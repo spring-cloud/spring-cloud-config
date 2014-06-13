@@ -16,20 +16,14 @@
 
 package org.springframework.platform.bootstrap.config;
 
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.PropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author Dave Syer
@@ -49,14 +43,12 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	private RestTemplate restTemplate = new RestTemplate();
 
 	@Override
-	public PropertySource<?> locate() {
+	public org.springframework.core.env.PropertySource<?> locate() {
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		List<SerializableMapPropertySource> result = restTemplate.exchange(
-				url + "/{name}/{env}/{label}", HttpMethod.GET,
-				new HttpEntity<Void>((Void) null),
-				new ParameterizedTypeReference<List<SerializableMapPropertySource>>() {
-				}, name, env, label).getBody();
-		for (SerializableMapPropertySource source : result) {
+		Environment result = restTemplate.exchange(url + "/{name}/{env}/{label}",
+				HttpMethod.GET, new HttpEntity<Void>((Void) null), Environment.class,
+				name, env, label).getBody();
+		for (PropertySource source : result.getPropertySources()) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) source.getSource();
 			composite.addPropertySource(new MapPropertySource(source.getName(), map));
@@ -96,26 +88,4 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		this.label = label;
 	}
 
-	protected static class SerializableMapPropertySource {
-
-		private String name;
-
-		private Map<?, ?> source;
-
-		@JsonCreator
-		public SerializableMapPropertySource(@JsonProperty("name") String name,
-				@JsonProperty("source") Map<?, ?> source) {
-			this.name = name;
-			this.source = source;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public Map<?, ?> getSource() {
-			return source;
-		}
-
-	}
 }

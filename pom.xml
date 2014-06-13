@@ -82,4 +82,18 @@
 			<id>full</id>
 		</profile>
 	</profiles>
+    <dependencyManagement>
+      <dependencies>
+		<dependency>
+			<groupId>org.springframework.platform</groupId>
+			<artifactId>spring-platform-config-client</artifactId>
+	        <version>1.0.0.BUILD-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.platform</groupId>
+			<artifactId>spring-platform-config-client</artifactId>
+	        <version>1.0.0.BUILD-SNAPSHOT</version>
+		</dependency>
+      </dependencies>
+    </dependencyManagement>
 </project>
