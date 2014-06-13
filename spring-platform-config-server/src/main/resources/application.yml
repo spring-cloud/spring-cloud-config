@@ -1,0 +1,7 @@
+info:
+  component: Config Server
+spring:
+  application:
+    name: configserver
+server:
+  port: 8888
