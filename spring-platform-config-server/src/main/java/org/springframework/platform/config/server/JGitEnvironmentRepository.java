@@ -20,9 +20,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.util.FileUtils;
 import org.springframework.platform.bootstrap.config.Environment;
 import org.springframework.platform.bootstrap.config.PropertySource;
+import org.springframework.util.Assert;
 
 /**
  * @author Dave Syer
@@ -31,6 +35,8 @@ import org.springframework.platform.bootstrap.config.PropertySource;
 public class JGitEnvironmentRepository implements EnvironmentRepository {
 
 	public static final String DEFAULT_URI = "https://github.com/scratches/config-repo";
+	
+	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
 
 	private File basedir;
 
@@ -38,8 +44,18 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 
 	public JGitEnvironmentRepository() {
 		try {
-			basedir = Files.createTempDirectory("config-repo-").toFile();
-			basedir.deleteOnExit();
+			final File basedir = Files.createTempDirectory("config-repo-").toFile();
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
+				public void run() {
+					try {
+						FileUtils.delete(basedir, FileUtils.RECURSIVE);
+					} catch (IOException e) {
+						logger.warn("Failed to delete temporary directory on exit: " + e);
+					}
+				}
+			});
+			this.basedir = basedir;
 		} catch (IOException e) {
 			throw new IllegalStateException("Cannot create temp dir", e);
 		}
@@ -51,6 +67,11 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		}
 		this.uri = uri;
 	}
+	
+	
+	public void setBasedir(File basedir) {
+		this.basedir = basedir;
+	}
 
 	@Override
 	public Environment findOne(String application, String name, String label) {
@@ -59,6 +80,14 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			if (new File(basedir, ".git").exists()) {
 				git = Git.open(basedir);
 			} else {
+				if (basedir.exists()) {
+					try {
+						FileUtils.delete(basedir, FileUtils.RECURSIVE);
+					} catch (IOException e) {
+						throw new IllegalStateException("Failed to initialize base directory",  e);
+					}
+				}
+				Assert.state(basedir.mkdirs(), "Could not create basedir: " + basedir);
 				git = Git.cloneRepository().setURI(uri).setDirectory(basedir).call();
 			}
 			Environment result;

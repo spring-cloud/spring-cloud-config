@@ -38,14 +38,14 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private String label = "master";
 
-	private String url = "http://localhost:8888";
+	private String uri = "http://localhost:8888";
 
 	private RestTemplate restTemplate = new RestTemplate();
 
 	@Override
 	public org.springframework.core.env.PropertySource<?> locate() {
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		Environment result = restTemplate.exchange(url + "/{name}/{env}/{label}",
+		Environment result = restTemplate.exchange(uri + "/{name}/{env}/{label}",
 				HttpMethod.GET, new HttpEntity<Void>((Void) null), Environment.class,
 				name, env, label).getBody();
 		for (PropertySource source : result.getPropertySources()) {
@@ -56,12 +56,12 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		return composite;
 	}
 
-	public String getUrl() {
-		return url;
+	public String getUri() {
+		return uri;
 	}
 
-	public void setUrl(String url) {
-		this.url = url;
+	public void setUri(String url) {
+		this.uri = url;
 	}
 
 	public String getName() {

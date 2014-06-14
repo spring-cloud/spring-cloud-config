@@ -14,6 +14,11 @@
 		<version>1.1.2.BUILD-SNAPSHOT</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+	<modules>
+	  <module>spring-platform-config-client</module>
+	  <module>spring-platform-config-server</module>
+	  <module>spring-platform-config-sample</module>
+	</modules>
 	<organization>
 		<name>Pivotal Software, Inc.</name>
 		<url>http://www.spring.io</url>
@@ -67,21 +72,6 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-	<profiles>
-		<profile>
-			<id>default</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<modules>
-				<module>spring-platform-config-client</module>
-				<module>spring-platform-config-server</module>
-			</modules>
-		</profile>
-		<profile>
-			<id>full</id>
-		</profile>
-	</profiles>
     <dependencyManagement>
       <dependencies>
 		<dependency>
@@ -91,7 +81,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.platform</groupId>
-			<artifactId>spring-platform-config-client</artifactId>
+			<artifactId>spring-platform-config-server</artifactId>
 	        <version>1.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
       </dependencies>
