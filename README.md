@@ -33,7 +33,7 @@ $ curl localhost:8888/foo/development
 ```
 
 The default strategy for locating property sources is to clone a git
-repository (at "spring.platform.config.uri") and use it to initialize
+repository (at "spring.platform.config.server.uri") and use it to initialize
 a `SpringApplication`. The application's `Environment` is used to
 enumerate property sources. The service has resources in the form:
 
@@ -58,7 +58,7 @@ the startup behaviour you can change the location of the server using
 bootstrap phase of an application context), e.g.
 
 ```
-spring.platform.config.url: http://myconfigserver.com
+spring.platform.config.uri: http://myconfigserver.com
 ```
 
 ## Sample Application

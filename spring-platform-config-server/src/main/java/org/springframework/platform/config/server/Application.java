@@ -54,7 +54,7 @@ public class Application {
 	@Profile("!native")
 	protected static class GitRepositoryConfiguration {
 		@Bean
-		@ConfigurationProperties("spring.platform.config")
+		@ConfigurationProperties("spring.platform.config.server")
 		public JGitEnvironmentRepository repository() {
 			return new JGitEnvironmentRepository();
 		}

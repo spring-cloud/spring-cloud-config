@@ -61,6 +61,7 @@ public class ConfigServiceBootstrapConfiguration implements
 			if (source == null) {
 				continue;
 			}
+			logger.info("Located property source: " + source);
 			composite.addPropertySource(source);
 			empty = false;
 		}
