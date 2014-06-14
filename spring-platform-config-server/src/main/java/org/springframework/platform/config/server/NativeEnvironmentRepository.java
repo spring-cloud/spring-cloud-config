@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.platform.config.server;
 
 import java.util.Arrays;
@@ -27,8 +28,10 @@ import org.springframework.platform.bootstrap.config.Environment;
 import org.springframework.platform.bootstrap.config.PropertySource;
 import org.springframework.web.context.support.StandardServletEnvironment;
 
-
 /**
+ * Simple implementation of {@link EnvironmentRepository} that just reflects an existing
+ * Spring Environment.
+ * 
  * @author Dave Syer
  *
  */
@@ -46,14 +49,14 @@ public class NativeEnvironmentRepository implements EnvironmentRepository {
 	public NativeEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
 	}
-	
+
 	@Override
 	public Environment findOne(String application, String env, String label) {
 		Environment result = new Environment(env, label);
 		for (org.springframework.core.env.PropertySource<?> source : environment.getPropertySources()) {
 			String name = source.getName();
-			if (!standardSources .contains(name) && source instanceof MapPropertySource) {  
-				result.add(new PropertySource(name, (Map<?,?>)source.getSource()));
+			if (!standardSources.contains(name) && source instanceof MapPropertySource) {
+				result.add(new PropertySource(name, (Map<?, ?>) source.getSource()));
 			}
 		}
 		return result;

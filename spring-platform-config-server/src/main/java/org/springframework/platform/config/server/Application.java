@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.platform.bootstrap.config.Environment;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +38,7 @@ public class Application {
 	}
 
 	@Configuration
+	@Profile("native")
 	protected static class NativeRepositoryConfiguration {
 		@Autowired
 		private ConfigurableEnvironment environment;
@@ -44,6 +46,15 @@ public class Application {
 		@Bean
 		public NativeEnvironmentRepository repository() {
 			return new NativeEnvironmentRepository(environment);
+		}
+	}
+
+	@Configuration
+	@Profile("!native")
+	protected static class GitRepositoryConfiguration {
+		@Bean
+		public JGitEnvironmentRepository repository() {
+			return new JGitEnvironmentRepository();
 		}
 	}
 }
