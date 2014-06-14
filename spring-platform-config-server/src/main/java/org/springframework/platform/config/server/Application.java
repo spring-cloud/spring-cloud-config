@@ -4,6 +4,7 @@ package org.springframework.platform.config.server;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -53,6 +54,7 @@ public class Application {
 	@Profile("!native")
 	protected static class GitRepositoryConfiguration {
 		@Bean
+		@ConfigurationProperties("spring.platform.config")
 		public JGitEnvironmentRepository repository() {
 			return new JGitEnvironmentRepository();
 		}
