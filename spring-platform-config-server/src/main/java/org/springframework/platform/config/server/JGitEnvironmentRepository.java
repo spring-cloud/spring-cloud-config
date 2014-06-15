@@ -79,6 +79,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			Git git;
 			if (new File(basedir, ".git").exists()) {
 				git = Git.open(basedir);
+				git.fetch().call();
 			} else {
 				if (basedir.exists()) {
 					try {
