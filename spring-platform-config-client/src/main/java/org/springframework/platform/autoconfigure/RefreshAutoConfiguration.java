@@ -72,6 +72,7 @@ public class RefreshAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnExpression("${endpoints.refresh.enabled:true}")
+	@ConditionalOnBean(EnvironmentEndpoint.class)
 	public RefreshEndpoint refreshEndpoint(ConfigurableApplicationContext context, ConfigServiceBootstrapConfiguration bootstrap) {
 		RefreshEndpoint endpoint = new RefreshEndpoint(context, bootstrap);
 		return endpoint;
