@@ -22,7 +22,15 @@ adapt to its environment in a completely flexible way.
 
 **Autoconfiguration** - An application using
 `@EnableAutoConfiguration` will pick up beans for the components
-below, notably `EnvironmentManager` and `RefreshScope`.
+below, notably `RefreshEndpoint`, `EnvironmentManager` and
+`RefreshScope`.
+
+## RefreshEndpoint
+
+Re-initializes the bootstrap environment, and sends a
+`EnvironmentChangeEvent` if any properties changed. Both the
+`RefreshScope` and the `ConfigurationPropertiesRebinder` respond to
+this event. Exposed at `/refresh`.
 
 ## EnvironmentManager and EnvironmentManagerEndpoint
 

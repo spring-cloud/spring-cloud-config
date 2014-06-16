@@ -63,6 +63,24 @@ the bootstrap phase of an application context), e.g.
 spring.platform.config.uri: http://myconfigserver.com
 ```
 
+The bootstrap properties will show up in the `/env` endpoint as a
+high-priority property source, e.g.
+
+```
+$ curl localhost:8080/env
+{
+  "profiles":[],
+  "configService:https://github.com/scratches/config-repo/bar.properties":{"foo":"bar"},
+  "servletContextInitParams":{},
+  "systemProperties":{...},
+  ...
+}
+```
+
+(a property source called "configService:<URL of remote
+repository>/<file name>" contains the property "foo" with value
+"bar" and is highest priority).
+
 ## Sample Application
 
 There is a sample application
@@ -78,3 +96,23 @@ environment property from the git configuration repo is present. To
 change the location of the config server just set
 "spring.platform.config.uri" in "bootstrap.yml" (or via System
 properties etc.).
+
+The test case has a `main()` method that runs the server in the same
+way (watch the logs for its port), so you can run the whole system in
+one process and play with it (e.g. right click on the main in your IDE
+and run it). The `main()` method uses `target/config` for the working
+directory of the git repository, so you can make local changes there
+and see them reflected in the running app.
+
+```
+$ curl localhost:8080/env/foo
+bar
+$ vi target/config/bar.properties
+.. change value of "foo", optionally commit
+$ curl localhost:8080/refresh
+["foo"]
+$ curl localhost:8080/env/foo
+baz
+```
+
+The refresh endpoint reports that the "foo" property changed.

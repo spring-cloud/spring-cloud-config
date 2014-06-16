@@ -98,7 +98,6 @@ public class BootstrapApplicationListener implements
 		builder.sources(names.toArray());
 		final ConfigurableApplicationContext context = builder.run();
 		// Shutdown the bootstrap context when the app closes
-		// TODO: maybe make the bootstrap context a parent of the app context
 		application.addListeners(new ApplicationListener<ContextClosedEvent>() {
 
 			@Override
@@ -106,6 +105,7 @@ public class BootstrapApplicationListener implements
 				context.close();
 			}
 		});
+		// Make the bootstrap context a parent of the app context
 		application.addInitializers(new AncestorInitializer(context));
 		return context;
 	}
@@ -146,10 +146,18 @@ public class BootstrapApplicationListener implements
 
 		@Override
 		public void initialize(ConfigurableApplicationContext context) {
+			preemptMerge(context.getEnvironment().getPropertySources(), parent.getEnvironment().getPropertySources().get("bootstrap"));
 			while (context.getParent()!=null) {
 				context = (ConfigurableApplicationContext) context.getParent();
 			}
 			context.setParent(parent);
+		}
+
+		private void preemptMerge(MutablePropertySources propertySources,
+				PropertySource<?> propertySource) {
+			if (propertySource!=null && !propertySources.contains(propertySource.getName())) {
+				propertySources.addFirst(propertySource);
+			}
 		}
 		
 	}

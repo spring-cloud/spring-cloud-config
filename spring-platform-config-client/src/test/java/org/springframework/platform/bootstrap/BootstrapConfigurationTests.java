@@ -17,6 +17,7 @@
 package org.springframework.platform.bootstrap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
@@ -29,6 +30,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.platform.config.client.PropertySourceLocator;
@@ -62,7 +64,10 @@ public class BootstrapConfigurationTests {
 				new StandardEnvironment()).child(BareConfiguration.class).web(false).run();
 		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
 		assertEquals(context.getEnvironment(), context.getParent().getEnvironment());
-		assertTrue(context.getEnvironment().getPropertySources().contains("bootstrap"));
+		MutablePropertySources sources = context.getEnvironment().getPropertySources();
+		PropertySource<?> bootstrap = sources.get("bootstrap");
+		assertNotNull(bootstrap);
+		assertEquals(0, sources.precedenceOf(bootstrap));
 	}
 
 	@Test
