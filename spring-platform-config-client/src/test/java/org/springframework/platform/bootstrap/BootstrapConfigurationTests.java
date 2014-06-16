@@ -31,7 +31,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.platform.bootstrap.config.PropertySourceLocator;
+import org.springframework.platform.config.client.PropertySourceLocator;
 
 /**
  * @author Dave Syer

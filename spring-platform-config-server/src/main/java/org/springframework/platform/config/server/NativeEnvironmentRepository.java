@@ -24,8 +24,8 @@ import java.util.Set;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.platform.bootstrap.config.Environment;
-import org.springframework.platform.bootstrap.config.PropertySource;
+import org.springframework.platform.config.Environment;
+import org.springframework.platform.config.PropertySource;
 import org.springframework.web.context.support.StandardServletEnvironment;
 
 /**

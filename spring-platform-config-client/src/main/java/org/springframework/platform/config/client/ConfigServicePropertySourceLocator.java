@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.platform.bootstrap.config;
+package org.springframework.platform.config.client;
 
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.platform.config.Environment;
+import org.springframework.platform.config.PropertySource;
 import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Dave Syer
  *
  */
+@ConfigurationProperties("spring.platform.config")
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
 
 	private String env = "development";

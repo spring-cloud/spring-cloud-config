@@ -22,7 +22,7 @@ import java.util.List;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.platform.bootstrap.config.Environment;
+import org.springframework.platform.config.Environment;
 import org.springframework.util.StringUtils;
 
 /**

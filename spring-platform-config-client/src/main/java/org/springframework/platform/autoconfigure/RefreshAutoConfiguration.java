@@ -27,9 +27,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.platform.bootstrap.config.ConfigServiceBootstrapConfiguration;
+import org.springframework.platform.config.client.RefreshEndpoint;
 import org.springframework.platform.context.environment.EnvironmentManager;
 import org.springframework.platform.context.environment.EnvironmentManagerMvcEndpoint;
 import org.springframework.platform.context.properties.ConfigurationPropertiesRebinder;
@@ -64,6 +67,14 @@ public class RefreshAutoConfiguration {
 		ConfigurationPropertiesRebinder rebinder = new ConfigurationPropertiesRebinder(binder);
 		rebinder.setBeanMetaDataStore(metaData);
 		return rebinder;
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	@ConditionalOnExpression("${endpoints.refresh.enabled:true}")
+	public RefreshEndpoint refreshEndpoint(ConfigurableApplicationContext context, ConfigServiceBootstrapConfiguration bootstrap) {
+		RefreshEndpoint endpoint = new RefreshEndpoint(context, bootstrap);
+		return endpoint;
 	}
 	
 	@Configuration

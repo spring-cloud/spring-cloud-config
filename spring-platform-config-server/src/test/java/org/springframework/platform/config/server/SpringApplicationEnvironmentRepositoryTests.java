@@ -18,7 +18,7 @@ package org.springframework.platform.config.server;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.springframework.platform.bootstrap.config.Environment;
+import org.springframework.platform.config.Environment;
 
 
 /**

@@ -24,8 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.util.FileUtils;
-import org.springframework.platform.bootstrap.config.Environment;
-import org.springframework.platform.bootstrap.config.PropertySource;
+import org.springframework.platform.config.Environment;
+import org.springframework.platform.config.PropertySource;
 import org.springframework.util.Assert;
 
 /**

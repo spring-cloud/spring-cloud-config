@@ -17,12 +17,12 @@
 package org.springframework.platform.bootstrap.config;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -30,7 +30,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.env.CompositePropertySource;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
+import org.springframework.platform.config.client.ConfigServicePropertySourceLocator;
+import org.springframework.platform.config.client.PropertySourceLocator;
 
 /**
  * @author Dave Syer
@@ -45,6 +48,11 @@ public class ConfigServiceBootstrapConfiguration implements
 
 	@Autowired(required = false)
 	private List<PropertySourceLocator> propertySourceLocators = new ArrayList<PropertySourceLocator>();
+	
+	public void setPropertySourceLocators(
+			Collection<PropertySourceLocator> propertySourceLocators) {
+		this.propertySourceLocators = new ArrayList<PropertySourceLocator>(propertySourceLocators);
+	}
 
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
@@ -66,12 +74,16 @@ public class ConfigServiceBootstrapConfiguration implements
 			empty = false;
 		}
 		if (!empty) {
-			applicationContext.getEnvironment().getPropertySources().addFirst(composite);
+			MutablePropertySources propertySources = applicationContext.getEnvironment().getPropertySources();
+			if (propertySources.contains("bootstrap")) {
+				propertySources.replace("bootstrap", composite);
+			} else {
+				propertySources.addFirst(composite);
+			}
 		}
 	}
 
 	@Bean
-	@ConfigurationProperties("spring.platform.config")
 	public ConfigServicePropertySourceLocator configServicePropertySource() {
 		return new ConfigServicePropertySourceLocator();
 	}

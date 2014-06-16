@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package org.springframework.platform.bootstrap.config;
+package org.springframework.platform.config;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,36 +25,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author Dave Syer
  *
  */
-public class Environment {
+public class PropertySource {
 
 	private String name;
 
-	private String label;
-
-	private List<PropertySource> propertySources = new ArrayList<PropertySource>();
+	private Map<?, ?> source;
 
 	@JsonCreator
-	public Environment(@JsonProperty("name") String name,
-			@JsonProperty("label") String label) {
-		super();
+	public PropertySource(@JsonProperty("name") String name,
+			@JsonProperty("source") Map<?, ?> source) {
 		this.name = name;
-		this.label = label;
-	}
-
-	public void add(PropertySource propertySource) {
-		this.propertySources.add(propertySource);
-	}
-
-	public List<PropertySource> getPropertySources() {
-		return propertySources;
+		this.source = source;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public String getLabel() {
-		return label;
+	public Map<?, ?> getSource() {
+		return source;
 	}
 
 }

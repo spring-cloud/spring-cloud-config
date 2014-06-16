@@ -15,7 +15,7 @@
  */
 package org.springframework.platform.config.server;
 
-import org.springframework.platform.bootstrap.config.Environment;
+import org.springframework.platform.config.Environment;
 
 
 /**

@@ -24,7 +24,7 @@ import java.io.File;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.platform.bootstrap.config.Environment;
+import org.springframework.platform.config.Environment;
 
 /**
  * @author Dave Syer

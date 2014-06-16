@@ -13,37 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.springframework.platform.config.client;
 
-package org.springframework.platform.bootstrap.config;
+import org.springframework.core.env.PropertySource;
 
-import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author Dave Syer
  *
  */
-public class PropertySource {
+public interface PropertySourceLocator {
 
-	private String name;
-
-	private Map<?, ?> source;
-
-	@JsonCreator
-	public PropertySource(@JsonProperty("name") String name,
-			@JsonProperty("source") Map<?, ?> source) {
-		this.name = name;
-		this.source = source;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public Map<?, ?> getSource() {
-		return source;
-	}
+	PropertySource<?> locate();
 
 }

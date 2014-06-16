@@ -106,6 +106,7 @@ public class BootstrapApplicationListener implements
 				context.close();
 			}
 		});
+		application.addInitializers(new AncestorInitializer(context));
 		return context;
 	}
 
@@ -133,6 +134,24 @@ public class BootstrapApplicationListener implements
 	@Override
 	public int getOrder() {
 		return this.order;
+	}
+	
+	private static class AncestorInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+		private ConfigurableApplicationContext parent;
+
+		public AncestorInitializer(ConfigurableApplicationContext parent) {
+			this.parent = parent;
+		}
+
+		@Override
+		public void initialize(ConfigurableApplicationContext context) {
+			while (context.getParent()!=null) {
+				context = (ConfigurableApplicationContext) context.getParent();
+			}
+			context.setParent(parent);
+		}
+		
 	}
 
 }
