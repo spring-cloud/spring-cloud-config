@@ -9,3 +9,5 @@ bin
 .springBeans
 .DS_Store
 *.sw*
+*.iml
+.idea
