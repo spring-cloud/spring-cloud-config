@@ -1,8 +1,14 @@
 info:
   component: Config Server
 spring:
+  platform:
+    config:
+      server:
+        basedir: target/config
   application:
     name: configserver
+  jmx:
+    default_domain: platform.config.server
 server:
   port: 8888
 management:
