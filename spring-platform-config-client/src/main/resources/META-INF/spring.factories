@@ -4,7 +4,8 @@ org.springframework.platform.autoconfigure.RefreshAutoConfiguration
 
 # Application Listeners
 org.springframework.context.ApplicationListener=\
-org.springframework.platform.bootstrap.BootstrapApplicationListener
+org.springframework.platform.bootstrap.BootstrapApplicationListener,\
+org.springframework.platform.context.restart.RestartListener
 
 # Bootstrap components
 org.springframework.platform.bootstrap.BootstrapConfiguration=\

@@ -22,12 +22,12 @@ import java.util.List;
 
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.builder.ParentContextApplicationContextInitializer;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -59,7 +59,8 @@ public class BootstrapApplicationListener implements
 	@Override
 	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
 		Environment environment = event.getEnvironment();
-		if (!environment.getProperty("spring.platform.bootstrap.enabled", Boolean.class, true)) {
+		if (!environment.getProperty("spring.platform.bootstrap.enabled", Boolean.class,
+				true)) {
 			return;
 		}
 		if (environment instanceof ConfigurableEnvironment) {
@@ -97,17 +98,25 @@ public class BootstrapApplicationListener implements
 				"spring.application.name:bootstrap");
 		builder.sources(names.toArray());
 		final ConfigurableApplicationContext context = builder.run();
-		// Shutdown the bootstrap context when the app closes
-		application.addListeners(new ApplicationListener<ContextClosedEvent>() {
-
-			@Override
-			public void onApplicationEvent(ContextClosedEvent event) {
-				context.close();
-			}
-		});
 		// Make the bootstrap context a parent of the app context
-		application.addInitializers(new AncestorInitializer(context));
+		addAncestorInitializer(application, context);
 		return context;
+	}
+
+	private void addAncestorInitializer(SpringApplication application,
+			ConfigurableApplicationContext context) {
+		boolean installed = false;
+		for (ApplicationContextInitializer<?> initializer : application.getInitializers()) {
+			if (initializer instanceof AncestorInitializer) {
+				installed = true;
+				// New parent
+				((AncestorInitializer) initializer).setParent(context);
+			}
+		}
+		if (!installed) {
+			application.addInitializers(new AncestorInitializer(context));
+		}
+
 	}
 
 	private void apply(ConfigurableApplicationContext context,
@@ -135,8 +144,9 @@ public class BootstrapApplicationListener implements
 	public int getOrder() {
 		return this.order;
 	}
-	
-	private static class AncestorInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+	private static class AncestorInitializer implements
+			ApplicationContextInitializer<ConfigurableApplicationContext> {
 
 		private ConfigurableApplicationContext parent;
 
@@ -144,22 +154,28 @@ public class BootstrapApplicationListener implements
 			this.parent = parent;
 		}
 
+		public void setParent(ConfigurableApplicationContext parent) {
+			this.parent = parent;
+		}
+
 		@Override
 		public void initialize(ConfigurableApplicationContext context) {
-			preemptMerge(context.getEnvironment().getPropertySources(), parent.getEnvironment().getPropertySources().get("bootstrap"));
-			while (context.getParent()!=null) {
+			preemptMerge(context.getEnvironment().getPropertySources(),
+					parent.getEnvironment().getPropertySources().get("bootstrap"));
+			while (context.getParent() != null && context.getParent() != context) {
 				context = (ConfigurableApplicationContext) context.getParent();
 			}
-			context.setParent(parent);
+			new ParentContextApplicationContextInitializer(parent).initialize(context);
 		}
 
 		private void preemptMerge(MutablePropertySources propertySources,
 				PropertySource<?> propertySource) {
-			if (propertySource!=null && !propertySources.contains(propertySource.getName())) {
+			if (propertySource != null
+					&& !propertySources.contains(propertySource.getName())) {
 				propertySources.addFirst(propertySource);
 			}
 		}
-		
+
 	}
 
 }

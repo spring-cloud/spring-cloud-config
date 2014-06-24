@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  */
+
 package org.springframework.platform.autoconfigure;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,60 +37,88 @@ import org.springframework.platform.config.client.RefreshEndpoint;
 import org.springframework.platform.context.environment.EnvironmentManager;
 import org.springframework.platform.context.environment.EnvironmentManagerMvcEndpoint;
 import org.springframework.platform.context.properties.ConfigurationPropertiesRebinder;
+import org.springframework.platform.context.restart.RestartEndpoint;
+import org.springframework.platform.context.restart.RestartMvcEndpoint;
 import org.springframework.platform.context.scope.refresh.RefreshScope;
 
 @Configuration
 @ConditionalOnClass(RefreshScope.class)
 @AutoConfigureAfter(EndpointAutoConfiguration.class)
 public class RefreshAutoConfiguration {
-	
-	@Autowired
-	private ConfigurationPropertiesBindingPostProcessor binder;
-
-	@Autowired
-	private ConfigurationBeanFactoryMetaData metaData;
 
 	@Bean
 	@ConditionalOnMissingBean
 	public static RefreshScope refreshScope() {
 		return new RefreshScope();
 	}
-	
+
 	@Bean
 	@ConditionalOnMissingBean
 	public EnvironmentManager environmentManager(ConfigurableEnvironment environment) {
 		return new EnvironmentManager(environment);
 	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public ConfigurationPropertiesRebinder configurationPropertiesRebinder() {
-		ConfigurationPropertiesRebinder rebinder = new ConfigurationPropertiesRebinder(binder);
-		rebinder.setBeanMetaDataStore(metaData);
-		return rebinder;
+
+	protected static class ConfigurationPropertiesRebinderConfiguration {
+
+		@Autowired
+		private ConfigurationPropertiesBindingPostProcessor binder;
+
+		@Autowired
+		private ConfigurationBeanFactoryMetaData metaData;
+
+		@Bean
+		@ConditionalOnMissingBean
+		public ConfigurationPropertiesRebinder configurationPropertiesRebinder() {
+			ConfigurationPropertiesRebinder rebinder = new ConfigurationPropertiesRebinder(
+					binder);
+			rebinder.setBeanMetaDataStore(metaData);
+			return rebinder;
+		}
+
 	}
-	
+
 	@Bean
 	@ConditionalOnMissingBean
+	public RestartEndpoint restartContextListener() {
+		return new RestartEndpoint();
+	}
+
+	@Configuration
 	@ConditionalOnExpression("${endpoints.refresh.enabled:true}")
-	@ConditionalOnBean(EnvironmentEndpoint.class)
-	public RefreshEndpoint refreshEndpoint(ConfigurableApplicationContext context, ConfigServiceBootstrapConfiguration bootstrap) {
-		RefreshEndpoint endpoint = new RefreshEndpoint(context, bootstrap);
-		return endpoint;
+	@ConditionalOnBean(ConfigServiceBootstrapConfiguration.class)
+	protected static class RefreshEndpointConfiguration {
+
+		@Bean
+		@ConditionalOnMissingBean
+		public RefreshEndpoint refreshEndpoint(ConfigurableApplicationContext context,
+				ConfigServiceBootstrapConfiguration bootstrap) {
+			RefreshEndpoint endpoint = new RefreshEndpoint(context, bootstrap);
+			return endpoint;
+		}
+
 	}
-	
+
 	@Configuration
 	@ConditionalOnWebApplication
 	@ConditionalOnClass(EnvironmentEndpoint.class)
 	@ConditionalOnExpression("${endpoints.env.enabled:true}")
 	@ConditionalOnBean(EnvironmentEndpoint.class)
 	protected static class EnvironmentEndpointConfiguration {
-		
+
+		@Autowired
+		private RestartEndpoint restartEndpoint;
+
 		@Bean
-		public EnvironmentManagerMvcEndpoint environmentManagerEndpoint(EnvironmentEndpoint delegate, EnvironmentManager environment) {
+		public EnvironmentManagerMvcEndpoint environmentManagerEndpoint(
+				EnvironmentEndpoint delegate, EnvironmentManager environment) {
 			return new EnvironmentManagerMvcEndpoint(delegate, environment);
 		}
-		
+
+		@Bean
+		public RestartMvcEndpoint restartMvcEndpoint() {
+			return new RestartMvcEndpoint(restartEndpoint);
+		}
+
 	}
-	
+
 }

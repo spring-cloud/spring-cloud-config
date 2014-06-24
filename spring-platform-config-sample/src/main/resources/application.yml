@@ -1,2 +1,5 @@
 info:
   component: Config Sample
+endpoints:
+  restart:
+    enabled: true
