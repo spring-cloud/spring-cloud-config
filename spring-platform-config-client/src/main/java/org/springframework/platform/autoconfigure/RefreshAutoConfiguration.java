@@ -18,7 +18,7 @@
 package org.springframework.platform.autoconfigure;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
+import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -43,7 +44,7 @@ import org.springframework.platform.context.scope.refresh.RefreshScope;
 
 @Configuration
 @ConditionalOnClass(RefreshScope.class)
-@AutoConfigureAfter(EndpointAutoConfiguration.class)
+@AutoConfigureAfter(WebMvcAutoConfiguration.class)
 public class RefreshAutoConfiguration {
 
 	@Bean
@@ -77,48 +78,53 @@ public class RefreshAutoConfiguration {
 
 	}
 
-	@Bean
-	@ConditionalOnMissingBean
-	public RestartEndpoint restartContextListener() {
-		return new RestartEndpoint();
-	}
-
-	@Configuration
-	@ConditionalOnExpression("${endpoints.refresh.enabled:true}")
-	@ConditionalOnBean(ConfigServiceBootstrapConfiguration.class)
-	protected static class RefreshEndpointConfiguration {
+	@ConditionalOnClass(Endpoint.class)
+	protected static class RefreshEndpointsConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		public RefreshEndpoint refreshEndpoint(ConfigurableApplicationContext context,
-				ConfigServiceBootstrapConfiguration bootstrap) {
-			RefreshEndpoint endpoint = new RefreshEndpoint(context, bootstrap);
-			return endpoint;
+		public RestartEndpoint restartContextListener() {
+			return new RestartEndpoint();
+		}
+
+		@Configuration
+		@ConditionalOnExpression("${endpoints.refresh.enabled:true}")
+		@ConditionalOnBean(ConfigServiceBootstrapConfiguration.class)
+		protected static class RefreshEndpointConfiguration {
+
+			@Bean
+			@ConditionalOnMissingBean
+			public RefreshEndpoint refreshEndpoint(
+					ConfigurableApplicationContext context,
+					ConfigServiceBootstrapConfiguration bootstrap) {
+				RefreshEndpoint endpoint = new RefreshEndpoint(context, bootstrap);
+				return endpoint;
+			}
+
+		}
+
+		@Configuration
+		@ConditionalOnWebApplication
+		@ConditionalOnClass(EnvironmentEndpoint.class)
+		@ConditionalOnExpression("${endpoints.env.enabled:true}")
+		@ConditionalOnBean(EnvironmentEndpoint.class)
+		protected static class EnvironmentEndpointConfiguration {
+
+			@Autowired
+			private RestartEndpoint restartEndpoint;
+
+			@Bean
+			public EnvironmentManagerMvcEndpoint environmentManagerEndpoint(
+					EnvironmentEndpoint delegate, EnvironmentManager environment) {
+				return new EnvironmentManagerMvcEndpoint(delegate, environment);
+			}
+
+			@Bean
+			public RestartMvcEndpoint restartMvcEndpoint() {
+				return new RestartMvcEndpoint(restartEndpoint);
+			}
+
 		}
 
 	}
-
-	@Configuration
-	@ConditionalOnWebApplication
-	@ConditionalOnClass(EnvironmentEndpoint.class)
-	@ConditionalOnExpression("${endpoints.env.enabled:true}")
-	@ConditionalOnBean(EnvironmentEndpoint.class)
-	protected static class EnvironmentEndpointConfiguration {
-
-		@Autowired
-		private RestartEndpoint restartEndpoint;
-
-		@Bean
-		public EnvironmentManagerMvcEndpoint environmentManagerEndpoint(
-				EnvironmentEndpoint delegate, EnvironmentManager environment) {
-			return new EnvironmentManagerMvcEndpoint(delegate, environment);
-		}
-
-		@Bean
-		public RestartMvcEndpoint restartMvcEndpoint() {
-			return new RestartMvcEndpoint(restartEndpoint);
-		}
-
-	}
-
 }
