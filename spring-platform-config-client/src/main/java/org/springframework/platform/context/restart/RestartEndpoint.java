@@ -20,11 +20,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
+import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.jmx.export.annotation.ManagedAttribute;
+import org.springframework.jmx.export.annotation.ManagedOperation;
+import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -37,6 +41,7 @@ import org.springframework.util.ClassUtils;
  *
  */
 @ConfigurationProperties("endpoints.restart")
+@ManagedResource
 public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 		ApplicationListener<ApplicationPreparedEvent> {
 
@@ -79,7 +84,48 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 			return false;
 		}
 	}
+	
+	public Endpoint<Boolean> getPauseEndpoint() {
+		return new PauseEndpoint();
+	}
+	
+	public Endpoint<Boolean> getResumeEndpoint() {
+		return new ResumeEndpoint();
+	}
+	
+	private class PauseEndpoint extends AbstractEndpoint<Boolean> {
+		
+		public PauseEndpoint() {
+			super("pause", true, true);
+		}
 
+		@Override
+		public Boolean invoke() {
+			if (isRunning()) {
+				pause();
+				return true;
+			}
+			return false;
+		}
+	}
+
+	private class ResumeEndpoint extends AbstractEndpoint<Boolean> {
+		
+		public ResumeEndpoint() {
+			super("resume", true, true);
+		}
+
+		@Override
+		public Boolean invoke() {
+			if (!isRunning()) {
+				resume();
+				return true;
+			}
+			return false;
+		}
+	}
+
+	@ManagedOperation
 	public synchronized ConfigurableApplicationContext restart() {
 		if (context != null) {
 			context.close();
@@ -89,6 +135,28 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 			context = application.run(args);
 		}
 		return context;
+	}
+	
+	@ManagedAttribute
+	public boolean isRunning() {
+		if (context != null) {
+			return context.isRunning();
+		}
+		return false;
+	}
+
+	@ManagedOperation
+	public synchronized void pause() {
+		if (context != null) {
+			context.stop();
+		}
+	}
+
+	@ManagedOperation
+	public synchronized void resume() {
+		if (context != null) {
+			context.start();
+		}
 	}
 
 	private void overrideClassLoaderForRestart() {

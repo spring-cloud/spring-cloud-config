@@ -18,7 +18,9 @@ package org.springframework.platform.context.restart;
 import java.util.Collections;
 import java.util.Map;
 
+import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointMvcAdapter;
+import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,5 +57,34 @@ public class RestartMvcEndpoint extends EndpointMvcAdapter {
 		return Collections.singletonMap(
 				"message", "Restarting");
 	}
+	
+	public MvcEndpoint getPauseEndpoint() {
+		return new GenericPostableMvcEndpoint(((RestartEndpoint)getDelegate()).getPauseEndpoint());
+	}
+
+	public MvcEndpoint getResumeEndpoint() {
+		return new GenericPostableMvcEndpoint(((RestartEndpoint)getDelegate()).getResumeEndpoint());
+	}
+	
+	
+	private static class GenericPostableMvcEndpoint extends EndpointMvcAdapter {
+
+		public GenericPostableMvcEndpoint(Endpoint<?> delegate) {
+			super(delegate);
+		}
+
+		@RequestMapping(method = RequestMethod.POST)
+		@ResponseBody
+		@Override
+		public Object invoke() {
+			if (!getDelegate().isEnabled()) {
+				return new ResponseEntity<Map<String, String>>(Collections.singletonMap(
+						"message", "This endpoint is disabled"), HttpStatus.NOT_FOUND);
+			}
+			return super.invoke();
+		}
+
+	}
+	
 
 }

@@ -20,6 +20,7 @@ package org.springframework.platform.autoconfigure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
+import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -28,6 +29,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -83,10 +85,22 @@ public class RefreshAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		public RestartEndpoint restartContextListener() {
+		public RestartEndpoint restartEndpoint() {
 			return new RestartEndpoint();
 		}
 
+		@Bean
+		@ConfigurationProperties("endpoints.pause")
+		public Endpoint<Boolean> pauseEndpoint(RestartEndpoint restartEndpoint) {
+			return restartEndpoint.getPauseEndpoint();
+		}
+		
+		@Bean
+		@ConfigurationProperties("endpoints.resume")
+		public Endpoint<Boolean> resumeEndpoint(RestartEndpoint restartEndpoint) {
+			return restartEndpoint.getResumeEndpoint();
+		}
+		
 		@Configuration
 		@ConditionalOnExpression("${endpoints.refresh.enabled:true}")
 		@ConditionalOnBean(ConfigServiceBootstrapConfiguration.class)
@@ -122,6 +136,16 @@ public class RefreshAutoConfiguration {
 			@Bean
 			public RestartMvcEndpoint restartMvcEndpoint() {
 				return new RestartMvcEndpoint(restartEndpoint);
+			}
+
+			@Bean
+			public MvcEndpoint pauseMvcEndpoint(RestartMvcEndpoint restartEndpoint) {
+				return restartEndpoint.getPauseEndpoint();
+			}
+
+			@Bean
+			public MvcEndpoint resumeMvcEndpoint(RestartMvcEndpoint restartEndpoint) {
+				return restartEndpoint.getResumeEndpoint();
 			}
 
 		}

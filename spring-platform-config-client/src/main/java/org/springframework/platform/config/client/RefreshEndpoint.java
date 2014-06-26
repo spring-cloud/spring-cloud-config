@@ -17,6 +17,7 @@
 package org.springframework.platform.config.client;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,8 @@ import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
+import org.springframework.jmx.export.annotation.ManagedOperation;
+import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.platform.bootstrap.config.ConfigServiceBootstrapConfiguration;
 import org.springframework.platform.context.environment.EnvironmentChangeEvent;
 import org.springframework.util.ReflectionUtils;
@@ -38,6 +41,7 @@ import org.springframework.util.ReflectionUtils;
  *
  */
 @ConfigurationProperties(prefix = "endpoints.refresh", ignoreUnknownFields = false)
+@ManagedResource
 public class RefreshEndpoint extends AbstractEndpoint<Collection<String>> {
 
 	private ConfigurableApplicationContext context;
@@ -49,18 +53,23 @@ public class RefreshEndpoint extends AbstractEndpoint<Collection<String>> {
 		this.context = context;
 		this.bootstrap = bootstrap;
 	}
-
-	@Override
-	public Collection<String> invoke() {
+	
+	@ManagedOperation
+	public synchronized String[] refresh() {
 		Map<String, Object> before = extract(context.getEnvironment().getPropertySources());
 		bootstrap.initialize(context);
 		Set<String> keys = changes(before,
 				extract(context.getEnvironment().getPropertySources())).keySet();
 		if (keys.isEmpty()) {
-			return keys;
+			return new String[0];
 		}
 		context.publishEvent(new EnvironmentChangeEvent(keys));
-		return keys;
+		return keys.toArray(new String[keys.size()]);		
+	}
+
+	@Override
+	public Collection<String> invoke() {
+		return Arrays.asList(refresh());
 	}
 
 	private Map<String, Object> changes(Map<String, Object> before,
