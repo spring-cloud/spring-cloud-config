@@ -162,6 +162,7 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 			if (integrationShutdown != null) {
 				integrationShutdown.stop(forceShutdown, timeout);
 			}
+			application.setEnvironment(context.getEnvironment());
 			context.close();
 			// If running in a webapp then the context classloader is probably going to
 			// die so we need to revert to a safe place before starting again

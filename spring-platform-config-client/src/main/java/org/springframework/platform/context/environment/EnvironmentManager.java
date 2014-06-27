@@ -24,13 +24,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 
 /**
  * @author Dave Syer
- *
+ * 
  */
 @Component
 @ManagedResource
@@ -44,6 +45,13 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 
 	public EnvironmentManager(ConfigurableEnvironment environment) {
 		this.environment = environment;
+		MutablePropertySources sources = environment.getPropertySources();
+		if (sources.contains(MANAGER_PROPERTY_SOURCE)) {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> map = (Map<String, Object>) sources.get(MANAGER_PROPERTY_SOURCE)
+							.getSource();
+			this.map = map;
+		}
 	}
 
 	@Override
@@ -52,12 +60,14 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 	}
 
 	@ManagedOperation
-	public void reset() {
+	public Map<String,Object> reset() {
+		Map<String, Object> result = new LinkedHashMap<String, Object>(map);
 		if (!map.isEmpty()) {
 			Set<String> keys = map.keySet();
 			map.clear();
 			publish(new EnvironmentChangeEvent(keys));
 		}
+		return result;
 	}
 
 	@ManagedOperation
@@ -65,7 +75,8 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 
 		if (!environment.getPropertySources().contains(MANAGER_PROPERTY_SOURCE)) {
 			synchronized (map) {
-				if (!environment.getPropertySources().contains(MANAGER_PROPERTY_SOURCE)) {
+				if (!environment.getPropertySources().contains(
+						MANAGER_PROPERTY_SOURCE)) {
 					MapPropertySource source = new MapPropertySource(
 							MANAGER_PROPERTY_SOURCE, map);
 					environment.getPropertySources().addFirst(source);
@@ -86,7 +97,7 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 	}
 
 	private void publish(EnvironmentChangeEvent environmentChangeEvent) {
-		if (publisher !=null ) {
+		if (publisher != null) {
 			publisher.publishEvent(environmentChangeEvent);
 		}
 	}

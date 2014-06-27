@@ -27,25 +27,32 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * @author Dave Syer
- *
+ * 
  */
 public class EnvironmentManagerMvcEndpoint implements MvcEndpoint {
 
 	private EnvironmentManager environment;
 	private EnvironmentEndpoint delegate;
 
-	public EnvironmentManagerMvcEndpoint(EnvironmentEndpoint delegate, EnvironmentManager enviroment) {
+	public EnvironmentManagerMvcEndpoint(EnvironmentEndpoint delegate,
+			EnvironmentManager enviroment) {
 		this.delegate = delegate;
 		environment = enviroment;
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.POST)
 	@ResponseBody
-	public Object value(@RequestParam Map<String,String> params) {
+	public Object value(@RequestParam Map<String, String> params) {
 		for (String name : params.keySet()) {
 			environment.setProperty(name, params.get(name));
 		}
 		return params;
+	}
+
+	@RequestMapping(value = "reset", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> reset() {
+		return environment.reset();
 	}
 
 	public void setEnvironmentManager(EnvironmentManager environment) {
