@@ -26,6 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.integration.monitor.IntegrationMBeanExporter;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
@@ -59,6 +60,36 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 
 	private ApplicationPreparedEvent event;
 
+	private IntegrationShutdown integrationShutdown;
+
+	private boolean forceShutdown;
+
+	private long timeout;
+
+	@ManagedAttribute
+	public boolean isForceShutdown() {
+		return forceShutdown;
+	}
+
+	public void setForceShutdown(boolean forceShutdown) {
+		this.forceShutdown = forceShutdown;
+	}
+
+	@ManagedAttribute
+	public long getTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
+	}
+
+	public void setIntegrationMBeanExporter(IntegrationMBeanExporter exporter) {
+		if (exporter != null) {
+			this.integrationShutdown = new IntegrationShutdown(exporter);
+		}
+	}
+
 	@Override
 	public void onApplicationEvent(ApplicationPreparedEvent input) {
 		event = (ApplicationPreparedEvent) input;
@@ -84,17 +115,17 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 			return false;
 		}
 	}
-	
+
 	public Endpoint<Boolean> getPauseEndpoint() {
 		return new PauseEndpoint();
 	}
-	
+
 	public Endpoint<Boolean> getResumeEndpoint() {
 		return new ResumeEndpoint();
 	}
-	
+
 	private class PauseEndpoint extends AbstractEndpoint<Boolean> {
-		
+
 		public PauseEndpoint() {
 			super("pause", true, true);
 		}
@@ -110,7 +141,7 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 	}
 
 	private class ResumeEndpoint extends AbstractEndpoint<Boolean> {
-		
+
 		public ResumeEndpoint() {
 			super("resume", true, true);
 		}
@@ -128,6 +159,9 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 	@ManagedOperation
 	public synchronized ConfigurableApplicationContext restart() {
 		if (context != null) {
+			if (integrationShutdown != null) {
+				integrationShutdown.stop(forceShutdown, timeout);
+			}
 			context.close();
 			// If running in a webapp then the context classloader is probably going to
 			// die so we need to revert to a safe place before starting again
@@ -136,7 +170,7 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 		}
 		return context;
 	}
-	
+
 	@ManagedAttribute
 	public boolean isRunning() {
 		if (context != null) {
@@ -161,6 +195,19 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 
 	private void overrideClassLoaderForRestart() {
 		ClassUtils.overrideThreadContextClassLoader(application.getClass().getClassLoader());
+	}
+
+	private class IntegrationShutdown {
+
+		private IntegrationMBeanExporter exporter;
+
+		public IntegrationShutdown(IntegrationMBeanExporter exporter) {
+			this.exporter = exporter;
+		}
+
+		public void stop(boolean force, long timeout) {
+			exporter.stopActiveComponents(force, timeout);
+		}
 	}
 
 }

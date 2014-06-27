@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
+import org.springframework.boot.context.config.ConfigFileApplicationListener;
+import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.CompositePropertySource;
@@ -58,6 +60,7 @@ public class RefreshEndpoint extends AbstractEndpoint<Collection<String>> {
 	public synchronized String[] refresh() {
 		Map<String, Object> before = extract(context.getEnvironment().getPropertySources());
 		bootstrap.initialize(context);
+		new ConfigFileApplicationListener().onApplicationEvent(new ApplicationEnvironmentPreparedEvent(null, null, context.getEnvironment()));
 		Set<String> keys = changes(before,
 				extract(context.getEnvironment().getPropertySources())).keySet();
 		if (keys.isEmpty()) {

@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
@@ -35,6 +36,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.integration.monitor.IntegrationMBeanExporter;
 import org.springframework.platform.bootstrap.config.ConfigServiceBootstrapConfiguration;
 import org.springframework.platform.config.client.RefreshEndpoint;
 import org.springframework.platform.context.environment.EnvironmentManager;
@@ -83,10 +85,31 @@ public class RefreshAutoConfiguration {
 	@ConditionalOnClass(Endpoint.class)
 	protected static class RefreshEndpointsConfiguration {
 
-		@Bean
-		@ConditionalOnMissingBean
-		public RestartEndpoint restartEndpoint() {
-			return new RestartEndpoint();
+		@ConditionalOnClass(IntegrationMBeanExporter.class)
+		protected static class RefreshEndpointWithIntegration {
+
+			@Autowired
+			private IntegrationMBeanExporter exporter;
+
+			@Bean
+			@ConditionalOnMissingBean
+			public RestartEndpoint restartEndpoint() {
+				RestartEndpoint endpoint = new RestartEndpoint();
+				if (exporter!=null) {
+					endpoint.setIntegrationMBeanExporter(exporter);
+				}
+				return endpoint;
+			}
+		}
+
+		@ConditionalOnMissingClass(name="org.springframework.integration.monitor.IntegrationMBeanExporter")
+		protected static class RefreshEndpointWithoutIntegration {
+
+			@Bean
+			@ConditionalOnMissingBean
+			public RestartEndpoint restartEndpoint() {
+				return new RestartEndpoint();
+			}
 		}
 
 		@Bean
@@ -94,13 +117,13 @@ public class RefreshAutoConfiguration {
 		public Endpoint<Boolean> pauseEndpoint(RestartEndpoint restartEndpoint) {
 			return restartEndpoint.getPauseEndpoint();
 		}
-		
+
 		@Bean
 		@ConfigurationProperties("endpoints.resume")
 		public Endpoint<Boolean> resumeEndpoint(RestartEndpoint restartEndpoint) {
 			return restartEndpoint.getResumeEndpoint();
 		}
-		
+
 		@Configuration
 		@ConditionalOnExpression("${endpoints.refresh.enabled:true}")
 		@ConditionalOnBean(ConfigServiceBootstrapConfiguration.class)
