@@ -79,9 +79,9 @@ public class RefreshScopeConcurrencyTests {
 			public String call() throws Exception {
 				logger.debug("Background started.");
 				try {
-					latch.countDown();
 					return service.getMessage();
 				} finally {
+					latch.countDown();
 					logger.debug("Background done.");
 				}
 			}
