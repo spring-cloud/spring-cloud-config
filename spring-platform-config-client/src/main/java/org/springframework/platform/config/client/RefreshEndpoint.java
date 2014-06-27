@@ -20,23 +20,25 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
-import org.springframework.boot.context.config.ConfigFileApplicationListener;
-import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.platform.bootstrap.config.ConfigServiceBootstrapConfiguration;
 import org.springframework.platform.context.environment.EnvironmentChangeEvent;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.context.support.StandardServletEnvironment;
 
 /**
  * @author Dave Syer
@@ -46,28 +48,51 @@ import org.springframework.util.ReflectionUtils;
 @ManagedResource
 public class RefreshEndpoint extends AbstractEndpoint<Collection<String>> {
 
+	private Set<String> standardSources = new HashSet<String>(Arrays.asList(
+			StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
+			StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+			StandardServletEnvironment.JNDI_PROPERTY_SOURCE_NAME,
+			StandardServletEnvironment.SERVLET_CONFIG_PROPERTY_SOURCE_NAME,
+			StandardServletEnvironment.SERVLET_CONTEXT_PROPERTY_SOURCE_NAME));
+
 	private ConfigurableApplicationContext context;
 
-	private ConfigServiceBootstrapConfiguration bootstrap = new ConfigServiceBootstrapConfiguration();
-
-	public RefreshEndpoint(ConfigurableApplicationContext context, ConfigServiceBootstrapConfiguration bootstrap) {
+	public RefreshEndpoint(ConfigurableApplicationContext context) {
 		super("refresh");
 		this.context = context;
-		this.bootstrap = bootstrap;
 	}
-	
+
 	@ManagedOperation
 	public synchronized String[] refresh() {
 		Map<String, Object> before = extract(context.getEnvironment().getPropertySources());
-		bootstrap.initialize(context);
-		new ConfigFileApplicationListener().onApplicationEvent(new ApplicationEnvironmentPreparedEvent(null, null, context.getEnvironment()));
+		addConfigFilesToEnvironment();
 		Set<String> keys = changes(before,
 				extract(context.getEnvironment().getPropertySources())).keySet();
 		if (keys.isEmpty()) {
 			return new String[0];
 		}
 		context.publishEvent(new EnvironmentChangeEvent(keys));
-		return keys.toArray(new String[keys.size()]);		
+		return keys.toArray(new String[keys.size()]);
+	}
+
+	private void addConfigFilesToEnvironment() {
+		ConfigurableApplicationContext capture = new SpringApplicationBuilder(Empty.class).showBanner(
+				false).web(false).environment(context.getEnvironment()).run();
+		MutablePropertySources target = context.getEnvironment().getPropertySources();
+		for (PropertySource<?> source : capture.getEnvironment().getPropertySources()) {
+			String name = source.getName();
+			if (!standardSources.contains(name)) {
+				if (target.contains(name)) {
+					target.replace(name, source);
+				} else {
+					if (target.contains("defaultProperties")) {
+						target.addBefore("defaultProperties", source);
+					} else {
+						target.addLast(source);
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -105,8 +130,11 @@ public class RefreshEndpoint extends AbstractEndpoint<Collection<String>> {
 
 	private Map<String, Object> extract(MutablePropertySources propertySources) {
 		Map<String, Object> result = new HashMap<String, Object>();
-		PropertySource<?> parent = propertySources.get("bootstrap");
-		extract(parent, result);
+		for (PropertySource<?> parent : propertySources) {
+			if (!standardSources.contains(parent.getName())) {
+				extract(parent, result);
+			}
+		}
 		return result;
 	}
 
@@ -129,6 +157,11 @@ public class RefreshEndpoint extends AbstractEndpoint<Collection<String>> {
 				result.put(key, parent.getProperty(key));
 			}
 		}
+	}
+
+	@Configuration
+	protected static class Empty {
+
 	}
 
 }

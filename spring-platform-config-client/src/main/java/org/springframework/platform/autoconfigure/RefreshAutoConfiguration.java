@@ -45,6 +45,7 @@ import org.springframework.platform.context.properties.ConfigurationPropertiesRe
 import org.springframework.platform.context.restart.RestartEndpoint;
 import org.springframework.platform.context.restart.RestartMvcEndpoint;
 import org.springframework.platform.context.scope.refresh.RefreshScope;
+import org.springframework.platform.endpoint.GenericPostableMvcEndpoint;
 
 @Configuration
 @ConditionalOnClass(RefreshScope.class)
@@ -88,21 +89,22 @@ public class RefreshAutoConfiguration {
 		@ConditionalOnClass(IntegrationMBeanExporter.class)
 		protected static class RefreshEndpointWithIntegration {
 
-			@Autowired
+			@Autowired(required=false)
 			private IntegrationMBeanExporter exporter;
 
 			@Bean
 			@ConditionalOnMissingBean
 			public RestartEndpoint restartEndpoint() {
 				RestartEndpoint endpoint = new RestartEndpoint();
-				if (exporter!=null) {
+				if (exporter != null) {
 					endpoint.setIntegrationMBeanExporter(exporter);
 				}
 				return endpoint;
 			}
+
 		}
 
-		@ConditionalOnMissingClass(name="org.springframework.integration.monitor.IntegrationMBeanExporter")
+		@ConditionalOnMissingClass(name = "org.springframework.integration.monitor.IntegrationMBeanExporter")
 		protected static class RefreshEndpointWithoutIntegration {
 
 			@Bean
@@ -131,11 +133,14 @@ public class RefreshAutoConfiguration {
 
 			@Bean
 			@ConditionalOnMissingBean
-			public RefreshEndpoint refreshEndpoint(
-					ConfigurableApplicationContext context,
-					ConfigServiceBootstrapConfiguration bootstrap) {
-				RefreshEndpoint endpoint = new RefreshEndpoint(context, bootstrap);
+			public RefreshEndpoint refreshEndpoint(ConfigurableApplicationContext context) {
+				RefreshEndpoint endpoint = new RefreshEndpoint(context);
 				return endpoint;
+			}
+
+			@Bean
+			public MvcEndpoint refreshMvcEndpoint(RefreshEndpoint endpoint) {
+				return new GenericPostableMvcEndpoint(endpoint);
 			}
 
 		}

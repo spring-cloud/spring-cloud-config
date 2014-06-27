@@ -13,28 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.platform.context.restart;
+package org.springframework.platform.endpoint;
 
 import java.util.Collections;
 import java.util.Map;
 
+import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointMvcAdapter;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.platform.endpoint.GenericPostableMvcEndpoint;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+public class GenericPostableMvcEndpoint extends EndpointMvcAdapter {
 
-/**
- * @author Dave Syer
- *
- */
-public class RestartMvcEndpoint extends EndpointMvcAdapter {
-
-	public RestartMvcEndpoint(RestartEndpoint delegate) {
+	public GenericPostableMvcEndpoint(Endpoint<?> delegate) {
 		super(delegate);
 	}
 
@@ -46,25 +40,7 @@ public class RestartMvcEndpoint extends EndpointMvcAdapter {
 			return new ResponseEntity<Map<String, String>>(Collections.singletonMap(
 					"message", "This endpoint is disabled"), HttpStatus.NOT_FOUND);
 		}
-		Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				RestartMvcEndpoint.super.invoke();
-			}
-		});
-		thread.setDaemon(false);
-		thread.start();
-		return Collections.singletonMap(
-				"message", "Restarting");
+		return super.invoke();
 	}
-	
-	public MvcEndpoint getPauseEndpoint() {
-		return new GenericPostableMvcEndpoint(((RestartEndpoint)getDelegate()).getPauseEndpoint());
-	}
-
-	public MvcEndpoint getResumeEndpoint() {
-		return new GenericPostableMvcEndpoint(((RestartEndpoint)getDelegate()).getResumeEndpoint());
-	}
-	
 
 }

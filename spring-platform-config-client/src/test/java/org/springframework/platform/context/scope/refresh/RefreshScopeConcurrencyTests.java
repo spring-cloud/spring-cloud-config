@@ -86,7 +86,7 @@ public class RefreshScopeConcurrencyTests {
 				}
 			}
 		});
-		assertTrue(latch.await(500, TimeUnit.MILLISECONDS));
+		assertTrue(latch.await(1500, TimeUnit.MILLISECONDS));
 		logger.info("Refreshing");
 		scope.refreshAll();
 		assertEquals("Foo", service.getMessage());
