@@ -84,7 +84,7 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 		this.timeout = timeout;
 	}
 
-	public void setIntegrationMBeanExporter(IntegrationMBeanExporter exporter) {
+	public void setIntegrationMBeanExporter(Object exporter) {
 		if (exporter != null) {
 			this.integrationShutdown = new IntegrationShutdown(exporter);
 		}
@@ -201,8 +201,8 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 
 		private IntegrationMBeanExporter exporter;
 
-		public IntegrationShutdown(IntegrationMBeanExporter exporter) {
-			this.exporter = exporter;
+		public IntegrationShutdown(Object exporter) {
+			this.exporter = (IntegrationMBeanExporter) exporter;
 		}
 
 		public void stop(boolean force, long timeout) {
