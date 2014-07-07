@@ -41,7 +41,7 @@ public class RestartIntegrationTests {
 	@Test
 	public void testRestartTwice() throws Exception {
 
-		context = SpringApplication.run(TestConfiguration.class, "--endpoints.restart.enabled=true", "--servert.port=0");
+		context = SpringApplication.run(TestConfiguration.class, "--endpoints.restart.enabled=true", "--server.port=0");
 		RestartEndpoint endpoint = context.getBean(RestartEndpoint.class);
 		assertNotNull(context.getParent());
 		assertNull(context.getParent().getParent());
