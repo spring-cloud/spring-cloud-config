@@ -43,7 +43,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<start-class>org.springframework.platform.config.server.Application</start-class>
+		<start-class>sample.Application</start-class>
 		<java.version>1.7</java.version>
 	</properties>
 

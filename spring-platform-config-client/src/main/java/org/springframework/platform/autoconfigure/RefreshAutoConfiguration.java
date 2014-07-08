@@ -46,6 +46,7 @@ import org.springframework.platform.context.restart.RestartEndpoint;
 import org.springframework.platform.context.restart.RestartMvcEndpoint;
 import org.springframework.platform.context.scope.refresh.RefreshScope;
 import org.springframework.platform.endpoint.GenericPostableMvcEndpoint;
+import org.springframework.platform.logging.LoggingRebinder;
 
 @Configuration
 @ConditionalOnClass(RefreshScope.class)
@@ -56,6 +57,12 @@ public class RefreshAutoConfiguration {
 	@ConditionalOnMissingBean
 	public static RefreshScope refreshScope() {
 		return new RefreshScope();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public static LoggingRebinder loggingRebinder() {
+		return new LoggingRebinder();
 	}
 
 	@Bean
