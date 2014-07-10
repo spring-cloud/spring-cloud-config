@@ -1,0 +1,5 @@
+spring:
+  platform:
+    config:
+      server:
+        basedir: target/config

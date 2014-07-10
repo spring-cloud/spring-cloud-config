@@ -3,6 +3,8 @@ info:
 spring:
   application:
     name: configserver
+  jmx:
+    default_domain: platform.config.server
 server:
   port: 8888
 management:

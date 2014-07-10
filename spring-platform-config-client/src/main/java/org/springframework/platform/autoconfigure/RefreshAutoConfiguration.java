@@ -94,7 +94,7 @@ public class RefreshAutoConfiguration {
 	protected static class RefreshEndpointsConfiguration {
 
 		@ConditionalOnClass(IntegrationMBeanExporter.class)
-		protected static class RefreshEndpointWithIntegration {
+		protected static class RestartEndpointWithIntegration {
 
 			@Autowired(required=false)
 			private IntegrationMBeanExporter exporter;
@@ -112,7 +112,7 @@ public class RefreshAutoConfiguration {
 		}
 
 		@ConditionalOnMissingClass(name = "org.springframework.integration.monitor.IntegrationMBeanExporter")
-		protected static class RefreshEndpointWithoutIntegration {
+		protected static class RestartEndpointWithoutIntegration {
 
 			@Bean
 			@ConditionalOnMissingBean
