@@ -103,6 +103,9 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			synchronized (this) {
 				SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
 				git.checkout().setName(label).call();
+				if (git.status().call().isClean()) {
+					git.pull().call();
+				}
 				String search = git.getRepository().getDirectory().getParent();
 				environment.setSearchLocations(search);
 				result = clean(environment.findOne(application, name, label));
