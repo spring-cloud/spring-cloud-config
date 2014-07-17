@@ -53,10 +53,13 @@ public class Application {
 	@Configuration
 	@Profile("!native")
 	protected static class GitRepositoryConfiguration {
+		@Autowired
+		private ConfigurableEnvironment environment;
+
 		@Bean
 		@ConfigurationProperties("spring.platform.config.server")
 		public JGitEnvironmentRepository repository() {
-			return new JGitEnvironmentRepository();
+			return new JGitEnvironmentRepository(environment);
 		}
 	}
 }

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-platform-config-server</artifactId>
-    <packaging>jar</packaging>
+	<packaging>jar</packaging>
 
 	<name>spring-platform-config-server</name>
 	<description>spring-platform-config-server</description>
@@ -16,10 +16,26 @@
 		<relativePath>..</relativePath>
 	</parent>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.platform</groupId>
+				<artifactId>spring-platform-netflix</artifactId>
+				<version>${spring-platform.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.platform</groupId>
 			<artifactId>spring-platform-config-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.platform</groupId>
+			<artifactId>spring-platform-netflix-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -35,6 +51,10 @@
 			<version>2.3.1.201302201838-r</version>
 		</dependency>
 		<dependency>
+			<groupId>com.netflix.eureka</groupId>
+			<artifactId>eureka-client</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
@@ -43,6 +63,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<spring-platform.version>${project.version}</spring-platform.version>
 		<start-class>org.springframework.platform.config.server.Application</start-class>
 		<java.version>1.7</java.version>
 	</properties>
@@ -52,6 +73,9 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<classifier>exec</classifier>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

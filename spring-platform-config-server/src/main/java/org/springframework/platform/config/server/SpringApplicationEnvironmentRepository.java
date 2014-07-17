@@ -55,6 +55,9 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 
 	private String[] getArgs(String config) {
 		List<String> list = new ArrayList<String>();
+		if (!config.startsWith("application")) {
+			config =  "application," + config;
+		}
 		list.add("--spring.config.name=" + config);
 		list.add("--spring.platform.bootstrap.enabled=false");
 		if (locations != null) {

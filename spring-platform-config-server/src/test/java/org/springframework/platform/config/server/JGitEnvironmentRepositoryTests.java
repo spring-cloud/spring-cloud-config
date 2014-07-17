@@ -24,6 +24,7 @@ import java.io.File;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.platform.config.Environment;
 
 /**
@@ -32,7 +33,7 @@ import org.springframework.platform.config.Environment;
  */
 public class JGitEnvironmentRepositoryTests {
 
-	private JGitEnvironmentRepository repository = new JGitEnvironmentRepository();
+	private JGitEnvironmentRepository repository = new JGitEnvironmentRepository(new StandardEnvironment());
 
 	private File basedir = new File("target/config-repo");
 

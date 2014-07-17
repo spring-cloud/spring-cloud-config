@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.util.FileUtils;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.platform.config.Environment;
 import org.springframework.platform.config.PropertySource;
 import org.springframework.util.Assert;
@@ -35,14 +36,17 @@ import org.springframework.util.Assert;
 public class JGitEnvironmentRepository implements EnvironmentRepository {
 
 	public static final String DEFAULT_URI = "https://github.com/scratches/config-repo";
-	
+
 	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
 
 	private File basedir;
 
 	private String uri = DEFAULT_URI;
 
-	public JGitEnvironmentRepository() {
+	private ConfigurableEnvironment environment;
+
+	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
+		this.environment = environment;
 		try {
 			final File basedir = Files.createTempDirectory("config-repo-").toFile();
 			Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -50,13 +54,15 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				public void run() {
 					try {
 						FileUtils.delete(basedir, FileUtils.RECURSIVE);
-					} catch (IOException e) {
+					}
+					catch (IOException e) {
 						logger.warn("Failed to delete temporary directory on exit: " + e);
 					}
 				}
 			});
 			this.basedir = basedir;
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new IllegalStateException("Cannot create temp dir", e);
 		}
 	}
@@ -67,8 +73,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		}
 		this.uri = uri;
 	}
-	
-	
+
 	public void setBasedir(File basedir) {
 		this.basedir = basedir;
 	}
@@ -80,12 +85,15 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			if (new File(basedir, ".git").exists()) {
 				git = Git.open(basedir);
 				git.fetch().call();
-			} else {
+			}
+			else {
 				if (basedir.exists()) {
 					try {
 						FileUtils.delete(basedir, FileUtils.RECURSIVE);
-					} catch (IOException e) {
-						throw new IllegalStateException("Failed to initialize base directory",  e);
+					}
+					catch (IOException e) {
+						throw new IllegalStateException(
+								"Failed to initialize base directory", e);
 					}
 				}
 				Assert.state(basedir.mkdirs(), "Could not create basedir: " + basedir);
@@ -100,7 +108,8 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				result = clean(environment.findOne(application, name, label));
 			}
 			return result;
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new IllegalStateException("Cannot clone repository", e);
 		}
 	}
@@ -109,9 +118,14 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		Environment result = new Environment(value.getName(), value.getLabel());
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName().replace(basedir.toURI().toString(), "");
+			if (name.contains(("classpath:/"))) {
+				continue;
+			}
+			if (environment.getPropertySources().contains(name)) {
+				continue;
+			}
 			name = name.replace("applicationConfig: [", "");
-			name = uri + "/"
-					+ name.substring(0, name.contains("]") ? name.lastIndexOf("]") : name.length());
+			name = uri + "/" + name.replace("]", "");
 			result.add(new PropertySource(name, source.getSource()));
 		}
 		return result;

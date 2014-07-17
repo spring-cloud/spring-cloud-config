@@ -38,6 +38,7 @@ import org.springframework.web.context.support.StandardServletEnvironment;
 public class NativeEnvironmentRepository implements EnvironmentRepository {
 
 	private Set<String> standardSources = new HashSet<String>(Arrays.asList(
+			"vcap",
 			StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
 			StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
 			StandardServletEnvironment.JNDI_PROPERTY_SOURCE_NAME,
