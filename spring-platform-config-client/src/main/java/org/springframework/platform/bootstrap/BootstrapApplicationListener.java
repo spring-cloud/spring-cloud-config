@@ -66,7 +66,7 @@ public class BootstrapApplicationListener implements
 		if (environment instanceof ConfigurableEnvironment) {
 			ConfigurableEnvironment configurable = (ConfigurableEnvironment) environment;
 			// don't listen to events in a bootstrap context
-			if (configurable.getPropertySources().contains("bootstrap")) {
+			if (configurable.getPropertySources().contains("bootstrapInProgress")) {
 				return;
 			}
 			ConfigurableApplicationContext context = bootstrapServiceContext(
@@ -82,6 +82,7 @@ public class BootstrapApplicationListener implements
 		for (PropertySource<?> source : bootstrapProperties) {
 			bootstrapProperties.remove(source.getName());
 		}
+		bootstrapProperties.addFirst(new MapPropertySource("bootstrapInProgress", Collections.<String,Object>emptyMap()));
 		for (PropertySource<?> source : environment.getPropertySources()) {
 			bootstrapProperties.addLast(source);
 		}
@@ -100,6 +101,7 @@ public class BootstrapApplicationListener implements
 		final ConfigurableApplicationContext context = builder.run();
 		// Make the bootstrap context a parent of the app context
 		addAncestorInitializer(application, context);
+		bootstrapProperties.remove("bootstrapInProgress");
 		return context;
 	}
 
