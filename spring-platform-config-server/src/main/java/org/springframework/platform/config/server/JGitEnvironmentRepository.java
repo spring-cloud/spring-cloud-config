@@ -79,7 +79,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	}
 
 	@Override
-	public Environment findOne(String application, String name, String label) {
+	public Environment findOne(String application, String profile, String label) {
 		try {
 			Git git;
 			if (new File(basedir, ".git").exists()) {
@@ -108,7 +108,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				}
 				String search = git.getRepository().getDirectory().getParent();
 				environment.setSearchLocations(search);
-				result = clean(environment.findOne(application, name, label));
+				result = clean(environment.findOne(application, profile, label));
 			}
 			return result;
 		}
