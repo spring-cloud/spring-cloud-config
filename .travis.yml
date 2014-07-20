@@ -3,5 +3,5 @@ install: mvn install -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFil
 script: mvn --settings .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true
 env:
   global:
-  - secure: JXDn4awZAYbhxPV9PIn0I+wUv+PwLJ5TLWFVW2q9rQqeJVDJd3KB0WRXSFOi03g/rGFbN0j+JCqgJPW/I91yEwC55AWbr2DG9fB7HuyQe6OKNT7qZkmoDxrfkYhaN7OLwcNf7vP4kXwzKqIbmSLfsrF1M/aVAPdXw9u6TPL+9i0=
-  - secure: cwftjc6405DztK+P2oJYsxSZWYqozsAWPaLPzuqq/1bTjp+3WAPkV+/OGWiZDW7Exd/z958McQMSONIab/CgLvfenrYc38ErjKstdovyduYs905aVitlUk19dOiH35qJgeFl9+6zNWIOB4OysWsBmdnmtbk1avM/v/Ove3bJvcE=
+  - secure: aomAMudvGhboHcPQDfZ9xFv0ThFMD53aCbX8f9DE0X6GudmdG4fcI02BDfIwFiDG8TG0DZl5brHCzbfgvylNv+Z54GwhzrMytUGv3sn2Meal5bhHm6opjHARqKzNnV8IHRYTVAZbBZK/9eUWIyQtxEL+fmK3PtzlTRshT81hI8I=
+  - secure: YhCHblp6q9FF4kCB4OlvqVpmMjysObdFuioDstRdvCc7V5fpxwnaGlt46qXAEsYbbdAw4YTibFid9vwyGT/cqbmaq5q0l5qrxEbe/sOdM1TTnH4rLIDLdSdhub3J18WWxtHlF4NmhmR3XL0bOIWjNvgoLkPyc6acILn+8FBzC4c=
