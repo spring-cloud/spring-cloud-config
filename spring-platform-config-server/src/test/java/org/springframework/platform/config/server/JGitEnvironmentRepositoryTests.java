@@ -48,7 +48,7 @@ public class JGitEnvironmentRepositoryTests {
 	public void vanilla() {
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertEquals(1, environment.getPropertySources().size());
+		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(JGitEnvironmentRepository.DEFAULT_URI + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
 	}
@@ -58,7 +58,7 @@ public class JGitEnvironmentRepositoryTests {
 		repository.setBasedir(basedir);
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertEquals(1, environment.getPropertySources().size());
+		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(JGitEnvironmentRepository.DEFAULT_URI + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
 	}
@@ -70,7 +70,7 @@ public class JGitEnvironmentRepositoryTests {
 		repository.setBasedir(basedir);
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertEquals(1, environment.getPropertySources().size());
+		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(JGitEnvironmentRepository.DEFAULT_URI + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
 	}

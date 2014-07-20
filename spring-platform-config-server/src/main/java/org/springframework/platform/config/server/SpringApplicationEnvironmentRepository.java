@@ -17,11 +17,15 @@
 package org.springframework.platform.config.server;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.platform.config.Environment;
 import org.springframework.util.StringUtils;
 
@@ -42,21 +46,35 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 	public Environment findOne(String config, String profile, String label) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(
 				PropertyPlaceholderAutoConfiguration.class);
-		builder.profiles(profile.split(",")).web(false).showBanner(false);
+		ConfigurableEnvironment environment = getEnvironment(profile);
+		builder.environment(environment);
+		builder.web(false).showBanner(false);
 		String[] args = getArgs(config);
 		ConfigurableApplicationContext context = builder.run(args);
+		environment.getPropertySources().remove("profiles");
 		try {
-			return new NativeEnvironmentRepository(context.getEnvironment()).findOne(
+			return new NativeEnvironmentRepository(environment).findOne(
 					config, profile, label);
-		} finally {
+		}
+		finally {
 			context.close();
 		}
+	}
+
+	private ConfigurableEnvironment getEnvironment(String profile) {
+		ConfigurableEnvironment environment = new StandardEnvironment();
+		environment.getPropertySources()
+				.addFirst(
+						new MapPropertySource("profiles", Collections
+								.<String, Object> singletonMap("spring.profiles.active",
+										profile)));
+		return environment;
 	}
 
 	private String[] getArgs(String config) {
 		List<String> list = new ArrayList<String>();
 		if (!config.startsWith("application")) {
-			config =  "application," + config;
+			config = "application," + config;
 		}
 		list.add("--spring.config.name=" + config);
 		list.add("--spring.platform.bootstrap.enabled=false");

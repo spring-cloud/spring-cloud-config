@@ -32,6 +32,13 @@ public class SpringApplicationEnvironmentRepositoryTests {
 	@Test
 	public void vanilla() {
 		Environment environment = repository.findOne("foo", "development", "master");
+		assertEquals(3, environment.getPropertySources().size());
+	}
+
+	@Test
+	public void ignoresExistingProfile() {
+		System.setProperty("spring.profiles.active", "cloud");
+		Environment environment = repository.findOne("foo", "main", "master");
 		assertEquals(2, environment.getPropertySources().size());
 	}
 
@@ -39,14 +46,14 @@ public class SpringApplicationEnvironmentRepositoryTests {
 	public void prefixed() {
 		repository.setSearchLocations("classpath:/test");
 		Environment environment = repository.findOne("foo", "development", "master");
-		assertEquals(3, environment.getPropertySources().size());
+		assertEquals(4, environment.getPropertySources().size());
 	}
 
 	@Test
 	public void prefixedWithFile() {
 		repository.setSearchLocations("file:./src/test/resources/test");
 		Environment environment = repository.findOne("foo", "development", "master");
-		assertEquals(3, environment.getPropertySources().size());
+		assertEquals(4, environment.getPropertySources().size());
 	}
 
 }
