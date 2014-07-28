@@ -30,10 +30,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.env.CompositePropertySource;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.platform.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.platform.config.client.PropertySourceLocator;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Dave Syer
@@ -44,14 +46,16 @@ import org.springframework.platform.config.client.PropertySourceLocator;
 public class ConfigServiceBootstrapConfiguration implements
 		ApplicationContextInitializer<ConfigurableApplicationContext> {
 
-	private static Log logger = LogFactory.getLog(ConfigServiceBootstrapConfiguration.class);
+	private static Log logger = LogFactory
+			.getLog(ConfigServiceBootstrapConfiguration.class);
 
 	@Autowired(required = false)
 	private List<PropertySourceLocator> propertySourceLocators = new ArrayList<PropertySourceLocator>();
-	
+
 	public void setPropertySourceLocators(
 			Collection<PropertySourceLocator> propertySourceLocators) {
-		this.propertySourceLocators = new ArrayList<PropertySourceLocator>(propertySourceLocators);
+		this.propertySourceLocators = new ArrayList<PropertySourceLocator>(
+				propertySourceLocators);
 	}
 
 	@Override
@@ -63,7 +67,8 @@ public class ConfigServiceBootstrapConfiguration implements
 			PropertySource<?> source = null;
 			try {
 				source = locator.locate();
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				logger.error("Could not locate PropertySource: " + e.getMessage());
 			}
 			if (source == null) {
@@ -74,18 +79,24 @@ public class ConfigServiceBootstrapConfiguration implements
 			empty = false;
 		}
 		if (!empty) {
-			MutablePropertySources propertySources = applicationContext.getEnvironment().getPropertySources();
+			MutablePropertySources propertySources = applicationContext.getEnvironment()
+					.getPropertySources();
 			if (propertySources.contains("bootstrap")) {
 				propertySources.replace("bootstrap", composite);
-			} else {
+			}
+			else {
 				propertySources.addFirst(composite);
 			}
 		}
 	}
 
 	@Bean
-	public ConfigServicePropertySourceLocator configServicePropertySource() {
-		return new ConfigServicePropertySourceLocator();
+	public ConfigServicePropertySourceLocator configServicePropertySource(
+			ConfigurableEnvironment environment) {
+		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator();
+		locator.setEnv(StringUtils.arrayToCommaDelimitedString(environment
+				.getActiveProfiles()));
+		return locator;
 	}
 
 }
