@@ -26,6 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand;
+import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.util.FileUtils;
@@ -118,14 +120,16 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				git.fetch().call();
 				git.getRepository().getConfig().setString("branch", label, "merge", label);
 				CheckoutCommand checkout = git.checkout();
-				if (!containsBranch(git, label)) {
+				if (isBranch(git, label) && !isLocalBranch(git, label)) {
 					trackBranch(git, checkout, label);
 				}
 				else {
+					// works for tags and local branches
 					checkout.setName(label);
 				}
-				checkout.call();
-				if (git.status().call().isClean()) {
+				Ref ref = checkout.call();
+				if (git.status().call().isClean() && ref!=null) {
+					// Assumes we are on a tracking branch (should be safe)
 					git.pull().call();
 				}
 				String search = git.getRepository().getDirectory().getParent();
@@ -145,10 +149,22 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				.setStartPoint("origin/" + label);
 	}
 
-	private boolean containsBranch(Git git, String label) throws GitAPIException {
-		List<Ref> branches = git.branchList().call();
+	private boolean isBranch(Git git, String label) throws GitAPIException {
+		return containsBranch(git, label, ListMode.ALL);
+	}
+	
+	private boolean isLocalBranch(Git git, String label) throws GitAPIException {
+		return containsBranch(git, label, null);
+	}
+	
+	private boolean containsBranch(Git git, String label, ListMode listMode) throws GitAPIException {
+		ListBranchCommand command = git.branchList();
+		if (listMode!=null) {
+			command.setListMode(listMode);
+		}
+		List<Ref> branches = command.call();
 		for (Ref ref : branches) {
-			if (ref.getName().equals("refs/heads/" + label)) {
+			if (ref.getName().endsWith("/" + label)) {
 				return true;
 			}
 		}

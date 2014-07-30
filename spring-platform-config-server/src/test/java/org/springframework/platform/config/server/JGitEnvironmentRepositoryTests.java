@@ -77,6 +77,15 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void tag() {
+		repository.setBasedir(basedir);
+		Environment environment = repository.findOne("bar", "staging", "foo");
+		assertEquals(2, environment.getPropertySources().size());
+		assertEquals(repository.getUri() + "/bar.properties",
+				environment.getPropertySources().get(0).getName());
+	}
+
+	@Test
 	public void basedir() {
 		repository.setBasedir(basedir);
 		repository.findOne("bar", "staging", "master");
