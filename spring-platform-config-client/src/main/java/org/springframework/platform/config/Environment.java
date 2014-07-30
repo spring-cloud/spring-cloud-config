@@ -58,4 +58,10 @@ public class Environment {
 		return label;
 	}
 
+	@Override
+	public String toString() {
+		return "Environment [name=" + name + ", label=" + label + ", propertySources="
+				+ propertySources + "]";
+	}
+
 }

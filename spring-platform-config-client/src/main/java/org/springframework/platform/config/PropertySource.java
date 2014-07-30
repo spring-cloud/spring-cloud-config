@@ -25,6 +25,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author Dave Syer
  *
  */
+/**
+ * @author Dave Syer
+ *
+ */
 public class PropertySource {
 
 	private String name;
@@ -44,6 +48,11 @@ public class PropertySource {
 
 	public Map<?, ?> getSource() {
 		return source;
+	}
+
+	@Override
+	public String toString() {
+		return "PropertySource [name=" + name + "]";
 	}
 
 }

@@ -19,10 +19,15 @@ package org.springframework.platform.config.server;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.platform.config.Environment;
@@ -74,8 +79,16 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		this.uri = uri;
 	}
 
+	public String getUri() {
+		return uri;
+	}
+
 	public void setBasedir(File basedir) {
-		this.basedir = basedir;
+		this.basedir = basedir.getAbsoluteFile();
+	}
+
+	public File getBasedir() {
+		return basedir;
 	}
 
 	@Override
@@ -102,7 +115,16 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			Environment result;
 			synchronized (this) {
 				SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
-				git.checkout().setName(label).call();
+				git.fetch().call();
+				git.getRepository().getConfig().setString("branch", label, "merge", label);
+				CheckoutCommand checkout = git.checkout();
+				if (!containsBranch(git, label)) {
+					trackBranch(git, checkout, label);
+				}
+				else {
+					checkout.setName(label);
+				}
+				checkout.call();
 				if (git.status().call().isClean()) {
 					git.pull().call();
 				}
@@ -115,6 +137,22 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot clone repository", e);
 		}
+	}
+
+	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
+		checkout.setCreateBranch(true).setName(label)
+				.setUpstreamMode(SetupUpstreamMode.TRACK)
+				.setStartPoint("origin/" + label);
+	}
+
+	private boolean containsBranch(Git git, String label) throws GitAPIException {
+		List<Ref> branches = git.branchList().call();
+		for (Ref ref : branches) {
+			if (ref.getName().equals("refs/heads/" + label)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private Environment clean(Environment value) {
