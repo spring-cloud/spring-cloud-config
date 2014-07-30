@@ -1,4 +1,5 @@
 language: java
+before_install: git clone https://github.com/dsyer/spring-security-rsa tmp && (cd tmp && mvn install -DskipTests=true)
 install: mvn install -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
 script: mvn --settings .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true
 env:
