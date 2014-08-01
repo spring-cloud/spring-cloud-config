@@ -150,7 +150,7 @@ public class EncryptionController {
 
 	@ExceptionHandler(InvalidCipherException.class)
 	@ResponseBody
-	public ResponseEntity<Map<String, Object>> invlidCipher() {
+	public ResponseEntity<Map<String, Object>> invalidCipher() {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "INVALID");
 		body.put("description", "Text not encrypted with this key");

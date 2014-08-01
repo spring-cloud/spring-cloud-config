@@ -39,7 +39,8 @@ import com.jcraft.jsch.Session;
 public class JGitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
-	private JGitEnvironmentRepository repository = new JGitEnvironmentRepository(environment);
+	private JGitEnvironmentRepository repository = new JGitEnvironmentRepository(
+			environment);
 
 	private File basedir = new File("target/config-repo");
 
@@ -51,8 +52,17 @@ public class JGitEnvironmentRepositoryTests {
 				session.setConfig("StrictHostKeyChecking", "no");
 			}
 		});
-		new File("target/test-classes/config-repo/git").renameTo(new File("target/test-classes/config-repo/.git"));
-		repository.setUri(environment.resolvePlaceholders("${user.name}@localhost:${user.dir}/target/test-classes/config-repo"));
+		File dotGit = new File("target/test-classes/config-repo/.git");
+		File git = new File("target/test-classes/config-repo/git");
+		if (git.exists()) {
+			if (dotGit.exists()) {
+				FileUtils.delete(dotGit, FileUtils.RECURSIVE);
+			}
+		}
+		git.renameTo(dotGit);
+		repository
+				.setUri(environment
+						.resolvePlaceholders("${user.name}@localhost:${user.dir}/target/test-classes/config-repo"));
 		if (basedir.exists()) {
 			FileUtils.delete(basedir, FileUtils.RECURSIVE);
 		}
@@ -63,8 +73,8 @@ public class JGitEnvironmentRepositoryTests {
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertEquals(repository.getUri() + "/bar.properties", environment
+				.getPropertySources().get(0).getName());
 	}
 
 	@Test
@@ -72,8 +82,8 @@ public class JGitEnvironmentRepositoryTests {
 		repository.setBasedir(basedir);
 		Environment environment = repository.findOne("bar", "staging", "raw");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertEquals(repository.getUri() + "/bar.properties", environment
+				.getPropertySources().get(0).getName());
 	}
 
 	@Test
@@ -81,8 +91,8 @@ public class JGitEnvironmentRepositoryTests {
 		repository.setBasedir(basedir);
 		Environment environment = repository.findOne("bar", "staging", "foo");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertEquals(repository.getUri() + "/bar.properties", environment
+				.getPropertySources().get(0).getName());
 	}
 
 	@Test
@@ -91,8 +101,8 @@ public class JGitEnvironmentRepositoryTests {
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertEquals(repository.getUri() + "/bar.properties", environment
+				.getPropertySources().get(0).getName());
 	}
 
 	@Test
@@ -103,8 +113,8 @@ public class JGitEnvironmentRepositoryTests {
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertEquals(repository.getUri() + "/bar.properties", environment
+				.getPropertySources().get(0).getName());
 	}
 
 }

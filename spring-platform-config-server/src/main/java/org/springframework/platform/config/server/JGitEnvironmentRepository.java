@@ -30,6 +30,7 @@ import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.platform.config.Environment;
@@ -99,7 +100,12 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			Git git;
 			if (new File(basedir, ".git").exists()) {
 				git = Git.open(basedir);
-				git.fetch().call();
+				try {
+					git.fetch().call();
+				}
+				catch (Exception e) {
+					logger.warn("Remote repository not available");
+				}
 			}
 			else {
 				if (basedir.exists()) {
@@ -117,18 +123,19 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			Environment result;
 			synchronized (this) {
 				SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
-				git.fetch().call();
-				git.getRepository().getConfig().setString("branch", label, "merge", label);
+				git.getRepository().getConfig()
+						.setString("branch", label, "merge", label);
 				CheckoutCommand checkout = git.checkout();
 				if (isBranch(git, label) && !isLocalBranch(git, label)) {
 					trackBranch(git, checkout, label);
 				}
 				else {
+					git.fetch().setTagOpt(TagOpt.FETCH_TAGS).call();
 					// works for tags and local branches
 					checkout.setName(label);
 				}
 				Ref ref = checkout.call();
-				if (git.status().call().isClean() && ref!=null) {
+				if (git.status().call().isClean() && ref != null) {
 					// Assumes we are on a tracking branch (should be safe)
 					git.pull().call();
 				}
@@ -152,14 +159,15 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	private boolean isBranch(Git git, String label) throws GitAPIException {
 		return containsBranch(git, label, ListMode.ALL);
 	}
-	
+
 	private boolean isLocalBranch(Git git, String label) throws GitAPIException {
 		return containsBranch(git, label, null);
 	}
-	
-	private boolean containsBranch(Git git, String label, ListMode listMode) throws GitAPIException {
+
+	private boolean containsBranch(Git git, String label, ListMode listMode)
+			throws GitAPIException {
 		ListBranchCommand command = git.branchList();
-		if (listMode!=null) {
+		if (listMode != null) {
 			command.setListMode(listMode);
 		}
 		List<Ref> branches = command.call();
