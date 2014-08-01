@@ -35,7 +35,7 @@ import org.springframework.web.client.RestTemplate;
 @ConfigurationProperties("spring.platform.config")
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
 
-	private String env = "development";
+	private String env = "default";
 
 	@Value("${spring.application.name:'application'}")
 	private String name;

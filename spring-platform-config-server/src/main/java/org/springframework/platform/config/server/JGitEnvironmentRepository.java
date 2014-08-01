@@ -30,7 +30,6 @@ import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.platform.config.Environment;
@@ -130,14 +129,17 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 					trackBranch(git, checkout, label);
 				}
 				else {
-					git.fetch().setTagOpt(TagOpt.FETCH_TAGS).call();
 					// works for tags and local branches
 					checkout.setName(label);
 				}
 				Ref ref = checkout.call();
 				if (git.status().call().isClean() && ref != null) {
 					// Assumes we are on a tracking branch (should be safe)
-					git.pull().call();
+					try {
+						git.pull().call();
+					} catch (Exception e) {
+						logger.warn("Could not pull remote for " + label + " (current ref=" + ref + ")");
+					}
 				}
 				String search = git.getRepository().getDirectory().getParent();
 				environment.setSearchLocations(search);

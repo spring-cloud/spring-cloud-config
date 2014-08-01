@@ -94,8 +94,11 @@ public class ConfigServiceBootstrapConfiguration implements
 	public ConfigServicePropertySourceLocator configServicePropertySource(
 			ConfigurableEnvironment environment) {
 		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator();
-		locator.setEnv(StringUtils.arrayToCommaDelimitedString(environment
-				.getActiveProfiles()));
+		String[] profiles = environment.getActiveProfiles();
+		if (profiles.length==0) {
+			profiles = environment.getDefaultProfiles();
+		}
+		locator.setEnv(StringUtils.arrayToCommaDelimitedString(profiles));
 		return locator;
 	}
 
