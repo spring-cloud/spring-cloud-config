@@ -15,6 +15,8 @@
  */
 package org.springframework.platform.config.server;
 
+import java.io.IOException;
+import java.security.KeyPair;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -23,20 +25,25 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.platform.config.Environment;
 import org.springframework.platform.config.PropertySource;
+import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
+import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Dave Syer
@@ -44,7 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class EncryptionController {
-	
+
 	private static Log logger = LogFactory.getLog(EncryptionController.class);
 
 	// TODO: expose as config property
@@ -52,7 +59,7 @@ public class EncryptionController {
 
 	private TextEncryptor encryptor;
 
-	@Autowired(required=false)
+	@Autowired(required = false)
 	public void setEncryptor(TextEncryptor encryptor) {
 		this.encryptor = encryptor;
 	}
@@ -65,7 +72,30 @@ public class EncryptionController {
 		return ((RsaKeyHolder) encryptor).getPublicKey();
 	}
 
-	@RequestMapping(value = "/key", method = RequestMethod.PUT)
+	@RequestMapping(value = "/key", method = RequestMethod.POST, params = { "password" })
+	public ResponseEntity<Map<String, Object>> uploadKeyStore(
+			@RequestParam("file") MultipartFile file,
+			@RequestParam("password") String password, @RequestParam("alias") String alias) {
+
+		Map<String, Object> body = new HashMap<String, Object>();
+		body.put("status", "OK");
+
+		try {
+			ByteArrayResource resource = new ByteArrayResource(file.getBytes());
+			KeyPair keyPair = new KeyStoreKeyFactory(resource, password.toCharArray())
+					.getKeyPair(alias);
+			encryptor = new RsaSecretEncryptor(keyPair);
+			body.put("publicKey", ((RsaKeyHolder) encryptor).getPublicKey());
+		}
+		catch (IOException e) {
+			throw new KeyFormatException();
+		}
+
+		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.CREATED);
+
+	}
+
+	@RequestMapping(value = "/key", method = RequestMethod.POST, params = { "!password" })
 	public ResponseEntity<Map<String, Object>> uploadKey(@RequestBody String data) {
 
 		Map<String, Object> body = new HashMap<String, Object>();
@@ -98,7 +128,7 @@ public class EncryptionController {
 	public ResponseEntity<Map<String, Object>> keyFormat() {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "BAD_REQUEST");
-		body.put("description", "Key data not in PEM format");
+		body.put("description", "Key data not in correct format (PEM or jks keystore)");
 		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.BAD_REQUEST);
 	}
 
@@ -124,6 +154,7 @@ public class EncryptionController {
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
+		data = stripFormData(data);
 		return encryptor.encrypt(data);
 	}
 
@@ -133,10 +164,23 @@ public class EncryptionController {
 			throw new KeyNotInstalledException();
 		}
 		try {
+			data = stripFormData(data);
 			return encryptor.decrypt(data);
-		} catch (IllegalArgumentException e) {
+		}
+		catch (IllegalArgumentException e) {
 			throw new InvalidCipherException();
 		}
+	}
+
+	private String stripFormData(String data) {
+
+		if (data.endsWith("=") && !Base64.isBase64(data.getBytes())) {
+			// User posted data with content type form but meant it to be text/plain
+			data = data.substring(0, data.length() - 1);
+		}
+
+		return data;
+
 	}
 
 	@ExceptionHandler(KeyNotInstalledException.class)
@@ -174,14 +218,16 @@ public class EncryptionController {
 					}
 					else {
 						try {
-							value = value == null ? null
-									: encryptor.decrypt(value.toString());
-						} catch (Exception e) {
+							value = value == null ? null : encryptor.decrypt(value
+									.toString());
+						}
+						catch (Exception e) {
 							value = "<n/a>";
 							name = "invalid." + name;
-							logger.warn("Cannot decode key: " + key + " (" + e.getClass() + ": " + e.getMessage() + ")");
+							logger.warn("Cannot decode key: " + key + " (" + e.getClass()
+									+ ": " + e.getMessage() + ")");
 						}
-						map.put(name,value);
+						map.put(name, value);
 					}
 				}
 			}
