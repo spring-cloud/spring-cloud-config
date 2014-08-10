@@ -82,7 +82,7 @@ public class EncryptionControllerTests {
 		String cipher = controller.encrypt("foo");
 		Environment environment = new Environment("foo", "bar");
 		environment.add(new PropertySource("spam", Collections
-				.<Object, Object> singletonMap("my.secret", cipher)));
+				.<Object, Object> singletonMap("my", "{cipher}" + cipher)));
 		Environment result = controller.decrypt(environment);
 		assertEquals("foo", result.getPropertySources().get(0).getSource().get("my"));
 	}

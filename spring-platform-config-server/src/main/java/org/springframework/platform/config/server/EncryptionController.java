@@ -209,22 +209,21 @@ public class EncryptionController {
 					source.getSource());
 			for (Object key : map.keySet()) {
 				String name = key.toString();
-				if (name.endsWith(".secret")) {
-					Object value = map.get(key);
+				String value = map.get(key).toString();
+				if (value.startsWith("{cipher}")) {
 					map.remove(key);
-					name = name.substring(0, name.length() - ".secret".length());
 					if (encryptor == null) {
 						map.put(name, value);
 					}
 					else {
 						try {
 							value = value == null ? null : encryptor.decrypt(value
-									.toString());
+									.substring("{cipher}".length()));
 						}
 						catch (Exception e) {
 							value = "<n/a>";
 							name = "invalid." + name;
-							logger.warn("Cannot decode key: " + key + " (" + e.getClass()
+							logger.warn("Cannot decrypt key: " + key + " (" + e.getClass()
 									+ ": " + e.getMessage() + ")");
 						}
 						map.put(name, value);
