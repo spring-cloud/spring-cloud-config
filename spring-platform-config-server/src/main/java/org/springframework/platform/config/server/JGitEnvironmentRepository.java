@@ -42,7 +42,7 @@ import org.springframework.util.Assert;
  */
 public class JGitEnvironmentRepository implements EnvironmentRepository {
 
-	public static final String DEFAULT_URI = "https://github.com/scratches/config-repo";
+	public static final String DEFAULT_URI = "https://github.com/spring-platform-samples/config-repo";
 
 	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
 
