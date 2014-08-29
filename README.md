@@ -16,7 +16,7 @@ labelled versions of configuration environments.
 Start the server:
 
 ```
-$ cd spring-platform-config-server
+$ cd spring-cloud-config-server
 $ mvn spring-boot:run
 ```
 
@@ -51,7 +51,7 @@ list of properties), and "label" is an optional git label (defaults to
 ### Client Side Usage
 
 To use these features in an application, just build it as a Spring
-Boot application that depends on spring-platform-config-client
+Boot application that depends on spring-cloud-config-client
 (e.g. see the test cases for the config-client, or the sample app).
 When it runs it will pick up the external configuration from the
 default local config server on port 8888 if it is running. To modify
@@ -84,7 +84,7 @@ repository>/<file name>" contains the property "foo" with value
 ## Sample Application
 
 There is a sample application
-[here](https://github.com/spring-platform/spring-platform-config/spring-platform-config-sample). It
+[here](https://github.com/spring-cloud/spring-cloud-config-sample). It
 is a Spring Boot application so you can run it using the usual
 mechanisms (for instance "mvn spring-boot:run"). When it runs it will
 look for the config server on "http://localhost:8888" by default, so
