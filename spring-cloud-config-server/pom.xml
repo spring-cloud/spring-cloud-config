@@ -3,15 +3,15 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>spring-platform-config-server</artifactId>
+	<artifactId>spring-cloud-config-server</artifactId>
 	<packaging>jar</packaging>
 
-	<name>spring-platform-config-server</name>
-	<description>spring-platform-config-server</description>
+	<name>spring-cloud-config-server</name>
+	<description>spring-cloud-config-server</description>
 
 	<parent>
-		<groupId>org.springframework.platform</groupId>
-		<artifactId>spring-platform-config</artifactId>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-config</artifactId>
 		<version>1.0.0.BUILD-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
@@ -19,9 +19,9 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>org.springframework.platform</groupId>
-				<artifactId>spring-platform-netflix</artifactId>
-				<version>${spring-platform.version}</version>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-netflix</artifactId>
+				<version>${spring-cloud.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -30,12 +30,12 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.platform</groupId>
-			<artifactId>spring-platform-config-client</artifactId>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-config-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.platform</groupId>
-			<artifactId>spring-platform-netflix-core</artifactId>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-netflix-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -76,8 +76,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring-platform.version>${project.version}</spring-platform.version>
-		<start-class>org.springframework.platform.config.server.Application</start-class>
+		<spring-cloud.version>${project.version}</spring-cloud.version>
+		<start-class>org.springframework.cloud.config.server.Application</start-class>
 		<java.version>1.7</java.version>
 	</properties>
 

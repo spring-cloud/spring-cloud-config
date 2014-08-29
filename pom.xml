@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.springframework.platform</groupId>
-	<artifactId>spring-platform-config</artifactId>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-config</artifactId>
 	<version>1.0.0.BUILD-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>Spring Platform Config</name>
-	<description>Spring Platform Config</description>
-	<url>http://projects.spring.io/spring-platform/</url>
+	<name>Spring Cloud Config</name>
+	<description>Spring Cloud Config</description>
+	<url>http://projects.spring.io/spring-cloud/</url>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -15,9 +15,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<modules>
-	  <module>spring-platform-config-client</module>
-	  <module>spring-platform-config-server</module>
-	  <module>spring-platform-config-sample</module>
+	  <module>spring-cloud-config-client</module>
+	  <module>spring-cloud-config-server</module>
+	  <module>spring-cloud-config-sample</module>
 	</modules>
 	<organization>
 		<name>Pivotal Software, Inc.</name>
@@ -30,7 +30,7 @@
 		</license>
 	</licenses>
 	<scm>
-		<url>https://github.com/spring-platform/spring-platform-config</url>
+		<url>https://github.com/spring-cloud/spring-cloud-config</url>
 	</scm>
 	<developers>
 		<developer>
@@ -139,13 +139,13 @@
     <dependencyManagement>
       <dependencies>
 		<dependency>
-			<groupId>org.springframework.platform</groupId>
-			<artifactId>spring-platform-config-client</artifactId>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-config-client</artifactId>
 	        <version>1.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.platform</groupId>
-			<artifactId>spring-platform-config-server</artifactId>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-config-server</artifactId>
 	        <version>1.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
       </dependencies>
