@@ -30,7 +30,7 @@ public class ApplicationTests {
 	@BeforeClass
 	public static void startConfigServer() {
 		ConfigurableApplicationContext context = SpringApplication.run(
-				org.springframework.platform.config.server.Application.class,
+				org.springframework.cloud.config.server.Application.class,
 				"--server.port=" + configPort, "--spring.config.name=server");
 		configPort = ((EmbeddedWebApplicationContext) context).getEmbeddedServletContainer().getPort();
 		System.setProperty("config.port", "" + configPort);
