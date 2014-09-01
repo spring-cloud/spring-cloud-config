@@ -24,6 +24,7 @@ import java.util.Collections;
 import org.junit.Test;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
+import org.springframework.http.MediaType;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 
 /**
@@ -36,7 +37,7 @@ public class EncryptionControllerTests {
 
 	@Test(expected = KeyNotInstalledException.class)
 	public void cannotDecryptWithoutKey() {
-		controller.decrypt("foo");
+		controller.decrypt("foo", MediaType.TEXT_PLAIN);
 	}
 
 	@Test(expected = KeyFormatException.class)
@@ -52,21 +53,21 @@ public class EncryptionControllerTests {
 	@Test(expected = InvalidCipherException.class)
 	public void invalidCipher() {
 		controller.uploadKey("foo");
-		controller.decrypt("foo");
+		controller.decrypt("foo", MediaType.TEXT_PLAIN);
 	}
 
 	@Test
 	public void sunnyDaySymmetricKey() {
 		controller.uploadKey("foo");
-		String cipher = controller.encrypt("foo");
-		assertEquals("foo", controller.decrypt(cipher));
+		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);
+		assertEquals("foo", controller.decrypt(cipher, MediaType.TEXT_PLAIN));
 	}
 
 	@Test
 	public void sunnyDayRsaKey() {
 		controller.setEncryptor(new RsaSecretEncryptor());
-		String cipher = controller.encrypt("foo");
-		assertEquals("foo", controller.decrypt(cipher));
+		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);
+		assertEquals("foo", controller.decrypt(cipher, MediaType.TEXT_PLAIN));
 	}
 
 	@Test
@@ -79,7 +80,7 @@ public class EncryptionControllerTests {
 	@Test
 	public void decryptEnvironment() {
 		controller.uploadKey("foo");
-		String cipher = controller.encrypt("foo");
+		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);
 		Environment environment = new Environment("foo", "bar");
 		environment.add(new PropertySource("spam", Collections
 				.<Object, Object> singletonMap("my", "{cipher}" + cipher)));
@@ -90,8 +91,8 @@ public class EncryptionControllerTests {
 	@Test
 	public void randomizedCipher() {
 		controller.uploadKey("foo");
-		String cipher = controller.encrypt("foo");
-		assertNotEquals(cipher, controller.encrypt("foo"));
+		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);
+		assertNotEquals(cipher, controller.encrypt("foo", MediaType.TEXT_PLAIN));
 	}
 
 }

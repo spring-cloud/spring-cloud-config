@@ -25,12 +25,12 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
-import org.springframework.security.crypto.codec.Base64;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
@@ -38,6 +38,7 @@ import org.springframework.security.rsa.crypto.RsaKeyHolder;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -150,21 +151,21 @@ public class EncryptionController {
 	}
 
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
-	public String encrypt(@RequestBody String data) {
+	public String encrypt(@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
-		data = stripFormData(data);
+		data = stripFormData(data, type);
 		return encryptor.encrypt(data);
 	}
 
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
-	public String decrypt(@RequestBody String data) {
+	public String decrypt(@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
 		try {
-			data = stripFormData(data);
+			data = stripFormData(data, type);
 			return encryptor.decrypt(data);
 		}
 		catch (IllegalArgumentException e) {
@@ -172,9 +173,9 @@ public class EncryptionController {
 		}
 	}
 
-	private String stripFormData(String data) {
+	private String stripFormData(String data, MediaType type) {
 
-		if (data.endsWith("=") && !Base64.isBase64(data.getBytes())) {
+		if (data.endsWith("=") && !type.equals(MediaType.TEXT_PLAIN)) {
 			// User posted data with content type form but meant it to be text/plain
 			data = data.substring(0, data.length() - 1);
 		}
