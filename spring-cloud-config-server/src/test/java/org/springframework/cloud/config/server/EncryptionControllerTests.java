@@ -79,6 +79,15 @@ public class EncryptionControllerTests {
 	}
 
 	@Test
+	public void formDataIn() {
+		controller.setEncryptor(new RsaSecretEncryptor());
+		// Add space to input
+		String cipher = controller.encrypt("foo bar=", MediaType.APPLICATION_FORM_URLENCODED);
+		String decrypt = controller.decrypt(cipher + "=", MediaType.APPLICATION_FORM_URLENCODED);
+		assertEquals("Wrong decrypted plaintext: " + decrypt, "foo bar", decrypt);
+	}
+
+	@Test
 	public void decryptEnvironment() {
 		controller.uploadKey("foo", MediaType.TEXT_PLAIN);
 		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);

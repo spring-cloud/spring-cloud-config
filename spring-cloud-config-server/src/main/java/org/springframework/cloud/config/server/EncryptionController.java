@@ -16,6 +16,8 @@
 package org.springframework.cloud.config.server;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.security.KeyPair;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +35,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
@@ -101,7 +104,7 @@ public class EncryptionController {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "OK");
 
-		encryptor = new EncryptorFactory().create(stripFormData(data, type));
+		encryptor = new EncryptorFactory().create(stripFormData(data, type, false));
 
 		if (encryptor instanceof RsaKeyHolder) {
 			body.put("publicKey", ((RsaKeyHolder) encryptor).getPublicKey());
@@ -142,7 +145,7 @@ public class EncryptionController {
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
-		data = stripFormData(data, type);
+		data = stripFormData(data, type, false);
 		return encryptor.encrypt(data);
 	}
 
@@ -153,7 +156,7 @@ public class EncryptionController {
 			throw new KeyNotInstalledException();
 		}
 		try {
-			data = stripFormData(data, type);
+			data = stripFormData(data, type, true);
 			return encryptor.decrypt(data);
 		}
 		catch (IllegalArgumentException e) {
@@ -161,9 +164,21 @@ public class EncryptionController {
 		}
 	}
 
-	private String stripFormData(String data, MediaType type) {
+	private String stripFormData(String data, MediaType type, boolean cipher) {
 
 		if (data.endsWith("=") && !type.equals(MediaType.TEXT_PLAIN)) {
+			try {
+				data = URLDecoder.decode(data, "UTF-8");
+				if (cipher) {
+					data = data.replace(" ", "+");
+				}
+			}
+			catch (UnsupportedEncodingException e) {
+				// Really?
+			}
+			if (cipher && Base64.isBase64(data.getBytes())) {
+				return data;
+			}
 			// User posted data with content type form but meant it to be text/plain
 			data = data.substring(0, data.length() - 1);
 		}
