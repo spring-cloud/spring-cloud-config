@@ -148,7 +148,17 @@
 			<artifactId>spring-cloud-config-server</artifactId>
 	        <version>1.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
-      </dependencies>
+ 		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-rsa</artifactId>
+			<version>1.0.0.M1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jgit</groupId>
+			<artifactId>org.eclipse.jgit</artifactId>
+			<version>2.3.1.201302201838-r</version>
+		</dependency>
+     </dependencies>
     </dependencyManagement>
 	<repositories>
 		<repository>
