@@ -37,6 +37,7 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.support.SpringFactoriesLoader;
+import org.springframework.util.ClassUtils;
 
 /**
  * A listener that prepares a SpringApplication (e.g. populating its Environment) by
@@ -78,26 +79,39 @@ public class BootstrapApplicationListener implements
 	private ConfigurableApplicationContext bootstrapServiceContext(
 			ConfigurableEnvironment environment, final SpringApplication application) {
 		StandardEnvironment bootstrapEnvironment = new StandardEnvironment();
-		MutablePropertySources bootstrapProperties = bootstrapEnvironment.getPropertySources();
+		MutablePropertySources bootstrapProperties = bootstrapEnvironment
+				.getPropertySources();
 		for (PropertySource<?> source : bootstrapProperties) {
 			bootstrapProperties.remove(source.getName());
 		}
-		bootstrapProperties.addFirst(new MapPropertySource("bootstrapInProgress", Collections.<String,Object>emptyMap()));
+		bootstrapProperties.addFirst(new MapPropertySource("bootstrapInProgress",
+				Collections.<String, Object> emptyMap()));
 		for (PropertySource<?> source : environment.getPropertySources()) {
 			bootstrapProperties.addLast(source);
 		}
-		bootstrapProperties.addFirst(new MapPropertySource("bootstrap",
-				Collections.<String, Object> singletonMap("spring.config.name",
-						"bootstrap")));
+		bootstrapProperties.addFirst(new MapPropertySource("bootstrap", Collections
+				.<String, Object> singletonMap("spring.config.name", "bootstrap")));
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		// Use names and ensure unique to protect against duplicates
 		List<String> names = SpringFactoriesLoader.loadFactoryNames(
 				BootstrapConfiguration.class, classLoader);
 		// TODO: is it possible or sensible to share a ResourceLoader?
-		SpringApplicationBuilder builder = new SpringApplicationBuilder().showBanner(
-				false).environment(bootstrapEnvironment).web(false).properties(
-				"spring.application.name:bootstrap");
-		builder.sources(names.toArray());
+		SpringApplicationBuilder builder = new SpringApplicationBuilder()
+				.showBanner(false).environment(bootstrapEnvironment).web(false)
+				.properties("spring.application.name:bootstrap");
+		List<Class<?>> sources = new ArrayList<Class<?>>();
+		for (String name : names) {
+			Class<?> cls = ClassUtils.resolveClassName(name, null);
+			try {
+				cls.getDeclaredAnnotations();
+			} catch (Exception e) {
+				continue;
+			}
+			if (cls != null) {
+				sources.add(cls);
+			}
+		}
+		builder.sources(sources.toArray());
 		final ConfigurableApplicationContext context = builder.run();
 		// Make the bootstrap context a parent of the app context
 		addAncestorInitializer(application, context);
@@ -126,7 +140,8 @@ public class BootstrapApplicationListener implements
 		@SuppressWarnings("rawtypes")
 		List<ApplicationContextInitializer> initializers = getOrderedBeansOfType(context,
 				ApplicationContextInitializer.class);
-		application.addInitializers(initializers.toArray(new ApplicationContextInitializer[0]));
+		application.addInitializers(initializers
+				.toArray(new ApplicationContextInitializer[0]));
 	}
 
 	private <T> List<T> getOrderedBeansOfType(ListableBeanFactory context, Class<T> type) {
@@ -162,8 +177,8 @@ public class BootstrapApplicationListener implements
 
 		@Override
 		public void initialize(ConfigurableApplicationContext context) {
-			preemptMerge(context.getEnvironment().getPropertySources(),
-					parent.getEnvironment().getPropertySources().get("bootstrap"));
+			preemptMerge(context.getEnvironment().getPropertySources(), parent
+					.getEnvironment().getPropertySources().get("bootstrap"));
 			while (context.getParent() != null && context.getParent() != context) {
 				context = (ConfigurableApplicationContext) context.getParent();
 			}

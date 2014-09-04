@@ -27,11 +27,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
+import org.springframework.cloud.config.encrypt.EncryptorFactory;
+import org.springframework.cloud.config.encrypt.KeyFormatException;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
@@ -54,9 +55,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class EncryptionController {
 
 	private static Log logger = LogFactory.getLog(EncryptionController.class);
-
-	// TODO: expose as config property
-	private static final String SALT = "deadbeef";
 
 	private TextEncryptor encryptor;
 
@@ -97,29 +95,17 @@ public class EncryptionController {
 	}
 
 	@RequestMapping(value = "/key", method = RequestMethod.POST, params = { "!password" })
-	public ResponseEntity<Map<String, Object>> uploadKey(@RequestBody String data) {
+	public ResponseEntity<Map<String, Object>> uploadKey(@RequestBody String data,
+			@RequestHeader("Content-Type") MediaType type) {
 
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "OK");
 
-		if (data.contains("RSA PRIVATE KEY")) {
+		encryptor = new EncryptorFactory().create(stripFormData(data, type));
 
-			try {
-				encryptor = new RsaSecretEncryptor(data);
-				body.put("publicKey", ((RsaKeyHolder) encryptor).getPublicKey());
-			}
-			catch (IllegalArgumentException e) {
-				throw new KeyFormatException();
-			}
-
+		if (encryptor instanceof RsaKeyHolder) {
+			body.put("publicKey", ((RsaKeyHolder) encryptor).getPublicKey());
 		}
-		else if (data.startsWith("ssh-rsa") || data.contains("RSA PUBLIC KEY")) {
-			throw new KeyFormatException();
-		}
-		else {
-			encryptor = Encryptors.text(data, SALT);
-		}
-
 		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.CREATED);
 
 	}
@@ -151,7 +137,8 @@ public class EncryptionController {
 	}
 
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
-	public String encrypt(@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
+	public String encrypt(@RequestBody String data,
+			@RequestHeader("Content-Type") MediaType type) {
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
@@ -160,7 +147,8 @@ public class EncryptionController {
 	}
 
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
-	public String decrypt(@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
+	public String decrypt(@RequestBody String data,
+			@RequestHeader("Content-Type") MediaType type) {
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
@@ -224,8 +212,8 @@ public class EncryptionController {
 						catch (Exception e) {
 							value = "<n/a>";
 							name = "invalid." + name;
-							logger.warn("Cannot decrypt key: " + key + " (" + e.getClass()
-									+ ": " + e.getMessage() + ")");
+							logger.warn("Cannot decrypt key: " + key + " ("
+									+ e.getClass() + ": " + e.getMessage() + ")");
 						}
 						map.put(name, value);
 					}
@@ -243,10 +231,6 @@ class KeyNotInstalledException extends RuntimeException {
 
 @SuppressWarnings("serial")
 class KeyNotAvailableException extends RuntimeException {
-}
-
-@SuppressWarnings("serial")
-class KeyFormatException extends RuntimeException {
 }
 
 @SuppressWarnings("serial")

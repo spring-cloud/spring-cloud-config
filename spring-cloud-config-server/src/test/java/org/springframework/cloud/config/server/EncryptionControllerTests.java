@@ -24,6 +24,7 @@ import java.util.Collections;
 import org.junit.Test;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
+import org.springframework.cloud.config.encrypt.KeyFormatException;
 import org.springframework.http.MediaType;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 
@@ -42,23 +43,23 @@ public class EncryptionControllerTests {
 
 	@Test(expected = KeyFormatException.class)
 	public void cannotUploadPublicKey() {
-		controller.uploadKey("ssh-rsa ...");
+		controller.uploadKey("ssh-rsa ...", MediaType.TEXT_PLAIN);
 	}
 
 	@Test(expected = KeyFormatException.class)
 	public void cannotUploadPublicKeyPemFormat() {
-		controller.uploadKey("---- BEGIN RSA PUBLIC KEY ...");
+		controller.uploadKey("---- BEGIN RSA PUBLIC KEY ...", MediaType.TEXT_PLAIN);
 	}
 
 	@Test(expected = InvalidCipherException.class)
 	public void invalidCipher() {
-		controller.uploadKey("foo");
+		controller.uploadKey("foo", MediaType.TEXT_PLAIN);
 		controller.decrypt("foo", MediaType.TEXT_PLAIN);
 	}
 
 	@Test
 	public void sunnyDaySymmetricKey() {
-		controller.uploadKey("foo");
+		controller.uploadKey("foo", MediaType.TEXT_PLAIN);
 		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);
 		assertEquals("foo", controller.decrypt(cipher, MediaType.TEXT_PLAIN));
 	}
@@ -79,7 +80,7 @@ public class EncryptionControllerTests {
 
 	@Test
 	public void decryptEnvironment() {
-		controller.uploadKey("foo");
+		controller.uploadKey("foo", MediaType.TEXT_PLAIN);
 		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);
 		Environment environment = new Environment("foo", "bar");
 		environment.add(new PropertySource("spam", Collections
@@ -90,7 +91,7 @@ public class EncryptionControllerTests {
 
 	@Test
 	public void randomizedCipher() {
-		controller.uploadKey("foo");
+		controller.uploadKey("foo", MediaType.TEXT_PLAIN);
 		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);
 		assertNotEquals(cipher, controller.encrypt("foo", MediaType.TEXT_PLAIN));
 	}
