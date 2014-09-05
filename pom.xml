@@ -151,7 +151,7 @@
  		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-rsa</artifactId>
-			<version>1.0.0.M1</version>
+			<version>1.0.0.M2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
