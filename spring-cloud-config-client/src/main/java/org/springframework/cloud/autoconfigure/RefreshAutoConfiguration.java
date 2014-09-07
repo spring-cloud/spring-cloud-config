@@ -17,9 +17,14 @@
 
 package org.springframework.cloud.autoconfigure;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
+import org.springframework.boot.actuate.endpoint.InfoEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -32,13 +37,9 @@ import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.integration.monitor.IntegrationMBeanExporter;
 import org.springframework.cloud.bootstrap.config.ConfigServiceBootstrapConfiguration;
 import org.springframework.cloud.config.client.RefreshEndpoint;
+import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.cloud.context.environment.EnvironmentManager;
 import org.springframework.cloud.context.environment.EnvironmentManagerMvcEndpoint;
 import org.springframework.cloud.context.properties.ConfigurationPropertiesRebinder;
@@ -47,6 +48,12 @@ import org.springframework.cloud.context.restart.RestartMvcEndpoint;
 import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.cloud.endpoint.GenericPostableMvcEndpoint;
 import org.springframework.cloud.logging.LoggingRebinder;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.integration.monitor.IntegrationMBeanExporter;
 
 @Configuration
 @ConditionalOnClass(RefreshScope.class)
@@ -71,6 +78,42 @@ public class RefreshAutoConfiguration {
 		return new EnvironmentManager(environment);
 	}
 
+	@Configuration
+	@ConditionalOnClass(InfoEndpoint.class)
+	protected static class InfoEndpointRebinderConfiguration implements ApplicationListener<EnvironmentChangeEvent> {
+		
+		@Autowired
+		private EndpointAutoConfiguration endpoints;
+		
+		@Autowired
+		private ConfigurableEnvironment environment;
+		
+		private Map<String, Object> map = new LinkedHashMap<String, Object>();
+		
+		@Override
+		public void onApplicationEvent(EnvironmentChangeEvent event) {
+			for (String key : event.getKeys()) {
+				if (key.startsWith("info.")) {
+					map.put(key, environment.getProperty(key));
+				}
+			}
+		}
+		
+		@Bean
+		public InfoEndpoint infoEndpoint() throws Exception {
+			return new InfoEndpoint(endpoints.infoEndpoint().invoke()) {
+				@Override
+				public Map<String, Object> invoke() {
+					Map<String, Object> info = new LinkedHashMap<String, Object>(super.invoke());
+					info.putAll(map);
+					return info;
+				}
+			};
+		}
+		
+	}
+	
+	@Configuration
 	protected static class ConfigurationPropertiesRebinderConfiguration {
 
 		@Autowired
