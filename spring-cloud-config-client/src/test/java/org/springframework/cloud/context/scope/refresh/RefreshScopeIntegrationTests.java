@@ -32,18 +32,18 @@ import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfigurati
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.context.scope.refresh.RefreshScopeIntegrationTests.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.cloud.context.scope.refresh.RefreshScopeIntegrationTests.TestConfiguration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@SpringApplicationConfiguration(classes=TestConfiguration.class)
+@SpringApplicationConfiguration(classes = TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
 public class RefreshScopeIntegrationTests {
 
@@ -112,7 +112,8 @@ public class RefreshScopeIntegrationTests {
 
 	}
 
-	public static class ExampleService implements Service, InitializingBean, DisposableBean {
+	public static class ExampleService implements Service, InitializingBean,
+			DisposableBean {
 
 		private static Log logger = LogFactory.getLog(ExampleService.class);
 
@@ -159,7 +160,8 @@ public class RefreshScopeIntegrationTests {
 			logger.debug("Getting message: " + message);
 			try {
 				Thread.sleep(delay);
-			} catch (InterruptedException e) {
+			}
+			catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 			}
 			logger.info("Returning message: " + message);
@@ -167,15 +169,15 @@ public class RefreshScopeIntegrationTests {
 		}
 
 	}
-	
+
 	@Configuration
 	@EnableConfigurationProperties(TestProperties.class)
-	@Import({RefreshAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class})
+	@Import({ RefreshAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class })
 	protected static class TestConfiguration {
-		
+
 		@Autowired
 		private TestProperties properties;
-		
+
 		@Bean
 		@RefreshScope
 		public ExampleService service() {
@@ -184,7 +186,7 @@ public class RefreshScopeIntegrationTests {
 			service.setDelay(properties.getDelay());
 			return service;
 		}
-		
+
 	}
 
 	@ConfigurationProperties
@@ -192,20 +194,24 @@ public class RefreshScopeIntegrationTests {
 	protected static class TestProperties {
 		private String message;
 		private int delay;
+
 		@ManagedAttribute
 		public String getMessage() {
 			return message;
 		}
+
 		public void setMessage(String message) {
 			this.message = message;
 		}
+
 		@ManagedAttribute
 		public int getDelay() {
 			return delay;
 		}
+
 		public void setDelay(int delay) {
 			this.delay = delay;
 		}
 	}
-	
+
 }

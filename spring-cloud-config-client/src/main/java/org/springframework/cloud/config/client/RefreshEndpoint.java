@@ -27,6 +27,8 @@ import java.util.Set;
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
+import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.CompositePropertySource;
@@ -36,7 +38,6 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.support.StandardServletEnvironment;
 
@@ -57,9 +58,12 @@ public class RefreshEndpoint extends AbstractEndpoint<Collection<String>> {
 
 	private ConfigurableApplicationContext context;
 
-	public RefreshEndpoint(ConfigurableApplicationContext context) {
+	private RefreshScope scope;
+
+	public RefreshEndpoint(ConfigurableApplicationContext context, RefreshScope scope) {
 		super("refresh");
 		this.context = context;
+		this.scope = scope;
 	}
 
 	@ManagedOperation
@@ -68,6 +72,7 @@ public class RefreshEndpoint extends AbstractEndpoint<Collection<String>> {
 		addConfigFilesToEnvironment();
 		Set<String> keys = changes(before,
 				extract(context.getEnvironment().getPropertySources())).keySet();
+		scope.refreshAll();
 		if (keys.isEmpty()) {
 			return new String[0];
 		}

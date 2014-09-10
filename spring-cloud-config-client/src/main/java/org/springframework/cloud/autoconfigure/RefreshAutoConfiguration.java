@@ -183,8 +183,8 @@ public class RefreshAutoConfiguration {
 
 			@Bean
 			@ConditionalOnMissingBean
-			public RefreshEndpoint refreshEndpoint(ConfigurableApplicationContext context) {
-				RefreshEndpoint endpoint = new RefreshEndpoint(context);
+			public RefreshEndpoint refreshEndpoint(ConfigurableApplicationContext context, RefreshScope scope) {
+				RefreshEndpoint endpoint = new RefreshEndpoint(context, scope);
 				return endpoint;
 			}
 
