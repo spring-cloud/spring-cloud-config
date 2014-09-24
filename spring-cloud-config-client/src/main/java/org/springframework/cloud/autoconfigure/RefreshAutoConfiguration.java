@@ -80,6 +80,7 @@ public class RefreshAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(InfoEndpoint.class)
+	@ConditionalOnBean(EndpointAutoConfiguration.class)
 	protected static class InfoEndpointRebinderConfiguration implements ApplicationListener<EnvironmentChangeEvent> {
 		
 		@Autowired
