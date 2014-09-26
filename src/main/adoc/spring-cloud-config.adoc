@@ -1,4 +1,5 @@
 = Spring Cloud Config
+:toc:
 
 include::intro.adoc[]
 

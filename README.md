@@ -61,7 +61,7 @@ Spring configuration.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Bind to Config Server and initialize Spring <code>Environment</code> with remote property sources</p>
+<p>Bind to the Config Server and initialize Spring <code>Environment</code> with remote property sources</p>
 </li>
 <li>
 <p>Encrypt and decrypt property values (symmetric or asymmetric)</p>
@@ -226,7 +226,7 @@ baz</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-09-26 11:20:05 BST
+Last updated 2014-09-26 11:35:20 BST
 </div>
 </div>
 </body>

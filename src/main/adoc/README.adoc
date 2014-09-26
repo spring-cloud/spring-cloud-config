@@ -12,7 +12,7 @@ Spring Cloud Config Server features:
 
 Config Client features (for Spring applications):
 
-* Bind to Config Server and initialize Spring `Environment` with remote property sources
+* Bind to the Config Server and initialize Spring `Environment` with remote property sources
 * Encrypt and decrypt property values (symmetric or asymmetric)
 * `@RefreshScope` for Spring `@Beans` that want to be re-initialized when configuration changes
 * Management endpoints:
