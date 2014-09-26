@@ -1,0 +1,26 @@
+= Spring Cloud Config
+
+include::./src/main/adoc/intro.adoc[]
+
+== Features
+
+Spring Cloud Config Server features:
+
+* HTTP, resource-based API for external configuration (name-value pairs, or equivalent YAML content)
+* Encrypt and decrypt property values (symmetric or asymmetric)
+
+Config Client features (for Spring applications):
+
+* Bind to Config Server and initialize Spring `Environment` with remote property sources
+* Encrypt and decrypt property values (symmetric or asymmetric)
+* `@RefreshScope` for Spring `@Beans` that want to be re-initialized when configuration changes
+* Management endpoints:
+** `/env/` for updating `Environment` and rebinding `@ConfigurationProperties`
+** `/refresh` for refreshing the `@RefreshScope` beans
+** `/restart` for restarting the Spring context (disabled by default)
+** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`)
+* Bootstrap appplication context: a parent context for the main application that can be trained to do anything (by default it binds to the Config Server, and decrypts property values)
+
+== Quick Start
+
+include::./src/main/adoc/quickstart.adoc[]
