@@ -1,6 +1,6 @@
 = Spring Cloud Config
 
-include::./src/main/adoc/intro.adoc[]
+include::intro.adoc[]
 
 == Features
 
@@ -8,6 +8,7 @@ Spring Cloud Config Server features:
 
 * HTTP, resource-based API for external configuration (name-value pairs, or equivalent YAML content)
 * Encrypt and decrypt property values (symmetric or asymmetric)
+* Embeddable easily in a Spring Boot application using `@EnableConfigServer`
 
 Config Client features (for Spring applications):
 
@@ -23,4 +24,4 @@ Config Client features (for Spring applications):
 
 == Quick Start
 
-include::./src/main/adoc/quickstart.adoc[]
+include::quickstart.adoc[]
