@@ -68,7 +68,6 @@
 					<artifactId>replacer</artifactId>
 					<version>1.5.3</version>
 				</plugin>
-
 			</plugins>
 		</pluginManagement>
         <plugins>
@@ -88,6 +87,7 @@
 				<goals>
 				  <goal>run</goal>
 				</goals>
+                <inherited>false</inherited>
                 <configuration>
                   <tasks>
                     <java classname="org.jruby.Main" failonerror="yes">
