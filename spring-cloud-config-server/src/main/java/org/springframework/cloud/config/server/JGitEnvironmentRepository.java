@@ -141,7 +141,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 						logger.warn("Could not pull remote for " + label + " (current ref=" + ref + ")");
 					}
 				}
-				String search = git.getRepository().getDirectory().getParent();
+				String search = basedir.getAbsolutePath();
 				environment.setSearchLocations(search);
 				result = clean(environment.findOne(application, profile, label));
 			}
