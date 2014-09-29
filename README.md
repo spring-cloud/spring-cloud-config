@@ -74,7 +74,7 @@ Spring configuration.</p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>/env/</code> for updating <code>Environment</code> and rebinding <code>@ConfigurationProperties</code></p>
+<p><code>/env</code> for updating <code>Environment</code> and rebinding <code>@ConfigurationProperties</code> and log levels</p>
 </li>
 <li>
 <p><code>/refresh</code> for refreshing the <code>@RefreshScope</code> beans</p>
@@ -226,7 +226,7 @@ baz</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-09-26 11:35:20 BST
+Last updated 2014-09-26 15:07:18 BST
 </div>
 </div>
 </body>

@@ -1,7 +1,6 @@
 package demo
 
-@Grab('org.springframework.cloud:spring-platform-config-client:1.0.0.BUILD-SNAPSHOT')
-@Grab('spring-boot-starter-actuator')
+@Grab('spring-cloud-starter')
 @RestController
 class Application {
   @RequestMapping("/")

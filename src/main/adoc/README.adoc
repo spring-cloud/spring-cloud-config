@@ -16,7 +16,7 @@ Config Client features (for Spring applications):
 * Encrypt and decrypt property values (symmetric or asymmetric)
 * `@RefreshScope` for Spring `@Beans` that want to be re-initialized when configuration changes
 * Management endpoints:
-** `/env/` for updating `Environment` and rebinding `@ConfigurationProperties`
+** `/env` for updating `Environment` and rebinding `@ConfigurationProperties` and log levels
 ** `/refresh` for refreshing the `@RefreshScope` beans
 ** `/restart` for restarting the Spring context (disabled by default)
 ** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`)
