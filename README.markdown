@@ -42,7 +42,7 @@ At this point, you just need to give your project a home page. There are pre-fab
     documentation.md
     project_group.html
     project.html
-    vaniall.md
+    vanilla.md
 
 At this point you need to make a decision: is your project a "grouping project", like Spring Data, acting as a parent for one or more child projects? If so, you should choose `project_group.html` in the following step. Otherwise, if you're dealing with an individual, concrete Spring project, e.g. Spring Data JPA, or Spring Security OAuth, you should choose `project.html`. The `documentation.md` can be used when you want to expose README.md files on your site.
 

@@ -1,0 +1,99 @@
+---
+# The name of your project
+title: Spring CLoud Config
+
+badges:
+
+  # Customize your project's badges. Delete any entries that do not apply.
+  custom:
+    - name: Source (GitHub)
+      url:  https://github.com/spring-cloud/spring-cloud-config
+      icon: github
+
+    - name: StackOverflow
+      url:  http://stackoverflow.com/questions/tagged/spring-cloud
+      icon: stackoverflow
+
+---
+<!DOCTYPE HTML>
+<html lang="en-US">
+
+<!-- Specify the parent of this project (or delete if none) to influence the rendering of the breadcrumb -->
+{% capture parent_link %}
+[Spring Parent]({{ site.projects_site_url }}/spring-parent)
+{% endcapture %}
+
+
+{% capture billboard_description %}
+
+Spring Cloud Config provides server and client-side support for externalized configuration in a distributed system. With the Config Server you have a central place to manage external properties for applications across all environments. The concepts on both client and server map identically to the Spring <code>Environment</code> and <code>PropertySource</code> abstractions, so they fit very well with Spring applications, but can be used with any application running in any language. As an application moves through the deployment pipeline from dev to test and into production you can manage the configuration between those environments and be certain that applications have everything they need to run when they migrate. The default implementation of the server storage backend uses git so it easily supports labelled versions of configuration environments, as well as being accessible to a wide range of tooling for managing the content.  It is easy to add alternative implementations and plug them in with Spring configuration.
+
+{% endcapture %}
+
+{% capture main_content %}
+
+## Features
+
+Spring Cloud Config Server features:
+
+* HTTP, resource-based API for external configuration (name-value pairs, or equivalent YAML content)
+* Encrypt and decrypt property values (symmetric or asymmetric)
+* Embeddable easily in a Spring Boot application using `@EnableConfigServer`
+
+Config Client features (for Spring applications):
+
+* Bind to the Config Server and initialize Spring `Environment` with remote property sources
+* Encrypt and decrypt property values (symmetric or asymmetric)
+* `@RefreshScope` for Spring `@Beans` that want to be re-initialized when configuration changes
+* Management endpoints:
+** `/env` for updating `Environment` and rebinding `@ConfigurationProperties` and log levels
+** `/refresh` for refreshing the `@RefreshScope` beans
+** `/restart` for restarting the Spring context (disabled by default)
+** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`)
+* Bootstrap appplication context: a parent context for the main application that can be trained to do anything (by default it binds to the Config Server, and decrypts property values)
+
+<span id="quick-start"></span>
+## Quick Start
+
+{% include download_widget.md %}
+
+As long as Spring Boot Actuator and Spring Config Client are on the
+classpath any Spring Boot application will try to contact a config
+server on `http://localhost:8888` (the default value of
+`spring.cloud.config.uri`):
+
+```java
+@Configuration
+@EnableAutoConfiguration
+@RestController
+public class Application {
+
+  @RequestMapping("/")
+  String home() {
+    "Hello World"
+  }
+
+  public static void main(String[] args) {
+    SpringApplication.run(Application.class, args);
+  }
+
+}
+```
+
+To run your own server use the `spring-cloud-config-server` dependency and `@EnableConfigServer`.
+
+{% endcapture %}
+
+{% capture related_resources %}
+
+### Sample Projects
+
+* [Config Server](https://github.com/spring-cloud-samples/configserver)
+* [Config Clients](https://github.com/spring-cloud-samples/customers-stores)
+* [Minimal (Groovy) Client](https://github.com/spring-cloud-samples/scripts/blob/master/demo/app.groovy)
+
+{% endcapture %}
+
+
+{% include project_page.html %}
+</html>
