@@ -6,6 +6,7 @@ asciidoctor.css
 *#
 target
 bin
+_site/
 .classpath
 .project
 .settings
