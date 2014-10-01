@@ -32,7 +32,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Dave Syer
  *
  */
-@ConfigurationProperties("spring.platform.config")
+@ConfigurationProperties("spring.cloud.config")
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
 
 	private String env = "default";
