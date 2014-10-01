@@ -6,3 +6,260 @@ include::intro.adoc[]
 == Quick Start
 
 include::quickstart.adoc[]
+
+== Spring Cloud Config Server
+
+The Server provides an HTTP, resource-based API for external
+configuration (name-value pairs, or equivalent YAML content).  The
+server is easily embeddable in a Spring Boot application using the
+`@EnableConfigServer` annotation.
+
+
+=== Encryption and Decryption
+
+The server exposes `/encrypt` and `/decrypt` endpoints (on the
+assumption that these will be secured and only accessed by authorized
+agents). If the remote property sources contain encryted content
+(values starting with `{cipher}`) they will be decrypted before
+sending to clients over HTTP. The main advantage of this set up is
+that the property values don't have to be in plain text when they are
+"at rest" (e.g. in a git repository). 
+
+If you are setting up a remote config repository for config client
+applications it might contain an `application.yml` like this, for
+instance:
+
+.application.yml
+----
+spring:
+  datasource:
+    username: dbuser
+    password: {cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ
+----
+
+You can safely push this plain text to a shared git repository and the
+secret password is protected.
+
+If you are editing a remote config file you can use the Config Server
+to encrypt values by POSTing to the `/encrypt` endpoint, e.g.
+
+----
+$ curl localhost:8888/encrypt -d mysecret
+682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+----
+
+The inverse operation is also available via `/decrypt` (provided the server is
+configured with a symmetric key or a full key pair):
+
+----
+$ curl localhost:8888/edecrypt -d 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+mysecret
+----
+
+Take the encypted value and add the `{cipher}` prefix before you put
+it in the YAML or properties file, and before you commit and push it
+to a remote, potentially insecure store.
+
+The `spring` command line client (with Spring Cloud CLI extensions
+installed) can also be used to encrypt and decrypt, e.g.
+
+----
+$ spring encrypt mysecret --key foo
+682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+$ spring decrypt --key foo 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+mysecret
+----
+
+To use a key in a file (e.g. an RSA public key for encyption) prepend
+the key value with "@" and provide the file path, e.g.
+
+----
+$ spring encrypt mysecret --key @${HOME}/.ssh/id_rsa.pub
+AQAjPgt3eFZQXwt8tsHAVv/QHiY5sI2dRcR+...
+----
+
+=== Key Management
+
+The Config Server can use a symmetric (shared) key or an asymmetric
+one (RSA key pair). The asymmetric choice is superior in terms of
+security, but it is often more convenient to use a symmetric key since
+it is just a single property value to configure.
+
+To configure a symmetric key you just need to set `encrypt.key` to a
+secret String (or use an enviroment variable `ENCRYPT_KEY` to keep it
+out of plain text configuration files). You can also POST a key value
+to the `/key` endpoint (but that won't change any existing encrypted
+values in remote repositories).
+
+To configure an asymmetric key you can either set the key as a
+PEM-encoded text value (in `encrypt.key`), or via a keystore (e.g. as
+created by the `keytool` utility that comes with the JDK). The
+keystore properties are `encrypt.keyStore.*` with `*` equals to
+`location` (a `Resource` location), `password` (to unlock the
+keystore) and `alias` (to identify which key in the store is to be
+used).
+
+The encryption is done with the public key, and a private key is
+needed for decryption. Thus in principle you can configure only the
+public key in the server if you only want to do encryption (and are
+prepared to decrypt the values yourself locally with the private
+key). In practice you might not want to do that because it spreads the
+key management process around all the clients, instead of
+concentrating it in the server. On the other hand it's a useful option
+if your config server really is relatively insecure and only a
+handful of clients need the encrypted properties.
+
+=== Creating a Key Store for Testing
+
+To create a keystore for testing you can do something like this:
+
+----
+$ keytool -genkeypair -alias mytestkey -keyalg RSA \
+  -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" \
+  -keypass changeme -keystore server.jks -storepass letmein
+----
+
+Put the `server.jks` file in the classpath (for instance) and then in
+your `application.yml` for the Config Server:
+
+----
+encrypt:
+  keyStore:
+    location: classpath:/server.jks
+    alias: mytestkey
+    password: letmein
+----
+
+== Spring Cloud Config Client
+
+A Spring Boot application can take immediate advantage of the Spring
+Config Server (or other external property sources provided by the
+application developer), and it will also pick up some additional
+useful features related to `Environment` change events. When a config
+client starts up it binds to the Config Server (via the bootstrap
+configuration property `spring.cloud.config.uri`) and initializes
+Spring `Environment` with remote property sources
+
+=== Environment Changes
+
+The application will listen for an `EnvironmentChangedEvent` and react
+to the change in a couple of standard ways (additional
+`ApplicationListeners` can be added as `@Beans` by the user in the
+normal way). When an `EnvironmentChangedEvent` is observed it will
+have a list of key values that have changed, and the application will
+use those to:
+
+* Re-bind any `@ConfigurationProperties` beans in the context
+* Set the logger levels for any properties in `logging.level.*`
+
+This covers a large class of refresh use cases, and you can verify the
+changes by visiting the `/configprops` endpoint (normal Spring Boot
+Actuator feature). For instance a `DataSource` can have its
+`maxPoolSize` changed at runtime (the default `DataSource` created by
+Spring Boot is an `@ConfigurationProperties` bean) and grow capacity
+dynamically. It does not cover another large class of use cases, where
+you need more control over the refresh, and where you need a
+configuration change to be atomic over the whole
+`ApplicationContext`. To address those concerns we have
+`@RefreshScope`.
+
+=== Refresh Scope
+
+A Spring `@Bean` that is marked as `@RefreshScope` will get special
+treatment when there is a configuration change. This addresses the
+problem of stateful beans that only get their configuration injected
+when they are initialized. For instance if a `DataSource` has open
+connections when the database URL is changed via the `Environment`, we
+probably want the holders of those connections to be able to complete
+what they are doing. Then the next time someone borrows a connection
+from the pool he gets one with the new URL.
+
+Refresh scope beans are lazy proxies that initialize when they are
+used (i.e. when a method is called), and the scope acts as a cache of
+initialized values. To force a bean to re-initialize on the next
+method call you just need to invalidate its cache entry.
+
+The `RefreshScope` is a bean in the context and it has a public method
+`refreshAll()` to refresh all beans in the scope by clearing the
+target cache. There is also a `refresh(String)` method to refresh an
+individual bean by name. This functionality is exposed in the
+`/refresh` endpoint (over HTTP or JMX).
+
+=== Encryption and Decryption
+
+The Config Client has an `Environment` pre-processor for decrypting
+property values locally. It follows the same rules as the Config
+Server, and has the same external configuration via `encrypt.*`. Thus
+you can use encrypted values in the form `{cipher}*` and as long as
+there is a valid key then they will be decrypted before the main
+application context gets the `Environment`.
+
+=== Endpoints
+
+For a Spring Boot Actuator application there are some additional management endpoints:
+* POST to `/env` to update the `Environment` and rebind `@ConfigurationProperties` and log levels
+* `/refresh` for re-loading the boot strap context and refreshing the `@RefreshScope` beans
+* `/restart` for closing the `ApplicationContext` and restarting it (disabled by default)
+* `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`)
+
+=== The Bootstrap Application Context
+
+The Config Client operates by creating a "bootstrap" application
+context, which is a parent context for the main application. Out of
+the box it is responsible for loading configuration properties from
+the Config Server, and also decrypting properties in the local
+external configuration files. The two contexts share an `Environment`
+which is the source of external properties for any Spring
+application. Bootstrap properties are added with hight precedence, so
+they cannot be overridden by local configuration.
+
+The bootstrap context uses a different convention for locating
+external configuration than the main application context, so instead
+of `application.yml` (or `.properties`) you use `bootstrap.yml`,
+keeping the external configuration for bootstrap and main context
+nicely separate. Example:
+
+.bootstrap.yml
+----
+spring:
+  application:
+    name: foo
+  cloud:
+    config:
+      uri: ${SPRING_CONFIG_URI:http://localhost:8888}
+----
+
+It is a good idea to set the `spring.application.name` in
+`bootstrap.yml` if your application needs any application-specific
+configuration from the server.
+
+You can disable the bootstrap process completely by setting
+`spring.platform.bootstrap.enabled=false` (e.g. in System properties).
+
+=== Customizing the Bootstrap
+
+The bootstrap context can be trained to do anything you like by adding
+entries to `/META-INF/spring.factories` under the key
+`org.springframework.cloud.bootstrap.BootstrapConfiguration`. This is
+a comma-separated list of Spring `@Configuration` classes which will
+be used to create the context. Any beans that you want to be available
+to the main application context for autowiring can be created here,
+and also there is a special contract for `@Beans` of type
+`ApplicationContextInitializer`.
+
+The bootstrap process ends by injecting initializers into the main
+`SpringApplication` instance (i.e. the normal Spring Boot startup
+sequence, whether it is running as a standalone app or deployed in an
+application server). First a bootstrap context is created from the
+classes found in `spring.factories` and then all `@Beans` of type
+`ApplicationContextInitializer` are added to the main
+`SpringApplication` before it is started.
+
+=== Customizing the Property Sources
+
+The default property source for external configuration added by the
+bootstrap process is the Config Server, but you can add additional
+sources by adding beans of type `PropertySourceLocator` to the
+bootstrap context (via `spring.factories`). You could use this to
+insert additional properties from a different server, or from a
+database, for instance.

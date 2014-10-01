@@ -36,8 +36,80 @@ list of properties), and "label" is an optional git label (defaults to
 === Client Side Usage
 
 To use these features in an application, just build it as a Spring
-Boot application that depends on spring-cloud-config-client
-(e.g. see the test cases for the config-client, or the sample app).
+Boot application that depends on spring-cloud-config-client (e.g. see
+the test cases for the config-client, or the sample app). The most
+convenient way to add the dependency is via a Spring Boot starter
+`org.springframework.cloud:spring-cloud-starter`. There is also a
+parent pom and BOM (`spring-cloud-starters`) for Maven users and a
+Spring IO version management properties file for Gradle and Spring CLI
+users. Example Maven configuration:
+
+[source,xml,indent=0]
+.pom.xml
+----
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.1.7.RELEASE</version>
+        <relativePath /> <!-- lookup parent from repository -->
+    </parent>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starters</artifactId>
+				<version>1.0.0.BUILD-SNAPSHOT</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+		</plugins>
+	</build>
+
+    <!-- repositories also needed for snapshots and milestones -->
+----
+
+Then you can create a standard Spring Boot application, like this simple HTTP server:
+
+----
+@Configuration
+@EnableAutoConfiguration
+@RestController
+public class Application {
+
+    @RequestMapping("/")
+    public String home() {
+        return "Hello World!";
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+}
+----
+
 When it runs it will pick up the external configuration from the
 default local config server on port 8888 if it is running. To modify
 the startup behaviour you can change the location of the config server
@@ -45,7 +117,7 @@ using `bootstrap.properties` (like `application.properties` but for
 the bootstrap phase of an application context), e.g.
 
 ----
-spring.platform.config.uri: http://myconfigserver.com
+spring.cloud.config.uri: http://myconfigserver.com
 ----
 
 The bootstrap properties will show up in the `/env` endpoint as a
@@ -65,39 +137,3 @@ $ curl localhost:8080/env
 (a property source called "configService:<URL of remote
 repository>/<file name>" contains the property "foo" with value
 "bar" and is highest priority).
-
-=== Sample Application
-
-There is a sample application
-https://github.com/spring-cloud/spring-cloud-config/tree/master/spring-cloud-config-sample[here]. It
-is a Spring Boot application so you can run it using the usual
-mechanisms (for instance "mvn spring-boot:run"). When it runs it will
-look for the config server on "http://localhost:8888" by default, so
-you could run the server as well to see it all working together.
-
-The sample has a test case where the config server is also started in
-the same JVM (with a different port), and the test asserts that an
-environment property from the git configuration repo is present. To
-change the location of the config server just set
-"spring.platform.config.uri" in "bootstrap.yml" (or via System
-properties etc.).
-
-The test case has a `main()` method that runs the server in the same
-way (watch the logs for its port), so you can run the whole system in
-one process and play with it (e.g. right click on the main in your IDE
-and run it). The `main()` method uses `target/config` for the working
-directory of the git repository, so you can make local changes there
-and see them reflected in the running app.
-
-----
-$ curl localhost:8080/env/foo
-bar
-$ vi target/config/bar.properties
-.. change value of "foo", optionally commit
-$ curl localhost:8080/refresh
-["foo"]
-$ curl localhost:8080/env/foo
-baz
-----
-
-The refresh endpoint reports that the "foo" property changed.
