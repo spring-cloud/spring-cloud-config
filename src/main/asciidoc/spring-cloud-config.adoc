@@ -266,3 +266,28 @@ sources by adding beans of type `PropertySourceLocator` to the
 bootstrap context (via `spring.factories`). You could use this to
 insert additional properties from a different server, or from a
 database, for instance.
+
+As an example, consider the following trivial custom locator:
+
+[source,java]
+----
+@Configuration
+public class CustomPropertySourceLocator implements PropertySourceLocator {
+
+    @Override
+    public PropertySource<?> locate() {
+        return new MapPropertySource("customProperty",
+                Collections.<String, Object>singletonMap("property.from.sample.custom.source", "worked as intended"));
+    }
+}
+----
+
+If you create a jar with this class in it and then add a
+`META-INF/spring.factories` containing:
+
+----
+org.springframework.cloud.bootstrap.BootstrapConfiguration=sample.custom.CustomPropertySourceLocator
+----
+
+then the "customProperty" `PropertySource` will show up in any
+application that includes that jar on its classpath.
