@@ -94,9 +94,11 @@ values in remote repositories).
 To configure an asymmetric key you can either set the key as a
 PEM-encoded text value (in `encrypt.key`), or via a keystore (e.g. as
 created by the `keytool` utility that comes with the JDK). The
-keystore properties are `encrypt.keyStore.*` with `*` equals to
-`location` (a `Resource` location), `password` (to unlock the
-keystore) and `alias` (to identify which key in the store is to be
+keystore properties are `encrypt.keyStore.\*` with `*` equal to
+
+* `location` (a `Resource` location), 
+* `password` (to unlock the keystore) and 
+* `alias` (to identify which key in the store is to be
 used).
 
 The encryption is done with the public key, and a private key is
@@ -189,7 +191,7 @@ individual bean by name. This functionality is exposed in the
 
 The Config Client has an `Environment` pre-processor for decrypting
 property values locally. It follows the same rules as the Config
-Server, and has the same external configuration via `encrypt.*`. Thus
+Server, and has the same external configuration via `encrypt.\*`. Thus
 you can use encrypted values in the form `{cipher}*` and as long as
 there is a valid key then they will be decrypted before the main
 application context gets the `Environment`.
@@ -197,6 +199,7 @@ application context gets the `Environment`.
 === Endpoints
 
 For a Spring Boot Actuator application there are some additional management endpoints:
+
 * POST to `/env` to update the `Environment` and rebind `@ConfigurationProperties` and log levels
 * `/refresh` for re-loading the boot strap context and refreshing the `@RefreshScope` beans
 * `/restart` for closing the `ApplicationContext` and restarting it (disabled by default)
@@ -210,7 +213,7 @@ the box it is responsible for loading configuration properties from
 the Config Server, and also decrypting properties in the local
 external configuration files. The two contexts share an `Environment`
 which is the source of external properties for any Spring
-application. Bootstrap properties are added with hight precedence, so
+application. Bootstrap properties are added with high precedence, so
 they cannot be overridden by local configuration.
 
 The bootstrap context uses a different convention for locating
