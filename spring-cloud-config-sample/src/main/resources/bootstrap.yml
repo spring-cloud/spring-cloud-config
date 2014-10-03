@@ -1,6 +1,6 @@
 spring:
   application:
     name: bar
-  platform:
+  cloud:
     config:
       uri: http://localhost:${config.port:8888}
