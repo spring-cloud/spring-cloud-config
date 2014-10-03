@@ -17,6 +17,12 @@ server is easily embeddable in a Spring Boot application using the
 
 === Encryption and Decryption
 
+IMPORTANT: **Prerequisites:** to use the encryption and decryption features
+you need the full-strength JCE installed in your JVM (it's not there by default).
+You can download the "Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files"
+from Oracle, and follow instructions for installation (essentially replace the 2 policy files
+in the JRE lib/security directory with the ones that you downloaded).
+
 The server exposes `/encrypt` and `/decrypt` endpoints (on the
 assumption that these will be secured and only accessed by authorized
 agents). If the remote property sources contain encryted content
