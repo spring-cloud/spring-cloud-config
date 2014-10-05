@@ -1,8 +1,5 @@
 language: java
-before_install: git clone https://github.com/dsyer/spring-security-rsa tmp && (cd tmp && mvn install -DskipTests=true)
-install: mvn install -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
+before_install: git config user.name "$GIT_NAME" && git config user.email "$GIT_EMAIL" && git config credential.helper "store --file=.git/credentials" && echo "https://$GH_TOKEN:@github.com" > .git/credentials
+install: mvn install -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true && ./src/main/asciidoc/ghpages.sh
 script: mvn --settings .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true
-env:
-  global:
-  - secure: aomAMudvGhboHcPQDfZ9xFv0ThFMD53aCbX8f9DE0X6GudmdG4fcI02BDfIwFiDG8TG0DZl5brHCzbfgvylNv+Z54GwhzrMytUGv3sn2Meal5bhHm6opjHARqKzNnV8IHRYTVAZbBZK/9eUWIyQtxEL+fmK3PtzlTRshT81hI8I=
-  - secure: YhCHblp6q9FF4kCB4OlvqVpmMjysObdFuioDstRdvCc7V5fpxwnaGlt46qXAEsYbbdAw4YTibFid9vwyGT/cqbmaq5q0l5qrxEbe/sOdM1TTnH4rLIDLdSdhub3J18WWxtHlF4NmhmR3XL0bOIWjNvgoLkPyc6acILn+8FBzC4c=
+
