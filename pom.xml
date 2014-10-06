@@ -9,9 +9,9 @@
 	<description>Spring Cloud Config</description>
 	<url>http://projects.spring.io/spring-cloud/</url>
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.1.5.RELEASE</version>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-build</artifactId>
+		<version>1.0.0.BUILD-SNAPSHOT</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<modules>
@@ -19,272 +19,6 @@
 	  <module>spring-cloud-config-server</module>
 	  <module>spring-cloud-config-sample</module>
 	</modules>
-	<organization>
-		<name>Pivotal Software, Inc.</name>
-		<url>http://www.spring.io</url>
-	</organization>
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
-		</license>
-	</licenses>
-	<scm>
-		<url>https://github.com/spring-cloud/spring-cloud-config</url>
-	</scm>
-	<developers>
-		<developer>
-			<id>dsyer</id>
-			<name>Dave Syer</name>
-			<email>dsyer at gopivotal.com</email>
-			<organization>Pivotal Software, Inc.</organization>
-			<organizationUrl>http://www.spring.io</organizationUrl>
-			<roles>
-				<role>Project lead</role>
-			</roles>
-		</developer>
-	</developers>
-	<prerequisites>
-		<maven>3.0.0</maven>
-	</prerequisites>
-	<properties>
-		<main.basedir>${basedir}</main.basedir>
-	</properties>
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-antrun-plugin</artifactId>
-					<version>1.7</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.17</version>
-				</plugin>
-				<plugin>
-					<groupId>com.google.code.maven-replacer-plugin</groupId>
-					<artifactId>replacer</artifactId>
-					<version>1.5.3</version>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-        <plugins>
-          <plugin>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <dependencies>
-              <dependency>
-                <groupId>org.jruby</groupId>
-                <artifactId>jruby-complete</artifactId>
-                <version>1.7.12</version>
-              </dependency>
-            </dependencies>
-            <executions>
-              <execution>
-                <id>readme</id>
-                <phase>process-resources</phase>
-				<goals>
-				  <goal>run</goal>
-				</goals>
-                <inherited>false</inherited>
-                <configuration>
-                  <tasks>
-                    <java classname="org.jruby.Main" failonerror="yes">
-                      <arg value="${basedir}/src/main/ruby/generate_readme.sh" />
-                      <arg value="-o" />
-                      <arg value="${basedir}/README.adoc" />
-                    </java>
-                  </tasks>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-		  <plugin>
-		    <groupId>org.asciidoctor</groupId>
-		    <artifactId>asciidoctor-maven-plugin</artifactId>
-		    <version>1.5.0</version>
-		    <executions>
-			  <execution>
-			    <id>generate-docs</id>
-			    <phase>process-resources</phase>
-			    <goals>
-				  <goal>process-asciidoc</goal>
-			    </goals>
-                <inherited>false</inherited>
-			    <configuration>
-				  <sourceDocumentName>${project.artifactId}.adoc</sourceDocumentName>
-                  <backend>html</backend>
-				  <doctype>article</doctype>
-				  <attributes>
-				    <docinfo>true</docinfo>
-				    <spring-cloud-version>${project.version}</spring-cloud-version>
-				  </attributes>
-			    </configuration>
-			  </execution>
-		    </executions>
-		  </plugin>
-        </plugins>
-	</build>
-    <profiles>
-		<profile>
-			<id>milestone</id>
-			<distributionManagement>
-				<repository>
-					<id>repo.spring.io</id>
-					<name>Spring Milestone Repository</name>
-					<url>https://repo.spring.io/libs-milestone-local</url>
-				</repository>
-			</distributionManagement>
-		</profile>
-		<profile>
-			<id>central</id>
-			<distributionManagement>
-				<snapshotRepository>
-					<id>sonatype-nexus-snapshots</id>
-					<name>Sonatype Nexus Snapshots</name>
-					<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-				</snapshotRepository>
-				<repository>
-					<id>sonatype-nexus-staging</id>
-					<name>Nexus Release Repository</name>
-					<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-				</repository>
-			</distributionManagement>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>full</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-antrun-plugin</artifactId>
-                        <inherited>false</inherited>
-						<dependencies>
-							<dependency>
-								<groupId>ant-contrib</groupId>
-								<artifactId>ant-contrib</artifactId>
-								<version>1.0b3</version>
-								<exclusions>
-									<exclusion>
-										<groupId>ant</groupId>
-										<artifactId>ant</artifactId>
-									</exclusion>
-								</exclusions>
-							</dependency>
-							<dependency>
-								<groupId>org.apache.ant</groupId>
-								<artifactId>ant-nodeps</artifactId>
-								<version>1.8.1</version>
-							</dependency>
-							<dependency>
-								<groupId>org.tigris.antelope</groupId>
-								<artifactId>antelopetasks</artifactId>
-								<version>3.2.10</version>
-							</dependency>
-						</dependencies>
-						<executions>
-							<execution>
-								<id>package-and-attach-docs-zip</id>
-								<phase>package</phase>
-								<goals>
-									<goal>run</goal>
-								</goals>
-								<configuration>
-									<target>
-										<zip destfile="${project.build.directory}/${project.artifactId}-${project.version}.zip">
-											<fileset dir="${project.build.directory}/generated-docs" />
-										</zip>
-									</target>
-								</configuration>
-							</execution>
-							<execution>
-								<id>setup-maven-properties</id>
-								<phase>validate</phase>
-								<goals>
-									<goal>run</goal>
-								</goals>
-								<configuration>
-									<exportAntProperties>true</exportAntProperties>
-									<target>
-										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
-										<taskdef name="stringutil" classname="ise.antelope.tasks.StringUtilTask" />
-										<var name="version-type" value="${project.version}" />
-										<propertyregex property="version-type" override="true" input="${version-type}" regexp=".*\.(.*)" replace="\1" />
-										<propertyregex property="version-type" override="true" input="${version-type}" regexp="(M)\d+" replace="MILESTONE" />
-										<propertyregex property="version-type" override="true" input="${version-type}" regexp="(RC)\d+" replace="MILESTONE" />
-										<propertyregex property="version-type" override="true" input="${version-type}" regexp="BUILD-(.*)" replace="SNAPSHOT" />
-										<stringutil string="${version-type}" property="spring-cloud-repo">
-											<lowercase />
-										</stringutil>
-										<var name="github-tag" value="v${project.version}" />
-										<propertyregex property="github-tag" override="true" input="${github-tag}" regexp=".*SNAPSHOT" replace="master" />
-									</target>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>build-helper-maven-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>attach-zip</id>
-								<goals>
-									<goal>attach-artifact</goal>
-								</goals>
-								<configuration>
-									<artifacts>
-										<artifact>
-											<file>${project.build.directory}/${project.artifactId}-${project.version}.zip</file>
-											<type>zip;zip.type=docs;zip.deployed=false</type>
-										</artifact>
-									</artifacts>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-    </profiles>
-	<distributionManagement>
-		<!-- see 'staging' profile for dry-run deployment settings -->
-		<downloadUrl>http://www.springsource.com/download/community
-		</downloadUrl>
-		<site>
-			<id>spring-docs</id>
-			<url>scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-retry/docs/${project.version}
-			</url>
-		</site>
-		<repository>
-			<id>repo.spring.io</id>
-			<name>Spring Release Repository</name>
-			<url>https://repo.spring.io/libs-release-local</url>
-		</repository>
-		<snapshotRepository>
-			<id>repo.spring.io</id>
-			<name>Spring Snapshot Repository</name>
-			<url>https://repo.spring.io/libs-snapshot-local</url>
-		</snapshotRepository>
-	</distributionManagement>
     <dependencyManagement>
       <dependencies>
 		<dependency>
@@ -309,40 +43,28 @@
 		</dependency>
      </dependencies>
     </dependencyManagement>
-	<repositories>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>http://repo.spring.io/snapshot</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>http://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>http://repo.spring.io/snapshot</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</pluginRepository>
-		<pluginRepository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>http://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
+    <profiles>
+		<profile>
+			<id>docs</id>
+            <build>
+               <plugins>
+		        <plugin>
+		          <groupId>org.asciidoctor</groupId>
+		          <artifactId>asciidoctor-maven-plugin</artifactId>
+                  <inherited>false</inherited>
+                </plugin>
+			    <plugin>
+				  <groupId>org.apache.maven.plugins</groupId>
+				  <artifactId>maven-antrun-plugin</artifactId>
+                  <inherited>false</inherited>
+                </plugin>
+ 				<plugin>
+				  <groupId>org.codehaus.mojo</groupId>
+				  <artifactId>build-helper-maven-plugin</artifactId>
+                  <inherited>false</inherited>
+                </plugin>
+              </plugins>
+            </build>
+		</profile>
+    </profiles>
 </project>
