@@ -1,13 +1,16 @@
 language: java
-before_install: git config user.name "$GIT_NAME" && git config user.email "$GIT_EMAIL"
-  && git config credential.helper "store --file=.git/credentials" && echo "https://$GH_TOKEN:@github.com"
-  > .git/credentials
+before_install:
+  - git config user.name "$GIT_NAME"
+  - git config user.email "$GIT_EMAIL"
+  - git config credential.helper "store --file=.git/credentials"
+  - echo "https://$GH_TOKEN:@github.com" > .git/credentials
 install:
-  - mvn install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
-  - ./src/main/asciidoc/ghpages.sh
+- mvn install -P docs -q -U -DskipTests=true -Dmaven.test.redirectTestOutputToFile=true
+- ./src/main/asciidoc/ghpages.sh
 script: mvn --settings .settings.xml deploy -nsu -Dmaven.test.redirectTestOutputToFile=true
 env:
   global:
-    - GIT_NAME="Dave Syer"
-    - GIT_EMAIL=dsyer@pivotal.io
-    - secure: XzldTjvoaqDnqWh8viTsGDQgqx25yT0j7ggga47Zhy6SpxIF084sBuYkLJpYTHTVzeGSNVX+TpETPRkDp05/0ELv/yKtl3UJcK7E8h5YLg9PFspzmOErnI2RmfK6DUPCRhwO8MYlmKXefK6WpNM8Ltdd1ZS90IdefhmzTuddrp8=
+  - GIT_NAME="Dave Syer"
+  - GIT_EMAIL=dsyer@pivotal.io
+  - CI_DEPLOY_USERNAME=buildmaster
+  - secure: AdOYck+f0ap+sV7N08jCAfD37/4YeQ2NBNSxzhdVwvcg7lfRUxzee0WkIge/0aPJuD/pYfb6vzIUDNE4ge8esaKijLwD0xE3SmUlroJ6Hmd3dVU39S9WcII78RmQGp9KBBhr7BQPyXz1UZQp2RhuiwRgUAr4hzDfwjpv7Mofgbs=
