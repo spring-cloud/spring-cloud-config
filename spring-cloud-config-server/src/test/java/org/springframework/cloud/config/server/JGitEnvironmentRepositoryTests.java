@@ -62,7 +62,7 @@ public class JGitEnvironmentRepositoryTests {
 		git.renameTo(dotGit);
 		repository
 				.setUri(environment
-						.resolvePlaceholders("${user.name}@localhost:${user.dir}/target/test-classes/config-repo"));
+						.resolvePlaceholders("file:./target/test-classes/config-repo"));
 		if (basedir.exists()) {
 			FileUtils.delete(basedir, FileUtils.RECURSIVE);
 		}

@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
@@ -31,10 +32,12 @@ import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.util.FileUtils;
-import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
+import org.springframework.util.FileSystemUtils;
 
 /**
  * @author Dave Syer
@@ -117,7 +120,15 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 					}
 				}
 				Assert.state(basedir.mkdirs(), "Could not create basedir: " + basedir);
-				git = Git.cloneRepository().setURI(uri).setDirectory(basedir).call();
+				if (uri.startsWith("file:")) {
+					FileSystemUtils.copyRecursively(new UrlResource(uri).getFile(), basedir);
+					git = Git.open(basedir);
+				}
+				else {
+					CloneCommand clone = Git.cloneRepository().setURI(uri)
+							.setDirectory(basedir);
+					git = clone.call();
+				}
 			}
 			Environment result;
 			synchronized (this) {
@@ -137,8 +148,10 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 					// Assumes we are on a tracking branch (should be safe)
 					try {
 						git.pull().call();
-					} catch (Exception e) {
-						logger.warn("Could not pull remote for " + label + " (current ref=" + ref + ")");
+					}
+					catch (Exception e) {
+						logger.warn("Could not pull remote for " + label
+								+ " (current ref=" + ref + ")");
 					}
 				}
 				String search = basedir.toURI().toString();
