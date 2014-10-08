@@ -58,7 +58,7 @@ The inverse operation is also available via `/decrypt` (provided the server is
 configured with a symmetric key or a full key pair):
 
 ----
-$ curl localhost:8888/edecrypt -d 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+$ curl localhost:8888/decrypt -d 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
 mysecret
 ----
 
