@@ -14,6 +14,20 @@ configuration (name-value pairs, or equivalent YAML content).  The
 server is easily embeddable in a Spring Boot application using the
 `@EnableConfigServer` annotation.
 
+=== Security
+
+You are free to secure your Config Server in any way that makes sense
+to you (from physical network security to OAuth2 bearer
+tokens), and Spring Security and Spring Boot make it easy to do pretty
+much anything. 
+
+To use the default Spring Boot configured HTTP Basic security, just
+include Spring Security on the classpath (e.g. through
+`spring-boot-starter-security`). The default is a username of "user"
+and a randomly generated password, which isn't going to be very useful
+in practice, so we recommend you configure the password (via
+`security.user.password`) and encrypt it (see below for instructions
+on how to do that).
 
 === Encryption and Decryption
 
@@ -29,7 +43,9 @@ agents). If the remote property sources contain encryted content
 (values starting with `{cipher}`) they will be decrypted before
 sending to clients over HTTP. The main advantage of this set up is
 that the property values don't have to be in plain text when they are
-"at rest" (e.g. in a git repository). 
+"at rest" (e.g. in a git repository). If a value cannot be decrypted
+it is replaced with an empty string, largely to prevent cipher text
+being used as a password in Spring Boot autconfigured HTTP basic.
 
 If you are setting up a remote config repository for config client
 applications it might contain an `application.yml` like this, for
@@ -147,6 +163,7 @@ useful features related to `Environment` change events. When a config
 client starts up it binds to the Config Server (via the bootstrap
 configuration property `spring.cloud.config.uri`) and initializes
 Spring `Environment` with remote property sources
+
 
 === Environment Changes
 
@@ -297,3 +314,38 @@ org.springframework.cloud.bootstrap.BootstrapConfiguration=sample.custom.CustomP
 
 then the "customProperty" `PropertySource` will show up in any
 application that includes that jar on its classpath.
+
+=== Security
+
+If you use HTTP Basic security on the server then clients just need to
+know the password (and username if it isn't the default). You can do
+that via the config server URI, or via separate username and password
+properties, e.g.
+
+.bootstrap.yml
+----
+spring:
+  cloud:
+    config:
+     uri: https://user:secret@myconfig.mycompany.com
+----
+
+or
+
+.bootstrap.yml
+----
+spring:
+  cloud:
+    config:
+     uri: https://myconfig.mycompany.com
+     username: user
+     password: secret
+----
+
+The `spring.cloud.config.password` and `spring.cloud.config.username`
+values override anything that is provided in the URI.
+
+If you use another form of security you might need to provide a
+`RestTemplate` to the `ConfigServicePropertySourceLocator` (e.g. by
+grabbing it in the bootstrap context and injecting one).
+

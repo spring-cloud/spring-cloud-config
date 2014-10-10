@@ -94,11 +94,20 @@ public class EnvironmentDecryptApplicationListener implements
 					value = value.substring("{cipher}".length());
 					try {
 						value = encryptor.decrypt(value);
-						overrides.put(key, value);
+						if (logger.isDebugEnabled()) {
+							logger.debug("Decrypted: key=" + key);
+						}
 					}
 					catch (Exception e) {
-						logger.warn("Cannot decrypt: key=" + key);
+						if (logger.isDebugEnabled()) {
+							logger.warn("Cannot decrypt: key=" + key, e);
+						} else {
+							logger.warn("Cannot decrypt: key=" + key);
+						}
+						// Set value to empty to avoid making a password out of the cipher text
+						value = "";
 					}
+					overrides.put(key, value);
 				}
 			}
 

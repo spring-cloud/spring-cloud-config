@@ -50,7 +50,7 @@ public class ConfigServerConfiguration {
 		private ConfigurableEnvironment environment;
 
 		@Bean
-		@ConfigurationProperties("spring.platform.config.server")
+		@ConfigurationProperties("spring.cloud.config.server")
 		public JGitEnvironmentRepository repository() {
 			return new JGitEnvironmentRepository(environment);
 		}

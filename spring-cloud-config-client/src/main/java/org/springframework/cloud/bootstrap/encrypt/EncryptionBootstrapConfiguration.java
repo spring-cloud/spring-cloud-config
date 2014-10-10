@@ -22,7 +22,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.bootstrap.encrypt.EncryptionBootstrapConfiguration.KeyCondition;
 import org.springframework.cloud.bootstrap.encrypt.KeyProperties.KeyStore;
 import org.springframework.cloud.config.encrypt.EncryptorFactory;
 import org.springframework.context.annotation.Bean;
@@ -42,11 +41,14 @@ import org.springframework.util.StringUtils;
  */
 @Configuration
 @ConditionalOnClass(TextEncryptor.class)
-@Conditional(KeyCondition.class)
 @EnableConfigurationProperties(KeyProperties.class)
 public class EncryptionBootstrapConfiguration {
 
+	@Autowired(required = false)
+	private TextEncryptor encryptor;
+
 	@Configuration
+	@Conditional(KeyCondition.class)
 	@ConditionalOnClass(RsaSecretEncryptor.class)
 	protected static class RsaEncryptionConfiguration {
 
@@ -57,7 +59,7 @@ public class EncryptionBootstrapConfiguration {
 		@ConditionalOnMissingBean(TextEncryptor.class)
 		public TextEncryptor textEncryptor() {
 			KeyStore keyStore = key.getKeyStore();
-			if (keyStore.getLocation()!=null && keyStore.getLocation().exists()) {
+			if (keyStore.getLocation() != null && keyStore.getLocation().exists()) {
 				return new RsaSecretEncryptor(
 						new KeyStoreKeyFactory(keyStore.getLocation(), keyStore
 								.getPassword().toCharArray()).getKeyPair(keyStore
@@ -69,6 +71,7 @@ public class EncryptionBootstrapConfiguration {
 	}
 
 	@Configuration
+	@Conditional(KeyCondition.class)
 	@ConditionalOnMissingClass(name = "org.springframework.security.rsa.crypto.RsaSecretEncryptor")
 	protected static class VanillaEncryptionConfiguration {
 
@@ -84,8 +87,10 @@ public class EncryptionBootstrapConfiguration {
 	}
 
 	@Bean
-	public EnvironmentDecryptApplicationListener environmentDecryptApplicationListener(
-			TextEncryptor encryptor) {
+	public EnvironmentDecryptApplicationListener environmentDecryptApplicationListener() {
+		if (encryptor == null) {
+			encryptor = new FailsafeTextEncryptor();
+		}
 		return new EnvironmentDecryptApplicationListener(encryptor);
 	}
 
@@ -114,6 +119,29 @@ public class EncryptionBootstrapConfiguration {
 				return false;
 			}
 			return StringUtils.hasText(environment.resolvePlaceholders(value));
+		}
+
+	}
+
+	/**
+	 * TextEncryptor that just fails, so that users don't get a false sense of security
+	 * adding ciphers to config files and not getting them decrypted.
+	 * 
+	 * @author Dave Syer
+	 *
+	 */
+	protected static class FailsafeTextEncryptor implements TextEncryptor {
+
+		@Override
+		public String encrypt(String text) {
+			throw new UnsupportedOperationException(
+					"No encryption for FailsafeTextEncryptor. Did you configure the keystore correctly?");
+		}
+
+		@Override
+		public String decrypt(String encryptedText) {
+			throw new UnsupportedOperationException(
+					"No decryption for FailsafeTextEncryptor. Did you configure the keystore correctly?");
 		}
 
 	}

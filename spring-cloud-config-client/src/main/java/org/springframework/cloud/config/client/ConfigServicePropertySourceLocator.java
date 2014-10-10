@@ -16,17 +16,28 @@
 
 package org.springframework.cloud.config.client;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.config.Environment;
+import org.springframework.cloud.config.PropertySource;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
-import org.springframework.cloud.config.Environment;
-import org.springframework.cloud.config.PropertySource;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.security.crypto.codec.Base64;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Dave Syer
@@ -42,14 +53,19 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private String label = "master";
 
+	private String username;
+
+	private String password;
+
 	private String uri = "http://localhost:8888";
 
-	private RestTemplate restTemplate = new RestTemplate();
+	private RestTemplate restTemplate;
 
 	@Override
 	public org.springframework.core.env.PropertySource<?> locate() {
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		Environment result = restTemplate.exchange(uri + "/{name}/{env}/{label}",
+		RestTemplate restTemplate = this.restTemplate==null ? getSecureRestTemplate() : this.restTemplate;
+		Environment result = restTemplate.exchange(getUri() + "/{name}/{env}/{label}",
 				HttpMethod.GET, new HttpEntity<Void>((Void) null), Environment.class,
 				name, env, label).getBody();
 		for (PropertySource source : result.getPropertySources()) {
@@ -60,8 +76,12 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		return composite;
 	}
 
+	public void setRestTemplate(RestTemplate restTemplate) {
+		this.restTemplate = restTemplate;
+	}
+
 	public String getUri() {
-		return uri;
+		return extractCredentials()[2];
 	}
 
 	public void setUri(String url) {
@@ -90,6 +110,100 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	public void setLabel(String label) {
 		this.label = label;
+	}
+
+	public String getUsername() {
+		return extractCredentials()[0];
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return extractCredentials()[1];
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	private RestTemplate getSecureRestTemplate() {
+		RestTemplate template = new RestTemplate();
+		String[] userInfo = extractCredentials();
+		if (userInfo[1]!=null) {
+			template.setInterceptors(Arrays
+					.<ClientHttpRequestInterceptor> asList(new BasicAuthorizationInterceptor(
+							userInfo[0], userInfo[1])));
+		}
+		return template;
+	}
+
+	private String[] extractCredentials() {
+		String[] result = new String[3];
+		String uri = this.uri;
+		result[2] = uri;
+		String[] creds = getUsernamePassword();
+		result[0] = creds[0];
+		result[1] = creds[1];
+		try {
+			URL url = new URL(uri);
+			String userInfo = url.getUserInfo();
+			if (StringUtils.isEmpty(userInfo) || ":".equals(userInfo)) {
+				return result;
+			}
+			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build()
+					.toUriString();
+			result[2] = bare;
+			if (!userInfo.contains(":")) {
+				userInfo = userInfo + ":";
+			}
+			String[] split = userInfo.split(":");
+			result[0] = split[0];
+			result[1] = split[1];
+			if (creds[1]!=null) {
+				// Explicit username / password takes precedence
+				result[1] = creds[1];
+				if ("user".equals(creds[0])) {
+					// But the username can be overridden
+					result[0] = split[0];
+				}
+			}
+			return result;
+		}
+		catch (MalformedURLException e) {
+			throw new IllegalStateException("Invalid URL: " + uri);
+		}
+	}
+
+	private String[] getUsernamePassword() {
+		if (StringUtils.hasText(password)) {
+			return new String[] {StringUtils.hasText(username) ? username.trim() : "user", password.trim()};
+		}
+		return new String[2];
+	}
+
+	private static class BasicAuthorizationInterceptor implements
+			ClientHttpRequestInterceptor {
+
+		private final String username;
+
+		private final String password;
+
+		public BasicAuthorizationInterceptor(String username, String password) {
+			this.username = username;
+			this.password = (password == null ? "" : password);
+		}
+
+		@Override
+		public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+				ClientHttpRequestExecution execution) throws IOException {
+			byte[] token = Base64
+					.encode((this.username + ":" + this.password).getBytes());
+			request.getHeaders().add("Authorization", "Basic " + new String(token));
+			return execution.execute(request, body);
+		}
+
 	}
 
 }
