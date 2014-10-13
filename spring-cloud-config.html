@@ -479,7 +479,7 @@ repository. Then try it out as a client:</p>
 </div>
 <div class="paragraph">
 <p>The default strategy for locating property sources is to clone a git
-repository (at "spring.platform.config.server.uri") and use it to
+repository (at "spring.cloud.config.server.uri") and use it to
 initialize a mini <code>SpringApplication</code>. The mini-application&#8217;s
 <code>Environment</code> is used to enumerate property sources and publish them
 via a JSON endpoint. The service has resources in the form:</p>
@@ -950,7 +950,7 @@ configuration from the server.</p>
 </div>
 <div class="paragraph">
 <p>You can disable the bootstrap process completely by setting
-<code>spring.platform.bootstrap.enabled=false</code> (e.g. in System properties).</p>
+<code>spring.cloud.bootstrap.enabled=false</code> (e.g. in System properties).</p>
 </div>
 </div>
 <div class="sect2">
@@ -1051,6 +1051,22 @@ properties, e.g.</p>
 values override anything that is provided in the URI.</p>
 </div>
 <div class="paragraph">
+<p>If you deploy your apps on Cloud Foundry then the best way to provide
+the password is through service credentials, e.g. in the URI, since
+then it doesn&#8217;t even need to be in a config file. An example which
+works locally and for a user-provided service on Cloud Foundry named
+"configserver":</p>
+</div>
+<div class="listingblock">
+<div class="title">bootstrap.yml</div>
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+     uri: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:8888}</pre>
+</div>
+</div>
+<div class="paragraph">
 <p>If you use another form of security you might need to provide a
 <code>RestTemplate</code> to the <code>ConfigServicePropertySourceLocator</code> (e.g. by
 grabbing it in the bootstrap context and injecting one).</p>
@@ -1061,7 +1077,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-06 07:54:05 BST
+Last updated 2014-10-13 15:57:08 UTC
 </div>
 </div>
 </body>
