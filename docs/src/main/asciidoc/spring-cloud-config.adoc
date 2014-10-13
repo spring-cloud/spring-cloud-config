@@ -260,7 +260,7 @@ It is a good idea to set the `spring.application.name` in
 configuration from the server.
 
 You can disable the bootstrap process completely by setting
-`spring.platform.bootstrap.enabled=false` (e.g. in System properties).
+`spring.cloud.bootstrap.enabled=false` (e.g. in System properties).
 
 === Customizing the Bootstrap
 

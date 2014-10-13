@@ -18,7 +18,7 @@ $ curl localhost:8888/foo/development
 ----
 
 The default strategy for locating property sources is to clone a git
-repository (at "spring.platform.config.server.uri") and use it to
+repository (at "spring.cloud.config.server.uri") and use it to
 initialize a mini `SpringApplication`. The mini-application's
 `Environment` is used to enumerate property sources and publish them
 via a JSON endpoint. The service has resources in the form:

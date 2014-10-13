@@ -60,7 +60,7 @@ public class BootstrapApplicationListener implements
 	@Override
 	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
 		Environment environment = event.getEnvironment();
-		if (!environment.getProperty("spring.platform.bootstrap.enabled", Boolean.class,
+		if (!environment.getProperty("spring.cloud.bootstrap.enabled", Boolean.class,
 				true)) {
 			return;
 		}

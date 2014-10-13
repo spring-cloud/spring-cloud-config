@@ -77,7 +77,7 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 			config = "application," + config;
 		}
 		list.add("--spring.config.name=" + config);
-		list.add("--spring.platform.bootstrap.enabled=false");
+		list.add("--spring.cloud.bootstrap.enabled=false");
 		if (locations != null) {
 			list.add("--spring.config.location="
 					+ StringUtils.arrayToCommaDelimitedString(locations));

@@ -4,7 +4,7 @@ spring:
   application:
     name: configserver
   jmx:
-    default_domain: platform.config.server
+    default_domain: cloud.config.server
 server:
   port: 8888
 management:

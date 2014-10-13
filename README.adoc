@@ -48,7 +48,7 @@ $ curl localhost:8888/foo/development
 ----
 
 The default strategy for locating property sources is to clone a git
-repository (at "spring.platform.config.server.uri") and use it to
+repository (at "spring.cloud.config.server.uri") and use it to
 initialize a mini `SpringApplication`. The mini-application's
 `Environment` is used to enumerate property sources and publish them
 via a JSON endpoint. The service has resources in the form:
@@ -181,7 +181,7 @@ The sample has a test case where the config server is also started in
 the same JVM (with a different port), and the test asserts that an
 environment property from the git configuration repo is present. To
 change the location of the config server just set
-"spring.platform.config.uri" in "bootstrap.yml" (or via System
+"spring.cloud.config.uri" in "bootstrap.yml" (or via System
 properties etc.).
 
 The test case has a `main()` method that runs the server in the same

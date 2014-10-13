@@ -40,7 +40,7 @@ The sample has a test case where the config server is also started in
 the same JVM (with a different port), and the test asserts that an
 environment property from the git configuration repo is present. To
 change the location of the config server just set
-"spring.platform.config.uri" in "bootstrap.yml" (or via System
+"spring.cloud.config.uri" in "bootstrap.yml" (or via System
 properties etc.).
 
 The test case has a `main()` method that runs the server in the same

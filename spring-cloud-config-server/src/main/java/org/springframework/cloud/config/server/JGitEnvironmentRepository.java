@@ -45,7 +45,7 @@ import org.springframework.util.FileSystemUtils;
  */
 public class JGitEnvironmentRepository implements EnvironmentRepository {
 
-	public static final String DEFAULT_URI = "https://github.com/spring-platform-samples/config-repo";
+	public static final String DEFAULT_URI = "https://github.com/spring-cloud-samples/config-repo";
 
 	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
 
