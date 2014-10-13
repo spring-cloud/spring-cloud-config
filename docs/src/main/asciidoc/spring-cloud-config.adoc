@@ -345,6 +345,21 @@ spring:
 The `spring.cloud.config.password` and `spring.cloud.config.username`
 values override anything that is provided in the URI.
 
+If you deploy your apps on Cloud Foundry then the best way to provide
+the password is through service credentials, e.g. in the URI, since
+then it doesn't even need to be in a config file. An example which
+works locally and for a user-provided service on Cloud Foundry named
+"configserver":
+
+.bootstrap.yml
+----
+spring:
+  cloud:
+    config:
+     uri: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:8888}
+
+----
+
 If you use another form of security you might need to provide a
 `RestTemplate` to the `ConfigServicePropertySourceLocator` (e.g. by
 grabbing it in the bootstrap context and injecting one).
