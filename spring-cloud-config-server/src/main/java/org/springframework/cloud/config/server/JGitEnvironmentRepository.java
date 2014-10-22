@@ -106,21 +106,21 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		return basedir;
 	}
 
-  public String getUsername() {
+	public String getUsername() {
 		return username;
 	}
 
-  public void setUsername(String username) {
-    this.username = username;
-  }
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-  public String getPassword() {
+	public String getPassword() {
 		return password;
 	}
 
-  public void setPassword(String password) {
-    this.password = password;
-  }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
@@ -130,10 +130,10 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				git = Git.open(basedir);
 				try {
 					FetchCommand fetch = git.fetch();
-          if (hasText(username)) {
-            setCredentialsProvider(fetch);
-          }
-          fetch.call();
+					if (hasText(username)) {
+						setCredentialsProvider(fetch);
+					}
+					fetch.call();
 				}
 				catch (Exception e) {
 					logger.warn("Remote repository not available");
@@ -157,9 +157,9 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				else {
 					CloneCommand clone = Git.cloneRepository().setURI(uri)
 							.setDirectory(basedir);
-          if (hasText(username)) {
-            setCredentialsProvider(clone);
-          }
+					if (hasText(username)) {
+						setCredentialsProvider(clone);
+					}
 					git = clone.call();
 				}
 			}
@@ -181,10 +181,10 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 					// Assumes we are on a tracking branch (should be safe)
 					try {
 						PullCommand pull = git.pull();
-            if (hasText(username)) {
-              setCredentialsProvider(pull);
-            }
-            pull.call();
+						if (hasText(username)) {
+							setCredentialsProvider(pull);
+						}
+						pull.call();
 					}
 					catch (Exception e) {
 						logger.warn("Could not pull remote for " + label
@@ -202,9 +202,9 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		}
 	}
 
-  private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
-    cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
-  }
+	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
+		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
+	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
 		checkout.setCreateBranch(true).setName(label)
