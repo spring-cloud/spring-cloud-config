@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server;
 
+import static org.springframework.util.StringUtils.hasText;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,8 +32,12 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.FetchCommand;
+import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.util.FileUtils;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -54,6 +60,10 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	private String uri = DEFAULT_URI;
 
 	private ConfigurableEnvironment environment;
+
+  private String username;
+
+  private String password;
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
@@ -96,6 +106,22 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		return basedir;
 	}
 
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 		try {
@@ -103,7 +129,11 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			if (new File(basedir, ".git").exists()) {
 				git = Git.open(basedir);
 				try {
-					git.fetch().call();
+					FetchCommand fetch = git.fetch();
+					if (hasText(username)) {
+						setCredentialsProvider(fetch);
+					}
+					fetch.call();
 				}
 				catch (Exception e) {
 					logger.warn("Remote repository not available");
@@ -127,6 +157,9 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				else {
 					CloneCommand clone = Git.cloneRepository().setURI(uri)
 							.setDirectory(basedir);
+					if (hasText(username)) {
+						setCredentialsProvider(clone);
+					}
 					git = clone.call();
 				}
 			}
@@ -147,7 +180,11 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				if (git.status().call().isClean() && ref != null) {
 					// Assumes we are on a tracking branch (should be safe)
 					try {
-						git.pull().call();
+						PullCommand pull = git.pull();
+						if (hasText(username)) {
+							setCredentialsProvider(pull);
+						}
+						pull.call();
 					}
 					catch (Exception e) {
 						logger.warn("Could not pull remote for " + label
@@ -163,6 +200,10 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot clone repository", e);
 		}
+	}
+
+	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
+		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
 	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
