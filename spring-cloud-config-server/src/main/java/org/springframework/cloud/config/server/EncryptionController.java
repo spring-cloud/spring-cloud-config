@@ -21,8 +21,8 @@ import java.net.URLDecoder;
 import java.security.KeyPair;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -209,7 +209,7 @@ public class EncryptionController {
 		Environment result = new Environment(environment.getName(),
 				environment.getLabel());
 		for (PropertySource source : environment.getPropertySources()) {
-			LinkedHashMap<Object, Object> map = new LinkedHashMap<Object, Object>(
+			ConcurrentHashMap<Object, Object> map = new ConcurrentHashMap<Object, Object>(
 					source.getSource());
 			for (Object key : map.keySet()) {
 				String name = key.toString();
