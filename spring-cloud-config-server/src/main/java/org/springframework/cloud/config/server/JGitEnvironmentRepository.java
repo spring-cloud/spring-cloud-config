@@ -34,6 +34,7 @@ import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -130,7 +131,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				try {
 					FetchCommand fetch = git.fetch();
           if (hasText(username)) {
-            fetch.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
+            setCredentialsProvider(fetch);
           }
           fetch.call();
 				}
@@ -157,7 +158,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 					CloneCommand clone = Git.cloneRepository().setURI(uri)
 							.setDirectory(basedir);
           if (hasText(username)) {
-            clone.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
+            setCredentialsProvider(clone);
           }
 					git = clone.call();
 				}
@@ -181,7 +182,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 					try {
 						PullCommand pull = git.pull();
             if (hasText(username)) {
-              pull.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
+              setCredentialsProvider(pull);
             }
             pull.call();
 					}
@@ -200,6 +201,10 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			throw new IllegalStateException("Cannot clone repository", e);
 		}
 	}
+
+  private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
+    cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
+  }
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
 		checkout.setCreateBranch(true).setName(label)
