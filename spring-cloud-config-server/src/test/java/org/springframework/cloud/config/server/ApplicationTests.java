@@ -9,13 +9,15 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.cloud.config.Environment;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = ConfigServerApplication.class)
-@IntegrationTest("server.port:0")
+@IntegrationTest({"server.port:0", "spring.config.name:configserver"})
 @WebAppConfiguration
+@ActiveProfiles("test")
 public class ApplicationTests {
 	
 	@Value("${local.server.port}")
