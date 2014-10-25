@@ -2,6 +2,9 @@ package org.springframework.cloud.config.server;
 
 import static org.junit.Assert.assertFalse;
 
+import java.io.IOException;
+
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,13 +18,18 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = ConfigServerApplication.class)
-@IntegrationTest({"server.port:0", "spring.config.name:configserver"})
+@IntegrationTest({"server.port:0", "spring.config.name:configserver", "spring.cloud.config.server.uri:file:./target/test-classes/config-repo"})
 @WebAppConfiguration
 @ActiveProfiles("test")
 public class ApplicationTests {
 	
 	@Value("${local.server.port}")
 	private int port;
+	
+	@BeforeClass
+	public static void init() throws IOException{
+		ConfigServerTestUtils.prepareLocalRepo();
+	}
 
 	@Test
 	public void contextLoads() {

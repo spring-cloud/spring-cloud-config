@@ -21,16 +21,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
-import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.cloud.config.Environment;
-
-import com.jcraft.jsch.Session;
+import org.springframework.core.env.StandardEnvironment;
 
 /**
  * @author Dave Syer
@@ -42,27 +37,12 @@ public class JGitEnvironmentRepositoryTests {
 	private JGitEnvironmentRepository repository = new JGitEnvironmentRepository(
 			environment);
 
-	private File basedir = new File("target/config-repo");
+	private File basedir = new File("target/config");
 
 	@Before
 	public void init() throws Exception {
-		SshSessionFactory.setInstance(new JschConfigSessionFactory() {
-			@Override
-			protected void configure(Host hc, Session session) {
-				session.setConfig("StrictHostKeyChecking", "no");
-			}
-		});
-		File dotGit = new File("target/test-classes/config-repo/.git");
-		File git = new File("target/test-classes/config-repo/git");
-		if (git.exists()) {
-			if (dotGit.exists()) {
-				FileUtils.delete(dotGit, FileUtils.RECURSIVE);
-			}
-		}
-		git.renameTo(dotGit);
-		repository
-				.setUri(environment
-						.resolvePlaceholders("file:./target/test-classes/config-repo"));
+		String uri = ConfigServerTestUtils.prepareLocalRepo();
+		repository.setUri(uri);
 		if (basedir.exists()) {
 			FileUtils.delete(basedir, FileUtils.RECURSIVE);
 		}

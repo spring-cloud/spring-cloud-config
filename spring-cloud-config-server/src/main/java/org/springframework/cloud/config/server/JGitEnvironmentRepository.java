@@ -61,9 +61,9 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 
 	private ConfigurableEnvironment environment;
 
-  private String username;
+	private String username;
 
-  private String password;
+	private String password;
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
@@ -151,7 +151,8 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				}
 				Assert.state(basedir.mkdirs(), "Could not create basedir: " + basedir);
 				if (uri.startsWith("file:")) {
-					FileSystemUtils.copyRecursively(new UrlResource(uri).getFile(), basedir);
+					FileSystemUtils.copyRecursively(new UrlResource(uri).getFile(),
+							basedir);
 					git = Git.open(basedir);
 				}
 				else {
@@ -203,7 +204,8 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	}
 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
-		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
+		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username,
+				password));
 	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {

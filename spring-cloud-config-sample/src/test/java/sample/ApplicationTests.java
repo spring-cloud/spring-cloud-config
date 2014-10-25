@@ -1,7 +1,8 @@
-
 package sample;
 
 import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
+import org.springframework.cloud.config.server.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -28,22 +30,25 @@ public class ApplicationTests {
 	private int port;
 
 	@BeforeClass
-	public static void startConfigServer() {
+	public static void startConfigServer() throws IOException {
+		String repo = ConfigServerTestUtils.prepareLocalRepo();
 		ConfigurableApplicationContext context = SpringApplication.run(
 				org.springframework.cloud.config.server.ConfigServerApplication.class,
-				"--server.port=" + configPort, "--spring.config.name=server");
-		configPort = ((EmbeddedWebApplicationContext) context).getEmbeddedServletContainer().getPort();
+				"--server.port=" + configPort, "--spring.config.name=server",
+				"--spring.cloud.config.server.uri=" + repo);
+		configPort = ((EmbeddedWebApplicationContext) context)
+				.getEmbeddedServletContainer().getPort();
 		System.setProperty("config.port", "" + configPort);
 	}
 
 	@Test
 	public void contextLoads() {
 		String foo = new TestRestTemplate().getForObject("http://localhost:" + port
-				+ "/env/foo", String.class);
+				+ "/env/info.foo", String.class);
 		assertEquals("bar", foo);
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		configPort = 8888;
 		startConfigServer();
 		SpringApplication.run(Application.class, args);
