@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
@@ -44,6 +45,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  *
  */
 @ConfigurationProperties("spring.cloud.config")
+@Order(0)
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
 
 	private String env = "default";
