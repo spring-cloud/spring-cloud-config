@@ -159,11 +159,36 @@ encrypt:
 A Spring Boot application can take immediate advantage of the Spring
 Config Server (or other external property sources provided by the
 application developer), and it will also pick up some additional
-useful features related to `Environment` change events. When a config
-client starts up it binds to the Config Server (via the bootstrap
-configuration property `spring.cloud.config.uri`) and initializes
-Spring `Environment` with remote property sources
+useful features related to `Environment` change events.
 
+=== Config First Bootstrap
+
+This is the default behaviour for any application wich has the Spring
+Cloud Config Client on the classpath. When a config client starts up
+it binds to the Config Server (via the bootstrap configuration
+property `spring.cloud.config.uri`) and initializes Spring
+`Environment` with remote property sources.
+
+The net result of this is that all client apps that want to consume
+the Config Server need a `bootstrap.yml` (or an environment variable)
+with the server address in `spring.cloud.config.uri` (defaults to
+"http://localhost:8888").
+
+=== Eureka First Bootstrap
+
+If you are using Spring Cloud Netflix and Eureka Service Discovery,
+then you can have the Config Server register with Eureka if you want
+to, but in the default "Config First" mode, clients won't be able to
+take advantage of the registration.
+
+If you prefer to use Eureka to locate the Config Server, you can do
+that by setting `spring.cloud.config.discovery.enabled=true` (default
+"false"). The net result of that is that client apps all need a
+`bootstrap.yml` (or an environment variable) with the Eureka server
+address, e.g. in `eureka.client.serviceUrl.defaultZone`.  The price
+for using this option is an extra network round trip on start up to
+locate the service registration. The benefit is that the Config Server
+can change its co-ordinates, as long as Eureka is a fixed point.
 
 === Environment Changes
 
