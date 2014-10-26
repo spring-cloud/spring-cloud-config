@@ -61,12 +61,15 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private String uri = "http://localhost:8888";
 
+	private Discovery discovery = new Discovery();
+
 	private RestTemplate restTemplate;
 
 	@Override
 	public org.springframework.core.env.PropertySource<?> locate() {
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		RestTemplate restTemplate = this.restTemplate==null ? getSecureRestTemplate() : this.restTemplate;
+		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate()
+				: this.restTemplate;
 		Environment result = restTemplate.exchange(getUri() + "/{name}/{env}/{label}",
 				HttpMethod.GET, new HttpEntity<Void>((Void) null), Environment.class,
 				name, env, label).getBody();
@@ -130,10 +133,14 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		this.password = password;
 	}
 
+	public Discovery getDiscovery() {
+		return discovery;
+	}
+
 	private RestTemplate getSecureRestTemplate() {
 		RestTemplate template = new RestTemplate();
 		String[] userInfo = extractCredentials();
-		if (userInfo[1]!=null) {
+		if (userInfo[1] != null) {
 			template.setInterceptors(Arrays
 					.<ClientHttpRequestInterceptor> asList(new BasicAuthorizationInterceptor(
 							userInfo[0], userInfo[1])));
@@ -163,7 +170,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			String[] split = userInfo.split(":");
 			result[0] = split[0];
 			result[1] = split[1];
-			if (creds[1]!=null) {
+			if (creds[1] != null) {
 				// Explicit username / password takes precedence
 				result[1] = creds[1];
 				if ("user".equals(creds[0])) {
@@ -180,7 +187,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private String[] getUsernamePassword() {
 		if (StringUtils.hasText(password)) {
-			return new String[] {StringUtils.hasText(username) ? username.trim() : "user", password.trim()};
+			return new String[] {
+					StringUtils.hasText(username) ? username.trim() : "user",
+					password.trim() };
 		}
 		return new String[2];
 	}
@@ -206,6 +215,29 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			return execution.execute(request, body);
 		}
 
+	}
+
+	public static class Discovery {
+		public static final String DEFAULT_CONFIG_SERVER = "CONFIGSERVER";
+
+		private boolean enabled;
+		private String serviceId = DEFAULT_CONFIG_SERVER;
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public String getServiceId() {
+			return serviceId;
+		}
+
+		public void setServiceId(String serviceId) {
+			this.serviceId = serviceId;
+		}
 	}
 
 }
