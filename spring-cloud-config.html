@@ -426,6 +426,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_encryption_and_decryption">Encryption and Decryption</a></li>
 <li><a href="#_key_management">Key Management</a></li>
 <li><a href="#_creating_a_key_store_for_testing">Creating a Key Store for Testing</a></li>
+<li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
 </ul>
 </li>
 <li><a href="#_spring_cloud_config_client">Spring Cloud Config Client</a>
@@ -816,6 +817,19 @@ your <code>application.yml</code> for the Config Server:</p>
     alias: mytestkey
     password: letmein</pre>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_embedding_the_config_server">Embedding the Config Server</h3>
+<div class="paragraph">
+<p>The Config Server runs best as a standalone application, but if you
+need to you can embed it in another application. Just use the
+<code>@EnableConfigServer</code> annotation and (optionally) set
+<code>spring.cloud.config.server.prefix</code> to a path prefix, e.g. "/config",
+to serve the resources under a prefix. The prefix should start but not
+end with a "/". It is applied to the <code>@RequestMappings</code> in the Config
+Server (i.e. underneath the Spring Boot prefixes <code>server.servletPath</code>
+and <code>server.contextPath</code>).</p>
 </div>
 </div>
 </div>
@@ -1218,7 +1232,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-29 15:04:06 UTC
+Last updated 2014-10-29 15:18:23 UTC
 </div>
 </div>
 </body>
