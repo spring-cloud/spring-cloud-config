@@ -17,6 +17,7 @@
 package org.springframework.cloud.bootstrap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
@@ -52,16 +53,34 @@ public class BootstrapConfigurationTests {
 
 	@Test
 	public void picksUpAdditionalPropertySource() {
-		context = new SpringApplicationBuilder().web(false).sources(
-				BareConfiguration.class).run();
+		context = new SpringApplicationBuilder().web(false)
+				.sources(BareConfiguration.class).run();
 		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
 		assertTrue(context.getEnvironment().getPropertySources().contains("bootstrap"));
 	}
 
 	@Test
-	public void environmentEnrichedOnce() {
-		context = new SpringApplicationBuilder().sources(BareConfiguration.class).environment(
-				new StandardEnvironment()).child(BareConfiguration.class).web(false).run();
+	public void applicationNameIsNotBootstrap() {
+		context = new SpringApplicationBuilder().web(false)
+				.properties("spring.cloud.bootstrap.name:other")
+				.sources(BareConfiguration.class).run();
+		assertEquals("main",
+				context.getEnvironment().getProperty("spring.application.name"));
+		assertEquals(
+				"other",
+				context.getParent().getEnvironment()
+						.getProperty("spring.application.name"));
+		// The bootstrap context has a different "bootstrap" property source
+		assertNotSame(context.getEnvironment().getPropertySources().get("bootstrap"),
+				((ConfigurableEnvironment) context.getParent().getEnvironment())
+						.getPropertySources().get("bootstrap"));
+	}
+
+	@Test
+	public void environmentEnrichedOnceWhenShared() {
+		context = new SpringApplicationBuilder().sources(BareConfiguration.class)
+				.environment(new StandardEnvironment()).child(BareConfiguration.class)
+				.web(false).run();
 		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
 		assertEquals(context.getEnvironment(), context.getParent().getEnvironment());
 		MutablePropertySources sources = context.getEnvironment().getPropertySources();
@@ -72,13 +91,40 @@ public class BootstrapConfigurationTests {
 
 	@Test
 	public void environmentEnrichedInParent() {
-		context = new SpringApplicationBuilder().sources(BareConfiguration.class).child(
-				BareConfiguration.class).web(false).run();
+		context = new SpringApplicationBuilder().sources(BareConfiguration.class)
+				.child(BareConfiguration.class).web(false).run();
 		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
 		assertNotSame(context.getEnvironment(), context.getParent().getEnvironment());
 		assertTrue(context.getEnvironment().getPropertySources().contains("bootstrap"));
-		assertTrue(((ConfigurableEnvironment) context.getParent().getEnvironment()).getPropertySources().contains(
-				"bootstrap"));
+		assertTrue(((ConfigurableEnvironment) context.getParent().getEnvironment())
+				.getPropertySources().contains("bootstrap"));
+	}
+
+	@Test
+	public void differentProfileInChild() {
+		// Profiles are always merged with the child
+		ConfigurableApplicationContext parent = new SpringApplicationBuilder()
+				.sources(BareConfiguration.class).profiles("parent").web(false).run();
+		context = new SpringApplicationBuilder(BareConfiguration.class).profiles("child")
+				.parent(parent).web(false).run();
+		assertNotSame(context.getEnvironment(), context.getParent().getEnvironment());
+		// The ApplicationContext merges profiles (profiles and property sources), see
+		// AbstractEnvironment.merge()
+		assertTrue(this.context.getEnvironment().acceptsProfiles("child", "parent"));
+		// But the parent is not a child
+		assertFalse(this.context.getParent().getEnvironment().acceptsProfiles("child"));
+		assertTrue(this.context.getParent().getEnvironment().acceptsProfiles("parent"));
+		assertTrue(((ConfigurableEnvironment) context.getParent().getEnvironment())
+				.getPropertySources().contains("bootstrap"));
+		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
+		// The "bootstrap" property source is not shared now, but it has the same
+		// properties in it because they are pulled from the PropertySourceConfiguration
+		// below
+		assertEquals("bar",
+				context.getParent().getEnvironment().getProperty("bootstrap.foo"));
+		// The parent property source is there in the child because they are both in the
+		// "parent" profile (by virtue of the merge in AbstractEnvironment)
+		assertEquals("parent", context.getEnvironment().getProperty("info.name"));
 	}
 
 	@Configuration
@@ -86,6 +132,7 @@ public class BootstrapConfigurationTests {
 	}
 
 	@Configuration
+	// This is added to bootstrap context as a source in bootstrap.properties
 	protected static class PropertySourceConfiguration implements PropertySourceLocator {
 
 		@Override

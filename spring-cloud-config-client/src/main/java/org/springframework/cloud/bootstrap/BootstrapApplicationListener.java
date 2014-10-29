@@ -18,7 +18,9 @@ package org.springframework.cloud.bootstrap;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.SpringApplication;
@@ -38,6 +40,7 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * A listener that prepares a SpringApplication (e.g. populating its Environment) by
@@ -52,6 +55,8 @@ import org.springframework.util.ClassUtils;
  */
 public class BootstrapApplicationListener implements
 		ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
+
+	public static final String BOOTSTRAP_PROPERTY_SOURCE_NAME = "bootstrap";
 
 	public static final int DEFAULT_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
@@ -84,27 +89,37 @@ public class BootstrapApplicationListener implements
 		for (PropertySource<?> source : bootstrapProperties) {
 			bootstrapProperties.remove(source.getName());
 		}
+		String configName = environment
+				.resolvePlaceholders("${spring.cloud.bootstrap.name:bootstrap}");
+		String configLocation = environment
+				.resolvePlaceholders("${spring.cloud.bootstrap.location:}");
+		Map<String, Object> bootstrapMap = new HashMap<String, Object>();
+		bootstrapMap.put("spring.config.name", configName);
+		if (StringUtils.hasText(configLocation)) {
+			bootstrapMap.put("spring.config.location", configName);
+		}
+		bootstrapMap.put("spring.application.name", configName);
+		bootstrapProperties.addFirst(new MapPropertySource(BOOTSTRAP_PROPERTY_SOURCE_NAME, bootstrapMap));
 		bootstrapProperties.addFirst(new MapPropertySource("bootstrapInProgress",
 				Collections.<String, Object> emptyMap()));
 		for (PropertySource<?> source : environment.getPropertySources()) {
 			bootstrapProperties.addLast(source);
 		}
-		bootstrapProperties.addFirst(new MapPropertySource("bootstrap", Collections
-				.<String, Object> singletonMap("spring.config.name", "bootstrap")));
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		// Use names and ensure unique to protect against duplicates
 		List<String> names = SpringFactoriesLoader.loadFactoryNames(
 				BootstrapConfiguration.class, classLoader);
 		// TODO: is it possible or sensible to share a ResourceLoader?
 		SpringApplicationBuilder builder = new SpringApplicationBuilder()
-				.showBanner(false).environment(bootstrapEnvironment).web(false)
-				.properties("spring.application.name:bootstrap");
+				.profiles(environment.getActiveProfiles()).showBanner(false)
+				.environment(bootstrapEnvironment).web(false);
 		List<Class<?>> sources = new ArrayList<Class<?>>();
 		for (String name : names) {
 			Class<?> cls = ClassUtils.resolveClassName(name, null);
 			try {
 				cls.getDeclaredAnnotations();
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				continue;
 			}
 			if (cls != null) {
@@ -177,8 +192,10 @@ public class BootstrapApplicationListener implements
 
 		@Override
 		public void initialize(ConfigurableApplicationContext context) {
-			preemptMerge(context.getEnvironment().getPropertySources(), parent
-					.getEnvironment().getPropertySources().get("bootstrap"));
+			preemptMerge(
+					context.getEnvironment().getPropertySources(),
+					new MapPropertySource(BOOTSTRAP_PROPERTY_SOURCE_NAME, Collections
+							.<String, Object> emptyMap()));
 			while (context.getParent() != null && context.getParent() != context) {
 				context = (ConfigurableApplicationContext) context.getParent();
 			}

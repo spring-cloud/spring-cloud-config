@@ -37,7 +37,7 @@ import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
-import org.springframework.cloud.bootstrap.config.ConfigServiceBootstrapConfiguration;
+import org.springframework.cloud.bootstrap.config.PropertySourceBootstrapConfiguration;
 import org.springframework.cloud.config.client.RefreshEndpoint;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.cloud.context.environment.EnvironmentManager;
@@ -179,7 +179,7 @@ public class RefreshAutoConfiguration {
 
 		@Configuration
 		@ConditionalOnExpression("${endpoints.refresh.enabled:true}")
-		@ConditionalOnBean(ConfigServiceBootstrapConfiguration.class)
+		@ConditionalOnBean(PropertySourceBootstrapConfiguration.class)
 		protected static class RefreshEndpointConfiguration {
 
 			@Bean

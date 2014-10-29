@@ -25,13 +25,19 @@ via a JSON endpoint. The service has resources in the form:
 
 ----
 /{application}/{profile}[/{label}]
+/{application}-{profile}.yml
+/{label}/{application}-{profile}.yml
+/{application}-{profile}.properties
+/{label}/{application}-{profile}.properties
 ----
 
 where the "application" is injected as the "spring.config.name" in the
 `SpringApplication` (i.e. what is normally "application" in a regular
 Spring Boot app), "profile" is an active profile (or comma-separated
 list of properties), and "label" is an optional git label (defaults to
-"master").
+"master".) The YAML and properties forms are coalesced into a single
+map, even if the origin of the values (reflected in the
+"propertySources" of the "standard" form) has multiple sources.
 
 === Client Side Usage
 

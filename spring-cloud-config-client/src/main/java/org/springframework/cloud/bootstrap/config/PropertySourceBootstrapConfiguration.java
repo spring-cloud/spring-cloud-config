@@ -33,6 +33,7 @@ import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
+import org.springframework.cloud.bootstrap.BootstrapApplicationListener;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.cloud.config.client.PropertySourceLocator;
 import org.springframework.util.StringUtils;
@@ -43,11 +44,13 @@ import org.springframework.util.StringUtils;
  */
 @Configuration
 @EnableConfigurationProperties
-public class ConfigServiceBootstrapConfiguration implements
+public class PropertySourceBootstrapConfiguration implements
 		ApplicationContextInitializer<ConfigurableApplicationContext> {
 
+	private static final String BOOTSTRAP_PROPERTY_SOURCE_NAME = BootstrapApplicationListener.BOOTSTRAP_PROPERTY_SOURCE_NAME;
+
 	private static Log logger = LogFactory
-			.getLog(ConfigServiceBootstrapConfiguration.class);
+			.getLog(PropertySourceBootstrapConfiguration.class);
 
 	@Autowired(required = false)
 	private List<PropertySourceLocator> propertySourceLocators = new ArrayList<PropertySourceLocator>();
@@ -60,7 +63,8 @@ public class ConfigServiceBootstrapConfiguration implements
 
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
-		CompositePropertySource composite = new CompositePropertySource("bootstrap");
+		CompositePropertySource composite = new CompositePropertySource(
+				BOOTSTRAP_PROPERTY_SOURCE_NAME);
 		AnnotationAwareOrderComparator.sort(propertySourceLocators);
 		boolean empty = true;
 		for (PropertySourceLocator locator : propertySourceLocators) {
@@ -81,8 +85,8 @@ public class ConfigServiceBootstrapConfiguration implements
 		if (!empty) {
 			MutablePropertySources propertySources = applicationContext.getEnvironment()
 					.getPropertySources();
-			if (propertySources.contains("bootstrap")) {
-				propertySources.replace("bootstrap", composite);
+			if (propertySources.contains(BOOTSTRAP_PROPERTY_SOURCE_NAME)) {
+				propertySources.replace(BOOTSTRAP_PROPERTY_SOURCE_NAME, composite);
 			}
 			else {
 				propertySources.addFirst(composite);
@@ -95,7 +99,7 @@ public class ConfigServiceBootstrapConfiguration implements
 			ConfigurableEnvironment environment) {
 		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator();
 		String[] profiles = environment.getActiveProfiles();
-		if (profiles.length==0) {
+		if (profiles.length == 0) {
 			profiles = environment.getDefaultProfiles();
 		}
 		locator.setEnv(StringUtils.arrayToCommaDelimitedString(profiles));

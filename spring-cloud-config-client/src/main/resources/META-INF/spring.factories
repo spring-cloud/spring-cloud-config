@@ -9,6 +9,6 @@ org.springframework.cloud.context.restart.RestartListener
 
 # Bootstrap components
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
-org.springframework.cloud.bootstrap.config.ConfigServiceBootstrapConfiguration,\
+org.springframework.cloud.bootstrap.config.PropertySourceBootstrapConfiguration,\
 org.springframework.cloud.bootstrap.encrypt.EncryptionBootstrapConfiguration,\
 org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration
