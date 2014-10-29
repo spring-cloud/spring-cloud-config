@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.yaml.snakeyaml.Yaml;
 
 @RestController
+@RequestMapping("${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
 
 	private EnvironmentRepository repository;

@@ -55,6 +55,7 @@ import org.springframework.web.multipart.MultipartFile;
  *
  */
 @RestController
+@RequestMapping("${spring.cloud.config.server.prefix:}")
 public class EncryptionController {
 
 	private static Log logger = LogFactory.getLog(EncryptionController.class);
