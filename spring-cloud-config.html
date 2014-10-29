@@ -436,9 +436,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_refresh_scope">Refresh Scope</a></li>
 <li><a href="#_encryption_and_decryption_2">Encryption and Decryption</a></li>
 <li><a href="#_endpoints">Endpoints</a></li>
+<li><a href="#_locating_remote_configuration_resources">Locating Remote Configuration Resources</a></li>
 <li><a href="#_the_bootstrap_application_context">The Bootstrap Application Context</a></li>
-<li><a href="#_customizing_the_bootstrap">Customizing the Bootstrap</a></li>
-<li><a href="#_customizing_the_property_sources">Customizing the Property Sources</a></li>
+<li><a href="#_application_context_hierarchies">Application Context Hierarchies</a></li>
+<li><a href="#customizing-bootstrap-properties">Changing the Location of Bootstrap Properties</a></li>
+<li><a href="#_customizing_the_bootstrap_configuration">Customizing the Bootstrap Configuration</a></li>
+<li><a href="#customizing-bootstrap-property-sources">Customizing the Bootstrap Property Sources</a></li>
 <li><a href="#_security_2">Security</a></li>
 </ul>
 </li>
@@ -488,7 +491,11 @@ via a JSON endpoint. The service has resources in the form:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>/{application}/{profile}[/{label}]</pre>
+<pre>/{application}/{profile}[/{label}]
+/{application}-{profile}.yml
+/{label}/{application}-{profile}.yml
+/{application}-{profile}.properties
+/{label}/{application}-{profile}.properties</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -496,7 +503,9 @@ via a JSON endpoint. The service has resources in the form:</p>
 <code>SpringApplication</code> (i.e. what is normally "application" in a regular
 Spring Boot app), "profile" is an active profile (or comma-separated
 list of properties), and "label" is an optional git label (defaults to
-"master").</p>
+"master".) The YAML and properties forms are coalesced into a single
+map, even if the origin of the values (reflected in the
+"propertySources" of the "standard" form) has multiple sources.</p>
 </div>
 <div class="sect2">
 <h3 id="_client_side_usage">Client Side Usage</h3>
@@ -948,6 +957,32 @@ application context gets the <code>Environment</code>.</p>
 </div>
 </div>
 <div class="sect2">
+<h3 id="_locating_remote_configuration_resources">Locating Remote Configuration Resources</h3>
+<div class="paragraph">
+<p>The Config Service serves property sources from <code>/{name}/{env}/{label}</code>, where the default bindings are</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>"name" = <code>${spring.application.name}</code></p>
+</li>
+<li>
+<p>"env" = <code>${spring.profiles.active}</code> (actually <code>Environment.getActiveProfiles()</code>)</p>
+</li>
+<li>
+<p>"label" = "master"</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>All of them can be overridden by setting <code>spring.cloud.config.*</code>
+(where <code>*</code> is "name", "env" or "label"). The "label" is useful for
+rolling back to previous versions of configuration; with the default
+Config Server implementation it can be a git label, branch name or
+commit id.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_the_bootstrap_application_context">The Bootstrap Application Context</h3>
 <div class="paragraph">
 <p>The Config Client operates by creating a "bootstrap" application
@@ -978,9 +1013,9 @@ nicely separate. Example:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>It is a good idea to set the <code>spring.application.name</code> in
-<code>bootstrap.yml</code> if your application needs any application-specific
-configuration from the server.</p>
+<p>It is a good idea to set the <code>spring.application.name</code> (in
+<code>bootstrap.yml</code> or <code>application.yml</code>) if your application needs any
+application-specific configuration from the server.</p>
 </div>
 <div class="paragraph">
 <p>You can disable the bootstrap process completely by setting
@@ -988,7 +1023,79 @@ configuration from the server.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_customizing_the_bootstrap">Customizing the Bootstrap</h3>
+<h3 id="_application_context_hierarchies">Application Context Hierarchies</h3>
+<div class="paragraph">
+<p>If you build an application context from <code>SpringApplication</code> or
+<code>SpringApplicationBuilder</code>, then the Bootstrap context is added as a
+parent to that context. It is a feature of Spring that child contexts
+inherit property sources and profiles from their parent, so the "main"
+application context will contain additional property sources, compared
+to building the same context without Spring Cloud Config. The
+additional property sources are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>"bootstrap": an optional <code>CompositePropertySource</code> appears with high
+priority if any <code>PropertySourceLocators</code> are found in the Bootstrap
+context, and they have non-empty properties. An example would be
+properties from the Spring Cloud Config Server. See
+<a href="#customizing-bootstrap-property-sources">below</a> for instructions
+on how to customize the contents of this property source.</p>
+</li>
+<li>
+<p>"applicationConfig: [classpath:bootstrap.yml]" (and friends if
+Spring profiles are active). If you have a <code>bootstrap.yml</code> (or
+properties) then those properties are used to configure the Bootstrap
+context, and then they get added to the child context when its parent
+is set. They have lower precedence than the <code>application.yml</code> (or
+properties) and any other property sources that are added to the child
+as a normal part of the process of creating a Spring Boot
+application. See <a href="#customizing-bootstrap-properties">below</a> for
+instructions on how to customize the contents of these property
+sources.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Because of the ordering rules of property sources the "bootstrap"
+entries take precedence, but note that these do not contain any data
+from <code>bootstrap.yml</code>, which has very low precedence, but can be used
+to set defaults.</p>
+</div>
+<div class="paragraph">
+<p>You can extend the context hierarchy by simply setting the parent
+context of any <code>ApplicationContext</code> you create, e.g. using its own
+interface, or with the <code>SpringApplicationBuilder</code> convenience methods
+(<code>parent()</code>, <code>child()</code> and <code>sibling()</code>). Note that the
+<code>SpringApplicationBuilder</code> allows you to share an <code>Environment</code>
+amongst the whole hierarchy, but that is not the default. Thus,
+normally you expect to see differences between different levels in the
+hierarchy, and sibling contexts in particular do not need to have the
+same profiles or property sources, even though they will share common
+things with their parent. Every context in the hierarchy will have its
+own "bootstrap" property source (possibly empty) to avoid promoting
+values inadvertently from parents down to their descendants.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="customizing-bootstrap-properties">Changing the Location of Bootstrap Properties</h3>
+<div class="paragraph">
+<p>The <code>bootstrap.yml</code> (or <code>.properties) location can be specified using
+`spring.cloud.bootstrap.name</code> (default "bootstrap") or
+<code>spring.cloud.bootstrap.location</code> (default empty), e.g. in System
+properties. Those properties behave like the <code>spring.config.*</code>
+variants with the same name, in fact they are used to set up the
+bootstrap <code>ApplicationContext</code> by setting those properties in its
+<code>Environment</code>. If there is an active profile (from
+<code>spring.profiles.active</code> or through the <code>Environment</code> API in the
+context you are building) then properties in that profile will be
+loaded as well, just like in a regular Spring Boot app, e.g. from
+<code>bootstrap-development.properties</code> for a "development" profile.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_customizing_the_bootstrap_configuration">Customizing the Bootstrap Configuration</h3>
 <div class="paragraph">
 <p>The bootstrap context can be trained to do anything you like by adding
 entries to <code>/META-INF/spring.factories</code> under the key
@@ -1010,7 +1117,7 @@ classes found in <code>spring.factories</code> and then all <code>@Beans</code> 
 </div>
 </div>
 <div class="sect2">
-<h3 id="_customizing_the_property_sources">Customizing the Property Sources</h3>
+<h3 id="customizing-bootstrap-property-sources">Customizing the Bootstrap Property Sources</h3>
 <div class="paragraph">
 <p>The default property source for external configuration added by the
 bootstrap process is the Config Server, but you can add additional
@@ -1111,7 +1218,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-26 15:48:31 UTC
+Last updated 2014-10-29 15:04:06 UTC
 </div>
 </div>
 </body>
