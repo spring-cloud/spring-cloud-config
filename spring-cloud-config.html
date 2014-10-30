@@ -1084,12 +1084,15 @@ interface, or with the <code>SpringApplicationBuilder</code> convenience methods
 (<code>parent()</code>, <code>child()</code> and <code>sibling()</code>). Note that the
 <code>SpringApplicationBuilder</code> allows you to share an <code>Environment</code>
 amongst the whole hierarchy, but that is not the default. Thus,
-normally you expect to see differences between different levels in the
-hierarchy, and sibling contexts in particular do not need to have the
-same profiles or property sources, even though they will share common
-things with their parent. Every context in the hierarchy will have its
-own "bootstrap" property source (possibly empty) to avoid promoting
-values inadvertently from parents down to their descendants.</p>
+sibling contexts in particular do not need to have the same profiles
+or property sources, even though they will share common things with
+their parent. Every context in the hierarchy will have its own
+"bootstrap" property source (possibly empty) to avoid promoting values
+inadvertently from parents down to their descendants. Every context in
+the hierarchy can also (in principle) have a different
+<code>spring.application.name</code> and hence a different remote property source
+if there is a Config Server. Remember that properties from a child
+context override those in the parent.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1149,12 +1152,22 @@ database, for instance.</p>
 public class CustomPropertySourceLocator implements PropertySourceLocator {
 
     @Override
-    public PropertySource&lt;?&gt; locate() {
+    public PropertySource&lt;?&gt; locate(Environment environment) {
         return new MapPropertySource("customProperty",
                 Collections.&lt;String, Object&gt;singletonMap("property.from.sample.custom.source", "worked as intended"));
     }
+
 }</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>The <code>Environment</code> that is passed in is the one for the
+<code>ApplicationContext</code> about to be created, i.e. the one that we are
+supplying additional property sources for. It will already have its
+normal Spring Boot-provided property sources, so you can use those to
+locate a property source specific to this <code>Environment</code> (e.g. by
+keying it on the <code>spring.application.name</code>, as is done in the default
+Config Server property source locator).</p>
 </div>
 <div class="paragraph">
 <p>If you create a jar with this class in it and then add a
@@ -1232,7 +1245,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-30 07:19:27 UTC
+Last updated 2014-10-30 11:46:25 UTC
 </div>
 </div>
 </body>
