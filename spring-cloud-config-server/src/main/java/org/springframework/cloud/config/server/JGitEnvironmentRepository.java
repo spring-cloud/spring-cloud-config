@@ -37,13 +37,18 @@ import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.util.FileUtils;
+import org.eclipse.jgit.transport.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
 import org.springframework.util.FileSystemUtils;
+
+import com.jcraft.jsch.Session;
 
 /**
  * @author Dave Syer
@@ -64,6 +69,8 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	private String username;
 
 	private String password;
+
+	private boolean initialized;
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
@@ -124,6 +131,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
+		initialize();
 		try {
 			Git git;
 			if (new File(basedir, ".git").exists()) {
@@ -200,6 +208,18 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot clone repository", e);
+		}
+	}
+
+	private void initialize() {
+		if (uri.startsWith("file:") && !initialized) {
+			SshSessionFactory.setInstance(new JschConfigSessionFactory() {
+				@Override
+				protected void configure(Host hc, Session session) {
+					session.setConfig("StrictHostKeyChecking", "no");
+				}
+			});
+			initialized = true;
 		}
 	}
 

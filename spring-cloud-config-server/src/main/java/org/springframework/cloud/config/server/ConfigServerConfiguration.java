@@ -16,9 +16,9 @@
 package org.springframework.cloud.config.server;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -28,18 +28,16 @@ import org.springframework.core.env.ConfigurableEnvironment;
  *
  */
 @Configuration
-@ComponentScan
+@ConditionalOnMissingBean(EnvironmentRepository.class)
 public class ConfigServerConfiguration {
 
 	@Configuration
 	@Profile("native")
 	protected static class NativeRepositoryConfiguration {
-		@Autowired
-		private ConfigurableEnvironment environment;
-
 		@Bean
-		public NativeEnvironmentRepository repository() {
-			return new NativeEnvironmentRepository(environment);
+		@ConfigurationProperties("spring.cloud.config.server")
+		public SpringApplicationEnvironmentRepository repository() {
+			return new SpringApplicationEnvironmentRepository();
 		}
 	}
 

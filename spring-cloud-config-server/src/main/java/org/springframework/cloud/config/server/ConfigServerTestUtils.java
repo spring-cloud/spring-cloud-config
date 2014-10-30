@@ -18,12 +18,7 @@ package org.springframework.cloud.config.server;
 import java.io.File;
 import java.io.IOException;
 
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
-import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.util.FileUtils;
-
-import com.jcraft.jsch.Session;
 
 /**
  * @author Dave Syer
@@ -43,12 +38,6 @@ public class ConfigServerTestUtils {
 		if (!repoPath.endsWith("/")) {
 			repoPath = repoPath + "/";
 		}
-		SshSessionFactory.setInstance(new JschConfigSessionFactory() {
-			@Override
-			protected void configure(Host hc, Session session) {
-				session.setConfig("StrictHostKeyChecking", "no");
-			}
-		});
 		File dotGit = new File(buildDir + repoPath + ".git");
 		File git = new File(buildDir + repoPath + "git");
 		if (git.exists()) {
