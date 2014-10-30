@@ -27,14 +27,17 @@ import java.util.Collections;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.config.client.ConfigClientProperties;
+import org.springframework.cloud.config.client.PropertySourceLocator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.cloud.config.client.PropertySourceLocator;
 
 /**
  * @author Dave Syer
@@ -46,6 +49,7 @@ public class BootstrapConfigurationTests {
 
 	@After
 	public void close() {
+		System.clearProperty("expected.name");
 		if (context != null) {
 			context.close();
 		}
@@ -53,21 +57,26 @@ public class BootstrapConfigurationTests {
 
 	@Test
 	public void picksUpAdditionalPropertySource() {
+		System.setProperty("expected.name","app");
 		context = new SpringApplicationBuilder().web(false)
 				.sources(BareConfiguration.class).run();
 		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
 		assertTrue(context.getEnvironment().getPropertySources().contains("bootstrap"));
+		assertNotNull(context.getBean(ConfigClientProperties.class));
 	}
 
 	@Test
 	public void applicationNameIsNotBootstrap() {
+		System.setProperty("expected.name","app");
 		context = new SpringApplicationBuilder().web(false)
 				.properties("spring.cloud.bootstrap.name:other")
 				.sources(BareConfiguration.class).run();
-		assertEquals("main",
+		assertEquals("app",
 				context.getEnvironment().getProperty("spring.application.name"));
+		// The parent is called "main" because spring.application.name is specified in
+		// other.properties (the bootstrap properties)
 		assertEquals(
-				"other",
+				"main",
 				context.getParent().getEnvironment()
 						.getProperty("spring.application.name"));
 		// The bootstrap context has a different "bootstrap" property source
@@ -77,7 +86,25 @@ public class BootstrapConfigurationTests {
 	}
 
 	@Test
-	public void environmentEnrichedOnceWhenShared() {
+	public void applicationNameNotInBootstrap() {
+		System.setProperty("expected.name","main");
+		context = new SpringApplicationBuilder()
+				.web(false)
+				.properties("spring.cloud.bootstrap.name:plain",
+						"spring.config.name:other").sources(BareConfiguration.class)
+				.run();
+		assertEquals("main",
+				context.getEnvironment().getProperty("spring.application.name"));
+		// The parent is called "plain" because spring.application.name is specified in
+		// other.properties (the application properties this time)
+		assertEquals(
+				"plain",
+				context.getParent().getEnvironment()
+						.getProperty("spring.application.name"));
+	}
+
+	@Test
+	public void environmentEnrichedOnceWhenSharedWithChildContext() {
 		context = new SpringApplicationBuilder().sources(BareConfiguration.class)
 				.environment(new StandardEnvironment()).child(BareConfiguration.class)
 				.web(false).run();
@@ -90,7 +117,7 @@ public class BootstrapConfigurationTests {
 	}
 
 	@Test
-	public void environmentEnrichedInParent() {
+	public void environmentEnrichedInParentContext() {
 		context = new SpringApplicationBuilder().sources(BareConfiguration.class)
 				.child(BareConfiguration.class).web(false).run();
 		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
@@ -132,13 +159,27 @@ public class BootstrapConfigurationTests {
 	}
 
 	@Configuration
+	@ConfigurationProperties("expected")
 	// This is added to bootstrap context as a source in bootstrap.properties
 	protected static class PropertySourceConfiguration implements PropertySourceLocator {
 
+		private String name;
+		
 		@Override
-		public PropertySource<?> locate() {
+		public PropertySource<?> locate(Environment environment) {
+			if (name != null) {
+				assertEquals(name, environment.getProperty("spring.application.name"));
+			}
 			return new MapPropertySource("testBootstrap",
 					Collections.<String, Object> singletonMap("bootstrap.foo", "bar"));
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 

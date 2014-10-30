@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.config.client;
 
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
 
 
@@ -24,6 +25,6 @@ import org.springframework.core.env.PropertySource;
  */
 public interface PropertySourceLocator {
 
-	PropertySource<?> locate();
+	PropertySource<?> locate(Environment environment);
 
 }

@@ -15,17 +15,21 @@
  */
 package org.springframework.cloud.config.client;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.springframework.boot.test.EnvironmentTestUtils;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.StandardEnvironment;
 
 /**
  * @author Dave Syer
  *
  */
-public class ConfigServicePropertySourceLocatorTests {
-	
-	private ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator();
+public class ConfigClientPropertiesTests {
+
+	private ConfigClientProperties locator = new ConfigClientProperties(
+			new StandardEnvironment());
 
 	@Test
 	public void vanilla() {
@@ -45,12 +49,21 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@Test
-	public void overridePassword() {
+	public void explicitPassword() {
 		locator.setUri("http://foo:bar@localhost:9999");
 		locator.setPassword("secret");
 		assertEquals("http://localhost:9999", locator.getUri());
 		assertEquals("foo", locator.getUsername());
 		assertEquals("secret", locator.getPassword());
+	}
+
+	@Test
+	public void changeNameInOverride() {
+		locator.setName("one");
+		ConfigurableEnvironment environment = new StandardEnvironment();
+		EnvironmentTestUtils.addEnvironment(environment, "spring.application.name:two");
+		ConfigClientProperties override = locator.override(environment);
+		assertEquals("two", override.getName());
 	}
 
 }

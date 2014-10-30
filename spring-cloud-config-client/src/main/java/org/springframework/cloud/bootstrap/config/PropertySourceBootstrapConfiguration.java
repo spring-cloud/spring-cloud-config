@@ -24,6 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.bootstrap.BootstrapApplicationListener;
+import org.springframework.cloud.config.client.ConfigClientProperties;
+import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
+import org.springframework.cloud.config.client.PropertySourceLocator;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -33,10 +37,6 @@ import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
-import org.springframework.cloud.bootstrap.BootstrapApplicationListener;
-import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
-import org.springframework.cloud.config.client.PropertySourceLocator;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Dave Syer
@@ -70,7 +70,7 @@ public class PropertySourceBootstrapConfiguration implements
 		for (PropertySourceLocator locator : propertySourceLocators) {
 			PropertySource<?> source = null;
 			try {
-				source = locator.locate();
+				source = locator.locate(applicationContext.getEnvironment());
 			}
 			catch (Exception e) {
 				logger.error("Could not locate PropertySource: " + e.getMessage());
@@ -94,16 +94,25 @@ public class PropertySourceBootstrapConfiguration implements
 		}
 	}
 
-	@Bean
-	public ConfigServicePropertySourceLocator configServicePropertySource(
-			ConfigurableEnvironment environment) {
-		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator();
-		String[] profiles = environment.getActiveProfiles();
-		if (profiles.length == 0) {
-			profiles = environment.getDefaultProfiles();
+	@Configuration
+	protected static class PropertySourceLocatorConfiguration {
+
+		@Autowired
+		private ConfigurableEnvironment environment;
+
+		@Bean
+		public ConfigClientProperties configClientProperties() {
+			ConfigClientProperties client = new ConfigClientProperties(environment);
+			return client;
 		}
-		locator.setEnv(StringUtils.arrayToCommaDelimitedString(profiles));
-		return locator;
+
+		@Bean
+		public ConfigServicePropertySourceLocator configServicePropertySource() {
+			ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
+					configClientProperties());
+			return locator;
+		}
+
 	}
 
 }
