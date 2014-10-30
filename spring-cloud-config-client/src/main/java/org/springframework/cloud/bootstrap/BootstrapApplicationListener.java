@@ -98,8 +98,8 @@ public class BootstrapApplicationListener implements
 		if (StringUtils.hasText(configLocation)) {
 			bootstrapMap.put("spring.config.location", configName);
 		}
-		bootstrapMap.put("spring.application.name", configName);
-		bootstrapProperties.addFirst(new MapPropertySource(BOOTSTRAP_PROPERTY_SOURCE_NAME, bootstrapMap));
+		bootstrapProperties.addFirst(new MapPropertySource(
+				BOOTSTRAP_PROPERTY_SOURCE_NAME, bootstrapMap));
 		bootstrapProperties.addFirst(new MapPropertySource("bootstrapInProgress",
 				Collections.<String, Object> emptyMap()));
 		for (PropertySource<?> source : environment.getPropertySources()) {
@@ -112,7 +112,8 @@ public class BootstrapApplicationListener implements
 		// TODO: is it possible or sensible to share a ResourceLoader?
 		SpringApplicationBuilder builder = new SpringApplicationBuilder()
 				.profiles(environment.getActiveProfiles()).showBanner(false)
-				.environment(bootstrapEnvironment).web(false);
+				.environment(bootstrapEnvironment)
+				.properties("spring.application.name:" + configName).web(false);
 		List<Class<?>> sources = new ArrayList<Class<?>>();
 		for (String name : names) {
 			Class<?> cls = ClassUtils.resolveClassName(name, null);
