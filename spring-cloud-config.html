@@ -973,7 +973,8 @@ application context gets the <code>Environment</code>.</p>
 <div class="sect2">
 <h3 id="_locating_remote_configuration_resources">Locating Remote Configuration Resources</h3>
 <div class="paragraph">
-<p>The Config Service serves property sources from <code>/{name}/{env}/{label}</code>, where the default bindings are</p>
+<p>The Config Service serves property sources from <code>/{name}/{env}/{label}</code>, where the default bindings in the
+client app are</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1081,18 +1082,25 @@ to set defaults.</p>
 <p>You can extend the context hierarchy by simply setting the parent
 context of any <code>ApplicationContext</code> you create, e.g. using its own
 interface, or with the <code>SpringApplicationBuilder</code> convenience methods
-(<code>parent()</code>, <code>child()</code> and <code>sibling()</code>). Note that the
-<code>SpringApplicationBuilder</code> allows you to share an <code>Environment</code>
-amongst the whole hierarchy, but that is not the default. Thus,
-sibling contexts in particular do not need to have the same profiles
-or property sources, even though they will share common things with
-their parent. Every context in the hierarchy will have its own
-"bootstrap" property source (possibly empty) to avoid promoting values
-inadvertently from parents down to their descendants. Every context in
-the hierarchy can also (in principle) have a different
-<code>spring.application.name</code> and hence a different remote property source
-if there is a Config Server. Remember that properties from a child
-context override those in the parent.</p>
+(<code>parent()</code>, <code>child()</code> and <code>sibling()</code>). The bootstrap context will be
+the parent of the most senior ancestor that you create yourself.
+Every context in the hierarchy will have its own "bootstrap" property
+source (possibly empty) to avoid promoting values inadvertently from
+parents down to their descendants.  Every context in the hierarchy can
+also (in principle) have a different <code>spring.application.name</code> and
+hence a different remote property source if there is a Config
+Server. Normal Spring application context behaviour rules apply to
+property resolution: properties from a child context override those in
+the parent, by name and also by property source name (if the child has
+a property source with the same name as the parent, the one from the
+parent is not included in the child).</p>
+</div>
+<div class="paragraph">
+<p>Note that the <code>SpringApplicationBuilder</code> allows you to share an
+<code>Environment</code> amongst the whole hierarchy, but that is not the
+default. Thus, sibling contexts in particular do not need to have the
+same profiles or property sources, even though they will share common
+things with their parent.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1245,7 +1253,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-30 11:46:25 UTC
+Last updated 2014-10-31 09:08:13 UTC
 </div>
 </div>
 </body>
