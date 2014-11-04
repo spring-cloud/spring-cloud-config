@@ -125,81 +125,126 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 		try {
-			Git git;
-			if (new File(basedir, ".git").exists()) {
-				git = Git.open(basedir);
-				try {
-					FetchCommand fetch = git.fetch();
-					if (hasText(username)) {
-						setCredentialsProvider(fetch);
-					}
-					fetch.call();
-				}
-				catch (Exception e) {
-					logger.warn("Remote repository not available");
-				}
-			}
-			else {
-				if (basedir.exists()) {
-					try {
-						FileUtils.delete(basedir, FileUtils.RECURSIVE);
-					}
-					catch (IOException e) {
-						throw new IllegalStateException(
-								"Failed to initialize base directory", e);
-					}
-				}
-				Assert.state(basedir.mkdirs(), "Could not create basedir: " + basedir);
-				if (uri.startsWith("file:")) {
-					FileSystemUtils.copyRecursively(new UrlResource(uri).getFile(),
-							basedir);
-					git = Git.open(basedir);
-				}
-				else {
-					CloneCommand clone = Git.cloneRepository().setURI(uri)
-							.setDirectory(basedir);
-					if (hasText(username)) {
-						setCredentialsProvider(clone);
-					}
-					git = clone.call();
-				}
-			}
-			Environment result;
-			synchronized (this) {
-				SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
-				git.getRepository().getConfig()
-						.setString("branch", label, "merge", label);
-				CheckoutCommand checkout = git.checkout();
-				if (isBranch(git, label) && !isLocalBranch(git, label)) {
-					trackBranch(git, checkout, label);
-				}
-				else {
-					// works for tags and local branches
-					checkout.setName(label);
-				}
-				Ref ref = checkout.call();
-				if (git.status().call().isClean() && ref != null) {
-					// Assumes we are on a tracking branch (should be safe)
-					try {
-						PullCommand pull = git.pull();
-						if (hasText(username)) {
-							setCredentialsProvider(pull);
-						}
-						pull.call();
-					}
-					catch (Exception e) {
-						logger.warn("Could not pull remote for " + label
-								+ " (current ref=" + ref + ")");
-					}
-				}
-				String search = basedir.toURI().toString();
-				environment.setSearchLocations(search);
-				result = clean(environment.findOne(application, profile, label));
-			}
-			return result;
+			final Git git = createGitClient();
+			return loadEnvironment(git, application, profile, label);
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot clone repository", e);
+		}
+	}
+
+	private synchronized Environment loadEnvironment(Git git, String application, String profile, String label) throws GitAPIException {
+		SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
+		git.getRepository().getConfig().setString("branch", label, "merge", label);
+		Ref ref = checkout(git, label);
+		if (shouldPull(git, ref)) {
+			pull(git, label, ref);
+		}
+		String search = basedir.toURI().toString();
+		environment.setSearchLocations(search);
+		return clean(environment.findOne(application, profile, label));
+	}
+
+	private Ref checkout(Git git, String label) throws GitAPIException {
+		CheckoutCommand checkout = git.checkout();
+		if (shouldTrack(git, label)) {
+			trackBranch(git, checkout, label);
+		} else {
+			// works for tags and local branches
+			checkout.setName(label);
+		}
+		return checkout.call();
+	}
+
+	private boolean shouldPull(Git git, Ref ref) throws GitAPIException {
+		return git.status().call().isClean() && ref != null;
+	}
+
+	private boolean shouldTrack(Git git, String label) throws GitAPIException {
+		return isBranch(git, label) && !isLocalBranch(git, label);
+	}
+
+	/**
+	 * Assumes we are on a tracking branch (should be safe)
+	 */
+	private void pull(Git git, String label, Ref ref) {
+		try {
+			PullCommand pull = git.pull();
+			if (hasText(username)) {
+				setCredentialsProvider(pull);
+			}
+			pull.call();
+		}
+		catch (Exception e) {
+			logger.warn("Could not pull remote for " + label
+					+ " (current ref=" + ref + ")");
+		}
+	}
+
+	private Git createGitClient() throws IOException, GitAPIException {
+		if (new File(basedir, ".git").exists()) {
+			return openGitRepository();
+		} else {
+			return copyRepository();
+		}
+	}
+
+	private Git copyRepository() throws IOException, GitAPIException {
+		deleteBaseDirIfExists();
+		Assert.state(basedir.mkdirs(), "Could not create basedir: " + basedir);
+		if (uri.startsWith("file:")) {
+			return copyFromLocalRepository();
+		}
+		else {
+			return cloneToBasedir();
+		}
+	}
+
+	private Git openGitRepository() throws IOException {
+		Git git = Git.open(basedir);
+		tryFetch(git);
+		return git;
+	}
+
+	private Git copyFromLocalRepository() throws IOException {
+		Git git;
+		FileSystemUtils.copyRecursively(new UrlResource(uri).getFile(),
+				basedir);
+		git = Git.open(basedir);
+		return git;
+	}
+
+	private Git cloneToBasedir() throws GitAPIException {
+		CloneCommand clone = Git.cloneRepository().setURI(uri)
+				.setDirectory(basedir);
+		if (hasText(username)) {
+			setCredentialsProvider(clone);
+		}
+		return clone.call();
+	}
+
+	private void tryFetch(Git git) {
+		try {
+			FetchCommand fetch = git.fetch();
+			if (hasText(username)) {
+				setCredentialsProvider(fetch);
+			}
+			fetch.call();
+		}
+		catch (Exception e) {
+			logger.warn("Remote repository not available");
+		}
+	}
+
+	private void deleteBaseDirIfExists() {
+		if (basedir.exists()) {
+			try {
+				FileUtils.delete(basedir, FileUtils.RECURSIVE);
+			}
+			catch (IOException e) {
+				throw new IllegalStateException(
+						"Failed to initialize base directory", e);
+			}
 		}
 	}
 
