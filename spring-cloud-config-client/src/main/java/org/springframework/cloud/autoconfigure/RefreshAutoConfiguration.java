@@ -95,7 +95,7 @@ public class RefreshAutoConfiguration {
 		public void onApplicationEvent(EnvironmentChangeEvent event) {
 			for (String key : event.getKeys()) {
 				if (key.startsWith("info.")) {
-					map.put(key, environment.getProperty(key));
+					map.put(key.substring("info.".length()), environment.getProperty(key));
 				}
 			}
 		}
