@@ -14,6 +14,48 @@ configuration (name-value pairs, or equivalent YAML content).  The
 server is easily embeddable in a Spring Boot application using the
 `@EnableConfigServer` annotation.
 
+=== Environment Repository
+
+Where do you want to store the configuration data for the Config
+Server? The strategy that governs this behaviour is the
+`EnvironmentRepository`, serving `Environment` objects. This
+`Environment` is a shallow copy of the domain from the Spring
+`Environment` (including `propertySources` as the main feature). The
+default implementation of `EnvironmentRepository` uses a Git backend,
+which is very convenient for managing upgrades and physical
+environments, and also for auditing changes. To change the location of
+the repository you can set the "spring.cloud.config.server.uri"
+configuration property in the Config Server (e.g. in
+`application.yml`). If you set it with a `file:` prefix it should work
+from a local repository so you can get started quickly and easily
+without a server (it doesn't matter if it's not bare because the
+Config Server never makes changes to the "remote" repository). To
+scale the Config Server up and make it highly available, however, you
+would need to have all instances of the server pointing to the same
+repository, so only a shared file system would work.
+
+There is also a "native" profile in the Config Server that doesn't use
+Git, but just loads the config files from the local classpath (or
+anywhere else you want to point to with
+"spring.cloud.config.server.locations"). To use the native profile
+just launch the Config Server with "spring.profiles.active=native". In
+the native profile the repository only has the "current" set of
+configuration files, so the "label" specification in the HTTP
+resources is ignored (i.e. it's like always pulling from "master" in
+the Git implementation).
+
+=== Embedding the Config Server
+
+The Config Server can be embedded in another web application by
+setting "spring.cloud.config.server.prefix" (default empty), e.g. to
+"/config". If you do that, then you probably want to bootstrap the app
+containing the Config Server from the same remote repository from
+which all the other remote apps get their configuration properties
+(otherwise it is just a normal Spring Boot application since it won't
+have a Config Server to contact when it starts). To do that you just
+need to make sure that the (optional) property
+"spring.cloud.config.server.bootstrap" is "true".
+
 === Security
 
 You are free to secure your Config Server in any way that makes sense
