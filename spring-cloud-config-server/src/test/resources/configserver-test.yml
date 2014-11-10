@@ -2,4 +2,5 @@ spring:
   cloud:
     config:
       server:
-        basedir: target/config
+        git:
+          basedir: target/config

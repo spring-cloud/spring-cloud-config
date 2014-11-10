@@ -35,7 +35,7 @@ public class ApplicationTests {
 		ConfigurableApplicationContext context = SpringApplication.run(
 				org.springframework.cloud.config.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
-				"--spring.cloud.config.server.uri=" + repo);
+				"--spring.cloud.config.server.git.uri=" + repo);
 		configPort = ((EmbeddedWebApplicationContext) context)
 				.getEmbeddedServletContainer().getPort();
 		System.setProperty("config.port", "" + configPort);

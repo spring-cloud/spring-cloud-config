@@ -34,10 +34,15 @@ public class ConfigServerMvcConfiguration {
 
 	@Autowired
 	private EnvironmentRepository repository;
+	
+	@Autowired
+	private ConfigServerProperties server;
 
 	@Bean
 	public EnvironmentController environmentController() {
-		return new EnvironmentController(repository, encryptionController());
+		EnvironmentController controller = new EnvironmentController(repository, encryptionController());
+		controller.setDefaultLabel(server.getDefaultLabel());
+		return controller;
 	}
 
 	@Bean

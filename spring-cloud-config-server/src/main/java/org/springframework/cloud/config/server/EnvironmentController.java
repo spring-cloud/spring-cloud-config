@@ -34,6 +34,8 @@ public class EnvironmentController {
 
 	private EncryptionController encryption;
 
+	private String defaultLabel = ConfigServerProperties.MASTER;
+
 	@Autowired
 	public EnvironmentController(EnvironmentRepository repository,
 			EncryptionController encryption) {
@@ -44,7 +46,7 @@ public class EnvironmentController {
 
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
 	public Environment master(@PathVariable String name, @PathVariable String profiles) {
-		return labelled(name, profiles, "master");
+		return labelled(name, profiles, defaultLabel);
 	}
 
 	@RequestMapping("/{name}/{profiles}/{label}")
@@ -56,7 +58,7 @@ public class EnvironmentController {
 	@RequestMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name,
 			@PathVariable String profiles) throws IOException {
-		return labelledProperties(name, profiles, "master");
+		return labelledProperties(name, profiles, defaultLabel);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.properties")
@@ -92,7 +94,7 @@ public class EnvironmentController {
 	@RequestMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> yaml(@PathVariable String name, @PathVariable String profiles)
 			throws Exception {
-		return labelledYaml(name, profiles, "master");
+		return labelledYaml(name, profiles, defaultLabel);
 	}
 
 	@RequestMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
@@ -178,6 +180,13 @@ public class EnvironmentController {
 			map.put(entry.getKey(), entry.getValue().toString());
 		}
 		return map;
+	}
+
+	/**
+	 * @param defaultLabel
+	 */
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel  = defaultLabel;
 	}
 
 }
