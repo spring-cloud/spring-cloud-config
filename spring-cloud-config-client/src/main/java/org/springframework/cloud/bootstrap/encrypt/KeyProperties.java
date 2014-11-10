@@ -22,8 +22,18 @@ import org.springframework.core.io.Resource;
 public class KeyProperties {
 
 	private String key;
+	
+	private boolean failOnError = true;
 
 	private KeyProperties.KeyStore keyStore = new KeyStore();
+
+	public boolean isFailOnError() {
+		return failOnError;
+	}
+
+	public void setFailOnError(boolean failOnError) {
+		this.failOnError = failOnError;
+	}
 
 	public String getKey() {
 		return key;

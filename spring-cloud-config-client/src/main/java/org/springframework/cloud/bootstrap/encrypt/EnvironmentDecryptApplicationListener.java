@@ -50,6 +50,8 @@ public class EnvironmentDecryptApplicationListener implements
 
 	private Field propertySourcesField;
 
+	private boolean failOnError = true;
+
 	{
 		initField();
 	}
@@ -64,6 +66,15 @@ public class EnvironmentDecryptApplicationListener implements
 		this.encryptor = encryptor;
 	}
 
+	/**
+	 * Strategy to determine how to handle exceptions during decryption.
+	 * 
+	 * @param failOnError the flag value (default true)
+	 */
+	public void setFailOnError(boolean failOnError) {
+		this.failOnError = failOnError;
+	}
+
 	@Override
 	public int getOrder() {
 		return order;
@@ -71,7 +82,7 @@ public class EnvironmentDecryptApplicationListener implements
 
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
-		
+
 		ConfigurableEnvironment environment = applicationContext.getEnvironment();
 		Map<String, Object> overrides = new LinkedHashMap<String, Object>();
 		for (PropertySource<?> source : environment.getPropertySources()) {
@@ -99,12 +110,18 @@ public class EnvironmentDecryptApplicationListener implements
 						}
 					}
 					catch (Exception e) {
-						if (logger.isDebugEnabled()) {
-							logger.warn("Cannot decrypt: key=" + key, e);
-						} else {
-							logger.warn("Cannot decrypt: key=" + key);
+						String message = "Cannot decrypt: key=" + key;
+						if (failOnError) {
+							throw new IllegalStateException(message, e);
 						}
-						// Set value to empty to avoid making a password out of the cipher text
+						if (logger.isDebugEnabled()) {
+							logger.warn(message, e);
+						}
+						else {
+							logger.warn(message);
+						}
+						// Set value to empty to avoid making a password out of the
+						// cipher text
 						value = "";
 					}
 					overrides.put(key, value);

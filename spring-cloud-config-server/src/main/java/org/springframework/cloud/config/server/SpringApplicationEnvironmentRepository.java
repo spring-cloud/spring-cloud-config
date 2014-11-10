@@ -42,6 +42,17 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 
 	private String[] locations;
 
+	private boolean failOnError = false;
+
+	/**
+	 * Strategy to determine how to handle exceptions during decryption.
+	 * 
+	 * @param failOnError the flag value (default false)
+	 */
+	public void setFailOnError(boolean failOnError) {
+		this.failOnError = failOnError;
+	}
+
 	@Override
 	public Environment findOne(String config, String profile, String label) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(
@@ -78,6 +89,7 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 		}
 		list.add("--spring.config.name=" + config);
 		list.add("--spring.cloud.bootstrap.enabled=false");
+		list.add("--encrypt.failOnError=" + failOnError);
 		if (locations != null) {
 			list.add("--spring.config.location="
 					+ StringUtils.arrayToCommaDelimitedString(locations));

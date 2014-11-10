@@ -47,6 +47,9 @@ public class EncryptionBootstrapConfiguration {
 	@Autowired(required = false)
 	private TextEncryptor encryptor;
 
+	@Autowired
+	private KeyProperties key;
+
 	@Configuration
 	@Conditional(KeyCondition.class)
 	@ConditionalOnClass(RsaSecretEncryptor.class)
@@ -91,7 +94,9 @@ public class EncryptionBootstrapConfiguration {
 		if (encryptor == null) {
 			encryptor = new FailsafeTextEncryptor();
 		}
-		return new EnvironmentDecryptApplicationListener(encryptor);
+		EnvironmentDecryptApplicationListener listener = new EnvironmentDecryptApplicationListener(encryptor);
+		listener.setFailOnError(key.isFailOnError());
+		return listener;
 	}
 
 	public static class KeyCondition extends SpringBootCondition {
