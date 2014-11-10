@@ -40,7 +40,7 @@ import org.springframework.util.StringUtils;
  *
  */
 @Configuration
-@ConditionalOnClass(TextEncryptor.class)
+@ConditionalOnClass({TextEncryptor.class, RsaSecretEncryptor.class})
 @EnableConfigurationProperties(KeyProperties.class)
 public class EncryptionBootstrapConfiguration {
 
