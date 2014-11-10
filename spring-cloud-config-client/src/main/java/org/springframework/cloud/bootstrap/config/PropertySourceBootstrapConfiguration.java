@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.bootstrap.BootstrapApplicationListener;
 import org.springframework.cloud.config.client.ConfigClientProperties;
+import org.springframework.cloud.config.client.ConfigServerHealthIndicator;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.cloud.config.client.PropertySourceLocator;
 import org.springframework.context.ApplicationContextInitializer;
@@ -113,6 +114,10 @@ public class PropertySourceBootstrapConfiguration implements
 			return locator;
 		}
 
+        @Bean
+        public ConfigServerHealthIndicator configServerHealthIndicator(ConfigServicePropertySourceLocator locator) {
+            return new ConfigServerHealthIndicator(environment, locator);
+        }
 	}
 
 }
