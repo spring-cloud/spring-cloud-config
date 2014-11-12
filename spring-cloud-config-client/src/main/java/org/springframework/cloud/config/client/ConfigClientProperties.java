@@ -34,6 +34,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class ConfigClientProperties {
 
 	public static final String PREFIX = "spring.cloud.config";
+	
+	private boolean enabled = true;
 
 	private String env = "default";
 
@@ -59,6 +61,14 @@ public class ConfigClientProperties {
 			profiles = environment.getDefaultProfiles();
 		}
 		this.setEnv(StringUtils.arrayToCommaDelimitedString(profiles));
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 
 	public String getUri() {
