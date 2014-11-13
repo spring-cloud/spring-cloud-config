@@ -1,0 +1,2 @@
+0000000000000000000000000000000000000000 9f01fb972bc9617e4ea59f5c8ee3ceb5ff515cd0 Dave Syer <dsyer@gopivotal.com> 1406860776 -0700	branch: Created from 9f01fb972bc9617e4ea59f5c8ee3ceb5ff515cd0
+9f01fb972bc9617e4ea59f5c8ee3ceb5ff515cd0 c4bd92016dc14b9fe376d9c3f7af1c9d22d44ee4 Dave Syer <dsyer@pivotal.io> 1415902338 +0000	commit: Move application.yml to subdir

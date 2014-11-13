@@ -28,10 +28,14 @@ public class ConfigServerTestUtils {
 
 	public static String prepareLocalRepo() throws IOException {
 		return prepareLocalRepo("target/test-classes", "config-repo", "target/config");
-		
 	}
-	
-	public static String prepareLocalRepo(String buildDir, String repoPath, String checkoutDir) throws IOException {
+
+	public static String prepareLocalRepo(String repoPath) throws IOException {
+		return prepareLocalRepo("target/test-classes", repoPath, "target/config");
+	}
+
+	public static String prepareLocalRepo(String buildDir, String repoPath,
+			String checkoutDir) throws IOException {
 		if (!repoPath.startsWith("/")) {
 			repoPath = "/" + repoPath;
 		}

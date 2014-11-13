@@ -21,6 +21,7 @@ import static org.springframework.util.StringUtils.hasText;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -72,6 +73,8 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 
 	private boolean initialized;
 
+	private String[] searchPaths = new String[0];
+
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
 		try {
@@ -112,6 +115,14 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	public File getBasedir() {
 		return basedir;
 	}
+	
+	public void setSearchPaths(String... searchPaths) {
+		this.searchPaths = searchPaths;
+	}
+	
+	public String[] getSearchPaths() {
+		return searchPaths;
+	}
 
 	public String getUsername() {
 		return username;
@@ -148,9 +159,20 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		if (shouldPull(git, ref)) {
 			pull(git, label, ref);
 		}
-		String search = basedir.toURI().toString();
-		environment.setSearchLocations(search);
+		environment.setSearchLocations(getSearchLocations(basedir));
 		return clean(environment.findOne(application, profile, label));
+	}
+
+	private String[] getSearchLocations(File dir) {
+		List<String> locations = new ArrayList<String>();
+		locations.add(dir.toURI().toString());
+		for (String path : searchPaths) {
+			File file = new File(basedir, path);
+			if (file.isDirectory()) {
+				locations.add(file.toURI().toString());
+			}
+		}
+		return locations.toArray(new String[0]);
 	}
 
 	private Ref checkout(Git git, String label) throws GitAPIException {

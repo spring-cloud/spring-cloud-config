@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
@@ -54,6 +55,18 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(repository.getUri() + "/bar.properties", environment
+				.getPropertySources().get(0).getName());
+	}
+
+	@Test
+	public void nested() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
+		repository.setUri(uri);
+		repository.setSearchPaths(new String[] {"sub"});
+		repository.findOne("bar", "staging", "master");
+		Environment environment = repository.findOne("bar", "staging", "master");
+		assertEquals(2, environment.getPropertySources().size());
+		assertEquals(repository.getUri() + "/sub/application.yml", environment
 				.getPropertySources().get(0).getName());
 	}
 
