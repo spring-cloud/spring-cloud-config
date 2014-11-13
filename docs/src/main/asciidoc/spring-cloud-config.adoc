@@ -216,7 +216,7 @@ useful features related to `Environment` change events.
 
 === Config First Bootstrap
 
-This is the default behaviour for any application wich has the Spring
+This is the default behaviour for any application which has the Spring
 Cloud Config Client on the classpath. When a config client starts up
 it binds to the Config Server (via the bootstrap configuration
 property `spring.cloud.config.uri`) and initializes Spring
