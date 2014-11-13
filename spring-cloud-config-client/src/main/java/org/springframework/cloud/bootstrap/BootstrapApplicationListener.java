@@ -179,7 +179,7 @@ public class BootstrapApplicationListener implements
 	}
 
 	private static class AncestorInitializer implements
-			ApplicationContextInitializer<ConfigurableApplicationContext> {
+			ApplicationContextInitializer<ConfigurableApplicationContext>, Ordered {
 
 		private ConfigurableApplicationContext parent;
 
@@ -189,6 +189,14 @@ public class BootstrapApplicationListener implements
 
 		public void setParent(ConfigurableApplicationContext parent) {
 			this.parent = parent;
+		}
+
+		@Override
+		public int getOrder() {
+			// Need to run not too late (so not unordered), so that, for instance, the
+			// ContextIdApplicationContextInitializer runs later and picks up the merged
+			// Environment
+			return 0;
 		}
 
 		@Override
