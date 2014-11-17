@@ -177,6 +177,7 @@ public class ConfigClientProperties {
 		public static final String DEFAULT_CONFIG_SERVER = "CONFIGSERVER";
 
 		private boolean enabled;
+		private String prefix;
 		private String serviceId = DEFAULT_CONFIG_SERVER;
 
 		public boolean isEnabled() {
@@ -193,6 +194,14 @@ public class ConfigClientProperties {
 
 		public void setServiceId(String serviceId) {
 			this.serviceId = serviceId;
+		}
+
+		public String getPrefix() {
+			return prefix;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
 		}
 	}
 
