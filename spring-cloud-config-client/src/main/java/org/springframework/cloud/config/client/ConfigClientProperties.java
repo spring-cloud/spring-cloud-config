@@ -194,6 +194,7 @@ public class ConfigClientProperties {
 		public void setServiceId(String serviceId) {
 			this.serviceId = serviceId;
 		}
+
 	}
 
 	public ConfigClientProperties override(

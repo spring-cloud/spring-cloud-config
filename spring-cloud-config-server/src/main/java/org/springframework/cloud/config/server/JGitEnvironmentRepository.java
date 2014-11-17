@@ -42,6 +42,7 @@ import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -55,6 +56,7 @@ import com.jcraft.jsch.Session;
  * @author Dave Syer
  *
  */
+@ConfigurationProperties("spring.cloud.config.server.git")
 public class JGitEnvironmentRepository implements EnvironmentRepository {
 
 	public static final String DEFAULT_URI = "https://github.com/spring-cloud-samples/config-repo";

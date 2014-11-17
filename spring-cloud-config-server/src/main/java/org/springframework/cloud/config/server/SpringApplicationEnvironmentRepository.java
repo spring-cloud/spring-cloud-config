@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
@@ -38,6 +39,7 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  *
  */
+@ConfigurationProperties("spring.cloud.config.server.native")
 public class SpringApplicationEnvironmentRepository implements EnvironmentRepository {
 
 	private String[] locations;
