@@ -423,18 +423,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_spring_cloud_config_server">Spring Cloud Config Server</a>
 <ul class="sectlevel2">
 <li><a href="#_environment_repository">Environment Repository</a></li>
-<li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
 <li><a href="#_security">Security</a></li>
 <li><a href="#_encryption_and_decryption">Encryption and Decryption</a></li>
 <li><a href="#_key_management">Key Management</a></li>
 <li><a href="#_creating_a_key_store_for_testing">Creating a Key Store for Testing</a></li>
-<li><a href="#_embedding_the_config_server_2">Embedding the Config Server</a></li>
+<li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
 </ul>
 </li>
 <li><a href="#_spring_cloud_config_client">Spring Cloud Config Client</a>
 <ul class="sectlevel2">
-<li><a href="#_config_first_bootstrap">Config First Bootstrap</a></li>
-<li><a href="#_eureka_first_bootstrap">Eureka First Bootstrap</a></li>
+<li><a href="#config-first-bootstrap">Config First Bootstrap</a></li>
+<li><a href="#eureka-first-bootstrap">Eureka First Bootstrap</a></li>
 <li><a href="#_environment_changes">Environment Changes</a></li>
 <li><a href="#_refresh_scope">Refresh Scope</a></li>
 <li><a href="#_encryption_and_decryption_2">Encryption and Decryption</a></li>
@@ -669,20 +668,6 @@ the Git implementation).</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_embedding_the_config_server">Embedding the Config Server</h3>
-<div class="paragraph">
-<p>The Config Server can be embedded in another web application by
-setting "spring.cloud.config.server.prefix" (default empty), e.g. to
-"/config". If you do that, then you probably want to bootstrap the app
-containing the Config Server from the same remote repository from
-which all the other remote apps get their configuration properties
-(otherwise it is just a normal Spring Boot application since it won&#8217;t
-have a Config Server to contact when it starts). To do that you just
-need to make sure that the (optional) property
-"spring.cloud.config.server.bootstrap" is "true".</p>
-</div>
-</div>
-<div class="sect2">
 <h3 id="_security">Security</h3>
 <div class="paragraph">
 <p>You are free to secure your Config Server in any way that makes sense
@@ -869,7 +854,7 @@ your <code>application.yml</code> for the Config Server:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_embedding_the_config_server_2">Embedding the Config Server</h3>
+<h3 id="_embedding_the_config_server">Embedding the Config Server</h3>
 <div class="paragraph">
 <p>The Config Server runs best as a standalone application, but if you
 need to you can embed it in another application. Just use the
@@ -893,7 +878,7 @@ application developer), and it will also pick up some additional
 useful features related to <code>Environment</code> change events.</p>
 </div>
 <div class="sect2">
-<h3 id="_config_first_bootstrap">Config First Bootstrap</h3>
+<h3 id="config-first-bootstrap">Config First Bootstrap</h3>
 <div class="paragraph">
 <p>This is the default behaviour for any application which has the Spring
 Cloud Config Client on the classpath. When a config client starts up
@@ -909,7 +894,7 @@ with the server address in <code>spring.cloud.config.uri</code> (defaults to
 </div>
 </div>
 <div class="sect2">
-<h3 id="_eureka_first_bootstrap">Eureka First Bootstrap</h3>
+<h3 id="eureka-first-bootstrap">Eureka First Bootstrap</h3>
 <div class="paragraph">
 <p>If you are using Spring Cloud Netflix and Eureka Service Discovery,
 then you can have the Config Server register with Eureka if you want
@@ -948,14 +933,28 @@ use those to:</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>This covers a large class of refresh use cases, and you can verify the
-changes by visiting the <code>/configprops</code> endpoint (normal Spring Boot
-Actuator feature). For instance a <code>DataSource</code> can have its
-<code>maxPoolSize</code> changed at runtime (the default <code>DataSource</code> created by
-Spring Boot is an <code>@ConfigurationProperties</code> bean) and grow capacity
-dynamically. It does not cover another large class of use cases, where
-you need more control over the refresh, and where you need a
-configuration change to be atomic over the whole
+<p>Note that the Config Client does not by default poll for changes in
+the <code>Environment</code>, and generally we would not recommend that approach
+for detecting changes (although you could set it up with a
+<code>@Scheduled</code> annotation). If you have a scaled-out client application
+then it is better to broadcast the <code>EnvironmentChangedEvent</code> to all
+the instances instead of having them polling for changes (e.g. using
+the <a href="https://github.com/spring-cloud/spring-cloud-bus">Spring Cloud
+Bus</a>).</p>
+</div>
+<div class="paragraph">
+<p>The <code>EnvironmentChangedEvent</code> covers a large class of refresh use
+cases, as long as you can actually make a change to the <code>Environment</code>
+and publish the event (those APIs are public and part of core
+Spring). You can verify the changes are bound to
+<code>@ConfigurationProperties</code> beans by visiting the <code>/configprops</code>
+endpoint (normal Spring Boot Actuator feature). For instance a
+<code>DataSource</code> can have its <code>maxPoolSize</code> changed at runtime (the
+default <code>DataSource</code> created by Spring Boot is an
+<code>@ConfigurationProperties</code> bean) and grow capacity
+dynamically. Re-binding <code>@ConfigurationProperties</code> does not cover
+another large class of use cases, where you need more control over the
+refresh, and where you need a change to be atomic over the whole
 <code>ApplicationContext</code>. To address those concerns we have
 <code>@RefreshScope</code>.</p>
 </div>
@@ -1302,7 +1301,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-11-17 09:28:10 UTC
+Last updated 2014-11-17 14:38:12 UTC
 </div>
 </div>
 </body>
