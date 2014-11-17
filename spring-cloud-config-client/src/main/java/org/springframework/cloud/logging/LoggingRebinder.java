@@ -15,12 +15,18 @@
  */
 package org.springframework.cloud.logging;
 
-import org.springframework.boot.logging.LoggingApplicationListener;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
+import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.logging.LoggingSystem;
+import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
-import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 
 /**
  * @author Dave Syer
@@ -29,9 +35,9 @@ import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 public class LoggingRebinder implements
 		ApplicationListener<EnvironmentChangeEvent>, EnvironmentAware {
 
-	private Environment environment;
+	private final Log logger = LogFactory.getLog(getClass());
 
-	private LoggingApplicationListener delegate = new LoggingApplicationListener();
+	private Environment environment;
 
 	@Override
 	public void setEnvironment(Environment environment) {
@@ -45,7 +51,29 @@ public class LoggingRebinder implements
 		}
 		LoggingSystem system = LoggingSystem.get(LoggingSystem.class
 				.getClassLoader());
-		delegate.setLogLevels(system, environment);
+		setLogLevels(system, environment);
+	}
+
+	protected void setLogLevels(LoggingSystem system, Environment environment) {
+		Map<String, Object> levels = new RelaxedPropertyResolver(environment)
+				.getSubProperties("logging.level.");
+		for (Entry<String, Object> entry : levels.entrySet()) {
+			setLogLevel(system, environment, entry.getKey(), entry.getValue().toString());
+		}
+	}
+
+	private void setLogLevel(LoggingSystem system, Environment environment, String name,
+			String level) {
+		try {
+			if (name.equalsIgnoreCase("root")) {
+				name = null;
+			}
+			level = environment.resolvePlaceholders(level);
+			system.setLogLevel(name, LogLevel.valueOf(level));
+		}
+		catch (RuntimeException ex) {
+			this.logger.error("Cannot set level: " + level + " for '" + name + "'");
+		}
 	}
 
 }
