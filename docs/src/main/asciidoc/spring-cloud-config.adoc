@@ -44,18 +44,6 @@ configuration files, so the "label" specification in the HTTP
 resources is ignored (i.e. it's like always pulling from "master" in
 the Git implementation).
 
-=== Embedding the Config Server
-
-The Config Server can be embedded in another web application by
-setting "spring.cloud.config.server.prefix" (default empty), e.g. to
-"/config". If you do that, then you probably want to bootstrap the app
-containing the Config Server from the same remote repository from
-which all the other remote apps get their configuration properties
-(otherwise it is just a normal Spring Boot application since it won't
-have a Config Server to contact when it starts). To do that you just
-need to make sure that the (optional) property
-"spring.cloud.config.server.bootstrap" is "true".
-
 === Security
 
 You are free to secure your Config Server in any way that makes sense
@@ -214,6 +202,7 @@ Config Server (or other external property sources provided by the
 application developer), and it will also pick up some additional
 useful features related to `Environment` change events.
 
+[[config-first-bootstrap]]
 === Config First Bootstrap
 
 This is the default behaviour for any application which has the Spring
@@ -227,6 +216,7 @@ the Config Server need a `bootstrap.yml` (or an environment variable)
 with the server address in `spring.cloud.config.uri` (defaults to
 "http://localhost:8888").
 
+[[eureka-first-bootstrap]]
 === Eureka First Bootstrap
 
 If you are using Spring Cloud Netflix and Eureka Service Discovery,
@@ -255,14 +245,27 @@ use those to:
 * Re-bind any `@ConfigurationProperties` beans in the context
 * Set the logger levels for any properties in `logging.level.*`
 
-This covers a large class of refresh use cases, and you can verify the
-changes by visiting the `/configprops` endpoint (normal Spring Boot
-Actuator feature). For instance a `DataSource` can have its
-`maxPoolSize` changed at runtime (the default `DataSource` created by
-Spring Boot is an `@ConfigurationProperties` bean) and grow capacity
-dynamically. It does not cover another large class of use cases, where
-you need more control over the refresh, and where you need a
-configuration change to be atomic over the whole
+Note that the Config Client does not by default poll for changes in
+the `Environment`, and generally we would not recommend that approach
+for detecting changes (although you could set it up with a
+`@Scheduled` annotation). If you have a scaled-out client application
+then it is better to broadcast the `EnvironmentChangedEvent` to all
+the instances instead of having them polling for changes (e.g. using
+the https://github.com/spring-cloud/spring-cloud-bus[Spring Cloud
+Bus]).
+
+The `EnvironmentChangedEvent` covers a large class of refresh use
+cases, as long as you can actually make a change to the `Environment`
+and publish the event (those APIs are public and part of core
+Spring). You can verify the changes are bound to
+`@ConfigurationProperties` beans by visiting the `/configprops`
+endpoint (normal Spring Boot Actuator feature). For instance a
+`DataSource` can have its `maxPoolSize` changed at runtime (the
+default `DataSource` created by Spring Boot is an
+`@ConfigurationProperties` bean) and grow capacity
+dynamically. Re-binding `@ConfigurationProperties` does not cover
+another large class of use cases, where you need more control over the
+refresh, and where you need a change to be atomic over the whole
 `ApplicationContext`. To address those concerns we have
 `@RefreshScope`.
 
