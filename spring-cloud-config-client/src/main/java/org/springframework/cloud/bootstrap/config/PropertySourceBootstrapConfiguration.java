@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.bootstrap.BootstrapApplicationListener;
 import org.springframework.cloud.config.client.ConfigClientProperties;
@@ -95,6 +96,7 @@ public class PropertySourceBootstrapConfiguration implements
 	}
 
 	@Configuration
+	@ConditionalOnExpression("${spring.cloud.config.server.enabled:true}")
 	protected static class PropertySourceLocatorConfiguration {
 
 		@Autowired
