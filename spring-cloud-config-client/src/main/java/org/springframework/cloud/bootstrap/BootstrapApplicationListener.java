@@ -33,7 +33,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
@@ -64,21 +63,18 @@ public class BootstrapApplicationListener implements
 
 	@Override
 	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
-		Environment environment = event.getEnvironment();
+		ConfigurableEnvironment environment = event.getEnvironment();
 		if (!environment.getProperty("spring.cloud.bootstrap.enabled", Boolean.class,
 				true)) {
 			return;
 		}
-		if (environment instanceof ConfigurableEnvironment) {
-			ConfigurableEnvironment configurable = (ConfigurableEnvironment) environment;
-			// don't listen to events in a bootstrap context
-			if (configurable.getPropertySources().contains("bootstrapInProgress")) {
-				return;
-			}
-			ConfigurableApplicationContext context = bootstrapServiceContext(
-					configurable, event.getSpringApplication());
-			apply(context, event.getSpringApplication(), configurable);
+		// don't listen to events in a bootstrap context
+		if (environment.getPropertySources().contains("bootstrapInProgress")) {
+			return;
 		}
+		ConfigurableApplicationContext context = bootstrapServiceContext(
+				environment, event.getSpringApplication());
+		apply(context, event.getSpringApplication(), environment);
 	}
 
 	private ConfigurableApplicationContext bootstrapServiceContext(
@@ -93,7 +89,7 @@ public class BootstrapApplicationListener implements
 				.resolvePlaceholders("${spring.cloud.bootstrap.name:bootstrap}");
 		String configLocation = environment
 				.resolvePlaceholders("${spring.cloud.bootstrap.location:}");
-		Map<String, Object> bootstrapMap = new HashMap<String, Object>();
+		Map<String, Object> bootstrapMap = new HashMap<>();
 		bootstrapMap.put("spring.config.name", configName);
 		if (StringUtils.hasText(configLocation)) {
 			bootstrapMap.put("spring.config.location", configName);
@@ -114,7 +110,7 @@ public class BootstrapApplicationListener implements
 				.profiles(environment.getActiveProfiles()).showBanner(false)
 				.environment(bootstrapEnvironment)
 				.properties("spring.application.name:" + configName).web(false);
-		List<Class<?>> sources = new ArrayList<Class<?>>();
+		List<Class<?>> sources = new ArrayList<>();
 		for (String name : names) {
 			Class<?> cls = ClassUtils.resolveClassName(name, null);
 			try {
@@ -123,11 +119,9 @@ public class BootstrapApplicationListener implements
 			catch (Exception e) {
 				continue;
 			}
-			if (cls != null) {
-				sources.add(cls);
-			}
+			sources.add(cls);
 		}
-		builder.sources(sources.toArray());
+		builder.sources(sources.toArray(new Class[sources.size()]));
 		final ConfigurableApplicationContext context = builder.run();
 		// Make the bootstrap context a parent of the app context
 		addAncestorInitializer(application, context);
@@ -157,7 +151,7 @@ public class BootstrapApplicationListener implements
 		List<ApplicationContextInitializer> initializers = getOrderedBeansOfType(context,
 				ApplicationContextInitializer.class);
 		application.addInitializers(initializers
-				.toArray(new ApplicationContextInitializer[0]));
+				.toArray(new ApplicationContextInitializer[initializers.size()]));
 	}
 
 	private <T> List<T> getOrderedBeansOfType(ListableBeanFactory context, Class<T> type) {
@@ -218,7 +212,5 @@ public class BootstrapApplicationListener implements
 				propertySources.addFirst(propertySource);
 			}
 		}
-
 	}
-
 }
