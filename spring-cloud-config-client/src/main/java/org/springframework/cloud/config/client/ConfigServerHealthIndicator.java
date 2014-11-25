@@ -35,7 +35,8 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
                 Field field = ReflectionUtils.findField(CompositePropertySource.class,
                         "propertySources");
                 field.setAccessible(true);
-                Set<PropertySource<?>> propertySources = (Set<PropertySource<?>>) field.get(composite);
+                @SuppressWarnings("unchecked")
+				Set<PropertySource<?>> propertySources = (Set<PropertySource<?>>) field.get(composite);
                 List<String> sources = new ArrayList<>();
                 for (PropertySource<?> ps : propertySources) {
                     sources.add(ps.getName());

@@ -62,18 +62,7 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 
 	private IntegrationShutdown integrationShutdown;
 
-	private boolean forceShutdown;
-
 	private long timeout;
-
-	@ManagedAttribute
-	public boolean isForceShutdown() {
-		return forceShutdown;
-	}
-
-	public void setForceShutdown(boolean forceShutdown) {
-		this.forceShutdown = forceShutdown;
-	}
 
 	@ManagedAttribute
 	public long getTimeout() {
@@ -160,7 +149,7 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 	public synchronized ConfigurableApplicationContext restart() {
 		if (context != null) {
 			if (integrationShutdown != null) {
-				integrationShutdown.stop(forceShutdown, timeout);
+				integrationShutdown.stop(timeout);
 			}
 			application.setEnvironment(context.getEnvironment());
 			context.close();
@@ -206,8 +195,8 @@ public class RestartEndpoint extends AbstractEndpoint<Boolean> implements
 			this.exporter = (IntegrationMBeanExporter) exporter;
 		}
 
-		public void stop(boolean force, long timeout) {
-			exporter.stopActiveComponents(force, timeout);
+		public void stop(long timeout) {
+			exporter.stopActiveComponents(timeout);
 		}
 	}
 

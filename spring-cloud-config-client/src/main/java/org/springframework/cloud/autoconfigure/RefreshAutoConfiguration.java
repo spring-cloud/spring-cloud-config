@@ -23,16 +23,13 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.Endpoint;
-import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
 import org.springframework.boot.actuate.endpoint.InfoEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -41,12 +38,9 @@ import org.springframework.cloud.bootstrap.config.PropertySourceBootstrapConfigu
 import org.springframework.cloud.config.client.RefreshEndpoint;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.cloud.context.environment.EnvironmentManager;
-import org.springframework.cloud.context.environment.EnvironmentManagerMvcEndpoint;
 import org.springframework.cloud.context.properties.ConfigurationPropertiesRebinder;
 import org.springframework.cloud.context.restart.RestartEndpoint;
-import org.springframework.cloud.context.restart.RestartMvcEndpoint;
 import org.springframework.cloud.context.scope.refresh.RefreshScope;
-import org.springframework.cloud.endpoint.GenericPostableMvcEndpoint;
 import org.springframework.cloud.logging.LoggingRebinder;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -187,44 +181,6 @@ public class RefreshAutoConfiguration {
 			public RefreshEndpoint refreshEndpoint(ConfigurableApplicationContext context, RefreshScope scope) {
 				RefreshEndpoint endpoint = new RefreshEndpoint(context, scope);
 				return endpoint;
-			}
-
-			@Bean
-			public MvcEndpoint refreshMvcEndpoint(RefreshEndpoint endpoint) {
-				return new GenericPostableMvcEndpoint(endpoint);
-			}
-
-		}
-
-		@Configuration
-		@ConditionalOnWebApplication
-		@ConditionalOnClass(EnvironmentEndpoint.class)
-		@ConditionalOnExpression("${endpoints.env.enabled:true}")
-		@ConditionalOnBean(EnvironmentEndpoint.class)
-		protected static class EnvironmentEndpointConfiguration {
-
-			@Autowired
-			private RestartEndpoint restartEndpoint;
-
-			@Bean
-			public EnvironmentManagerMvcEndpoint environmentManagerEndpoint(
-					EnvironmentEndpoint delegate, EnvironmentManager environment) {
-				return new EnvironmentManagerMvcEndpoint(delegate, environment);
-			}
-
-			@Bean
-			public RestartMvcEndpoint restartMvcEndpoint() {
-				return new RestartMvcEndpoint(restartEndpoint);
-			}
-
-			@Bean
-			public MvcEndpoint pauseMvcEndpoint(RestartMvcEndpoint restartEndpoint) {
-				return restartEndpoint.getPauseEndpoint();
-			}
-
-			@Bean
-			public MvcEndpoint resumeMvcEndpoint(RestartMvcEndpoint restartEndpoint) {
-				return restartEndpoint.getResumeEndpoint();
 			}
 
 		}
