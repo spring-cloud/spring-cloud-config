@@ -109,6 +109,7 @@ public class RefreshAutoConfiguration {
 	}
 	
 	@Configuration
+	@ConditionalOnBean(ConfigurationPropertiesBindingPostProcessor.class)
 	protected static class ConfigurationPropertiesRebinderConfiguration {
 
 		@Autowired

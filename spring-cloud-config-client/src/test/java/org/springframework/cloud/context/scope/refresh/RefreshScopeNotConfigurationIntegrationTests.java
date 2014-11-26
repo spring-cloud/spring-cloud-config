@@ -17,77 +17,82 @@ package org.springframework.cloud.context.scope.refresh;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
-import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.context.environment.EnvironmentManager;
-import org.springframework.cloud.context.scope.refresh.RefreshScopeConfigurationIntegrationTests.Application;
+import org.springframework.cloud.context.scope.refresh.RefreshScopeNotConfigurationIntegrationTests.Application;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author Dave Syer
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = Application.class)
-public class RefreshScopeConfigurationIntegrationTests {
+@SpringApplicationConfiguration(classes = Application.class)
+public class RefreshScopeNotConfigurationIntegrationTests {
 
 	@Autowired
 	private org.springframework.cloud.context.scope.refresh.RefreshScope scope;
-
+	
 	@Autowired
 	private EnvironmentManager environmentManager;
-
+	
 	@Autowired
-	private Application application;
-
+	private Client application;
+	
 	@Autowired
 	private ConfigurableListableBeanFactory beanFactory;
-
+	
 	@Test
 	public void scopeOnBeanDefinition() throws Exception {
-		assertEquals("refresh", beanFactory.getBeanDefinition("scopedTarget.application")
-				.getScope());
+		assertEquals("refresh", beanFactory.getBeanDefinition("scopedTarget.application").getScope());
 	}
 
-	/**
-	 * See gh-43
-	 */
 	@Test
-	@Ignore
 	public void beanAccess() throws Exception {
-		// Comment out this line and it works!
 		application.hello();
-		scope.refresh("application");
+		environmentManager.setProperty("message", "Hello Dave!");
+		scope.refreshAll();
 		String message = application.hello();
-		assertEquals("Hello World", message);
+		assertEquals("Hello Dave!", message);
+	}
+	
+	@Configuration
+	@EnableAutoConfiguration
+	protected static class Application {
+		
+		@Bean
+		@RefreshScope
+		public Client application() {
+			return new Client();
+		}
+		
+		public static void main(String[] args) {
+			SpringApplication.run(Application.class, args);
+		}
+
 	}
 
-	@Configuration("application")
-	// @Component("application")
-	@RefreshScope
-	@Import({ PropertyPlaceholderAutoConfiguration.class, RefreshAutoConfiguration.class })
-	protected static class Application {
+	@RestController
+	protected static class Client {
 
-		String message = "Hello World";
+		@Value("${message:Hello World!}")
+		String message;
 
 		@RequestMapping("/")
 		public String hello() {
 			return message;
-		}
-
-		public static void main(String[] args) {
-			SpringApplication.run(Application.class, args);
 		}
 
 	}
