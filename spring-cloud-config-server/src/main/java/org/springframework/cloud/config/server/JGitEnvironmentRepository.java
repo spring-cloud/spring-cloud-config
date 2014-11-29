@@ -29,19 +29,19 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.TransportCommand;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
+import org.eclipse.jgit.util.FileUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
@@ -149,8 +149,11 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			final Git git = createGitClient();
 			return loadEnvironment(git, application, profile, label);
 		}
-		catch (Exception e) {
+		catch (GitAPIException e) {
 			throw new IllegalStateException("Cannot clone repository", e);
+		}
+		catch (Exception e) {
+			throw new IllegalStateException("Cannot load environment", e);
 		}
 	}
 
