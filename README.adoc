@@ -238,10 +238,10 @@ running locally (e.g. mongo or rabbit).  Ignore the git-related bits
 that you might find in "before_install" since they will be able git
 credentials and you already have those.
 
-If you need mongo, rabbit or redis, see the README in the [scripts
-demo repository](https://github.com/spring-cloud-samples/scripts) for
+If you need mongo, rabbit or redis, see the README in the https://github.com/spring-cloud-samples/scripts[scripts
+demo repository] for
 instructions. For example consider using the "fig.yml" with
-[Fig](http://www.fig.sh/) to run them in Docker containers.
+http://www.fig.sh[Fig] to run them in Docker containers.
 
 == Documentation
 
