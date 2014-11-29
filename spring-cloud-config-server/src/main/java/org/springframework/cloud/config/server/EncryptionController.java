@@ -36,6 +36,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.codec.Base64;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
@@ -177,11 +178,24 @@ public class EncryptionController {
 			catch (UnsupportedEncodingException e) {
 				// Really?
 			}
-			if (cipher && Base64.isBase64(data.getBytes())) {
+			String candidate = data.substring(0, data.length()-1);
+			if (cipher) {
+				if (data.endsWith("=")) {
+					 if (data.length()/2!=(data.length()+1)/2) {
+						 try {
+							 Hex.decode(candidate);
+							 return candidate;
+						 } catch (IllegalArgumentException e) {
+							 if (Base64.isBase64(data.getBytes())) {
+								 return data;
+							 }
+						 }
+					 }
+				}
 				return data;
 			}
 			// User posted data with content type form but meant it to be text/plain
-			data = data.substring(0, data.length() - 1);
+			data = candidate;
 		}
 
 		return data;
