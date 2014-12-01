@@ -32,6 +32,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshEndpointIntegrationTests.ClientApp;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -56,7 +57,7 @@ public class RefreshEndpointIntegrationTests {
 
 	@Value("${local.server.port}")
 	private int port;
-	
+
 	@Test
 	public void webAccess() throws Exception {
 		TestRestTemplate template = new TestRestTemplate();
@@ -82,9 +83,22 @@ public class RefreshEndpointIntegrationTests {
 
 	@Configuration
 	@EnableAutoConfiguration
-	@RestController
-	@RefreshScope
 	protected static class ClientApp {
+		
+		@Bean
+		@RefreshScope
+		public Controller controller() {
+			return new Controller();
+		}
+
+		public static void main(String[] args) {
+			SpringApplication.run(ClientApp.class, args);
+		}
+
+	}
+
+	@RestController
+	protected static class Controller {
 
 		@Value("${message:Hello World!}")
 		String message;
@@ -94,10 +108,7 @@ public class RefreshEndpointIntegrationTests {
 			return message;
 		}
 
-		public static void main(String[] args) {
-			SpringApplication.run(ClientApp.class, args);
-		}
-
 	}
+
 
 }

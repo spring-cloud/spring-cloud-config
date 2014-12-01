@@ -35,16 +35,19 @@ import org.springframework.beans.factory.config.Scope;
 import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.cloud.context.config.BeanLifecycleDecorator;
+import org.springframework.cloud.context.config.BeanLifecycleDecorator.Context;
+import org.springframework.cloud.context.config.StandardBeanLifecycleDecorator;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.expression.BeanFactoryAccessor;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.cloud.context.config.BeanLifecycleDecorator;
-import org.springframework.cloud.context.config.BeanLifecycleDecorator.Context;
-import org.springframework.cloud.context.config.StandardBeanLifecycleDecorator;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
 
@@ -58,8 +61,7 @@ import org.springframework.util.StringValueResolver;
  * @since 3.1
  * 
  */
-public class GenericScope implements Scope, BeanFactoryPostProcessor,
-		DisposableBean {
+public class GenericScope implements Scope, BeanFactoryPostProcessor, DisposableBean {
 
 	private static final Log logger = LogFactory.getLog(GenericScope.class);
 
@@ -81,12 +83,10 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 	private BeanLifecycleDecorator<?> lifecycle;
 
 	/**
-	 * Manual override for the serialization id that will be used to identify
-	 * the bean factory. The default is a unique key based on the bean names in
-	 * the bean factory.
+	 * Manual override for the serialization id that will be used to identify the bean
+	 * factory. The default is a unique key based on the bean names in the bean factory.
 	 * 
-	 * @param id
-	 *            the id to set
+	 * @param id the id to set
 	 */
 	public void setId(String id) {
 		this.id = id;
@@ -95,36 +95,32 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 	/**
 	 * The name of this scope. Default "refresh".
 	 * 
-	 * @param name
-	 *            the name value to set
+	 * @param name the name value to set
 	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
 	/**
-	 * Flag to indicate that proxies should be created for the concrete type,
-	 * not just the interfaces, of the scoped beans.
+	 * Flag to indicate that proxies should be created for the concrete type, not just the
+	 * interfaces, of the scoped beans.
 	 * 
-	 * @param proxyTargetClass
-	 *            the flag value to set
+	 * @param proxyTargetClass the flag value to set
 	 */
 	public void setProxyTargetClass(boolean proxyTargetClass) {
 		this.proxyTargetClass = proxyTargetClass;
 	}
 
 	/**
-	 * Flag to indicate that all scoped beans should automatically be proxied.
-	 * If true then scoped beans can be injected as dependencies of another
-	 * component and the concrete target will only be instantiated when it is
-	 * used. Proxying is a huge advantage if the context storage for the scope
-	 * cache is not available at configuration time (e.g. for thread-based, or
-	 * other transient scopes). If this flag is false you can expect maybe to
-	 * have to add extra meta-data to the bean definitions individually (e.g.
-	 * &lt;aop:scoped-proxy/&gt; for an XML configuration).
+	 * Flag to indicate that all scoped beans should automatically be proxied. If true
+	 * then scoped beans can be injected as dependencies of another component and the
+	 * concrete target will only be instantiated when it is used. Proxying is a huge
+	 * advantage if the context storage for the scope cache is not available at
+	 * configuration time (e.g. for thread-based, or other transient scopes). If this flag
+	 * is false you can expect maybe to have to add extra meta-data to the bean
+	 * definitions individually (e.g. &lt;aop:scoped-proxy/&gt; for an XML configuration).
 	 * 
-	 * @param autoProxy
-	 *            the flag value to set, default is true
+	 * @param autoProxy the flag value to set, default is true
 	 */
 	public void setAutoProxy(boolean autoProxy) {
 		this.autoProxy = autoProxy;
@@ -133,8 +129,7 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 	/**
 	 * The cache implementation to use for bean instances in this scope.
 	 * 
-	 * @param cache
-	 *            the cache to use
+	 * @param cache the cache to use
 	 */
 	public void setScopeCache(ScopeCache cache) {
 		this.cache = new BeanLifecycleWrapperCache(cache);
@@ -143,8 +138,7 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 	/**
 	 * Helper to manage the creation and destruction of beans.
 	 * 
-	 * @param lifecycle
-	 *            the bean lifecycle to set
+	 * @param lifecycle the bean lifecycle to set
 	 */
 	public void setBeanLifecycleManager(BeanLifecycleDecorator<?> lifecycle) {
 		this.lifecycle = lifecycle;
@@ -156,7 +150,8 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 		for (BeanLifecycleWrapper wrapper : wrappers) {
 			try {
 				wrapper.destroy();
-			} catch (RuntimeException e) {
+			}
+			catch (RuntimeException e) {
 				errors.add(e);
 			}
 		}
@@ -176,8 +171,8 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 		if (lifecycle == null) {
 			lifecycle = new StandardBeanLifecycleDecorator(proxyTargetClass);
 		}
-		BeanLifecycleWrapper value = cache.put(name, new BeanLifecycleWrapper(
-				name, objectFactory, lifecycle));
+		BeanLifecycleWrapper value = cache.put(name, new BeanLifecycleWrapper(name,
+				objectFactory, lifecycle));
 		return value.getBean();
 	}
 
@@ -214,18 +209,19 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 			ExpressionParser parser = new SpelExpressionParser();
 			try {
 				return parser.parseExpression(input);
-			} catch (ParseException e) {
-				throw new IllegalArgumentException("Cannot parse expression: "
-						+ input, e);
+			}
+			catch (ParseException e) {
+				throw new IllegalArgumentException("Cannot parse expression: " + input, e);
 			}
 
-		} else {
+		}
+		else {
 			return null;
 		}
 	}
 
-	public void postProcessBeanFactory(
-			ConfigurableListableBeanFactory beanFactory) throws BeansException {
+	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
+			throws BeansException {
 
 		beanFactory.registerScope(name, this);
 		setSerializationId(beanFactory);
@@ -249,26 +245,23 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 			// Replace this or any of its inner beans with scoped proxy if it
 			// has this scope
 			boolean scoped = name.equals(definition.getScope());
-			Scopifier scopifier = new Scopifier(registry, name,
-					proxyTargetClass, scoped);
+			Scopifier scopifier = new Scopifier(registry, name, proxyTargetClass, scoped);
 			scopifier.visitBeanDefinition(definition);
 			if (scoped) {
-				createScopedProxy(beanName, definition, registry,
-						proxyTargetClass);
+				createScopedProxy(beanName, definition, registry, proxyTargetClass);
 			}
 		}
 
 	}
 
 	/**
-	 * If the bean factory is a DefaultListableBeanFactory then it can serialize
-	 * scoped beans and deserialize them in another context (even in another
-	 * JVM), as long as the ids of the bean factories match. This method sets up
-	 * the serialization id to be either the id provided to the scope instance,
-	 * or if that is null, a hash of all the bean names.
+	 * If the bean factory is a DefaultListableBeanFactory then it can serialize scoped
+	 * beans and deserialize them in another context (even in another JVM), as long as the
+	 * ids of the bean factories match. This method sets up the serialization id to be
+	 * either the id provided to the scope instance, or if that is null, a hash of all the
+	 * bean names.
 	 * 
-	 * @param beanFactory
-	 *            the bean factory to configure
+	 * @param beanFactory the bean factory to configure
 	 */
 	private void setSerializationId(ConfigurableListableBeanFactory beanFactory) {
 
@@ -276,8 +269,8 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 
 			String id = this.id;
 			if (id == null) {
-				String names = Arrays.asList(
-						beanFactory.getBeanDefinitionNames()).toString();
+				String names = Arrays.asList(beanFactory.getBeanDefinitionNames())
+						.toString();
 				logger.debug("Generating bean factory id from names: " + names);
 				id = UUID.nameUUIDFromBytes(names.getBytes()).toString();
 			}
@@ -285,7 +278,8 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 			logger.info("BeanFactory id=" + id);
 			((DefaultListableBeanFactory) beanFactory).setSerializationId(id);
 
-		} else {
+		}
+		else {
 			logger.warn("BeanFactory was not a DefaultListableBeanFactory, so RefreshScope beans "
 					+ "cannot be serialized reliably and passed to a remote JVM.");
 		}
@@ -308,14 +302,13 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 		BeanDefinitionHolder proxyHolder = ScopedProxyUtils.createScopedProxy(
 				new BeanDefinitionHolder(definition, beanName), registry,
 				proxyTargetClass);
-		registry.registerBeanDefinition(beanName,
-				proxyHolder.getBeanDefinition());
+		registry.registerBeanDefinition(beanName, proxyHolder.getBeanDefinition());
 		return proxyHolder;
 	}
 
 	/**
-	 * Helper class to scan a bean definition hierarchy and force the use of
-	 * auto-proxy for scoped beans.
+	 * Helper class to scan a bean definition hierarchy and force the use of auto-proxy
+	 * for scoped beans.
 	 * 
 	 * @author Dave Syer
 	 * 
@@ -344,15 +337,37 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 		}
 
 		@Override
+		protected void visitBeanClassName(BeanDefinition beanDefinition) {
+			String className = beanDefinition.getBeanClassName();
+			if (className!=null) {
+				Class<?> type = ClassUtils.resolveClassName(className, null);
+				Assert.state(
+						!beanDefinition.getScope().equals(scope)
+								|| AnnotationUtils.findAnnotation(type,
+										Configuration.class) == null,
+						"Scoped proxies not allowed on @Configuration (for '" + scope
+								+ "' scope) on bean of type " + type);
+				org.springframework.context.annotation.Scope beanScope = AnnotationUtils
+						.findAnnotation(type,
+								org.springframework.context.annotation.Scope.class);
+				if (beanScope != null && !scoped && beanScope.value().equals(scope)) {
+					beanDefinition.setScope(scope);
+				}
+			}
+			super.visitBeanClassName(beanDefinition);
+		}
+
+		@Override
 		protected Object resolveValue(Object value) {
 
 			BeanDefinition definition = null;
 			String beanName = null;
 			if (value instanceof BeanDefinition) {
 				definition = (BeanDefinition) value;
-				beanName = BeanDefinitionReaderUtils.generateBeanName(
-						definition, registry);
-			} else if (value instanceof BeanDefinitionHolder) {
+				beanName = BeanDefinitionReaderUtils.generateBeanName(definition,
+						registry);
+			}
+			else if (value instanceof BeanDefinitionHolder) {
 				BeanDefinitionHolder holder = (BeanDefinitionHolder) value;
 				definition = holder.getBeanDefinition();
 				beanName = holder.getBeanName();
@@ -409,9 +424,9 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 	}
 
 	/**
-	 * Wrapper for a bean instance and any destruction callback (DisposableBean
-	 * etc.) that is registered for it. Also decorates the bean to optionally
-	 * guard it from concurrent access (for instance).
+	 * Wrapper for a bean instance and any destruction callback (DisposableBean etc.) that
+	 * is registered for it. Also decorates the bean to optionally guard it from
+	 * concurrent access (for instance).
 	 * 
 	 * @author Dave Syer
 	 * 
@@ -430,8 +445,8 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 		private final ObjectFactory<?> objectFactory;
 
 		@SuppressWarnings("rawtypes")
-		public BeanLifecycleWrapper(String name,
-				ObjectFactory<?> objectFactory, BeanLifecycleDecorator lifecycle) {
+		public BeanLifecycleWrapper(String name, ObjectFactory<?> objectFactory,
+				BeanLifecycleDecorator lifecycle) {
 			this.name = name;
 			this.objectFactory = objectFactory;
 			this.lifecycle = lifecycle;
@@ -444,18 +459,17 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 		@SuppressWarnings("unchecked")
 		public Object getBean() {
 			if (bean == null) {
-				bean = lifecycle.decorateBean(objectFactory.getObject(),
-						context);
+				bean = lifecycle.decorateBean(objectFactory.getObject(), context);
 			}
 			return bean;
 		}
-		
+
 		public void destroy() {
-			if (context==null) {
+			if (context == null) {
 				return;
 			}
 			Runnable callback = context.getCallback();
-			if (callback!=null) {
+			if (callback != null) {
 				callback.run();
 			}
 		}
@@ -480,7 +494,8 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor,
 			if (name == null) {
 				if (other.name != null)
 					return false;
-			} else if (!name.equals(other.name))
+			}
+			else if (!name.equals(other.name))
 				return false;
 			return true;
 		}
