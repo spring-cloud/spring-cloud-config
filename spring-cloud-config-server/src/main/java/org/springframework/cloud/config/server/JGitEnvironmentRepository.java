@@ -117,11 +117,11 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	public File getBasedir() {
 		return basedir;
 	}
-	
+
 	public void setSearchPaths(String... searchPaths) {
 		this.searchPaths = searchPaths;
 	}
-	
+
 	public String[] getSearchPaths() {
 		return searchPaths;
 	}
@@ -145,8 +145,9 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 		initialize();
+		Git git = null;
 		try {
-			final Git git = createGitClient();
+			git = createGitClient();
 			return loadEnvironment(git, application, profile, label);
 		}
 		catch (GitAPIException e) {
@@ -155,9 +156,20 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot load environment", e);
 		}
+		finally {
+			try {
+				if (git != null) {
+					git.getRepository().close();
+				}
+			}
+			catch (Exception e) {
+				logger.warn("Could not close git repository", e);
+			}
+		}
 	}
 
-	private synchronized Environment loadEnvironment(Git git, String application, String profile, String label) throws GitAPIException {
+	private synchronized Environment loadEnvironment(Git git, String application,
+			String profile, String label) throws GitAPIException {
 		SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
 		git.getRepository().getConfig().setString("branch", label, "merge", label);
 		Ref ref = checkout(git, label);
@@ -184,7 +196,8 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 		CheckoutCommand checkout = git.checkout();
 		if (shouldTrack(git, label)) {
 			trackBranch(git, checkout, label);
-		} else {
+		}
+		else {
 			// works for tags and local branches
 			checkout.setName(label);
 		}
@@ -211,15 +224,16 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			pull.call();
 		}
 		catch (Exception e) {
-			logger.warn("Could not pull remote for " + label
-					+ " (current ref=" + ref + ")");
+			logger.warn("Could not pull remote for " + label + " (current ref=" + ref
+					+ ")");
 		}
 	}
 
 	private Git createGitClient() throws IOException, GitAPIException {
 		if (new File(basedir, ".git").exists()) {
 			return openGitRepository();
-		} else {
+		}
+		else {
 			return copyRepository();
 		}
 	}
@@ -243,15 +257,13 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 
 	private Git copyFromLocalRepository() throws IOException {
 		Git git;
-		FileSystemUtils.copyRecursively(new UrlResource(uri).getFile(),
-				basedir);
+		FileSystemUtils.copyRecursively(new UrlResource(uri).getFile(), basedir);
 		git = Git.open(basedir);
 		return git;
 	}
 
 	private Git cloneToBasedir() throws GitAPIException {
-		CloneCommand clone = Git.cloneRepository().setURI(uri)
-				.setDirectory(basedir);
+		CloneCommand clone = Git.cloneRepository().setURI(uri).setDirectory(basedir);
 		if (hasText(username)) {
 			setCredentialsProvider(clone);
 		}
@@ -277,8 +289,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 				FileUtils.delete(basedir, FileUtils.RECURSIVE);
 			}
 			catch (IOException e) {
-				throw new IllegalStateException(
-						"Failed to initialize base directory", e);
+				throw new IllegalStateException("Failed to initialize base directory", e);
 			}
 		}
 	}

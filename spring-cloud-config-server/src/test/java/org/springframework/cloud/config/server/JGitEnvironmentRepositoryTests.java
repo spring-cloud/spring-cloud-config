@@ -45,7 +45,7 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		repository.setUri(uri);
 		if (basedir.exists()) {
-			FileUtils.delete(basedir, FileUtils.RECURSIVE);
+			FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 		}
 	}
 
