@@ -22,6 +22,7 @@ import java.security.KeyPair;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
@@ -226,9 +227,10 @@ public class EncryptionController {
 		for (PropertySource source : environment.getPropertySources()) {
 			ConcurrentHashMap<Object, Object> map = new ConcurrentHashMap<Object, Object>(
 					source.getSource());
-			for (Object key : map.keySet()) {
+			for (Entry<Object,Object> entry : map.entrySet()) {
+				Object key = entry.getKey();
 				String name = key.toString();
-				String value = map.get(key).toString();
+				String value = entry.getValue().toString();
 				if (value.startsWith("{cipher}")) {
 					map.remove(key);
 					if (encryptor == null) {
