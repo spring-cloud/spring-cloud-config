@@ -54,6 +54,13 @@ public class RefreshScopeConfigurationTests {
 		}
 	}
 
+	private void refresh() {
+		EnvironmentManager environmentManager = context.getBean(EnvironmentManager.class);
+		environmentManager.setProperty("message", "Hello Dave!");
+		org.springframework.cloud.context.scope.refresh.RefreshScope scope = context.getBean(org.springframework.cloud.context.scope.refresh.RefreshScope.class);
+		scope.refreshAll();
+	}
+
 	/**
 	 * See gh-43
 	 */
@@ -87,11 +94,28 @@ public class RefreshScopeConfigurationTests {
 		assertEquals("Hello Dave!", message);
 	}
 
-	private void refresh() {
-		EnvironmentManager environmentManager = context.getBean(EnvironmentManager.class);
-		environmentManager.setProperty("message", "Hello Dave!");
-		org.springframework.cloud.context.scope.refresh.RefreshScope scope = context.getBean(org.springframework.cloud.context.scope.refresh.RefreshScope.class);
-		scope .refreshAll();
+	// WTF? Maven can't compile without the FQN on this one (not the others).
+	@org.springframework.context.annotation.Configuration
+	protected static class NestedApp {
+		
+		@RestController
+		@RefreshScope
+		protected static class NestedController {
+
+			@Value("${message:Hello World!}")
+			String message;
+
+			@RequestMapping("/")
+			public String hello() {
+				return message;
+			}
+
+		}
+
+		public static void main(String[] args) {
+			SpringApplication.run(ClientApp.class, args);
+		}
+
 	}
 
 	@Configuration
@@ -135,29 +159,6 @@ public class RefreshScopeConfigurationTests {
 		@RequestMapping("/")
 		public String hello() {
 			return message;
-		}
-
-	}
-
-	@Configuration
-	protected static class NestedApp {
-		
-		@RestController
-		@RefreshScope
-		protected static class NestedController {
-
-			@Value("${message:Hello World!}")
-			String message;
-
-			@RequestMapping("/")
-			public String hello() {
-				return message;
-			}
-
-		}
-
-		public static void main(String[] args) {
-			SpringApplication.run(ClientApp.class, args);
 		}
 
 	}
