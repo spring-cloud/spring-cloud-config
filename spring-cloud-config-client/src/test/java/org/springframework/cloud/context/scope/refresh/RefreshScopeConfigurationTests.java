@@ -29,7 +29,6 @@ import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.context.environment.EnvironmentManager;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeConfigurationTests.NestedApp.NestedController;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 public class RefreshScopeConfigurationTests {
 	
-	private ConfigurableApplicationContext context;
+	private AnnotationConfigApplicationContext context;
 	
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
@@ -65,10 +64,16 @@ public class RefreshScopeConfigurationTests {
 	 * See gh-43
 	 */
 	@Test
+	@Ignore("gh-43")
 	public void configurationWithRefreshScope() throws Exception {
-		expected.expectMessage("Scoped proxies not allowed on @Configuration");
 		context = new AnnotationConfigApplicationContext(Application.class,
 				PropertyPlaceholderAutoConfiguration.class, RefreshAutoConfiguration.class);
+		Application application = context.getBean(Application.class);
+		assertEquals("refresh", context.getBeanDefinition("application").getScope());
+		application.hello();
+		refresh();
+		String message = application.hello();
+		assertEquals("Hello Dave!", message);
 	}
 
 	@Test
@@ -83,7 +88,6 @@ public class RefreshScopeConfigurationTests {
 	}
 
 	@Test
-	@Ignore("SPR-12486")
 	public void refreshScopeOnNested() throws Exception {
 		context = new AnnotationConfigApplicationContext(NestedApp.class,
 				PropertyPlaceholderAutoConfiguration.class, RefreshAutoConfiguration.class);
@@ -118,7 +122,7 @@ public class RefreshScopeConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration("application")
 	@RefreshScope
 	protected static class Application {
 

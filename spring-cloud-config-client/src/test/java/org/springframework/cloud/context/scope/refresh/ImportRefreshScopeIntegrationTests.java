@@ -28,7 +28,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.ImportRefreshScopeIntegrationTests.TestConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @SpringApplicationConfiguration(classes = TestConfiguration.class)
@@ -46,7 +45,6 @@ public class ImportRefreshScopeIntegrationTests {
 	private org.springframework.cloud.context.scope.refresh.RefreshScope scope;
 
 	@Test
-	@DirtiesContext
 	public void testSimpleProperties() throws Exception {
 		assertEquals("Hello scope!", service.getMessage());
 		assertEquals("refresh", beanFactory.getBeanDefinition("service").getScope());

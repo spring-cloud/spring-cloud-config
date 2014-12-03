@@ -38,16 +38,13 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.cloud.context.config.BeanLifecycleDecorator;
 import org.springframework.cloud.context.config.BeanLifecycleDecorator.Context;
 import org.springframework.cloud.context.config.StandardBeanLifecycleDecorator;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.expression.BeanFactoryAccessor;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
 
@@ -334,27 +331,6 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor, Disposable
 			this.proxyTargetClass = proxyTargetClass;
 			this.scope = scope;
 			this.scoped = scoped;
-		}
-
-		@Override
-		protected void visitBeanClassName(BeanDefinition beanDefinition) {
-			String className = beanDefinition.getBeanClassName();
-			if (className!=null) {
-				Class<?> type = ClassUtils.resolveClassName(className, null);
-				Assert.state(
-						!beanDefinition.getScope().equals(scope)
-								|| AnnotationUtils.findAnnotation(type,
-										Configuration.class) == null,
-						"Scoped proxies not allowed on @Configuration (for '" + scope
-								+ "' scope) on bean of type " + type);
-				org.springframework.context.annotation.Scope beanScope = AnnotationUtils
-						.findAnnotation(type,
-								org.springframework.context.annotation.Scope.class);
-				if (beanScope != null && !scoped && beanScope.value().equals(scope)) {
-					beanDefinition.setScope(scope);
-				}
-			}
-			super.visitBeanClassName(beanDefinition);
 		}
 
 		@Override
