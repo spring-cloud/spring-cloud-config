@@ -291,6 +291,15 @@ target cache. There is also a `refresh(String)` method to refresh an
 individual bean by name. This functionality is exposed in the
 `/refresh` endpoint (over HTTP or JMX).
 
+NOTE: `@RefreshScope` works (technically) on an `@Configuration`
+class, but it might lead to surprising behaviour: e.g. it does *not*
+mean that all the `@Beans` defined in that class are themselves
+`@RefreshScope`. Specifically, anything that depends on those beans
+cannot rely on them being updated when a refresh is initiated, unless
+it is itself in `@RefreshScope` (in which it will be rebuilt on a
+refresh and its dependencies re-injected, at which point they will be
+re-initialized from the refreshed `@Configuration`).
+
 === Encryption and Decryption
 
 The Config Client has an `Environment` pre-processor for decrypting

@@ -18,7 +18,6 @@ package org.springframework.cloud.context.scope.refresh;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -64,12 +63,11 @@ public class RefreshScopeConfigurationTests {
 	 * See gh-43
 	 */
 	@Test
-	@Ignore("gh-43")
 	public void configurationWithRefreshScope() throws Exception {
 		context = new AnnotationConfigApplicationContext(Application.class,
 				PropertyPlaceholderAutoConfiguration.class, RefreshAutoConfiguration.class);
 		Application application = context.getBean(Application.class);
-		assertEquals("refresh", context.getBeanDefinition("application").getScope());
+		assertEquals("refresh", context.getBeanDefinition("scopedTarget.application").getScope());
 		application.hello();
 		refresh();
 		String message = application.hello();
@@ -126,6 +124,7 @@ public class RefreshScopeConfigurationTests {
 	@RefreshScope
 	protected static class Application {
 
+		@Value("${message:Hello World!}")
 		String message = "Hello World";
 
 		@RequestMapping("/")

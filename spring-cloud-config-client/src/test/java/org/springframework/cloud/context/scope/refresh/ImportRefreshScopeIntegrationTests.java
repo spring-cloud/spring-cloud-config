@@ -17,7 +17,6 @@ package org.springframework.cloud.context.scope.refresh;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +31,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @SpringApplicationConfiguration(classes = TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
-@Ignore("gh-43")
 public class ImportRefreshScopeIntegrationTests {
 	
 	@Autowired
@@ -47,7 +45,7 @@ public class ImportRefreshScopeIntegrationTests {
 	@Test
 	public void testSimpleProperties() throws Exception {
 		assertEquals("Hello scope!", service.getMessage());
-		assertEquals("refresh", beanFactory.getBeanDefinition("service").getScope());
+		assertEquals("refresh", beanFactory.getBeanDefinition("scopedTarget.service").getScope());
 		assertEquals("Hello scope!", service.getMessage());
 	}
 
