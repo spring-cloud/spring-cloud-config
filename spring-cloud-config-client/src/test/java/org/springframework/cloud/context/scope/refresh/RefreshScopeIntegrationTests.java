@@ -15,10 +15,6 @@
  */
 package org.springframework.cloud.context.scope.refresh;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
@@ -35,6 +31,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeIntegrationTests.TestConfiguration;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -42,6 +39,8 @@ import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import static org.junit.Assert.*;
 
 @SpringApplicationConfiguration(classes = TestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -88,6 +87,9 @@ public class RefreshScopeIntegrationTests {
 		assertEquals(2, ExampleService.getInitCount());
 		assertEquals(1, ExampleService.getDestroyCount());
 		assertNotSame(id1, id2);
+		assertNotNull(ExampleService.event);
+		assertEquals(RefreshScopeRefreshedEvent.DEFAULT_NAME,
+				ExampleService.event.getName());
 	}
 
 	@Test
@@ -104,6 +106,10 @@ public class RefreshScopeIntegrationTests {
 		assertEquals(2, ExampleService.getInitCount());
 		assertEquals(1, ExampleService.getDestroyCount());
 		assertNotSame(id1, id2);
+		assertNotNull(ExampleService.event);
+		assertEquals(
+				org.springframework.cloud.context.scope.refresh.RefreshScope.SCOPED_TARGET_PREFIX
+						+ "service", ExampleService.event.getName());
 	}
 
 	public static interface Service {
@@ -113,12 +119,13 @@ public class RefreshScopeIntegrationTests {
 	}
 
 	public static class ExampleService implements Service, InitializingBean,
-			DisposableBean {
+			DisposableBean, ApplicationListener<RefreshScopeRefreshedEvent> {
 
 		private static Log logger = LogFactory.getLog(ExampleService.class);
 
 		private volatile static int initCount = 0;
 		private volatile static int destroyCount = 0;
+		private volatile static RefreshScopeRefreshedEvent event;
 
 		private String message = null;
 		private volatile long delay = 0;
@@ -141,6 +148,7 @@ public class RefreshScopeIntegrationTests {
 		public static void reset() {
 			initCount = 0;
 			destroyCount = 0;
+			event = null;
 		}
 
 		public static int getInitCount() {
@@ -168,6 +176,10 @@ public class RefreshScopeIntegrationTests {
 			return message;
 		}
 
+		@Override
+		public void onApplicationEvent(RefreshScopeRefreshedEvent e) {
+			event = e;
+		}
 	}
 
 	@Configuration

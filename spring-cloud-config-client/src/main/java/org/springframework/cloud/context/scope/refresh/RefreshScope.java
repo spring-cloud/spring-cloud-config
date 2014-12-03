@@ -15,6 +15,9 @@ package org.springframework.cloud.context.scope.refresh;
 
 import java.io.Serializable;
 
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.cloud.context.scope.GenericScope;
@@ -54,7 +57,10 @@ import org.springframework.cloud.context.scope.GenericScope;
  * 
  */
 @ManagedResource
-public class RefreshScope extends GenericScope {
+public class RefreshScope extends GenericScope implements ApplicationContextAware {
+
+	protected static final String SCOPED_TARGET_PREFIX = "scopedTarget.";
+	private ApplicationContext context;
 
 	/**
 	 * Create a scope instance and give it the default name: "refresh".
@@ -66,17 +72,23 @@ public class RefreshScope extends GenericScope {
 
 	@ManagedOperation(description = "Dispose of the current instance of bean name provided and force a refresh on next method execution.")
 	public void refresh(String name) {
-		if (!name.startsWith("scopedTarget.")) {
+		if (!name.startsWith(SCOPED_TARGET_PREFIX)) {
 			// User wants to refresh the bean with this name but that isn't the one in the cache...
-			name = "scopedTarget." + name;
+			name = SCOPED_TARGET_PREFIX + name;
 		}
 		// Ensure lifecycle is finished if bean was disposable
 		super.destroy(name);
+		context.publishEvent(new RefreshScopeRefreshedEvent(name));
 	}
 
 	@ManagedOperation(description = "Dispose of the current instance of all beans in this scope and force a refresh on next method execution.")
 	public void refreshAll() {
 		super.destroy();
+		context.publishEvent(new RefreshScopeRefreshedEvent());
 	}
 
+	@Override
+	public void setApplicationContext(ApplicationContext context) throws BeansException {
+		this.context = context;
+	}
 }
