@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.config.client;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,7 +37,6 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.support.StandardServletEnvironment;
 
 /**
@@ -146,12 +144,7 @@ public class RefreshEndpoint extends AbstractEndpoint<Collection<String>> {
 	private void extract(PropertySource<?> parent, Map<String, Object> result) {
 		if (parent instanceof CompositePropertySource) {
 			try {
-				Field field = ReflectionUtils.findField(CompositePropertySource.class,
-						"propertySources");
-				field.setAccessible(true);
-				@SuppressWarnings("unchecked")
-				Set<PropertySource<?>> sources = (Set<PropertySource<?>>) field.get(parent);
-				for (PropertySource<?> source : sources) {
+				for (PropertySource<?> source : ((CompositePropertySource) parent).getPropertySources()) {
 					extract(source, result);
 				}
 			} catch (Exception e) {

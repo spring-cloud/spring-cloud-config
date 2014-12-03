@@ -15,10 +15,8 @@
  */
 package org.springframework.cloud.bootstrap.encrypt;
 
-import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,7 +30,6 @@ import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
-import org.springframework.util.ReflectionUtils;
 
 /**
  * @author Dave Syer
@@ -48,19 +45,7 @@ public class EnvironmentDecryptApplicationListener implements
 
 	private TextEncryptor encryptor;
 
-	private Field propertySourcesField;
-
 	private boolean failOnError = true;
-
-	{
-		initField();
-	}
-
-	private void initField() {
-		propertySourcesField = ReflectionUtils.findField(CompositePropertySource.class,
-				"propertySources");
-		propertySourcesField.setAccessible(true);
-	}
 
 	public EnvironmentDecryptApplicationListener(TextEncryptor encryptor) {
 		this.encryptor = encryptor;
@@ -131,17 +116,11 @@ public class EnvironmentDecryptApplicationListener implements
 		}
 		else if (source instanceof CompositePropertySource) {
 
-			try {
-				@SuppressWarnings("unchecked")
-				Set<PropertySource<?>> sources = (Set<PropertySource<?>>) propertySourcesField
-						.get(source);
-				for (PropertySource<?> nested : sources) {
-					decrypt(nested, overrides);
-				}
+			for (PropertySource<?> nested : ((CompositePropertySource) source)
+					.getPropertySources()) {
+				decrypt(nested, overrides);
 			}
-			catch (IllegalAccessException e) {
-				return;
-			}
+
 		}
 
 	}

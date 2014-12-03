@@ -1,16 +1,13 @@
 package org.springframework.cloud.config.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health.Builder;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
-import org.springframework.util.ReflectionUtils;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * @author Spencer Gibb
@@ -31,14 +28,8 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
             PropertySource<?> propertySource = locator.locate(env);
             builder.up();
             if (propertySource instanceof CompositePropertySource) {
-                CompositePropertySource composite = CompositePropertySource.class.cast(propertySource);
-                Field field = ReflectionUtils.findField(CompositePropertySource.class,
-                        "propertySources");
-                field.setAccessible(true);
-                @SuppressWarnings("unchecked")
-				Set<PropertySource<?>> propertySources = (Set<PropertySource<?>>) field.get(composite);
                 List<String> sources = new ArrayList<>();
-                for (PropertySource<?> ps : propertySources) {
+                for (PropertySource<?> ps : ((CompositePropertySource) propertySource).getPropertySources()) {
                     sources.add(ps.getName());
                 }
                 builder.withDetail("propertySources", sources);
