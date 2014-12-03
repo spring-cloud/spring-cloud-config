@@ -984,6 +984,25 @@ target cache. There is also a <code>refresh(String)</code> method to refresh an
 individual bean by name. This functionality is exposed in the
 <code>/refresh</code> endpoint (over HTTP or JMX).</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<code>@RefreshScope</code> works (technically) on an <code>@Configuration</code>
+class, but it might lead to surprising behaviour: e.g. it does <strong>not</strong>
+mean that all the <code>@Beans</code> defined in that class are themselves
+<code>@RefreshScope</code>. Specifically, anything that depends on those beans
+cannot rely on them being updated when a refresh is initiated, unless
+it is itself in <code>@RefreshScope</code> (in which it will be rebuilt on a
+refresh and its dependencies re-injected, at which point they will be
+re-initialized from the refreshed <code>@Configuration</code>).
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_encryption_and_decryption_2">Encryption and Decryption</h3>
@@ -1301,7 +1320,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-12-03 15:08:12 UTC
+Last updated 2014-12-03 17:23:59 UTC
 </div>
 </div>
 </body>
