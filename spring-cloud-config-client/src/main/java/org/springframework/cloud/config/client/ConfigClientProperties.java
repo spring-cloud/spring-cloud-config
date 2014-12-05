@@ -52,6 +52,8 @@ public class ConfigClientProperties {
 
 	private Discovery discovery = new Discovery();
 
+	private boolean failFast = false;
+
 	private ConfigClientProperties() {
 	}
 
@@ -125,6 +127,14 @@ public class ConfigClientProperties {
 
 	public void setDiscovery(Discovery discovery) {
 		this.discovery = discovery;
+	}
+
+	public boolean isFailFast() {
+		return failFast;
+	}
+
+	public void setFailFast(boolean failFast) {
+		this.failFast = failFast;
 	}
 
 	private String[] extractCredentials() {
@@ -216,7 +226,8 @@ public class ConfigClientProperties {
 	@Override
 	public String toString() {
 		return "ConfigClientProperties [name=" + name + ", env=" + env + ", label="
-				+ label + ", uri=" + uri + ", discovery.enabled=" + discovery.enabled + "]";
+				+ label + ", uri=" + uri + ", discovery.enabled=" + discovery.enabled
+				+ ", failFast="+ failFast + "]";
 	}
 
 }

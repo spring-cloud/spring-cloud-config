@@ -60,7 +60,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void vanilla() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				.properties("spring.cloud.config.server.git.uri=" + uri).run();
+				//TODO: why didn't .properties() work for me?
+				.run("--spring.cloud.config.server.git.uri=" + uri);
 		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
@@ -72,8 +73,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		context = new SpringApplicationBuilder(TestConfiguration.class)
 				.web(false)
-				.properties("spring.cloud.config.server.git.uri=" + uri,
-						"spring.cloud.config.server.git.searchPaths=sub").run();
+				//TODO: why didn't .properties() work for me?
+				.run("--spring.cloud.config.server.git.uri=" + uri,
+						"--spring.cloud.config.server.git.searchPaths=sub");
 		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
