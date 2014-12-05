@@ -434,6 +434,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#config-first-bootstrap">Config First Bootstrap</a></li>
 <li><a href="#eureka-first-bootstrap">Eureka First Bootstrap</a></li>
+<li><a href="#config-client-fail-fast">Config Client Fail Fast</a></li>
 <li><a href="#_environment_changes">Environment Changes</a></li>
 <li><a href="#_refresh_scope">Refresh Scope</a></li>
 <li><a href="#_encryption_and_decryption_2">Encryption and Decryption</a></li>
@@ -913,6 +914,16 @@ can change its co-ordinates, as long as Eureka is a fixed point.</p>
 </div>
 </div>
 <div class="sect2">
+<h3 id="config-client-fail-fast">Config Client Fail Fast</h3>
+<div class="paragraph">
+<p>In some cases, it may be desirable to fail startup of a service if
+it cannot connect to the Config Server.  If this is the desired
+behavior, set the bootstrap configuration property
+<code>spring.cloud.config.failFast=true</code> and the client will halt with
+an Exception.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_environment_changes">Environment Changes</h3>
 <div class="paragraph">
 <p>The application will listen for an <code>EnvironmentChangedEvent</code> and react
@@ -1320,7 +1331,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-12-05 02:54:42 UTC
+Last updated 2014-12-05 19:37:48 UTC
 </div>
 </div>
 </body>
