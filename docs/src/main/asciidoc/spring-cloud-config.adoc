@@ -233,6 +233,15 @@ for using this option is an extra network round trip on start up to
 locate the service registration. The benefit is that the Config Server
 can change its co-ordinates, as long as Eureka is a fixed point.
 
+[[config-client-fail-fast]]
+=== Config Client Fail Fast
+
+In some cases, it may be desirable to fail startup of a service if
+it cannot connect to the Config Server.  If this is the desired
+behavior, set the bootstrap configuration property
+`spring.cloud.config.failFast=true` and the client will halt with
+an Exception.
+
 === Environment Changes
 
 The application will listen for an `EnvironmentChangedEvent` and react
