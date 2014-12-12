@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +16,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.cloud.config.server.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
@@ -39,6 +41,11 @@ public class ApplicationTests {
 		configPort = ((EmbeddedWebApplicationContext) context)
 				.getEmbeddedServletContainer().getPort();
 		System.setProperty("config.port", "" + configPort);
+	}
+	
+	@AfterClass
+	public static void close() {
+		System.clearProperty("config.port");		
 	}
 
 	@Test
