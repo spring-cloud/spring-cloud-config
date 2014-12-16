@@ -59,7 +59,7 @@ public class PropertySourceBootstrapConfiguration implements
 	@Autowired(required = false)
 	private List<PropertySourceLocator> propertySourceLocators = new ArrayList<>();
 
-	@Autowired
+	@Autowired(required = false)
 	private ConfigClientProperties configClientProperties;
 
 	public void setPropertySourceLocators(
@@ -79,7 +79,7 @@ public class PropertySourceBootstrapConfiguration implements
 				source = locator.locate(applicationContext.getEnvironment());
 			}
 			catch (Exception e) {
-				if (configClientProperties.isFailFast()) {
+				if (configClientProperties != null && configClientProperties.isFailFast()) {
 					throw new IllegalStateException("Could not locate PropertySource. The fail fast property is set, failing", e);
 				}
 				logger.error("Could not locate PropertySource: " + e.getMessage());
