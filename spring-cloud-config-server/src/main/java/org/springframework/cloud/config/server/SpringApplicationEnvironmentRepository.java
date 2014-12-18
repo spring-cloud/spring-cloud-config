@@ -23,11 +23,11 @@ import java.util.List;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.config.Environment;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.cloud.config.Environment;
 import org.springframework.util.StringUtils;
 
 /**
@@ -46,6 +46,9 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 
 	private boolean failOnError = false;
 
+	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/",
+			"classpath:/config/", "file:./", "file:./config/" };
+
 	/**
 	 * Strategy to determine how to handle exceptions during decryption.
 	 * 
@@ -62,12 +65,12 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 		ConfigurableEnvironment environment = getEnvironment(profile);
 		builder.environment(environment);
 		builder.web(false).showBanner(false);
-		String[] args = getArgs(config);
+		String[] args = getArgs(config, label);
 		ConfigurableApplicationContext context = builder.run(args);
 		environment.getPropertySources().remove("profiles");
 		try {
-			return new NativeEnvironmentRepository(environment).findOne(
-					config, profile, label);
+			return new NativeEnvironmentRepository(environment).findOne(config, profile,
+					label);
 		}
 		finally {
 			context.close();
@@ -84,7 +87,7 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 		return environment;
 	}
 
-	private String[] getArgs(String config) {
+	private String[] getArgs(String config, String label) {
 		List<String> list = new ArrayList<String>();
 		if (!config.startsWith("application")) {
 			config = "application," + config;
@@ -93,22 +96,41 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 		list.add("--spring.cloud.bootstrap.enabled=false");
 		list.add("--encrypt.failOnError=" + failOnError);
 		if (locations != null) {
-			list.add("--spring.config.location="
-					+ StringUtils.arrayToCommaDelimitedString(locations));
+			list.add("--spring.config.location=" + getLocations(this.locations, label));
+		}
+		else {
+			list.add("--spring.config.location=" + getLocations(DEFAULT_LOCATIONS, label));
 		}
 		return list.toArray(new String[0]);
+	}
+
+	private String getLocations(String[] locations, String label) {
+		List<String> output = new ArrayList<String>();
+		for (String location : locations) {
+			output.add(location);
+		}
+		for (String location : locations) {
+			if (isDirectory(location) && StringUtils.hasText(label)) {
+				output.add(location + label.trim() + "/");
+			}
+		}
+		return StringUtils.collectionToCommaDelimitedString(output);
 	}
 
 	public void setSearchLocations(String... locations) {
 		this.locations = locations;
 		for (int i = 0; i < locations.length; i++) {
 			String location = locations[i];
-			if (!location.endsWith(".properties") && !location.endsWith(".yml")
-					&& !location.endsWith(".yaml") && !location.endsWith("/")) {
+			if (isDirectory(location)&& !location.endsWith("/")) {
 				location = location + "/";
 			}
 			locations[i] = location;
 		}
+	}
+
+	private boolean isDirectory(String location) {
+		return !location.endsWith(".properties") && !location.endsWith(".yml")
+				&& !location.endsWith(".yaml");
 	}
 
 }

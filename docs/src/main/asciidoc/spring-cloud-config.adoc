@@ -39,10 +39,11 @@ Git, but just loads the config files from the local classpath (or
 anywhere else you want to point to with
 "spring.cloud.config.server.locations"). To use the native profile
 just launch the Config Server with "spring.profiles.active=native". In
-the native profile the repository only has the "current" set of
-configuration files, so the "label" specification in the HTTP
-resources is ignored (i.e. it's like always pulling from "master" in
-the Git implementation).
+the native profile the repository the "label" specification in the
+HTTP resources is added to the search path, so properties files are
+loaded from each search location *and* a subdirectory with the same
+name as the label (the labelled properties take precedence in the
+Spring Environment).
 
 === Security
 

@@ -177,7 +177,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 			pull(git, label, ref);
 		}
 		environment.setSearchLocations(getSearchLocations(basedir));
-		return clean(environment.findOne(application, profile, label));
+		return clean(environment.findOne(application, profile, ""));
 	}
 
 	private String[] getSearchLocations(File dir) {

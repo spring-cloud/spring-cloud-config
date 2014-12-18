@@ -56,4 +56,13 @@ public class SpringApplicationEnvironmentRepositoryTests {
 		assertEquals(3, environment.getPropertySources().size());
 	}
 
+	@Test
+	public void labelled() {
+		repository.setSearchLocations("classpath:/test");
+		Environment environment = repository.findOne("foo", "development", "dev");
+		assertEquals(4, environment.getPropertySources().size());
+		// position 1 because it has higher precendence than anything except the foo-development.properties
+		assertEquals("dev_bar", environment.getPropertySources().get(1).getSource().get("foo"));
+	}
+
 }
