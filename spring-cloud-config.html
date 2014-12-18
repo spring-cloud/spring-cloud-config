@@ -662,10 +662,11 @@ Git, but just loads the config files from the local classpath (or
 anywhere else you want to point to with
 "spring.cloud.config.server.locations"). To use the native profile
 just launch the Config Server with "spring.profiles.active=native". In
-the native profile the repository only has the "current" set of
-configuration files, so the "label" specification in the HTTP
-resources is ignored (i.e. it&#8217;s like always pulling from "master" in
-the Git implementation).</p>
+the native profile the repository the "label" specification in the
+HTTP resources is added to the search path, so properties files are
+loaded from each search location <strong>and</strong> a subdirectory with the same
+name as the label (the labelled properties take precedence in the
+Spring Environment).</p>
 </div>
 </div>
 <div class="sect2">
@@ -1331,7 +1332,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-12-16 19:55:38 UTC
+Last updated 2014-12-18 16:51:58 UTC
 </div>
 </div>
 </body>
