@@ -42,6 +42,7 @@ import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
@@ -57,15 +58,13 @@ import com.jcraft.jsch.Session;
  *
  */
 @ConfigurationProperties("spring.cloud.config.server.git")
-public class JGitEnvironmentRepository implements EnvironmentRepository {
-
-	public static final String DEFAULT_URI = "https://github.com/spring-cloud-samples/config-repo";
+public class JGitEnvironmentRepository implements EnvironmentRepository, InitializingBean {
 
 	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
 
 	private File basedir;
 
-	private String uri = DEFAULT_URI;
+	private String uri;
 
 	private ConfigurableEnvironment environment;
 
@@ -76,6 +75,11 @@ public class JGitEnvironmentRepository implements EnvironmentRepository {
 	private boolean initialized;
 
 	private String[] searchPaths = new String[0];
+	
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		Assert.state(uri!=null, "You need to configure a uri for the git repository");
+	}
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
