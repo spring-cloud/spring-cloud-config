@@ -65,7 +65,7 @@ users. Example Maven configuration:
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-parent</artifactId>
-				<version>1.0.0.BUILD-SNAPSHOT</version>
+				<version>1.0.0.RC1</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
