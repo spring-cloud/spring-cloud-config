@@ -490,7 +490,10 @@ repository. Then try it out as a client:</p>
 repository (at "spring.cloud.config.server.git.uri") and use it to
 initialize a mini <code>SpringApplication</code>. The mini-application&#8217;s
 <code>Environment</code> is used to enumerate property sources and publish them
-via a JSON endpoint. The service has resources in the form:</p>
+via a JSON endpoint.</p>
+</div>
+<div class="paragraph">
+<p>The HTTP service has resources in the form:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -506,7 +509,10 @@ via a JSON endpoint. The service has resources in the form:</p>
 <code>SpringApplication</code> (i.e. what is normally "application" in a regular
 Spring Boot app), "profile" is an active profile (or comma-separated
 list of properties), and "label" is an optional git label (defaults to
-"master".) The YAML and properties forms are coalesced into a single
+"master".)</p>
+</div>
+<div class="paragraph">
+<p>The YAML and properties forms are coalesced into a single
 map, even if the origin of the values (reflected in the
 "propertySources" of the "standard" form) has multiple sources.</p>
 </div>
@@ -643,10 +649,66 @@ Server? The strategy that governs this behaviour is the
 <code>EnvironmentRepository</code>, serving <code>Environment</code> objects. This
 <code>Environment</code> is a shallow copy of the domain from the Spring
 <code>Environment</code> (including <code>propertySources</code> as the main feature). The
-default implementation of <code>EnvironmentRepository</code> uses a Git backend,
-which is very convenient for managing upgrades and physical
+<code>Environment</code> resources are parametrized by three variables:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>{application}</code> maps to "spring.application.name" on the client side;</p>
+</li>
+<li>
+<p><code>{profile}</code> maps to "spring.active.profiles" on the client (comma separated list); and</p>
+</li>
+<li>
+<p><code>{label}</code> which is a server side feature labelling a "versioned" set of config files.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Repository implementations generally behave just like a Spring Boot
+application loading configuration files from a "spring.config.name"
+equal to the <code>{application}</code> parameter, and "spring.profiles.active"
+equal to the <code>{profiles}</code> parameter. Precedence rules for profiles are
+also the same as in a regular Boot application: active profiles take
+precedence over defaults, and if there are multiple profiles the last
+one wins (like adding entries to a <code>Map</code>).</p>
+</div>
+<div class="paragraph">
+<p>Example: a client application has this bootstrap configuration:</p>
+</div>
+<div class="listingblock">
+<div class="title">bootstrap.yml</div>
+<div class="content">
+<pre>spring:
+  application:
+    name: foo
+  profiles:
+    active: dev,mysql</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>(as usual with a Spring Boot application, these properties could also
+be set as environment variables or command line arguments).</p>
+</div>
+<div class="paragraph">
+<p>If the repository is file-based, the server will create an
+<code>Environment</code> from <code>application.yml</code> (shared between all clients), and
+<code>foo.yml</code> (with <code>foo.yml</code> taking precedence). If the YAML files have
+documents inside them that point to Spring profiles, those are applied
+with higher precendence (in order of the profiles listed), and if
+there are profile-specific YAML (or properties) files these are also
+applied with higher precedence than the defaults. Higher precendence
+translates to a <code>PropertySource</code> listed earlier in the
+<code>Environment</code>. (These are the same rules as apply in a standalone
+Spring Boot application.)</p>
+</div>
+<div class="sect3">
+<h4 id="_git_backend">Git Backend</h4>
+<div class="paragraph">
+<p>The default implementation of <code>EnvironmentRepository</code> uses a Git
+backend, which is very convenient for managing upgrades and physical
 environments, and also for auditing changes. To change the location of
-the repository you can set the "spring.cloud.config.server.uri"
+the repository you can set the "spring.cloud.config.server.git.uri"
 configuration property in the Config Server (e.g. in
 <code>application.yml</code>). If you set it with a <code>file:</code> prefix it should work
 from a local repository so you can get started quickly and easily
@@ -657,16 +719,27 @@ would need to have all instances of the server pointing to the same
 repository, so only a shared file system would work.</p>
 </div>
 <div class="paragraph">
+<p>This repository implementation maps the <code>{label}</code> parameter of the
+HTTP resource to a git label (commit id, branch name or tag).</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_file_system_backend">File System Backend</h4>
+<div class="paragraph">
 <p>There is also a "native" profile in the Config Server that doesn&#8217;t use
-Git, but just loads the config files from the local classpath (or
-anywhere else you want to point to with
-"spring.cloud.config.server.locations"). To use the native profile
-just launch the Config Server with "spring.profiles.active=native". In
-the native profile the repository the "label" specification in the
-HTTP resources is added to the search path, so properties files are
+Git, but just loads the config files from the local classpath or file
+system (any static URL you want to point to with
+"spring.cloud.config.server.native.locations"). To use the native
+profile just launch the Config Server with
+"spring.profiles.active=native".</p>
+</div>
+<div class="paragraph">
+<p>This repository implementation maps the <code>{label}</code> parameter of the
+HTTP resource to a suffix on the search path, so properties files are
 loaded from each search location <strong>and</strong> a subdirectory with the same
 name as the label (the labelled properties take precedence in the
 Spring Environment).</p>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1332,7 +1405,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-02 07:29:59 UTC
+Last updated 2015-01-06 09:37:59 UTC
 </div>
 </div>
 </body>
