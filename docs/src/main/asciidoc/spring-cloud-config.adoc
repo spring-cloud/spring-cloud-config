@@ -21,10 +21,54 @@ Server? The strategy that governs this behaviour is the
 `EnvironmentRepository`, serving `Environment` objects. This
 `Environment` is a shallow copy of the domain from the Spring
 `Environment` (including `propertySources` as the main feature). The
-default implementation of `EnvironmentRepository` uses a Git backend,
-which is very convenient for managing upgrades and physical
+`Environment` resources are parametrized by three variables:
+
+
+* `{application}` maps to "spring.application.name" on the client side;
+
+* `{profile}` maps to "spring.active.profiles" on the client (comma separated list); and 
+
+* `{label}` which is a server side feature labelling a "versioned" set of config files.
+
+Repository implementations generally behave just like a Spring Boot
+application loading configuration files from a "spring.config.name"
+equal to the `{application}` parameter, and "spring.profiles.active"
+equal to the `{profiles}` parameter. Precedence rules for profiles are
+also the same as in a regular Boot application: active profiles take
+precedence over defaults, and if there are multiple profiles the last
+one wins (like adding entries to a `Map`).
+
+Example: a client application has this bootstrap configuration:
+
+.bootstrap.yml
+----
+spring:
+  application:
+    name: foo
+  profiles:
+    active: dev,mysql
+----
+
+(as usual with a Spring Boot application, these properties could also
+be set as environment variables or command line arguments). 
+
+If the repository is file-based, the server will create an
+`Environment` from `application.yml` (shared between all clients), and
+`foo.yml` (with `foo.yml` taking precedence). If the YAML files have
+documents inside them that point to Spring profiles, those are applied
+with higher precendence (in order of the profiles listed), and if
+there are profile-specific YAML (or properties) files these are also
+applied with higher precedence than the defaults. Higher precendence
+translates to a `PropertySource` listed earlier in the
+`Environment`. (These are the same rules as apply in a standalone
+Spring Boot application.)
+
+==== Git Backend
+
+The default implementation of `EnvironmentRepository` uses a Git
+backend, which is very convenient for managing upgrades and physical
 environments, and also for auditing changes. To change the location of
-the repository you can set the "spring.cloud.config.server.uri"
+the repository you can set the "spring.cloud.config.server.git.uri"
 configuration property in the Config Server (e.g. in
 `application.yml`). If you set it with a `file:` prefix it should work
 from a local repository so you can get started quickly and easily
@@ -34,13 +78,20 @@ scale the Config Server up and make it highly available, however, you
 would need to have all instances of the server pointing to the same
 repository, so only a shared file system would work.
 
+This repository implementation maps the `{label}` parameter of the
+HTTP resource to a git label (commit id, branch name or tag).
+
+==== File System Backend
+
 There is also a "native" profile in the Config Server that doesn't use
-Git, but just loads the config files from the local classpath (or
-anywhere else you want to point to with
-"spring.cloud.config.server.locations"). To use the native profile
-just launch the Config Server with "spring.profiles.active=native". In
-the native profile the repository the "label" specification in the
-HTTP resources is added to the search path, so properties files are
+Git, but just loads the config files from the local classpath or file
+system (any static URL you want to point to with
+"spring.cloud.config.server.native.locations"). To use the native
+profile just launch the Config Server with
+"spring.profiles.active=native". 
+
+This repository implementation maps the `{label}` parameter of the
+HTTP resource to a suffix on the search path, so properties files are
 loaded from each search location *and* a subdirectory with the same
 name as the label (the labelled properties take precedence in the
 Spring Environment).
