@@ -92,7 +92,7 @@ public class BootstrapApplicationListener implements
 		Map<String, Object> bootstrapMap = new HashMap<>();
 		bootstrapMap.put("spring.config.name", configName);
 		if (StringUtils.hasText(configLocation)) {
-			bootstrapMap.put("spring.config.location", configName);
+			bootstrapMap.put("spring.config.location", configLocation);
 		}
 		bootstrapProperties.addFirst(new MapPropertySource(
 				BOOTSTRAP_PROPERTY_SOURCE_NAME, bootstrapMap));

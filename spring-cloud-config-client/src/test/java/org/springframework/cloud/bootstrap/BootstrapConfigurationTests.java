@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.util.Collections;
 
 import org.junit.After;
@@ -54,6 +55,35 @@ public class BootstrapConfigurationTests {
 		if (context != null) {
 			context.close();
 		}
+	}
+
+	@Test
+	public void pickupExternalBootstrapProperties() {
+		String externalPropertiesPath = getExternalProperties();
+
+		System.setProperty("spring.cloud.bootstrap.location", externalPropertiesPath);
+		context = new SpringApplicationBuilder().web(false)
+				.sources(BareConfiguration.class).run();
+		assertEquals("externalPropertiesInfoName", context.getEnvironment().getProperty("info.name"));
+		assertTrue(context.getEnvironment().getPropertySources().contains("bootstrap"));
+		assertNotNull(context.getBean(ConfigClientProperties.class));
+	}
+
+	/**
+	 * Running the test from maven will start from a different directory then starting it from intellij
+	 *
+	 * @return
+	 */
+	private String getExternalProperties() {
+		String externalPropertiesPath = "";
+		File externalProperties = new File("src/test/external-properties/bootstrap.properties");
+		if (externalProperties.exists()) {
+			externalPropertiesPath = externalProperties.getAbsolutePath();
+		} else {
+			externalProperties = new File("spring-cloud-config-client/src/test/external-properties/bootstrap.properties");
+			externalPropertiesPath = externalProperties.getAbsolutePath();
+		}
+		return externalPropertiesPath;
 	}
 
 	@Test
