@@ -22,7 +22,7 @@ import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.cloud.config.client.RefreshEndpoint;
@@ -40,7 +40,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnClass(EnvironmentEndpoint.class)
-@ConditionalOnExpression("${endpoints.env.enabled:true}")
+@ConditionalOnProperty(value = "endpoints.env.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 @ConditionalOnBean({ EnvironmentEndpoint.class, RefreshEndpoint.class })
 @AutoConfigureAfter({ WebMvcAutoConfiguration.class, EndpointAutoConfiguration.class })

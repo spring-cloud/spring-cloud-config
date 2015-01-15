@@ -27,9 +27,9 @@ import org.springframework.boot.actuate.endpoint.InfoEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -173,7 +173,7 @@ public class RefreshAutoConfiguration {
 		}
 
 		@Configuration
-		@ConditionalOnExpression("${endpoints.refresh.enabled:true}")
+		@ConditionalOnProperty(value = "endpoints.refresh.enabled", matchIfMissing = true)
 		@ConditionalOnBean(PropertySourceBootstrapConfiguration.class)
 		protected static class RefreshEndpointConfiguration {
 
