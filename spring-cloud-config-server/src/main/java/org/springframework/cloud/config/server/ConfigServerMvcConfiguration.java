@@ -42,6 +42,7 @@ public class ConfigServerMvcConfiguration {
 	public EnvironmentController environmentController() {
 		EnvironmentController controller = new EnvironmentController(repository, encryptionController());
 		controller.setDefaultLabel(server.getDefaultLabel());
+		controller.setOverrides(server.getOverrides());
 		return controller;
 	}
 

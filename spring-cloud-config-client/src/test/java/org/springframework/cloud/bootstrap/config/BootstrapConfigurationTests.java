@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.bootstrap;
+package org.springframework.cloud.bootstrap.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,6 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Test;
@@ -51,7 +53,11 @@ public class BootstrapConfigurationTests {
 
 	@After
 	public void close() {
+		// Expected.* is bound to the PropertySourceConfiguration below
 		System.clearProperty("expected.name");
+		// Used to test system properties override
+		System.clearProperty("bootstrap.foo");
+		PropertySourceConfiguration.MAP.clear();
 		if (context != null) {
 			context.close();
 		}
@@ -61,26 +67,32 @@ public class BootstrapConfigurationTests {
 	public void pickupExternalBootstrapProperties() {
 		String externalPropertiesPath = getExternalProperties();
 
-		System.setProperty("spring.cloud.bootstrap.location", externalPropertiesPath);
 		context = new SpringApplicationBuilder().web(false)
-				.sources(BareConfiguration.class).run();
-		assertEquals("externalPropertiesInfoName", context.getEnvironment().getProperty("info.name"));
+				.sources(BareConfiguration.class)
+				.properties("spring.cloud.bootstrap.location:" + externalPropertiesPath)
+				.run();
+		assertEquals("externalPropertiesInfoName",
+				context.getEnvironment().getProperty("info.name"));
 		assertTrue(context.getEnvironment().getPropertySources().contains("bootstrap"));
 		assertNotNull(context.getBean(ConfigClientProperties.class));
 	}
 
 	/**
-	 * Running the test from maven will start from a different directory then starting it from intellij
+	 * Running the test from maven will start from a different directory then starting it
+	 * from intellij
 	 *
 	 * @return
 	 */
 	private String getExternalProperties() {
 		String externalPropertiesPath = "";
-		File externalProperties = new File("src/test/external-properties/bootstrap.properties");
+		File externalProperties = new File(
+				"src/test/resources/external-properties/bootstrap.properties");
 		if (externalProperties.exists()) {
 			externalPropertiesPath = externalProperties.getAbsolutePath();
-		} else {
-			externalProperties = new File("spring-cloud-config-client/src/test/external-properties/bootstrap.properties");
+		}
+		else {
+			externalProperties = new File(
+					"spring-cloud-config-client/src/test/resources/external-properties/bootstrap.properties");
 			externalPropertiesPath = externalProperties.getAbsolutePath();
 		}
 		return externalPropertiesPath;
@@ -88,12 +100,48 @@ public class BootstrapConfigurationTests {
 
 	@Test
 	public void picksUpAdditionalPropertySource() {
+		PropertySourceConfiguration.MAP.put("bootstrap.foo", "bar");
 		System.setProperty("expected.name", "bootstrap");
 		context = new SpringApplicationBuilder().web(false)
 				.sources(BareConfiguration.class).run();
 		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
 		assertTrue(context.getEnvironment().getPropertySources().contains("bootstrap"));
 		assertNotNull(context.getBean(ConfigClientProperties.class));
+	}
+
+	@Test
+	public void overrideSystemPropertySourceByDefault() {
+		PropertySourceConfiguration.MAP.put("bootstrap.foo", "bar");
+		System.setProperty("bootstrap.foo", "system");
+		context = new SpringApplicationBuilder().web(false)
+				.sources(BareConfiguration.class).run();
+		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
+	}
+
+	@Test
+	public void systemPropertyOverrideFalse() {
+		PropertySourceConfiguration.MAP.put("bootstrap.foo", "bar");
+		PropertySourceConfiguration.MAP.put(
+				"spring.cloud.config.systemPropertiesOverride", "false");
+		System.setProperty("bootstrap.foo", "system");
+		context = new SpringApplicationBuilder().web(false)
+				.sources(BareConfiguration.class).run();
+		assertEquals("system", context.getEnvironment().getProperty("bootstrap.foo"));
+	}
+
+	@Test
+	public void systemPropertyOverrideWhenOverrideDisallowed() {
+		PropertySourceConfiguration.MAP.put("bootstrap.foo", "bar");
+		PropertySourceConfiguration.MAP.put(
+				"spring.cloud.config.systemPropertiesOverride", "false");
+		// If spring.cloud.config.allowOverride=false is in the remote property sources
+		// with sufficiently high priority it always wins. Admins can enforce it by adding
+		// their own remote property source.
+		PropertySourceConfiguration.MAP.put("spring.cloud.config.allowOverride", "false");
+		System.setProperty("bootstrap.foo", "system");
+		context = new SpringApplicationBuilder().web(false)
+				.sources(BareConfiguration.class).run();
+		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
 	}
 
 	@Test
@@ -158,6 +206,7 @@ public class BootstrapConfigurationTests {
 
 	@Test
 	public void environmentEnrichedOnceWhenSharedWithChildContext() {
+		PropertySourceConfiguration.MAP.put("bootstrap.foo", "bar");
 		context = new SpringApplicationBuilder().sources(BareConfiguration.class)
 				.environment(new StandardEnvironment()).child(BareConfiguration.class)
 				.web(false).run();
@@ -171,6 +220,7 @@ public class BootstrapConfigurationTests {
 
 	@Test
 	public void environmentEnrichedInParentContext() {
+		PropertySourceConfiguration.MAP.put("bootstrap.foo", "bar");
 		context = new SpringApplicationBuilder().sources(BareConfiguration.class)
 				.child(BareConfiguration.class).web(false).run();
 		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
@@ -182,6 +232,7 @@ public class BootstrapConfigurationTests {
 
 	@Test
 	public void differentProfileInChild() {
+		PropertySourceConfiguration.MAP.put("bootstrap.foo", "bar");
 		// Profiles are always merged with the child
 		ConfigurableApplicationContext parent = new SpringApplicationBuilder()
 				.sources(BareConfiguration.class).profiles("parent").web(false).run();
@@ -217,6 +268,9 @@ public class BootstrapConfigurationTests {
 	// This is added to bootstrap context as a source in bootstrap.properties
 	protected static class PropertySourceConfiguration implements PropertySourceLocator {
 
+		public static Map<String, Object> MAP = new HashMap<String, Object>(
+				Collections.<String, Object> singletonMap("bootstrap.foo", "bar"));
+
 		private String name;
 
 		@Override
@@ -224,8 +278,7 @@ public class BootstrapConfigurationTests {
 			if (name != null) {
 				assertEquals(name, environment.getProperty("spring.application.name"));
 			}
-			return new MapPropertySource("testBootstrap",
-					Collections.<String, Object> singletonMap("bootstrap.foo", "bar"));
+			return new MapPropertySource("testBootstrap", MAP);
 		}
 
 		public String getName() {

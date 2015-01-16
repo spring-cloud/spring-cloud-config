@@ -36,6 +36,8 @@ public class EnvironmentController {
 
 	private String defaultLabel = ConfigServerProperties.MASTER;
 
+	private Map<String, String> overrides = new LinkedHashMap<String, String>();
+
 	@Autowired
 	public EnvironmentController(EnvironmentRepository repository,
 			EncryptionController encryption) {
@@ -52,7 +54,12 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles}/{label}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
-		return encryption.decrypt(repository.findOne(name, profiles, label));
+		Environment environment = encryption.decrypt(repository.findOne(name, profiles,
+				label));
+		if (!overrides.isEmpty()) {
+			environment.addFirst(new PropertySource("overrides", overrides));
+		}
+		return environment;
 	}
 
 	@RequestMapping("/{name}-{profiles}.properties")
@@ -65,7 +72,8 @@ public class EnvironmentController {
 	public ResponseEntity<String> labelledProperties(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label) throws IOException {
 		if (name.contains("-") || profiles.contains("-")) {
-			throw new IllegalArgumentException("Properties output not supported for name or profiles containing hyphens");
+			throw new IllegalArgumentException(
+					"Properties output not supported for name or profiles containing hyphens");
 		}
 		Properties properties = convertToProperties(labelled(name, profiles, label));
 		return getSuccess(sortLines(properties));
@@ -92,8 +100,8 @@ public class EnvironmentController {
 	}
 
 	@RequestMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
-	public ResponseEntity<String> yaml(@PathVariable String name, @PathVariable String profiles)
-			throws Exception {
+	public ResponseEntity<String> yaml(@PathVariable String name,
+			@PathVariable String profiles) throws Exception {
 		return labelledYaml(name, profiles, defaultLabel);
 	}
 
@@ -101,7 +109,8 @@ public class EnvironmentController {
 	public ResponseEntity<String> labelledYaml(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label) throws Exception {
 		if (name.contains("-") || profiles.contains("-")) {
-			throw new IllegalArgumentException("YAML output not supported for name or profiles containing hyphens");
+			throw new IllegalArgumentException(
+					"YAML output not supported for name or profiles containing hyphens");
 		}
 		LinkedHashMap<String, Object> target = new LinkedHashMap<String, Object>();
 		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<Map<String, Object>>(
@@ -113,7 +122,7 @@ public class EnvironmentController {
 		Map<String, Object> input = factory.getObject();
 		return getSuccess(new Yaml().dumpAsMap(input));
 	}
-	
+
 	@ExceptionHandler(IllegalArgumentException.class)
 	public void illegalArgument(HttpServletResponse response) throws IOException {
 		response.sendError(HttpStatus.BAD_REQUEST.value());
@@ -186,7 +195,14 @@ public class EnvironmentController {
 	 * @param defaultLabel
 	 */
 	public void setDefaultLabel(String defaultLabel) {
-		this.defaultLabel  = defaultLabel;
+		this.defaultLabel = defaultLabel;
+	}
+
+	/**
+	 * @param overrides the overrides to set
+	 */
+	public void setOverrides(Map<String, String> overrides) {
+		this.overrides = overrides;
 	}
 
 }

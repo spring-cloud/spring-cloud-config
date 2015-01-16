@@ -46,7 +46,7 @@ public class ConfigServerBootstrapConfiguration {
 	@Bean
 	public EnvironmentRepositoryPropertySourceLocator environmentRepositoryPropertySourceLocator() {
 		return new EnvironmentRepositoryPropertySourceLocator(repository,
-				client.getName(), client.getEnv(), client.getLabel());
+				client.getName(), client.getProfile(), client.getLabel());
 	}
 
 }

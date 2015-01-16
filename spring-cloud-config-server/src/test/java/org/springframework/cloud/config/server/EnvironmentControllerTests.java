@@ -17,6 +17,7 @@ package org.springframework.cloud.config.server;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,7 +39,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
  *
  */
 public class EnvironmentControllerTests {
-	
+
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
 
@@ -120,9 +121,22 @@ public class EnvironmentControllerTests {
 
 	@Test
 	public void mappingForLabelledYamlWithHyphen() throws Exception {
-		Mockito.when(repository.findOne("foo", "bar-spam", "other")).thenReturn(environment);
+		Mockito.when(repository.findOne("foo", "bar-spam", "other")).thenReturn(
+				environment);
 		MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-spam.yml")).andExpect(
 				MockMvcResultMatchers.status().isBadRequest());
 	}
+
+	@Test
+	public void allowOverrideFalse() throws Exception {
+		controller.setOverrides(Collections.singletonMap("foo", "bar"));
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("a.b.c", "d");
+		environment.add(new PropertySource("one", map));
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		assertEquals("{foo=bar}", controller.master("foo", "bar").getPropertySources()
+				.get(0).getSource().toString());
+	}
+
 }

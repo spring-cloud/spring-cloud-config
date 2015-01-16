@@ -24,6 +24,6 @@ import org.springframework.cloud.config.Environment;
  */
 public interface EnvironmentRepository {
 	
-	Environment findOne(String application, String name, String label);
+	Environment findOne(String application, String profile, String label);
 
 }

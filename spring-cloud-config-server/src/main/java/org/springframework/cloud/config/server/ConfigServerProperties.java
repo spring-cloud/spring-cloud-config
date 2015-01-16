@@ -15,6 +15,9 @@
  */
 package org.springframework.cloud.config.server;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -28,7 +31,15 @@ public class ConfigServerProperties {
 	
 	private boolean bootstrap;
 	private String prefix;
+	/**
+	 * Default repository label (defaults to "master") when incoming requests do not have
+	 * a specific label.
+	 */
 	private String defaultLabel = ConfigServerProperties.MASTER;
+	/**
+	 * Extra map for a property source to be sent to all clients.
+	 */
+	private Map<String, String> overrides = new LinkedHashMap<String, String>();
 	public String getDefaultLabel() {
 		return defaultLabel;
 	}
@@ -46,6 +57,12 @@ public class ConfigServerProperties {
 	}
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
+	}
+	public Map<String, String> getOverrides() {
+		return overrides;
+	}
+	public void setOverrides(Map<String, String> overrides) {
+		this.overrides = overrides;
 	}
 
 }

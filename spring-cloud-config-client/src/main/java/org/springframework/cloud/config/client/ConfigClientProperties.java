@@ -35,9 +35,15 @@ public class ConfigClientProperties {
 
 	public static final String PREFIX = "spring.cloud.config";
 	
+	/**
+	 * Flag to say that remote configuration is enabled. Default true;
+	 */
 	private boolean enabled = true;
 
-	private String env = "default";
+	/**
+	 * The default profile to use when fetching remote configuration (comma-separated). Default is "default".
+	 */
+	private String profile = "default";
 
 	@Value("${spring.application.name:'application'}")
 	private String name;
@@ -53,7 +59,7 @@ public class ConfigClientProperties {
 	private Discovery discovery = new Discovery();
 
 	private boolean failFast = false;
-
+	
 	private ConfigClientProperties() {
 	}
 
@@ -62,7 +68,7 @@ public class ConfigClientProperties {
 		if (profiles.length == 0) {
 			profiles = environment.getDefaultProfiles();
 		}
-		this.setEnv(StringUtils.arrayToCommaDelimitedString(profiles));
+		this.setProfile(StringUtils.arrayToCommaDelimitedString(profiles));
 	}
 
 	public boolean isEnabled() {
@@ -89,12 +95,12 @@ public class ConfigClientProperties {
 		this.name = name;
 	}
 
-	public String getEnv() {
-		return env;
+	public String getProfile() {
+		return profile;
 	}
 
-	public void setEnv(String env) {
-		this.env = env;
+	public void setProfile(String env) {
+		this.profile = env;
 	}
 
 	public String getLabel() {
@@ -214,8 +220,8 @@ public class ConfigClientProperties {
 		override.setName(environment.resolvePlaceholders("${"
 				+ ConfigClientProperties.PREFIX
 				+ ".name:${spring.application.name:'application'}}"));
-		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".env")) {
-			override.setEnv(environment.getProperty(ConfigClientProperties.PREFIX + ".env"));
+		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
+			override.setProfile(environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
 		}
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".label")) {
 			override.setLabel(environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
@@ -225,7 +231,7 @@ public class ConfigClientProperties {
 
 	@Override
 	public String toString() {
-		return "ConfigClientProperties [name=" + name + ", env=" + env + ", label="
+		return "ConfigClientProperties [name=" + name + ", env=" + profile + ", label="
 				+ label + ", uri=" + uri + ", discovery.enabled=" + discovery.enabled
 				+ ", failFast="+ failFast + "]";
 	}

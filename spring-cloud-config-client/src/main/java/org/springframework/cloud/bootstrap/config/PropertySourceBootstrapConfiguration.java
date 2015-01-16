@@ -24,6 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.bind.PropertySourcesPropertyValues;
+import org.springframework.boot.bind.RelaxedDataBinder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.bootstrap.BootstrapApplicationListener;
 import org.springframework.cloud.config.client.ConfigClientProperties;
@@ -38,13 +40,14 @@ import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
+import org.springframework.core.env.StandardEnvironment;
 
 /**
  * @author Dave Syer
  *
  */
 @Configuration
-@EnableConfigurationProperties
+@EnableConfigurationProperties(PropertySourceBootstrapProperties.class)
 public class PropertySourceBootstrapConfiguration implements
 		ApplicationContextInitializer<ConfigurableApplicationContext> {
 
@@ -56,8 +59,8 @@ public class PropertySourceBootstrapConfiguration implements
 	@Autowired(required = false)
 	private List<PropertySourceLocator> propertySourceLocators = new ArrayList<>();
 
-	@Autowired(required = false)
-	private ConfigClientProperties configClientProperties;
+	@Autowired
+	private PropertySourceBootstrapProperties properties;
 
 	public void setPropertySourceLocators(
 			Collection<PropertySourceLocator> propertySourceLocators) {
@@ -72,15 +75,7 @@ public class PropertySourceBootstrapConfiguration implements
 		boolean empty = true;
 		for (PropertySourceLocator locator : propertySourceLocators) {
 			PropertySource<?> source = null;
-			try {
-				source = locator.locate(applicationContext.getEnvironment());
-			}
-			catch (Exception e) {
-				if (configClientProperties != null && configClientProperties.isFailFast()) {
-					throw new IllegalStateException("Could not locate PropertySource. The fail fast property is set, failing", e);
-				}
-				logger.error("Could not locate PropertySource: " + e.getMessage());
-			}
+			source = locator.locate(applicationContext.getEnvironment());
 			if (source == null) {
 				continue;
 			}
@@ -92,11 +87,32 @@ public class PropertySourceBootstrapConfiguration implements
 			MutablePropertySources propertySources = applicationContext.getEnvironment()
 					.getPropertySources();
 			if (propertySources.contains(BOOTSTRAP_PROPERTY_SOURCE_NAME)) {
-				propertySources.replace(BOOTSTRAP_PROPERTY_SOURCE_NAME, composite);
+				propertySources.remove(BOOTSTRAP_PROPERTY_SOURCE_NAME);
 			}
-			else {
-				propertySources.addFirst(composite);
-			}
+			insertPropertySources(propertySources, composite);
+		}
+	}
+
+	private void insertPropertySources(MutablePropertySources propertySources,
+			CompositePropertySource composite) {
+		MutablePropertySources incoming = new MutablePropertySources();
+		incoming.addFirst(composite);
+		PropertySourceBootstrapProperties remoteProperties = new PropertySourceBootstrapProperties();
+		new RelaxedDataBinder(remoteProperties, "spring.cloud.config").bind(new PropertySourcesPropertyValues(
+				incoming));
+		if (!remoteProperties.isAllowOverride()
+				|| remoteProperties.isSystemPropertiesOverride()) {
+			propertySources.addFirst(composite);
+			return;
+		}
+		if (propertySources
+				.contains(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME)) {
+			propertySources.addAfter(
+					StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+					composite);
+		}
+		else {
+			propertySources.addLast(composite);
 		}
 	}
 

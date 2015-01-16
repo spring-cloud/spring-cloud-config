@@ -1,5 +1,6 @@
 package org.springframework.cloud.config.server;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.IOException;
@@ -35,6 +36,8 @@ public class ApplicationTests {
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate().getForObject("http://localhost:" + port + "/foo/development/", Environment.class);
 		assertFalse(environment.getPropertySources().isEmpty());
+		assertEquals("overrides", environment.getPropertySources().get(0).getName());
+		assertEquals("{spring.cloud.config.enabled=true}", environment.getPropertySources().get(0).getSource().toString());
 	}
 
 }

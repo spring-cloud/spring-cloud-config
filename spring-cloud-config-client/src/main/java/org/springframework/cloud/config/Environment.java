@@ -46,6 +46,10 @@ public class Environment {
 		this.propertySources.add(propertySource);
 	}
 
+	public void addFirst(PropertySource propertySource) {
+		this.propertySources.add(0, propertySource);
+	}
+
 	public List<PropertySource> getPropertySources() {
 		return propertySources;
 	}

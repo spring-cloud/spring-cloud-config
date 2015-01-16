@@ -18,13 +18,22 @@ package org.springframework.cloud.config.client;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
 
-
 /**
+ * Strategy for locating (possibly remote) property sources for the Environment.
+ * Implementations should not fail unless they intend to prevent the application from
+ * starting.
+ * 
  * @author Dave Syer
  *
  */
 public interface PropertySourceLocator {
 
+	/**
+	 * @param environment the current Environment
+	 * @return a PropertySource or null if there is none
+	 * 
+	 * @throws IllegalStateException if there is a fail fast condition
+	 */
 	PropertySource<?> locate(Environment environment);
 
 }

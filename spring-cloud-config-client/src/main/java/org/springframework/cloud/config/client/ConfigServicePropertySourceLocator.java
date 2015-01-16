@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
 import org.springframework.core.annotation.Order;
@@ -41,6 +43,9 @@ import org.springframework.web.client.RestTemplate;
 @Order(0)
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
 
+	private static Log logger = LogFactory
+			.getLog(ConfigServicePropertySourceLocator.class);
+
 	private RestTemplate restTemplate;
 	private ConfigClientProperties defaults;
 
@@ -55,16 +60,28 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		CompositePropertySource composite = new CompositePropertySource("configService");
 		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(client)
 				: this.restTemplate;
-		Environment result = restTemplate.exchange(
-				client.getUri() + "/{name}/{env}/{label}", HttpMethod.GET,
-				new HttpEntity<Void>((Void) null), Environment.class, client.getName(),
-				client.getEnv(), client.getLabel()).getBody();
-		for (PropertySource source : result.getPropertySources()) {
-			@SuppressWarnings("unchecked")
-			Map<String, Object> map = (Map<String, Object>) source.getSource();
-			composite.addPropertySource(new MapPropertySource(source.getName(), map));
+		try {
+			Environment result = restTemplate.exchange(
+					client.getUri() + "/{name}/{profile}/{label}", HttpMethod.GET,
+					new HttpEntity<Void>((Void) null), Environment.class,
+					client.getName(), client.getProfile(), client.getLabel()).getBody();
+			for (PropertySource source : result.getPropertySources()) {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> map = (Map<String, Object>) source.getSource();
+				composite.addPropertySource(new MapPropertySource(source.getName(), map));
+			}
+			return composite;
 		}
-		return composite;
+		catch (Exception e) {
+			if (client != null && client.isFailFast()) {
+				throw new IllegalStateException(
+						"Could not locate PropertySource. The fail fast property is set, failing",
+						e);
+			}
+			logger.error("Could not locate PropertySource: " + e.getMessage());
+			return null;
+		}
+
 	}
 
 	public void setRestTemplate(RestTemplate restTemplate) {
