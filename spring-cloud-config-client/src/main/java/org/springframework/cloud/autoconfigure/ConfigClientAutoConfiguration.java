@@ -15,7 +15,9 @@
  */
 package org.springframework.cloud.autoconfigure;
 
+import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.cloud.config.client.ConfigClientProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -33,7 +35,12 @@ import org.springframework.core.env.Environment;
 public class ConfigClientAutoConfiguration {
 
 	@Bean
-	public ConfigClientProperties configClientProperties(Environment environment) {
+	public ConfigClientProperties configClientProperties(Environment environment,
+			ApplicationContext context) {
+		if (context.getParent()!=null && BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context.getParent(),
+				ConfigClientProperties.class).length > 0) {
+			return BeanFactoryUtils.beanOfType(context.getParent(), ConfigClientProperties.class);
+		}
 		ConfigClientProperties client = new ConfigClientProperties(environment);
 		return client;
 	}
