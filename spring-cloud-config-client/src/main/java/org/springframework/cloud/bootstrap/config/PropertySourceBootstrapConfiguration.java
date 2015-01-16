@@ -23,13 +23,10 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.bootstrap.BootstrapApplicationListener;
 import org.springframework.cloud.config.client.ConfigClientProperties;
-import org.springframework.cloud.config.client.ConfigServerHealthIndicator;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.cloud.config.client.PropertySourceLocator;
 import org.springframework.context.ApplicationContextInitializer;
@@ -123,20 +120,6 @@ public class PropertySourceBootstrapConfiguration implements
 			return locator;
 		}
 
-	}
-
-	@Configuration
-	@ConditionalOnClass(HealthIndicator.class)
-	@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
-	protected static class ConfigServerHealthIndicatorConfiguration {
-
-		@Autowired
-		private ConfigurableEnvironment environment;
-
-        @Bean
-        public ConfigServerHealthIndicator configServerHealthIndicator(ConfigServicePropertySourceLocator locator) {
-            return new ConfigServerHealthIndicator(environment, locator);
-        }
 	}
 
 }
