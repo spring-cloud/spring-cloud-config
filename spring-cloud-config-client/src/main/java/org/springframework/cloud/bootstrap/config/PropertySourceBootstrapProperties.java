@@ -9,7 +9,7 @@ public class PropertySourceBootstrapProperties {
 	 * Flag to indicate that the external properties should override system properties.
 	 * Default true.
 	 */
-	private boolean systemPropertiesOverride = true;
+	private boolean overrideSystemProperties = true;
 
 	/**
 	 * Flag to indicate that {@link #isSystemPropertiesOverride()
@@ -18,12 +18,12 @@ public class PropertySourceBootstrapProperties {
 	 */
 	private boolean allowOverride = true;
 
-	public boolean isSystemPropertiesOverride() {
-		return systemPropertiesOverride;
+	public boolean isOverrideSystemProperties() {
+		return overrideSystemProperties;
 	}
 
-	public void setSystemPropertiesOverride(boolean systemPropertiesOverride) {
-		this.systemPropertiesOverride = systemPropertiesOverride;
+	public void setOverrideSystemProperties(boolean overrideSystemProperties) {
+		this.overrideSystemProperties = overrideSystemProperties;
 	}
 
 	public boolean isAllowOverride() {

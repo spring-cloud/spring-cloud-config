@@ -122,7 +122,7 @@ public class BootstrapConfigurationTests {
 	public void systemPropertyOverrideFalse() {
 		PropertySourceConfiguration.MAP.put("bootstrap.foo", "bar");
 		PropertySourceConfiguration.MAP.put(
-				"spring.cloud.config.systemPropertiesOverride", "false");
+				"spring.cloud.config.overrideSystemProperties", "false");
 		System.setProperty("bootstrap.foo", "system");
 		context = new SpringApplicationBuilder().web(false)
 				.sources(BareConfiguration.class).run();
@@ -133,7 +133,7 @@ public class BootstrapConfigurationTests {
 	public void systemPropertyOverrideWhenOverrideDisallowed() {
 		PropertySourceConfiguration.MAP.put("bootstrap.foo", "bar");
 		PropertySourceConfiguration.MAP.put(
-				"spring.cloud.config.systemPropertiesOverride", "false");
+				"spring.cloud.config.overrideSystemProperties", "false");
 		// If spring.cloud.config.allowOverride=false is in the remote property sources
 		// with sufficiently high priority it always wins. Admins can enforce it by adding
 		// their own remote property source.
