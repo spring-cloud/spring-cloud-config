@@ -22,7 +22,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @IntegrationTest({"server.port:0", "spring.config.name:configserver", "spring.cloud.config.server.git.uri:file:./target/repos/config-repo"})
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class ApplicationTests {
+public class VanillaConfigServerIntegrationTests {
 	
 	@Value("${local.server.port}")
 	private int port;

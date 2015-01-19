@@ -42,20 +42,22 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass(EnvironmentEndpoint.class)
 @ConditionalOnProperty(value = "endpoints.env.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
-@ConditionalOnBean({ EnvironmentEndpoint.class, RefreshEndpoint.class })
-@AutoConfigureAfter({ WebMvcAutoConfiguration.class, EndpointAutoConfiguration.class })
+@ConditionalOnBean(RestartEndpoint.class)
+@AutoConfigureAfter({ WebMvcAutoConfiguration.class, EndpointAutoConfiguration.class, RefreshAutoConfiguration.class })
 public class EnvironmentEndpointAutoConfiguration {
 
 	@Autowired
 	private RestartEndpoint restartEndpoint;
 
 	@Bean
+	@ConditionalOnBean(EnvironmentEndpoint.class)
 	public EnvironmentManagerMvcEndpoint environmentManagerEndpoint(
 			EnvironmentEndpoint delegate, EnvironmentManager environment) {
 		return new EnvironmentManagerMvcEndpoint(delegate, environment);
 	}
 
 	@Bean
+	@ConditionalOnBean(RefreshEndpoint.class)
 	public MvcEndpoint refreshMvcEndpoint(RefreshEndpoint endpoint) {
 		return new GenericPostableMvcEndpoint(endpoint);
 	}
