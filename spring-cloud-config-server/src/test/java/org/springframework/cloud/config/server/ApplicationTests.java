@@ -19,7 +19,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = ConfigServerApplication.class)
-@IntegrationTest({"server.port:0", "spring.config.name:configserver", "spring.cloud.config.server.git.uri:file:./target/test-classes/config-repo"})
+@IntegrationTest({"server.port:0", "spring.config.name:configserver", "spring.cloud.config.server.git.uri:file:./target/repos/config-repo"})
 @WebAppConfiguration
 @ActiveProfiles("test")
 public class ApplicationTests {

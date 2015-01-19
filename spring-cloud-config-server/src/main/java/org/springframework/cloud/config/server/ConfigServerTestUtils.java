@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.eclipse.jgit.util.FileUtils;
+import org.springframework.util.FileSystemUtils;
 
 /**
  * @author Dave Syer
@@ -27,21 +28,24 @@ import org.eclipse.jgit.util.FileUtils;
 public class ConfigServerTestUtils {
 
 	public static String prepareLocalRepo() throws IOException {
-		return prepareLocalRepo("target/test-classes", "config-repo", "target/config");
+		return prepareLocalRepo("target/repos", "config-repo", "target/config");
 	}
 
 	public static String prepareLocalRepo(String repoPath) throws IOException {
-		return prepareLocalRepo("target/test-classes", repoPath, "target/config");
+		return prepareLocalRepo("target/repos", repoPath, "target/config");
 	}
 
 	public static String prepareLocalRepo(String buildDir, String repoPath,
 			String checkoutDir) throws IOException {
+		new File(buildDir).mkdirs();
 		if (!repoPath.startsWith("/")) {
 			repoPath = "/" + repoPath;
 		}
 		if (!repoPath.endsWith("/")) {
 			repoPath = repoPath + "/";
 		}
+		File source = new File("src/test/resources" + repoPath);
+		FileSystemUtils.copyRecursively(source, new File(buildDir + repoPath));
 		File dotGit = new File(buildDir + repoPath + ".git");
 		File git = new File(buildDir + repoPath + "git");
 		if (git.exists()) {
@@ -58,6 +62,18 @@ public class ConfigServerTestUtils {
 			buildDir = "./" + buildDir;
 		}
 		return "file:" + buildDir + repoPath;
+	}
+
+	public static String copyLocalRepo(String path) throws IOException {
+		File dest = new File("target/repos/" + path);
+		FileSystemUtils.deleteRecursively(dest);
+		FileSystemUtils.copyRecursively(new File("target/repos/config-repo"), dest);
+		return "file:./target/repos/" + path;
+	}
+
+	public static boolean deleteLocalRepo(String path) throws IOException {
+		File dest = new File("target/repos/" + path);
+		return FileSystemUtils.deleteRecursively(dest);
 	}
 
 }

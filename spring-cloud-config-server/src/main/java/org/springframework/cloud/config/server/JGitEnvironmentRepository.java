@@ -49,7 +49,7 @@ import org.springframework.cloud.config.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.util.StringUtils;
 
 import com.jcraft.jsch.Session;
 
@@ -75,10 +75,10 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 	private boolean initialized;
 
 	private String[] searchPaths = new String[0];
-	
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		Assert.state(uri!=null, "You need to configure a uri for the git repository");
+		Assert.state(uri != null, "You need to configure a uri for the git repository");
 	}
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
@@ -220,8 +220,8 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 	 * Assumes we are on a tracking branch (should be safe)
 	 */
 	private void pull(Git git, String label, Ref ref) {
+		PullCommand pull = git.pull();
 		try {
-			PullCommand pull = git.pull();
 			if (hasText(username)) {
 				setCredentialsProvider(pull);
 			}
@@ -229,7 +229,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 		}
 		catch (Exception e) {
 			logger.warn("Could not pull remote for " + label + " (current ref=" + ref
-					+ ")");
+					+ "), remote: " + git.getRepository().getConfig().getString("remote", "origin", "url"));
 		}
 	}
 
@@ -261,7 +261,12 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 
 	private Git copyFromLocalRepository() throws IOException {
 		Git git;
-		FileSystemUtils.copyRecursively(new UrlResource(uri).getFile(), basedir);
+		File remote = new UrlResource(StringUtils.cleanPath(uri)).getFile();
+		Assert.state(remote.isDirectory(), "No directory at " + uri);
+		File gitDir = new File(remote, ".git");
+		Assert.state(gitDir.exists(), "No .git at " + uri);
+		Assert.state(gitDir.isDirectory(), "No .git directory at " + uri);
+		basedir = remote;
 		git = Git.open(basedir);
 		return git;
 	}

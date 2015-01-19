@@ -19,8 +19,11 @@ package org.springframework.cloud.config.server;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -31,6 +34,8 @@ import org.springframework.cloud.config.Environment;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.util.ResourceUtils;
+import org.springframework.util.StreamUtils;
 
 /**
  * @author Dave Syer
@@ -47,6 +52,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		if (basedir.exists()) {
 			FileUtils.delete(basedir, FileUtils.RECURSIVE);
 		}
+		ConfigServerTestUtils.deleteLocalRepo("config-copy");
 	}
 
 	@After
@@ -60,8 +66,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void vanilla() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				//TODO: why didn't .properties() work for me?
-				.run("--spring.cloud.config.server.git.uri=" + uri);
+				.properties("spring.cloud.config.server.git.uri:" + uri).run();
+		// TODO: why didn't .properties() work for me?
+		//		.run("--spring.cloud.config.server.git.uri=" + uri);
 		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
@@ -69,11 +76,32 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	}
 
 	@Test
+	public void pull() throws Exception {
+		ConfigServerTestUtils.prepareLocalRepo();
+		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false).run(
+				"--spring.cloud.config.server.git.uri=" + uri);
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		repository.findOne("bar", "staging", "master");
+		Environment environment = repository.findOne("bar", "staging", "master");
+		assertEquals("bar", environment.getPropertySources().get(0).getSource()
+				.get("foo"));
+		Git git = Git.open(ResourceUtils.getFile(uri).getAbsoluteFile());
+		git.checkout().setName("master").call();
+		StreamUtils.copy("foo: foo", Charset.defaultCharset(), new FileOutputStream(
+				ResourceUtils.getFile(uri + "/bar.properties")));
+		git.add().addFilepattern("bar.properties").call();
+		git.commit().setMessage("Updated for pull").call();
+		environment = repository.findOne("bar", "staging", "master");
+		assertEquals("foo", environment.getPropertySources().get(0).getSource()
+				.get("foo"));
+	}
+
+	@Test
 	public void nested() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
-		context = new SpringApplicationBuilder(TestConfiguration.class)
-				.web(false)
-				//TODO: why didn't .properties() work for me?
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+		// TODO: why didn't .properties() work for me?
 				.run("--spring.cloud.config.server.git.uri=" + uri,
 						"--spring.cloud.config.server.git.searchPaths=sub");
 		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
