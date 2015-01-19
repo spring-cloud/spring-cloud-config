@@ -712,11 +712,15 @@ the repository you can set the "spring.cloud.config.server.git.uri"
 configuration property in the Config Server (e.g. in
 <code>application.yml</code>). If you set it with a <code>file:</code> prefix it should work
 from a local repository so you can get started quickly and easily
-without a server (it doesn&#8217;t matter if it&#8217;s not bare because the
-Config Server never makes changes to the "remote" repository). To
-scale the Config Server up and make it highly available, however, you
-would need to have all instances of the server pointing to the same
-repository, so only a shared file system would work.</p>
+without a server, but in that case the server operates directly on the
+local repository without cloning it (it doesn&#8217;t matter if it&#8217;s not
+bare because the Config Server never makes changes to the "remote"
+repository). To scale the Config Server up and make it highly
+available, you would need to have all instances of the server pointing
+to the same repository, so only a shared file system would work. Even
+in that case it is better to use the <code>ssh:</code> protocol for a shared
+filesystem repository, so that the server can clone it and use a local
+working copy as a cache.</p>
 </div>
 <div class="paragraph">
 <p>This repository implementation maps the <code>{label}</code> parameter of the
@@ -1405,7 +1409,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-17 15:12:22 UTC
+Last updated 2015-01-19 15:09:02 UTC
 </div>
 </div>
 </body>
