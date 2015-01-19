@@ -180,15 +180,27 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 		if (shouldPull(git, ref)) {
 			pull(git, label, ref);
 		}
-		environment.setSearchLocations(getSearchLocations(basedir));
+		environment.setSearchLocations(getSearchLocations(getWorkingDirectory()));
 		return clean(environment.findOne(application, profile, ""));
+	}
+
+	private File getWorkingDirectory() {
+		if (uri.startsWith("file:")) {
+			try {
+				return new UrlResource(StringUtils.cleanPath(uri)).getFile();
+			}
+			catch (Exception e) {
+				throw new IllegalStateException("Cannot convert uri to file: " + uri);
+			}
+		}
+		return basedir;
 	}
 
 	private String[] getSearchLocations(File dir) {
 		List<String> locations = new ArrayList<String>();
 		locations.add(dir.toURI().toString());
 		for (String path : searchPaths) {
-			File file = new File(basedir, path);
+			File file = new File(getWorkingDirectory(), path);
 			if (file.isDirectory()) {
 				locations.add(file.toURI().toString());
 			}
@@ -209,7 +221,9 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 	}
 
 	private boolean shouldPull(Git git, Ref ref) throws GitAPIException {
-		return git.status().call().isClean() && ref != null;
+		return git.status().call().isClean()
+				&& ref != null
+				&& git.getRepository().getConfig().getString("remote", "origin", "url")!=null;
 	}
 
 	private boolean shouldTrack(Git git, String label) throws GitAPIException {
@@ -254,7 +268,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 	}
 
 	private Git openGitRepository() throws IOException {
-		Git git = Git.open(basedir);
+		Git git = Git.open(getWorkingDirectory());
 		tryFetch(git);
 		return git;
 	}
@@ -266,8 +280,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 		File gitDir = new File(remote, ".git");
 		Assert.state(gitDir.exists(), "No .git at " + uri);
 		Assert.state(gitDir.isDirectory(), "No .git directory at " + uri);
-		basedir = remote;
-		git = Git.open(basedir);
+		git = Git.open(remote);
 		return git;
 	}
 
@@ -352,7 +365,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 	private Environment clean(Environment value) {
 		Environment result = new Environment(value.getName(), value.getLabel());
 		for (PropertySource source : value.getPropertySources()) {
-			String name = source.getName().replace(basedir.toURI().toString(), "");
+			String name = source.getName().replace(getWorkingDirectory().toURI().toString(), "");
 			if (name.contains(("classpath:/"))) {
 				continue;
 			}
