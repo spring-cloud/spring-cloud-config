@@ -29,7 +29,7 @@ import org.yaml.snakeyaml.Yaml;
 @RestController
 @RequestMapping("${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
-
+	
 	private EnvironmentRepository repository;
 
 	private EncryptionController encryption;
@@ -61,7 +61,7 @@ public class EnvironmentController {
 		}
 		return environment;
 	}
-
+	
 	@RequestMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name,
 			@PathVariable String profiles) throws IOException {

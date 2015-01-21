@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.config.ConfigFileApplicationListener;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.Environment;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -66,6 +67,10 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 		builder.environment(environment);
 		builder.web(false).showBanner(false);
 		String[] args = getArgs(config, label);
+		// Explicitly set the listeners (to exclude logging listener which would change log
+		// levels in the caller)
+		builder.application().setListeners(
+				Collections.singletonList(new ConfigFileApplicationListener()));
 		ConfigurableApplicationContext context = builder.run(args);
 		environment.getPropertySources().remove("profiles");
 		try {
@@ -121,7 +126,7 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 		this.locations = locations;
 		for (int i = 0; i < locations.length; i++) {
 			String location = locations[i];
-			if (isDirectory(location)&& !location.endsWith("/")) {
+			if (isDirectory(location) && !location.endsWith("/")) {
 				location = location + "/";
 			}
 			locations[i] = location;

@@ -28,7 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -50,11 +52,15 @@ import org.springframework.core.env.StandardEnvironment;
 public class BootstrapConfigurationTests {
 
 	private ConfigurableApplicationContext context;
+	
+	@Rule
+	public ExpectedException expected = ExpectedException.none();
 
 	@After
 	public void close() {
 		// Expected.* is bound to the PropertySourceConfiguration below
 		System.clearProperty("expected.name");
+		System.clearProperty("expected.fail");
 		// Used to test system properties override
 		System.clearProperty("bootstrap.foo");
 		PropertySourceConfiguration.MAP.clear();
@@ -107,6 +113,14 @@ public class BootstrapConfigurationTests {
 		assertEquals("bar", context.getEnvironment().getProperty("bootstrap.foo"));
 		assertTrue(context.getEnvironment().getPropertySources().contains("bootstrap"));
 		assertNotNull(context.getBean(ConfigClientProperties.class));
+	}
+
+	@Test
+	public void failsOnPropertySource() {
+		System.setProperty("expected.fail", "true");
+		expected.expectMessage("Planned");
+		context = new SpringApplicationBuilder().web(false)
+				.sources(BareConfiguration.class).run();
 	}
 
 	@Test
@@ -272,11 +286,16 @@ public class BootstrapConfigurationTests {
 				Collections.<String, Object> singletonMap("bootstrap.foo", "bar"));
 
 		private String name;
+		
+		private boolean fail = false;
 
 		@Override
 		public PropertySource<?> locate(Environment environment) {
 			if (name != null) {
 				assertEquals(name, environment.getProperty("spring.application.name"));
+			}
+			if (fail) {
+				throw new RuntimeException("Planned");
 			}
 			return new MapPropertySource("testBootstrap", MAP);
 		}
@@ -287,6 +306,14 @@ public class BootstrapConfigurationTests {
 
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		public boolean isFail() {
+			return fail;
+		}
+
+		public void setFail(boolean fail) {
+			this.fail = fail;
 		}
 	}
 

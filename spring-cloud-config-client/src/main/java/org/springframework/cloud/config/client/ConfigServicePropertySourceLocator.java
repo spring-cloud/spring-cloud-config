@@ -30,10 +30,12 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.crypto.codec.Base64;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -60,6 +62,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		CompositePropertySource composite = new CompositePropertySource("configService");
 		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(client)
 				: this.restTemplate;
+		RuntimeException error = null;
+		String errorBody = null;
 		try {
 			Environment result = restTemplate.exchange(
 					client.getUri() + "/{name}/{profile}/{label}", HttpMethod.GET,
@@ -72,15 +76,23 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			}
 			return composite;
 		}
-		catch (Exception e) {
-			if (client != null && client.isFailFast()) {
-				throw new IllegalStateException(
-						"Could not locate PropertySource. The fail fast property is set, failing",
-						e);
+		catch (HttpServerErrorException e) {
+			error = e;
+			if (MediaType.APPLICATION_JSON.includes(e.getResponseHeaders().getContentType())) {
+				errorBody = e.getResponseBodyAsString();
 			}
-			logger.error("Could not locate PropertySource: " + e.getMessage());
-			return null;
 		}
+		catch (Exception e) {
+			error = new IllegalStateException(
+					"Could not locate PropertySource. The fail fast property is set, failing",
+					e);
+		}
+		if (client != null && client.isFailFast()) {
+			throw error;
+		}
+		logger.error("Could not locate PropertySource: "
+				+ (errorBody == null ? error.getMessage() : errorBody));
+		return null;
 
 	}
 
