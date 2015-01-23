@@ -1,9 +1,5 @@
 package sample;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -19,50 +15,55 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
 @IntegrationTest("server.port:0")
 @WebAppConfiguration
 public class ApplicationTests {
 
-	private static int configPort = 0;
+    private static int configPort = 0;
 
-	@Value("${local.server.port}")
-	private int port;
+    @Value("${local.server.port}")
+    private int port;
 
-	private static ConfigurableApplicationContext server;
+    private static ConfigurableApplicationContext server;
 
-	@BeforeClass
-	public static void startConfigServer() throws IOException {
-		String repo = ConfigServerTestUtils.prepareLocalRepo();
-		server = SpringApplication.run(
-				org.springframework.cloud.config.server.ConfigServerApplication.class,
-				"--server.port=" + configPort, "--spring.config.name=server",
-				"--spring.cloud.config.server.git.uri=" + repo);
-		configPort = ((EmbeddedWebApplicationContext) server)
-				.getEmbeddedServletContainer().getPort();
-		System.setProperty("config.port", "" + configPort);
-	}
-	
-	@AfterClass
-	public static void close() {
-		System.clearProperty("config.port");
-		if (server!=null) {
-			server.close();
-		}
-	}
+    @BeforeClass
+    public static void startConfigServer() throws IOException {
+        String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
+        String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
+        server = SpringApplication.run(
+                org.springframework.cloud.config.server.ConfigServerApplication.class,
+                "--server.port=" + configPort, "--spring.config.name=server",
+                "--spring.cloud.config.server.git.uri=" + repo);
+        configPort = ((EmbeddedWebApplicationContext) server)
+                .getEmbeddedServletContainer().getPort();
+        System.setProperty("config.port", "" + configPort);
+    }
 
-	@Test
-	public void contextLoads() {
-		String foo = new TestRestTemplate().getForObject("http://localhost:" + port
-				+ "/env/info.foo", String.class);
-		assertEquals("bar", foo);
-	}
+    @AfterClass
+    public static void close() {
+        System.clearProperty("config.port");
+        if (server != null) {
+            server.close();
+        }
+    }
 
-	public static void main(String[] args) throws IOException {
-		configPort = 8888;
-		startConfigServer();
-		SpringApplication.run(Application.class, args);
-	}
+    @Test
+    public void contextLoads() {
+        String foo = new TestRestTemplate().getForObject("http://localhost:" + port
+                + "/env/info.foo", String.class);
+        assertEquals("bar", foo);
+    }
+
+    public static void main(String[] args) throws IOException {
+        configPort = 8888;
+        startConfigServer();
+        SpringApplication.run(Application.class, args);
+    }
 
 }
