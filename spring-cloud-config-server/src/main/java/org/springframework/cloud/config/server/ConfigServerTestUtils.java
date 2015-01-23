@@ -15,28 +15,28 @@
  */
 package org.springframework.cloud.config.server;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.util.FileSystemUtils;
 
+import java.io.File;
+import java.io.IOException;
+
 /**
  * @author Dave Syer
- *
  */
 public class ConfigServerTestUtils {
 
 	public static String prepareLocalRepo() throws IOException {
-		return prepareLocalRepo("target/repos", "config-repo", "target/config");
+		return prepareLocalRepo("./", "target/repos", "config-repo", "target/config");
 	}
 
 	public static String prepareLocalRepo(String repoPath) throws IOException {
-		return prepareLocalRepo("target/repos", repoPath, "target/config");
+		return prepareLocalRepo("./", "target/repos", repoPath, "target/config");
 	}
 
-	public static String prepareLocalRepo(String buildDir, String repoPath,
-			String checkoutDir) throws IOException {
+	public static String prepareLocalRepo(String baseDir, String buildDir, String repoPath,
+										  String checkoutDir) throws IOException {
+		buildDir = baseDir + buildDir;
 		new File(buildDir).mkdirs();
 		if (!repoPath.startsWith("/")) {
 			repoPath = "/" + repoPath;
@@ -44,7 +44,7 @@ public class ConfigServerTestUtils {
 		if (!repoPath.endsWith("/")) {
 			repoPath = repoPath + "/";
 		}
-		File source = new File("src/test/resources" + repoPath);
+		File source = new File(baseDir + "src/test/resources" + repoPath);
 		FileSystemUtils.copyRecursively(source, new File(buildDir + repoPath));
 		File dotGit = new File(buildDir + repoPath + ".git");
 		File git = new File(buildDir + repoPath + "git");
@@ -63,6 +63,11 @@ public class ConfigServerTestUtils {
 		}
 		return "file:" + buildDir + repoPath;
 	}
+
+	public static String getBaseDirectory(String potentialRoot) {
+		return new File(potentialRoot).exists() ? potentialRoot + "/" : "./";
+	}
+
 
 	public static String copyLocalRepo(String path) throws IOException {
 		File dest = new File("target/repos/" + path);
