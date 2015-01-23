@@ -66,7 +66,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String errorBody = null;
 		try {
 			Environment result = restTemplate.exchange(
-					client.getUri() + "/{name}/{profile}/{label}", HttpMethod.GET,
+					client.getRawUri() + "/{name}/{profile}/{label}", HttpMethod.GET,
 					new HttpEntity<Void>((Void) null), Environment.class,
 					client.getName(), client.getProfile(), client.getLabel()).getBody();
 			for (PropertySource source : result.getPropertySources()) {

@@ -35,7 +35,7 @@ public class ConfigClientPropertiesTests {
 	public void vanilla() {
 		locator.setUri("http://localhost:9999");
 		locator.setPassword("secret");
-		assertEquals("http://localhost:9999", locator.getUri());
+		assertEquals("http://localhost:9999", locator.getRawUri());
 		assertEquals("user", locator.getUsername());
 		assertEquals("secret", locator.getPassword());
 	}
@@ -43,7 +43,7 @@ public class ConfigClientPropertiesTests {
 	@Test
 	public void uriCreds() {
 		locator.setUri("http://foo:bar@localhost:9999");
-		assertEquals("http://localhost:9999", locator.getUri());
+		assertEquals("http://localhost:9999", locator.getRawUri());
 		assertEquals("foo", locator.getUsername());
 		assertEquals("bar", locator.getPassword());
 	}
@@ -52,7 +52,7 @@ public class ConfigClientPropertiesTests {
 	public void explicitPassword() {
 		locator.setUri("http://foo:bar@localhost:9999");
 		locator.setPassword("secret");
-		assertEquals("http://localhost:9999", locator.getUri());
+		assertEquals("http://localhost:9999", locator.getRawUri());
 		assertEquals("foo", locator.getUsername());
 		assertEquals("secret", locator.getPassword());
 	}

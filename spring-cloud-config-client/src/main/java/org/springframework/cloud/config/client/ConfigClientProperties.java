@@ -45,7 +45,7 @@ public class ConfigClientProperties {
 	 */
 	private String profile = "default";
 
-	@Value("${spring.application.name:'application'}")
+	@Value("${spring.application.name:application}")
 	private String name;
 
 	private String label = "master";
@@ -79,8 +79,12 @@ public class ConfigClientProperties {
 		this.enabled = enabled;
 	}
 
-	public String getUri() {
+	public String getRawUri() {
 		return extractCredentials()[2];
+	}
+	
+	public String getUri() {
+		return uri;
 	}
 
 	public void setUri(String url) {
@@ -219,7 +223,7 @@ public class ConfigClientProperties {
 		BeanUtils.copyProperties(this, override);
 		override.setName(environment.resolvePlaceholders("${"
 				+ ConfigClientProperties.PREFIX
-				+ ".name:${spring.application.name:'application'}}"));
+				+ ".name:${spring.application.name:application}}"));
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
 			override.setProfile(environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
 		}

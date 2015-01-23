@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health.Builder;
+import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
@@ -14,18 +15,19 @@ import org.springframework.core.env.PropertySource;
  */
 public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
-    private Environment env;
     private ConfigServicePropertySourceLocator locator;
+	private Environment env;
 
-    public ConfigServerHealthIndicator(Environment env, ConfigServicePropertySourceLocator locator) {
-        this.env = env;
+    public ConfigServerHealthIndicator(ConfigServicePropertySourceLocator locator) {
+        this.env = new AbstractEnvironment() {
+		};
         this.locator = locator;
     }
 
     @Override
     protected void doHealthCheck(Builder builder) throws Exception {
         try {
-            PropertySource<?> propertySource = locator.locate(env);
+            PropertySource<?> propertySource = locator.locate(this.env);
             builder.up();
             if (propertySource instanceof CompositePropertySource) {
                 List<String> sources = new ArrayList<>();
@@ -33,8 +35,10 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
                     sources.add(ps.getName());
                 }
                 builder.withDetail("propertySources", sources);
-            } else {
+            } else if (propertySource!=null) {
                 builder.withDetail("propertySources", propertySource.toString());
+            } else {
+            	builder.down().withDetail("error", "no property sources located");
             }
         } catch (Exception e) {
             builder.down(e);
