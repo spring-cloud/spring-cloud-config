@@ -180,7 +180,9 @@ public class EnvironmentController {
 
 	private Properties convertToProperties(Environment profiles) {
 		Properties map = new Properties();
-		for (PropertySource source : profiles.getPropertySources()) {
+		List<PropertySource> sources = new ArrayList<PropertySource>(profiles.getPropertySources());
+		Collections.reverse(sources);
+		for (PropertySource source : sources) {
 			@SuppressWarnings("unchecked")
 			Map<String, String> value = (Map<String, String>) source.getSource();
 			map.putAll(value);

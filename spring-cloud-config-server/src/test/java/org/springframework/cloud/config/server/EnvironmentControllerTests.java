@@ -61,6 +61,17 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void propertyOverrideInYaml() throws Exception {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("a.b.c", "d");
+		environment.add(new PropertySource("one", map));
+		environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "e")));
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		String yaml = controller.yaml("foo", "bar").getBody();
+		assertEquals("a:\n  b:\n    c: e\n", yaml);
+	}
+
+	@Test
 	public void arrayInYaml() throws Exception {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("a.b[0]", "c");
