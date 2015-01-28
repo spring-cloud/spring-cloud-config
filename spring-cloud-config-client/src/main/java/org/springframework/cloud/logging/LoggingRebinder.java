@@ -24,8 +24,10 @@ import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.EnvironmentAware;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.env.Environment;
 
 /**
@@ -33,7 +35,7 @@ import org.springframework.core.env.Environment;
  *
  */
 public class LoggingRebinder implements
-		ApplicationListener<EnvironmentChangeEvent>, EnvironmentAware {
+		ApplicationListener<ApplicationEvent>, EnvironmentAware {
 
 	private final Log logger = LogFactory.getLog(getClass());
 
@@ -45,13 +47,15 @@ public class LoggingRebinder implements
 	}
 
 	@Override
-	public void onApplicationEvent(EnvironmentChangeEvent event) {
+	public void onApplicationEvent(ApplicationEvent event) {
 		if (environment == null) {
 			return;
 		}
-		LoggingSystem system = LoggingSystem.get(LoggingSystem.class
-				.getClassLoader());
-		setLogLevels(system, environment);
+		if (event instanceof EnvironmentChangeEvent || event instanceof ContextRefreshedEvent) {
+			LoggingSystem system = LoggingSystem.get(LoggingSystem.class
+					.getClassLoader());
+			setLogLevels(system, environment);
+		}
 	}
 
 	protected void setLogLevels(LoggingSystem system, Environment environment) {
