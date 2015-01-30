@@ -18,6 +18,7 @@ package org.springframework.cloud.bootstrap.config;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -31,6 +32,8 @@ import org.springframework.cloud.bootstrap.BootstrapApplicationListener;
 import org.springframework.cloud.config.client.ConfigClientProperties;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.cloud.config.client.PropertySourceLocator;
+import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
+import org.springframework.cloud.logging.LoggingRebinder;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -90,7 +93,17 @@ public class PropertySourceBootstrapConfiguration implements
 				propertySources.remove(BOOTSTRAP_PROPERTY_SOURCE_NAME);
 			}
 			insertPropertySources(propertySources, composite);
+			setLogLevels(applicationContext.getEnvironment());
 		}
+	}
+
+	private void setLogLevels(ConfigurableEnvironment environment) {
+		LoggingRebinder rebinder = new LoggingRebinder();
+		rebinder.setEnvironment(environment);
+		// We can't fire the event in the ApplicationContext here (too early), but we can
+		// create our own listener and poke it (it doesn't need the key changes)
+		rebinder.onApplicationEvent(new EnvironmentChangeEvent(Collections
+				.<String> emptySet()));
 	}
 
 	private void insertPropertySources(MutablePropertySources propertySources,
@@ -98,8 +111,8 @@ public class PropertySourceBootstrapConfiguration implements
 		MutablePropertySources incoming = new MutablePropertySources();
 		incoming.addFirst(composite);
 		PropertySourceBootstrapProperties remoteProperties = new PropertySourceBootstrapProperties();
-		new RelaxedDataBinder(remoteProperties, "spring.cloud.config").bind(new PropertySourcesPropertyValues(
-				incoming));
+		new RelaxedDataBinder(remoteProperties, "spring.cloud.config")
+				.bind(new PropertySourcesPropertyValues(incoming));
 		if (!remoteProperties.isAllowOverride()
 				|| remoteProperties.isOverrideSystemProperties()) {
 			propertySources.addFirst(composite);
