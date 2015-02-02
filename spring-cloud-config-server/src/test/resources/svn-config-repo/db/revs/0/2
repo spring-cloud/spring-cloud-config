@@ -1,0 +1,104 @@
+id: 4-2.0.r2/0
+type: file
+count: 0
+text: 1 0 20 8 e1dcf98b4c823827be0a0524052ae95a cbddbad2c491aab236e1025ad5b9ace129ea5667 1-1/_b
+cpath: /branches/demobranch/bar.properties
+copyroot: 0 /
+
+PLAIN
+K 14
+bar.properties
+V 15
+file 4-2.0.r2/0
+END
+ENDREP
+id: 2-2.0.r2/247
+type: dir
+count: 0
+text: 2 189 45 0 b81dd010d3e089eb3fcd04ca3a23c7a0
+cpath: /branches/demobranch
+copyroot: 0 /
+
+PLAIN
+K 10
+demobranch
+V 16
+dir 2-2.0.r2/247
+END
+ENDREP
+id: 1-2.0.r2/431
+type: dir
+count: 0
+text: 2 376 42 0 1b635f8d96875ae074d7cc4052ba7888
+cpath: /branches
+copyroot: 0 /
+
+id: 7-2.0.r2/549
+type: file
+count: 0
+text: 1 33 40 28 13bec2d9ad81465f3114cbae20b6c7da 4ba5f6a617dee5e5e8d382f6bbc07531d5f968c4 1-1/_c
+cpath: /trunk/application.yml
+copyroot: 0 /
+
+id: 9-2.0.r2/729
+type: file
+count: 0
+text: 1 0 20 8 e1dcf98b4c823827be0a0524052ae95a cbddbad2c491aab236e1025ad5b9ace129ea5667 1-1/_a
+cpath: /trunk/bar.properties
+copyroot: 0 /
+
+PLAIN
+K 15
+application.yml
+V 17
+file 7-2.0.r2/549
+K 14
+bar.properties
+V 17
+file 9-2.0.r2/729
+END
+ENDREP
+id: 6-2.0.r2/1010
+type: dir
+count: 0
+text: 2 906 91 0 0dc6340175a4fc841f8f8ddb9ab4f826
+cpath: /trunk
+copyroot: 0 /
+
+PLAIN
+K 8
+branches
+V 16
+dir 1-2.0.r2/431
+K 5
+trunk
+V 17
+dir 6-2.0.r2/1010
+END
+ENDREP
+id: 0.0.r2/1211
+type: dir
+pred: 0.0.r1/533
+count: 2
+text: 2 1126 72 0 a8927d430ec09518c534d157c6e49580
+cpath: /
+copyroot: 0 /
+
+0-1.0.r1/86 delete-file false false /application.yml
+
+2-1.0.r1/259 delete-file false false /bar.properties
+
+_1.0.t1-1 add-dir false false /branches
+
+_2.0.t1-1 add-dir false false /branches/demobranch
+
+_4.0.t1-1 add-file true false /branches/demobranch/bar.properties
+
+_6.0.t1-1 add-dir false false /trunk
+
+_7.0.t1-1 add-file true false /trunk/application.yml
+
+_9.0.t1-1 add-file true false /trunk/bar.properties
+
+
+1211 1338
