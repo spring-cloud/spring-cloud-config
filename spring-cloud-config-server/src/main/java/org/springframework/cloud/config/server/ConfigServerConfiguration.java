@@ -42,7 +42,7 @@ public class ConfigServerConfiguration {
 	}
 
 	@Configuration
-	@Profile("!native")
+	@Profile({ "!native", "!subversion" })
 	protected static class GitRepositoryConfiguration {
 		@Autowired
 		private ConfigurableEnvironment environment;
@@ -50,6 +50,18 @@ public class ConfigServerConfiguration {
 		@Bean
 		public JGitEnvironmentRepository EnvironmentRepository() {
 			return new JGitEnvironmentRepository(environment);
+		}
+	}
+
+	@Configuration
+	@Profile("subversion")
+	protected static class SvnRepositoryConfiguration {
+		@Autowired
+		private ConfigurableEnvironment environment;
+
+		@Bean
+		public SVNKitEnvironmentRepository EnvironmentRepository() {
+			return new SVNKitEnvironmentRepository(environment);
 		}
 	}
 

@@ -16,13 +16,11 @@
 
 package org.springframework.cloud.config.server;
 
-import static org.springframework.util.StringUtils.hasText;
-
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
+
+import com.jcraft.jsch.Session;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,108 +40,28 @@ import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.Environment;
-import org.springframework.cloud.config.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.jcraft.jsch.Session;
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * @author Dave Syer
  *
  */
 @ConfigurationProperties("spring.cloud.config.server.git")
-public class JGitEnvironmentRepository implements EnvironmentRepository, InitializingBean {
+public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository {
 
 	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
 
-	private File basedir;
-
-	private String uri;
-
-	private ConfigurableEnvironment environment;
-
-	private String username;
-
-	private String password;
-
 	private boolean initialized;
 
-	private String[] searchPaths = new String[0];
-
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		Assert.state(uri != null, "You need to configure a uri for the git repository");
-	}
-
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
-		this.environment = environment;
-		try {
-			final File basedir = Files.createTempDirectory("config-repo-").toFile();
-			Runtime.getRuntime().addShutdownHook(new Thread() {
-				@Override
-				public void run() {
-					try {
-						FileUtils.delete(basedir, FileUtils.RECURSIVE);
-					}
-					catch (IOException e) {
-						logger.warn("Failed to delete temporary directory on exit: " + e);
-					}
-				}
-			});
-			this.basedir = basedir;
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Cannot create temp dir", e);
-		}
-	}
-
-	public void setUri(String uri) {
-		while (uri.endsWith("/")) {
-			uri = uri.substring(0, uri.length() - 1);
-		}
-		this.uri = uri;
-	}
-
-	public String getUri() {
-		return uri;
-	}
-
-	public void setBasedir(File basedir) {
-		this.basedir = basedir.getAbsoluteFile();
-	}
-
-	public File getBasedir() {
-		return basedir;
-	}
-
-	public void setSearchPaths(String... searchPaths) {
-		this.searchPaths = searchPaths;
-	}
-
-	public String[] getSearchPaths() {
-		return searchPaths;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
+		super(environment);
 	}
 
 	@Override
@@ -153,27 +71,28 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 		try {
 			git = createGitClient();
 			return loadEnvironment(git, application, profile, label);
-		}
-		catch (GitAPIException e) {
+		} catch (GitAPIException e) {
 			throw new IllegalStateException("Cannot clone repository", e);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			throw new IllegalStateException("Cannot load environment", e);
-		}
-		finally {
+		} finally {
 			try {
 				if (git != null) {
 					git.getRepository().close();
 				}
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				logger.warn("Could not close git repository", e);
 			}
 		}
 	}
 
-	private synchronized Environment loadEnvironment(Git git, String application,
-			String profile, String label) throws GitAPIException {
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		Assert.state(uri != null, "You need to configure a uri for the git repository");
+	}
+
+	private synchronized Environment loadEnvironment(Git git, String application, String profile,
+			String label) throws GitAPIException {
 		SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
 		git.getRepository().getConfig().setString("branch", label, "merge", label);
 		Ref ref = checkout(git, label);
@@ -184,36 +103,11 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 		return clean(environment.findOne(application, profile, ""));
 	}
 
-	private File getWorkingDirectory() {
-		if (uri.startsWith("file:")) {
-			try {
-				return new UrlResource(StringUtils.cleanPath(uri)).getFile();
-			}
-			catch (Exception e) {
-				throw new IllegalStateException("Cannot convert uri to file: " + uri);
-			}
-		}
-		return basedir;
-	}
-
-	private String[] getSearchLocations(File dir) {
-		List<String> locations = new ArrayList<String>();
-		locations.add(dir.toURI().toString());
-		for (String path : searchPaths) {
-			File file = new File(getWorkingDirectory(), path);
-			if (file.isDirectory()) {
-				locations.add(file.toURI().toString());
-			}
-		}
-		return locations.toArray(new String[0]);
-	}
-
 	private Ref checkout(Git git, String label) throws GitAPIException {
 		CheckoutCommand checkout = git.checkout();
 		if (shouldTrack(git, label)) {
 			trackBranch(git, checkout, label);
-		}
-		else {
+		} else {
 			// works for tags and local branches
 			checkout.setName(label);
 		}
@@ -221,9 +115,8 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 	}
 
 	private boolean shouldPull(Git git, Ref ref) throws GitAPIException {
-		return git.status().call().isClean()
-				&& ref != null
-				&& git.getRepository().getConfig().getString("remote", "origin", "url")!=null;
+		return git.status().call().isClean() && ref != null
+				&& git.getRepository().getConfig().getString("remote", "origin", "url") != null;
 	}
 
 	private boolean shouldTrack(Git git, String label) throws GitAPIException {
@@ -240,18 +133,16 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 				setCredentialsProvider(pull);
 			}
 			pull.call();
-		}
-		catch (Exception e) {
-			logger.warn("Could not pull remote for " + label + " (current ref=" + ref
-					+ "), remote: " + git.getRepository().getConfig().getString("remote", "origin", "url"));
+		} catch (Exception e) {
+			logger.warn("Could not pull remote for " + label + " (current ref=" + ref + "), remote: "
+					+ git.getRepository().getConfig().getString("remote", "origin", "url"));
 		}
 	}
 
 	private Git createGitClient() throws IOException, GitAPIException {
 		if (new File(basedir, ".git").exists()) {
 			return openGitRepository();
-		}
-		else {
+		} else {
 			return copyRepository();
 		}
 	}
@@ -261,8 +152,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 		Assert.state(basedir.mkdirs(), "Could not create basedir: " + basedir);
 		if (uri.startsWith("file:")) {
 			return copyFromLocalRepository();
-		}
-		else {
+		} else {
 			return cloneToBasedir();
 		}
 	}
@@ -299,8 +189,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 				setCredentialsProvider(fetch);
 			}
 			fetch.call();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			logger.warn("Remote repository not available");
 		}
 	}
@@ -309,8 +198,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 		if (basedir.exists()) {
 			try {
 				FileUtils.delete(basedir, FileUtils.RECURSIVE);
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				throw new IllegalStateException("Failed to initialize base directory", e);
 			}
 		}
@@ -329,13 +217,11 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 	}
 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
-		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username,
-				password));
+		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
 	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
-		checkout.setCreateBranch(true).setName(label)
-				.setUpstreamMode(SetupUpstreamMode.TRACK)
+		checkout.setCreateBranch(true).setName(label).setUpstreamMode(SetupUpstreamMode.TRACK)
 				.setStartPoint("origin/" + label);
 	}
 
@@ -347,8 +233,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 		return containsBranch(git, label, null);
 	}
 
-	private boolean containsBranch(Git git, String label, ListMode listMode)
-			throws GitAPIException {
+	private boolean containsBranch(Git git, String label, ListMode listMode) throws GitAPIException {
 		ListBranchCommand command = git.branchList();
 		if (listMode != null) {
 			command.setListMode(listMode);
@@ -360,22 +245,5 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 			}
 		}
 		return false;
-	}
-
-	private Environment clean(Environment value) {
-		Environment result = new Environment(value.getName(), value.getLabel());
-		for (PropertySource source : value.getPropertySources()) {
-			String name = source.getName().replace(getWorkingDirectory().toURI().toString(), "");
-			if (name.contains(("classpath:/"))) {
-				continue;
-			}
-			if (environment.getPropertySources().contains(name)) {
-				continue;
-			}
-			name = name.replace("applicationConfig: [", "");
-			name = uri + "/" + name.replace("]", "");
-			result.add(new PropertySource(name, source.getSource()));
-		}
-		return result;
 	}
 }
