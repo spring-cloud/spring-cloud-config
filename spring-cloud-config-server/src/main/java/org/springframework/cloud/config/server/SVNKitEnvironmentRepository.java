@@ -24,6 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
@@ -91,7 +92,17 @@ public class SVNKitEnvironmentRepository extends AbstractSCMEnvironmentRepositor
 	public void afterPropertiesSet() throws Exception {
 		Assert
 				.state(getUri() != null,
-						"You need to configure a uri for the subversion repository (e.g. 'http://example.com/svn/'");
+						"You need to configure a uri for the subversion repository (e.g. 'http://example.com/svn/')");
+		resolveRelativeFileUri();
+	}
+
+	private void resolveRelativeFileUri() {
+		if (getUri().startsWith("file:///./")) {
+			String path = getUri().substring(8);
+			String absolutePath = new File(path).getAbsolutePath();
+			setUri("file:///" + StringUtils.cleanPath(absolutePath));
+		}
+
 	}
 
 	public SVNKitEnvironmentRepository(ConfigurableEnvironment environment) {

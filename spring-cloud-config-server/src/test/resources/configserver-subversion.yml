@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    config:
+      server:
+        defaultLabel: trunk
+        overrides:
+          spring:
+            cloud:
+              config:
+                enabled: true

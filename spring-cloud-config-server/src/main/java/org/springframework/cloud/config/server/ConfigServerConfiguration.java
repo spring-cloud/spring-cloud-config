@@ -42,7 +42,6 @@ public class ConfigServerConfiguration {
 	}
 
 	@Configuration
-	@Profile({ "!native", "!subversion" })
 	protected static class GitRepositoryConfiguration {
 		
 		@Autowired

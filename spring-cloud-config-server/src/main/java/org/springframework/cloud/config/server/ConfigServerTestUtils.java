@@ -17,6 +17,7 @@ package org.springframework.cloud.config.server;
 
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.util.FileSystemUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,7 +74,7 @@ public class ConfigServerTestUtils {
 		}
 		local.mkdirs();
 		FileSystemUtils.copyRecursively(sourceDirFile, local);
-		return "file:///" + local.getAbsolutePath();
+		return StringUtils.cleanPath("file:///" + local.getAbsolutePath());
 
 	}
 
