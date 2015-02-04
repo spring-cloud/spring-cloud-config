@@ -62,7 +62,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		CompositePropertySource composite = new CompositePropertySource("configService");
 		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(client)
 				: this.restTemplate;
-		RuntimeException error = null;
+		Exception error = null;
 		String errorBody = null;
 		try {
 			Environment result = restTemplate.exchange(
@@ -78,17 +78,18 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		catch (HttpServerErrorException e) {
 			error = e;
-			if (MediaType.APPLICATION_JSON.includes(e.getResponseHeaders().getContentType())) {
+			if (MediaType.APPLICATION_JSON.includes(e.getResponseHeaders()
+					.getContentType())) {
 				errorBody = e.getResponseBodyAsString();
 			}
 		}
 		catch (Exception e) {
-			error = new IllegalStateException(
-					"Could not locate PropertySource. The fail fast property is set, failing",
-					e);
+			error = e;
 		}
 		if (client != null && client.isFailFast()) {
-			throw error;
+			throw new IllegalStateException(
+					"Could not locate PropertySource and the fail fast property is set, failing",
+					error);
 		}
 		logger.error("Could not locate PropertySource: "
 				+ (errorBody == null ? error.getMessage() : errorBody));

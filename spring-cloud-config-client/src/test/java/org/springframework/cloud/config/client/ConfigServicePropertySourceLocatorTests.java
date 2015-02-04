@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 
+import org.hamcrest.core.IsInstanceOf;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -75,8 +76,8 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.when(response.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
 		Mockito.when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));
 		locator.setRestTemplate(restTemplate);
-		expected.expect(HttpServerErrorException.class);
-		expected.expectMessage("500");
+		expected.expectCause(IsInstanceOf.<Throwable>instanceOf(HttpServerErrorException.class));
+		expected.expectMessage("fail fast property is set");
 		assertNull(locator.locate(environment));
 	}
 
