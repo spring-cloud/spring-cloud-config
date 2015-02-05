@@ -75,7 +75,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 	private boolean initialized;
 
 	private String[] searchPaths = new String[0];
-
+	
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		Assert.state(uri != null, "You need to configure a uri for the git repository");
@@ -103,6 +103,7 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 		}
 	}
 
+	
 	public void setUri(String uri) {
 		while (uri.endsWith("/")) {
 			uri = uri.substring(0, uri.length() - 1);
