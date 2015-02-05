@@ -103,8 +103,8 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 		Assert.state(uri != null, "You need to configure a uri for the git repository");
 	}
 
-	private synchronized Environment loadEnvironment(Git git, String application, String profile,
-			String label) throws GitAPIException {
+	private synchronized Environment loadEnvironment(Git git, String application,
+			String profile, String label) throws GitAPIException {
 		SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
 		git.getRepository().getConfig().setString("branch", label, "merge", label);
 		Ref ref = checkout(git, label);

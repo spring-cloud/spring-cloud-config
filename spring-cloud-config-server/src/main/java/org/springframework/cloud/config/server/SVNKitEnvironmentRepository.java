@@ -49,32 +49,37 @@ public class SVNKitEnvironmentRepository extends AbstractSCMEnvironmentRepositor
 	public Environment findOne(String application, String profile, String label) {
 		SvnOperationFactory svnOperationFactory = new SvnOperationFactory();
 		if (hasText(getUsername())) {
-			svnOperationFactory.setAuthenticationManager(new DefaultSVNAuthenticationManager(null, false,
-					getUsername(), getPassword()));
+			svnOperationFactory
+					.setAuthenticationManager(new DefaultSVNAuthenticationManager(null,
+							false, getUsername(), getPassword()));
 		}
 		try {
 			if (new File(getWorkingDirectory(), ".svn").exists()) {
 				update(svnOperationFactory);
-			} else {
+			}
+			else {
 				checkout(svnOperationFactory);
 			}
 			return clean(loadEnvironment(application, profile, label));
-		} catch (SVNException e) {
+		}
+		catch (SVNException e) {
 			throw new IllegalStateException("Cannot checkout repository", e);
-		} finally {
+		}
+		finally {
 			svnOperationFactory.dispose();
 		}
 	}
 
 	private Environment loadEnvironment(String application, String profile, String label) {
 		final SpringApplicationEnvironmentRepository environmentRepository = new SpringApplicationEnvironmentRepository();
-		environmentRepository.setSearchLocations(getSearchLocations(getSvnPath(getWorkingDirectory(),
-				label)));
+		environmentRepository.setSearchLocations(getSearchLocations(getSvnPath(
+				getWorkingDirectory(), label)));
 		return environmentRepository.findOne(application, profile, label);
 	}
 
 	private void checkout(SvnOperationFactory svnOperationFactory) throws SVNException {
-		logger.debug("Checking out " + getUri() + " to: " + getWorkingDirectory().getAbsolutePath());
+		logger.debug("Checking out " + getUri() + " to: "
+				+ getWorkingDirectory().getAbsolutePath());
 		final SvnCheckout checkout = svnOperationFactory.createCheckout();
 		checkout.setSource(SvnTarget.fromURL(SVNURL.parseURIEncoded(getUri())));
 		checkout.setSingleTarget(SvnTarget.fromFile(getWorkingDirectory()));
@@ -90,9 +95,9 @@ public class SVNKitEnvironmentRepository extends AbstractSCMEnvironmentRepositor
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		Assert
-				.state(getUri() != null,
-						"You need to configure a uri for the subversion repository (e.g. 'http://example.com/svn/')");
+		Assert.state(
+				getUri() != null,
+				"You need to configure a uri for the subversion repository (e.g. 'http://example.com/svn/')");
 		resolveRelativeFileUri();
 	}
 

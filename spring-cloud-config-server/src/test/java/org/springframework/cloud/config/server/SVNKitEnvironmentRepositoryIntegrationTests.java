@@ -69,10 +69,11 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void vanilla() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
-				"target/config");
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
+				"src/test/resources/svn-config-repo", "target/config");
 		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+				.profiles("subversion")
+				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "trunk");
 		Environment environment = repository.findOne("bar", "staging", "trunk");
@@ -81,21 +82,24 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void update() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
-				"target/config");
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
+				"src/test/resources/svn-config-repo", "target/config");
 		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+				.profiles("subversion")
+				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "trunk");
 		Environment environment = repository.findOne("bar", "staging", "trunk");
-		assertEquals("bar", environment.getPropertySources().get(0).getSource().get("foo"));
+		assertEquals("bar", environment.getPropertySources().get(0).getSource()
+				.get("foo"));
 		updateRepoForUpdate(uri);
 		environment = repository.findOne("bar", "staging", "trunk");
-		assertEquals("foo", environment.getPropertySources().get(0).getSource().get("foo"));
+		assertEquals("foo", environment.getPropertySources().get(0).getSource()
+				.get("foo"));
 	}
 
-	private void updateRepoForUpdate(String uri) throws SVNException, FileNotFoundException,
-			IOException {
+	private void updateRepoForUpdate(String uri) throws SVNException,
+			FileNotFoundException, IOException {
 		SvnOperationFactory svnFactory = new SvnOperationFactory();
 		final SvnCheckout checkout = svnFactory.createCheckout();
 		checkout.setSource(SvnTarget.fromURL(SVNURL.parseURIEncoded(uri)));
@@ -104,7 +108,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 
 		// update bar.properties
 		File barProps = new File(workingDir, "trunk/bar.properties");
-		StreamUtils.copy("foo: foo", Charset.defaultCharset(), new FileOutputStream(barProps));
+		StreamUtils.copy("foo: foo", Charset.defaultCharset(), new FileOutputStream(
+				barProps));
 		// commit to repo
 		SvnCommit svnCommit = svnFactory.createCommit();
 		svnCommit.setCommitMessage("update bar.properties");
