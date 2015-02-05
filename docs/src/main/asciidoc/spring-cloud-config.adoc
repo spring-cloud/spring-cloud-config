@@ -186,6 +186,8 @@ $ spring encrypt mysecret --key @${HOME}/.ssh/id_rsa.pub
 AQAjPgt3eFZQXwt8tsHAVv/QHiY5sI2dRcR+...
 ----
 
+The key argument is mandatory (despite having a `--` prefix).
+
 === Key Management
 
 The Config Server can use a symmetric (shared) key or an asymmetric
