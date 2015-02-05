@@ -44,13 +44,13 @@ public class ConfigServerConfiguration {
 	@Configuration
 	@Profile("!native")
 	protected static class GitRepositoryConfiguration {
+		
 		@Autowired
-		private ConfigurableEnvironment environment;
-
+		private ConfigurableEnvironment environment;		
+		
 		@Bean
-		public JGitEnvironmentRepository EnvironmentRepository() {
-			return new JGitEnvironmentRepository(environment);
+		public MultipleJGitEnvironmentRepository EnvironmentRepository() {			
+			return new MultipleJGitEnvironmentRepository(environment);
 		}
 	}
-
 }

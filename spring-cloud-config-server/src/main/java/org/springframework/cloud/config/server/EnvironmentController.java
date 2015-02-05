@@ -12,6 +12,7 @@ import java.util.Properties;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
@@ -30,6 +31,7 @@ import org.yaml.snakeyaml.Yaml;
 @RequestMapping("${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
 	
+	@Qualifier("MultipleJGitEnvironmentRepository")
 	private EnvironmentRepository repository;
 
 	private EncryptionController encryption;
