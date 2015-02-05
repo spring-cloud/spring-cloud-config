@@ -40,6 +40,7 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 	private static final String REPO_URI = "uri";
 	private static final String REPO_USERNAME = "username";
 	private static final String REPO_PASSWORD = "password";
+	private static final String REPO_SEARCHPATHS = "searchPaths";
 
 	private String uri;
 	private String username;
@@ -93,13 +94,15 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 			String repoUri = (String)repoKeyValue.get(REPO_URI);
 			String repoUsername = (String)repoKeyValue.get(REPO_USERNAME);
 			String repoPassword = (String)repoKeyValue.get(REPO_PASSWORD);
+			LinkedHashMap<String, String> o = (LinkedHashMap<String, String>)repoKeyValue.get(REPO_SEARCHPATHS);
+			String[] repoSearchPaths = o.values().toArray(new String[o.values().size()]);
 
 			if (PatternMatchUtils.simpleMatch(repoName, application)) {
 				repo = repoCache.get(repoName);
 
 				if (repo == null) {
 					repo = createJGitEnvironmentRepository(repoUri, repoUsername,
-							repoPassword, null);
+							repoPassword, repoSearchPaths);
 
 					synchronized (repoCache) {
 						repoCache.put(repoName, repo);
@@ -119,7 +122,7 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 		repo.setUri(uri);
 		repo.setUsername(username);
 		repo.setPassword(password);
-		repo.setSearchPaths(searchPaths == null ? new String[0] : searchPaths);
+		repo.setSearchPaths(searchPaths);
 
 		return repo;
 	}

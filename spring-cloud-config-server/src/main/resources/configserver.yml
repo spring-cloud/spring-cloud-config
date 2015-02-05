@@ -13,6 +13,9 @@ spring:
           repos:
             - name: iceycake-*
               uri: https://github.com/iceycake/config-repo
+              searchPaths:
+                - /sub
+                - /foobar
 
 server:
   port: 8888
