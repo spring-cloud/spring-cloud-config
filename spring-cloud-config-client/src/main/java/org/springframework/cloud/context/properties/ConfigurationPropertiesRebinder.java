@@ -25,12 +25,14 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
+import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.stereotype.Component;
 
 /**
@@ -39,7 +41,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ManagedResource
-public class ConfigurationPropertiesRebinder implements BeanPostProcessor, ApplicationListener<EnvironmentChangeEvent> {
+public class ConfigurationPropertiesRebinder implements BeanPostProcessor,
+		ApplicationListener<EnvironmentChangeEvent>, ApplicationContextAware {
 
 	private ConfigurationBeanFactoryMetaData metaData;
 
@@ -51,6 +54,14 @@ public class ConfigurationPropertiesRebinder implements BeanPostProcessor, Appli
 	}
 
 	private Map<String, Object> beans = new HashMap<String, Object>();
+
+	private ApplicationContext applicationContext;
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
+	}
 
 	/**
 	 * @param beans the bean meta data to set
@@ -93,13 +104,17 @@ public class ConfigurationPropertiesRebinder implements BeanPostProcessor, Appli
 	@ManagedOperation
 	public void rebind(String name) {
 		binder.postProcessBeforeInitialization(beans.get(name), name);
+		if (applicationContext != null) {
+			applicationContext.getAutowireCapableBeanFactory().initializeBean(
+					beans.get(name), name);
+		}
 	}
-	
+
 	@ManagedAttribute
 	public Set<String> getBeanNames() {
 		return new HashSet<String>(beans.keySet());
 	}
-	
+
 	@Override
 	public void onApplicationEvent(EnvironmentChangeEvent event) {
 		rebind();
