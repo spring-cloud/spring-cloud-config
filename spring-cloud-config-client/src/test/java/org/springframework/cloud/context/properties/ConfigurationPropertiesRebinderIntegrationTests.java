@@ -17,6 +17,8 @@ package org.springframework.cloud.context.properties;
 
 import static org.junit.Assert.assertEquals;
 
+import javax.annotation.PostConstruct;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,17 +57,20 @@ public class ConfigurationPropertiesRebinderIntegrationTests {
 		EnvironmentTestUtils.addEnvironment(environment, "message:Foo");
 		// ...but don't refresh, so the bean stays the same:
 		assertEquals("Hello scope!", properties.getMessage());
+		assertEquals(1, properties.getCount());
 	}
 
 	@Test
 	@DirtiesContext
 	public void testRefresh() throws Exception {
+		assertEquals(1, properties.getCount());
 		assertEquals("Hello scope!", properties.getMessage());
 		// Change the dynamic property source...
 		EnvironmentTestUtils.addEnvironment(environment, "message:Foo");
 		// ...and then refresh, so the bean is re-initialized:
 		rebinder.rebind();
 		assertEquals("Foo", properties.getMessage());
+		assertEquals(2, properties.getCount());
 	}
 	
 	@Configuration
@@ -84,6 +89,10 @@ public class ConfigurationPropertiesRebinderIntegrationTests {
 	protected static class TestProperties {
 		private String message;
 		private int delay;
+		private int count = 0;
+		public int getCount() {
+			return count;
+		}
 		public String getMessage() {
 			return message;
 		}
@@ -95,6 +104,10 @@ public class ConfigurationPropertiesRebinderIntegrationTests {
 		}
 		public void setDelay(int delay) {
 			this.delay = delay;
+		}
+		@PostConstruct
+		public void init() {
+			this.count ++;
 		}
 	}
 	
