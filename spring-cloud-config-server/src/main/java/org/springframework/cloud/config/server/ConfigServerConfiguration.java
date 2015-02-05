@@ -15,10 +15,8 @@
  */
 package org.springframework.cloud.config.server;
 
-import org.eclipse.jgit.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,20 +49,7 @@ public class ConfigServerConfiguration {
 		private ConfigurableEnvironment environment;		
 		
 		@Bean
-		public JGitEnvironmentRepository EnvironmentRepository() {			
-			return new JGitEnvironmentRepository(environment);
-		}
-	}
-
-	@Configuration
-	@Profile("!native")
-	protected static class MultipleGitRepositoriesConfiguration {
-		
-		@Autowired
-		private ConfigurableEnvironment environment;		
-		
-		@Bean
-		public EnvironmentRepository MultipleJGitEnvironmentRepository() {			
+		public MultipleJGitEnvironmentRepository EnvironmentRepository() {			
 			return new MultipleJGitEnvironmentRepository(environment);
 		}
 	}

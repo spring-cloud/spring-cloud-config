@@ -34,7 +34,6 @@ public class ConfigServerMvcConfiguration {
 	private TextEncryptor encryptor;
 
 	@Autowired
-	@Qualifier("MultipleJGitEnvironmentRepository")
 	private EnvironmentRepository repository;
 	
 	@Autowired

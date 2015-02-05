@@ -44,8 +44,9 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 	private String uri;
 	private String username;
 	private String password;
+	private String[] searchPaths = new String[0];
 
-	private List<Map<String, String>> repos = new ArrayList<Map<String, String>>();
+	private List<Map<String, Object>> repos = new ArrayList<Map<String, Object>>();
 	private Map<String, JGitEnvironmentRepository> repoCache = new LinkedHashMap<String, JGitEnvironmentRepository>();
 	private JGitEnvironmentRepository defaultRepo;
 
@@ -57,7 +58,7 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 				"You need to configure a uri for the default git repository");
 		
 		defaultRepo = createJGitEnvironmentRepository(this.uri, this.username,
-				this.password);		
+				this.password, this.searchPaths);		
 	}
 
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment) {
@@ -75,11 +76,11 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 		return uri;
 	}
 
-	public void setRepos(List<Map<String, String>> repos) {
+	public void setRepos(List<Map<String, Object>> repos) {
 		this.repos.addAll(repos);
 	}
 
-	public List<Map<String, String>> getRepos() {
+	public List<Map<String, Object>> getRepos() {
 		return this.repos;
 	}
 
@@ -87,18 +88,18 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 	public Environment findOne(String application, String profile, String label) {
 		JGitEnvironmentRepository repo = this.defaultRepo;
 
-		for (Map<String, String> repoKeyValue : repos) {
-			String repoName = repoKeyValue.get(REPO_NAME);
-			String repoUri = repoKeyValue.get(REPO_URI);
-			String repoUsername = repoKeyValue.get(REPO_USERNAME);
-			String repoPassword = repoKeyValue.get(REPO_PASSWORD);
+		for (Map<String, Object> repoKeyValue : repos) {
+			String repoName = (String)repoKeyValue.get(REPO_NAME);
+			String repoUri = (String)repoKeyValue.get(REPO_URI);
+			String repoUsername = (String)repoKeyValue.get(REPO_USERNAME);
+			String repoPassword = (String)repoKeyValue.get(REPO_PASSWORD);
 
 			if (PatternMatchUtils.simpleMatch(repoName, application)) {
 				repo = repoCache.get(repoName);
 
 				if (repo == null) {
 					repo = createJGitEnvironmentRepository(repoUri, repoUsername,
-							repoPassword);
+							repoPassword, null);
 
 					synchronized (repoCache) {
 						repoCache.put(repoName, repo);
@@ -113,11 +114,12 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 	}
 
 	private JGitEnvironmentRepository createJGitEnvironmentRepository(String uri,
-			String username, String password) {
+			String username, String password, String[] searchPaths) {
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment);
 		repo.setUri(uri);
 		repo.setUsername(username);
 		repo.setPassword(password);
+		repo.setSearchPaths(searchPaths == null ? new String[0] : searchPaths);
 
 		return repo;
 	}
