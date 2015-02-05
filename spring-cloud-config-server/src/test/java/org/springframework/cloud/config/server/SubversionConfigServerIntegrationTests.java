@@ -17,7 +17,8 @@ import static org.junit.Assert.assertFalse;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = ConfigServerApplication.class)
-@IntegrationTest({"server.port:0", "spring.config.name:configserver", "spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo"})
+@IntegrationTest({ "server.port:0", "spring.config.name:configserver",
+		"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo" })
 @WebAppConfiguration
 @ActiveProfiles("subversion")
 public class SubversionConfigServerIntegrationTests {

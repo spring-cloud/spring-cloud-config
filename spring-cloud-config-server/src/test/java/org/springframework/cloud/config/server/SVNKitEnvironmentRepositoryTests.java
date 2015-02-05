@@ -35,14 +35,15 @@ import static org.junit.Assert.assertEquals;
 public class SVNKitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
-	private SVNKitEnvironmentRepository repository = new SVNKitEnvironmentRepository(environment);
+	private SVNKitEnvironmentRepository repository = new SVNKitEnvironmentRepository(
+			environment);
 
 	private File basedir = new File("target/config");
 
 	@Before
 	public void init() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
-				"target/repos/svn-config-repo");
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
+				"src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
 		repository.setUri(uri);
 		if (basedir.exists()) {
 			FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
@@ -53,8 +54,10 @@ public class SVNKitEnvironmentRepositoryTests {
 	public void vanilla() {
 		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertEquals(2, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName().contains("bar.properties"));
-		assertTrue(environment.getPropertySources().get(1).getName().contains("application.yml"));
+		assertTrue(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties"));
+		assertTrue(environment.getPropertySources().get(1).getName()
+				.contains("application.yml"));
 	}
 
 	@Test
@@ -62,15 +65,19 @@ public class SVNKitEnvironmentRepositoryTests {
 		repository.setBasedir(basedir);
 		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertEquals(2, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName().contains("bar.properties"));
-		assertTrue(environment.getPropertySources().get(1).getName().contains("application.yml"));
+		assertTrue(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties"));
+		assertTrue(environment.getPropertySources().get(1).getName()
+				.contains("application.yml"));
 	}
 
 	@Test
 	public void branch() {
-		Environment environment = repository.findOne("bar", "staging", "branches/demobranch");
+		Environment environment = repository.findOne("bar", "staging",
+				"branches/demobranch");
 		assertEquals(1, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName().contains("bar.properties"));
+		assertTrue(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties"));
 	}
 
 	@Test
@@ -78,8 +85,10 @@ public class SVNKitEnvironmentRepositoryTests {
 		repository.findOne("bar", "staging", "trunk");
 		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertEquals(2, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName().contains("bar.properties"));
-		assertTrue(environment.getPropertySources().get(1).getName().contains("application.yml"));
+		assertTrue(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties"));
+		assertTrue(environment.getPropertySources().get(1).getName()
+				.contains("application.yml"));
 	}
 
 }

@@ -59,13 +59,15 @@ public abstract class AbstractSCMEnvironmentRepository implements EnvironmentRep
 				public void run() {
 					try {
 						FileUtils.delete(basedir, FileUtils.RECURSIVE);
-					} catch (IOException e) {
+					}
+					catch (IOException e) {
 						logger.warn("Failed to delete temporary directory on exit: " + e);
 					}
 				}
 			});
 			return basedir;
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new IllegalStateException("Cannot create temp dir", e);
 		}
 	}
@@ -117,7 +119,8 @@ public abstract class AbstractSCMEnvironmentRepository implements EnvironmentRep
 		if (uri.startsWith("file:")) {
 			try {
 				return new UrlResource(StringUtils.cleanPath(uri)).getFile();
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				throw new IllegalStateException("Cannot convert uri to file: " + uri);
 			}
 		}
@@ -139,7 +142,8 @@ public abstract class AbstractSCMEnvironmentRepository implements EnvironmentRep
 	protected Environment clean(Environment value) {
 		Environment result = new Environment(value.getName(), value.getLabel());
 		for (PropertySource source : value.getPropertySources()) {
-			String name = source.getName().replace(getWorkingDirectory().toURI().toString(), "");
+			String name = source.getName().replace(
+					getWorkingDirectory().toURI().toString(), "");
 			if (name.contains(("classpath:/"))) {
 				continue;
 			}

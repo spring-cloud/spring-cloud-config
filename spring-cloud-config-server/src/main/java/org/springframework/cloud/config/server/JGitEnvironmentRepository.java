@@ -71,16 +71,20 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 		try {
 			git = createGitClient();
 			return loadEnvironment(git, application, profile, label);
-		} catch (GitAPIException e) {
+		}
+		catch (GitAPIException e) {
 			throw new IllegalStateException("Cannot clone repository", e);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new IllegalStateException("Cannot load environment", e);
-		} finally {
+		}
+		finally {
 			try {
 				if (git != null) {
 					git.getRepository().close();
 				}
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				logger.warn("Could not close git repository", e);
 			}
 		}
@@ -91,8 +95,8 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 		Assert.state(uri != null, "You need to configure a uri for the git repository");
 	}
 
-	private synchronized Environment loadEnvironment(Git git, String application, String profile,
-			String label) throws GitAPIException {
+	private synchronized Environment loadEnvironment(Git git, String application,
+			String profile, String label) throws GitAPIException {
 		SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
 		git.getRepository().getConfig().setString("branch", label, "merge", label);
 		Ref ref = checkout(git, label);
@@ -107,7 +111,8 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 		CheckoutCommand checkout = git.checkout();
 		if (shouldTrack(git, label)) {
 			trackBranch(git, checkout, label);
-		} else {
+		}
+		else {
 			// works for tags and local branches
 			checkout.setName(label);
 		}
@@ -115,7 +120,8 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 	}
 
 	private boolean shouldPull(Git git, Ref ref) throws GitAPIException {
-		return git.status().call().isClean() && ref != null
+		return git.status().call().isClean()
+				&& ref != null
 				&& git.getRepository().getConfig().getString("remote", "origin", "url") != null;
 	}
 
@@ -133,16 +139,23 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 				setCredentialsProvider(pull);
 			}
 			pull.call();
-		} catch (Exception e) {
-			logger.warn("Could not pull remote for " + label + " (current ref=" + ref + "), remote: "
-					+ git.getRepository().getConfig().getString("remote", "origin", "url"));
+		}
+		catch (Exception e) {
+			logger.warn("Could not pull remote for "
+					+ label
+					+ " (current ref="
+					+ ref
+					+ "), remote: "
+					+ git.getRepository().getConfig()
+							.getString("remote", "origin", "url"));
 		}
 	}
 
 	private Git createGitClient() throws IOException, GitAPIException {
 		if (new File(basedir, ".git").exists()) {
 			return openGitRepository();
-		} else {
+		}
+		else {
 			return copyRepository();
 		}
 	}
@@ -152,7 +165,8 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 		Assert.state(basedir.mkdirs(), "Could not create basedir: " + basedir);
 		if (uri.startsWith("file:")) {
 			return copyFromLocalRepository();
-		} else {
+		}
+		else {
 			return cloneToBasedir();
 		}
 	}
@@ -189,7 +203,8 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 				setCredentialsProvider(fetch);
 			}
 			fetch.call();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			logger.warn("Remote repository not available");
 		}
 	}
@@ -198,7 +213,8 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 		if (basedir.exists()) {
 			try {
 				FileUtils.delete(basedir, FileUtils.RECURSIVE);
-			} catch (IOException e) {
+			}
+			catch (IOException e) {
 				throw new IllegalStateException("Failed to initialize base directory", e);
 			}
 		}
@@ -217,11 +233,13 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 	}
 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
-		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
+		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username,
+				password));
 	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
-		checkout.setCreateBranch(true).setName(label).setUpstreamMode(SetupUpstreamMode.TRACK)
+		checkout.setCreateBranch(true).setName(label)
+				.setUpstreamMode(SetupUpstreamMode.TRACK)
 				.setStartPoint("origin/" + label);
 	}
 
@@ -233,7 +251,8 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 		return containsBranch(git, label, null);
 	}
 
-	private boolean containsBranch(Git git, String label, ListMode listMode) throws GitAPIException {
+	private boolean containsBranch(Git git, String label, ListMode listMode)
+			throws GitAPIException {
 		ListBranchCommand command = git.branchList();
 		if (listMode != null) {
 			command.setListMode(listMode);
