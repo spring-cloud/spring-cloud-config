@@ -11,7 +11,7 @@ spring:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
           repos:
-            - name: iceycake-*
+            - patterns: iceycake-*,cake-*
               uri: https://github.com/iceycake/config-repo
 
 server:

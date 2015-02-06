@@ -36,7 +36,7 @@ import org.springframework.util.PatternMatchUtils;
 public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 		InitializingBean {
 
-	private static final String REPO_NAME = "name";
+	private static final String REPO_PATTERNS = "patterns";
 	private static final String REPO_URI = "uri";
 	private static final String REPO_USERNAME = "username";
 	private static final String REPO_PASSWORD = "password";
@@ -94,25 +94,26 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 		JGitEnvironmentRepository repo = this.defaultRepo;
 
 		for (Map<String, Object> repoKeyValue : repos) {
-			String repoName = (String)repoKeyValue.get(REPO_NAME);
+			String repoPatternsList = (String)repoKeyValue.get(REPO_PATTERNS);
+			String[] repoPatterns = repoPatternsList.split(",");
 			String repoUri = (String)repoKeyValue.get(REPO_URI);
 			String repoUsername = (String)repoKeyValue.get(REPO_USERNAME);
 			String repoPassword = (String)repoKeyValue.get(REPO_PASSWORD);
 			String[] repoSearchPaths = new String[0];
-			LinkedHashMap<String, String> o = (LinkedHashMap<String, String>)repoKeyValue.get(REPO_SEARCHPATHS);
-			if (o != null) {
-				repoSearchPaths = o.values().toArray(new String[o.values().size()]);
+			LinkedHashMap<String, String> searchPathsList = (LinkedHashMap<String, String>)repoKeyValue.get(REPO_SEARCHPATHS);
+			if (searchPathsList != null) {
+				repoSearchPaths = searchPathsList.values().toArray(new String[searchPathsList.values().size()]);
 			}
 
-			if (PatternMatchUtils.simpleMatch(repoName, application)) {
-				repo = repoCache.get(repoName);
+			if (PatternMatchUtils.simpleMatch(repoPatterns, application)) {
+				repo = repoCache.get(repoPatternsList);
 
 				if (repo == null) {
 					repo = createJGitEnvironmentRepository(repoUri, repoUsername,
 							repoPassword, repoSearchPaths);
 
 					synchronized (repoCache) {
-						repoCache.put(repoName, repo);
+						repoCache.put(repoPatternsList, repo);
 					}
 				}
 
