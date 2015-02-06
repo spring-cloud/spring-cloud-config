@@ -35,7 +35,7 @@ import org.springframework.util.ClassUtils;
 /**
  * An endpoint that restarts the application context. Install as a bean and also register
  * a {@link RestartListener} with the {@link SpringApplication} that starts the context.
- * Those two components communicate via an {@link ApplicationEvent} and set up teh state
+ * Those two components communicate via an {@link ApplicationEvent} and set up the state
  * needed to restart the context.
  * 
  * @author Dave Syer

@@ -23,6 +23,7 @@ import java.util.Set;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.jmx.export.annotation.ManagedOperation;
@@ -30,6 +31,10 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 
 /**
+ * Entry point for making local (but volatile) changes to the {@link Environment} of a
+ * running application. Allows properties to be added and values changed, simply by adding
+ * them to a high priority property source in the existing Environment.
+ * 
  * @author Dave Syer
  * 
  */
@@ -48,8 +53,8 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 		MutablePropertySources sources = environment.getPropertySources();
 		if (sources.contains(MANAGER_PROPERTY_SOURCE)) {
 			@SuppressWarnings("unchecked")
-			Map<String, Object> map = (Map<String, Object>) sources.get(MANAGER_PROPERTY_SOURCE)
-							.getSource();
+			Map<String, Object> map = (Map<String, Object>) sources.get(
+					MANAGER_PROPERTY_SOURCE).getSource();
 			this.map = map;
 		}
 	}
@@ -60,7 +65,7 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 	}
 
 	@ManagedOperation
-	public Map<String,Object> reset() {
+	public Map<String, Object> reset() {
 		Map<String, Object> result = new LinkedHashMap<String, Object>(map);
 		if (!map.isEmpty()) {
 			Set<String> keys = map.keySet();
@@ -75,8 +80,7 @@ public class EnvironmentManager implements ApplicationEventPublisherAware {
 
 		if (!environment.getPropertySources().contains(MANAGER_PROPERTY_SOURCE)) {
 			synchronized (map) {
-				if (!environment.getPropertySources().contains(
-						MANAGER_PROPERTY_SOURCE)) {
+				if (!environment.getPropertySources().contains(MANAGER_PROPERTY_SOURCE)) {
 					MapPropertySource source = new MapPropertySource(
 							MANAGER_PROPERTY_SOURCE, map);
 					environment.getPropertySources().addFirst(source);

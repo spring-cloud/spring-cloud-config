@@ -22,10 +22,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * @author Dave Syer
- *
- */
-/**
+ * Simple plain text serializable encapsulation of a named source of key-value pairs.
+ * Basically a DTO for {@link PropertySource}, but also applicable outside the domain of a
+ * Spring application.
+ * 
  * @author Dave Syer
  *
  */

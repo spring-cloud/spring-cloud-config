@@ -25,17 +25,27 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.env.Environment;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 
 /**
+ * Listens for {@link EnvironmentChangeEvent} and rebinds beans that were bound to the
+ * {@link Environment} using {@link ConfigurationProperties
+ * <code>@ConfigurationProperties</code>}. When these beans are re-bound and
+ * re-initialized the changes are available immediately to any component that is using the
+ * <code>@ConfigurationProperties</code> bean.
+ * 
+ * @see RefreshScope for a deeper and optionally more focused refresh of bean components
+ * 
  * @author Dave Syer
  *
  */

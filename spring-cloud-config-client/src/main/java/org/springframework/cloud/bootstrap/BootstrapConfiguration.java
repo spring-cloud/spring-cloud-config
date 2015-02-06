@@ -18,7 +18,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
+/**
+ * A marker interface used as a key in <code>META-INF/spring.factories</code>. Entries in
+ * the factories file are used to create the bootstrap application context.
+ * 
+ * @author Dave Syer
+ *
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

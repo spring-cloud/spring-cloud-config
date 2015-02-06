@@ -23,6 +23,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
+ * Simple plain text serializable encapsulation of a list of property sources. Basically a
+ * DTO for {@link org.springframework.core.env.Environment}, but also applicable outside
+ * the domain of a Spring application.
+ * 
  * @author Dave Syer
  *
  */
