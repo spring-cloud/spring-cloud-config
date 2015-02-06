@@ -66,6 +66,10 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 		this.environment = environment;
 	}
 
+	public void setSearchPaths(String... searchPaths) {
+		this.searchPaths = searchPaths;
+	}
+	
 	public void setUri(String uri) {
 		while (uri.endsWith("/")) {
 			uri = uri.substring(0, uri.length() - 1);
@@ -94,8 +98,11 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 			String repoUri = (String)repoKeyValue.get(REPO_URI);
 			String repoUsername = (String)repoKeyValue.get(REPO_USERNAME);
 			String repoPassword = (String)repoKeyValue.get(REPO_PASSWORD);
+			String[] repoSearchPaths = new String[0];
 			LinkedHashMap<String, String> o = (LinkedHashMap<String, String>)repoKeyValue.get(REPO_SEARCHPATHS);
-			String[] repoSearchPaths = o.values().toArray(new String[o.values().size()]);
+			if (o != null) {
+				repoSearchPaths = o.values().toArray(new String[o.values().size()]);
+			}
 
 			if (PatternMatchUtils.simpleMatch(repoName, application)) {
 				repo = repoCache.get(repoName);
