@@ -57,9 +57,6 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 	public void afterPropertiesSet() throws Exception {
 		Assert.state(uri != null,
 				"You need to configure a uri for the default git repository");
-		
-		defaultRepo = createJGitEnvironmentRepository(this.uri, this.username,
-				this.password, this.searchPaths);		
 	}
 
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment) {
@@ -91,12 +88,24 @@ public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
+		if (this.defaultRepo == null) {		
+			defaultRepo = createJGitEnvironmentRepository(this.uri, this.username,
+					this.password, this.searchPaths);					
+		}
+		
 		JGitEnvironmentRepository repo = this.defaultRepo;
 
 		for (Map<String, Object> repoKeyValue : repos) {
 			String repoPatternsList = (String)repoKeyValue.get(REPO_PATTERNS);
+			if (repoPatternsList == null || repoPatternsList.isEmpty()) {
+				continue;
+			}
 			String[] repoPatterns = repoPatternsList.split(",");
 			String repoUri = (String)repoKeyValue.get(REPO_URI);
+			
+			Assert.state(repoUri != null,
+					"You need to configure a uri for the '" + repoPatternsList + "' git repository");
+			
 			String repoUsername = (String)repoKeyValue.get(REPO_USERNAME);
 			String repoPassword = (String)repoKeyValue.get(REPO_PASSWORD);
 			String[] repoSearchPaths = new String[0];
