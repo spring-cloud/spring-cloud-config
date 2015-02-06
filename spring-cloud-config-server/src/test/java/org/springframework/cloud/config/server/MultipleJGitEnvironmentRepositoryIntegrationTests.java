@@ -19,11 +19,12 @@ package org.springframework.cloud.config.server;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -34,8 +35,6 @@ import org.springframework.cloud.config.Environment;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.util.ResourceUtils;
-import org.springframework.util.StreamUtils;
 
 /**
  * @author Andy Chan (iceycake)
@@ -70,6 +69,30 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
+		assertEquals(2, environment.getPropertySources().size());
+	}
+
+	@Test
+	public void mappingRepo() throws IOException {
+		String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		String test1RepoUri = ConfigServerTestUtils.prepareLocalRepo("test1-config-repo");
+
+		Map<String, Object> repoMapping = new LinkedHashMap<String, Object>();
+		repoMapping.put("patterns", "*test1*");
+		repoMapping.put("uri", test1RepoUri);
+		
+		List<Map<String, Object>> repoMappings = new ArrayList<Map<String, Object>>();
+		repoMappings.add(repoMapping);
+		
+		Map<String, Object> reposProperties = new LinkedHashMap<String, Object>();
+		reposProperties.put("spring.cloud.config.server.git.repos", repoMappings);
+		
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri)
+				.properties(reposProperties).run();
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		repository.findOne("test1-svc", "staging", "master");
+		Environment environment = repository.findOne("test1-svc", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
 	}
 
