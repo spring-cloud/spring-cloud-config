@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
