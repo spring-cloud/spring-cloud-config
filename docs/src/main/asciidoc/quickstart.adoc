@@ -64,7 +64,7 @@ spring:
 In the above example, if {application} does not match to any of the patterns
 under "spring.cloud.config.server.git.repos", it will use the default uri
 defined under "spring.cloud.config.server.git.uri".  Acceptable pattern
-format is "*xxx", "xxx*", or "*xxx". 
+format is "*xxx", "xxx*", or "*xxx*". 
 
 === Client Side Usage
 
