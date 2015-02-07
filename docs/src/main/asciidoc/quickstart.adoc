@@ -55,7 +55,7 @@ spring:
 	      repos:
 	        - patterns: *pattern
 	          uri: https://github.com/pattern1/config-repo
-	        - patterns: pattern*
+	        - patterns: pattern*,*pattern1*
 	          uri: https://github.com/pattern2/config-repo
 	        - patterns: local*
 	          uri: file:/home/configsvc/config-repo
