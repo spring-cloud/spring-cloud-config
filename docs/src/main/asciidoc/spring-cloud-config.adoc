@@ -85,6 +85,30 @@ working copy as a cache.
 This repository implementation maps the `{label}` parameter of the
 HTTP resource to a git label (commit id, branch name or tag).
 
+Spring Cloud Config Server also supports multiple git repositories:
+
+----
+spring:
+  cloud:
+    config:
+	  server:
+	    git:
+	      uri: https://github.com/spring-cloud-samples/config-repo
+	      repos:
+	        - patterns: *pattern
+	          uri: https://github.com/pattern1/config-repo
+	        - patterns: pattern*
+	          uri: https://github.com/pattern2/config-repo
+	        - patterns: local*
+	          uri: file:/home/configsvc/config-repo
+----
+
+In the above example, if {application} does not match to any of the patterns
+under "spring.cloud.config.server.git.repos", it will use the default uri
+defined under "spring.cloud.config.server.git.uri".  Acceptable pattern
+format is "*xxx", "xxx*", or "*xxx". 
+
+
 ==== File System Backend
 
 There is also a "native" profile in the Config Server that doesn't use
