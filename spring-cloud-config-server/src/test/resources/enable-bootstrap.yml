@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:./target/repos/config-repo
+        bootstrap: true
