@@ -20,9 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jgit.util.FileUtils;
@@ -78,18 +76,27 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		String test1RepoUri = ConfigServerTestUtils.prepareLocalRepo("test1-config-repo");
 
 		Map<String, Object> repoMapping = new LinkedHashMap<String, Object>();
-		repoMapping.put("patterns", "*test1*");
-		repoMapping.put("uri", test1RepoUri);
-		
-		List<Map<String, Object>> repoMappings = new ArrayList<Map<String, Object>>();
-		repoMappings.add(repoMapping);
-		
-		Map<String, Object> reposProperties = new LinkedHashMap<String, Object>();
-		reposProperties.put("spring.cloud.config.server.git.repos", repoMappings);
-		
+		repoMapping.put("spring.cloud.config.server.git.repos[test1].pattern", "*test1*");
+		repoMapping.put("spring.cloud.config.server.git.repos[test1].uri", test1RepoUri);		
 		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri)
-				.properties(reposProperties).run();
+				.properties(repoMapping).run();
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		repository.findOne("test1-svc", "staging", "master");
+		Environment environment = repository.findOne("test1-svc", "staging", "master");
+		assertEquals(2, environment.getPropertySources().size());
+	}
+
+	@Test
+	public void mappingRepoWithJustUri() throws IOException {
+		String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		String test1RepoUri = ConfigServerTestUtils.prepareLocalRepo("test1-config-repo");
+
+		Map<String, Object> repoMapping = new LinkedHashMap<String, Object>();
+		repoMapping.put("spring.cloud.config.server.git.repos.test1-svc", test1RepoUri);		
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri)
+				.properties(repoMapping).run();
 		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
 		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");

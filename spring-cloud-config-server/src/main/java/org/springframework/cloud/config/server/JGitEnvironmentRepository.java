@@ -43,7 +43,6 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.Environment;
 import org.springframework.cloud.config.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -54,10 +53,11 @@ import org.springframework.util.StringUtils;
 import com.jcraft.jsch.Session;
 
 /**
+ * An {@link EnvironmentRepository} backed by a single git repository.
+ * 
  * @author Dave Syer
  *
  */
-@ConfigurationProperties("spring.cloud.config.server.git")
 public class JGitEnvironmentRepository implements EnvironmentRepository, InitializingBean {
 
 	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
@@ -145,6 +145,14 @@ public class JGitEnvironmentRepository implements EnvironmentRepository, Initial
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	protected ConfigurableEnvironment getEnvironment() {
+		return environment;
+	}
+
+	protected void setEnvironment(ConfigurableEnvironment environment) {
+		this.environment = environment;
 	}
 
 	@Override

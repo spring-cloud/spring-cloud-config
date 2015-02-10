@@ -16,132 +16,120 @@
 
 package org.springframework.cloud.config.server;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.util.Assert;
 import org.springframework.util.PatternMatchUtils;
+import org.springframework.util.StringUtils;
 
 /**
+ * {@link EnvironmentRepository} that based on one or more git repositories. Can be
+ * configured just like a single {@link JGitEnvironmentRepository}, for the "default"
+ * properties, and then additional repositories can be registered by name. The simplest
+ * form of the registration is just a map from name to uri (plus credentials if needed),
+ * where each app has its own git repository. As well as a name you can provide a pattern
+ * that matches on the application name (or even a list of patterns). Each sub-repository
+ * additionally can have its own search paths (subdirectories inside the top level of the
+ * repository).
+ * 
  * @author Andy Chan (iceycake)
+ * @author Dave Syer
  *
  */
 @ConfigurationProperties("spring.cloud.config.server.git")
-public class MultipleJGitEnvironmentRepository implements EnvironmentRepository,
-		InitializingBean {
+public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository {
 
-	private static final String REPO_PATTERNS = "patterns";
-	private static final String REPO_URI = "uri";
-	private static final String REPO_USERNAME = "username";
-	private static final String REPO_PASSWORD = "password";
-	private static final String REPO_SEARCHPATHS = "searchPaths";
+	private Map<String, PatternMatchingJGitEnvironmentRepository> repos = new LinkedHashMap<String, PatternMatchingJGitEnvironmentRepository>();
 
-	private String uri;
-	private String username;
-	private String password;
-	private String[] searchPaths = new String[0];
-
-	private List<Map<String, Object>> repos = new ArrayList<Map<String, Object>>();
-	private Map<String, JGitEnvironmentRepository> repoCache = new LinkedHashMap<String, JGitEnvironmentRepository>();
-	private JGitEnvironmentRepository defaultRepo;
-
-	private ConfigurableEnvironment environment;
+	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment) {
+		super(environment);
+	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		Assert.state(uri != null,
-				"You need to configure a uri for the default git repository");
-	}
-
-	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment) {
-		this.environment = environment;
-	}
-
-	public void setSearchPaths(String... searchPaths) {
-		this.searchPaths = searchPaths;
-	}
-	
-	public void setUri(String uri) {
-		while (uri.endsWith("/")) {
-			uri = uri.substring(0, uri.length() - 1);
+		super.afterPropertiesSet();
+		for (String name : repos.keySet()) {
+			PatternMatchingJGitEnvironmentRepository repo = repos.get(name);
+			repo.setEnvironment(getEnvironment());
+			if (!StringUtils.hasText(repo.getName())) {
+				repo.setName(name);
+			}
+			if (repo.getPattern() == null || repo.getPattern().length == 0) {
+				repo.setPattern(new String[] { name });
+			}
+			repo.afterPropertiesSet();
 		}
-		this.uri = uri;
 	}
 
-	public String getUri() {
-		return uri;
+	public void setRepos(Map<String, PatternMatchingJGitEnvironmentRepository> repos) {
+		this.repos.putAll(repos);
 	}
 
-	public void setRepos(List<Map<String, Object>> repos) {
-		this.repos.addAll(repos);
-	}
-
-	public List<Map<String, Object>> getRepos() {
+	public Map<String, PatternMatchingJGitEnvironmentRepository> getRepos() {
 		return this.repos;
 	}
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-		if (this.defaultRepo == null) {		
-			defaultRepo = createJGitEnvironmentRepository(this.uri, this.username,
-					this.password, this.searchPaths);					
+		for (PatternMatchingJGitEnvironmentRepository repository : repos.values()) {
+			Environment source = repository.findOne(application, profile, label);
+			if (source != null) {
+				return source;
+			}
+		}
+
+		return super.findOne(application, profile, label);
+	}
+
+	public static class PatternMatchingJGitEnvironmentRepository extends
+			JGitEnvironmentRepository {
+
+		private String[] pattern;
+		private String name;
+
+		public PatternMatchingJGitEnvironmentRepository() {
+			super(null);
+		}
+
+		public PatternMatchingJGitEnvironmentRepository(String uri) {
+			this();
+			setUri(uri);
 		}
 		
-		JGitEnvironmentRepository repo = this.defaultRepo;
+		@Override
+		public Environment findOne(String application, String profile, String label) {
 
-		for (Map<String, Object> repoKeyValue : repos) {
-			String repoPatternsList = (String)repoKeyValue.get(REPO_PATTERNS);
-			if (repoPatternsList == null || repoPatternsList.isEmpty()) {
-				continue;
-			}
-			String[] repoPatterns = repoPatternsList.split(",");
-			String repoUri = (String)repoKeyValue.get(REPO_URI);
-			
-			Assert.state(repoUri != null,
-					"You need to configure a uri for the '" + repoPatternsList + "' git repository");
-			
-			String repoUsername = (String)repoKeyValue.get(REPO_USERNAME);
-			String repoPassword = (String)repoKeyValue.get(REPO_PASSWORD);
-			String[] repoSearchPaths = new String[0];
-			LinkedHashMap<String, String> searchPathsList = (LinkedHashMap<String, String>)repoKeyValue.get(REPO_SEARCHPATHS);
-			if (searchPathsList != null) {
-				repoSearchPaths = searchPathsList.values().toArray(new String[searchPathsList.values().size()]);
+			if (pattern == null || pattern.length == 0) {
+				return null;
 			}
 
-			if (PatternMatchUtils.simpleMatch(repoPatterns, application)) {
-				repo = repoCache.get(repoPatternsList);
-
-				if (repo == null) {
-					repo = createJGitEnvironmentRepository(repoUri, repoUsername,
-							repoPassword, repoSearchPaths);
-
-					synchronized (repoCache) {
-						repoCache.put(repoPatternsList, repo);
-					}
-				}
-
-				break;
+			if (PatternMatchUtils.simpleMatch(pattern, application)) {
+				return super.findOne(application, profile, label);
 			}
+
+			return null;
+
 		}
 
-		return repo.findOne(application, profile, label);
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String[] getPattern() {
+			return pattern;
+		}
+
+		public void setPattern(String[] pattern) {
+			this.pattern = pattern;
+		}
+
 	}
 
-	private JGitEnvironmentRepository createJGitEnvironmentRepository(String uri,
-			String username, String password, String[] searchPaths) {
-		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment);
-		repo.setUri(uri);
-		repo.setUsername(username);
-		repo.setPassword(password);
-		repo.setSearchPaths(searchPaths);
-
-		return repo;
-	}
 }

@@ -95,18 +95,21 @@ spring:
 	    git:
 	      uri: https://github.com/spring-cloud-samples/config-repo
 	      repos:
-	        - patterns: *pattern
-	          uri: https://github.com/pattern1/config-repo
-            - patterns: pattern*,*pattern1*
+	        simple: https://github.com/pattern1/config-repo
+            special:
+              pattern: pattern*,*pattern1*
 	          uri: https://github.com/pattern2/config-repo
-	        - patterns: local*
+	        local:
+              pattern: local*
 	          uri: file:/home/configsvc/config-repo
 ----
 
-In the above example, if {application} does not match to any of the patterns
-under "spring.cloud.config.server.git.repos", it will use the default uri
-defined under "spring.cloud.config.server.git.uri".  Acceptable pattern
-format is "*xxx", "xxx*", or "*xxx*". 
+In the above example, if {application} does not match to any of the
+patterns, it will use the default uri defined under
+"spring.cloud.config.server.git.uri". For the "simple" repository, the
+pattern is "simple" (i.e. it only matches one application).  The
+pattern format is a comma-separated list of application names with
+wildcards.
 
 
 ==== File System Backend

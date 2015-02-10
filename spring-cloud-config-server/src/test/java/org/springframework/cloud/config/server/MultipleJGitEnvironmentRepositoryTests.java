@@ -18,14 +18,13 @@ package org.springframework.cloud.config.server;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.config.Environment;
+import org.springframework.cloud.config.server.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
 import org.springframework.core.env.StandardEnvironment;
 
 /**
@@ -43,24 +42,25 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 				
 		repository.setUri(defaultUri);
-		repository.setRepos(createRepositoryMappings());
+		repository.setRepos(createRepositories());
 	}
 	
-	private List<Map<String, Object>> createRepositoryMappings() throws Exception {
+	private Map<String, PatternMatchingJGitEnvironmentRepository> createRepositories() throws Exception {
 		String test1Uri = ConfigServerTestUtils.prepareLocalRepo("test1-config-repo");
 
-		List<Map<String, Object>> mappings = new ArrayList<Map<String, Object>>();
-		mappings.add(createRepositoryMapping("*test1*", test1Uri));
+		Map<String, PatternMatchingJGitEnvironmentRepository> repos = new HashMap<String, PatternMatchingJGitEnvironmentRepository>();
+		repos.put("test1", createRepository("test1", "*test1*", test1Uri));
 		
-		return mappings;
+		return repos;
 	}
 	
-	private Map<String, Object> createRepositoryMapping(String pattern, String uri) {
-		Map<String, Object> repoMapping = new LinkedHashMap<String, Object>();
-		repoMapping.put("patterns", pattern);
-		repoMapping.put("uri", uri);
-		
-		return repoMapping;
+	private PatternMatchingJGitEnvironmentRepository createRepository(String name, String pattern, String uri) {
+		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository();
+		repo.setEnvironment(environment);
+		repo.setName(name);
+		repo.setPattern(new String[] {pattern});
+		repo.setUri(uri);
+		return repo;
 	}
 
 	@Test
@@ -112,19 +112,19 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void mappingRepo() {
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(getUri("*test1*") + "test1-svc.properties", environment
+		assertEquals(getUri("*test1*") + "/test1-svc.properties", environment
 				.getPropertySources().get(0).getName());
 	}	
 
 	private String getUri(String pattern) {
 		String uri = null;
 		
-		List<Map<String, Object>> repoMappings  = repository.getRepos();
+		Map<String, PatternMatchingJGitEnvironmentRepository> repoMappings  = repository.getRepos();
 		
-		for (Map<String, Object> mapping : repoMappings) {
-			String mappingPattern = (String)mapping.get("patterns");
-			if (mappingPattern != null) {
-				uri = (String)mapping.get("uri");
+		for (PatternMatchingJGitEnvironmentRepository repo : repoMappings.values()) {
+			String[] mappingPattern = repo.getPattern();
+			if (mappingPattern != null && mappingPattern.length!=0) {
+				uri = repo.getUri();
 				break;
 			}
 		}
