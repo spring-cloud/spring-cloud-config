@@ -781,6 +781,23 @@ pattern is "simple" (i.e. it only matches one application).  The
 pattern format is a comma-separated list of application names with
 wildcards.</p>
 </div>
+<div class="paragraph">
+<p>To use HTTP basic authentication on the remote repository add the
+"username" and "password" properties separately (not in the URL),
+e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+	  server:
+	    git:
+	      uri: https://github.com/spring-cloud-samples/config-repo
+          username: trolley
+          password: strongpassword</pre>
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_file_system_backend">File System Backend</h4>
@@ -1467,7 +1484,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-12 10:24:54 UTC
+Last updated 2015-02-12 10:33:17 UTC
 </div>
 </div>
 </body>
