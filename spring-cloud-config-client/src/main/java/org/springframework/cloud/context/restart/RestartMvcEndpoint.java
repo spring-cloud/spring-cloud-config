@@ -27,8 +27,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-
 /**
+ * MVC endpoint to allow an application to be restarted on a POST (to /restart by
+ * default).
+ * 
  * @author Dave Syer
  *
  */
@@ -54,17 +56,17 @@ public class RestartMvcEndpoint extends EndpointMvcAdapter {
 		});
 		thread.setDaemon(false);
 		thread.start();
-		return Collections.singletonMap(
-				"message", "Restarting");
+		return Collections.singletonMap("message", "Restarting");
 	}
-	
+
 	public MvcEndpoint getPauseEndpoint() {
-		return new GenericPostableMvcEndpoint(((RestartEndpoint)getDelegate()).getPauseEndpoint());
+		return new GenericPostableMvcEndpoint(
+				((RestartEndpoint) getDelegate()).getPauseEndpoint());
 	}
 
 	public MvcEndpoint getResumeEndpoint() {
-		return new GenericPostableMvcEndpoint(((RestartEndpoint)getDelegate()).getResumeEndpoint());
+		return new GenericPostableMvcEndpoint(
+				((RestartEndpoint) getDelegate()).getResumeEndpoint());
 	}
-	
 
 }

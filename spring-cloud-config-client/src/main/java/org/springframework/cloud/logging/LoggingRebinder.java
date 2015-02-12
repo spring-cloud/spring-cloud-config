@@ -29,11 +29,14 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 
 /**
+ * Listener that looks for {@link EnvironmentChangeEvent} and rebinds logger levels if any
+ * changed.
+ * 
  * @author Dave Syer
  *
  */
-public class LoggingRebinder implements
-		ApplicationListener<EnvironmentChangeEvent>, EnvironmentAware {
+public class LoggingRebinder implements ApplicationListener<EnvironmentChangeEvent>,
+		EnvironmentAware {
 
 	private final Log logger = LogFactory.getLog(getClass());
 
@@ -49,8 +52,7 @@ public class LoggingRebinder implements
 		if (environment == null) {
 			return;
 		}
-		LoggingSystem system = LoggingSystem.get(LoggingSystem.class
-				.getClassLoader());
+		LoggingSystem system = LoggingSystem.get(LoggingSystem.class.getClassLoader());
 		setLogLevels(system, environment);
 	}
 

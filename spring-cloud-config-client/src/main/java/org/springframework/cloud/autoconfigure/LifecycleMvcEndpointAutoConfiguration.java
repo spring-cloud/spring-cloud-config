@@ -35,6 +35,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
+ * Autoconfiguration for some MVC endpoints governing the application context lifecycle.
+ * Provides restart, pause, resume, refresh (environment) and environment update
+ * endpoints.
+ * 
  * @author Dave Syer
  *
  */
@@ -43,8 +47,9 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "endpoints.env.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication
 @ConditionalOnBean(RestartEndpoint.class)
-@AutoConfigureAfter({ WebMvcAutoConfiguration.class, EndpointAutoConfiguration.class, RefreshAutoConfiguration.class })
-public class EnvironmentEndpointAutoConfiguration {
+@AutoConfigureAfter({ WebMvcAutoConfiguration.class, EndpointAutoConfiguration.class,
+		RefreshAutoConfiguration.class })
+public class LifecycleMvcEndpointAutoConfiguration {
 
 	@Autowired
 	private RestartEndpoint restartEndpoint;

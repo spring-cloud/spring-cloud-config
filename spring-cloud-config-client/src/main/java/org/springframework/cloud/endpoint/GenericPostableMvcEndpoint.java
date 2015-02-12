@@ -26,6 +26,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+/**
+ * A convenient base class for MVC endpoints that accept a POST (instead of the default
+ * GET).
+ * 
+ * @author Dave Syer
+ *
+ */
 public class GenericPostableMvcEndpoint extends EndpointMvcAdapter {
 
 	public GenericPostableMvcEndpoint(Endpoint<?> delegate) {

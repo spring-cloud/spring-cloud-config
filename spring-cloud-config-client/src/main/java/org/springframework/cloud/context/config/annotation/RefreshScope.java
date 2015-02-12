@@ -24,7 +24,17 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 
-@Target({ElementType.TYPE, ElementType.METHOD})
+/**
+ * Convenience annotation to put a <code>@Bean</code> definition in
+ * {@link org.springframework.cloud.context.scope.refresh.RefreshScope refresh scope}.
+ * Beans annotated this way can be refreshed at runtime and any components that are using
+ * them will get a new instance on the next method call, fully initialized and injected
+ * with all dependencies.
+ * 
+ * @author Dave Syer
+ *
+ */
+@Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Scope("refresh")
 @Documented

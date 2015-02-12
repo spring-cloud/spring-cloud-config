@@ -18,8 +18,11 @@ package org.springframework.cloud.context.environment;
 import java.util.Set;
 
 import org.springframework.context.ApplicationEvent;
+import org.springframework.core.env.Environment;
 
 /**
+ * Event published to signal a change in the {@link Environment}.
+ * 
  * @author Dave Syer
  *
  */

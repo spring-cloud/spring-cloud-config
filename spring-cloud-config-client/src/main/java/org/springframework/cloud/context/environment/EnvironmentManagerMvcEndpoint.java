@@ -26,6 +26,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
+ * MVC endpoint for the {@link EnvironmentManager} providing a POST to /env as a simple
+ * way to change the Environment.
+ * 
  * @author Dave Syer
  * 
  */
