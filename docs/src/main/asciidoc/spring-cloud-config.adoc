@@ -111,6 +111,20 @@ pattern is "simple" (i.e. it only matches one application).  The
 pattern format is a comma-separated list of application names with
 wildcards.
 
+To use HTTP basic authentication on the remote repository add the
+"username" and "password" properties separately (not in the URL), 
+e.g.
+
+----
+spring:
+  cloud:
+    config:
+	  server:
+	    git:
+	      uri: https://github.com/spring-cloud-samples/config-repo
+          username: trolley
+          password: strongpassword
+----
 
 ==== File System Backend
 
