@@ -516,6 +516,32 @@ list of properties), and "label" is an optional git label (defaults to
 map, even if the origin of the values (reflected in the
 "propertySources" of the "standard" form) has multiple sources.</p>
 </div>
+<div class="paragraph">
+<p>Spring Cloud Config Server also supports multiple git repositories:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+	  server:
+	    git:
+	      uri: https://github.com/spring-cloud-samples/config-repo
+	      repos:
+	        - patterns: *pattern
+	          uri: https://github.com/pattern1/config-repo
+	        - patterns: pattern*,*pattern1*
+	          uri: https://github.com/pattern2/config-repo
+	        - patterns: local*
+	          uri: file:/home/configsvc/config-repo</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the above example, if {application} does not match to any of the patterns
+under "spring.cloud.config.server.git.repos", it will use the default uri
+defined under "spring.cloud.config.server.git.uri".  Acceptable pattern
+format is "<strong>xxx", "xxx</strong>", or "<strong>xxx</strong>".</p>
+</div>
 <div class="sect2">
 <h3 id="_client_side_usage">Client Side Usage</h3>
 <div class="paragraph">
@@ -725,6 +751,35 @@ working copy as a cache.</p>
 <div class="paragraph">
 <p>This repository implementation maps the <code>{label}</code> parameter of the
 HTTP resource to a git label (commit id, branch name or tag).</p>
+</div>
+<div class="paragraph">
+<p>Spring Cloud Config Server also supports multiple git repositories:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+	  server:
+	    git:
+	      uri: https://github.com/spring-cloud-samples/config-repo
+	      repos:
+	        simple: https://github.com/pattern1/config-repo
+            special:
+              pattern: pattern*,*pattern1*
+	          uri: https://github.com/pattern2/config-repo
+	        local:
+              pattern: local*
+	          uri: file:/home/configsvc/config-repo</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the above example, if {application} does not match to any of the
+patterns, it will use the default uri defined under
+"spring.cloud.config.server.git.uri". For the "simple" repository, the
+pattern is "simple" (i.e. it only matches one application).  The
+pattern format is a comma-separated list of application names with
+wildcards.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1412,7 +1467,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-10 11:02:44 UTC
+Last updated 2015-02-12 10:24:54 UTC
 </div>
 </div>
 </body>
