@@ -29,7 +29,7 @@ import org.springframework.security.crypto.encrypt.Encryptors;
  */
 public class EnvironmentDecryptApplicationListenerTests {
 	
-	private EnvironmentDecryptApplicationListener listener = new EnvironmentDecryptApplicationListener(Encryptors.noOpText());
+	private EnvironmentDecryptApplicationInitializer listener = new EnvironmentDecryptApplicationInitializer(Encryptors.noOpText());
 
 	@Test
 	public void decryptCipherKey() {
@@ -41,7 +41,7 @@ public class EnvironmentDecryptApplicationListenerTests {
 
 	@Test(expected=IllegalStateException.class)
 	public void errorOnDecrypt() {
-		listener = new EnvironmentDecryptApplicationListener(Encryptors.text("deadbeef", "AFFE37"));
+		listener = new EnvironmentDecryptApplicationInitializer(Encryptors.text("deadbeef", "AFFE37"));
 		ConfigurableApplicationContext context = new AnnotationConfigApplicationContext();
 		EnvironmentTestUtils.addEnvironment(context, "foo: {cipher}bar");
 		listener.initialize(context);
@@ -50,7 +50,7 @@ public class EnvironmentDecryptApplicationListenerTests {
 
 	@Test
 	public void errorOnDecryptWithEmpty() {
-		listener = new EnvironmentDecryptApplicationListener(Encryptors.text("deadbeef", "AFFE37"));
+		listener = new EnvironmentDecryptApplicationInitializer(Encryptors.text("deadbeef", "AFFE37"));
 		listener.setFailOnError(false);
 		ConfigurableApplicationContext context = new AnnotationConfigApplicationContext();
 		EnvironmentTestUtils.addEnvironment(context, "foo: {cipher}bar");

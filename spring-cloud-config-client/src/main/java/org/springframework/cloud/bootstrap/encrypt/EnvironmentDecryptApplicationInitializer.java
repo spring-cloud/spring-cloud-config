@@ -20,7 +20,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.boot.context.config.ConfigFileApplicationListener;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
@@ -35,19 +34,19 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
  * @author Dave Syer
  *
  */
-public class EnvironmentDecryptApplicationListener implements
+public class EnvironmentDecryptApplicationInitializer implements
 		ApplicationContextInitializer<ConfigurableApplicationContext>, Ordered {
 
 	private static Log logger = LogFactory
-			.getLog(EnvironmentDecryptApplicationListener.class);
+			.getLog(EnvironmentDecryptApplicationInitializer.class);
 
-	private int order = ConfigFileApplicationListener.DEFAULT_ORDER + 1;
+	private int order = Ordered.HIGHEST_PRECEDENCE + 15;
 
 	private TextEncryptor encryptor;
 
 	private boolean failOnError = true;
 
-	public EnvironmentDecryptApplicationListener(TextEncryptor encryptor) {
+	public EnvironmentDecryptApplicationInitializer(TextEncryptor encryptor) {
 		this.encryptor = encryptor;
 	}
 

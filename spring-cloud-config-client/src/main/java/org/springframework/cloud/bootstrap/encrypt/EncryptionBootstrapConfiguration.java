@@ -90,11 +90,11 @@ public class EncryptionBootstrapConfiguration {
 	}
 
 	@Bean
-	public EnvironmentDecryptApplicationListener environmentDecryptApplicationListener() {
+	public EnvironmentDecryptApplicationInitializer environmentDecryptApplicationListener() {
 		if (encryptor == null) {
 			encryptor = new FailsafeTextEncryptor();
 		}
-		EnvironmentDecryptApplicationListener listener = new EnvironmentDecryptApplicationListener(encryptor);
+		EnvironmentDecryptApplicationInitializer listener = new EnvironmentDecryptApplicationInitializer(encryptor);
 		listener.setFailOnError(key.isFailOnError());
 		return listener;
 	}

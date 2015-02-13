@@ -72,8 +72,8 @@ public class BootstrapApplicationListener implements
 		if (environment.getPropertySources().contains("bootstrapInProgress")) {
 			return;
 		}
-		ConfigurableApplicationContext context = bootstrapServiceContext(
-				environment, event.getSpringApplication());
+		ConfigurableApplicationContext context = bootstrapServiceContext(environment,
+				event.getSpringApplication());
 		apply(context, event.getSpringApplication(), environment);
 	}
 
@@ -189,8 +189,9 @@ public class BootstrapApplicationListener implements
 		public int getOrder() {
 			// Need to run not too late (so not unordered), so that, for instance, the
 			// ContextIdApplicationContextInitializer runs later and picks up the merged
-			// Environment
-			return 0;
+			// Environment. Also not too early so that other initializers can pick up the
+			// parent (especially the Environment).
+			return Ordered.HIGHEST_PRECEDENCE + 10;
 		}
 
 		@Override
