@@ -415,7 +415,12 @@ property values locally. It follows the same rules as the Config
 Server, and has the same external configuration via `encrypt.\*`. Thus
 you can use encrypted values in the form `{cipher}*` and as long as
 there is a valid key then they will be decrypted before the main
-application context gets the `Environment`.
+application context gets the `Environment`. To use the encryption
+features in a client you need to include Spring Security RSA in your
+classpath (Maven co-ordinates
+"org.springframework.security:spring-security-rsa") and you also need
+the full strength JCE extensions in your JVM (google it and download
+from Oracle).
 
 === Endpoints
 
