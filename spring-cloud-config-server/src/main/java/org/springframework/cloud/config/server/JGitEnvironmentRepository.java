@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.config.server;
 
-import static org.springframework.util.StringUtils.hasText;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
+import com.jcraft.jsch.Session;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,7 +46,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.jcraft.jsch.Session;
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * An {@link EnvironmentRepository} backed by a single git repository.
@@ -130,7 +130,7 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 	private boolean shouldPull(Git git, Ref ref) throws GitAPIException {
 		return git.status().call().isClean()
 				&& ref != null
-				&& git.getRepository().getConfig().getString("remote", "origin", "url")!=null;
+				&& git.getRepository().getConfig().getString("remote", "origin", "url") != null;
 	}
 
 	private boolean shouldTrack(Git git, String label) throws GitAPIException {
@@ -149,8 +149,13 @@ public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository 
 			pull.call();
 		}
 		catch (Exception e) {
-			logger.warn("Could not pull remote for " + label + " (current ref=" + ref
-					+ "), remote: " + git.getRepository().getConfig().getString("remote", "origin", "url"));
+			logger.warn("Could not pull remote for "
+					+ label
+					+ " (current ref="
+					+ ref
+					+ "), remote: "
+					+ git.getRepository().getConfig()
+							.getString("remote", "origin", "url"));
 		}
 	}
 

@@ -65,4 +65,16 @@ public class ConfigServerConfiguration {
 		}
 	}
 
+	@Configuration
+	@Profile("subversion")
+	protected static class SvnRepositoryConfiguration {
+		@Autowired
+		private ConfigurableEnvironment environment;
+
+		@Bean
+		public SVNKitEnvironmentRepository EnvironmentRepository() {
+			return new SVNKitEnvironmentRepository(environment);
+		}
+	}
+
 }
