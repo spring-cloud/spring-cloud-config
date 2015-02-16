@@ -48,6 +48,11 @@
 			<artifactId>org.eclipse.jgit</artifactId>
 			<version>3.5.3.201412180710-r</version>
 		</dependency>
+        <dependency>
+            <groupId>org.tmatesoft.svnkit</groupId>
+            <artifactId>svnkit</artifactId>
+            <version>1.8.7</version>
+        </dependency>
      </dependencies>
     </dependencyManagement>
 </project>
