@@ -17,6 +17,7 @@ package org.springframework.cloud.config.server;
 
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.util.FileSystemUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +36,7 @@ public class ConfigServerTestUtils {
 	}
 
 	public static String prepareLocalRepo(String baseDir, String buildDir, String repoPath,
-										  String checkoutDir) throws IOException {
+			String checkoutDir) throws IOException {
 		buildDir = baseDir + buildDir;
 		new File(buildDir).mkdirs();
 		if (!repoPath.startsWith("/")) {
@@ -64,10 +65,22 @@ public class ConfigServerTestUtils {
 		return "file:" + buildDir + repoPath;
 	}
 
+	public static String prepareLocalSvnRepo(String sourceDir, String checkoutDir) throws Exception {
+		File sourceDirFile = new File(sourceDir);
+		sourceDirFile.mkdirs();
+		File local = new File(checkoutDir);
+		if (local.exists()) {
+			FileUtils.delete(local, FileUtils.RECURSIVE);
+		}
+		local.mkdirs();
+		FileSystemUtils.copyRecursively(sourceDirFile, local);
+		return StringUtils.cleanPath("file:///" + local.getAbsolutePath());
+
+	}
+
 	public static String getBaseDirectory(String potentialRoot) {
 		return new File(potentialRoot).exists() ? potentialRoot + "/" : "./";
 	}
-
 
 	public static String copyLocalRepo(String path) throws IOException {
 		File dest = new File("target/repos/" + path);
