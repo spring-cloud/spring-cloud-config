@@ -126,6 +126,13 @@ spring:
           password: strongpassword
 ----
 
+If you don't use HTTPS and user credentials, SSH should also work out
+of the box when you store keys in the default directories (`~/.ssh`)
+and the uri is points to an SSH location,
+e.g. "git@github.com:configuration/cloud-configuration". The
+repository is accessed using JGit, so any documentation you find on
+that should be applicable.
+
 ==== File System Backend
 
 There is also a "native" profile in the Config Server that doesn't use
