@@ -36,19 +36,20 @@ public class ConfigServerConfiguration {
 	@Profile("native")
 	protected static class NativeRepositoryConfiguration {
 		@Bean
-		public SpringApplicationEnvironmentRepository EnvironmentRepository() {
+		public EnvironmentRepository environmentRepository() {
 			return new SpringApplicationEnvironmentRepository();
 		}
 	}
 
 	@Configuration
+	@ConditionalOnMissingBean(EnvironmentRepository.class)
 	protected static class GitRepositoryConfiguration {
 		
 		@Autowired
 		private ConfigurableEnvironment environment;		
 		
 		@Bean
-		public MultipleJGitEnvironmentRepository EnvironmentRepository() {			
+		public EnvironmentRepository environmentRepository() {
 			return new MultipleJGitEnvironmentRepository(environment);
 		}
 	}
@@ -60,7 +61,7 @@ public class ConfigServerConfiguration {
 		private ConfigurableEnvironment environment;
 
 		@Bean
-		public SVNKitEnvironmentRepository EnvironmentRepository() {
+		public EnvironmentRepository environmentRepository() {
 			return new SVNKitEnvironmentRepository(environment);
 		}
 	}
