@@ -517,7 +517,8 @@ map, even if the origin of the values (reflected in the
 "propertySources" of the "standard" form) has multiple sources.</p>
 </div>
 <div class="paragraph">
-<p>Spring Cloud Config Server also supports multiple git repositories:</p>
+<p>Spring Cloud Config Server pulls configuration for remote clients
+from a git repository (which must be provided):</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -526,21 +527,8 @@ map, even if the origin of the values (reflected in the
     config:
 	  server:
 	    git:
-	      uri: https://github.com/spring-cloud-samples/config-repo
-	      repos:
-	        - patterns: *pattern
-	          uri: https://github.com/pattern1/config-repo
-	        - patterns: pattern*,*pattern1*
-	          uri: https://github.com/pattern2/config-repo
-	        - patterns: local*
-	          uri: file:/home/configsvc/config-repo</pre>
+	      uri: https://github.com/spring-cloud-samples/config-repo</pre>
 </div>
-</div>
-<div class="paragraph">
-<p>In the above example, if {application} does not match to any of the patterns
-under "spring.cloud.config.server.git.repos", it will use the default uri
-defined under "spring.cloud.config.server.git.uri".  Acceptable pattern
-format is "<strong>xxx", "xxx</strong>", or "<strong>xxx</strong>".</p>
 </div>
 <div class="sect2">
 <h3 id="_client_side_usage">Client Side Usage</h3>
@@ -753,24 +741,25 @@ working copy as a cache.</p>
 HTTP resource to a git label (commit id, branch name or tag).</p>
 </div>
 <div class="paragraph">
-<p>Spring Cloud Config Server also supports multiple git repositories:</p>
+<p>Spring Cloud Config Server supports a single or multiple git
+repositories:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre>spring:
   cloud:
     config:
-	  server:
-	    git:
-	      uri: https://github.com/spring-cloud-samples/config-repo
-	      repos:
-	        simple: https://github.com/pattern1/config-repo
+    server:
+      git:
+        uri: https://github.com/spring-cloud-samples/config-repo
+        repos:
+          simple: https://github.com/pattern1/config-repo
             special:
               pattern: pattern*,*pattern1*
-	          uri: https://github.com/pattern2/config-repo
-	        local:
+            uri: https://github.com/pattern2/config-repo
+          local:
               pattern: local*
-	          uri: file:/home/configsvc/config-repo</pre>
+            uri: file:/home/configsvc/config-repo</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -791,9 +780,9 @@ e.g.</p>
 <pre>spring:
   cloud:
     config:
-	  server:
-	    git:
-	      uri: https://github.com/spring-cloud-samples/config-repo
+    server:
+      git:
+        uri: https://github.com/spring-cloud-samples/config-repo
           username: trolley
           password: strongpassword</pre>
 </div>
@@ -1497,7 +1486,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-16 18:47:10 UTC
+Last updated 2015-02-20 16:22:16 UTC
 </div>
 </div>
 </body>
