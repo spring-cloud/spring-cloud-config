@@ -85,23 +85,24 @@ working copy as a cache.
 This repository implementation maps the `{label}` parameter of the
 HTTP resource to a git label (commit id, branch name or tag).
 
-Spring Cloud Config Server also supports multiple git repositories:
+Spring Cloud Config Server supports a single or multiple git
+repositories:
 
 ----
 spring:
   cloud:
     config:
-	  server:
-	    git:
-	      uri: https://github.com/spring-cloud-samples/config-repo
-	      repos:
-	        simple: https://github.com/pattern1/config-repo
+    server:
+      git:
+        uri: https://github.com/spring-cloud-samples/config-repo
+        repos:
+          simple: https://github.com/pattern1/config-repo
             special:
               pattern: pattern*,*pattern1*
-	          uri: https://github.com/pattern2/config-repo
-	        local:
+            uri: https://github.com/pattern2/config-repo
+          local:
               pattern: local*
-	          uri: file:/home/configsvc/config-repo
+            uri: file:/home/configsvc/config-repo
 ----
 
 In the above example, if {application} does not match to any of the
@@ -119,9 +120,9 @@ e.g.
 spring:
   cloud:
     config:
-	  server:
-	    git:
-	      uri: https://github.com/spring-cloud-samples/config-repo
+    server:
+      git:
+        uri: https://github.com/spring-cloud-samples/config-repo
           username: trolley
           password: strongpassword
 ----

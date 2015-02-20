@@ -50,7 +50,9 @@ The default strategy for locating property sources is to clone a git
 repository (at "spring.cloud.config.server.git.uri") and use it to
 initialize a mini `SpringApplication`. The mini-application's
 `Environment` is used to enumerate property sources and publish them
-via a JSON endpoint. The service has resources in the form:
+via a JSON endpoint.
+
+The HTTP service has resources in the form:
 
 ----
 /{application}/{profile}[/{label}]
@@ -64,9 +66,34 @@ where the "application" is injected as the "spring.config.name" in the
 `SpringApplication` (i.e. what is normally "application" in a regular
 Spring Boot app), "profile" is an active profile (or comma-separated
 list of properties), and "label" is an optional git label (defaults to
-"master".) The YAML and properties forms are coalesced into a single
+"master".)
+
+The YAML and properties forms are coalesced into a single
 map, even if the origin of the values (reflected in the
 "propertySources" of the "standard" form) has multiple sources.
+
+Spring Cloud Config Server also supports multiple git repositories:
+
+----
+spring:
+  cloud:
+    config:
+	  server:
+	    git:
+	      uri: https://github.com/spring-cloud-samples/config-repo
+	      repos:
+	        - patterns: *pattern
+	          uri: https://github.com/pattern1/config-repo
+	        - patterns: pattern*,*pattern1*
+	          uri: https://github.com/pattern2/config-repo
+	        - patterns: local*
+	          uri: file:/home/configsvc/config-repo
+----
+
+In the above example, if {application} does not match to any of the patterns
+under "spring.cloud.config.server.git.repos", it will use the default uri
+defined under "spring.cloud.config.server.git.uri".  Acceptable pattern
+format is "*xxx", "xxx*", or "*xxx*".
 
 === Client Side Usage
 
