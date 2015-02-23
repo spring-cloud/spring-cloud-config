@@ -1060,7 +1060,10 @@ that by setting <code>spring.cloud.config.discovery.enabled=true</code> (default
 address, e.g. in <code>eureka.client.serviceUrl.defaultZone</code>.  The price
 for using this option is an extra network round trip on start up to
 locate the service registration. The benefit is that the Config Server
-can change its co-ordinates, as long as Eureka is a fixed point.</p>
+can change its co-ordinates, as long as Eureka is a fixed point. The
+default service id is "CONFIGSERVER" but you can change that on the
+client with <code>spring.cloud.config.discovery.serviceId</code> (and on the server
+in the usual way for a service, e.g. by setting <code>spring.application.name</code>).</p>
 </div>
 </div>
 <div class="sect2">
@@ -1486,7 +1489,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-23 10:21:29 UTC
+Last updated 2015-02-23 15:40:48 UTC
 </div>
 </div>
 </body>
