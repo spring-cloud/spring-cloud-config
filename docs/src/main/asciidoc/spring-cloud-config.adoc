@@ -338,7 +338,10 @@ that by setting `spring.cloud.config.discovery.enabled=true` (default
 address, e.g. in `eureka.client.serviceUrl.defaultZone`.  The price
 for using this option is an extra network round trip on start up to
 locate the service registration. The benefit is that the Config Server
-can change its co-ordinates, as long as Eureka is a fixed point.
+can change its co-ordinates, as long as Eureka is a fixed point. The
+default service id is "CONFIGSERVER" but you can change that on the
+client with `spring.cloud.config.discovery.serviceId` (and on the server
+in the usual way for a service, e.g. by setting `spring.application.name`).
 
 [[config-client-fail-fast]]
 === Config Client Fail Fast
