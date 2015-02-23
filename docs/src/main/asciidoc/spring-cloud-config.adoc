@@ -139,7 +139,7 @@ that should be applicable.
 There is also a "native" profile in the Config Server that doesn't use
 Git, but just loads the config files from the local classpath or file
 system (any static URL you want to point to with
-"spring.cloud.config.server.native.locations"). To use the native
+"spring.cloud.config.server.native.searchLocations"). To use the native
 profile just launch the Config Server with
 "spring.profiles.active=native". 
 
