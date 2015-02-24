@@ -16,14 +16,11 @@
 
 package org.springframework.cloud.bootstrap.config;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.bind.PropertySourcesPropertyValues;
 import org.springframework.boot.bind.RelaxedDataBinder;
@@ -32,6 +29,7 @@ import org.springframework.cloud.bootstrap.BootstrapApplicationListener;
 import org.springframework.cloud.config.client.ConfigClientProperties;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.cloud.config.client.PropertySourceLocator;
+import org.springframework.cloud.config.client.RetryableConfigServicePropertySourceLocator;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.cloud.logging.LoggingRebinder;
 import org.springframework.context.ApplicationContextInitializer;
@@ -39,11 +37,13 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.core.env.CompositePropertySource;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.env.*;
+import org.springframework.retry.RetryOperations;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Dave Syer
@@ -143,9 +143,20 @@ public class PropertySourceBootstrapConfiguration implements
 		}
 
 		@Bean
+		@ConditionalOnMissingClass(name = {"org.springframework.cloud.config.server.EnvironmentRepository", "org.springframework.retry.RetryOperations"})
 		public ConfigServicePropertySourceLocator configServicePropertySource() {
 			ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
 					configClientProperties());
+			return locator;
+		}
+
+		@Bean
+		@ConditionalOnMissingClass(name = {"org.springframework.cloud.config.server.EnvironmentRepository"})
+		@ConditionalOnClass(value = RetryOperations.class)
+		public RetryableConfigServicePropertySourceLocator retryableConfigServicePropertySource() {
+			RetryableConfigServicePropertySourceLocator locator = new RetryableConfigServicePropertySourceLocator(
+					configClientProperties());
+
 			return locator;
 		}
 
