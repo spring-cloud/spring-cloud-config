@@ -16,15 +16,15 @@
 
 package org.springframework.cloud.config.client;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * @author Dave Syer
@@ -59,6 +59,8 @@ public class ConfigClientProperties {
 	private Discovery discovery = new Discovery();
 
 	private boolean failFast = false;
+
+	private int retryBeforeFail;
 	
 	private ConfigClientProperties() {
 	}
@@ -145,6 +147,14 @@ public class ConfigClientProperties {
 
 	public void setFailFast(boolean failFast) {
 		this.failFast = failFast;
+	}
+
+	public int getRetryBeforeFail() {
+		return retryBeforeFail;
+	}
+
+	public void setRetryBeforeFail(int retryBeforeFail) {
+		this.retryBeforeFail = retryBeforeFail;
 	}
 
 	private String[] extractCredentials() {

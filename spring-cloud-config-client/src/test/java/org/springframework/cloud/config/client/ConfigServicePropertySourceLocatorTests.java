@@ -1,11 +1,5 @@
 package org.springframework.cloud.config.client;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-import java.io.ByteArrayInputStream;
-import java.net.URI;
-
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.Rule;
 import org.junit.Test;
@@ -15,17 +9,22 @@ import org.mockito.Mockito;
 import org.springframework.cloud.config.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class ConfigServicePropertySourceLocatorTests {
 
@@ -35,6 +34,9 @@ public class ConfigServicePropertySourceLocatorTests {
 	private ConfigurableEnvironment environment = new StandardEnvironment();
 
 	private ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
+			new ConfigClientProperties(environment));
+
+	private RetryableConfigServicePropertySourceLocator retryableLocator = new RetryableConfigServicePropertySourceLocator(
 			new ConfigClientProperties(environment));
 
 	private RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
@@ -79,6 +81,42 @@ public class ConfigServicePropertySourceLocatorTests {
 		expected.expectCause(IsInstanceOf.<Throwable>instanceOf(HttpServerErrorException.class));
 		expected.expectMessage("fail fast property is set");
 		assertNull(locator.locate(environment));
+	}
+
+	@Test
+	public void failWithRetry() throws Exception {
+		ClientHttpRequestFactory requestFactory = Mockito
+				.mock(ClientHttpRequestFactory.class);
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+		ClientHttpResponse response = Mockito.mock(ClientHttpResponse.class);
+		Mockito.when(
+				requestFactory.createRequest(Mockito.any(URI.class),
+											 Mockito.any(HttpMethod.class))).thenReturn(request);
+		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
+		Mockito.when(request.execute()).thenReturn(response);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		Mockito.when(response.getHeaders()).thenReturn(headers);
+		Mockito.when(response.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
+		Mockito.when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));
+
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
+
+		int retryCount = 5;
+		ConfigClientProperties defaults = new ConfigClientProperties(environment);
+		defaults.setFailFast(true);
+		defaults.setRetryBeforeFail(retryCount);
+		retryableLocator = new RetryableConfigServicePropertySourceLocator(defaults);
+
+		restTemplate.setRequestFactory(requestFactory);
+		retryableLocator.setRestTemplate(restTemplate);
+		expected.expectCause(IsInstanceOf.<Throwable>instanceOf(HttpServerErrorException.class));
+		assertNull(retryableLocator.locate(environment));
+
+		verify(restTemplate, times(retryCount)).exchange(
+				anyString(), any(HttpMethod.class),
+				any(HttpEntity.class), any(Class.class),
+				anyString(), anyString(), anyString());
 	}
 
 	@SuppressWarnings("unchecked")
