@@ -6,8 +6,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.bootstrap.config.PropertySourceBootstrapConfiguration;
-import org.springframework.cloud.config.client.ConfigClientProperties;
-import org.springframework.cloud.config.client.ConfigServerHealthIndicator;
+import org.springframework.cloud.configure.client.ConfigClientProperties;
+import org.springframework.cloud.configure.client.ConfigServerHealthIndicator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 

@@ -25,7 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
-import org.springframework.cloud.config.client.RefreshEndpoint;
+import org.springframework.cloud.configure.client.RefreshEndpoint;
 import org.springframework.cloud.context.environment.EnvironmentManager;
 import org.springframework.cloud.context.environment.EnvironmentManagerMvcEndpoint;
 import org.springframework.cloud.context.restart.RestartEndpoint;

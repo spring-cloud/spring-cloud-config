@@ -15,7 +15,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.cloud.config.server.ConfigServerTestUtils;
+import org.springframework.cloud.configure.server.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -41,7 +41,7 @@ public class ServerNativeApplicationTests {
 	public static void startConfigServer() throws IOException {
 		String repo = ConfigServerTestUtils.prepareLocalRepo();
 		server = SpringApplication.run(
-				org.springframework.cloud.config.server.ConfigServerApplication.class,
+				org.springframework.cloud.configure.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
 				"--spring.cloud.config.server.git.uri=" + repo, "--spring.profiles.active=native");
 		configPort = ((EmbeddedWebApplicationContext) server)
