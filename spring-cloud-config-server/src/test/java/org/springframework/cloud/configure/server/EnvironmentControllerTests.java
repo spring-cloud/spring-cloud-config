@@ -28,9 +28,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.springframework.cloud.configure.Environment;
 import org.springframework.cloud.configure.PropertySource;
-import org.springframework.cloud.configure.server.EncryptionController;
-import org.springframework.cloud.configure.server.EnvironmentController;
-import org.springframework.cloud.configure.server.EnvironmentRepository;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -65,7 +62,7 @@ public class EnvironmentControllerTests {
 
 	@Test
 	public void propertyOverrideInYaml() throws Exception {
-		Map<String, Object> map = new HashMap<String, Object>();
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("a.b.c", "d");
 		environment.add(new PropertySource("one", map));
 		environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "e")));
@@ -83,6 +80,42 @@ public class EnvironmentControllerTests {
 		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
 		String yaml = controller.yaml("foo", "bar").getBody();
 		assertEquals("a:\n  b:\n  - c\n  - d\n", yaml);
+	}
+
+	@Test
+	public void arrayOfObjectInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a.b[0].c", "d");
+		map.put("a.b[0].d", "e");
+		map.put("a.b[1].c", "d");
+		environment.add(new PropertySource("one", map));
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		String yaml = controller.yaml("foo", "bar").getBody();
+		assertEquals("a:\n  b:\n  - d: e\n    c: d\n  - c: d\n", yaml);
+	}
+
+	@Test
+	public void arrayOfObjectAtTopLevelInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("b[0].c", "d");
+		map.put("b[0].d", "e");
+		map.put("b[1].c", "d");
+		environment.add(new PropertySource("one", map));
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		String yaml = controller.yaml("foo", "bar").getBody();
+		assertEquals("b:\n- c: d\n  d: e\n- c: d\n", yaml);
+	}
+
+	@Test
+	public void arrayOfObjectNestedLevelInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("x.a.b[0].c", "d");
+		map.put("x.a.b[0].d", "e");
+		map.put("x.a.b[1].c", "d");
+		environment.add(new PropertySource("one", map));
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		String yaml = controller.yaml("foo", "bar").getBody();
+		assertEquals("x:\n  a:\n    b:\n    - c: d\n      d: e\n    - c: d\n", yaml);
 	}
 
 	@Test

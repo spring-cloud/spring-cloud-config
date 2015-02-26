@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -16,6 +15,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.configure.Environment;
 import org.springframework.cloud.configure.PropertySource;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -30,7 +31,9 @@ import org.yaml.snakeyaml.Yaml;
 @RestController
 @RequestMapping("${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
-	
+
+	private static final String MAP_PREFIX = "map";
+
 	@Qualifier("MultipleJGitEnvironmentRepository")
 	private EnvironmentRepository repository;
 
@@ -63,7 +66,7 @@ public class EnvironmentController {
 		}
 		return environment;
 	}
-	
+
 	@RequestMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name,
 			@PathVariable String profiles) throws IOException {
@@ -77,13 +80,14 @@ public class EnvironmentController {
 			throw new IllegalArgumentException(
 					"Properties output not supported for name or profiles containing hyphens");
 		}
-		Properties properties = convertToProperties(labelled(name, profiles, label));
+		Map<String, Object> properties = convertToProperties(labelled(name, profiles,
+				label));
 		return getSuccess(sortLines(properties));
 	}
 
-	private String sortLines(Properties properties) throws IOException {
+	private String sortLines(Map<String, Object> properties) throws IOException {
 		List<String> list = new ArrayList<String>();
-		for (Entry<Object, Object> entry : properties.entrySet()) {
+		for (Entry<String, Object> entry : properties.entrySet()) {
 			if (entry.getKey().equals("spring.profiles")) {
 				continue;
 			}
@@ -117,12 +121,18 @@ public class EnvironmentController {
 		LinkedHashMap<String, Object> target = new LinkedHashMap<String, Object>();
 		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<Map<String, Object>>(
 				target);
-		Properties properties = convertToProperties(labelled(name, profiles, label));
+		Map<String, Object> data = convertToProperties(labelled(name, profiles,
+				label));
+		LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>();
+		for (String key : data.keySet()) {
+			properties.put(MAP_PREFIX + "." + key, data.get(key));
+		}
 		addArrays(target, properties);
-		factory.setProperties(properties);
+		MutablePropertySources propertySources = new MutablePropertySources();
+		propertySources.addFirst(new MapPropertySource("properties", properties));
+		factory.setPropertySources(propertySources);
 		factory.bindPropertiesToTarget();
-		Map<String, Object> input = factory.getObject();
-		return getSuccess(new Yaml().dumpAsMap(input));
+		return getSuccess(new Yaml().dumpAsMap(target.get(MAP_PREFIX)));
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
@@ -145,13 +155,14 @@ public class EnvironmentController {
 	 * @param target the target Map
 	 * @param properties the properties (with key names to check)
 	 */
-	private void addArrays(LinkedHashMap<String, Object> target, Properties properties) {
-		for (String key : properties.stringPropertyNames()) {
+	private void addArrays(LinkedHashMap<String, Object> target,
+			Map<String, Object> properties) {
+		for (String key : properties.keySet()) {
 			int index = key.indexOf("[");
 			Map<String, Object> current = target;
 			if (index > 0) {
 				String stem = key.substring(0, index);
-				String[] keys = StringUtils.split(stem, ".");
+				String[] keys = StringUtils.delimitedListToStringArray(stem, ".");
 				for (int i = 0; i < keys.length - 1; i++) {
 					if (current.get(keys[i]) == null) {
 						LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
@@ -174,23 +185,26 @@ public class EnvironmentController {
 				int position = Integer
 						.valueOf(key.substring(index + 1, key.indexOf("]")));
 				while (position >= value.size()) {
-					value.add("");
+					if (key.indexOf("].", index) > 0) {
+						value.add(new LinkedHashMap<String, Object>());
+					}
+					else {
+						value.add("");
+					}
 				}
 			}
 		}
 	}
 
-	private Properties convertToProperties(Environment profiles) {
-		Properties map = new Properties();
-		List<PropertySource> sources = new ArrayList<PropertySource>(profiles.getPropertySources());
+	private Map<String, Object> convertToProperties(Environment profiles) {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		List<PropertySource> sources = new ArrayList<PropertySource>(
+				profiles.getPropertySources());
 		Collections.reverse(sources);
 		for (PropertySource source : sources) {
 			@SuppressWarnings("unchecked")
 			Map<String, String> value = (Map<String, String>) source.getSource();
 			map.putAll(value);
-		}
-		for (Entry<Object, Object> entry : map.entrySet()) {
-			map.put(entry.getKey(), entry.getValue().toString());
 		}
 		return map;
 	}
