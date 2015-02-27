@@ -35,7 +35,7 @@ import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaD
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
 import org.springframework.cloud.bootstrap.config.PropertySourceBootstrapConfiguration;
-import org.springframework.cloud.configure.client.RefreshEndpoint;
+import org.springframework.cloud.config.client.RefreshEndpoint;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.cloud.context.environment.EnvironmentManager;
 import org.springframework.cloud.context.properties.ConfigurationPropertiesRebinder;

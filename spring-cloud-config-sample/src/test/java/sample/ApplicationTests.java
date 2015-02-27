@@ -10,7 +10,7 @@ import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
-import org.springframework.cloud.configure.server.ConfigServerTestUtils;
+import org.springframework.cloud.config.server.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -37,7 +37,7 @@ public class ApplicationTests {
 		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
 		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
 		server = SpringApplication.run(
-				org.springframework.cloud.configure.server.ConfigServerApplication.class,
+				org.springframework.cloud.config.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
 				"--spring.cloud.config.server.git.uri=" + repo);
 		configPort = ((EmbeddedWebApplicationContext) server)
