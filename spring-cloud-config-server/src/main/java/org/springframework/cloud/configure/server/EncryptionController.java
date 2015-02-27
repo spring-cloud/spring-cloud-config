@@ -22,6 +22,7 @@ import java.security.KeyPair;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -227,7 +228,7 @@ public class EncryptionController {
 		for (PropertySource source : environment.getPropertySources()) {
 			Map<Object, Object> map = new LinkedHashMap<Object, Object>(
 					source.getSource());
-			for (Entry<Object,Object> entry : map.entrySet()) {
+			for (Entry<Object,Object> entry : new LinkedHashSet<>(map.entrySet())) {
 				Object key = entry.getKey();
 				String name = key.toString();
 				String value = entry.getValue().toString();
