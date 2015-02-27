@@ -24,8 +24,8 @@ import java.util.Set;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.cloud.config.source.Environment;
-import org.springframework.cloud.config.source.PropertySource;
+import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.web.context.support.StandardServletEnvironment;
 
 /**

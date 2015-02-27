@@ -21,9 +21,9 @@ import java.io.File;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.ConfigServerTestUtils;
 import org.springframework.cloud.config.server.SVNKitEnvironmentRepository;
-import org.springframework.cloud.config.source.Environment;
 import org.springframework.core.env.StandardEnvironment;
 
 import static org.junit.Assert.assertTrue;

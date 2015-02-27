@@ -18,8 +18,8 @@ package org.springframework.cloud.config.server;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.SpringApplicationEnvironmentRepository;
-import org.springframework.cloud.config.source.Environment;
 
 
 /**

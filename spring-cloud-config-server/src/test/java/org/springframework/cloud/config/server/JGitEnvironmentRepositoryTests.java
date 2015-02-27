@@ -25,9 +25,9 @@ import java.io.IOException;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.ConfigServerTestUtils;
 import org.springframework.cloud.config.server.JGitEnvironmentRepository;
-import org.springframework.cloud.config.source.Environment;
 import org.springframework.core.env.StandardEnvironment;
 
 /**

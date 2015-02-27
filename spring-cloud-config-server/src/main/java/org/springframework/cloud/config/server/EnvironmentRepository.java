@@ -15,7 +15,7 @@
  */
 package org.springframework.cloud.config.server;
 
-import org.springframework.cloud.config.source.Environment;
+import org.springframework.cloud.config.environment.Environment;
 
 
 /**

@@ -23,10 +23,10 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.ConfigServerTestUtils;
 import org.springframework.cloud.config.server.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
-import org.springframework.cloud.config.source.Environment;
 import org.springframework.core.env.StandardEnvironment;
 
 /**

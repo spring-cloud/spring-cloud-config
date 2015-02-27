@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.source;
+package org.springframework.cloud.config.environment;
 
 import java.util.Map;
 
