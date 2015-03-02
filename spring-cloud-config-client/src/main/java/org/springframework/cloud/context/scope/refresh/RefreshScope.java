@@ -16,11 +16,11 @@ package org.springframework.cloud.context.scope.refresh;
 import java.io.Serializable;
 
 import org.springframework.beans.BeansException;
+import org.springframework.cloud.context.scope.GenericScope;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.cloud.context.scope.GenericScope;
 
 /**
  * <p>
@@ -59,7 +59,6 @@ import org.springframework.cloud.context.scope.GenericScope;
 @ManagedResource
 public class RefreshScope extends GenericScope implements ApplicationContextAware {
 
-	protected static final String SCOPED_TARGET_PREFIX = "scopedTarget.";
 	private ApplicationContext context;
 
 	/**

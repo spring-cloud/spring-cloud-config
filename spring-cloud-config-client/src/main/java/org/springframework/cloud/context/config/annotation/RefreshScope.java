@@ -42,6 +42,6 @@ public @interface RefreshScope {
 	/**
 	 * @see Scope#proxyMode()
 	 */
-	ScopedProxyMode proxyMode() default ScopedProxyMode.DEFAULT;
+	ScopedProxyMode proxyMode() default ScopedProxyMode.TARGET_CLASS;
 
 }

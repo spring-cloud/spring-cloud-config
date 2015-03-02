@@ -22,31 +22,22 @@ import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanDefinitionHolder;
-import org.springframework.beans.factory.config.BeanDefinitionVisitor;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.Scope;
-import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.cloud.context.config.BeanLifecycleDecorator;
 import org.springframework.cloud.context.config.BeanLifecycleDecorator.Context;
 import org.springframework.cloud.context.config.StandardBeanLifecycleDecorator;
-import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.util.StringValueResolver;
 
 /**
  * <p>
@@ -62,14 +53,14 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor, Disposable
 
 	private static final Log logger = LogFactory.getLog(GenericScope.class);
 
+	public static final String SCOPED_TARGET_PREFIX = "scopedTarget.";
+
 	private BeanLifecycleWrapperCache cache = new BeanLifecycleWrapperCache(
 			new StandardScopeCache());
 
 	private String name = "generic";
 
 	private boolean proxyTargetClass = true;
-
-	private boolean autoProxy = true;
 
 	private ConfigurableListableBeanFactory beanFactory;
 
@@ -106,21 +97,6 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor, Disposable
 	 */
 	public void setProxyTargetClass(boolean proxyTargetClass) {
 		this.proxyTargetClass = proxyTargetClass;
-	}
-
-	/**
-	 * Flag to indicate that all scoped beans should automatically be proxied. If true
-	 * then scoped beans can be injected as dependencies of another component and the
-	 * concrete target will only be instantiated when it is used. Proxying is a huge
-	 * advantage if the context storage for the scope cache is not available at
-	 * configuration time (e.g. for thread-based, or other transient scopes). If this flag
-	 * is false you can expect maybe to have to add extra meta-data to the bean
-	 * definitions individually (e.g. &lt;aop:scoped-proxy/&gt; for an XML configuration).
-	 * 
-	 * @param autoProxy the flag value to set, default is true
-	 */
-	public void setAutoProxy(boolean autoProxy) {
-		this.autoProxy = autoProxy;
 	}
 
 	/**
@@ -219,36 +195,8 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor, Disposable
 
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
 			throws BeansException {
-
 		beanFactory.registerScope(name, this);
 		setSerializationId(beanFactory);
-
-		this.beanFactory = beanFactory;
-
-		evaluationContext = new StandardEvaluationContext();
-		evaluationContext.addPropertyAccessor(new BeanFactoryAccessor());
-
-		if (!autoProxy) {
-			// No need to try and create proxies
-			return;
-		}
-
-		Assert.state(beanFactory instanceof BeanDefinitionRegistry,
-				"BeanFactory was not a BeanDefinitionRegistry, so RefreshScope cannot be used.");
-		BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
-
-		for (String beanName : beanFactory.getBeanDefinitionNames()) {
-			BeanDefinition definition = beanFactory.getBeanDefinition(beanName);
-			// Replace this or any of its inner beans with scoped proxy if it
-			// has this scope
-			boolean scoped = name.equals(definition.getScope());
-			Scopifier scopifier = new Scopifier(registry, name, proxyTargetClass, scoped);
-			scopifier.visitBeanDefinition(definition);
-			if (scoped) {
-				createScopedProxy(beanName, definition, registry, proxyTargetClass);
-			}
-		}
-
 	}
 
 	/**
@@ -291,81 +239,6 @@ public class GenericScope implements Scope, BeanFactoryPostProcessor, Disposable
 			throw (Error) throwable;
 		}
 		return new IllegalStateException(throwable);
-	}
-
-	private static BeanDefinitionHolder createScopedProxy(String beanName,
-			BeanDefinition definition, BeanDefinitionRegistry registry,
-			boolean proxyTargetClass) {
-		BeanDefinitionHolder proxyHolder = ScopedProxyUtils.createScopedProxy(
-				new BeanDefinitionHolder(definition, beanName), registry,
-				proxyTargetClass);
-		registry.registerBeanDefinition(beanName, proxyHolder.getBeanDefinition());
-		return proxyHolder;
-	}
-
-	/**
-	 * Helper class to scan a bean definition hierarchy and force the use of auto-proxy
-	 * for scoped beans.
-	 * 
-	 * @author Dave Syer
-	 * 
-	 */
-	private static class Scopifier extends BeanDefinitionVisitor {
-
-		private final boolean proxyTargetClass;
-
-		private final BeanDefinitionRegistry registry;
-
-		private final String scope;
-
-		private final boolean scoped;
-
-		public Scopifier(BeanDefinitionRegistry registry, String scope,
-				boolean proxyTargetClass, boolean scoped) {
-			super(new StringValueResolver() {
-				public String resolveStringValue(String value) {
-					return value;
-				}
-			});
-			this.registry = registry;
-			this.proxyTargetClass = proxyTargetClass;
-			this.scope = scope;
-			this.scoped = scoped;
-		}
-
-		@Override
-		protected Object resolveValue(Object value) {
-
-			BeanDefinition definition = null;
-			String beanName = null;
-			if (value instanceof BeanDefinition) {
-				definition = (BeanDefinition) value;
-				beanName = BeanDefinitionReaderUtils.generateBeanName(definition,
-						registry);
-			}
-			else if (value instanceof BeanDefinitionHolder) {
-				BeanDefinitionHolder holder = (BeanDefinitionHolder) value;
-				definition = holder.getBeanDefinition();
-				beanName = holder.getBeanName();
-			}
-
-			if (definition != null) {
-				boolean nestedScoped = scope.equals(definition.getScope());
-				boolean scopeChangeRequiresProxy = !scoped && nestedScoped;
-				if (scopeChangeRequiresProxy) {
-					// Exit here so that nested inner bean definitions are not
-					// analysed
-					return createScopedProxy(beanName, definition, registry,
-							proxyTargetClass);
-				}
-			}
-
-			// Nested inner bean definitions are recursively analysed here
-			value = super.resolveValue(value);
-			return value;
-
-		}
-
 	}
 
 	private static class BeanLifecycleWrapperCache {

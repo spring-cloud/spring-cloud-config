@@ -30,6 +30,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.context.scope.GenericScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeIntegrationTests.TestConfiguration;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -107,9 +108,8 @@ public class RefreshScopeIntegrationTests {
 		assertEquals(1, ExampleService.getDestroyCount());
 		assertNotSame(id1, id2);
 		assertNotNull(ExampleService.event);
-		assertEquals(
-				org.springframework.cloud.context.scope.refresh.RefreshScope.SCOPED_TARGET_PREFIX
-						+ "service", ExampleService.event.getName());
+		assertEquals(GenericScope.SCOPED_TARGET_PREFIX + "service",
+				ExampleService.event.getName());
 	}
 
 	public static interface Service {
