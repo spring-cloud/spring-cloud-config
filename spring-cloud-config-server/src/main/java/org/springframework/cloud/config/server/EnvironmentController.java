@@ -56,7 +56,7 @@ public class EnvironmentController {
 		return labelled(name, profiles, defaultLabel);
 	}
 
-	@RequestMapping("/{name}/{profiles}/{label}")
+	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
 		Environment environment = encryption.decrypt(repository.findOne(name, profiles,
