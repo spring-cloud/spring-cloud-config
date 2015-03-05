@@ -20,6 +20,9 @@
 		<developerConnection>scm:git:ssh://git@github.com/spring-cloud/spring-cloud-config.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
+    <properties>
+        <bintray.package>config</bintray.package>
+    </properties>
 	<modules>
 	  <module>spring-cloud-config-client</module>
 	  <module>spring-cloud-config-server</module>
