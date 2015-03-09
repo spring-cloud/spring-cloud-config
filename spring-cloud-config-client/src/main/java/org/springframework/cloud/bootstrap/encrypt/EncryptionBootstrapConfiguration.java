@@ -40,7 +40,7 @@ import org.springframework.util.StringUtils;
  *
  */
 @Configuration
-@ConditionalOnClass({TextEncryptor.class, RsaSecretEncryptor.class})
+@ConditionalOnClass({ TextEncryptor.class, RsaSecretEncryptor.class })
 @EnableConfigurationProperties(KeyProperties.class)
 public class EncryptionBootstrapConfiguration {
 
@@ -65,8 +65,8 @@ public class EncryptionBootstrapConfiguration {
 			if (keyStore.getLocation() != null && keyStore.getLocation().exists()) {
 				return new RsaSecretEncryptor(
 						new KeyStoreKeyFactory(keyStore.getLocation(), keyStore
-								.getPassword().toCharArray()).getKeyPair(keyStore
-								.getAlias()));
+								.getPassword().toCharArray()).getKeyPair(
+								keyStore.getAlias(), keyStore.getSecret().toCharArray()));
 			}
 			return new EncryptorFactory().create(key.getKey());
 		}
@@ -94,7 +94,8 @@ public class EncryptionBootstrapConfiguration {
 		if (encryptor == null) {
 			encryptor = new FailsafeTextEncryptor();
 		}
-		EnvironmentDecryptApplicationInitializer listener = new EnvironmentDecryptApplicationInitializer(encryptor);
+		EnvironmentDecryptApplicationInitializer listener = new EnvironmentDecryptApplicationInitializer(
+				encryptor);
 		listener.setFailOnError(key.isFailOnError());
 		return listener;
 	}

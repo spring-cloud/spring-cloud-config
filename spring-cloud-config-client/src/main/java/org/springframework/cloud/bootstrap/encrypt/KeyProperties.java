@@ -56,6 +56,7 @@ public class KeyProperties {
 		private Resource location;
 		private String password;
 		private String alias;
+		private String secret;
 
 		public String getAlias() {
 			return alias;
@@ -79,6 +80,14 @@ public class KeyProperties {
 
 		public void setPassword(String password) {
 			this.password = password;
+		}
+
+		public String getSecret() {
+			return secret==null ? password : secret;
+		}
+
+		public void setSecret(String secret) {
+			this.secret = secret;
 		}
 
 	}

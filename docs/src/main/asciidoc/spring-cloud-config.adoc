@@ -287,8 +287,9 @@ your `application.yml` for the Config Server:
 encrypt:
   keyStore:
     location: classpath:/server.jks
-    alias: mytestkey
     password: letmein
+    alias: mytestkey
+    secret: changeme
 ----
 
 === Embedding the Config Server
