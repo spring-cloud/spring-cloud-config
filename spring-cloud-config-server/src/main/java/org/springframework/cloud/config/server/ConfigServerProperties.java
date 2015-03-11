@@ -26,41 +26,62 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties("spring.cloud.config.server")
 public class ConfigServerProperties {
-	
+
 	public static final String MASTER = "master";
-	
+
+	/**
+	 * Flag indicating that the config server should initialize its own Environment with
+	 * properties from the remote repository. Off by default because it delays startup but
+	 * can be useful when embedding the server in another application.
+	 */
 	private boolean bootstrap;
+
+	/**
+	 * Prefix for configuration resource paths (default is empty). Useful when embedding
+	 * in another application when you don't want to change the context path or servlet
+	 * path.
+	 */
 	private String prefix;
+
 	/**
 	 * Default repository label (defaults to "master") when incoming requests do not have
 	 * a specific label.
 	 */
 	private String defaultLabel = ConfigServerProperties.MASTER;
+
 	/**
-	 * Extra map for a property source to be sent to all clients.
+	 * Extra map for a property source to be sent to all clients unconditionally.
 	 */
 	private Map<String, String> overrides = new LinkedHashMap<String, String>();
+
 	public String getDefaultLabel() {
 		return defaultLabel;
 	}
+
 	public void setDefaultLabel(String defaultLabel) {
 		this.defaultLabel = defaultLabel;
 	}
+
 	public boolean isBootstrap() {
 		return bootstrap;
 	}
+
 	public void setBootstrap(boolean bootstrap) {
 		this.bootstrap = bootstrap;
 	}
+
 	public String getPrefix() {
 		return prefix;
 	}
+
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
 	}
+
 	public Map<String, String> getOverrides() {
 		return overrides;
 	}
+
 	public void setOverrides(Map<String, String> overrides) {
 		this.overrides = overrides;
 	}
