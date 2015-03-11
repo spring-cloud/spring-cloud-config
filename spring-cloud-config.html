@@ -1015,7 +1015,12 @@ need to you can embed it in another application. Just use the
 to serve the resources under a prefix. The prefix should start but not
 end with a "/". It is applied to the <code>@RequestMappings</code> in the Config
 Server (i.e. underneath the Spring Boot prefixes <code>server.servletPath</code>
-and <code>server.contextPath</code>).</p>
+and <code>server.contextPath</code>). Another optional property that can be
+useful in this case is <code>spring.cloud.config.server.bootstrap</code> which is
+a flag to indicate that the server should configure itself from its
+own remote repository. The flag is off by default because it can delay
+startup, but when embedded in another application it makes sense to
+initialize the same way as any other application.</p>
 </div>
 </div>
 </div>
@@ -1490,7 +1495,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-09 22:17:58 UTC
+Last updated 2015-03-11 10:33:15 UTC
 </div>
 </div>
 </body>
