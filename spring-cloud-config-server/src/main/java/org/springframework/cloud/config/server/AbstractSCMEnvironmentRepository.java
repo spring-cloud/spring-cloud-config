@@ -44,6 +44,9 @@ public abstract class AbstractSCMEnvironmentRepository implements EnvironmentRep
 	protected ConfigurableEnvironment environment;
 	protected String username;
 	protected String password;
+	
+	private boolean searchAllFoldersInRoot = false;
+	
 	private String[] searchPaths = new String[0];
 
 	public AbstractSCMEnvironmentRepository(ConfigurableEnvironment environment) {
@@ -90,6 +93,14 @@ public abstract class AbstractSCMEnvironmentRepository implements EnvironmentRep
 	public File getBasedir() {
 		return basedir;
 	}
+	
+	public boolean isSearchAllFoldersInRoot() {
+		return searchAllFoldersInRoot;
+	}
+
+	public void setSearchAllFoldersInRoot(boolean searchAllFoldersInRoot) {
+		this.searchAllFoldersInRoot = searchAllFoldersInRoot;
+	}
 
 	public void setSearchPaths(String... searchPaths) {
 		this.searchPaths = searchPaths;
@@ -130,12 +141,22 @@ public abstract class AbstractSCMEnvironmentRepository implements EnvironmentRep
 	protected String[] getSearchLocations(File dir) {
 		List<String> locations = new ArrayList<String>();
 		locations.add(dir.toURI().toString());
+		
+		if (searchAllFoldersInRoot) {
+			for (File file : dir.listFiles()) {
+				if (file.isDirectory()) {
+					locations.add(file.toURI().toString());
+				}
+			}
+		}
+		
 		for (String path : searchPaths) {
 			File file = new File(getWorkingDirectory(), path);
 			if (file.isDirectory()) {
 				locations.add(file.toURI().toString());
 			}
 		}
+		
 		return locations.toArray(new String[0]);
 	}
 
