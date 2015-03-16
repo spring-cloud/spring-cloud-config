@@ -29,15 +29,16 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
+import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Dave Syer
  * @author Michael Prankl
  */
-public abstract class AbstractSCMEnvironmentRepository implements EnvironmentRepository,
+public abstract class AbstractScmEnvironmentRepository implements EnvironmentRepository,
 		InitializingBean {
-	private static Log logger = LogFactory.getLog(AbstractSCMEnvironmentRepository.class);
+	private static Log logger = LogFactory.getLog(AbstractScmEnvironmentRepository.class);
 
 	protected File basedir;
 	protected String uri;
@@ -46,7 +47,7 @@ public abstract class AbstractSCMEnvironmentRepository implements EnvironmentRep
 	protected String password;
 	private String[] searchPaths = new String[0];
 
-	public AbstractSCMEnvironmentRepository(ConfigurableEnvironment environment) {
+	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
 		this.basedir = createBaseDir();
 	}
@@ -130,10 +131,13 @@ public abstract class AbstractSCMEnvironmentRepository implements EnvironmentRep
 	protected String[] getSearchLocations(File dir) {
 		List<String> locations = new ArrayList<String>();
 		locations.add(dir.toURI().toString());
-		for (String path : searchPaths) {
-			File file = new File(getWorkingDirectory(), path);
-			if (file.isDirectory()) {
-				locations.add(file.toURI().toString());
+		String[] list = dir.list();
+		if (list!=null) {
+			for (String path : list) {
+				File file = new File(dir, path);
+				if (file.isDirectory() && PatternMatchUtils.simpleMatch(searchPaths, path)) {
+					locations.add(file.toURI().toString());
+				}
 			}
 		}
 		return locations.toArray(new String[0]);

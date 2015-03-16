@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.ConfigServerTestUtils;
-import org.springframework.cloud.config.server.SVNKitEnvironmentRepository;
+import org.springframework.cloud.config.server.SvnKitEnvironmentRepository;
 import org.springframework.core.env.StandardEnvironment;
 
 import static org.junit.Assert.assertTrue;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 public class SVNKitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
-	private SVNKitEnvironmentRepository repository = new SVNKitEnvironmentRepository(
+	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(
 			environment);
 
 	private File basedir = new File("target/config");

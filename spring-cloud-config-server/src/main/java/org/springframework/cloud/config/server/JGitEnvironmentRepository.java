@@ -54,7 +54,7 @@ import static org.springframework.util.StringUtils.hasText;
  * @author Dave Syer
  *
  */
-public class JGitEnvironmentRepository extends AbstractSCMEnvironmentRepository {
+public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository {
 
 	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
 

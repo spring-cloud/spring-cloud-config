@@ -62,7 +62,7 @@ public class ConfigServerConfiguration {
 
 		@Bean
 		public EnvironmentRepository environmentRepository() {
-			return new SVNKitEnvironmentRepository(environment);
+			return new SvnKitEnvironmentRepository(environment);
 		}
 	}
 

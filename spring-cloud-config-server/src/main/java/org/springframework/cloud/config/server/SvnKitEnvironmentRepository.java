@@ -41,9 +41,9 @@ import static org.springframework.util.StringUtils.hasText;
  * @author Michael Prankl
  */
 @ConfigurationProperties("spring.cloud.config.server.svn")
-public class SVNKitEnvironmentRepository extends AbstractSCMEnvironmentRepository {
+public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepository {
 
-	private static Log logger = LogFactory.getLog(SVNKitEnvironmentRepository.class);
+	private static Log logger = LogFactory.getLog(SvnKitEnvironmentRepository.class);
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
@@ -110,7 +110,7 @@ public class SVNKitEnvironmentRepository extends AbstractSCMEnvironmentRepositor
 
 	}
 
-	public SVNKitEnvironmentRepository(ConfigurableEnvironment environment) {
+	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
 	}
 

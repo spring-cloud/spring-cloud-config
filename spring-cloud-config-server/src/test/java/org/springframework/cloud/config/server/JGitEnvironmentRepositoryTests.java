@@ -73,6 +73,18 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void nestedPattern() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
+		repository.setUri(uri);
+		repository.setSearchPaths(new String[] {"sub*"});
+		repository.findOne("bar", "staging", "master");
+		Environment environment = repository.findOne("bar", "staging", "master");
+		assertEquals(2, environment.getPropertySources().size());
+		assertEquals(repository.getUri() + "/sub/application.yml", environment
+				.getPropertySources().get(0).getName());
+	}
+
+	@Test
 	public void branch() {
 		repository.setBasedir(basedir);
 		Environment environment = repository.findOne("bar", "staging", "raw");
