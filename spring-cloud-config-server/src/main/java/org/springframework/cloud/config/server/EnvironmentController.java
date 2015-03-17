@@ -10,8 +10,6 @@ import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -34,7 +32,6 @@ public class EnvironmentController {
 
 	private static final String MAP_PREFIX = "map";
 
-	@Qualifier("MultipleJGitEnvironmentRepository")
 	private EnvironmentRepository repository;
 
 	private EncryptionController encryption;
@@ -43,7 +40,6 @@ public class EnvironmentController {
 
 	private Map<String, String> overrides = new LinkedHashMap<String, String>();
 
-	@Autowired
 	public EnvironmentController(EnvironmentRepository repository,
 			EncryptionController encryption) {
 		super();
