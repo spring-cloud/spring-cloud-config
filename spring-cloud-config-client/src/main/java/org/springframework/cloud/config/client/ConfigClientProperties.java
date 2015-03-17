@@ -34,14 +34,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class ConfigClientProperties {
 
 	public static final String PREFIX = "spring.cloud.config";
-	
+
 	/**
 	 * Flag to say that remote configuration is enabled. Default true;
 	 */
 	private boolean enabled = true;
 
 	/**
-	 * The default profile to use when fetching remote configuration (comma-separated). Default is "default".
+	 * The default profile to use when fetching remote configuration (comma-separated).
+	 * Default is "default".
 	 */
 	private String profile = "default";
 
@@ -59,7 +60,7 @@ public class ConfigClientProperties {
 	private Discovery discovery = new Discovery();
 
 	private boolean failFast = false;
-	
+
 	private ConfigClientProperties() {
 	}
 
@@ -82,7 +83,7 @@ public class ConfigClientProperties {
 	public String getRawUri() {
 		return extractCredentials()[2];
 	}
-	
+
 	public String getUri() {
 		return uri;
 	}
@@ -225,19 +226,22 @@ public class ConfigClientProperties {
 				+ ConfigClientProperties.PREFIX
 				+ ".name:${spring.application.name:application}}"));
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
-			override.setProfile(environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
+			override.setProfile(environment.getProperty(ConfigClientProperties.PREFIX
+					+ ".profile"));
 		}
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".label")) {
-			override.setLabel(environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
+			override.setLabel(environment.getProperty(ConfigClientProperties.PREFIX
+					+ ".label"));
 		}
 		return override;
 	}
 
 	@Override
 	public String toString() {
-		return "ConfigClientProperties [name=" + name + ", env=" + profile + ", label="
-				+ label + ", uri=" + uri + ", discovery.enabled=" + discovery.enabled
-				+ ", failFast="+ failFast + "]";
+		return "ConfigClientProperties [enabled=" + enabled + ", profile=" + profile
+				+ ", name=" + name + ", label=" + label + ", username=" + username
+				+ ", password=" + password + ", uri=" + uri + ", discovery.enabled="
+				+ discovery.enabled + ", failFast=" + failFast + "]";
 	}
 
 }

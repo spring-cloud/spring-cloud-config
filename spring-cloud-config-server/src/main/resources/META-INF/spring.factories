@@ -1,3 +1,7 @@
 # Bootstrap components
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
 org.springframework.cloud.config.server.ConfigServerBootstrapConfiguration
+
+# Application listeners
+org.springframework.context.ApplicationListener=\
+org.springframework.cloud.config.server.ConfigServerBootstrapApplicationListener

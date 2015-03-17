@@ -130,7 +130,6 @@ public class PropertySourceBootstrapConfiguration implements
 	}
 
 	@Configuration
-	@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
 	protected static class PropertySourceLocatorConfiguration {
 
 		@Autowired
@@ -143,6 +142,7 @@ public class PropertySourceBootstrapConfiguration implements
 		}
 
 		@Bean
+		@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
 		public ConfigServicePropertySourceLocator configServicePropertySource() {
 			ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
 					configClientProperties());

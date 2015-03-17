@@ -32,21 +32,25 @@ import org.springframework.context.annotation.Import;
  * @author Dave Syer
  *
  */
-@ConditionalOnProperty("spring.cloud.config.server.bootstrap")
 @Configuration
-@Import(ConfigServerConfiguration.class)
 public class ConfigServerBootstrapConfiguration {
 
-	@Autowired
-	private EnvironmentRepository repository;
+	@ConditionalOnProperty("spring.cloud.config.server.bootstrap")
+	@Import(ConfigServerConfiguration.class)
+	protected static class LocalPropertySourceLocatorConfiguration {
 
-	@Autowired
-	private ConfigClientProperties client;
+		@Autowired
+		private EnvironmentRepository repository;
 
-	@Bean
-	public EnvironmentRepositoryPropertySourceLocator environmentRepositoryPropertySourceLocator() {
-		return new EnvironmentRepositoryPropertySourceLocator(repository,
-				client.getName(), client.getProfile(), client.getLabel());
+		@Autowired
+		private ConfigClientProperties client;
+
+		@Bean
+		public EnvironmentRepositoryPropertySourceLocator environmentRepositoryPropertySourceLocator() {
+			return new EnvironmentRepositoryPropertySourceLocator(repository,
+					client.getName(), client.getProfile(), client.getLabel());
+		}
+
 	}
 
 }

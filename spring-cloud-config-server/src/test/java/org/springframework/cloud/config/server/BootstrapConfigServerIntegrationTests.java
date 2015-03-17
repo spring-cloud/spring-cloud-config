@@ -21,8 +21,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = ConfigServerApplication.class)
-@IntegrationTest({ "debug", "server.port:0",
-		"spring.cloud.bootstrap.name:enable-bootstrap" })
+@IntegrationTest({ "server.port:0", "spring.cloud.bootstrap.name:enable-bootstrap" })
 @WebAppConfiguration
 @ActiveProfiles("test")
 public class BootstrapConfigServerIntegrationTests {
@@ -43,8 +42,8 @@ public class BootstrapConfigServerIntegrationTests {
 		Environment environment = new TestRestTemplate().getForObject("http://localhost:"
 				+ port + "/foo/development/", Environment.class);
 		assertFalse(environment.getPropertySources().isEmpty());
-		assertEquals("bar", environment.getPropertySources().get(0)
-				.getSource().get("info.foo"));
+		assertEquals("bar",
+				environment.getPropertySources().get(0).getSource().get("info.foo"));
 	}
 
 	@Test
