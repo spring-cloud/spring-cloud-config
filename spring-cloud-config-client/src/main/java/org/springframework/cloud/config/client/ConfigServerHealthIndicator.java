@@ -20,6 +20,10 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
     public ConfigServerHealthIndicator(ConfigServicePropertySourceLocator locator) {
         this.env = new AbstractEnvironment() {
+        	@Override
+        	public String[] getActiveProfiles() {
+        		return new String[] {"default"};
+        	}
 		};
         this.locator = locator;
     }
@@ -38,7 +42,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
             } else if (propertySource!=null) {
                 builder.withDetail("propertySources", propertySource.toString());
             } else {
-            	builder.down().withDetail("error", "no property sources located");
+            	builder.unknown().withDetail("error", "no property sources located");
             }
         } catch (Exception e) {
             builder.down(e);
