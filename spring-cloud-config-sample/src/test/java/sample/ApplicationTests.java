@@ -19,23 +19,27 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith ( SpringJUnit4ClassRunner.class )
-@SpringApplicationConfiguration ( classes = Application.class )
-@IntegrationTest ( "server.port:0" )
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = Application.class)
+// Normally spring.cloud.config.enabled:true is the default but since we have the config
+// server on the classpath we need to set it explicitly
+@IntegrationTest({ "server.port:0", "spring.cloud.config.enabled:true" })
 @WebAppConfiguration
 public class ApplicationTests {
 
 	private static int configPort = 0;
 
-	@Value ( "${local.server.port}" )
+	@Value("${local.server.port}")
 	private int port;
 
 	private static ConfigurableApplicationContext server;
 
 	@BeforeClass
 	public static void startConfigServer() throws IOException {
-		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
-		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
+		String baseDir = ConfigServerTestUtils
+				.getBaseDirectory("spring-cloud-config-sample");
+		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos",
+				"config-repo", "target/config");
 		server = SpringApplication.run(
 				org.springframework.cloud.config.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
@@ -56,7 +60,7 @@ public class ApplicationTests {
 	@Test
 	public void contextLoads() {
 		String foo = new TestRestTemplate().getForObject("http://localhost:" + port
-																 + "/env/info.foo", String.class);
+				+ "/env/info.foo", String.class);
 		assertEquals("bar", foo);
 	}
 

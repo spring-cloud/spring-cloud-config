@@ -12,7 +12,7 @@ public class ApplicationFailFastTests {
         try {
             new SpringApplicationBuilder()
                     .sources(Application.class)
-                    .run("--server.port=0",
+                    .run("--server.port=0", "--spring.cloud.config.enabled=true", 
                             "--spring.cloud.config.failFast=true",
                             "--spring.cloud.config.uit=http://server-host-doesnt-exist:1234");
             fail("failFast option did not produce an exception");
