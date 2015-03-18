@@ -17,7 +17,7 @@ package org.springframework.cloud.config.server;
 
 import java.util.Map;
 
-import org.springframework.cloud.config.client.PropertySourceLocator;
+import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.Environment;

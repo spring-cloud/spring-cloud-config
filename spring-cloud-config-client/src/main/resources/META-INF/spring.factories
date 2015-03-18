@@ -1,16 +1,7 @@
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.springframework.cloud.autoconfigure.RefreshAutoConfiguration,\
-org.springframework.cloud.autoconfigure.LifecycleMvcEndpointAutoConfiguration,\
-org.springframework.cloud.autoconfigure.ConfigClientAutoConfiguration
-
-# Application Listeners
-org.springframework.context.ApplicationListener=\
-org.springframework.cloud.bootstrap.BootstrapApplicationListener,\
-org.springframework.cloud.context.restart.RestartListener
+org.springframework.cloud.config.client.ConfigClientAutoConfiguration
 
 # Bootstrap components
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
-org.springframework.cloud.bootstrap.config.PropertySourceBootstrapConfiguration,\
-org.springframework.cloud.bootstrap.encrypt.EncryptionBootstrapConfiguration,\
-org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration
+org.springframework.cloud.config.client.ConfigServiceBootstrapConfiguration

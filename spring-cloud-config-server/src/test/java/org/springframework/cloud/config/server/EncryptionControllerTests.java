@@ -22,12 +22,12 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collections;
 
 import org.junit.Test;
-import org.springframework.cloud.config.encrypt.KeyFormatException;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.EncryptionController;
 import org.springframework.cloud.config.server.InvalidCipherException;
 import org.springframework.cloud.config.server.KeyNotInstalledException;
+import org.springframework.cloud.context.encrypt.KeyFormatException;
 import org.springframework.http.MediaType;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 

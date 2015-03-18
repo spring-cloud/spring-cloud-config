@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.autoconfigure;
+package org.springframework.cloud.config.client;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.config.client.ConfigClientProperties;
-import org.springframework.cloud.config.client.ConfigServerHealthIndicator;
-import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +30,7 @@ import org.springframework.core.env.Environment;
  * bound to it. It won't be available in time for autowiring into the bootstrap context,
  * but the values in this properties object will be the same as the ones used to bind to
  * the config server, if there is one.
- * 
+ *
  * @author Dave Syer
  *
  */
@@ -43,9 +40,11 @@ public class ConfigClientAutoConfiguration {
 	@Bean
 	public ConfigClientProperties configClientProperties(Environment environment,
 			ApplicationContext context) {
-		if (context.getParent()!=null && BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context.getParent(),
-				ConfigClientProperties.class).length > 0) {
-			return BeanFactoryUtils.beanOfType(context.getParent(), ConfigClientProperties.class);
+		if (context.getParent() != null
+				&& BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
+						context.getParent(), ConfigClientProperties.class).length > 0) {
+			return BeanFactoryUtils.beanOfType(context.getParent(),
+					ConfigClientProperties.class);
 		}
 		ConfigClientProperties client = new ConfigClientProperties(environment);
 		return client;
@@ -57,10 +56,11 @@ public class ConfigClientAutoConfiguration {
 	@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
 	protected static class ConfigServerHealthIndicatorConfiguration {
 
-        @Bean
-        public ConfigServerHealthIndicator configServerHealthIndicator(ConfigServicePropertySourceLocator locator) {
-            return new ConfigServerHealthIndicator(locator);
-        }
+		@Bean
+		public ConfigServerHealthIndicator configServerHealthIndicator(
+				ConfigServicePropertySourceLocator locator) {
+			return new ConfigServerHealthIndicator(locator);
+		}
 	}
 
 }

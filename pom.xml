@@ -41,11 +41,6 @@
 			<artifactId>spring-cloud-config-server</artifactId>
 	        <version>1.0.1.BUILD-SNAPSHOT</version>
 		</dependency>
- 		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-rsa</artifactId>
-			<version>1.0.0.RELEASE</version>
-		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit</artifactId>
