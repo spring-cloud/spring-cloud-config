@@ -20,6 +20,9 @@ package org.springframework.cloud.autoconfigure;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.Endpoint;
@@ -34,6 +37,7 @@ import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
+import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessorRegistrar;
 import org.springframework.cloud.bootstrap.config.PropertySourceBootstrapConfiguration;
 import org.springframework.cloud.config.client.RefreshEndpoint;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
@@ -119,23 +123,34 @@ public class RefreshAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnBean(ConfigurationPropertiesBindingPostProcessor.class)
-	protected static class ConfigurationPropertiesRebinderConfiguration {
+	protected static class ConfigurationPropertiesRebinderConfiguration implements
+			BeanFactoryAware {
 
-		@Autowired
-		private ConfigurationPropertiesBindingPostProcessor binder;
+		private BeanFactory context;
 
-		@Autowired
-		private ConfigurationBeanFactoryMetaData metaData;
+		@Override
+		public void setBeanFactory(BeanFactory applicationContext) throws BeansException {
+			context = applicationContext;
+		}
 
 		@Bean
 		@ConditionalOnMissingBean
 		public ConfigurationPropertiesRebinder configurationPropertiesRebinder() {
+			// Since this is a BeanPostProcessor we have to be super careful not to cause
+			// a cascade of bean instantiation. Knowing the *name* of the beans we need is
+			// super optimal, but a little brittle (unfortunately we have no choice).
+			ConfigurationPropertiesBindingPostProcessor binder = context
+					.getBean(
+							ConfigurationPropertiesBindingPostProcessorRegistrar.BINDER_BEAN_NAME,
+							ConfigurationPropertiesBindingPostProcessor.class);
+			ConfigurationBeanFactoryMetaData metaData = context.getBean(
+					ConfigurationPropertiesBindingPostProcessorRegistrar.BINDER_BEAN_NAME
+							+ ".store", ConfigurationBeanFactoryMetaData.class);
 			ConfigurationPropertiesRebinder rebinder = new ConfigurationPropertiesRebinder(
 					binder);
 			rebinder.setBeanMetaDataStore(metaData);
 			return rebinder;
 		}
-
 	}
 
 	@ConditionalOnClass(Endpoint.class)
