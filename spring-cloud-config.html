@@ -435,16 +435,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#config-first-bootstrap">Config First Bootstrap</a></li>
 <li><a href="#eureka-first-bootstrap">Eureka First Bootstrap</a></li>
 <li><a href="#config-client-fail-fast">Config Client Fail Fast</a></li>
-<li><a href="#_environment_changes">Environment Changes</a></li>
-<li><a href="#_refresh_scope">Refresh Scope</a></li>
-<li><a href="#_encryption_and_decryption_2">Encryption and Decryption</a></li>
-<li><a href="#_endpoints">Endpoints</a></li>
 <li><a href="#_locating_remote_configuration_resources">Locating Remote Configuration Resources</a></li>
-<li><a href="#_the_bootstrap_application_context">The Bootstrap Application Context</a></li>
-<li><a href="#_application_context_hierarchies">Application Context Hierarchies</a></li>
-<li><a href="#customizing-bootstrap-properties">Changing the Location of Bootstrap Properties</a></li>
-<li><a href="#_customizing_the_bootstrap_configuration">Customizing the Bootstrap Configuration</a></li>
-<li><a href="#customizing-bootstrap-property-sources">Customizing the Bootstrap Property Sources</a></li>
 <li><a href="#_security_2">Security</a></li>
 </ul>
 </li>
@@ -806,6 +797,36 @@ system (any static URL you want to point to with
 profile just launch the Config Server with
 "spring.profiles.active=native".</p>
 </div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+The default value of the <code>searchLocations</code> is identical to a
+local Spring Boot application (so
+<code>[classpath:/, classpath:/config, file:./, file:./config]</code>) which will
+expose the <code>application.properties</code> from the server to all clients.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+A filesystem backend is great for getting started quickly and
+for testing. To use it in production you need to be sure that the
+file system is reliable, and shared across all instances of the
+Config Server.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>This repository implementation maps the <code>{label}</code> parameter of the
 HTTP resource to a suffix on the search path, so properties files are
@@ -999,8 +1020,9 @@ your <code>application.yml</code> for the Config Server:</p>
 <pre>encrypt:
   keyStore:
     location: classpath:/server.jks
+    password: letmein
     alias: mytestkey
-    password: letmein</pre>
+    secret: changeme</pre>
 </div>
 </div>
 </div>
@@ -1014,7 +1036,12 @@ need to you can embed it in another application. Just use the
 to serve the resources under a prefix. The prefix should start but not
 end with a "/". It is applied to the <code>@RequestMappings</code> in the Config
 Server (i.e. underneath the Spring Boot prefixes <code>server.servletPath</code>
-and <code>server.contextPath</code>).</p>
+and <code>server.contextPath</code>). Another optional property that can be
+useful in this case is <code>spring.cloud.config.server.bootstrap</code> which is
+a flag to indicate that the server should configure itself from its
+own remote repository. The flag is off by default because it can delay
+startup, but when embedded in another application it makes sense to
+initialize the same way as any other application.</p>
 </div>
 </div>
 </div>
@@ -1077,136 +1104,6 @@ an Exception.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_environment_changes">Environment Changes</h3>
-<div class="paragraph">
-<p>The application will listen for an <code>EnvironmentChangedEvent</code> and react
-to the change in a couple of standard ways (additional
-<code>ApplicationListeners</code> can be added as <code>@Beans</code> by the user in the
-normal way). When an <code>EnvironmentChangedEvent</code> is observed it will
-have a list of key values that have changed, and the application will
-use those to:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Re-bind any <code>@ConfigurationProperties</code> beans in the context</p>
-</li>
-<li>
-<p>Set the logger levels for any properties in <code>logging.level.*</code></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Note that the Config Client does not by default poll for changes in
-the <code>Environment</code>, and generally we would not recommend that approach
-for detecting changes (although you could set it up with a
-<code>@Scheduled</code> annotation). If you have a scaled-out client application
-then it is better to broadcast the <code>EnvironmentChangedEvent</code> to all
-the instances instead of having them polling for changes (e.g. using
-the <a href="https://github.com/spring-cloud/spring-cloud-bus">Spring Cloud
-Bus</a>).</p>
-</div>
-<div class="paragraph">
-<p>The <code>EnvironmentChangedEvent</code> covers a large class of refresh use
-cases, as long as you can actually make a change to the <code>Environment</code>
-and publish the event (those APIs are public and part of core
-Spring). You can verify the changes are bound to
-<code>@ConfigurationProperties</code> beans by visiting the <code>/configprops</code>
-endpoint (normal Spring Boot Actuator feature). For instance a
-<code>DataSource</code> can have its <code>maxPoolSize</code> changed at runtime (the
-default <code>DataSource</code> created by Spring Boot is an
-<code>@ConfigurationProperties</code> bean) and grow capacity
-dynamically. Re-binding <code>@ConfigurationProperties</code> does not cover
-another large class of use cases, where you need more control over the
-refresh, and where you need a change to be atomic over the whole
-<code>ApplicationContext</code>. To address those concerns we have
-<code>@RefreshScope</code>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_refresh_scope">Refresh Scope</h3>
-<div class="paragraph">
-<p>A Spring <code>@Bean</code> that is marked as <code>@RefreshScope</code> will get special
-treatment when there is a configuration change. This addresses the
-problem of stateful beans that only get their configuration injected
-when they are initialized. For instance if a <code>DataSource</code> has open
-connections when the database URL is changed via the <code>Environment</code>, we
-probably want the holders of those connections to be able to complete
-what they are doing. Then the next time someone borrows a connection
-from the pool he gets one with the new URL.</p>
-</div>
-<div class="paragraph">
-<p>Refresh scope beans are lazy proxies that initialize when they are
-used (i.e. when a method is called), and the scope acts as a cache of
-initialized values. To force a bean to re-initialize on the next
-method call you just need to invalidate its cache entry.</p>
-</div>
-<div class="paragraph">
-<p>The <code>RefreshScope</code> is a bean in the context and it has a public method
-<code>refreshAll()</code> to refresh all beans in the scope by clearing the
-target cache. There is also a <code>refresh(String)</code> method to refresh an
-individual bean by name. This functionality is exposed in the
-<code>/refresh</code> endpoint (over HTTP or JMX).</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-<code>@RefreshScope</code> works (technically) on an <code>@Configuration</code>
-class, but it might lead to surprising behaviour: e.g. it does <strong>not</strong>
-mean that all the <code>@Beans</code> defined in that class are themselves
-<code>@RefreshScope</code>. Specifically, anything that depends on those beans
-cannot rely on them being updated when a refresh is initiated, unless
-it is itself in <code>@RefreshScope</code> (in which it will be rebuilt on a
-refresh and its dependencies re-injected, at which point they will be
-re-initialized from the refreshed <code>@Configuration</code>).
-</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_encryption_and_decryption_2">Encryption and Decryption</h3>
-<div class="paragraph">
-<p>The Config Client has an <code>Environment</code> pre-processor for decrypting
-property values locally. It follows the same rules as the Config
-Server, and has the same external configuration via <code>encrypt.*</code>. Thus
-you can use encrypted values in the form <code>{cipher}*</code> and as long as
-there is a valid key then they will be decrypted before the main
-application context gets the <code>Environment</code>. To use the encryption
-features in a client you need to include Spring Security RSA in your
-classpath (Maven co-ordinates
-"org.springframework.security:spring-security-rsa") and you also need
-the full strength JCE extensions in your JVM (google it and download
-from Oracle).</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_endpoints">Endpoints</h3>
-<div class="paragraph">
-<p>For a Spring Boot Actuator application there are some additional management endpoints:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>POST to <code>/env</code> to update the <code>Environment</code> and rebind <code>@ConfigurationProperties</code> and log levels</p>
-</li>
-<li>
-<p><code>/refresh</code> for re-loading the boot strap context and refreshing the <code>@RefreshScope</code> beans</p>
-</li>
-<li>
-<p><code>/restart</code> for closing the <code>ApplicationContext</code> and restarting it (disabled by default)</p>
-</li>
-<li>
-<p><code>/pause</code> and <code>/resume</code> for calling the <code>Lifecycle</code> methods (<code>stop()</code> and <code>start()</code> on the <code>ApplicationContext</code>)</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
 <h3 id="_locating_remote_configuration_resources">Locating Remote Configuration Resources</h3>
 <div class="paragraph">
 <p>The Config Service serves property sources from <code>/{name}/{env}/{label}</code>, where the default bindings in the
@@ -1231,200 +1128,6 @@ client app are</p>
 rolling back to previous versions of configuration; with the default
 Config Server implementation it can be a git label, branch name or
 commit id.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_the_bootstrap_application_context">The Bootstrap Application Context</h3>
-<div class="paragraph">
-<p>The Config Client operates by creating a "bootstrap" application
-context, which is a parent context for the main application. Out of
-the box it is responsible for loading configuration properties from
-the Config Server, and also decrypting properties in the local
-external configuration files. The two contexts share an <code>Environment</code>
-which is the source of external properties for any Spring
-application. Bootstrap properties are added with high precedence, so
-they cannot be overridden by local configuration.</p>
-</div>
-<div class="paragraph">
-<p>The bootstrap context uses a different convention for locating
-external configuration than the main application context, so instead
-of <code>application.yml</code> (or <code>.properties</code>) you use <code>bootstrap.yml</code>,
-keeping the external configuration for bootstrap and main context
-nicely separate. Example:</p>
-</div>
-<div class="listingblock">
-<div class="title">bootstrap.yml</div>
-<div class="content">
-<pre>spring:
-  application:
-    name: foo
-  cloud:
-    config:
-      uri: ${SPRING_CONFIG_URI:http://localhost:8888}</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>It is a good idea to set the <code>spring.application.name</code> (in
-<code>bootstrap.yml</code> or <code>application.yml</code>) if your application needs any
-application-specific configuration from the server.</p>
-</div>
-<div class="paragraph">
-<p>You can disable the bootstrap process completely by setting
-<code>spring.cloud.bootstrap.enabled=false</code> (e.g. in System properties).</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_application_context_hierarchies">Application Context Hierarchies</h3>
-<div class="paragraph">
-<p>If you build an application context from <code>SpringApplication</code> or
-<code>SpringApplicationBuilder</code>, then the Bootstrap context is added as a
-parent to that context. It is a feature of Spring that child contexts
-inherit property sources and profiles from their parent, so the "main"
-application context will contain additional property sources, compared
-to building the same context without Spring Cloud Config. The
-additional property sources are:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>"bootstrap": an optional <code>CompositePropertySource</code> appears with high
-priority if any <code>PropertySourceLocators</code> are found in the Bootstrap
-context, and they have non-empty properties. An example would be
-properties from the Spring Cloud Config Server. See
-<a href="#customizing-bootstrap-property-sources">below</a> for instructions
-on how to customize the contents of this property source.</p>
-</li>
-<li>
-<p>"applicationConfig: [classpath:bootstrap.yml]" (and friends if
-Spring profiles are active). If you have a <code>bootstrap.yml</code> (or
-properties) then those properties are used to configure the Bootstrap
-context, and then they get added to the child context when its parent
-is set. They have lower precedence than the <code>application.yml</code> (or
-properties) and any other property sources that are added to the child
-as a normal part of the process of creating a Spring Boot
-application. See <a href="#customizing-bootstrap-properties">below</a> for
-instructions on how to customize the contents of these property
-sources.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Because of the ordering rules of property sources the "bootstrap"
-entries take precedence, but note that these do not contain any data
-from <code>bootstrap.yml</code>, which has very low precedence, but can be used
-to set defaults.</p>
-</div>
-<div class="paragraph">
-<p>You can extend the context hierarchy by simply setting the parent
-context of any <code>ApplicationContext</code> you create, e.g. using its own
-interface, or with the <code>SpringApplicationBuilder</code> convenience methods
-(<code>parent()</code>, <code>child()</code> and <code>sibling()</code>). The bootstrap context will be
-the parent of the most senior ancestor that you create yourself.
-Every context in the hierarchy will have its own "bootstrap" property
-source (possibly empty) to avoid promoting values inadvertently from
-parents down to their descendants.  Every context in the hierarchy can
-also (in principle) have a different <code>spring.application.name</code> and
-hence a different remote property source if there is a Config
-Server. Normal Spring application context behaviour rules apply to
-property resolution: properties from a child context override those in
-the parent, by name and also by property source name (if the child has
-a property source with the same name as the parent, the one from the
-parent is not included in the child).</p>
-</div>
-<div class="paragraph">
-<p>Note that the <code>SpringApplicationBuilder</code> allows you to share an
-<code>Environment</code> amongst the whole hierarchy, but that is not the
-default. Thus, sibling contexts in particular do not need to have the
-same profiles or property sources, even though they will share common
-things with their parent.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="customizing-bootstrap-properties">Changing the Location of Bootstrap Properties</h3>
-<div class="paragraph">
-<p>The <code>bootstrap.yml</code> (or <code>.properties) location can be specified using
-`spring.cloud.bootstrap.name</code> (default "bootstrap") or
-<code>spring.cloud.bootstrap.location</code> (default empty), e.g. in System
-properties. Those properties behave like the <code>spring.config.*</code>
-variants with the same name, in fact they are used to set up the
-bootstrap <code>ApplicationContext</code> by setting those properties in its
-<code>Environment</code>. If there is an active profile (from
-<code>spring.profiles.active</code> or through the <code>Environment</code> API in the
-context you are building) then properties in that profile will be
-loaded as well, just like in a regular Spring Boot app, e.g. from
-<code>bootstrap-development.properties</code> for a "development" profile.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_customizing_the_bootstrap_configuration">Customizing the Bootstrap Configuration</h3>
-<div class="paragraph">
-<p>The bootstrap context can be trained to do anything you like by adding
-entries to <code>/META-INF/spring.factories</code> under the key
-<code>org.springframework.cloud.bootstrap.BootstrapConfiguration</code>. This is
-a comma-separated list of Spring <code>@Configuration</code> classes which will
-be used to create the context. Any beans that you want to be available
-to the main application context for autowiring can be created here,
-and also there is a special contract for <code>@Beans</code> of type
-<code>ApplicationContextInitializer</code>.</p>
-</div>
-<div class="paragraph">
-<p>The bootstrap process ends by injecting initializers into the main
-<code>SpringApplication</code> instance (i.e. the normal Spring Boot startup
-sequence, whether it is running as a standalone app or deployed in an
-application server). First a bootstrap context is created from the
-classes found in <code>spring.factories</code> and then all <code>@Beans</code> of type
-<code>ApplicationContextInitializer</code> are added to the main
-<code>SpringApplication</code> before it is started.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="customizing-bootstrap-property-sources">Customizing the Bootstrap Property Sources</h3>
-<div class="paragraph">
-<p>The default property source for external configuration added by the
-bootstrap process is the Config Server, but you can add additional
-sources by adding beans of type <code>PropertySourceLocator</code> to the
-bootstrap context (via <code>spring.factories</code>). You could use this to
-insert additional properties from a different server, or from a
-database, for instance.</p>
-</div>
-<div class="paragraph">
-<p>As an example, consider the following trivial custom locator:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
-public class CustomPropertySourceLocator implements PropertySourceLocator {
-
-    @Override
-    public PropertySource&lt;?&gt; locate(Environment environment) {
-        return new MapPropertySource("customProperty",
-                Collections.&lt;String, Object&gt;singletonMap("property.from.sample.custom.source", "worked as intended"));
-    }
-
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The <code>Environment</code> that is passed in is the one for the
-<code>ApplicationContext</code> about to be created, i.e. the one that we are
-supplying additional property sources for. It will already have its
-normal Spring Boot-provided property sources, so you can use those to
-locate a property source specific to this <code>Environment</code> (e.g. by
-keying it on the <code>spring.application.name</code>, as is done in the default
-Config Server property source locator).</p>
-</div>
-<div class="paragraph">
-<p>If you create a jar with this class in it and then add a
-<code>META-INF/spring.factories</code> containing:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>org.springframework.cloud.bootstrap.BootstrapConfiguration=sample.custom.CustomPropertySourceLocator</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>then the "customProperty" <code>PropertySource</code> will show up in any
-application that includes that jar on its classpath.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1489,7 +1192,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-19 16:13:56 UTC
+Last updated 2015-03-19 18:44:08 UTC
 </div>
 </div>
 </body>
