@@ -43,20 +43,26 @@ import org.springframework.util.StringUtils;
 @ConfigurationProperties("spring.cloud.config.server.native")
 public class SpringApplicationEnvironmentRepository implements EnvironmentRepository {
 
-	private String[] locations;
+	/**
+	 * Locations to search for configuration files. Defaults to the same as a Spring Boot
+	 * app so [classpath:/,classpath:/config/,file:./,file:./config/].
+	 */
+	private String[] searchLocations;
 
+	/**
+	 * Flag to determine how to handle exceptions during decryption (default false).
+	 */
 	private boolean failOnError = false;
 
 	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/",
 			"classpath:/config/", "file:./", "file:./config/" };
 
-	/**
-	 * Strategy to determine how to handle exceptions during decryption.
-	 * 
-	 * @param failOnError the flag value (default false)
-	 */
 	public void setFailOnError(boolean failOnError) {
 		this.failOnError = failOnError;
+	}
+	
+	public boolean isFailOnError() {
+		return failOnError;
 	}
 
 	@Override
@@ -100,8 +106,8 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 		list.add("--spring.config.name=" + config);
 		list.add("--spring.cloud.bootstrap.enabled=false");
 		list.add("--encrypt.failOnError=" + failOnError);
-		if (locations != null) {
-			list.add("--spring.config.location=" + getLocations(this.locations, label));
+		if (searchLocations != null) {
+			list.add("--spring.config.location=" + getLocations(this.searchLocations, label));
 		}
 		else {
 			list.add("--spring.config.location=" + getLocations(DEFAULT_LOCATIONS, label));
@@ -121,9 +127,13 @@ public class SpringApplicationEnvironmentRepository implements EnvironmentReposi
 		}
 		return StringUtils.collectionToCommaDelimitedString(output);
 	}
+	
+	public String[] getSearchLocations() {
+		return searchLocations;
+	}
 
 	public void setSearchLocations(String... locations) {
-		this.locations = locations;
+		this.searchLocations = locations;
 		for (int i = 0; i < locations.length; i++) {
 			String location = locations[i];
 			if (isDirectory(location) && !location.endsWith("/")) {
