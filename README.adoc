@@ -72,7 +72,8 @@ The YAML and properties forms are coalesced into a single
 map, even if the origin of the values (reflected in the
 "propertySources" of the "standard" form) has multiple sources.
 
-Spring Cloud Config Server also supports multiple git repositories:
+Spring Cloud Config Server pulls configuration for remote clients
+from a git repository (which must be provided):
 
 ----
 spring:
@@ -81,19 +82,7 @@ spring:
 	  server:
 	    git:
 	      uri: https://github.com/spring-cloud-samples/config-repo
-	      repos:
-	        - patterns: *pattern
-	          uri: https://github.com/pattern1/config-repo
-	        - patterns: pattern*,*pattern1*
-	          uri: https://github.com/pattern2/config-repo
-	        - patterns: local*
-	          uri: file:/home/configsvc/config-repo
 ----
-
-In the above example, if {application} does not match to any of the patterns
-under "spring.cloud.config.server.git.repos", it will use the default uri
-defined under "spring.cloud.config.server.git.uri".  Acceptable pattern
-format is "*xxx", "xxx*", or "*xxx*".
 
 === Client Side Usage
 

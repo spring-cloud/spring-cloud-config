@@ -141,7 +141,17 @@ Git, but just loads the config files from the local classpath or file
 system (any static URL you want to point to with
 "spring.cloud.config.server.native.searchLocations"). To use the native
 profile just launch the Config Server with
-"spring.profiles.active=native". 
+"spring.profiles.active=native".
+
+WARNING: The default value of the `searchLocations` is identical to a
+local Spring Boot application (so
+`[classpath:/, classpath:/config, file:./, file:./config]`) which will
+expose the `application.properties` from the server to all clients.
+
+TIP: A filesystem backend is great for getting started quickly and
+for testing. To use it in production you need to be sure that the 
+file system is reliable, and shared across all instances of the
+Config Server.
 
 This repository implementation maps the `{label}` parameter of the
 HTTP resource to a suffix on the search path, so properties files are
