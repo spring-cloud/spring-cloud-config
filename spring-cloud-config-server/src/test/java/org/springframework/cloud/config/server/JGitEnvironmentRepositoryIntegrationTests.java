@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -31,9 +32,6 @@ import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.ConfigServerConfiguration;
-import org.springframework.cloud.config.server.ConfigServerTestUtils;
-import org.springframework.cloud.config.server.EnvironmentRepository;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -74,6 +72,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
+		assertEquals("bar", environment.getName());
+		assertArrayEquals(new String[] {"staging"}, environment.getProfiles());
+		assertEquals("master", environment.getLabel());
 	}
 
 	@Test

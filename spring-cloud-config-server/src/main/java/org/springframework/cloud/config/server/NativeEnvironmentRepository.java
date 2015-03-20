@@ -26,6 +26,7 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.support.StandardServletEnvironment;
 
 /**
@@ -53,7 +54,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository {
 
 	@Override
 	public Environment findOne(String application, String env, String label) {
-		Environment result = new Environment(env, label);
+		Environment result = new Environment(application, StringUtils.commaDelimitedListToStringArray(env), label);
 		for (org.springframework.core.env.PropertySource<?> source : environment.getPropertySources()) {
 			String name = source.getName();
 			if (!standardSources.contains(name) && source instanceof MapPropertySource) {

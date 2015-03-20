@@ -223,7 +223,7 @@ public class EncryptionController {
 	}
 
 	public Environment decrypt(Environment environment) {
-		Environment result = new Environment(environment.getName(),
+		Environment result = new Environment(environment.getName(), environment.getProfiles(),
 				environment.getLabel());
 		for (PropertySource source : environment.getPropertySources()) {
 			Map<Object, Object> map = new LinkedHashMap<Object, Object>(

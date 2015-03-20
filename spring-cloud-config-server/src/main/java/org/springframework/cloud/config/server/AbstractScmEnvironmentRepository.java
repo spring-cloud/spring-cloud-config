@@ -144,7 +144,7 @@ public abstract class AbstractScmEnvironmentRepository implements EnvironmentRep
 	}
 
 	protected Environment clean(Environment value) {
-		Environment result = new Environment(value.getName(), value.getLabel());
+		Environment result = new Environment(value.getName(), value.getProfiles(), value.getLabel());
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName().replace(
 					getWorkingDirectory().toURI().toString(), "");

@@ -112,7 +112,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 			pull(git, label, ref);
 		}
 		environment.setSearchLocations(getSearchLocations(getWorkingDirectory()));
-		return clean(environment.findOne(application, profile, ""));
+		Environment result = environment.findOne(application, profile, "");
+		result.setLabel(label);
+		return clean(result);
 	}
 
 	private Ref checkout(Git git, String label) throws GitAPIException {
