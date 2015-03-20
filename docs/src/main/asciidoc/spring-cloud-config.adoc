@@ -1,7 +1,12 @@
 = Spring Cloud Config
+:github: https://github.com/spring-cloud/spring-cloud-config
+:githubmaster: {github}/tree/master
+:docslink: {githubmaster}/docs/src/main/asciidoc
 :toc:
 
 include::intro.adoc[]
+
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/contributing-docs.adoc[]
 
 == Quick Start
 
