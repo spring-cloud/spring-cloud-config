@@ -1,11 +1,7 @@
 package org.springframework.cloud.config.server;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletResponse;
@@ -72,31 +68,35 @@ public class EnvironmentController {
 	@RequestMapping("/{label}/{name}-{profiles}.properties")
 	public ResponseEntity<String> labelledProperties(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label) throws IOException {
-		if (name.contains("-") || profiles.contains("-")) {
-			throw new IllegalArgumentException(
-					"Properties output not supported for name or profiles containing hyphens");
-		}
+		validateNameAndProfiles(name, profiles);
 		Map<String, Object> properties = convertToProperties(labelled(name, profiles,
 				label));
-		return getSuccess(sortLines(properties));
+		return getSuccess(getPropertiesString(properties));
 	}
 
-	private String sortLines(Map<String, Object> properties) throws IOException {
-		List<String> list = new ArrayList<String>();
-		for (Entry<String, Object> entry : properties.entrySet()) {
-			if (entry.getKey().equals("spring.profiles")) {
-				continue;
-			}
-			String line = entry.getKey() + ": " + entry.getValue();
-			list.add(line);
-		}
-		Collections.sort(list);
+	@RequestMapping("{name}-{profiles}.json")
+	public ResponseEntity<Map<String, Object>> jsonProperties(@PathVariable String name,
+			@PathVariable String profiles) throws IOException {
+		return labelledJsonProperties(name, profiles, defaultLabel);
+	}
+
+	@RequestMapping("/{label}/{name}-{profiles}.json")
+	public ResponseEntity<Map<String, Object>> labelledJsonProperties(@PathVariable String name,
+			@PathVariable String profiles, @PathVariable String label) throws IOException {
+		validateNameAndProfiles(name, profiles);
+		Map<String, Object> properties = convertToProperties(labelled(name, profiles,
+				label));
+		return getSuccess(properties);
+	}
+
+	private String getPropertiesString(Map<String, Object> properties) {
 		StringBuilder output = new StringBuilder();
-		for (String item : list) {
+		for (Entry<String, Object> entry : properties.entrySet()) {
 			if (output.length() > 0) {
 				output.append("\n");
 			}
-			output.append(item);
+			String line = entry.getKey() + ": " + entry.getValue();
+			output.append(line);
 		}
 		return output.toString();
 	}
@@ -136,10 +136,25 @@ public class EnvironmentController {
 		response.sendError(HttpStatus.BAD_REQUEST.value());
 	}
 
+	private void validateNameAndProfiles(String name, String profiles) {
+		if (name.contains("-") || profiles.contains("-")) {
+			throw new IllegalArgumentException(
+					"Properties output not supported for name or profiles containing hyphens");
+		}
+	}
+
+	private HttpHeaders getHttpHeaders(MediaType mediaType) {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.setContentType(mediaType);
+		return httpHeaders;
+	}
+
 	private ResponseEntity<String> getSuccess(String body) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.TEXT_PLAIN);
-		return new ResponseEntity<String>(body, headers, HttpStatus.OK);
+		return new ResponseEntity<>(body, getHttpHeaders(MediaType.TEXT_PLAIN), HttpStatus.OK);
+	}
+
+	private ResponseEntity<Map<String, Object>> getSuccess(Map<String, Object> body) {
+		return new ResponseEntity<>(body, getHttpHeaders(MediaType.APPLICATION_JSON), HttpStatus.OK);
 	}
 
 	/**
@@ -193,7 +208,7 @@ public class EnvironmentController {
 	}
 
 	private Map<String, Object> convertToProperties(Environment profiles) {
-		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		Map<String, Object> map = new TreeMap<String, Object>();
 		List<PropertySource> sources = new ArrayList<PropertySource>(
 				profiles.getPropertySources());
 		Collections.reverse(sources);
@@ -202,7 +217,16 @@ public class EnvironmentController {
 			Map<String, String> value = (Map<String, String>) source.getSource();
 			map.putAll(value);
 		}
+        postProcessProperties(map);
 		return map;
+	}
+
+	private void postProcessProperties(Map<String, Object> propertiesMap) {
+		for(String key : propertiesMap.keySet()) {
+			if(key.equals("spring.profiles")) {
+				propertiesMap.remove(key);
+			}
+		}
 	}
 
 	/**
