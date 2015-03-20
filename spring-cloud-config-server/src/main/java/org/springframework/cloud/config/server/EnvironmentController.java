@@ -140,26 +140,26 @@ public class EnvironmentController {
 		response.sendError(HttpStatus.BAD_REQUEST.value());
 	}
 
-    private void validateNameAndProfiles(String name, String profiles) {
-        if (name.contains("-") || profiles.contains("-")) {
-            throw new IllegalArgumentException(
-                    "Properties output not supported for name or profiles containing hyphens");
-        }
-    }
+	private void validateNameAndProfiles(String name, String profiles) {
+		if (name.contains("-") || profiles.contains("-")) {
+			throw new IllegalArgumentException(
+					"Properties output not supported for name or profiles containing hyphens");
+		}
+	}
 
-    private HttpHeaders getHttpHeaders(MediaType mediaType) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(mediaType);
-        return httpHeaders;
-    }
+	private HttpHeaders getHttpHeaders(MediaType mediaType) {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.setContentType(mediaType);
+		return httpHeaders;
+	}
 
 	private ResponseEntity<String> getSuccess(String body) {
 		return new ResponseEntity<>(body, getHttpHeaders(MediaType.TEXT_PLAIN), HttpStatus.OK);
 	}
 
-    private ResponseEntity<Map<String, Object>> getSuccess(Map<String, Object> body) {
-        return new ResponseEntity<>(body, getHttpHeaders(MediaType.APPLICATION_JSON), HttpStatus.OK);
-    }
+	private ResponseEntity<Map<String, Object>> getSuccess(Map<String, Object> body) {
+		return new ResponseEntity<>(body, getHttpHeaders(MediaType.APPLICATION_JSON), HttpStatus.OK);
+	}
 
 	/**
 	 * Create Lists of the right size for any YAML arrays that are going to need to be
