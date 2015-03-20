@@ -49,7 +49,7 @@ public class ConfigClientProperties {
 	@Value("${spring.application.name:application}")
 	private String name;
 
-	private String label = "master";
+	private String label;
 
 	private String username;
 
@@ -239,7 +239,7 @@ public class ConfigClientProperties {
 	@Override
 	public String toString() {
 		return "ConfigClientProperties [enabled=" + enabled + ", profile=" + profile
-				+ ", name=" + name + ", label=" + label + ", username=" + username
+				+ ", name=" + name + ", label=" + (label==null?"":label) + ", username=" + username
 				+ ", password=" + password + ", uri=" + uri + ", discovery.enabled="
 				+ discovery.enabled + ", failFast=" + failFast + "]";
 	}

@@ -21,6 +21,7 @@ import org.springframework.cloud.config.client.ConfigClientProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.util.StringUtils;
 
 /**
  * Bootstrap configuration to fetch external configuration from a (possibly remote)
@@ -45,10 +46,15 @@ public class ConfigServerBootstrapConfiguration {
 		@Autowired
 		private ConfigClientProperties client;
 
+		@Autowired
+		private ConfigServerProperties server;
+
 		@Bean
 		public EnvironmentRepositoryPropertySourceLocator environmentRepositoryPropertySourceLocator() {
+			String label = StringUtils.hasText(client.getLabel()) ? client.getLabel()
+					: server.getDefaultLabel();
 			return new EnvironmentRepositoryPropertySourceLocator(repository,
-					client.getName(), client.getProfile(), client.getLabel());
+					client.getName(), client.getProfile(), label);
 		}
 
 	}

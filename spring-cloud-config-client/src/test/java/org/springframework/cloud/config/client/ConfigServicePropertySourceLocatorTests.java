@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.cloud.config.client.ConfigClientProperties;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.cloud.config.environment.Environment;
@@ -44,14 +45,25 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void sunnyDay() {
 		Environment body = new Environment("app", "master");
-		mockRequestResponse(new ResponseEntity<Environment>(body, HttpStatus.OK));
+		mockRequestResponseWithoutLabel(new ResponseEntity<Environment>(body,
+				HttpStatus.OK));
 		locator.setRestTemplate(restTemplate);
 		assertNotNull(locator.locate(environment));
 	}
 
 	@Test
+	public void sunnyDayWithLabel() {
+		Environment body = new Environment("app", "master");
+		mockRequestResponseWithLabel(new ResponseEntity<Environment>(body,
+				HttpStatus.OK), "v1.0.0");
+		locator.setRestTemplate(restTemplate);
+		EnvironmentTestUtils.addEnvironment(environment, "spring.cloud.config.label:v1.0.0");
+		assertNotNull(locator.locate(environment));
+	}
+
+	@Test
 	public void failsQuietly() {
-		mockRequestResponse(new ResponseEntity<String>("Wah!",
+		mockRequestResponseWithoutLabel(new ResponseEntity<String>("Wah!",
 				HttpStatus.INTERNAL_SERVER_ERROR));
 		locator.setRestTemplate(restTemplate);
 		assertNull(locator.locate(environment));
@@ -75,21 +87,32 @@ public class ConfigServicePropertySourceLocatorTests {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		Mockito.when(response.getHeaders()).thenReturn(headers);
-		Mockito.when(response.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
-		Mockito.when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));
+		Mockito.when(response.getStatusCode()).thenReturn(
+				HttpStatus.INTERNAL_SERVER_ERROR);
+		Mockito.when(response.getBody()).thenReturn(
+				new ByteArrayInputStream("{}".getBytes()));
 		locator.setRestTemplate(restTemplate);
-		expected.expectCause(IsInstanceOf.<Throwable>instanceOf(HttpServerErrorException.class));
+		expected.expectCause(IsInstanceOf
+				.<Throwable> instanceOf(HttpServerErrorException.class));
 		expected.expectMessage("fail fast property is set");
 		assertNull(locator.locate(environment));
 	}
 
 	@SuppressWarnings("unchecked")
-	private void mockRequestResponse(ResponseEntity<?> response) {
+	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		Mockito.when(
 				restTemplate.exchange(Mockito.any(String.class),
 						Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
 						Mockito.any(Class.class), Matchers.anyString(),
-						Matchers.anyString(), Matchers.anyString())).thenReturn(response);
+						Matchers.anyString(), Matchers.eq(label))).thenReturn(response);
 	}
 
+	@SuppressWarnings("unchecked")
+	private void mockRequestResponseWithoutLabel(ResponseEntity<?> response) {
+		Mockito.when(
+				restTemplate.exchange(Mockito.any(String.class),
+						Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+						Mockito.any(Class.class), Matchers.anyString(),
+						Matchers.anyString())).thenReturn(response);
+	}
 }

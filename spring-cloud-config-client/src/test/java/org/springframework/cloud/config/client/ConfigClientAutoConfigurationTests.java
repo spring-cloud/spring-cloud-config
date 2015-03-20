@@ -1,4 +1,4 @@
-package org.springframework.cloud.autoconfigure;
+package org.springframework.cloud.config.client;
 
 import static org.junit.Assert.assertEquals;
 

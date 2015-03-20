@@ -35,6 +35,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -65,10 +66,16 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		Exception error = null;
 		String errorBody = null;
 		try {
-			Environment result = restTemplate.exchange(
-					client.getRawUri() + "/{name}/{profile}/{label}", HttpMethod.GET,
-					new HttpEntity<Void>((Void) null), Environment.class,
-					client.getName(), client.getProfile(), client.getLabel()).getBody();
+			Object[] args = new String[] { client.getName(), client.getProfile() };
+			String path = "/{name}/{profile}";
+			if (StringUtils.hasText(client.getLabel())) {
+				args = new String[] { client.getName(), client.getProfile(),
+						client.getLabel() };
+				path = path + "/{label}";
+			}
+			Environment result = restTemplate.exchange(client.getRawUri() + path,
+					HttpMethod.GET, new HttpEntity<Void>((Void) null), Environment.class,
+					args).getBody();
 			for (PropertySource source : result.getPropertySources()) {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> map = (Map<String, Object>) source.getSource();
