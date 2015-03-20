@@ -180,6 +180,31 @@ public class EnvironmentControllerTests {
 				MockMvcResultMatchers.status().isBadRequest());
 	}
 
+    @Test
+    public void mappingforLabelledJsonProperties() throws Exception {
+        Mockito.when(repository.findOne("foo", "bar", "other")).thenReturn(environment);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.json")).andExpect(
+                MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void mappingforJsonProperties() throws Exception {
+        Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json")).andExpect(
+                MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void mappingForLabelledJsonPropertiesWithHyphen() throws Exception {
+        Mockito.when(repository.findOne("foo", "bar-spam", "other")).thenReturn(
+                environment);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-spam.json")).andExpect(
+                MockMvcResultMatchers.status().isBadRequest());
+    }
+
 	@Test
 	public void allowOverrideFalse() throws Exception {
 		controller.setOverrides(Collections.singletonMap("foo", "bar"));
