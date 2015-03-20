@@ -19,16 +19,17 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.SpringApplicationEnvironmentRepository;
-
+import org.springframework.cloud.config.server.NativeEnvironmentRepository;
+import org.springframework.core.env.StandardEnvironment;
 
 /**
  * @author Dave Syer
  *
  */
-public class SpringApplicationEnvironmentRepositoryTests {
-	
-	private SpringApplicationEnvironmentRepository repository = new SpringApplicationEnvironmentRepository();
+public class NativeEnvironmentRepositoryTests {
+
+	private NativeEnvironmentRepository repository = new NativeEnvironmentRepository(
+			new StandardEnvironment());
 
 	@Test
 	public void vanilla() {
@@ -47,23 +48,25 @@ public class SpringApplicationEnvironmentRepositoryTests {
 	public void prefixed() {
 		repository.setSearchLocations("classpath:/test");
 		Environment environment = repository.findOne("foo", "development", "master");
-		assertEquals(3, environment.getPropertySources().size());
+		assertEquals(2, environment.getPropertySources().size());
 	}
 
 	@Test
 	public void prefixedWithFile() {
 		repository.setSearchLocations("file:./src/test/resources/test");
 		Environment environment = repository.findOne("foo", "development", "master");
-		assertEquals(3, environment.getPropertySources().size());
+		assertEquals(2, environment.getPropertySources().size());
 	}
 
 	@Test
 	public void labelled() {
 		repository.setSearchLocations("classpath:/test");
 		Environment environment = repository.findOne("foo", "development", "dev");
-		assertEquals(4, environment.getPropertySources().size());
-		// position 1 because it has higher precendence than anything except the foo-development.properties
-		assertEquals("dev_bar", environment.getPropertySources().get(1).getSource().get("foo"));
+		assertEquals(3, environment.getPropertySources().size());
+		// position 1 because it has higher precendence than anything except the
+		// foo-development.properties
+		assertEquals("dev_bar",
+				environment.getPropertySources().get(1).getSource().get("foo"));
 	}
 
 }

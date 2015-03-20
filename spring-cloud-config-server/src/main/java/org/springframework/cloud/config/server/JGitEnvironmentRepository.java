@@ -64,14 +64,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 		super(environment);
 	}
 
-	protected ConfigurableEnvironment getEnvironment() {
-		return environment;
-	}
-
-	protected void setEnvironment(ConfigurableEnvironment environment) {
-		this.environment = environment;
-	}
-
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 		initialize();
@@ -100,12 +92,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		Assert.state(uri != null, "You need to configure a uri for the git repository");
+		Assert.state(getUri() != null,
+				"You need to configure a uri for the git repository");
 	}
 
 	private synchronized Environment loadEnvironment(Git git, String application,
 			String profile, String label) throws GitAPIException {
-		SpringApplicationEnvironmentRepository environment = new SpringApplicationEnvironmentRepository();
+		NativeEnvironmentRepository environment = new NativeEnvironmentRepository(getEnvironment());
 		git.getRepository().getConfig().setString("branch", label, "merge", label);
 		Ref ref = checkout(git, label);
 		if (shouldPull(git, ref)) {
@@ -145,7 +138,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private void pull(Git git, String label, Ref ref) {
 		PullCommand pull = git.pull();
 		try {
-			if (hasText(username)) {
+			if (hasText(getUsername())) {
 				setCredentialsProvider(pull);
 			}
 			pull.call();
@@ -162,7 +155,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	}
 
 	private Git createGitClient() throws IOException, GitAPIException {
-		if (new File(basedir, ".git").exists()) {
+		if (new File(getBasedir(), ".git").exists()) {
 			return openGitRepository();
 		}
 		else {
@@ -172,8 +165,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	private Git copyRepository() throws IOException, GitAPIException {
 		deleteBaseDirIfExists();
-		Assert.state(basedir.mkdirs(), "Could not create basedir: " + basedir);
-		if (uri.startsWith("file:")) {
+		Assert.state(getBasedir().mkdirs(), "Could not create basedir: " + getBasedir());
+		if (getUri().startsWith("file:")) {
 			return copyFromLocalRepository();
 		}
 		else {
@@ -189,18 +182,19 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	private Git copyFromLocalRepository() throws IOException {
 		Git git;
-		File remote = new UrlResource(StringUtils.cleanPath(uri)).getFile();
-		Assert.state(remote.isDirectory(), "No directory at " + uri);
+		File remote = new UrlResource(StringUtils.cleanPath(getUri())).getFile();
+		Assert.state(remote.isDirectory(), "No directory at " + getUri());
 		File gitDir = new File(remote, ".git");
-		Assert.state(gitDir.exists(), "No .git at " + uri);
-		Assert.state(gitDir.isDirectory(), "No .git directory at " + uri);
+		Assert.state(gitDir.exists(), "No .git at " + getUri());
+		Assert.state(gitDir.isDirectory(), "No .git directory at " + getUri());
 		git = Git.open(remote);
 		return git;
 	}
 
 	private Git cloneToBasedir() throws GitAPIException {
-		CloneCommand clone = Git.cloneRepository().setURI(uri).setDirectory(basedir);
-		if (hasText(username)) {
+		CloneCommand clone = Git.cloneRepository().setURI(getUri())
+				.setDirectory(getBasedir());
+		if (hasText(getUsername())) {
 			setCredentialsProvider(clone);
 		}
 		return clone.call();
@@ -209,7 +203,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private void tryFetch(Git git) {
 		try {
 			FetchCommand fetch = git.fetch();
-			if (hasText(username)) {
+			if (hasText(getUsername())) {
 				setCredentialsProvider(fetch);
 			}
 			fetch.call();
@@ -220,9 +214,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	}
 
 	private void deleteBaseDirIfExists() {
-		if (basedir.exists()) {
+		if (getBasedir().exists()) {
 			try {
-				FileUtils.delete(basedir, FileUtils.RECURSIVE);
+				FileUtils.delete(getBasedir(), FileUtils.RECURSIVE);
 			}
 			catch (IOException e) {
 				throw new IllegalStateException("Failed to initialize base directory", e);
@@ -231,7 +225,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	}
 
 	private void initialize() {
-		if (uri.startsWith("file:") && !initialized) {
+		if (getUri().startsWith("file:") && !initialized) {
 			SshSessionFactory.setInstance(new JschConfigSessionFactory() {
 				@Override
 				protected void configure(Host hc, Session session) {
@@ -243,8 +237,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	}
 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
-		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username,
-				password));
+		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(getUsername(),
+				getPassword()));
 	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {

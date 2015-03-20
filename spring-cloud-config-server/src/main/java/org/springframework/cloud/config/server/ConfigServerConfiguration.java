@@ -35,10 +35,15 @@ public class ConfigServerConfiguration {
 	@Configuration
 	@Profile("native")
 	protected static class NativeRepositoryConfiguration {
+
+		@Autowired
+		private ConfigurableEnvironment environment;		
+		
 		@Bean
 		public EnvironmentRepository environmentRepository() {
-			return new SpringApplicationEnvironmentRepository();
+			return new NativeEnvironmentRepository(environment);
 		}
+
 	}
 
 	@Configuration

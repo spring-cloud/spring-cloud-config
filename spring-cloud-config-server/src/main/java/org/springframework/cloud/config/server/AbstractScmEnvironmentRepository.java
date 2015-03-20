@@ -40,11 +40,11 @@ public abstract class AbstractScmEnvironmentRepository implements EnvironmentRep
 		InitializingBean {
 	private static Log logger = LogFactory.getLog(AbstractScmEnvironmentRepository.class);
 
-	protected File basedir;
-	protected String uri;
-	protected ConfigurableEnvironment environment;
-	protected String username;
-	protected String password;
+	private File basedir;
+	private String uri;
+	private ConfigurableEnvironment environment;
+	private String username;
+	private String password;
 	private String[] searchPaths = new String[0];
 
 	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment) {
@@ -71,6 +71,14 @@ public abstract class AbstractScmEnvironmentRepository implements EnvironmentRep
 		catch (IOException e) {
 			throw new IllegalStateException("Cannot create temp dir", e);
 		}
+	}
+	
+	protected ConfigurableEnvironment getEnvironment() {
+		return environment;
+	}
+
+	protected void setEnvironment(ConfigurableEnvironment environment) {
+		this.environment = environment;
 	}
 
 	public void setUri(String uri) {
@@ -148,12 +156,6 @@ public abstract class AbstractScmEnvironmentRepository implements EnvironmentRep
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName().replace(
 					getWorkingDirectory().toURI().toString(), "");
-			if (name.contains(("classpath:/"))) {
-				continue;
-			}
-			if (environment.getPropertySources().contains(name)) {
-				continue;
-			}
 			name = name.replace("applicationConfig: [", "");
 			name = uri + "/" + name.replace("]", "");
 			result.add(new PropertySource(name, source.getSource()));

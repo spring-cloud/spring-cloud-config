@@ -71,7 +71,8 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	private Environment loadEnvironment(String application, String profile, String label) {
-		final SpringApplicationEnvironmentRepository environmentRepository = new SpringApplicationEnvironmentRepository();
+		final NativeEnvironmentRepository environmentRepository = new NativeEnvironmentRepository(
+				getEnvironment());
 		environmentRepository.setSearchLocations(getSearchLocations(getSvnPath(
 				getWorkingDirectory(), label)));
 		return environmentRepository.findOne(application, profile, label);
@@ -116,7 +117,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 
 	@Override
 	protected File getWorkingDirectory() {
-		return this.basedir;
+		return this.getBasedir();
 	}
 
 	private File getSvnPath(File workingDirectory, String label) {
