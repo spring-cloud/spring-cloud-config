@@ -74,36 +74,32 @@ public class EnvironmentController {
 		return getSuccess(getPropertiesString(properties));
 	}
 
-    @RequestMapping("{name}-{profiles}.json")
-    public ResponseEntity<Map<String, Object>> jsonProperties(@PathVariable String name,
-            @PathVariable String profiles) throws IOException {
-        return labelledJsonProperties(name, profiles, defaultLabel);
-    }
+	@RequestMapping("{name}-{profiles}.json")
+	public ResponseEntity<Map<String, Object>> jsonProperties(@PathVariable String name,
+			@PathVariable String profiles) throws IOException {
+		return labelledJsonProperties(name, profiles, defaultLabel);
+	}
 
-    @RequestMapping("/{label}/{name}-{profiles}.json")
-    public ResponseEntity<Map<String, Object>> labelledJsonProperties(@PathVariable String name,
-            @PathVariable String profiles, @PathVariable String label) throws IOException {
-        validateNameAndProfiles(name, profiles);
-        Map<String, Object> properties = convertToProperties(labelled(name, profiles,
-                label));
-        return getSuccess(properties);
-    }
+	@RequestMapping("/{label}/{name}-{profiles}.json")
+	public ResponseEntity<Map<String, Object>> labelledJsonProperties(@PathVariable String name,
+			@PathVariable String profiles, @PathVariable String label) throws IOException {
+		validateNameAndProfiles(name, profiles);
+		Map<String, Object> properties = convertToProperties(labelled(name, profiles,
+				label));
+		return getSuccess(properties);
+	}
 
-
-    private String getPropertiesString(Map<String, Object> properties) {
-        StringBuilder output = new StringBuilder();
-        for (Entry<String, Object> entry : properties.entrySet()) {
-            if (entry.getKey().equals("spring.profiles")) {
-                continue;
-            }
-            if (output.length() > 0) {
-                output.append("\n");
-            }
-            String line = entry.getKey() + ": " + entry.getValue();
-            output.append(line);
-        }
-        return output.toString();
-    }
+	private String getPropertiesString(Map<String, Object> properties) {
+		StringBuilder output = new StringBuilder();
+		for (Entry<String, Object> entry : properties.entrySet()) {
+			if (output.length() > 0) {
+				output.append("\n");
+			}
+			String line = entry.getKey() + ": " + entry.getValue();
+			output.append(line);
+		}
+		return output.toString();
+	}
 
 	@RequestMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> yaml(@PathVariable String name,
@@ -221,7 +217,16 @@ public class EnvironmentController {
 			Map<String, String> value = (Map<String, String>) source.getSource();
 			map.putAll(value);
 		}
+        postProcessProperties(map);
 		return map;
+	}
+
+	private void postProcessProperties(Map<String, Object> propertiesMap) {
+		for(String key : propertiesMap.keySet()) {
+			if(key.equals("spring.profiles")) {
+				propertiesMap.remove(key);
+			}
+		}
 	}
 
 	/**
