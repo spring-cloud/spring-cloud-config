@@ -1,8 +1,28 @@
+/*
+ * Copyright 2014-2015 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.cloud.config.server;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -16,6 +36,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -76,17 +97,17 @@ public class EnvironmentController {
 
 	@RequestMapping("{name}-{profiles}.json")
 	public ResponseEntity<Map<String, Object>> jsonProperties(@PathVariable String name,
-			@PathVariable String profiles) throws IOException {
+			@PathVariable String profiles) throws Exception {
 		return labelledJsonProperties(name, profiles, defaultLabel);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.json")
-	public ResponseEntity<Map<String, Object>> labelledJsonProperties(@PathVariable String name,
-			@PathVariable String profiles, @PathVariable String label) throws IOException {
+	public ResponseEntity<Map<String, Object>> labelledJsonProperties(
+			@PathVariable String name, @PathVariable String profiles,
+			@PathVariable String label) throws Exception {
 		validateNameAndProfiles(name, profiles);
-		Map<String, Object> properties = convertToProperties(labelled(name, profiles,
-				label));
-		return getSuccess(properties);
+		Map<String, Object> properties = convertToMap(labelled(name, profiles, label));
+		return getSuccess(properties, MediaType.APPLICATION_JSON);
 	}
 
 	private String getPropertiesString(Map<String, Object> properties) {
@@ -110,15 +131,16 @@ public class EnvironmentController {
 	@RequestMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> labelledYaml(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label) throws Exception {
-		if (name.contains("-") || profiles.contains("-")) {
-			throw new IllegalArgumentException(
-					"YAML output not supported for name or profiles containing hyphens");
-		}
-		LinkedHashMap<String, Object> target = new LinkedHashMap<String, Object>();
+		validateNameAndProfiles(name, profiles);
+		Map<String, Object> result = convertToMap(labelled(name, profiles, label));
+		return getSuccess(new Yaml().dumpAsMap(result));
+	}
+
+	private Map<String, Object> convertToMap(Environment input) throws BindException {
+		Map<String, Object> target = new LinkedHashMap<String, Object>();
 		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<Map<String, Object>>(
 				target);
-		Map<String, Object> data = convertToProperties(labelled(name, profiles,
-				label));
+		Map<String, Object> data = convertToProperties(input);
 		LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>();
 		for (String key : data.keySet()) {
 			properties.put(MAP_PREFIX + "." + key, data.get(key));
@@ -128,7 +150,9 @@ public class EnvironmentController {
 		propertySources.addFirst(new MapPropertySource("properties", properties));
 		factory.setPropertySources(propertySources);
 		factory.bindPropertiesToTarget();
-		return getSuccess(new Yaml().dumpAsMap(target.get(MAP_PREFIX)));
+		@SuppressWarnings("unchecked")
+		Map<String, Object> result = (Map<String, Object>) target.get(MAP_PREFIX);
+		return result==null ? new LinkedHashMap<String, Object>() : result;
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
@@ -150,11 +174,13 @@ public class EnvironmentController {
 	}
 
 	private ResponseEntity<String> getSuccess(String body) {
-		return new ResponseEntity<>(body, getHttpHeaders(MediaType.TEXT_PLAIN), HttpStatus.OK);
+		return new ResponseEntity<>(body, getHttpHeaders(MediaType.TEXT_PLAIN),
+				HttpStatus.OK);
 	}
 
-	private ResponseEntity<Map<String, Object>> getSuccess(Map<String, Object> body) {
-		return new ResponseEntity<>(body, getHttpHeaders(MediaType.APPLICATION_JSON), HttpStatus.OK);
+	private ResponseEntity<Map<String, Object>> getSuccess(Map<String, Object> body, MediaType mediaType) {
+		return new ResponseEntity<>(body, getHttpHeaders(mediaType),
+				HttpStatus.OK);
 	}
 
 	/**
@@ -166,8 +192,7 @@ public class EnvironmentController {
 	 * @param target the target Map
 	 * @param properties the properties (with key names to check)
 	 */
-	private void addArrays(LinkedHashMap<String, Object> target,
-			Map<String, Object> properties) {
+	private void addArrays(Map<String, Object> target, Map<String, Object> properties) {
 		for (String key : properties.keySet()) {
 			int index = key.indexOf("[");
 			Map<String, Object> current = target;
@@ -217,13 +242,13 @@ public class EnvironmentController {
 			Map<String, String> value = (Map<String, String>) source.getSource();
 			map.putAll(value);
 		}
-        postProcessProperties(map);
+		postProcessProperties(map);
 		return map;
 	}
 
 	private void postProcessProperties(Map<String, Object> propertiesMap) {
-		for(String key : propertiesMap.keySet()) {
-			if(key.equals("spring.profiles")) {
+		for (String key : propertiesMap.keySet()) {
+			if (key.equals("spring.profiles")) {
 				propertiesMap.remove(key);
 			}
 		}

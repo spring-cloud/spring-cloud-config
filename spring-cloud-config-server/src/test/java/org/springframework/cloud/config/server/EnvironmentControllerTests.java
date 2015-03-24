@@ -140,8 +140,22 @@ public class EnvironmentControllerTests {
 	public void mappingForYaml() throws Exception {
 		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
 		MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/foo-bar.yml")).andExpect(
-				MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
+		mvc.perform(MockMvcRequestBuilders.get("/foo-bar.yml"))
+				.andExpect(
+						MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN))
+				.andExpect(MockMvcResultMatchers.content().string("{}\n"));
+	}
+
+	@Test
+	public void mappingForJson() throws Exception {
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+		mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json"))
+				.andExpect(
+						MockMvcResultMatchers.content().contentType(
+								MediaType.APPLICATION_JSON))
+				.andExpect(MockMvcResultMatchers.content().string("{}"));
+		;
 	}
 
 	@Test
