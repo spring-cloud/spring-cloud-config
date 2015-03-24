@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.cloud.config.server;
 
 import java.io.File;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.config.environment.Environment;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
@@ -33,17 +27,31 @@ import org.tmatesoft.svn.core.wc2.SvnOperationFactory;
 import org.tmatesoft.svn.core.wc2.SvnTarget;
 import org.tmatesoft.svn.core.wc2.SvnUpdate;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.config.environment.Environment;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
 import static org.springframework.util.StringUtils.hasText;
 
 /**
  * Subversion-backed {@link EnvironmentRepository}.
- * 
+ *
  * @author Michael Prankl
+ * @author Roy Clarkson
  */
 @ConfigurationProperties("spring.cloud.config.server.svn")
 public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepository {
 
 	private static Log logger = LogFactory.getLog(SvnKitEnvironmentRepository.class);
+
+	private static final String DEFAULT_LABEL = "trunk";
+
+	@Override
+	public String getDefaultLabel() {
+		return DEFAULT_LABEL;
+	}
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {

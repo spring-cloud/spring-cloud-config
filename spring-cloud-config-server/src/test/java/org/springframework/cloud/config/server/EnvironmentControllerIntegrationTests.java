@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
  * @author Dave Syer
- *
+ * @author Roy Clarkson
  */
 public class EnvironmentControllerIntegrationTests {
 
@@ -36,6 +36,7 @@ public class EnvironmentControllerIntegrationTests {
 
 	@Before
 	public void init() {
+		Mockito.when(repository.getDefaultLabel()).thenReturn("master");
 		mvc = MockMvcBuilders.standaloneSetup(
 				new EnvironmentController(repository, new EncryptionController()))
 				.build();

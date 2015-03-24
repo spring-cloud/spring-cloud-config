@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * @author Dave Syer
- *
+ * @author Roy Clarkson
  */
 @ConfigurationProperties("spring.cloud.config.server")
 public class ConfigServerProperties {
-
-	public static final String MASTER = "master";
 
 	/**
 	 * Flag indicating that the config server should initialize its own Environment with
@@ -44,10 +42,9 @@ public class ConfigServerProperties {
 	private String prefix;
 
 	/**
-	 * Default repository label (defaults to "master") when incoming requests do not have
-	 * a specific label.
+	 * Default repository label when incoming requests do not have a specific label.
 	 */
-	private String defaultLabel = ConfigServerProperties.MASTER;
+	private String defaultLabel;
 
 	/**
 	 * Extra map for a property source to be sent to all clients unconditionally.

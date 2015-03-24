@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,16 @@ import java.io.File;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.ConfigServerTestUtils;
-import org.springframework.cloud.config.server.SvnKitEnvironmentRepository;
 import org.springframework.core.env.StandardEnvironment;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Michael Prankl
- *
+ * @author Roy Clarkson
  */
 public class SVNKitEnvironmentRepositoryTests {
 
@@ -90,6 +89,12 @@ public class SVNKitEnvironmentRepositoryTests {
 				.contains("bar.properties"));
 		assertTrue(environment.getPropertySources().get(1).getName()
 				.contains("application.yml"));
+	}
+
+	@Test
+	public void invalidLabel() {
+		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
+		assertEquals(0, environment.getPropertySources().size());
 	}
 
 }

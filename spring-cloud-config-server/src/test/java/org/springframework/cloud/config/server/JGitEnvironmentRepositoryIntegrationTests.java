@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.config.server;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,6 +26,7 @@ import org.eclipse.jgit.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
@@ -38,9 +36,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StreamUtils;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author Dave Syer
- *
+ * @author Roy Clarkson
  */
 public class JGitEnvironmentRepositoryIntegrationTests {
 
@@ -110,6 +111,24 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
+	}
+
+	@Test
+	public void defaultLabel() throws Exception {
+		String uri = ConfigServerTestUtils.prepareLocalRepo();
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.properties("spring.cloud.config.server.git.uri:" + uri).run();
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		assertEquals("master", repository.getDefaultLabel());
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void invalidLabel() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo();
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.properties("spring.cloud.config.server.git.uri:" + uri).run();
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		repository.findOne("bar", "staging", "unknownlabel");
 	}
 
 	@Configuration

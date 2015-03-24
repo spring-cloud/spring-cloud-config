@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,22 +21,24 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.support.StandardServletEnvironment;
 
 /**
  * Simple implementation of {@link EnvironmentRepository} that just reflects an existing
  * Spring Environment.
- * 
- * @author Dave Syer
  *
+ * @author Dave Syer
+ * @author Roy Clarkson
  */
 public class PassthruEnvironmentRepository implements EnvironmentRepository {
+
+	private static final String DEFAULT_LABEL = "master";
 
 	private Set<String> standardSources = new HashSet<String>(Arrays.asList(
 			"vcap",
@@ -50,6 +52,11 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 
 	public PassthruEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
+	}
+
+	@Override
+	public String getDefaultLabel() {
+		return DEFAULT_LABEL;
 	}
 
 	@Override
