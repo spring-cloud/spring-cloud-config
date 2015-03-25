@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,17 +25,6 @@ import java.nio.charset.Charset;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.ConfigServerConfiguration;
-import org.springframework.cloud.config.server.ConfigServerTestUtils;
-import org.springframework.cloud.config.server.EnvironmentRepository;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.util.FileSystemUtils;
-import org.springframework.util.StreamUtils;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.wc2.SvnCheckout;
@@ -43,11 +32,20 @@ import org.tmatesoft.svn.core.wc2.SvnCommit;
 import org.tmatesoft.svn.core.wc2.SvnOperationFactory;
 import org.tmatesoft.svn.core.wc2.SvnTarget;
 
+import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.config.environment.Environment;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.util.FileSystemUtils;
+import org.springframework.util.StreamUtils;
+
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Michael Prankl
- *
+ * @author Roy Clarkson
  */
 public class SVNKitEnvironmentRepositoryIntegrationTests {
 
@@ -118,6 +116,30 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		svnCommit.setCommitMessage("update bar.properties");
 		svnCommit.setSingleTarget(SvnTarget.fromFile(barProps));
 		svnCommit.run();
+	}
+
+	@Test
+	public void defaultLabel() throws Exception {
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
+				"src/test/resources/svn-config-repo", "target/config");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.profiles("subversion")
+				.run("--spring.cloud.config.server.svn.uri=" + uri);
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		assertEquals("trunk", repository.getDefaultLabel());
+	}
+
+	@Test
+	public void invalidLabel() throws Exception {
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
+				"src/test/resources/svn-config-repo", "target/config");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.profiles("subversion")
+				.run("--spring.cloud.config.server.svn.uri=" + uri);
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		repository.findOne("bar", "staging", "unknownlabel");
+		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
+		assertEquals(0, environment.getPropertySources().size());
 	}
 
 	@Configuration

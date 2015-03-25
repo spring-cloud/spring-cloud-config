@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,17 @@
  */
 package org.springframework.cloud.config.server;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.http.MediaType;
@@ -35,9 +34,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Dave Syer
- *
+ * @author Roy Clarkson
  */
 public class EnvironmentControllerTests {
 
@@ -46,10 +48,15 @@ public class EnvironmentControllerTests {
 
 	private EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
 
-	private EnvironmentController controller = new EnvironmentController(repository,
-			new EncryptionController());
+	private EnvironmentController controller;
 
 	private Environment environment = new Environment("foo", "master");
+
+	@Before
+	public void init() {
+		Mockito.when(repository.getDefaultLabel()).thenReturn("master");
+		this.controller = new EnvironmentController(repository, new EncryptionController());
+	}
 
 	@Test
 	public void vanillaYaml() throws Exception {
@@ -223,7 +230,7 @@ public class EnvironmentControllerTests {
 		map.put("a.b.c", "d");
 		environment.add(new PropertySource("one", map));
 		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
-		assertEquals("{foo=bar}", controller.master("foo", "bar").getPropertySources()
+		assertEquals("{foo=bar}", controller.defaultLabel("foo", "bar").getPropertySources()
 				.get(0).getSource().toString());
 	}
 

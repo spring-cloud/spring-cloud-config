@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.jcraft.jsch.Session;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -40,6 +39,7 @@ import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
@@ -52,16 +52,23 @@ import static org.springframework.util.StringUtils.hasText;
  * An {@link EnvironmentRepository} backed by a single git repository.
  * 
  * @author Dave Syer
- *
+ * @author Roy Clarkson
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository {
 
 	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
 
+	private static final String DEFAULT_LABEL = "master";
+
 	private boolean initialized;
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
+	}
+
+	@Override
+	public String getDefaultLabel() {
+		return DEFAULT_LABEL;
 	}
 
 	@Override

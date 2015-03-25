@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.config.ConfigFileApplicationListener;
@@ -40,15 +41,16 @@ import org.springframework.util.StringUtils;
  * and configuration files located through the normal protocols. The resulting Environment
  * is composed of property sources located using the application name as the config file
  * stem (spring.config.name) and the environment name as a Spring profile.
- * 
- * @author Dave Syer
  *
+ * @author Dave Syer
+ * @author Roy Clarkson
  */
 @ConfigurationProperties("spring.cloud.config.server.native")
 public class NativeEnvironmentRepository implements EnvironmentRepository {
 
-	private static Log logger = LogFactory
-			.getLog(NativeEnvironmentRepository.class);
+	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
+
+	private static final String DEFAULT_LABEL = "master";
 
 	/**
 	 * Locations to search for configuration files. Defaults to the same as a Spring Boot
@@ -76,6 +78,11 @@ public class NativeEnvironmentRepository implements EnvironmentRepository {
 
 	public boolean isFailOnError() {
 		return failOnError;
+	}
+
+	@Override
+	public String getDefaultLabel() {
+		return DEFAULT_LABEL;
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ import org.springframework.util.StringUtils;
  * enabled with <code>spring.cloud.config.server.bootstrap=true</code>. This would be
  * useful, for example, if the config server were embedded in another app that wanted to
  * be configured from the same repository as all the other clients.
- * 
- * @author Dave Syer
  *
+ * @author Dave Syer
+ * @author Roy Clarkson
  */
 @Configuration
 public class ConfigServerBootstrapConfiguration {
@@ -51,10 +51,20 @@ public class ConfigServerBootstrapConfiguration {
 
 		@Bean
 		public EnvironmentRepositoryPropertySourceLocator environmentRepositoryPropertySourceLocator() {
-			String label = StringUtils.hasText(client.getLabel()) ? client.getLabel()
-					: server.getDefaultLabel();
 			return new EnvironmentRepositoryPropertySourceLocator(repository,
-					client.getName(), client.getProfile(), label);
+					client.getName(), client.getProfile(), getDefaultLabel());
+		}
+
+		private String getDefaultLabel() {
+			if (StringUtils.hasText(client.getLabel())) {
+				return client.getLabel();
+			}
+			else if (StringUtils.hasText(server.getDefaultLabel())) {
+				return server.getDefaultLabel();
+			}
+			else {
+				return repository.getDefaultLabel();
+			}
 		}
 
 	}

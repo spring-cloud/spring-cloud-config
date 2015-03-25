@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.yaml.snakeyaml.Yaml;
+
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -41,8 +43,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.yaml.snakeyaml.Yaml;
 
+/**
+ * @author Dave Syer
+ * @author Spencer Gibb
+ * @author Roy Clarkson
+ */
 @RestController
 @RequestMapping("${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
@@ -53,7 +59,7 @@ public class EnvironmentController {
 
 	private EncryptionController encryption;
 
-	private String defaultLabel = ConfigServerProperties.MASTER;
+	private String defaultLabel;
 
 	private Map<String, String> overrides = new LinkedHashMap<String, String>();
 
@@ -61,11 +67,12 @@ public class EnvironmentController {
 			EncryptionController encryption) {
 		super();
 		this.repository = repository;
+		this.defaultLabel = repository.getDefaultLabel();
 		this.encryption = encryption;
 	}
 
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
-	public Environment master(@PathVariable String name, @PathVariable String profiles) {
+	public Environment defaultLabel(@PathVariable String name, @PathVariable String profiles) {
 		return labelled(name, profiles, defaultLabel);
 	}
 
@@ -188,7 +195,7 @@ public class EnvironmentController {
 	 * bound. Some of this might be do-able in RelaxedDataBinder, but we need to do it
 	 * here for now. Only supports arrays at leaf level currently (i.e. the properties
 	 * keys end in [*]).
-	 * 
+	 *
 	 * @param target the target Map
 	 * @param properties the properties (with key names to check)
 	 */
