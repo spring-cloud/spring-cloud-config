@@ -96,6 +96,7 @@ public class EncryptionController {
 		catch (IOException e) {
 			throw new KeyFormatException();
 		}
+		logger.info("Key changed to alias=" + alias);
 
 		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.CREATED);
 
@@ -113,6 +114,7 @@ public class EncryptionController {
 		if (encryptor instanceof RsaKeyHolder) {
 			body.put("publicKey", ((RsaKeyHolder) encryptor).getPublicKey());
 		}
+		logger.info("Key changed with literal value");
 		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.CREATED);
 
 	}
@@ -150,7 +152,9 @@ public class EncryptionController {
 			throw new KeyNotInstalledException();
 		}
 		data = stripFormData(data, type, false);
-		return encryptor.encrypt(data);
+		String encrypted = encryptor.encrypt(data);
+		logger.info("Encrypted data");
+		return encrypted;
 	}
 
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
@@ -161,7 +165,9 @@ public class EncryptionController {
 		}
 		try {
 			data = stripFormData(data, type, true);
-			return encryptor.decrypt(data);
+			String decrypted = encryptor.decrypt(data);
+			logger.info("Decrypted cipher data");
+			return decrypted;
 		}
 		catch (IllegalArgumentException e) {
 			throw new InvalidCipherException();
