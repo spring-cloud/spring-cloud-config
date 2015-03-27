@@ -743,17 +743,17 @@ repositories:</p>
 <pre>spring:
   cloud:
     config:
-    server:
-      git:
-        uri: https://github.com/spring-cloud-samples/config-repo
-        repos:
-          simple: https://github.com/pattern1/config-repo
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          repos:
+            simple: https://github.com/pattern1/config-repo
             special:
               pattern: pattern*,*pattern1*
-            uri: https://github.com/pattern2/config-repo
-          local:
+              uri: https://github.com/pattern2/config-repo
+            local:
               pattern: local*
-            uri: file:/home/configsvc/config-repo</pre>
+              uri: file:/home/configsvc/config-repo</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -765,6 +765,27 @@ pattern format is a comma-separated list of application names with
 wildcards.</p>
 </div>
 <div class="paragraph">
+<p>Every repository can also optionally store config files in
+sub-directories, and patterns to search for those directories can be
+specified as <code>searchPaths</code>. For example at the top level:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          searchPaths: foo,bar*</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example the server searches for config files in the top level
+and in the "foo/" sub-directory and also any sub-directory whose name
+begins with "bar".</p>
+</div>
+<div class="paragraph">
 <p>To use HTTP basic authentication on the remote repository add the
 "username" and "password" properties separately (not in the URL),
 e.g.</p>
@@ -774,9 +795,9 @@ e.g.</p>
 <pre>spring:
   cloud:
     config:
-    server:
-      git:
-        uri: https://github.com/spring-cloud-samples/config-repo
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
           username: trolley
           password: strongpassword</pre>
 </div>
@@ -1195,7 +1216,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-26 10:20:24 UTC
+Last updated 2015-03-27 12:31:05 UTC
 </div>
 </div>
 </body>
