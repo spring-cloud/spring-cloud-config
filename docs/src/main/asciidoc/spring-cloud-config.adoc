@@ -97,17 +97,17 @@ repositories:
 spring:
   cloud:
     config:
-    server:
-      git:
-        uri: https://github.com/spring-cloud-samples/config-repo
-        repos:
-          simple: https://github.com/pattern1/config-repo
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          repos:
+            simple: https://github.com/pattern1/config-repo
             special:
               pattern: pattern*,*pattern1*
-            uri: https://github.com/pattern2/config-repo
-          local:
+              uri: https://github.com/pattern2/config-repo
+            local:
               pattern: local*
-            uri: file:/home/configsvc/config-repo
+              uri: file:/home/configsvc/config-repo
 ----
 
 In the above example, if {application} does not match to any of the
@@ -117,6 +117,24 @@ pattern is "simple" (i.e. it only matches one application).  The
 pattern format is a comma-separated list of application names with
 wildcards.
 
+Every repository can also optionally store config files in
+sub-directories, and patterns to search for those directories can be
+specified as `searchPaths`. For example at the top level:
+
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          searchPaths: foo,bar*
+----
+
+In this example the server searches for config files in the top level
+and in the "foo/" sub-directory and also any sub-directory whose name
+begins with "bar".
+
 To use HTTP basic authentication on the remote repository add the
 "username" and "password" properties separately (not in the URL), 
 e.g.
@@ -125,9 +143,9 @@ e.g.
 spring:
   cloud:
     config:
-    server:
-      git:
-        uri: https://github.com/spring-cloud-samples/config-repo
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
           username: trolley
           password: strongpassword
 ----
