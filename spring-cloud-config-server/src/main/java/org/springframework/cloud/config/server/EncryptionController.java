@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.cloud.context.encrypt.KeyFormatException;
 import org.springframework.core.io.ByteArrayResource;
@@ -63,15 +64,16 @@ public class EncryptionController {
 
 	private static Log logger = LogFactory.getLog(EncryptionController.class);
 
-	private TextEncryptor encryptor;
+	private final TextEncryptorLocator encryptorLocator;
 
-	@Autowired(required = false)
-	public void setEncryptor(TextEncryptor encryptor) {
-		this.encryptor = encryptor;
+	@Autowired
+	public EncryptionController (TextEncryptorLocator encryptorLocator) {
+		this.encryptorLocator = encryptorLocator;
 	}
 
 	@RequestMapping(value = "/key", method = RequestMethod.GET)
 	public String getPublicKey() {
+		TextEncryptor encryptor = encryptorLocator.get();
 		if (!(encryptor instanceof RsaKeyHolder)) {
 			throw new KeyNotAvailableException();
 		}
@@ -90,8 +92,9 @@ public class EncryptionController {
 			ByteArrayResource resource = new ByteArrayResource(file.getBytes());
 			KeyPair keyPair = new KeyStoreKeyFactory(resource, password.toCharArray())
 					.getKeyPair(alias);
-			encryptor = new RsaSecretEncryptor(keyPair);
-			body.put("publicKey", ((RsaKeyHolder) encryptor).getPublicKey());
+			RsaSecretEncryptor encryptor = new RsaSecretEncryptor(keyPair);
+			encryptorLocator.setEncryptor(encryptor);
+			body.put("publicKey", encryptor.getPublicKey());
 		}
 		catch (IOException e) {
 			throw new KeyFormatException();
@@ -109,7 +112,8 @@ public class EncryptionController {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "OK");
 
-		encryptor = new EncryptorFactory().create(stripFormData(data, type, false));
+		TextEncryptor encryptor = new EncryptorFactory().create(stripFormData(data, type, false));
+		encryptorLocator.setEncryptor(encryptor);
 
 		if (encryptor instanceof RsaKeyHolder) {
 			body.put("publicKey", ((RsaKeyHolder) encryptor).getPublicKey());
@@ -139,7 +143,7 @@ public class EncryptionController {
 
 	@RequestMapping(value = "encrypt/status", method = RequestMethod.GET)
 	public Map<String, Object> status() {
-		if (encryptor == null) {
+		if (encryptorLocator.get() == null) {
 			throw new KeyNotInstalledException();
 		}
 		return Collections.<String, Object> singletonMap("status", "OK");
@@ -148,6 +152,7 @@ public class EncryptionController {
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
 	public String encrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
+		TextEncryptor encryptor = encryptorLocator.get();
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
@@ -160,6 +165,7 @@ public class EncryptionController {
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
 	public String decrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
+		TextEncryptor encryptor = encryptorLocator.get();
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
@@ -228,40 +234,7 @@ public class EncryptionController {
 		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.BAD_REQUEST);
 	}
 
-	public Environment decrypt(Environment environment) {
-		Environment result = new Environment(environment.getName(), environment.getProfiles(),
-				environment.getLabel());
-		for (PropertySource source : environment.getPropertySources()) {
-			Map<Object, Object> map = new LinkedHashMap<Object, Object>(
-					source.getSource());
-			for (Entry<Object,Object> entry : new LinkedHashSet<>(map.entrySet())) {
-				Object key = entry.getKey();
-				String name = key.toString();
-				String value = entry.getValue().toString();
-				if (value.startsWith("{cipher}")) {
-					map.remove(key);
-					if (encryptor == null) {
-						map.put(name, value);
-					}
-					else {
-						try {
-							value = value == null ? null : encryptor.decrypt(value
-									.substring("{cipher}".length()));
-						}
-						catch (Exception e) {
-							value = "<n/a>";
-							name = "invalid." + name;
-							logger.warn("Cannot decrypt key: " + key + " ("
-									+ e.getClass() + ": " + e.getMessage() + ")");
-						}
-						map.put(name, value);
-					}
-				}
-			}
-			result.add(new PropertySource(source.getName(), map));
-		}
-		return result;
-	}
+
 }
 
 @SuppressWarnings("serial")
