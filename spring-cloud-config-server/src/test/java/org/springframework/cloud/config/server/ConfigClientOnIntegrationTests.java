@@ -2,6 +2,8 @@ package org.springframework.cloud.config.server;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.anyString;
 
 import java.io.IOException;
 
@@ -63,7 +65,9 @@ public class ConfigClientOnIntegrationTests {
 		
 		@Bean
 		public EnvironmentRepository environmentRepository() {
-			return Mockito.mock(EnvironmentRepository.class);
+			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
+			given(repository.findOne(anyString(), anyString(), anyString())).willReturn(new Environment("", ""));
+			return repository;
 		}
 		
 	}

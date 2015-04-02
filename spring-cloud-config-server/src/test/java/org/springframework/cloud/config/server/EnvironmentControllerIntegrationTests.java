@@ -20,6 +20,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
+import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -38,7 +40,7 @@ public class EnvironmentControllerIntegrationTests {
 	public void init() {
 		Mockito.when(repository.getDefaultLabel()).thenReturn("master");
 		mvc = MockMvcBuilders.standaloneSetup(
-				new EnvironmentController(repository, new EncryptionController()))
+				new EnvironmentController(repository, new CipherEnvironmentEncryptor(new TextEncryptorLocator())))
 				.build();
 	}
 

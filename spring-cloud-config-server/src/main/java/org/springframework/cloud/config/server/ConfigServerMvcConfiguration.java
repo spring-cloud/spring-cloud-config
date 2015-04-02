@@ -17,6 +17,9 @@ package org.springframework.cloud.config.server;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
+import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
+import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
@@ -31,7 +34,7 @@ import org.springframework.util.StringUtils;
 public class ConfigServerMvcConfiguration {
 
 	@Autowired(required = false)
-	private TextEncryptor encryptor;
+	private TextEncryptor textEncryptor;
 
 	@Autowired
 	private EnvironmentRepository repository;
@@ -39,9 +42,12 @@ public class ConfigServerMvcConfiguration {
 	@Autowired
 	private ConfigServerProperties server;
 
+	@Autowired
+	private TextEncryptorLocator textEncryptorLocator;
+
 	@Bean
-	public EnvironmentController environmentController() {
-		EnvironmentController controller = new EnvironmentController(repository, encryptionController());
+	public EnvironmentController environmentController(EnvironmentEncryptor environmentEncryptor) {
+		EnvironmentController controller = new EnvironmentController(repository, environmentEncryptor);
 		controller.setDefaultLabel(getDefaultLabel());
 		controller.setOverrides(server.getOverrides());
 		return controller;
@@ -58,10 +64,18 @@ public class ConfigServerMvcConfiguration {
 
 	@Bean
 	public EncryptionController encryptionController() {
-		EncryptionController controller = new EncryptionController();
-		if (encryptor!=null) {
-			controller.setEncryptor(encryptor);
-		}
-		return controller;
+		return new EncryptionController(textEncryptorLocator);
+	}
+
+	@Bean
+	public EnvironmentEncryptor environmentEncryptor() {
+		return new CipherEnvironmentEncryptor(textEncryptorLocator);
+	}
+
+	@Bean
+	public TextEncryptorLocator textEncryptorLocator() {
+		TextEncryptorLocator locator = new TextEncryptorLocator();
+		locator.setEncryptor(textEncryptor);
+		return locator;
 	}
 }

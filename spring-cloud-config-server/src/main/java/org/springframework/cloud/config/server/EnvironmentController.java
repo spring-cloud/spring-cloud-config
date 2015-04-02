@@ -15,22 +15,10 @@
  */
 package org.springframework.cloud.config.server;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.yaml.snakeyaml.Yaml;
-
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
@@ -43,6 +31,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.yaml.snakeyaml.Yaml;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 /**
  * @author Dave Syer
@@ -57,18 +56,17 @@ public class EnvironmentController {
 
 	private EnvironmentRepository repository;
 
-	private EncryptionController encryption;
+	private EnvironmentEncryptor environmentEncryptor;
 
 	private String defaultLabel;
 
 	private Map<String, String> overrides = new LinkedHashMap<String, String>();
 
-	public EnvironmentController(EnvironmentRepository repository,
-			EncryptionController encryption) {
+	public EnvironmentController(EnvironmentRepository repository, EnvironmentEncryptor environmentEncryptor) {
 		super();
 		this.repository = repository;
 		this.defaultLabel = repository.getDefaultLabel();
-		this.encryption = encryption;
+		this.environmentEncryptor = environmentEncryptor;
 	}
 
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
@@ -79,7 +77,7 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
-		Environment environment = encryption.decrypt(repository.findOne(name, profiles,
+		Environment environment = environmentEncryptor.decrypt(repository.findOne(name, profiles,
 				label));
 		if (!overrides.isEmpty()) {
 			environment.addFirst(new PropertySource("overrides", overrides));
