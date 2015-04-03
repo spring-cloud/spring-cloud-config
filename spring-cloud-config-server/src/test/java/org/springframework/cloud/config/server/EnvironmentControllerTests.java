@@ -234,4 +234,15 @@ public class EnvironmentControllerTests {
 				.get(0).getSource().toString());
 	}
 
+	@Test
+	public void overrideWithEscapedPlaceholders() throws Exception {
+		controller.setOverrides(Collections.singletonMap("foo", "$\\{bar}"));
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("bar", "foo");
+		environment.add(new PropertySource("one", map));
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		assertEquals("{foo=${bar}}", controller.defaultLabel("foo", "bar").getPropertySources()
+				.get(0).getSource().toString());
+	}
+
 }

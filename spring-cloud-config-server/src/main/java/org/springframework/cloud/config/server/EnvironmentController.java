@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,6 @@ import java.util.TreeMap;
 import javax.servlet.http.HttpServletResponse;
 
 import org.yaml.snakeyaml.Yaml;
-
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -72,7 +72,8 @@ public class EnvironmentController {
 	}
 
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
-	public Environment defaultLabel(@PathVariable String name, @PathVariable String profiles) {
+	public Environment defaultLabel(@PathVariable String name,
+			@PathVariable String profiles) {
 		return labelled(name, profiles, defaultLabel);
 	}
 
@@ -159,7 +160,7 @@ public class EnvironmentController {
 		factory.bindPropertiesToTarget();
 		@SuppressWarnings("unchecked")
 		Map<String, Object> result = (Map<String, Object>) target.get(MAP_PREFIX);
-		return result==null ? new LinkedHashMap<String, Object>() : result;
+		return result == null ? new LinkedHashMap<String, Object>() : result;
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
@@ -185,9 +186,9 @@ public class EnvironmentController {
 				HttpStatus.OK);
 	}
 
-	private ResponseEntity<Map<String, Object>> getSuccess(Map<String, Object> body, MediaType mediaType) {
-		return new ResponseEntity<>(body, getHttpHeaders(mediaType),
-				HttpStatus.OK);
+	private ResponseEntity<Map<String, Object>> getSuccess(Map<String, Object> body,
+			MediaType mediaType) {
+		return new ResponseEntity<>(body, getHttpHeaders(mediaType), HttpStatus.OK);
 	}
 
 	/**
@@ -272,7 +273,12 @@ public class EnvironmentController {
 	 * @param overrides the overrides to set
 	 */
 	public void setOverrides(Map<String, String> overrides) {
-		this.overrides = overrides;
+		this.overrides = new HashMap<String, String>(overrides);
+		for (String key : overrides.keySet()) {
+			if (overrides.get(key).contains("$\\{")) {
+				this.overrides.put(key, overrides.get(key).replace("$\\{", "${"));
+			}
+		}
 	}
 
 }
