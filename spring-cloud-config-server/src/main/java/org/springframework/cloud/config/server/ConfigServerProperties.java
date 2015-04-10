@@ -57,6 +57,17 @@ public class ConfigServerProperties {
 	 */
 	private boolean stripDocumentFromYaml = true;
 
+	/**
+	 * Default application name when incoming requests do not have a specific one.
+	 */
+	private String defaultApplicationName = "application";
+
+	/**
+	 * Default application profile when incoming requests do not have a specific one.
+	 */
+	private String defaultProfile = "default";
+	
+
 	public String getDefaultLabel() {
 		return defaultLabel;
 	}
@@ -97,4 +108,19 @@ public class ConfigServerProperties {
 		this.stripDocumentFromYaml = stripDocumentFromYaml;
 	}
 
+	public String getDefaultApplicationName() {
+		return defaultApplicationName;
+	}
+
+	public void setDefaultApplicationName(String defaultApplicationName) {
+		this.defaultApplicationName = defaultApplicationName;
+	}
+
+	public String getDefaultProfile() {
+		return defaultProfile;
+	}
+
+	public void setDefaultProfile(String defaultProfile) {
+		this.defaultProfile = defaultProfile;
+	}
 }

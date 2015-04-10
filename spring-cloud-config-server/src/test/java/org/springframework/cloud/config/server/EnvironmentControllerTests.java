@@ -28,6 +28,8 @@ import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
+import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -55,7 +57,7 @@ public class EnvironmentControllerTests {
 	@Before
 	public void init() {
 		Mockito.when(repository.getDefaultLabel()).thenReturn("master");
-		this.controller = new EnvironmentController(repository, new EncryptionController());
+		this.controller = new EnvironmentController(repository, new CipherEnvironmentEncryptor(new SingleTextEncryptorLocator()));
 	}
 
 	@Test
