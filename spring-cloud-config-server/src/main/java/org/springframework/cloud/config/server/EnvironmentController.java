@@ -25,12 +25,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
@@ -60,7 +60,7 @@ public class EnvironmentController {
 
 	private EnvironmentRepository repository;
 
-	private EncryptionController encryption;
+	private EnvironmentEncryptor environmentEncryptor;
 
 	private String defaultLabel;
 
@@ -68,12 +68,11 @@ public class EnvironmentController {
 
 	private boolean stripDocument = true;
 
-	public EnvironmentController(EnvironmentRepository repository,
-			EncryptionController encryption) {
+	public EnvironmentController(EnvironmentRepository repository, EnvironmentEncryptor environmentEncryptor) {
 		super();
 		this.repository = repository;
 		this.defaultLabel = repository.getDefaultLabel();
-		this.encryption = encryption;
+		this.environmentEncryptor = environmentEncryptor;
 	}
 
 	/**
@@ -94,7 +93,7 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
-		Environment environment = encryption.decrypt(repository.findOne(name, profiles,
+		Environment environment = environmentEncryptor.decrypt(repository.findOne(name, profiles,
 				label));
 		if (!overrides.isEmpty()) {
 			environment.addFirst(new PropertySource("overrides", overrides));

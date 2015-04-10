@@ -15,21 +15,16 @@
  */
 package org.springframework.cloud.config.server;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Collections;
-
 import org.junit.Test;
-import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.cloud.config.server.EncryptionController;
-import org.springframework.cloud.config.server.InvalidCipherException;
-import org.springframework.cloud.config.server.KeyNotInstalledException;
+
+import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
 import org.springframework.cloud.context.encrypt.KeyFormatException;
 import org.springframework.http.MediaType;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Dave Syer
@@ -37,7 +32,9 @@ import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
  */
 public class EncryptionControllerTests {
 
-	private EncryptionController controller = new EncryptionController();
+	private SingleTextEncryptorLocator textEncryptorLocator = new SingleTextEncryptorLocator();
+
+	private EncryptionController controller = new EncryptionController(textEncryptorLocator);
 
 	@Test(expected = KeyNotInstalledException.class)
 	public void cannotDecryptWithoutKey() {
@@ -69,36 +66,25 @@ public class EncryptionControllerTests {
 
 	@Test
 	public void sunnyDayRsaKey() {
-		controller.setEncryptor(new RsaSecretEncryptor());
+		textEncryptorLocator.setEncryptor(new RsaSecretEncryptor());
 		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);
 		assertEquals("foo", controller.decrypt(cipher, MediaType.TEXT_PLAIN));
 	}
 
 	@Test
 	public void publicKey() {
-		controller.setEncryptor(new RsaSecretEncryptor());
+		textEncryptorLocator.setEncryptor(new RsaSecretEncryptor());
 		String key = controller.getPublicKey();
 		assertTrue("Wrong key format: " + key, key.startsWith("ssh-rsa"));
 	}
 
 	@Test
 	public void formDataIn() {
-		controller.setEncryptor(new RsaSecretEncryptor());
+		textEncryptorLocator.setEncryptor(new RsaSecretEncryptor());
 		// Add space to input
 		String cipher = controller.encrypt("foo bar=", MediaType.APPLICATION_FORM_URLENCODED);
 		String decrypt = controller.decrypt(cipher + "=", MediaType.APPLICATION_FORM_URLENCODED);
 		assertEquals("Wrong decrypted plaintext: " + decrypt, "foo bar", decrypt);
-	}
-
-	@Test
-	public void decryptEnvironment() {
-		controller.uploadKey("foo", MediaType.TEXT_PLAIN);
-		String cipher = controller.encrypt("foo", MediaType.TEXT_PLAIN);
-		Environment environment = new Environment("foo", "bar");
-		environment.add(new PropertySource("spam", Collections
-				.<Object, Object> singletonMap("my", "{cipher}" + cipher)));
-		Environment result = controller.decrypt(environment);
-		assertEquals("foo", result.getPropertySources().get(0).getSource().get("my"));
 	}
 
 	@Test
