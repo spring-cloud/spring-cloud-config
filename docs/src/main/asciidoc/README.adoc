@@ -21,7 +21,7 @@ Specifically for Spring applications:
 ** `/refresh` for refreshing the `@RefreshScope` beans
 ** `/restart` for restarting the Spring context (disabled by default)
 ** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`)
-* Bootstrap appplication context: a parent context for the main application that can be trained to do anything (by default it binds to the Config Server, and decrypts property values)
+* Bootstrap application context: a parent context for the main application that can be trained to do anything (by default it binds to the Config Server, and decrypts property values)
 
 == Quick Start
 
