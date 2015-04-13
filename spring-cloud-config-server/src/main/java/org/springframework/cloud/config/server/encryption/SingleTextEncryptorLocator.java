@@ -20,27 +20,27 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 public class SingleTextEncryptorLocator implements TextEncryptorLocator {
-    private TextEncryptor encryptor;
+	private TextEncryptor encryptor;
 
-    public SingleTextEncryptorLocator() {
-    }
+	public SingleTextEncryptorLocator() {
+	}
 
-    public SingleTextEncryptorLocator(TextEncryptor encryptor) {
-        this.encryptor = encryptor;
-    }
+	public SingleTextEncryptorLocator(TextEncryptor encryptor) {
+		this.encryptor = encryptor;
+	}
 
-    // temporary solution to support EncryptionController REST API
-    public void setEncryptor(TextEncryptor encryptor) {
-        this.encryptor = encryptor;
-    }
+	// temporary solution to support EncryptionController REST API
+	public void setEncryptor(TextEncryptor encryptor) {
+		this.encryptor = encryptor;
+	}
 
-    @Override
-    public TextEncryptor locate() {
-        return encryptor;
-    }
+	@Override
+	public TextEncryptor locate() {
+		return encryptor;
+	}
 
-    @Override
-    public TextEncryptor locate(Environment environment) {
-        return locate();
-    }
+	@Override
+	public TextEncryptor locate(Environment environment) {
+		return locate();
+	}
 }

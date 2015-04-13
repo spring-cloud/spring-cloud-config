@@ -25,21 +25,21 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 @Configuration
 public class ConfigServerEncryptionConfiguration {
 
-    @Autowired(required = false)
-    private TextEncryptor encryptor;
+	@Autowired(required = false)
+	private TextEncryptor encryptor;
 
-    @Bean
-    public EncryptionController encryptionController(TextEncryptorLocator locator) {
-        return new EncryptionController(locator);
-    }
+	@Bean
+	public EncryptionController encryptionController(TextEncryptorLocator locator) {
+		return new EncryptionController(locator);
+	}
 
-    @Bean
-    public EnvironmentEncryptor environmentEncryptor(TextEncryptorLocator locator) {
-        return new CipherEnvironmentEncryptor(locator);
-    }
+	@Bean
+	public EnvironmentEncryptor environmentEncryptor(TextEncryptorLocator locator) {
+		return new CipherEnvironmentEncryptor(locator);
+	}
 
-    @Bean
-    public TextEncryptorLocator textEncryptorLocator() {
-        return new SingleTextEncryptorLocator(encryptor);
-    }
+	@Bean
+	public TextEncryptorLocator textEncryptorLocator() {
+		return new SingleTextEncryptorLocator(encryptor);
+	}
 }

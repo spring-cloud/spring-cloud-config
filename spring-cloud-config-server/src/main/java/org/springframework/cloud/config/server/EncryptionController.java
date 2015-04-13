@@ -26,7 +26,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
 import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
@@ -63,8 +62,7 @@ public class EncryptionController {
 
 	private final TextEncryptorLocator encryptorLocator;
 
-	@Autowired
-	public EncryptionController (TextEncryptorLocator encryptorLocator) {
+	public EncryptionController(TextEncryptorLocator encryptorLocator) {
 		this.encryptorLocator = encryptorLocator;
 	}
 
@@ -90,8 +88,8 @@ public class EncryptionController {
 			KeyPair keyPair = new KeyStoreKeyFactory(resource, password.toCharArray())
 					.getKeyPair(alias);
 			RsaSecretEncryptor encryptor = new RsaSecretEncryptor(keyPair);
-            updateEncryptor(encryptor);
-            body.put("publicKey", encryptor.getPublicKey());
+			updateEncryptor(encryptor);
+			body.put("publicKey", encryptor.getPublicKey());
 		}
 		catch (IOException e) {
 			throw new KeyFormatException();
@@ -118,16 +116,16 @@ public class EncryptionController {
 		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.CREATED);
 	}
 
-    // this is temporary solution to support existing REST API
-    // downcasting is only necessary until we introduce some key management abstraction,
-    // we don't want TextEncryptorLocator to have setEncryptor method
-    private void updateEncryptor(TextEncryptor encryptor) {
-        if (encryptorLocator instanceof SingleTextEncryptorLocator) {
-            ((SingleTextEncryptorLocator) encryptorLocator).setEncryptor(encryptor);
-        } else {
-            throw new IncompatibleTextEncryptorLocatorException();
-        }
-    }
+	// this is temporary solution to support existing REST API
+	// downcasting is only necessary until we introduce some key management abstraction,
+	// we don't want TextEncryptorLocator to have setEncryptor method
+	private void updateEncryptor(TextEncryptor encryptor) {
+		if (encryptorLocator instanceof SingleTextEncryptorLocator) {
+			((SingleTextEncryptorLocator) encryptorLocator).setEncryptor(encryptor);
+		} else {
+			throw new IncompatibleTextEncryptorLocatorException();
+		}
+	}
 
 	@ExceptionHandler(KeyFormatException.class)
 	@ResponseBody
@@ -158,6 +156,7 @@ public class EncryptionController {
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
 	public String encrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
+
 		TextEncryptor encryptor = encryptorLocator.locate();
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
@@ -171,6 +170,7 @@ public class EncryptionController {
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
 	public String decrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
+
 		TextEncryptor encryptor = encryptorLocator.locate();
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
