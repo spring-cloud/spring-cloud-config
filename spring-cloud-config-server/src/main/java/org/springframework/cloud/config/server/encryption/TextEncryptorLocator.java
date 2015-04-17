@@ -18,6 +18,20 @@ package org.springframework.cloud.config.server.encryption;
 
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
+/**
+ * Service interface for locating proper TextEncryptor to be used for particular application.
+ * It can be used to provide config server with application and environment specific encryption.
+ *
+ * @author Bartosz Wojtkiewicz
+ * @author Rafal Zukowski
+ *
+ */
 public interface TextEncryptorLocator {
+	/**
+	 * Returns TextEncryptor to be used for given application and profiles.
+	 *
+	 * @param applicationName application name
+	 * @param profiles comma separated list of profiles
+	 */
 	TextEncryptor locate(String applicationName, String profiles);
 }

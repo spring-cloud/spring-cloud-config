@@ -30,6 +30,14 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+/**
+ * EnvironmentEncryptor that can decrypt property values prefixed with {cipher} marker.
+ *
+ * @author Dave Syer
+ * @author Bartosz Wojtkiewicz
+ * @author Rafal Zukowski
+ *
+ */
 @Component
 public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 

@@ -18,6 +18,14 @@ package org.springframework.cloud.config.server.encryption;
 
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
+/**
+ * Basic implementation of TextEncryptorLocator which uses
+ * single TextEncryptor for all applications and profiles.
+ *
+ * @author Bartosz Wojtkiewicz
+ * @author Rafal Zukowski
+ *
+ */
 public class SingleTextEncryptorLocator implements TextEncryptorLocator {
 	private TextEncryptor encryptor;
 

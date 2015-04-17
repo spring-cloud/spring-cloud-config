@@ -18,6 +18,13 @@ package org.springframework.cloud.config.server.encryption;
 
 import org.springframework.cloud.config.environment.Environment;
 
+/**
+ * Service interface for decrypting properties in Environment object.
+ *
+ * @author Bartosz Wojtkiewicz
+ * @author Rafal Zukowski
+ *
+ */
 public interface EnvironmentEncryptor {
 	Environment decrypt(Environment environment);
 }

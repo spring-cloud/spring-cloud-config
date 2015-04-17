@@ -52,6 +52,9 @@ import org.yaml.snakeyaml.nodes.Tag;
  * @author Dave Syer
  * @author Spencer Gibb
  * @author Roy Clarkson
+ * @author Bartosz Wojtkiewicz
+ * @author Rafal Zukowski
+ *
  */
 @RestController
 @RequestMapping("${spring.cloud.config.server.prefix:}")
