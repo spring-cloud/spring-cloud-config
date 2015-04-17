@@ -41,6 +41,7 @@ import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,13 +63,17 @@ public class EncryptionController {
 
 	private final TextEncryptorLocator encryptorLocator;
 
-	public EncryptionController(TextEncryptorLocator encryptorLocator) {
+	private final ConfigServerProperties properties;
+
+	public EncryptionController(TextEncryptorLocator encryptorLocator,
+								ConfigServerProperties configServerProperties) {
 		this.encryptorLocator = encryptorLocator;
+		this.properties = configServerProperties;
 	}
 
 	@RequestMapping(value = "/key", method = RequestMethod.GET)
 	public String getPublicKey() {
-		TextEncryptor encryptor = encryptorLocator.locate();
+		TextEncryptor encryptor = locateDefaultTextEncryptor();
 		if (!(encryptor instanceof RsaKeyHolder)) {
 			throw new KeyNotAvailableException();
 		}
@@ -147,43 +152,72 @@ public class EncryptionController {
 
 	@RequestMapping(value = "encrypt/status", method = RequestMethod.GET)
 	public Map<String, Object> status() {
-		if (encryptorLocator.locate() == null) {
-			throw new KeyNotInstalledException();
-		}
+		checkEncryptorInstalled(locateDefaultTextEncryptor());
 		return Collections.<String, Object> singletonMap("status", "OK");
 	}
 
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
-	public String encrypt(@RequestBody String data,
+	public String encrypt(
+			@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
 
-		TextEncryptor encryptor = encryptorLocator.locate();
-		if (encryptor == null) {
-			throw new KeyNotInstalledException();
+		return encrypt(properties.getDefaultApplicationName(),
+				properties.getDefaultProfile(), data, type);
+	}
+
+	@RequestMapping(value = "/encrypt/{name}/{profiles}", method = RequestMethod.POST)
+	public String encrypt(
+			@PathVariable String name,
+			@PathVariable String profiles,
+			@RequestBody String data,
+			@RequestHeader("Content-Type") MediaType type) {
+
+		try {
+			TextEncryptor encryptor = checkEncryptorInstalled(encryptorLocator.locate(name, profiles));
+			String encrypted = encryptor.encrypt(stripFormData(data, type, false));
+			logger.info("Encrypted data");
+			return encrypted;
+		} catch (IllegalArgumentException e) {
+			throw new InvalidCipherException();
 		}
-		data = stripFormData(data, type, false);
-		String encrypted = encryptor.encrypt(data);
-		logger.info("Encrypted data");
-		return encrypted;
 	}
 
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
-	public String decrypt(@RequestBody String data,
+	public String decrypt(
+			@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
 
-		TextEncryptor encryptor = encryptorLocator.locate();
+		return decrypt(properties.getDefaultApplicationName(),
+				properties.getDefaultProfile(), data, type);
+	}
+
+	@RequestMapping(value = "/decrypt/{name}/{profiles}", method = RequestMethod.POST)
+	public String decrypt(
+			@PathVariable String name,
+			@PathVariable String profiles,
+			@RequestBody String data,
+			@RequestHeader("Content-Type") MediaType type) {
+
+		try {
+			TextEncryptor encryptor = checkEncryptorInstalled(encryptorLocator.locate(name, profiles));
+			String decrypted = encryptor.decrypt(stripFormData(data, type, true));
+			logger.info("Decrypted cipher data");
+			return decrypted;
+		} catch (IllegalArgumentException e) {
+			throw new InvalidCipherException();
+		}
+	}
+
+	private TextEncryptor checkEncryptorInstalled(TextEncryptor encryptor) {
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
-		try {
-			data = stripFormData(data, type, true);
-			String decrypted = encryptor.decrypt(data);
-			logger.info("Decrypted cipher data");
-			return decrypted;
-		}
-		catch (IllegalArgumentException e) {
-			throw new InvalidCipherException();
-		}
+		return encryptor;
+	}
+
+	private TextEncryptor locateDefaultTextEncryptor() {
+		return encryptorLocator.locate(properties.getDefaultApplicationName(),
+										properties.getDefaultProfile());
 	}
 
 	private String stripFormData(String data, MediaType type, boolean cipher) {
@@ -239,7 +273,6 @@ public class EncryptionController {
 		body.put("description", "Text not encrypted with this key");
 		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.BAD_REQUEST);
 	}
-
 
 }
 

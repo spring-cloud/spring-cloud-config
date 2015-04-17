@@ -33,8 +33,8 @@ import static org.junit.Assert.assertTrue;
 public class EncryptionControllerTests {
 
 	private SingleTextEncryptorLocator textEncryptorLocator = new SingleTextEncryptorLocator();
-
-	private EncryptionController controller = new EncryptionController(textEncryptorLocator);
+	private ConfigServerProperties properties = new ConfigServerProperties();
+	private EncryptionController controller = new EncryptionController(textEncryptorLocator, properties);
 
 	@Test(expected = KeyNotInstalledException.class)
 	public void cannotDecryptWithoutKey() {

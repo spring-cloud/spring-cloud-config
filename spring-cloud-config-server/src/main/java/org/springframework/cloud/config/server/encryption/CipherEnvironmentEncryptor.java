@@ -28,6 +28,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
@@ -43,7 +44,8 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 
 	@Override
 	public Environment decrypt(Environment environment) {
-		TextEncryptor encryptor = encryptorLocator.locate(environment);
+		TextEncryptor encryptor = encryptorLocator.locate(environment.getName(),
+				StringUtils.arrayToCommaDelimitedString(environment.getProfiles()));
 		return encryptor != null ? decrypt(environment, encryptor) : environment;
 	}
 

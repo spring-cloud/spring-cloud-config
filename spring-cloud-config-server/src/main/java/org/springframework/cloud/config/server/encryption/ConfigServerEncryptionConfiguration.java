@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.encryption;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.config.server.ConfigServerProperties;
 import org.springframework.cloud.config.server.EncryptionController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,13 +29,19 @@ public class ConfigServerEncryptionConfiguration {
 	@Autowired(required = false)
 	private TextEncryptor encryptor;
 
+	@Autowired
+	private TextEncryptorLocator locator;
+
+	@Autowired
+	private ConfigServerProperties properties;
+
 	@Bean
-	public EncryptionController encryptionController(TextEncryptorLocator locator) {
-		return new EncryptionController(locator);
+	public EncryptionController encryptionController() {
+		return new EncryptionController(locator, properties);
 	}
 
 	@Bean
-	public EnvironmentEncryptor environmentEncryptor(TextEncryptorLocator locator) {
+	public EnvironmentEncryptor environmentEncryptor() {
 		return new CipherEnvironmentEncryptor(locator);
 	}
 

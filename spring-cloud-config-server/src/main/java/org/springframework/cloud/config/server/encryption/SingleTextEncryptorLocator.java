@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import org.springframework.cloud.config.environment.Environment;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 public class SingleTextEncryptorLocator implements TextEncryptorLocator {
@@ -35,12 +34,7 @@ public class SingleTextEncryptorLocator implements TextEncryptorLocator {
 	}
 
 	@Override
-	public TextEncryptor locate() {
+	public TextEncryptor locate(String applicationName, String profiles) {
 		return encryptor;
-	}
-
-	@Override
-	public TextEncryptor locate(Environment environment) {
-		return locate();
 	}
 }

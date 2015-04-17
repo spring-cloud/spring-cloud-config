@@ -16,10 +16,8 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import org.springframework.cloud.config.environment.Environment;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 public interface TextEncryptorLocator {
-	TextEncryptor locate();
-	TextEncryptor locate(Environment environment);
+	TextEncryptor locate(String applicationName, String profiles);
 }
