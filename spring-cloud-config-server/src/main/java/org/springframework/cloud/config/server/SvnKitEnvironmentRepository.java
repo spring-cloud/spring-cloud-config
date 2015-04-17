@@ -78,7 +78,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		}
 	}
 
-	private Environment loadEnvironment(String application, String profile, String label) {
+	private synchronized Environment loadEnvironment(String application, String profile, String label) {
 		final NativeEnvironmentRepository environmentRepository = new NativeEnvironmentRepository(
 				getEnvironment());
 		environmentRepository.setSearchLocations(getSearchLocations(getSvnPath(
