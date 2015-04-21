@@ -35,6 +35,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -57,6 +58,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 	@Override
+	@Retryable(interceptor="configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(
 			org.springframework.core.env.Environment environment) {
 		ConfigClientProperties client = defaults.override(environment);

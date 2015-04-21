@@ -62,5 +62,5 @@ public class ConfigClientAutoConfiguration {
 			return new ConfigServerHealthIndicator(locator);
 		}
 	}
-
+	
 }
