@@ -133,8 +133,8 @@ public class NativeEnvironmentRepository implements EnvironmentRepository {
 				boolean matches = false;
 				String normal = name;
 				if (normal.startsWith("file:")) {
-					normal = new File(normal.substring("file:".length()))
-							.getAbsolutePath();
+					normal = StringUtils.cleanPath(new File(normal.substring("file:".length()))
+							.getAbsolutePath());
 				}
 				for (String pattern : StringUtils
 						.commaDelimitedListToStringArray(getLocations(searchLocations,
