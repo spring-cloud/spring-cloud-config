@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.config.server;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -122,6 +121,18 @@ public class JGitEnvironmentRepositoryTests {
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
+	}
+	
+	@Test
+	public void uriWithHostOnly() throws Exception {
+		repository.setUri("git://localhost");
+		assertEquals("git://localhost/", repository.getUri());
+	}
+
+	@Test
+	public void uriWithHostAndPath() throws Exception {
+		repository.setUri("git://localhost/foo/");
+		assertEquals("git://localhost/foo", repository.getUri());
 	}
 
 }

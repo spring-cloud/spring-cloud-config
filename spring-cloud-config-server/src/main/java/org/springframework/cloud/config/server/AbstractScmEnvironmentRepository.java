@@ -85,6 +85,11 @@ public abstract class AbstractScmEnvironmentRepository implements EnvironmentRep
 		while (uri.endsWith("/")) {
 			uri = uri.substring(0, uri.length() - 1);
 		}
+		int index = uri.indexOf("://");
+		if (index>0 && !uri.substring(index+"://".length()).contains("/")) {
+			// If there's no context path add one
+			uri = uri + "/";
+		}
 		this.uri = uri;
 	}
 
