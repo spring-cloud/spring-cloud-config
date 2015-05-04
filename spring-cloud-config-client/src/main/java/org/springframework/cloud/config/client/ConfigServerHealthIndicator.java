@@ -30,22 +30,18 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
     @Override
     protected void doHealthCheck(Builder builder) throws Exception {
-        try {
-            PropertySource<?> propertySource = locator.locate(this.env);
-            builder.up();
-            if (propertySource instanceof CompositePropertySource) {
-                List<String> sources = new ArrayList<>();
-                for (PropertySource<?> ps : ((CompositePropertySource) propertySource).getPropertySources()) {
-                    sources.add(ps.getName());
-                }
-                builder.withDetail("propertySources", sources);
-            } else if (propertySource!=null) {
-                builder.withDetail("propertySources", propertySource.toString());
-            } else {
-            	builder.unknown().withDetail("error", "no property sources located");
-            }
-        } catch (Exception e) {
-            builder.down(e);
-        }
+		PropertySource<?> propertySource = locator.locate(this.env);
+		builder.up();
+		if (propertySource instanceof CompositePropertySource) {
+			List<String> sources = new ArrayList<>();
+			for (PropertySource<?> ps : ((CompositePropertySource) propertySource).getPropertySources()) {
+				sources.add(ps.getName());
+			}
+			builder.withDetail("propertySources", sources);
+		} else if (propertySource!=null) {
+			builder.withDetail("propertySources", propertySource.toString());
+		} else {
+			builder.unknown().withDetail("error", "no property sources located");
+		}
     }
 }

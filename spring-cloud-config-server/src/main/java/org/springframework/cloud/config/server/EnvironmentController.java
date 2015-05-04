@@ -61,7 +61,7 @@ public class EnvironmentController {
 
 	private String defaultLabel;
 
-	private Map<String, String> overrides = new LinkedHashMap<String, String>();
+	private Map<String, String> overrides = new LinkedHashMap<>();
 
 	public EnvironmentController(EnvironmentRepository repository,
 			EncryptionController encryption) {
