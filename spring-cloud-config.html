@@ -423,6 +423,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_spring_cloud_config_server">Spring Cloud Config Server</a>
 <ul class="sectlevel2">
 <li><a href="#_environment_repository">Environment Repository</a></li>
+<li><a href="#_health_indicator">Health Indicator</a></li>
 <li><a href="#_security">Security</a></li>
 <li><a href="#_encryption_and_decryption">Encryption and Decryption</a></li>
 <li><a href="#_key_management">Key Management</a></li>
@@ -861,6 +862,37 @@ Spring Environment).</p>
 </div>
 </div>
 <div class="sect2">
+<h3 id="_health_indicator">Health Indicator</h3>
+<div class="paragraph">
+<p>Config Server comes with a Health Indicator that checks if the configured
+<code>EnvironmentRepository</code> is working.  By default it asks the <code>EnvironmentRepository</code>
+for an application named <code>app</code>, the <code>default</code> profile and the default
+label provided by the <code>EnvironmentRepository</code> implementation.</p>
+</div>
+<div class="paragraph">
+<p>You can configure the Health Indicator to check more appliations
+along with custom profiles and custom labels, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+      server:
+        health:
+          repositories:
+            myservice:
+              label: mylabel
+            myservice-dev:
+              name: myservice
+              profiles: development</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can disable the Health Indicator by setting <code>spring.cloud.config.server.health.enabled=false</code>.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_security">Security</h3>
 <div class="paragraph">
 <p>You are free to secure your Config Server in any way that makes sense
@@ -1216,7 +1248,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-04-29 09:39:07 UTC
+Last updated 2015-05-04 19:33:40 UTC
 </div>
 </div>
 </body>
