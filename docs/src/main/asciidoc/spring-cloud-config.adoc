@@ -36,7 +36,7 @@ Server? The strategy that governs this behaviour is the
 * `{label}` which is a server side feature labelling a "versioned" set of config files.
 
 Repository implementations generally behave just like a Spring Boot
-application loading configuration files from a "spring.config.name"
+application loading configuration files from a "spring.application.name"
 equal to the `{application}` parameter, and "spring.profiles.active"
 equal to the `{profiles}` parameter. Precedence rules for profiles are
 also the same as in a regular Boot application: active profiles take
@@ -224,7 +224,7 @@ instance:
 spring:
   datasource:
     username: dbuser
-    password: {cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ
+    password: "{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ"
 ----
 
 You can safely push this plain text to a shared git repository and the
