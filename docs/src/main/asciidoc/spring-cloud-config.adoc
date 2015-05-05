@@ -250,7 +250,7 @@ instance:
 spring:
   datasource:
     username: dbuser
-    password: {cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ
+    password: '{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'
 ----
 
 You can safely push this plain text to a shared git repository and the
