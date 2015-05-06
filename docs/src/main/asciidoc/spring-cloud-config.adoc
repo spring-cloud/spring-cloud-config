@@ -135,6 +135,23 @@ In this example the server searches for config files in the top level
 and in the "foo/" sub-directory and also any sub-directory whose name
 begins with "bar".
 
+By default the server clones remote repositories when configuration 
+is first requested. The server can be configured to clone the repositories
+at startup. For example at the top level:
+
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          cloneOnStart: true
+----
+
+In this example the server clones config-repo on startup before it accepts
+any requests.
+
 To use HTTP basic authentication on the remote repository add the
 "username" and "password" properties separately (not in the URL), 
 e.g.

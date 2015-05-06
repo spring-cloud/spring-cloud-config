@@ -61,11 +61,21 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private static final String DEFAULT_LABEL = "master";
 
 	private boolean initialized;
+	
+	private boolean cloneOnStart = false;
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
 	}
 
+	public boolean getCloneOnStart() {
+		return cloneOnStart;
+	}
+	
+	public void setCloneOnStart(boolean cloneOnStart) {
+		this.cloneOnStart = cloneOnStart;
+	}
+	
 	@Override
 	public String getDefaultLabel() {
 		return DEFAULT_LABEL;
@@ -101,6 +111,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	public void afterPropertiesSet() throws Exception {
 		Assert.state(getUri() != null,
 				"You need to configure a uri for the git repository");
+		
+		if (cloneOnStart) {
+			//First call to clone from the remote repository. 
+			createGitClient();
+			
+			//Second call to open the local file system. 
+			createGitClient();
+		}
 	}
 
 	private synchronized Environment loadEnvironment(Git git, String application,

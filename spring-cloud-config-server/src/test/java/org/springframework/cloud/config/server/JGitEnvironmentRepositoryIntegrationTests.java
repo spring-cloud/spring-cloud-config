@@ -26,7 +26,6 @@ import org.eclipse.jgit.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
@@ -38,6 +37,8 @@ import org.springframework.util.StreamUtils;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Dave Syer
@@ -113,6 +114,26 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertEquals(2, environment.getPropertySources().size());
 	}
 
+	@Test
+	public void envRepoStartup_CloneOnStartSet_CloneOnStartTrue() throws Exception {
+		ConfigServerTestUtils.prepareLocalRepo();
+		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false).run(
+				"--spring.cloud.config.server.git.uri=" + uri, 
+				"--spring.cloud.config.server.git.cloneOnStart=true");
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		assertTrue(((JGitEnvironmentRepository)repository).getCloneOnStart());
+	}
+	
+	@Test
+	public void envRepoStartup_CloneOnStartNotSet_CloneOnStartFalse() throws Exception {
+		ConfigServerTestUtils.prepareLocalRepo();
+		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false).run(
+				"--spring.cloud.config.server.git.uri=" + uri);
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		assertFalse(((JGitEnvironmentRepository)repository).getCloneOnStart());
+	}
 	@Test
 	public void defaultLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
