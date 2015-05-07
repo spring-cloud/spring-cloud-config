@@ -59,6 +59,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
 
 	private static final String DEFAULT_LABEL = "master";
+	private static final String FILE_URI_PREFIX = "file:";
 
 	private boolean initialized;
 	
@@ -122,12 +123,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 		Assert.state(getUri() != null,
 				"You need to configure a uri for the git repository");
 		
-		if (cloneOnStart) {
-			//First call to clone from the remote repository. 
-			createGitClient();
-			
-			//Second call to open the local file system. 
-			createGitClient();
+		//Clone the repository then open a connection to the local
+		//file system. 
+		if (cloneOnStart && !getUri().startsWith(FILE_URI_PREFIX)) {
+			cloneToBasedir();
+			openGitRepository();
 		}
 	}
 
@@ -201,7 +201,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private Git copyRepository() throws IOException, GitAPIException {
 		deleteBaseDirIfExists();
 		Assert.state(getBasedir().mkdirs(), "Could not create basedir: " + getBasedir());
-		if (getUri().startsWith("file:")) {
+		if (getUri().startsWith(FILE_URI_PREFIX)) {
 			return copyFromLocalRepository();
 		}
 		else {

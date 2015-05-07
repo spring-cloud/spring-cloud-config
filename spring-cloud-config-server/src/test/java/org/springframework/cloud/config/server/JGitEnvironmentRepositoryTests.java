@@ -153,7 +153,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setUri("http:\\\\somegitserver\\somegitrepo");
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
-		verify(mockCloneCommand, times(2)).call();
+		verify(mockCloneCommand, times(1)).call();
 	}
 
 	@Test
