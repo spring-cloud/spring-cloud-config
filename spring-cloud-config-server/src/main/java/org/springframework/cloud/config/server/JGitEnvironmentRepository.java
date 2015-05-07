@@ -64,6 +64,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	
 	private boolean cloneOnStart = false;
 
+	private GitFactory gitFactory = new GitFactory();
+	
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
 	}
@@ -74,6 +76,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	
 	public void setCloneOnStart(boolean cloneOnStart) {
 		this.cloneOnStart = cloneOnStart;
+	}
+	
+	public GitFactory getGitFactory() {
+		return gitFactory;
+	}
+	
+	public void setGitFactory(GitFactory gitFactory) {
+		this.gitFactory = gitFactory;
 	}
 	
 	@Override
@@ -200,7 +210,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	}
 
 	private Git openGitRepository() throws IOException {
-		Git git = Git.open(getWorkingDirectory());
+		Git git = gitFactory.getGitByOpen(getWorkingDirectory());
 		tryFetch(git);
 		return git;
 	}
@@ -212,13 +222,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 		File gitDir = new File(remote, ".git");
 		Assert.state(gitDir.exists(), "No .git at " + getUri());
 		Assert.state(gitDir.isDirectory(), "No .git directory at " + getUri());
-		git = Git.open(remote);
+		git = gitFactory.getGitByOpen(remote);
 		return git;
 	}
 
 	private Git cloneToBasedir() throws GitAPIException {
-		CloneCommand clone = Git.cloneRepository().setURI(getUri())
-				.setDirectory(getBasedir());
+		CloneCommand clone = gitFactory.getCloneCommandByCloneRepository()
+				.setURI(getUri()).setDirectory(getBasedir());
 		if (hasText(getUsername())) {
 			setCredentialsProvider(clone);
 		}

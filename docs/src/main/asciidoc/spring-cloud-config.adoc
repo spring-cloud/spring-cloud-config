@@ -145,12 +145,25 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/spring-cloud-samples/config-repo
-          cloneOnStart: true
+          uri: https://git/common/config-repo.git
+          repos:
+            team-a:
+                pattern: team-a-*
+                cloneOnStart: true
+                uri: http://git/team-a/config-repo.git
+            team-b:
+                pattern: team-b-*
+                cloneOnStart: false
+                uri: http://git/team-b/config-repo.git
+            team-c:
+                pattern: team-c-*
+                uri: http://git/team-a/config-repo.git
+                
 ----
 
-In this example the server clones config-repo on startup before it accepts
-any requests.
+In this example the server clones team-a's config-repo on startup before it 
+accepts any requests. All other repositories will not be cloned until 
+configuration from the repository is requested.
 
 To use HTTP basic authentication on the remote repository add the
 "username" and "password" properties separately (not in the URL), 
