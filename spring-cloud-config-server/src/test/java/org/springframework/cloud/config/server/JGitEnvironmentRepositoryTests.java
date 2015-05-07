@@ -150,7 +150,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
 				environment);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
-		envRepository.setUri("http:\\\\somegitserver\\somegitrepo");
+		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 		verify(mockCloneCommand, times(1)).call();
@@ -169,7 +169,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
 				environment);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
-		envRepository.setUri("http:\\\\somegitserver\\somegitrepo");
+		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.afterPropertiesSet();
 		verify(mockCloneCommand, times(0)).call();
 		verify(mockGit, times(0)).fetch();
@@ -187,7 +187,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
 				environment);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
-		envRepository.setUri("file:\\\\somefilesystem\\somegitrepo");
+		envRepository.setUri("file://somefilesystem/somegitrepo");
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 		verify(mockCloneCommand, times(0)).call();
