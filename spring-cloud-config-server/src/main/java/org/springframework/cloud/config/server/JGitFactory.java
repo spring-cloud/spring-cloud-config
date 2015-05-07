@@ -23,13 +23,14 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 
 /**
- * Wraps the static method calls to {@link org.eclipse.jgit.api.Git} allowing
- * for easier unit testing by classes that use them.
+ * Wraps the static method calls to {@link org.eclipse.jgit.api.Git} and
+ * {@link org.eclipse.jgit.api.CloneCommand} allowing for easier unit 
+ * testing by classes that use them.
  * 
  * @author acorvino
  *
  */
-public class GitFactory {
+public class JGitFactory {
 	
 	public Git getGitByOpen(File file) throws IOException {
 		return Git.open(file);

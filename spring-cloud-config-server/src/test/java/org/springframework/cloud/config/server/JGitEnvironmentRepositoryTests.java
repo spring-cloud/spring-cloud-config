@@ -173,7 +173,7 @@ public class JGitEnvironmentRepositoryTests {
 		verify(mockCloneCommand, times(0)).call();
 	}
 	
-	private class MockGitFactory extends GitFactory {
+	private class MockGitFactory extends JGitFactory {
 		
 		private Git mockGit;
 		private CloneCommand mockCloneCommand;

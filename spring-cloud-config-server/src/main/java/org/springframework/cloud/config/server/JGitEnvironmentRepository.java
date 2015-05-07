@@ -64,7 +64,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	
 	private boolean cloneOnStart = false;
 
-	private GitFactory gitFactory = new GitFactory();
+	private JGitFactory gitFactory = new JGitFactory();
 	
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
@@ -78,11 +78,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 		this.cloneOnStart = cloneOnStart;
 	}
 	
-	public GitFactory getGitFactory() {
+	public JGitFactory getGitFactory() {
 		return gitFactory;
 	}
 	
-	public void setGitFactory(GitFactory gitFactory) {
+	public void setGitFactory(JGitFactory gitFactory) {
 		this.gitFactory = gitFactory;
 	}
 	
