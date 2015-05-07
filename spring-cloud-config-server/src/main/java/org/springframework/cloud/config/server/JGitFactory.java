@@ -27,7 +27,7 @@ import org.eclipse.jgit.api.Git;
  * {@link org.eclipse.jgit.api.CloneCommand} allowing for easier unit 
  * testing by classes that use them.
  * 
- * @author acorvino
+ * @author Alex Corvino
  *
  */
 public class JGitFactory {
