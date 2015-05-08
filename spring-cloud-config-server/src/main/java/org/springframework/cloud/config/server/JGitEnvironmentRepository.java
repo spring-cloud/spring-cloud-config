@@ -65,7 +65,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	
 	private boolean cloneOnStart = false;
 
-	private JGitFactory gitFactory = new JGitFactory();
+	private JGitEnvironmentRepository.JGitFactory gitFactory = 
+			new JGitEnvironmentRepository.JGitFactory();
 	
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
@@ -303,5 +304,21 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Wraps the static method calls to {@link org.eclipse.jgit.api.Git} and
+	 * {@link org.eclipse.jgit.api.CloneCommand} allowing for easier unit 
+	 * testing.
+	 */
+	public static class JGitFactory {
+		
+		public Git getGitByOpen(File file) throws IOException {
+			return Git.open(file);
+		}
+
+		public CloneCommand getCloneCommandByCloneRepository() {
+			return Git.cloneRepository();
+		}
 	}
 }

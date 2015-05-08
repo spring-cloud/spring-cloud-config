@@ -194,12 +194,12 @@ public class JGitEnvironmentRepositoryTests {
 		verify(mockGit, times(0)).fetch();
 	}
 
-	private class MockGitFactory extends JGitFactory {
+	public class MockGitFactory extends JGitEnvironmentRepository.JGitFactory {
 		
 		private Git mockGit;
 		private CloneCommand mockCloneCommand;
 		
-		public MockGitFactory(Git mockGit, CloneCommand mockCloneCommand) {
+		public MockGitFactory (Git mockGit, CloneCommand mockCloneCommand) {
 			this.mockGit = mockGit;
 			this.mockCloneCommand = mockCloneCommand;
 		}
