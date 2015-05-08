@@ -311,7 +311,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	 * {@link org.eclipse.jgit.api.CloneCommand} allowing for easier unit 
 	 * testing.
 	 */
-	public static class JGitFactory {
+	static class JGitFactory {
 		
 		public Git getGitByOpen(File file) throws IOException {
 			return Git.open(file);
