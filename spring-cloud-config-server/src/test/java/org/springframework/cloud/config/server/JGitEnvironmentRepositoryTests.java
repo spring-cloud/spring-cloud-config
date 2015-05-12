@@ -139,7 +139,7 @@ public class JGitEnvironmentRepositoryTests {
 	}
 	
 	@Test
-	public void envRepoStartup_CloneOnStartTrue_CloneAndFetchCalled() 
+	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchCalled() 
 			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
@@ -158,7 +158,7 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void envRepoStartup_CloneOnStartFalse_CloneAndFetchNotCalled() 
+	public void afterPropertiesSet_CloneOnStartFalse_CloneAndFetchNotCalled() 
 			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
@@ -176,7 +176,7 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void envRepoStartup_CloneOnStartTrueWithFileURL_CloneAndFetchNotCalled() 
+	public void afterPropertiesSet_CloneOnStartTrueWithFileURL_CloneAndFetchNotCalled() 
 			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);

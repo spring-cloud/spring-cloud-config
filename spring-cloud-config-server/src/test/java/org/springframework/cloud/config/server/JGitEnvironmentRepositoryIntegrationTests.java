@@ -132,7 +132,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void findOne_CloneOnStartSet_FindOneSuccess() throws Exception {
+	public void findOne_CloneOnStartTrue_FindOneSuccess() throws Exception {
 		ConfigServerTestUtils.prepareLocalRepo();
 		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
 		context = new SpringApplicationBuilder(TestConfiguration.class).web(false).run(
