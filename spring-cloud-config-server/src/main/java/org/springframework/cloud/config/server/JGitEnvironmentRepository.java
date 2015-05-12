@@ -124,14 +124,25 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 		Assert.state(getUri() != null,
 				"You need to configure a uri for the git repository");
 		
-		//Clone the repository then open a connection to the local
-		//file system. 
-		if (cloneOnStart && !getUri().startsWith(FILE_URI_PREFIX)) {
+		if (cloneOnStart) {
+			initClonedRepository();
+		}
+	}
+	
+	/**
+	 * Clones the remote repository and then opens a connection to it.
+	 * @throws GitAPIException
+	 * @throws IOException
+	 */
+	private void initClonedRepository() throws GitAPIException, IOException {
+		if (!getUri().startsWith(FILE_URI_PREFIX)) {
+			deleteBaseDirIfExists();
 			cloneToBasedir();
 			openGitRepository();
 		}
+		
 	}
-
+	
 	private synchronized Environment loadEnvironment(Git git, String application,
 			String profile, String label) throws GitAPIException {
 		NativeEnvironmentRepository environment = new NativeEnvironmentRepository(getEnvironment());
