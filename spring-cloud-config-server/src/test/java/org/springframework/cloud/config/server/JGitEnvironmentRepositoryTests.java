@@ -17,10 +17,13 @@
 package org.springframework.cloud.config.server;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.IOException;
 
+import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -134,5 +137,79 @@ public class JGitEnvironmentRepositoryTests {
 		repository.setUri("git://localhost/foo/");
 		assertEquals("git://localhost/foo", repository.getUri());
 	}
+	
+	@Test
+	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchCalled() 
+			throws Exception {
+		Git mockGit = mock(Git.class);
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				environment);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setCloneOnStart(true);
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, times(1)).call();
+		verify(mockGit, times(1)).fetch();
+	}
+
+	@Test
+	public void afterPropertiesSet_CloneOnStartFalse_CloneAndFetchNotCalled() 
+			throws Exception {
+		Git mockGit = mock(Git.class);
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				environment);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, times(0)).call();
+		verify(mockGit, times(0)).fetch();
+	}
+
+	@Test
+	public void afterPropertiesSet_CloneOnStartTrueWithFileURL_CloneAndFetchNotCalled() 
+			throws Exception {
+		Git mockGit = mock(Git.class);
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				environment);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("file://somefilesystem/somegitrepo");
+		envRepository.setCloneOnStart(true);
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, times(0)).call();
+		verify(mockGit, times(0)).fetch();
+	}
+
+	class MockGitFactory extends JGitEnvironmentRepository.JGitFactory {
+		
+		private Git mockGit;
+		private CloneCommand mockCloneCommand;
+		
+		public MockGitFactory (Git mockGit, CloneCommand mockCloneCommand) {
+			this.mockGit = mockGit;
+			this.mockCloneCommand = mockCloneCommand;
+		}
+		
+		public Git getGitByOpen(File file) throws IOException {
+			return mockGit;
+		}
+
+		public CloneCommand getCloneCommandByCloneRepository() {
+			return mockCloneCommand;
+		}
+	}
 }

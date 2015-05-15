@@ -26,7 +26,6 @@ import org.eclipse.jgit.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
@@ -38,6 +37,7 @@ import org.springframework.util.StreamUtils;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Dave Syer
@@ -112,7 +112,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
 	}
-
+	
 	@Test
 	public void defaultLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
@@ -131,6 +131,69 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		repository.findOne("bar", "staging", "unknownlabel");
 	}
 
+	@Test
+	public void findOne_CloneOnStartTrue_FindOneSuccess() throws Exception {
+		ConfigServerTestUtils.prepareLocalRepo();
+		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false).run(
+				"--spring.cloud.config.server.git.uri=" + uri, 
+				"--spring.cloud.config.server.git.cloneOnStart=true");
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		assertTrue(((JGitEnvironmentRepository)repository).getCloneOnStart());
+		Environment environment = repository.findOne("bar", "staging", "master");
+		assertEquals(2, environment.getPropertySources().size());
+		assertEquals("bar", environment.getName());
+		assertArrayEquals(new String[] {"staging"}, environment.getProfiles());
+		assertEquals("master", environment.getLabel());
+	}
+
+	@Test
+	public void findOne_FileAddedToRepo_FindOneSuccess() throws Exception {
+		ConfigServerTestUtils.prepareLocalRepo();
+		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false).run(
+				"--spring.cloud.config.server.git.uri=" + uri, 
+				"--spring.cloud.config.server.git.cloneOnStart=true");
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		repository.findOne("bar", "staging", "master");
+		Environment environment = repository.findOne("bar", "staging", "master");
+		assertEquals("bar", environment.getPropertySources().get(0).getSource()
+				.get("foo"));
+		Git git = Git.open(ResourceUtils.getFile(uri).getAbsoluteFile());
+		git.checkout().setName("master").call();
+		StreamUtils.copy("foo: foo", Charset.defaultCharset(), new FileOutputStream(
+				ResourceUtils.getFile(uri + "/bar.properties")));
+		git.add().addFilepattern("bar.properties").call();
+		git.commit().setMessage("Updated for pull").call();
+		environment = repository.findOne("bar", "staging", "master");
+		assertEquals("foo", environment.getPropertySources().get(0).getSource()
+				.get("foo"));
+	}
+
+	@Test
+	public void findOne_NestedSearchPath_FindOneSuccess() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+		// TODO: why didn't .properties() work for me?
+				.run("--spring.cloud.config.server.git.uri=" + uri,
+						"--spring.cloud.config.server.git.searchPaths=sub", 
+						"--spring.cloud.config.server.git.cloneOnStart=true");
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		repository.findOne("bar", "staging", "master");
+		Environment environment = repository.findOne("bar", "staging", "master");
+		assertEquals(2, environment.getPropertySources().size());
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void findOne_FindInvalidLabel_IllegalStateExceptionThrown() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo();
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.properties("spring.cloud.config.server.git.uri:" + uri, 
+						"--spring.cloud.config.server.git.cloneOnStart=true").run();
+		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		repository.findOne("bar", "staging", "unknownlabel");
+	}
+	
 	@Configuration
 	@Import({ PropertyPlaceholderAutoConfiguration.class, ConfigServerConfiguration.class })
 	protected static class TestConfiguration {
