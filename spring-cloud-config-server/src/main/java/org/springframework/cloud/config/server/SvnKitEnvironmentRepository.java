@@ -26,7 +26,6 @@ import org.tmatesoft.svn.core.wc2.SvnCheckout;
 import org.tmatesoft.svn.core.wc2.SvnOperationFactory;
 import org.tmatesoft.svn.core.wc2.SvnTarget;
 import org.tmatesoft.svn.core.wc2.SvnUpdate;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -81,8 +80,21 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	private synchronized Environment loadEnvironment(String application, String profile, String label) {
 		final NativeEnvironmentRepository environmentRepository = new NativeEnvironmentRepository(
 				getEnvironment());
-		environmentRepository.setSearchLocations(getSearchLocations(getSvnPath(
-				getWorkingDirectory(), label)));
+		String[] locations = getSearchLocations(getSvnPath(
+				getWorkingDirectory(), label));
+		boolean exists = false;
+		for (String location : locations) {
+			location = location.startsWith("file:") ? location.substring("file:".length()) : location;
+			location = StringUtils.cleanPath(location);
+			if (new File(location).exists()) {
+				exists = true;
+				break;
+			}
+		}
+		if (!exists) {
+			throw new NoSuchLabelException("No label found for: " + label);
+		}
+		environmentRepository.setSearchLocations(locations);
 		return environmentRepository.findOne(application, profile, label);
 	}
 

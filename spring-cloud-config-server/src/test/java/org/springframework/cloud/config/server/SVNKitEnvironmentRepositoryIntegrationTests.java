@@ -129,7 +129,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		assertEquals("trunk", repository.getDefaultLabel());
 	}
 
-	@Test
+	@Test(expected=NoSuchLabelException.class)
 	public void invalidLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
 				"src/test/resources/svn-config-repo", "target/config");
