@@ -417,6 +417,15 @@ behavior, set the bootstrap configuration property
 `spring.cloud.config.failFast=true` and the client will halt with
 an Exception.
 
+[[config-client-accept-empty]]
+=== Config Client Accept Empty Property Sources
+
+By default, the Config Client will accept empty PropertySources, i.e.
+if the application is not found. However, if it is desired to reject empty 
+PropertySources and fail, either fast or retry, set the bootstrap configuration property
+`spring.cloud.config.acceptEmpty=false` and the client will throw an 
+`IllegalStateException` if empty PropertySources are retrieved. 
+
 === Locating Remote Configuration Resources
 
 The Config Service serves property sources from `/{name}/{env}/{label}`, where the default bindings in the

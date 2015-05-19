@@ -42,6 +42,7 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Dave Syer
+ * @author Haris Michopoulos
  *
  */
 @Order(0)
@@ -78,6 +79,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			Environment result = restTemplate.exchange(client.getRawUri() + path,
 					HttpMethod.GET, new HttpEntity<Void>((Void) null), Environment.class,
 					args).getBody();
+			if (!client.isAcceptEmpty() && result.getPropertySources().isEmpty()) {
+				throw new IllegalStateException("Empty property sources returned but fail if empty is set to true");
+			}
 			for (PropertySource source : result.getPropertySources()) {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> map = (Map<String, Object>) source.getSource();
@@ -97,7 +101,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		if (client != null && client.isFailFast()) {
 			throw new IllegalStateException(
-					"Could not locate PropertySource and the fail fast property is set, failing",
+					"Could not locate PropertySource (or PropertySource empty) and the fail fast property is set, failing",
 					error);
 		}
 		logger.error("Could not locate PropertySource: "

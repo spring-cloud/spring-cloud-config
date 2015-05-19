@@ -28,6 +28,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Dave Syer
+ * @author Haris Michopoulos
  *
  */
 @ConfigurationProperties(ConfigClientProperties.PREFIX)
@@ -60,6 +61,8 @@ public class ConfigClientProperties {
 	private Discovery discovery = new Discovery();
 
 	private boolean failFast = false;
+	
+	private boolean acceptEmpty = true;
 
 	private ConfigClientProperties() {
 	}
@@ -146,6 +149,14 @@ public class ConfigClientProperties {
 
 	public void setFailFast(boolean failFast) {
 		this.failFast = failFast;
+	}
+
+	public boolean isAcceptEmpty() {
+		return acceptEmpty;
+	}
+
+	public void setAcceptEmpty(boolean acceptEmpty) {
+		this.acceptEmpty = acceptEmpty;
 	}
 
 	private String[] extractCredentials() {

@@ -97,6 +97,33 @@ public class ConfigServicePropertySourceLocatorTests {
 		expected.expectMessage("fail fast property is set");
 		assertNull(locator.locate(environment));
 	}
+	
+	@Test
+	public void failsQuietlyOnEmpty() throws Exception {
+		ConfigClientProperties configClientProperties = new ConfigClientProperties(environment);
+		configClientProperties.setAcceptEmpty(false);
+		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(configClientProperties);
+		Environment body = new Environment("app", "master");
+		mockRequestResponseWithoutLabel(new ResponseEntity<Environment>(body, HttpStatus.OK));
+		locator.setRestTemplate(restTemplate);
+		assertNull(locator.locate(environment));
+	}
+
+	@Test
+	public void failsOnEmpty() throws Exception {
+		ConfigClientProperties configClientProperties = new ConfigClientProperties(environment);
+		configClientProperties.setAcceptEmpty(false);
+		configClientProperties.setFailFast(true);
+		
+		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(configClientProperties);
+		Environment body = new Environment("app", "master");
+		mockRequestResponseWithoutLabel(new ResponseEntity<Environment>(body, HttpStatus.OK));
+		locator.setRestTemplate(restTemplate);
+		expected.expectCause(IsInstanceOf
+				.<Throwable> instanceOf(IllegalStateException.class));
+		expected.expectMessage("fail fast property is set");
+		assertNull(locator.locate(environment));
+	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
@@ -116,3 +143,4 @@ public class ConfigServicePropertySourceLocatorTests {
 						Matchers.anyString())).thenReturn(response);
 	}
 }
+
