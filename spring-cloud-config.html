@@ -870,7 +870,7 @@ for an application named <code>app</code>, the <code>default</code> profile and 
 label provided by the <code>EnvironmentRepository</code> implementation.</p>
 </div>
 <div class="paragraph">
-<p>You can configure the Health Indicator to check more appliations
+<p>You can configure the Health Indicator to check more applications
 along with custom profiles and custom labels, e.g.</p>
 </div>
 <div class="listingblock">
@@ -1162,8 +1162,7 @@ an Exception.</p>
 <div class="sect2">
 <h3 id="_locating_remote_configuration_resources">Locating Remote Configuration Resources</h3>
 <div class="paragraph">
-<p>The Config Service serves property sources from <code>/{name}/{env}/{label}</code>, where the default bindings in the
-client app are</p>
+<p>The Config Service serves property sources from <code>/{name}/{env}/{label}</code>, where the default bindings in the client app are</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1183,7 +1182,11 @@ client app are</p>
 (where <code>*</code> is "name", "env" or "label"). The "label" is useful for
 rolling back to previous versions of configuration; with the default
 Config Server implementation it can be a git label, branch name or
-commit id.</p>
+commit id. Label can also be provided as a comma-separated list, in
+which case the items in the list are tried on-by-one until one succeeds.
+This can be useful when working on a feature branch, for instance,
+when you might want to align the config label with your branch, but
+make it optional (e.g. <code>spring.cloud.config.label=myfeature,develop</code>).</p>
 </div>
 </div>
 <div class="sect2">
@@ -1248,7 +1251,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-05-19 10:59:55 UTC
+Last updated 2015-05-19 11:52:33 UTC
 </div>
 </div>
 </body>
