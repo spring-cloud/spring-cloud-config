@@ -44,6 +44,7 @@ public class ConfigServerMvcConfiguration {
 		EnvironmentController controller = new EnvironmentController(repository, encryptionController());
 		controller.setDefaultLabel(getDefaultLabel());
 		controller.setOverrides(server.getOverrides());
+		controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
 		return controller;
 	}
 

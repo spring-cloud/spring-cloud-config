@@ -17,6 +17,7 @@ package org.springframework.cloud.config.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -27,7 +28,6 @@ import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.yaml.snakeyaml.Yaml;
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -43,6 +43,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.yaml.snakeyaml.DumperOptions.FlowStyle;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.Tag;
 
 /**
  * @author Dave Syer
@@ -63,12 +66,23 @@ public class EnvironmentController {
 
 	private Map<String, String> overrides = new LinkedHashMap<>();
 
+	private boolean stripDocument = true;
+
 	public EnvironmentController(EnvironmentRepository repository,
 			EncryptionController encryption) {
 		super();
 		this.repository = repository;
 		this.defaultLabel = repository.getDefaultLabel();
 		this.encryption = encryption;
+	}
+
+	/**
+	 * Flag to indicate that YAML documents which are not a map should be stripped of the
+	 * "document" prefix that is added by Spring (to facilitate conversion to Properties).
+	 * @param stripDocument the flag to set
+	 */
+	public void setStripDocumentFromYaml(boolean stripDocument) {
+		this.stripDocument = stripDocument;
 	}
 
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
@@ -141,6 +155,15 @@ public class EnvironmentController {
 			@PathVariable String profiles, @PathVariable String label) throws Exception {
 		validateNameAndProfiles(name, profiles);
 		Map<String, Object> result = convertToMap(labelled(name, profiles, label));
+		if (this.stripDocument && result.size() == 1
+				&& result.keySet().iterator().next().equals("document")) {
+			Object value = result.get("document");
+			if (value instanceof Collection) {
+				return getSuccess(new Yaml().dumpAs(value, Tag.SEQ, FlowStyle.BLOCK));
+			} else {
+				return getSuccess(new Yaml().dumpAs(value, Tag.STR, FlowStyle.BLOCK));
+			}
+		}
 		return getSuccess(new Yaml().dumpAsMap(result));
 	}
 

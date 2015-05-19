@@ -51,6 +51,12 @@ public class ConfigServerProperties {
 	 */
 	private Map<String, String> overrides = new LinkedHashMap<String, String>();
 
+	/**
+	 * Flag to indicate that YAML documents that are text or collections (not a map)
+	 * should be returned in "native" form.
+	 */
+	private boolean stripDocumentFromYaml = true;
+
 	public String getDefaultLabel() {
 		return defaultLabel;
 	}
@@ -81,6 +87,14 @@ public class ConfigServerProperties {
 
 	public void setOverrides(Map<String, String> overrides) {
 		this.overrides = overrides;
+	}
+
+	public boolean isStripDocumentFromYaml() {
+		return stripDocumentFromYaml;
+	}
+
+	public void setStripDocumentFromYaml(boolean stripDocumentFromYaml) {
+		this.stripDocumentFromYaml = stripDocumentFromYaml;
 	}
 
 }
