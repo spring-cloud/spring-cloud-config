@@ -186,6 +186,11 @@ public class EnvironmentController {
 		return result == null ? new LinkedHashMap<String, Object>() : result;
 	}
 
+	@ExceptionHandler(NoSuchLabelException.class)
+	public void noSuchLabel(HttpServletResponse response) throws IOException {
+		response.sendError(HttpStatus.NOT_FOUND.value());
+	}
+
 	@ExceptionHandler(IllegalArgumentException.class)
 	public void illegalArgument(HttpServletResponse response) throws IOException {
 		response.sendError(HttpStatus.BAD_REQUEST.value());

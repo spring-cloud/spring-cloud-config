@@ -122,7 +122,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertEquals("master", repository.getDefaultLabel());
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test(expected = NoSuchLabelException.class)
 	public void invalidLabel() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
