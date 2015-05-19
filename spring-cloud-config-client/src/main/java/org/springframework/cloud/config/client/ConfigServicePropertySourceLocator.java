@@ -31,7 +31,9 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
@@ -58,7 +60,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 	@Override
-	@Retryable(interceptor="configServerRetryInterceptor")
+	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(
 			org.springframework.core.env.Environment environment) {
 		ConfigClientProperties client = defaults.override(environment);
@@ -68,22 +70,24 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		Exception error = null;
 		String errorBody = null;
 		try {
-			Object[] args = new String[] { client.getName(), client.getProfile() };
-			String path = "/{name}/{profile}";
+			String[] labels = new String[]{""};
 			if (StringUtils.hasText(client.getLabel())) {
-				args = new String[] { client.getName(), client.getProfile(),
-						client.getLabel() };
-				path = path + "/{label}";
+				labels = StringUtils.commaDelimitedListToStringArray(client.getLabel());
 			}
-			Environment result = restTemplate.exchange(client.getRawUri() + path,
-					HttpMethod.GET, new HttpEntity<Void>((Void) null), Environment.class,
-					args).getBody();
-			for (PropertySource source : result.getPropertySources()) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> map = (Map<String, Object>) source.getSource();
-				composite.addPropertySource(new MapPropertySource(source.getName(), map));
+			// Try all the labels until one works
+			for (String label : labels) {
+				Environment result = getRemoteEnvironment(restTemplate, client.getRawUri(), client.getName(), client.getProfile(), label.trim());
+				if (result != null) {
+					for (PropertySource source : result.getPropertySources()) {
+						@SuppressWarnings("unchecked")
+						Map<String, Object> map = (Map<String, Object>) source
+								.getSource();
+						composite.addPropertySource(new MapPropertySource(source
+								.getName(), map));
+					}
+					return composite;
+				}
 			}
-			return composite;
 		}
 		catch (HttpServerErrorException e) {
 			error = e;
@@ -101,9 +105,26 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					error);
 		}
 		logger.error("Could not locate PropertySource: "
-				+ (errorBody == null ? error.getMessage() : errorBody));
+				+ (errorBody == null ? error==null ? "label not found" : error.getMessage() : errorBody));
 		return null;
 
+	}
+
+	private Environment getRemoteEnvironment(RestTemplate restTemplate, String uri, String name, String profile, String label) {
+		String path = "/{name}/{profile}";
+		Object[] args = new String[] { name, profile };
+		if (StringUtils.hasText(label)) {
+			args = new String[] { name, profile, label };
+			path = path + "/{label}";
+		}
+		ResponseEntity<Environment> response = restTemplate.exchange(uri + path,
+				HttpMethod.GET, new HttpEntity<Void>((Void) null),
+				Environment.class, args);
+		if (response==null || response.getStatusCode()!=HttpStatus.OK) {
+			return null;
+		}
+		Environment result = response.getBody();
+		return result;
 	}
 
 	public void setRestTemplate(RestTemplate restTemplate) {

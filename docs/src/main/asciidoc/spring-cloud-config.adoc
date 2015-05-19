@@ -189,7 +189,7 @@ Config Server comes with a Health Indicator that checks if the configured
 for an application named `app`, the `default` profile and the default
 label provided by the `EnvironmentRepository` implementation.
 
-You can configure the Health Indicator to check more appliations
+You can configure the Health Indicator to check more applications
 along with custom profiles and custom labels, e.g.
 
 ----
@@ -419,8 +419,7 @@ an Exception.
 
 === Locating Remote Configuration Resources
 
-The Config Service serves property sources from `/{name}/{env}/{label}`, where the default bindings in the
-client app are
+The Config Service serves property sources from `/{name}/{env}/{label}`, where the default bindings in the client app are
 
 * "name" = `${spring.application.name}`
 * "env" = `${spring.profiles.active}` (actually `Environment.getActiveProfiles()`)
@@ -430,7 +429,11 @@ All of them can be overridden by setting `spring.cloud.config.\*`
 (where `*` is "name", "env" or "label"). The "label" is useful for
 rolling back to previous versions of configuration; with the default
 Config Server implementation it can be a git label, branch name or
-commit id.
+commit id. Label can also be provided as a comma-separated list, in 
+which case the items in the list are tried on-by-one until one succeeds.
+This can be useful when working on a feature branch, for instance,
+when you might want to align the config label with your branch, but 
+make it optional (e.g. `spring.cloud.config.label=myfeature,develop`).
 
 === Security
 
