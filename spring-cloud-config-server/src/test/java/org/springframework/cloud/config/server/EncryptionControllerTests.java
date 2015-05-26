@@ -16,10 +16,10 @@
 package org.springframework.cloud.config.server;
 
 import org.junit.Test;
-
 import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
 import org.springframework.cloud.context.encrypt.KeyFormatException;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 
 import static org.junit.Assert.assertEquals;
@@ -38,6 +38,12 @@ public class EncryptionControllerTests {
 
 	@Test(expected = KeyNotInstalledException.class)
 	public void cannotDecryptWithoutKey() {
+		controller.decrypt("foo", MediaType.TEXT_PLAIN);
+	}
+
+	@Test(expected = KeyNotInstalledException.class)
+	public void cannotDecryptWithNoopEncryptor() {
+		textEncryptorLocator.setEncryptor(Encryptors.noOpText());
 		controller.decrypt("foo", MediaType.TEXT_PLAIN);
 	}
 

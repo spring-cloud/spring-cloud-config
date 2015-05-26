@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.config.server.ConfigServerProperties;
-import org.springframework.cloud.config.server.EncryptionController;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 /**
  * @author Bartosz Wojtkiewicz
@@ -28,22 +28,22 @@ import org.springframework.context.annotation.Configuration;
  *
  */
 @Configuration
-public class ConfigServerEncryptionConfiguration {
-
-	@Autowired
-	private TextEncryptorLocator locator;
-
-	@Autowired
-	private ConfigServerProperties properties;
+public class EncryptionAutoConfiguration {
 
 	@Bean
-	public EnvironmentEncryptor environmentEncryptor() {
-		return new CipherEnvironmentEncryptor(locator);
+	@ConditionalOnMissingBean
+	public TextEncryptorLocator textEncryptorLocator(TextEncryptor encryptor) {
+		return new SingleTextEncryptorLocator(encryptor);
 	}
+	
+	@ConditionalOnMissingBean(TextEncryptor.class)
+	protected static class DefaultTextEncryptorConfiguration {
+		
+		@Bean
+		public TextEncryptor nullTextEncryptor() {
+			return Encryptors.noOpText();
+		}
 
-	@Bean
-	public EncryptionController encryptionController() {
-		return new EncryptionController(locator, properties);
 	}
 
 }

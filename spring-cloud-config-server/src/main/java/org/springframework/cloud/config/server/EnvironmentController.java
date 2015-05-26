@@ -72,7 +72,8 @@ public class EnvironmentController {
 
 	private boolean stripDocument = true;
 
-	public EnvironmentController(EnvironmentRepository repository, EnvironmentEncryptor environmentEncryptor) {
+	public EnvironmentController(EnvironmentRepository repository,
+			EnvironmentEncryptor environmentEncryptor) {
 		super();
 		this.repository = repository;
 		this.defaultLabel = repository.getDefaultLabel();
@@ -97,8 +98,10 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
-		Environment environment = environmentEncryptor.decrypt(repository.findOne(name, profiles,
-				label));
+		Environment environment = repository.findOne(name, profiles, label);
+		if (environmentEncryptor != null) {
+			environment = environmentEncryptor.decrypt(environment);
+		}
 		if (!overrides.isEmpty()) {
 			environment.addFirst(new PropertySource("overrides", overrides));
 		}
@@ -163,7 +166,8 @@ public class EnvironmentController {
 			Object value = result.get("document");
 			if (value instanceof Collection) {
 				return getSuccess(new Yaml().dumpAs(value, Tag.SEQ, FlowStyle.BLOCK));
-			} else {
+			}
+			else {
 				return getSuccess(new Yaml().dumpAs(value, Tag.STR, FlowStyle.BLOCK));
 			}
 		}

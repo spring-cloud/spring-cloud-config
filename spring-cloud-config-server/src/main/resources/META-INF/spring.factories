@@ -5,3 +5,7 @@ org.springframework.cloud.config.server.ConfigServerBootstrapConfiguration
 # Application listeners
 org.springframework.context.ApplicationListener=\
 org.springframework.cloud.config.server.ConfigServerBootstrapApplicationListener
+
+# Autoconfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.cloud.config.server.encryption.EncryptionAutoConfiguration

@@ -35,7 +35,7 @@ public class ConfigServerMvcConfiguration {
 	@Autowired
 	private ConfigServerProperties server;
 
-	@Autowired
+	@Autowired(required=false)
 	private EnvironmentEncryptor environmentEncryptor;
 
 	@Bean
