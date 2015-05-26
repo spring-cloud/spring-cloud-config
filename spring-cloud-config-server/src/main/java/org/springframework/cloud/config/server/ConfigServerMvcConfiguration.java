@@ -35,8 +35,11 @@ public class ConfigServerMvcConfiguration {
 	@Autowired
 	private ConfigServerProperties server;
 
+	@Autowired
+	private EnvironmentEncryptor environmentEncryptor;
+
 	@Bean
-	public EnvironmentController environmentController(EnvironmentEncryptor environmentEncryptor) {
+	public EnvironmentController environmentController() {
 		EnvironmentController controller = new EnvironmentController(repository, environmentEncryptor);
 		controller.setDefaultLabel(getDefaultLabel());
 		controller.setOverrides(server.getOverrides());

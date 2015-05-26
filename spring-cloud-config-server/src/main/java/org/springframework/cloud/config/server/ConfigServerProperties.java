@@ -60,7 +60,7 @@ public class ConfigServerProperties {
 	/**
 	 * Default application name when incoming requests do not have a specific one.
 	 */
-	private String defaultApplicationName = "default";
+	private String defaultApplicationName = "application";
 
 	/**
 	 * Default application profile when incoming requests do not have a specific one.

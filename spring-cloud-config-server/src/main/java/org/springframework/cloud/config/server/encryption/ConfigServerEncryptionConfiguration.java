@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.encryption;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.config.server.ConfigServerProperties;
 import org.springframework.cloud.config.server.EncryptionController;
 import org.springframework.context.annotation.Bean;
@@ -51,6 +52,7 @@ public class ConfigServerEncryptionConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean
 	public TextEncryptorLocator textEncryptorLocator() {
 		return new SingleTextEncryptorLocator(encryptor);
 	}
