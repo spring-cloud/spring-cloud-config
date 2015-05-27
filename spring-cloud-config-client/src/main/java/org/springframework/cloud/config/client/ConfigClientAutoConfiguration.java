@@ -53,7 +53,7 @@ public class ConfigClientAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass(HealthIndicator.class)
 	@ConditionalOnBean(ConfigServicePropertySourceLocator.class)
-	@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.cloud.config.health.enabled", matchIfMissing = true)
 	protected static class ConfigServerHealthIndicatorConfiguration {
 
 		@Bean
@@ -62,5 +62,5 @@ public class ConfigClientAutoConfiguration {
 			return new ConfigServerHealthIndicator(locator);
 		}
 	}
-	
+
 }

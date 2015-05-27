@@ -60,6 +60,8 @@ public class ConfigClientProperties {
 	private Discovery discovery = new Discovery();
 
 	private boolean failFast = false;
+	
+	private Health health = new Health();
 
 	private ConfigClientProperties() {
 	}
@@ -217,6 +219,10 @@ public class ConfigClientProperties {
 		}
 
 	}
+	
+	public Health getHealth() {
+		return health;
+	}
 
 	public ConfigClientProperties override(
 			org.springframework.core.env.Environment environment) {
@@ -234,6 +240,18 @@ public class ConfigClientProperties {
 					+ ".label"));
 		}
 		return override;
+	}
+	
+	public static class Health {
+		private boolean enabled = true;
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
 	}
 
 	@Override
