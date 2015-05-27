@@ -49,20 +49,37 @@ public class ConfigClientProperties {
 	@Value("${spring.application.name:application}")
 	private String name;
 
+	/**
+	 * The label name to use to pull remote configuration properties. The default is set
+	 * on the server (generally "master" for a git based server).
+	 */
 	private String label;
 
+	/**
+	 * The username to use (HTTP Basic) when contacting the remote server.
+	 */
 	private String username;
 
+	/**
+	 * The password to use (HTTP Basic) when contacting the remote server.
+	 */
 	private String password;
 
+	/**
+	 * The URI of the remote server (default http://localhost:8888).
+	 */
 	private String uri = "http://localhost:8888";
 
+	/**
+	 * Discovery properties.
+	 */
 	private Discovery discovery = new Discovery();
 
+	/**
+	 * Flag to indicate that failure to connect to the server is fatal (default false).
+	 */
 	private boolean failFast = false;
 	
-	private Health health = new Health();
-
 	private ConfigClientProperties() {
 	}
 
@@ -219,10 +236,6 @@ public class ConfigClientProperties {
 		}
 
 	}
-	
-	public Health getHealth() {
-		return health;
-	}
 
 	public ConfigClientProperties override(
 			org.springframework.core.env.Environment environment) {
@@ -241,25 +254,14 @@ public class ConfigClientProperties {
 		}
 		return override;
 	}
-	
-	public static class Health {
-		private boolean enabled = true;
-
-		public boolean isEnabled() {
-			return enabled;
-		}
-
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
-		}
-	}
 
 	@Override
 	public String toString() {
 		return "ConfigClientProperties [enabled=" + enabled + ", profile=" + profile
-				+ ", name=" + name + ", label=" + (label==null?"":label) + ", username=" + username
-				+ ", password=" + password + ", uri=" + uri + ", discovery.enabled="
-				+ discovery.enabled + ", failFast=" + failFast + "]";
+				+ ", name=" + name + ", label=" + (label == null ? "" : label)
+				+ ", username=" + username + ", password=" + password + ", uri=" + uri
+				+ ", discovery.enabled=" + discovery.enabled + ", failFast=" + failFast
+				+ "]";
 	}
 
 }
