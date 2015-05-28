@@ -532,7 +532,7 @@ from a git repository (which must be provided):</p>
 Boot application that depends on spring-cloud-config-client (e.g. see
 the test cases for the config-client, or the sample app). The most
 convenient way to add the dependency is via a Spring Boot starter
-<code>org.springframework.cloud:spring-cloud-starter</code>. There is also a
+<code>org.springframework.cloud:spring-cloud-starter-config</code>. There is also a
 parent pom and BOM (<code>spring-cloud-starter-parent</code>) for Maven users and a
 Spring IO version management properties file for Gradle and Spring CLI
 users. Example Maven configuration:</p>
@@ -543,7 +543,7 @@ users. Example Maven configuration:</p>
 <pre class="highlight"><code class="language-xml" data-lang="xml">&lt;parent&gt;
     &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
     &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
-    &lt;version&gt;1.1.7.RELEASE&lt;/version&gt;
+    &lt;version&gt;1.2.3.RELEASE&lt;/version&gt;
     &lt;relativePath /&gt; &lt;!-- lookup parent from repository --&gt;
 &lt;/parent&gt;
 
@@ -552,7 +552,7 @@ users. Example Maven configuration:</p>
         &lt;dependency&gt;
             &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
             &lt;artifactId&gt;spring-cloud-starter-parent&lt;/artifactId&gt;
-            &lt;version&gt;1.0.0.BUILD-SNAPSHOT&lt;/version&gt;
+            &lt;version&gt;1.0.1.RELEASE&lt;/version&gt;
             &lt;type&gt;pom&lt;/type&gt;
             &lt;scope&gt;import&lt;/scope&gt;
         &lt;/dependency&gt;
@@ -562,7 +562,7 @@ users. Example Maven configuration:</p>
 &lt;dependencies&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-        &lt;artifactId&gt;spring-cloud-starter&lt;/artifactId&gt;
+        &lt;artifactId&gt;spring-cloud-starter-config&lt;/artifactId&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
@@ -1251,7 +1251,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-05-27 09:07:26 UTC
+Last updated 2015-05-28 15:14:13 UTC
 </div>
 </div>
 </body>
