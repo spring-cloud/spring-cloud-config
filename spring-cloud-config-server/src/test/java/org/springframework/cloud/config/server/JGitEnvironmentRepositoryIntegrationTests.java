@@ -184,7 +184,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertEquals(2, environment.getPropertySources().size());
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test(expected = NoSuchLabelException.class)
 	public void findOne_FindInvalidLabel_IllegalStateExceptionThrown() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
