@@ -357,6 +357,11 @@ The method getLocation() is undefined for the type ProxyRouteLocator.ProxyRouteS
 ==== Importing into other IDEs
 Maven is well supported by most Java IDEs. Refer to you vendor documentation.
 
+==== Common Issues
+If you are getting an exception due to "Illegal key size" and you are using Sun's JDK, you need to install the Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files. See the following link for more information:
+
+Java 6 JCE Link http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html Java 7 JCE Link http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html Java 8 JCE Link http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html Extract files into JDK/JRE/lib/security folder (To whichever version of JRE/JDK x64/x86 you are using)
+
 == Contributing
 
 Spring Cloud is released under the non-restrictive Apache 2.0 license. If you would like
