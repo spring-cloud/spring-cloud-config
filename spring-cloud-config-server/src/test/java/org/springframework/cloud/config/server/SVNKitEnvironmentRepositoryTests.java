@@ -91,7 +91,7 @@ public class SVNKitEnvironmentRepositoryTests {
 				.contains("application.yml"));
 	}
 
-	@Test
+	@Test(expected=NoSuchLabelException.class)
 	public void invalidLabel() {
 		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
 		assertEquals(0, environment.getPropertySources().size());

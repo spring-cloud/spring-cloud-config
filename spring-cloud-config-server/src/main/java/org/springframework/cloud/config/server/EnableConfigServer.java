@@ -21,6 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.cloud.config.server.encryption.ConfigServerEncryptionConfiguration;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -30,7 +31,8 @@ import org.springframework.context.annotation.Import;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import({ConfigServerConfiguration.class, ConfigServerMvcConfiguration.class})
+@Import({ EnvironmentRepositoryConfiguration.class,
+		ConfigServerEncryptionConfiguration.class, ConfigServerMvcConfiguration.class })
 public @interface EnableConfigServer {
 
 }

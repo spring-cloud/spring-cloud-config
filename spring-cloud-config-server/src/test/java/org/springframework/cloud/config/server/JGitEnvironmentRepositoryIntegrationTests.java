@@ -122,7 +122,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertEquals("master", repository.getDefaultLabel());
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test(expected = NoSuchLabelException.class)
 	public void invalidLabel() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
@@ -195,7 +195,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	}
 	
 	@Configuration
-	@Import({ PropertyPlaceholderAutoConfiguration.class, ConfigServerConfiguration.class })
+	@Import({ PropertyPlaceholderAutoConfiguration.class, EnvironmentRepositoryConfiguration.class })
 	protected static class TestConfiguration {
 	}
 

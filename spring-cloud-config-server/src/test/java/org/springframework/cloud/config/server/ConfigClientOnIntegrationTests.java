@@ -1,14 +1,12 @@
 package org.springframework.cloud.config.server;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +23,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.anyString;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = TestConfiguration.class)
@@ -63,7 +66,9 @@ public class ConfigClientOnIntegrationTests {
 		
 		@Bean
 		public EnvironmentRepository environmentRepository() {
-			return Mockito.mock(EnvironmentRepository.class);
+			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
+			given(repository.findOne(anyString(), anyString(), anyString())).willReturn(new Environment("", ""));
+			return repository;
 		}
 		
 	}

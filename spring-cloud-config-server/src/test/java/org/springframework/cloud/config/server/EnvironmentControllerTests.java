@@ -28,6 +28,8 @@ import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
+import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -55,7 +57,7 @@ public class EnvironmentControllerTests {
 	@Before
 	public void init() {
 		Mockito.when(repository.getDefaultLabel()).thenReturn("master");
-		this.controller = new EnvironmentController(repository, new EncryptionController());
+		this.controller = new EnvironmentController(repository, new CipherEnvironmentEncryptor(new SingleTextEncryptorLocator()));
 	}
 
 	@Test
@@ -89,6 +91,38 @@ public class EnvironmentControllerTests {
 		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
 		String yaml = controller.yaml("foo", "bar").getBody();
 		assertEquals("a:\n  b:\n  - c\n  - d\n", yaml);
+	}
+
+	@Test
+	public void textAtTopLevelInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("document", "blah");
+		environment.add(new PropertySource("one", map));
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		String yaml = controller.yaml("foo", "bar").getBody();
+		assertEquals("blah\n", yaml);
+	}
+
+	@Test
+	public void arrayAtTopLevelInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("document[0]", "c");
+		map.put("document[1]", "d");
+		environment.add(new PropertySource("one", map));
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		String yaml = controller.yaml("foo", "bar").getBody();
+		assertEquals("- c\n- d\n", yaml);
+	}
+
+	@Test
+	public void arrayObObjectAtTopLevelInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("document[0].a", "c");
+		map.put("document[1].a", "d");
+		environment.add(new PropertySource("one", map));
+		Mockito.when(repository.findOne("foo", "bar", "master")).thenReturn(environment);
+		String yaml = controller.yaml("foo", "bar").getBody();
+		assertEquals("- a: c\n- a: d\n", yaml);
 	}
 
 	@Test

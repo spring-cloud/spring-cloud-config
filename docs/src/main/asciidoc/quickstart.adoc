@@ -61,7 +61,7 @@ To use these features in an application, just build it as a Spring
 Boot application that depends on spring-cloud-config-client (e.g. see
 the test cases for the config-client, or the sample app). The most
 convenient way to add the dependency is via a Spring Boot starter
-`org.springframework.cloud:spring-cloud-starter`. There is also a
+`org.springframework.cloud:spring-cloud-starter-config`. There is also a
 parent pom and BOM (`spring-cloud-starter-parent`) for Maven users and a
 Spring IO version management properties file for Gradle and Spring CLI
 users. Example Maven configuration:
@@ -72,7 +72,7 @@ users. Example Maven configuration:
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.1.7.RELEASE</version>
+        <version>1.2.3.RELEASE</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
 
@@ -81,7 +81,7 @@ users. Example Maven configuration:
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-parent</artifactId>
-				<version>1.0.0.BUILD-SNAPSHOT</version>
+				<version>1.0.1.RELEASE</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -91,7 +91,7 @@ users. Example Maven configuration:
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter</artifactId>
+			<artifactId>spring-cloud-starter-config</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

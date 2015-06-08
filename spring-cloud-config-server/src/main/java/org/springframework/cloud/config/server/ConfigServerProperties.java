@@ -51,6 +51,23 @@ public class ConfigServerProperties {
 	 */
 	private Map<String, String> overrides = new LinkedHashMap<String, String>();
 
+	/**
+	 * Flag to indicate that YAML documents that are text or collections (not a map)
+	 * should be returned in "native" form.
+	 */
+	private boolean stripDocumentFromYaml = true;
+
+	/**
+	 * Default application name when incoming requests do not have a specific one.
+	 */
+	private String defaultApplicationName = "application";
+
+	/**
+	 * Default application profile when incoming requests do not have a specific one.
+	 */
+	private String defaultProfile = "default";
+	
+
 	public String getDefaultLabel() {
 		return defaultLabel;
 	}
@@ -83,4 +100,27 @@ public class ConfigServerProperties {
 		this.overrides = overrides;
 	}
 
+	public boolean isStripDocumentFromYaml() {
+		return stripDocumentFromYaml;
+	}
+
+	public void setStripDocumentFromYaml(boolean stripDocumentFromYaml) {
+		this.stripDocumentFromYaml = stripDocumentFromYaml;
+	}
+
+	public String getDefaultApplicationName() {
+		return defaultApplicationName;
+	}
+
+	public void setDefaultApplicationName(String defaultApplicationName) {
+		this.defaultApplicationName = defaultApplicationName;
+	}
+
+	public String getDefaultProfile() {
+		return defaultProfile;
+	}
+
+	public void setDefaultProfile(String defaultProfile) {
+		this.defaultProfile = defaultProfile;
+	}
 }

@@ -37,7 +37,7 @@ import org.springframework.util.StringUtils;
 public class ConfigServerBootstrapConfiguration {
 
 	@ConditionalOnProperty("spring.cloud.config.server.bootstrap")
-	@Import(ConfigServerConfiguration.class)
+	@Import(EnvironmentRepositoryConfiguration.class)
 	protected static class LocalPropertySourceLocatorConfiguration {
 
 		@Autowired

@@ -21,16 +21,12 @@ import java.net.URLDecoder;
 import java.security.KeyPair;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
+import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.cloud.context.encrypt.KeyFormatException;
 import org.springframework.core.io.ByteArrayResource;
@@ -44,6 +40,7 @@ import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,15 +60,19 @@ public class EncryptionController {
 
 	private static Log logger = LogFactory.getLog(EncryptionController.class);
 
-	private TextEncryptor encryptor;
+	private final TextEncryptorLocator encryptorLocator;
 
-	@Autowired(required = false)
-	public void setEncryptor(TextEncryptor encryptor) {
-		this.encryptor = encryptor;
+	private final ConfigServerProperties properties;
+
+	public EncryptionController(TextEncryptorLocator encryptorLocator,
+			ConfigServerProperties configServerProperties) {
+		this.encryptorLocator = encryptorLocator;
+		this.properties = configServerProperties;
 	}
 
 	@RequestMapping(value = "/key", method = RequestMethod.GET)
 	public String getPublicKey() {
+		TextEncryptor encryptor = locateDefaultTextEncryptor();
 		if (!(encryptor instanceof RsaKeyHolder)) {
 			throw new KeyNotAvailableException();
 		}
@@ -90,8 +91,9 @@ public class EncryptionController {
 			ByteArrayResource resource = new ByteArrayResource(file.getBytes());
 			KeyPair keyPair = new KeyStoreKeyFactory(resource, password.toCharArray())
 					.getKeyPair(alias);
-			encryptor = new RsaSecretEncryptor(keyPair);
-			body.put("publicKey", ((RsaKeyHolder) encryptor).getPublicKey());
+			RsaSecretEncryptor encryptor = new RsaSecretEncryptor(keyPair);
+			updateEncryptor(encryptor);
+			body.put("publicKey", encryptor.getPublicKey());
 		}
 		catch (IOException e) {
 			throw new KeyFormatException();
@@ -109,14 +111,26 @@ public class EncryptionController {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "OK");
 
-		encryptor = new EncryptorFactory().create(stripFormData(data, type, false));
-
+		TextEncryptor encryptor = new EncryptorFactory().create(stripFormData(data, type,
+				false));
+		updateEncryptor(encryptor);
 		if (encryptor instanceof RsaKeyHolder) {
 			body.put("publicKey", ((RsaKeyHolder) encryptor).getPublicKey());
 		}
 		logger.info("Key changed with literal value");
 		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.CREATED);
+	}
 
+	// this is temporary solution to support existing REST API
+	// downcasting is only necessary until we introduce some key management abstraction,
+	// we don't want TextEncryptorLocator to have setEncryptor method
+	private void updateEncryptor(TextEncryptor encryptor) {
+		if (encryptorLocator instanceof SingleTextEncryptorLocator) {
+			((SingleTextEncryptorLocator) encryptorLocator).setEncryptor(encryptor);
+		}
+		else {
+			throw new IncompatibleTextEncryptorLocatorException();
+		}
 	}
 
 	@ExceptionHandler(KeyFormatException.class)
@@ -139,39 +153,68 @@ public class EncryptionController {
 
 	@RequestMapping(value = "encrypt/status", method = RequestMethod.GET)
 	public Map<String, Object> status() {
-		if (encryptor == null) {
-			throw new KeyNotInstalledException();
-		}
+		checkEncryptorInstalled(locateDefaultTextEncryptor());
 		return Collections.<String, Object> singletonMap("status", "OK");
 	}
 
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
 	public String encrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
-		if (encryptor == null) {
-			throw new KeyNotInstalledException();
+
+		return encrypt(properties.getDefaultApplicationName(),
+				properties.getDefaultProfile(), data, type);
+	}
+
+	@RequestMapping(value = "/encrypt/{name}/{profiles}", method = RequestMethod.POST)
+	public String encrypt(@PathVariable String name, @PathVariable String profiles,
+			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
+
+		try {
+			TextEncryptor encryptor = checkEncryptorInstalled(encryptorLocator.locate(
+					name, profiles));
+			String encrypted = encryptor.encrypt(stripFormData(data, type, false));
+			logger.info("Encrypted data");
+			return encrypted;
 		}
-		data = stripFormData(data, type, false);
-		String encrypted = encryptor.encrypt(data);
-		logger.info("Encrypted data");
-		return encrypted;
+		catch (IllegalArgumentException e) {
+			throw new InvalidCipherException();
+		}
 	}
 
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
 	public String decrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
-		if (encryptor == null) {
-			throw new KeyNotInstalledException();
-		}
+
+		return decrypt(properties.getDefaultApplicationName(),
+				properties.getDefaultProfile(), data, type);
+	}
+
+	@RequestMapping(value = "/decrypt/{name}/{profiles}", method = RequestMethod.POST)
+	public String decrypt(@PathVariable String name, @PathVariable String profiles,
+			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
+
 		try {
-			data = stripFormData(data, type, true);
-			String decrypted = encryptor.decrypt(data);
+			TextEncryptor encryptor = checkEncryptorInstalled(encryptorLocator.locate(
+					name, profiles));
+			String decrypted = encryptor.decrypt(stripFormData(data, type, true));
 			logger.info("Decrypted cipher data");
 			return decrypted;
 		}
 		catch (IllegalArgumentException e) {
 			throw new InvalidCipherException();
 		}
+	}
+
+	private TextEncryptor checkEncryptorInstalled(TextEncryptor encryptor) {
+		if (encryptor == null || encryptor.encrypt("FOO").equals("FOO")) {
+			throw new KeyNotInstalledException();
+		}
+		return encryptor;
+	}
+
+	private TextEncryptor locateDefaultTextEncryptor() {
+		return encryptorLocator.locate(properties.getDefaultApplicationName(),
+				properties.getDefaultProfile());
 	}
 
 	private String stripFormData(String data, MediaType type, boolean cipher) {
@@ -186,19 +229,20 @@ public class EncryptionController {
 			catch (UnsupportedEncodingException e) {
 				// Really?
 			}
-			String candidate = data.substring(0, data.length()-1);
+			String candidate = data.substring(0, data.length() - 1);
 			if (cipher) {
 				if (data.endsWith("=")) {
-					 if (data.length()/2!=(data.length()+1)/2) {
-						 try {
-							 Hex.decode(candidate);
-							 return candidate;
-						 } catch (IllegalArgumentException e) {
-							 if (Base64.isBase64(data.getBytes())) {
-								 return data;
-							 }
-						 }
-					 }
+					if (data.length() / 2 != (data.length() + 1) / 2) {
+						try {
+							Hex.decode(candidate);
+							return candidate;
+						}
+						catch (IllegalArgumentException e) {
+							if (Base64.isBase64(data.getBytes())) {
+								return data;
+							}
+						}
+					}
 				}
 				return data;
 			}
@@ -228,40 +272,6 @@ public class EncryptionController {
 		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.BAD_REQUEST);
 	}
 
-	public Environment decrypt(Environment environment) {
-		Environment result = new Environment(environment.getName(), environment.getProfiles(),
-				environment.getLabel());
-		for (PropertySource source : environment.getPropertySources()) {
-			Map<Object, Object> map = new LinkedHashMap<Object, Object>(
-					source.getSource());
-			for (Entry<Object,Object> entry : new LinkedHashSet<>(map.entrySet())) {
-				Object key = entry.getKey();
-				String name = key.toString();
-				String value = entry.getValue().toString();
-				if (value.startsWith("{cipher}")) {
-					map.remove(key);
-					if (encryptor == null) {
-						map.put(name, value);
-					}
-					else {
-						try {
-							value = value == null ? null : encryptor.decrypt(value
-									.substring("{cipher}".length()));
-						}
-						catch (Exception e) {
-							value = "<n/a>";
-							name = "invalid." + name;
-							logger.warn("Cannot decrypt key: " + key + " ("
-									+ e.getClass() + ": " + e.getMessage() + ")");
-						}
-						map.put(name, value);
-					}
-				}
-			}
-			result.add(new PropertySource(source.getName(), map));
-		}
-		return result;
-	}
 }
 
 @SuppressWarnings("serial")
@@ -274,4 +284,8 @@ class KeyNotAvailableException extends RuntimeException {
 
 @SuppressWarnings("serial")
 class InvalidCipherException extends RuntimeException {
+}
+
+@SuppressWarnings("serial")
+class IncompatibleTextEncryptorLocatorException extends RuntimeException {
 }

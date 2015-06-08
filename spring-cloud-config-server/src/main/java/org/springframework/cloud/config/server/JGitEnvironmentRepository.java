@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.jcraft.jsch.Session;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -33,13 +34,13 @@ import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
-
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
@@ -101,8 +102,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 			git = createGitClient();
 			return loadEnvironment(git, application, profile, label);
 		}
+		catch (RefNotFoundException e) {
+			throw new NoSuchLabelException("No such label: " + label);
+		}
 		catch (GitAPIException e) {
-			throw new IllegalStateException("Cannot clone repository", e);
+			throw new IllegalStateException("Cannot clone or checkout repository", e);
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot load environment", e);

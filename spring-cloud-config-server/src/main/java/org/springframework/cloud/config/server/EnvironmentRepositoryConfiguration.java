@@ -31,7 +31,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 @Configuration
 @ConditionalOnMissingBean(EnvironmentRepository.class)
 @EnableConfigurationProperties(ConfigServerProperties.class)
-public class ConfigServerConfiguration {
+public class EnvironmentRepositoryConfiguration {
 
 	@Bean
 	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)

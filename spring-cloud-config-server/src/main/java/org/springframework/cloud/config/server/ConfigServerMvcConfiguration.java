@@ -17,9 +17,9 @@ package org.springframework.cloud.config.server;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.util.StringUtils;
 
 /**
@@ -29,21 +29,21 @@ import org.springframework.util.StringUtils;
 @Configuration
 @ConditionalOnWebApplication
 public class ConfigServerMvcConfiguration {
-
-	@Autowired(required = false)
-	private TextEncryptor encryptor;
-
 	@Autowired
 	private EnvironmentRepository repository;
 
 	@Autowired
 	private ConfigServerProperties server;
 
+	@Autowired(required=false)
+	private EnvironmentEncryptor environmentEncryptor;
+
 	@Bean
 	public EnvironmentController environmentController() {
-		EnvironmentController controller = new EnvironmentController(repository, encryptionController());
+		EnvironmentController controller = new EnvironmentController(repository, environmentEncryptor);
 		controller.setDefaultLabel(getDefaultLabel());
 		controller.setOverrides(server.getOverrides());
+		controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
 		return controller;
 	}
 
@@ -54,14 +54,5 @@ public class ConfigServerMvcConfiguration {
 		else {
 			return repository.getDefaultLabel();
 		}
-	}
-
-	@Bean
-	public EncryptionController encryptionController() {
-		EncryptionController controller = new EncryptionController();
-		if (encryptor!=null) {
-			controller.setEncryptor(encryptor);
-		}
-		return controller;
 	}
 }

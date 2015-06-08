@@ -94,8 +94,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository {
 		builder.web(false).showBanner(false);
 		String[] args = getArgs(config, label);
 		// Explicitly set the listeners (to exclude logging listener which would change
-		// log
-		// levels in the caller)
+		// log levels in the caller)
 		builder.application().setListeners(
 				Collections.singletonList(new ConfigFileApplicationListener()));
 		ConfigurableApplicationContext context = builder.run(args);
