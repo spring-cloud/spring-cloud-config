@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,17 @@
 
 package org.springframework.cloud.config.server.encryption;
 
+import java.util.Map;
+
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 /**
- * Service interface for locating proper TextEncryptor to be used for particular application.
- * It can be used to provide config server with application and environment specific encryption.
- *
+ * @author Dave Syer
  * @author Bartosz Wojtkiewicz
- * @author Rafal Zukowski
  *
  */
 public interface TextEncryptorLocator {
-	/**
-	 * Returns TextEncryptor to be used for given application and profiles.
-	 *
-	 * @param applicationName application name
-	 * @param profiles comma separated list of profiles
-	 */
-	TextEncryptor locate(String applicationName, String profiles);
+
+	TextEncryptor locate(Map<String,String> keys);
+
 }

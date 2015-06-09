@@ -22,11 +22,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -43,25 +41,27 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 
 	private static Log logger = LogFactory.getLog(CipherEnvironmentEncryptor.class);
 
-	private final TextEncryptorLocator encryptorLocator;
+	private final TextEncryptorLocator encryptor;
+
+	private EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
 
 	@Autowired
-	public CipherEnvironmentEncryptor(TextEncryptorLocator encryptorLocator) {
-		this.encryptorLocator = encryptorLocator;
+	public CipherEnvironmentEncryptor(TextEncryptorLocator encryptor) {
+		this.encryptor = encryptor;
 	}
 
 	@Override
 	public Environment decrypt(Environment environment) {
-		TextEncryptor encryptor = encryptorLocator.locate(environment.getName(),
-				StringUtils.arrayToCommaDelimitedString(environment.getProfiles()));
-		return encryptor != null ? decrypt(environment, encryptor) : environment;
+		return this.encryptor != null ? decrypt(environment, this.encryptor)
+				: environment;
 	}
 
-	private Environment decrypt(Environment environment, TextEncryptor encryptor) {
+	private Environment decrypt(Environment environment, TextEncryptorLocator encryptor) {
 		Environment result = new Environment(environment.getName(),
-		environment.getProfiles(), environment.getLabel());
+				environment.getProfiles(), environment.getLabel());
 		for (PropertySource source : environment.getPropertySources()) {
-			Map<Object, Object> map = new LinkedHashMap<Object, Object>(source.getSource());
+			Map<Object, Object> map = new LinkedHashMap<Object, Object>(
+					source.getSource());
 			for (Map.Entry<Object, Object> entry : new LinkedHashSet<>(map.entrySet())) {
 				Object key = entry.getKey();
 				String name = key.toString();
@@ -69,13 +69,17 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 				if (value.startsWith("{cipher}")) {
 					map.remove(key);
 					try {
-						value = value == null ? null : encryptor.decrypt(value.substring(
-																	"{cipher}".length()));
-					} catch (Exception e) {
+						value = value.substring("{cipher}".length());
+						value = encryptor.locate(
+								this.helper.getEncryptorKeys(name, StringUtils
+										.arrayToCommaDelimitedString(environment
+												.getProfiles()), value)).decrypt(this.helper.stripPrefix(value));
+					}
+					catch (Exception e) {
 						value = "<n/a>";
 						name = "invalid." + name;
-						logger.warn("Cannot decrypt key: " + key
-								+ " (" + e.getClass() + ": " + e.getMessage() + ")");
+						logger.warn("Cannot decrypt key: " + key + " (" + e.getClass()
+								+ ": " + e.getMessage() + ")");
 					}
 					map.put(name, value);
 				}

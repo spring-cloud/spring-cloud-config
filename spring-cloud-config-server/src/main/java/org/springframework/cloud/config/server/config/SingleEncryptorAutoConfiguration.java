@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,36 +14,28 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.server.encryption;
+package org.springframework.cloud.config.server.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
+import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
-/**
- * @author Bartosz Wojtkiewicz
- * @author Rafal Zukowski
- *
- */
 @Configuration
-public class EncryptionAutoConfiguration {
+@AutoConfigureAfter(EncryptionAutoConfiguration.class)
+public class SingleEncryptorAutoConfiguration {
+
+	@Autowired(required = false)
+	private TextEncryptor encryptor;
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TextEncryptorLocator textEncryptorLocator(TextEncryptor encryptor) {
-		return new SingleTextEncryptorLocator(encryptor);
-	}
-	
-	@ConditionalOnMissingBean(TextEncryptor.class)
-	protected static class DefaultTextEncryptorConfiguration {
-		
-		@Bean
-		public TextEncryptor nullTextEncryptor() {
-			return Encryptors.noOpText();
-		}
-
+	public TextEncryptorLocator textEncryptorLocator() {
+		return new SingleTextEncryptorLocator(this.encryptor);
 	}
 
 }

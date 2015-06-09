@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server;
+package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.cloud.config.server.ConfigServerProperties;
+import org.springframework.cloud.config.server.EnvironmentController;
+import org.springframework.cloud.config.server.EnvironmentRepository;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

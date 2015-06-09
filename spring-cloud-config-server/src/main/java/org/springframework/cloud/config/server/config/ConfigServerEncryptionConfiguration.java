@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.server.encryption;
+package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.server.ConfigServerProperties;
-import org.springframework.cloud.config.server.EncryptionController;
+import org.springframework.cloud.config.server.encryption.EncryptionController;
+import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,20 +31,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ConfigServerEncryptionConfiguration {
 
-	@Autowired
-	private TextEncryptorLocator locator;
+	@Autowired(required=false)
+	private TextEncryptorLocator encryptor;
 
 	@Autowired
 	private ConfigServerProperties properties;
 
 	@Bean
-	public EnvironmentEncryptor environmentEncryptor() {
-		return new CipherEnvironmentEncryptor(locator);
-	}
-
-	@Bean
 	public EncryptionController encryptionController() {
-		return new EncryptionController(locator, properties);
+		return new EncryptionController(this.encryptor, this.properties);
 	}
 
 }

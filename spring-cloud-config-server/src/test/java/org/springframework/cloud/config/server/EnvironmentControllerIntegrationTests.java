@@ -19,10 +19,8 @@ package org.springframework.cloud.config.server;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
-import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -39,32 +37,33 @@ public class EnvironmentControllerIntegrationTests {
 
 	@Before
 	public void init() {
-		Mockito.when(repository.getDefaultLabel()).thenReturn("master");
-		mvc = MockMvcBuilders.standaloneSetup(
-				new EnvironmentController(repository, new CipherEnvironmentEncryptor(new SingleTextEncryptorLocator())))
-				.build();
+		Mockito.when(this.repository.getDefaultLabel()).thenReturn("master");
+		this.mvc = MockMvcBuilders.standaloneSetup(
+				new EnvironmentController(this.repository,
+						new CipherEnvironmentEncryptor(null))).build();
 	}
 
 	@Test
 	public void environmentNoLabel() throws Exception {
-		Mockito.when(repository.findOne("foo", "default", "master")).thenReturn(
+		Mockito.when(this.repository.findOne("foo", "default", "master")).thenReturn(
 				new Environment("foo", "default"));
-		mvc.perform(MockMvcRequestBuilders.get("/foo/default")).andExpect(
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default")).andExpect(
 				MockMvcResultMatchers.status().isOk());
 	}
 
 	@Test
 	public void environmentWithLabel() throws Exception {
-		Mockito.when(repository.findOne("foo", "default", "awesome")).thenReturn(
+		Mockito.when(this.repository.findOne("foo", "default", "awesome")).thenReturn(
 				new Environment("foo", "default"));
-		mvc.perform(MockMvcRequestBuilders.get("/foo/default/awesome")).andExpect(
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/awesome")).andExpect(
 				MockMvcResultMatchers.status().isOk());
 	}
+
 	@Test
 	public void environmentWithLabelContainingPeriod() throws Exception {
-		Mockito.when(repository.findOne("foo", "default", "1.0.0")).thenReturn(
+		Mockito.when(this.repository.findOne("foo", "default", "1.0.0")).thenReturn(
 				new Environment("foo", "default"));
-		mvc.perform(MockMvcRequestBuilders.get("/foo/default/1.0.0")).andExpect(
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/1.0.0")).andExpect(
 				MockMvcResultMatchers.status().isOk());
 	}
 

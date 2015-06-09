@@ -261,15 +261,13 @@ You can download the "Java Cryptography Extension (JCE) Unlimited Strength Juris
 from Oracle, and follow instructions for installation (essentially replace the 2 policy files
 in the JRE lib/security directory with the ones that you downloaded).
 
-The server exposes `/encrypt` and `/decrypt` endpoints (on the
-assumption that these will be secured and only accessed by authorized
-agents). If the remote property sources contain encryted content
+If the remote property sources contain encryted content
 (values starting with `{cipher}`) they will be decrypted before
 sending to clients over HTTP. The main advantage of this set up is
 that the property values don't have to be in plain text when they are
 "at rest" (e.g. in a git repository). If a value cannot be decrypted
 it is replaced with an empty string, largely to prevent cipher text
-being used as a password in Spring Boot autconfigured HTTP basic.
+being used as a password and accidentally leaking.
 
 If you are setting up a remote config repository for config client
 applications it might contain an `application.yml` like this, for
@@ -286,7 +284,9 @@ spring:
 You can safely push this plain text to a shared git repository and the
 secret password is protected.
 
-If you are editing a remote config file you can use the Config Server
+The server also exposes `/encrypt` and `/decrypt` endpoints (on the
+assumption that these will be secured and only accessed by authorized
+agents). If you are editing a remote config file you can use the Config Server
 to encrypt values by POSTing to the `/encrypt` endpoint, e.g.
 
 ----
@@ -304,7 +304,15 @@ mysecret
 
 Take the encypted value and add the `{cipher}` prefix before you put
 it in the YAML or properties file, and before you commit and push it
-to a remote, potentially insecure store.
+to a remote, potentially insecure store. The `/encypt` and `/decrypt` 
+endpoints also both accept paths of the form `/*/{name}/{profiles}`
+which can be used to control cryptography per application (name)
+and profile when clients call into the main Environment resource.
+
+NOTE: to control the cryptography in this granular way you must also 
+provide a `@Bean` of type `TextEncryptorLocator` that creates a
+different encryptor per name and profiles. The one that is provided
+by default does not do this.
 
 The `spring` command line client (with Spring Cloud CLI extensions
 installed) can also be used to encrypt and decrypt, e.g.
@@ -335,9 +343,7 @@ it is just a single property value to configure.
 
 To configure a symmetric key you just need to set `encrypt.key` to a
 secret String (or use an enviroment variable `ENCRYPT_KEY` to keep it
-out of plain text configuration files). You can also POST a key value
-to the `/key` endpoint (but that won't change any existing encrypted
-values in remote repositories).
+out of plain text configuration files).
 
 To configure an asymmetric key you can either set the key as a
 PEM-encoded text value (in `encrypt.key`), or via a keystore (e.g. as
@@ -380,6 +386,43 @@ encrypt:
     alias: mytestkey
     secret: changeme
 ----
+
+=== Using Multiple Keys and Key Rotation
+
+In addition to the `{cipher}` prefix in encrypted property values, the
+Config Server looks for `{name:value}` prefixes (zero or many) before
+the start of the (Base64 encoded) cipher text. The keys are passed to
+a `TextEncryptorLocator` which can do whatever logic it needs to
+locate a `TextEncryptor` for the cipher. If you have configured a
+keystore (`encrypt.keystore.location`) the default locator will look
+for keys in the store with aliases as supplied by the "key" prefix,
+i.e. with a cipher text like this:
+
+
+----
+foo:
+  bar: `{cipher}{key:testkey}...`
+----
+
+the locator will look for a key named "testkey". A secret can also be
+supplied via a `{secret:...}` value in the prefix, but if it is not
+the default is to use the keystore password (which is what you get
+when you build a keytore and don't specify a secret). If you *do*
+supply a secret it is recommended that you also encrypt the secrets
+using a custom `SecretLocator`.
+
+Key rotation is hardly ever necessary on cryptographic grounds if the
+keys are only being used to encrypt a few bytes of configuration data
+(i.e. they are not being used elsewhere), but occasionally you might
+need to change the keys if there is a security breach for instance. In
+that case all the clients would need to change their source config
+files (e.g. in git) and use a new `{key:...}` prefix in all the
+ciphers, checking beforehand of course that the key alias is available
+in the Config Server keystore.
+
+TIP: the `{name:value}` prefixes can also be added to plaintext posted
+to the `/encrypt` endpoint, if you want to let the Config Server
+handle all encryption as well as decryption.
 
 === Embedding the Config Server
 

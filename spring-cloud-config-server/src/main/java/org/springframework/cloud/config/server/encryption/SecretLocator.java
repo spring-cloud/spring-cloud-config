@@ -16,27 +16,12 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import java.util.Map;
-
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
-
 /**
- * @author Bartosz Wojtkiewicz
  * @author Dave Syer
  *
  */
-public class SingleTextEncryptorLocator implements TextEncryptorLocator {
+public interface SecretLocator {
 
-	private TextEncryptor encryptor;
-
-	public SingleTextEncryptorLocator(TextEncryptor encryptor) {
-		this.encryptor = encryptor == null ? Encryptors.noOpText() : encryptor;
-	}
-
-	@Override
-	public TextEncryptor locate(Map<String, String> keys) {
-		return this.encryptor;
-	}
+	char[] locate(String secret);
 
 }

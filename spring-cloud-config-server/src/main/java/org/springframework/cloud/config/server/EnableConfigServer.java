@@ -21,7 +21,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.cloud.config.server.encryption.ConfigServerEncryptionConfiguration;
+import org.springframework.cloud.config.server.config.ConfigServerEncryptionConfiguration;
+import org.springframework.cloud.config.server.config.ConfigServerMvcConfiguration;
+import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
 import org.springframework.context.annotation.Import;
 
 /**

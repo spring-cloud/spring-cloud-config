@@ -16,34 +16,54 @@
 
 package org.springframework.cloud.config.server.encryption;
 
+import static java.util.UUID.randomUUID;
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collections;
+import java.util.Map;
 
 import org.junit.Test;
-
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
-import static java.util.UUID.randomUUID;
-import static org.junit.Assert.assertEquals;
-
 public class CipherEnvironmentEncryptorTests {
-    TextEncryptor textEncryptor = new EncryptorFactory().create("foo");
-    TextEncryptorLocator textEncryptorLocator =  new SingleTextEncryptorLocator(textEncryptor);
-    EnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(textEncryptorLocator);
+	TextEncryptor textEncryptor = new EncryptorFactory().create("foo");
+	EnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(new TextEncryptorLocator() {
 
-    @Test
-    public void shouldDecryptEnvironment() {
-        // given
-        String secret = randomUUID().toString();
+		@Override
+		public TextEncryptor locate(Map<String, String> keys) {
+			return CipherEnvironmentEncryptorTests.this.textEncryptor;
+		}
+	});
 
-        // when
-        Environment environment = new Environment("name", "profile", "label");
-        environment.add(new PropertySource("a",
-                Collections.<Object, Object>singletonMap(environment.getName(), "{cipher}" + textEncryptor.encrypt(secret))));
+	@Test
+	public void shouldDecryptEnvironment() {
+		// given
+		String secret = randomUUID().toString();
 
-        // then
-        assertEquals(secret, encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()));
-    }
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a",
+				Collections.<Object, Object>singletonMap(environment.getName(), "{cipher}" + this.textEncryptor.encrypt(secret))));
+
+		// then
+		assertEquals(secret, this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()));
+	}
+
+	@Test
+	public void shouldDecryptEnvironmentWithKey() {
+		// given
+		String secret = randomUUID().toString();
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a",
+				Collections.<Object, Object>singletonMap(environment.getName(), "{cipher}{key:test}" + this.textEncryptor.encrypt(secret))));
+
+		// then
+		assertEquals(secret, this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()));
+	}
+
 }
