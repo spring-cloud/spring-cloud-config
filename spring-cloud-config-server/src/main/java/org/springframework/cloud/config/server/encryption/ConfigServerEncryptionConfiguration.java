@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.encryption;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.config.server.ConfigServerProperties;
 import org.springframework.cloud.config.server.EncryptionController;
 import org.springframework.context.annotation.Bean;
@@ -37,6 +38,7 @@ public class ConfigServerEncryptionConfiguration {
 	private ConfigServerProperties properties;
 
 	@Bean
+	@ConditionalOnProperty(value = "spring.cloud.config.server.decrypt.enabled", matchIfMissing = true)
 	public EnvironmentEncryptor environmentEncryptor() {
 		return new CipherEnvironmentEncryptor(locator);
 	}
