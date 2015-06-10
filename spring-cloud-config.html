@@ -787,6 +787,38 @@ and in the "foo/" sub-directory and also any sub-directory whose name
 begins with "bar".</p>
 </div>
 <div class="paragraph">
+<p>By default the server clones remote repositories when configuration
+is first requested. The server can be configured to clone the repositories
+at startup. For example at the top level:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://git/common/config-repo.git
+          repos:
+            team-a:
+                pattern: team-a-*
+                cloneOnStart: true
+                uri: http://git/team-a/config-repo.git
+            team-b:
+                pattern: team-b-*
+                cloneOnStart: false
+                uri: http://git/team-b/config-repo.git
+            team-c:
+                pattern: team-c-*
+                uri: http://git/team-a/config-repo.git</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example the server clones team-a&#8217;s config-repo on startup before it
+accepts any requests. All other repositories will not be cloned until
+configuration from the repository is requested.</p>
+</div>
+<div class="paragraph">
 <p>To use HTTP basic authentication on the remote repository add the
 "username" and "password" properties separately (not in the URL),
 e.g.</p>
@@ -1251,7 +1283,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-08 06:00:50 UTC
+Last updated 2015-06-10 08:37:57 UTC
 </div>
 </div>
 </body>
