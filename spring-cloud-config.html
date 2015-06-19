@@ -428,6 +428,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_encryption_and_decryption">Encryption and Decryption</a></li>
 <li><a href="#_key_management">Key Management</a></li>
 <li><a href="#_creating_a_key_store_for_testing">Creating a Key Store for Testing</a></li>
+<li><a href="#_using_multiple_keys_and_key_rotation">Using Multiple Keys and Key Rotation</a></li>
 <li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
 </ul>
 </li>
@@ -961,15 +962,13 @@ in the JRE lib/security directory with the ones that you downloaded).
 </table>
 </div>
 <div class="paragraph">
-<p>The server exposes <code>/encrypt</code> and <code>/decrypt</code> endpoints (on the
-assumption that these will be secured and only accessed by authorized
-agents). If the remote property sources contain encryted content
+<p>If the remote property sources contain encryted content
 (values starting with <code>{cipher}</code>) they will be decrypted before
 sending to clients over HTTP. The main advantage of this set up is
 that the property values don&#8217;t have to be in plain text when they are
 "at rest" (e.g. in a git repository). If a value cannot be decrypted
 it is replaced with an empty string, largely to prevent cipher text
-being used as a password in Spring Boot autconfigured HTTP basic.</p>
+being used as a password and accidentally leaking.</p>
 </div>
 <div class="paragraph">
 <p>If you are setting up a remote config repository for config client
@@ -990,7 +989,9 @@ instance:</p>
 secret password is protected.</p>
 </div>
 <div class="paragraph">
-<p>If you are editing a remote config file you can use the Config Server
+<p>The server also exposes <code>/encrypt</code> and <code>/decrypt</code> endpoints (on the
+assumption that these will be secured and only accessed by authorized
+agents). If you are editing a remote config file you can use the Config Server
 to encrypt values by POSTing to the <code>/encrypt</code> endpoint, e.g.</p>
 </div>
 <div class="listingblock">
@@ -1012,7 +1013,25 @@ mysecret</pre>
 <div class="paragraph">
 <p>Take the encypted value and add the <code>{cipher}</code> prefix before you put
 it in the YAML or properties file, and before you commit and push it
-to a remote, potentially insecure store.</p>
+to a remote, potentially insecure store. The <code>/encypt</code> and <code>/decrypt</code>
+endpoints also both accept paths of the form <code>/*/{name}/{profiles}</code>
+which can be used to control cryptography per application (name)
+and profile when clients call into the main Environment resource.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+to control the cryptography in this granular way you must also
+provide a <code>@Bean</code> of type <code>TextEncryptorLocator</code> that creates a
+different encryptor per name and profiles. The one that is provided
+by default does not do this.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>The <code>spring</code> command line client (with Spring Cloud CLI extensions
@@ -1051,9 +1070,7 @@ it is just a single property value to configure.</p>
 <div class="paragraph">
 <p>To configure a symmetric key you just need to set <code>encrypt.key</code> to a
 secret String (or use an enviroment variable <code>ENCRYPT_KEY</code> to keep it
-out of plain text configuration files). You can also POST a key value
-to the <code>/key</code> endpoint (but that won&#8217;t change any existing encrypted
-values in remote repositories).</p>
+out of plain text configuration files).</p>
 </div>
 <div class="paragraph">
 <p>To configure an asymmetric key you can either set the key as a
@@ -1112,6 +1129,57 @@ your <code>application.yml</code> for the Config Server:</p>
     alias: mytestkey
     secret: changeme</pre>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_using_multiple_keys_and_key_rotation">Using Multiple Keys and Key Rotation</h3>
+<div class="paragraph">
+<p>In addition to the <code>{cipher}</code> prefix in encrypted property values, the
+Config Server looks for <code>{name:value}</code> prefixes (zero or many) before
+the start of the (Base64 encoded) cipher text. The keys are passed to
+a <code>TextEncryptorLocator</code> which can do whatever logic it needs to
+locate a <code>TextEncryptor</code> for the cipher. If you have configured a
+keystore (<code>encrypt.keystore.location</code>) the default locator will look
+for keys in the store with aliases as supplied by the "key" prefix,
+i.e. with a cipher text like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>foo:
+  bar: `{cipher}{key:testkey}...`</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>the locator will look for a key named "testkey". A secret can also be
+supplied via a <code>{secret:&#8230;&#8203;}</code> value in the prefix, but if it is not
+the default is to use the keystore password (which is what you get
+when you build a keytore and don&#8217;t specify a secret). If you <strong>do</strong>
+supply a secret it is recommended that you also encrypt the secrets
+using a custom <code>SecretLocator</code>.</p>
+</div>
+<div class="paragraph">
+<p>Key rotation is hardly ever necessary on cryptographic grounds if the
+keys are only being used to encrypt a few bytes of configuration data
+(i.e. they are not being used elsewhere), but occasionally you might
+need to change the keys if there is a security breach for instance. In
+that case all the clients would need to change their source config
+files (e.g. in git) and use a new <code>{key:&#8230;&#8203;}</code> prefix in all the
+ciphers, checking beforehand of course that the key alias is available
+in the Config Server keystore.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+the <code>{name:value}</code> prefixes can also be added to plaintext posted
+to the <code>/encrypt</code> endpoint, if you want to let the Config Server
+handle all encryption as well as decryption.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -1283,7 +1351,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-10 08:37:57 UTC
+Last updated 2015-06-19 15:06:14 UTC
 </div>
 </div>
 </body>
