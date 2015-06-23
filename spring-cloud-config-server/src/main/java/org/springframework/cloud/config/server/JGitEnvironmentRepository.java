@@ -215,7 +215,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	private Git copyRepository() throws IOException, GitAPIException {
 		deleteBaseDirIfExists();
-		Assert.state(getBasedir().mkdirs(), "Could not create basedir: " + getBasedir());
+		getBasedir().mkdirs();
+		Assert.state(getBasedir().exists(), "Could not create basedir: " + getBasedir());
 		if (getUri().startsWith(FILE_URI_PREFIX)) {
 			return copyFromLocalRepository();
 		}
