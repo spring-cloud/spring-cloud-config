@@ -59,6 +59,7 @@ public class EncryptionAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled", matchIfMissing = true)
 	public EnvironmentEncryptor environmentEncryptor(
 			TextEncryptorLocator textEncryptorLocator) {
 		return new CipherEnvironmentEncryptor(textEncryptorLocator);

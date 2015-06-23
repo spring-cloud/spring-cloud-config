@@ -66,10 +66,18 @@ public class ConfigServerProperties {
 	 * Default application profile when incoming requests do not have a specific one.
 	 */
 	private String defaultProfile = "default";
-	
+
+	/**
+	 * Decryption configuration for when server handles encrypted properties before sending them to clients.
+	 */
+	private Encrypt encrypt = new Encrypt();
+
+	public Encrypt getEncrypt() {
+		return this.encrypt;
+	}
 
 	public String getDefaultLabel() {
-		return defaultLabel;
+		return this.defaultLabel;
 	}
 
 	public void setDefaultLabel(String defaultLabel) {
@@ -77,7 +85,7 @@ public class ConfigServerProperties {
 	}
 
 	public boolean isBootstrap() {
-		return bootstrap;
+		return this.bootstrap;
 	}
 
 	public void setBootstrap(boolean bootstrap) {
@@ -85,7 +93,7 @@ public class ConfigServerProperties {
 	}
 
 	public String getPrefix() {
-		return prefix;
+		return this.prefix;
 	}
 
 	public void setPrefix(String prefix) {
@@ -93,7 +101,7 @@ public class ConfigServerProperties {
 	}
 
 	public Map<String, String> getOverrides() {
-		return overrides;
+		return this.overrides;
 	}
 
 	public void setOverrides(Map<String, String> overrides) {
@@ -101,7 +109,7 @@ public class ConfigServerProperties {
 	}
 
 	public boolean isStripDocumentFromYaml() {
-		return stripDocumentFromYaml;
+		return this.stripDocumentFromYaml;
 	}
 
 	public void setStripDocumentFromYaml(boolean stripDocumentFromYaml) {
@@ -109,7 +117,7 @@ public class ConfigServerProperties {
 	}
 
 	public String getDefaultApplicationName() {
-		return defaultApplicationName;
+		return this.defaultApplicationName;
 	}
 
 	public void setDefaultApplicationName(String defaultApplicationName) {
@@ -117,10 +125,25 @@ public class ConfigServerProperties {
 	}
 
 	public String getDefaultProfile() {
-		return defaultProfile;
+		return this.defaultProfile;
 	}
 
 	public void setDefaultProfile(String defaultProfile) {
 		this.defaultProfile = defaultProfile;
+	}
+
+	public static class Encrypt {
+		/**
+		 * Enable decryption of environment properties before sending to client.
+		 */
+		private boolean enabled = true;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
 	}
 }
