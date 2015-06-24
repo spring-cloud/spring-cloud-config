@@ -88,7 +88,12 @@ filesystem repository, so that the server can clone it and use a local
 working copy as a cache.
 
 This repository implementation maps the `{label}` parameter of the
-HTTP resource to a git label (commit id, branch name or tag).
+HTTP resource to a git label (commit id, branch name or tag). If the
+git branch or tag name contains a slash ("/") then the label in the
+HTTP URL should be specified with the special string "(_)" instead (to
+avoid ambiguity with other URL paths). Be careful with the brackets in
+the URL if you are using a command line client like curl (e.g. escape
+them from the shell with quotes '').
 
 Spring Cloud Config Server supports a single or multiple git
 repositories:

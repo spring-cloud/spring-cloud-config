@@ -92,18 +92,25 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
 	public Environment defaultLabel(@PathVariable String name,
 			@PathVariable String profiles) {
-		return labelled(name, profiles, defaultLabel);
+		return labelled(name, profiles, this.defaultLabel);
 	}
 
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
-		Environment environment = repository.findOne(name, profiles, label);
-		if (environmentEncryptor != null) {
-			environment = environmentEncryptor.decrypt(environment);
+		if (label==null) {
+			label = this.defaultLabel;
 		}
-		if (!overrides.isEmpty()) {
-			environment.addFirst(new PropertySource("overrides", overrides));
+		if (label!=null && label.contains("(_)")) {
+			// "(_)" is uncommon in a git branch name, but "/" cannot be matched by Spring MVC
+			label = label.replace("(_)", "/");
+		}
+		Environment environment = this.repository.findOne(name, profiles, label);
+		if (this.environmentEncryptor != null) {
+			environment = this.environmentEncryptor.decrypt(environment);
+		}
+		if (!this.overrides.isEmpty()) {
+			environment.addFirst(new PropertySource("overrides", this.overrides));
 		}
 		return environment;
 	}
@@ -111,7 +118,7 @@ public class EnvironmentController {
 	@RequestMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name,
 			@PathVariable String profiles) throws IOException {
-		return labelledProperties(name, profiles, defaultLabel);
+		return labelledProperties(name, profiles, this.defaultLabel);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.properties")
@@ -126,7 +133,7 @@ public class EnvironmentController {
 	@RequestMapping("{name}-{profiles}.json")
 	public ResponseEntity<Map<String, Object>> jsonProperties(@PathVariable String name,
 			@PathVariable String profiles) throws Exception {
-		return labelledJsonProperties(name, profiles, defaultLabel);
+		return labelledJsonProperties(name, profiles, this.defaultLabel);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.json")
@@ -153,7 +160,7 @@ public class EnvironmentController {
 	@RequestMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> yaml(@PathVariable String name,
 			@PathVariable String profiles) throws Exception {
-		return labelledYaml(name, profiles, defaultLabel);
+		return labelledYaml(name, profiles, this.defaultLabel);
 	}
 
 	@RequestMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
@@ -251,7 +258,7 @@ public class EnvironmentController {
 					else {
 						@SuppressWarnings("unchecked")
 						Map<String, Object> map = (Map<String, Object>) current
-								.get(keys[i]);
+						.get(keys[i]);
 						current = map;
 					}
 				}
