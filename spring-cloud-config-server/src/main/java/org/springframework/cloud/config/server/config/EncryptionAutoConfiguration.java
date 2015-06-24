@@ -78,9 +78,13 @@ public class EncryptionAutoConfiguration {
 		@ConditionalOnMissingBean
 		public TextEncryptorLocator textEncryptorLocator() {
 			KeyStore keyStore = this.key.getKeyStore();
-			return new KeyStoreTextEncryptorLocator(new KeyStoreKeyFactory(
+			KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(new KeyStoreKeyFactory(
 					keyStore.getLocation(), keyStore.getPassword().toCharArray()),
 					keyStore.getSecret(), keyStore.getAlias());
+			locator.setRsaAlgorithm(this.key.getRsa().getAlgorithm());
+			locator.setSalt(this.key.getRsa().getSalt());
+			locator.setStrong(this.key.getRsa().isStrong());
+			return locator;
 		}
 
 	}

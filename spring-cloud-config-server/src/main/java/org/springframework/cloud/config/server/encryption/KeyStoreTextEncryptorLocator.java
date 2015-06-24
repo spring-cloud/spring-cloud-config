@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
+import org.springframework.security.rsa.crypto.RsaAlgorithm;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 
 /**
@@ -46,6 +47,10 @@ public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 
 	private SecretLocator secretLocator = new PassthruSecretLocator();
 
+	private RsaAlgorithm rsaAlgorithm = RsaAlgorithm.DEFAULT;
+	private boolean strong = false;
+	private String salt = "deadbeef";
+
 	public KeyStoreTextEncryptorLocator(KeyStoreKeyFactory keys, String defaultSecret,
 			String defaultAlias) {
 		this.keys = keys;
@@ -60,12 +65,24 @@ public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 		this.secretLocator = secretLocator;
 	}
 
+	public void setRsaAlgorithm(RsaAlgorithm rsaAlgorithm) {
+		this.rsaAlgorithm = rsaAlgorithm;
+	}
+
+	public void setStrong(boolean strong) {
+		this.strong = strong;
+	}
+
+	public void setSalt(String salt) {
+		this.salt = salt;
+	}
+
 	@Override
 	public TextEncryptor locate(Map<String, String> keys) {
 		String alias = keys.containsKey(KEY) ? keys.get(KEY) : this.defaultAlias;
 		String secret = keys.containsKey(SECRET) ? keys.get(SECRET) : this.defaultSecret;
 		return new RsaSecretEncryptor(this.keys.getKeyPair(alias,
-				this.secretLocator.locate(secret)));
+				this.secretLocator.locate(secret)), this.rsaAlgorithm, this.salt, this.strong);
 	}
 
 }
