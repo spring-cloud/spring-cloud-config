@@ -44,13 +44,6 @@ Config Client features (for Spring applications):
 
 * Bind to the Config Server and initialize Spring `Environment` with remote property sources
 * Encrypt and decrypt property values (symmetric or asymmetric)
-* `@RefreshScope` for Spring `@Beans` that want to be re-initialized when configuration changes
-* Management endpoints:
-** `/env` for updating `Environment` and rebinding `@ConfigurationProperties` and log levels
-** `/refresh` for refreshing the `@RefreshScope` beans
-** `/restart` for restarting the Spring context (disabled by default)
-** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`)
-* Bootstrap appplication context: a parent context for the main application that can be trained to do anything (by default it binds to the Config Server, and decrypts property values)
 
 <span id="quick-start"></span>
 ## Quick Start
@@ -80,7 +73,9 @@ public class Application {
 }
 ```
 
-To run your own server use the `spring-cloud-config-server` dependency and `@EnableConfigServer`.
+To run your own server use the `spring-cloud-config-server` dependency and `@EnableConfigServer`, and add a 
+configuration property `spring.cloud.config.server.git.uri` (it can be a local git repository with a 
+`file://...` path for testing).
 
 {% endcapture %}
 
