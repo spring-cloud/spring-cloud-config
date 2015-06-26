@@ -28,6 +28,7 @@
 	  <module>spring-cloud-config-client</module>
 	  <module>spring-cloud-config-server</module>
 	  <module>spring-cloud-config-sample</module>
+		<module>spring-cloud-starter-config</module>
 	  <module>docs</module>
 	</modules>
     <dependencyManagement>
