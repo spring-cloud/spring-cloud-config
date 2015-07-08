@@ -44,6 +44,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
@@ -58,7 +59,7 @@ import org.yaml.snakeyaml.nodes.Tag;
  *
  */
 @RestController
-@RequestMapping("${spring.cloud.config.server.prefix:}")
+@RequestMapping(method = RequestMethod.GET, value = "${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
 
 	private static final String MAP_PREFIX = "map";
@@ -84,6 +85,7 @@ public class EnvironmentController {
 	/**
 	 * Flag to indicate that YAML documents which are not a map should be stripped of the
 	 * "document" prefix that is added by Spring (to facilitate conversion to Properties).
+	 * 
 	 * @param stripDocument the flag to set
 	 */
 	public void setStripDocumentFromYaml(boolean stripDocument) {
@@ -99,11 +101,12 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
-		if (label==null) {
+		if (label == null) {
 			label = this.defaultLabel;
 		}
-		if (label!=null && label.contains("(_)")) {
-			// "(_)" is uncommon in a git branch name, but "/" cannot be matched by Spring MVC
+		if (label != null && label.contains("(_)")) {
+			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
+			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
 		Environment environment = this.repository.findOne(name, profiles, label);
@@ -259,7 +262,7 @@ public class EnvironmentController {
 					else {
 						@SuppressWarnings("unchecked")
 						Map<String, Object> map = (Map<String, Object>) current
-						.get(keys[i]);
+								.get(keys[i]);
 						current = map;
 					}
 				}
