@@ -44,7 +44,7 @@ public class ConfigClientAutoConfiguration {
 		if (context.getParent() != null
 				&& BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 						context.getParent(), ConfigClientProperties.class).length > 0) {
-			return BeanFactoryUtils.beanOfType(context.getParent(),
+			return BeanFactoryUtils.beanOfTypeIncludingAncestors(context.getParent(),
 					ConfigClientProperties.class);
 		}
 		ConfigClientProperties client = new ConfigClientProperties(environment);
