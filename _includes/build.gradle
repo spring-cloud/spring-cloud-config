@@ -8,7 +8,7 @@ apply plugin: "io.spring.dependency-management"
 
 dependencyManagement {
      imports {
-          mavenBom '{@= groupId @}:spring-cloud-config:{@= version @}'
+          mavenBom '{@= groupId @}:spring-cloud-config:{@= findBom(version) @}'
      }
 }
 
