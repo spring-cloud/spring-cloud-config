@@ -62,6 +62,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private static final String DEFAULT_LABEL = "master";
 	private static final String FILE_URI_PREFIX = "file:";
 
+	/**
+	 * Timeout (in seconds) for obtaining HTTP or SSH connection (if applicable)
+	 */
+	private int timeout = 0;
+
 	private boolean initialized;
 
 	private boolean cloneOnStart = false;
@@ -79,6 +84,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	public void setCloneOnStart(boolean cloneOnStart) {
 		this.cloneOnStart = cloneOnStart;
+	}
+
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
 	}
 
 	public JGitFactory getGitFactory() {
@@ -187,6 +196,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	 */
 	private void pull(Git git, String label, Ref ref) {
 		PullCommand pull = git.pull();
+		setTimeout(pull);
 		try {
 			if (hasText(getUsername())) {
 				setCredentialsProvider(pull);
@@ -245,6 +255,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private Git cloneToBasedir() throws GitAPIException {
 		CloneCommand clone = this.gitFactory.getCloneCommandByCloneRepository()
 				.setURI(getUri()).setDirectory(getBasedir());
+		setTimeout(clone);
 		if (hasText(getUsername())) {
 			setCredentialsProvider(clone);
 		}
@@ -254,6 +265,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private void tryFetch(Git git) {
 		try {
 			FetchCommand fetch = git.fetch();
+			setTimeout(fetch);
 			if (hasText(getUsername())) {
 				setCredentialsProvider(fetch);
 			}
@@ -290,6 +302,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
 		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(getUsername(),
 				getPassword()));
+	}
+
+	private void setTimeout(TransportCommand<?,?> pull) {
+		pull.setTimeout(this.timeout);
 	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
@@ -329,11 +345,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	static class JGitFactory {
 
 		public Git getGitByOpen(File file) throws IOException {
-			return Git.open(file);
+			Git git = Git.open(file);
+			return git;
 		}
 
 		public CloneCommand getCloneCommandByCloneRepository() {
-			return Git.cloneRepository();
+			CloneCommand command = Git.cloneRepository();
+			return command;
 		}
 	}
 }
