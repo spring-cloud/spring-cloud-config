@@ -71,8 +71,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	private boolean cloneOnStart = false;
 
-	private JGitEnvironmentRepository.JGitFactory gitFactory =
-			new JGitEnvironmentRepository.JGitFactory();
+	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
@@ -157,7 +156,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	private synchronized Environment loadEnvironment(Git git, String application,
 			String profile, String label) throws GitAPIException {
-		NativeEnvironmentRepository environment = new NativeEnvironmentRepository(getEnvironment());
+		NativeEnvironmentRepository environment = new NativeEnvironmentRepository(
+				getEnvironment());
 		git.getRepository().getConfig().setString("branch", label, "merge", label);
 		Ref ref = checkout(git, label);
 		if (shouldPull(git, ref)) {
@@ -223,7 +223,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 		}
 	}
 
-	private Git copyRepository() throws IOException, GitAPIException {
+	// Synchronize here so that multiple requests don't all try and delete the base dir
+	// together (this is a once only operation, so it only holds things up on the first
+	// request).
+	private synchronized Git copyRepository() throws IOException, GitAPIException {
 		deleteBaseDirIfExists();
 		getBasedir().mkdirs();
 		Assert.state(getBasedir().exists(), "Could not create basedir: " + getBasedir());
@@ -304,7 +307,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 				getPassword()));
 	}
 
-	private void setTimeout(TransportCommand<?,?> pull) {
+	private void setTimeout(TransportCommand<?, ?> pull) {
 		pull.setTimeout(this.timeout);
 	}
 
@@ -339,8 +342,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	/**
 	 * Wraps the static method calls to {@link org.eclipse.jgit.api.Git} and
-	 * {@link org.eclipse.jgit.api.CloneCommand} allowing for easier unit
-	 * testing.
+	 * {@link org.eclipse.jgit.api.CloneCommand} allowing for easier unit testing.
 	 */
 	static class JGitFactory {
 
