@@ -62,9 +62,12 @@ server on `http://localhost:8888` (the default value of
 @RestController
 public class Application {
 
+  @Value("${config.name}")
+  String name = "World";
+
   @RequestMapping("/")
   public String home() {
-    return "Hello World";
+    "Hello " + name;
   }
 
   public static void main(String[] args) {
@@ -74,9 +77,9 @@ public class Application {
 }
 ```
 
-To run your own server use the `spring-cloud-config-server` dependency and `@EnableConfigServer`, and add a 
-configuration property `spring.cloud.config.server.git.uri` (it can be a local git repository with a 
-`file://...` path for testing).
+The value of `config.name` in the sample (or any other values you bind to in the normal Spring Boot way) can come from local configuration or from the remote Config Server. The Config Server will take precedence by default. To see this look at the `/env` endpoint in the application and see the `configServer` property sources.
+
+To run your own server use the `spring-cloud-config-server` dependency and `@EnableConfigServer`. If you set `spring.config.name=configserver` the app will run on port 8888 and serve data from a sample repository. You need a `spring.cloud.config.server.git.uri` to locate the configuration data for your own needs (by default it is the location of a git repository, and can be a local `file:..` URL).
 
 {% endcapture %}
 
