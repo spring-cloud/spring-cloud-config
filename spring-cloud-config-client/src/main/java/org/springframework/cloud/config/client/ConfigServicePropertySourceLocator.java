@@ -104,7 +104,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					"Could not locate PropertySource and the fail fast property is set, failing",
 					error);
 		}
-		logger.error("Could not locate PropertySource: "
+		logger.warn("Could not locate PropertySource: "
 				+ (errorBody == null ? error==null ? "label not found" : error.getMessage() : errorBody));
 		return null;
 
