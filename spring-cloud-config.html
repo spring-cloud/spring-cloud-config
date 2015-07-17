@@ -1267,7 +1267,7 @@ an Exception.</p>
 <div class="sect2">
 <h3 id="_locating_remote_configuration_resources">Locating Remote Configuration Resources</h3>
 <div class="paragraph">
-<p>The Config Service serves property sources from <code>/{name}/{env}/{label}</code>, where the default bindings in the client app are</p>
+<p>The Config Service serves property sources from <code>/{name}/{profile}/{label}</code>, where the default bindings in the client app are</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1275,7 +1275,7 @@ an Exception.</p>
 <p>"name" = <code>${spring.application.name}</code></p>
 </li>
 <li>
-<p>"env" = <code>${spring.profiles.active}</code> (actually <code>Environment.getActiveProfiles()</code>)</p>
+<p>"profile" = <code>${spring.profiles.active}</code> (actually <code>Environment.getActiveProfiles()</code>)</p>
 </li>
 <li>
 <p>"label" = "master"</p>
@@ -1284,7 +1284,7 @@ an Exception.</p>
 </div>
 <div class="paragraph">
 <p>All of them can be overridden by setting <code>spring.cloud.config.*</code>
-(where <code>*</code> is "name", "env" or "label"). The "label" is useful for
+(where <code>*</code> is "name", "profile" or "label"). The "label" is useful for
 rolling back to previous versions of configuration; with the default
 Config Server implementation it can be a git label, branch name or
 commit id. Label can also be provided as a comma-separated list, in
@@ -1356,7 +1356,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-16 22:34:27 UTC
+Last updated 2015-07-17 21:17:13 UTC
 </div>
 </div>
 </body>
