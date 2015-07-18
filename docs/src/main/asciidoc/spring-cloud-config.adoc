@@ -497,14 +497,14 @@ an Exception.
 
 === Locating Remote Configuration Resources
 
-The Config Service serves property sources from `/{name}/{env}/{label}`, where the default bindings in the client app are
+The Config Service serves property sources from `/{name}/{profile}/{label}`, where the default bindings in the client app are
 
 * "name" = `${spring.application.name}`
-* "env" = `${spring.profiles.active}` (actually `Environment.getActiveProfiles()`)
+* "profile" = `${spring.profiles.active}` (actually `Environment.getActiveProfiles()`)
 * "label" = "master"
 
 All of them can be overridden by setting `spring.cloud.config.\*`
-(where `*` is "name", "env" or "label"). The "label" is useful for
+(where `*` is "name", "profile" or "label"). The "label" is useful for
 rolling back to previous versions of configuration; with the default
 Config Server implementation it can be a git label, branch name or
 commit id. Label can also be provided as a comma-separated list, in 
