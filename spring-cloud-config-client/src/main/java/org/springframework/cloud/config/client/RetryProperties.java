@@ -22,7 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Dave Syer
  *
  */
-@ConfigurationProperties("spring.config.retry")
+@ConfigurationProperties("spring.cloud.config.retry")
 public class RetryProperties {
 
 	/**
