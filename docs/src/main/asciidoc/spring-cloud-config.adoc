@@ -495,6 +495,42 @@ behavior, set the bootstrap configuration property
 `spring.cloud.config.failFast=true` and the client will halt with
 an Exception.
 
+[[config-client-retry]]
+=== Config Client Retry
+
+If a client is setup to `failFast`, it can also be configured to retry contacting the Config Server with the addition of dependencies to Spring Retry and Spring Boot AOP. For Maven this would look like:
+
+----
+<dependency>
+  <groupId>org.springframework.retry</groupId>
+  <artifactId>spring-retry</artifactId>
+  <version>1.1.2.RELEASE</version>
+</dependency>
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+----
+
+With these dependencies added, the retry functionality can be controlled by bootstrap properties under `spring.config.retry`. The available properties are:
+
+* `initialInterval` initial timeout in mS (default 1000)
+* `multiplier` multiplier for subsequent timeouts (default 1.1)
+* `maxInterval` maximum timeout in mS (default 2000)
+* `maxAttempts` maximum number of retries (default 6)
+
+An example bootstrap yml would look like:
+
+----
+spring:
+  config:
+    retry:
+      initialInterval: 1000
+      multiplier: 1.1
+      maxInterval: 2000
+      maxAttempts: 6
+----
+
 === Locating Remote Configuration Resources
 
 The Config Service serves property sources from `/{name}/{profile}/{label}`, where the default bindings in the client app are
