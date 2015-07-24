@@ -627,7 +627,7 @@ high-priority property source, e.g.</p>
 <pre>$ curl localhost:8080/env
 {
   "profiles":[],
-  "configService:https://github.com/scratches/config-repo/bar.properties":{"foo":"bar"},
+  "configService:https://github.com/spring-cloud-samples/config-repo/bar.properties":{"foo":"bar"},
   "servletContextInitParams":{},
   "systemProperties":{...},
   ...
@@ -638,6 +638,19 @@ high-priority property source, e.g.</p>
 <p>(a property source called "configService:&lt;URL of remote
 repository&gt;/&lt;file name&gt;" contains the property "foo" with value
 "bar" and is highest priority).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the URL in the property source name is the git repository not
+the config server URL.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -1356,7 +1369,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-21 08:20:34 UTC
+Last updated 2015-07-24 08:40:55 UTC
 </div>
 </div>
 </body>
