@@ -149,7 +149,7 @@ high-priority property source, e.g.
 $ curl localhost:8080/env
 {
   "profiles":[],
-  "configService:https://github.com/scratches/config-repo/bar.properties":{"foo":"bar"},
+  "configService:https://github.com/spring-cloud-samples/config-repo/bar.properties":{"foo":"bar"},
   "servletContextInitParams":{},
   "systemProperties":{...},
   ...
@@ -159,3 +159,6 @@ $ curl localhost:8080/env
 (a property source called "configService:<URL of remote
 repository>/<file name>" contains the property "foo" with value
 "bar" and is highest priority).
+
+NOTE: the URL in the property source name is the git repository not
+the config server URL.
