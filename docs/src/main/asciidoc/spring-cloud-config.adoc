@@ -495,6 +495,21 @@ behavior, set the bootstrap configuration property
 `spring.cloud.config.failFast=true` and the client will halt with
 an Exception.
 
+[[config-client-retry]]
+=== Config Client Retry
+
+If you expect that the config server may occasionally be unavailable when
+your app starts, you can ask it to keep trying after a failure. First you need 
+to set `spring.cloud.config.failFast=true`, and then you need to add
+`spring-retry` and `spring-boot-starter-aop` to your classpath. The default
+behaviour is to retry 6 times with an initial backoff interval of 1000ms and an
+exponential multiplier of 1.1 for subsequent backoffs. You can configure these
+properties (and others) using `spring.config.retry.*` configuration properties.
+
+TIP: To take full control of the retry add a `@Bean` of type
+`RetryOperationsInterceptor` with id "configServerRetryInterceptor". Spring
+Retry has a `RetryInterceptorBuilder` that makes it easy to create one.
+
 === Locating Remote Configuration Resources
 
 The Config Service serves property sources from `/{name}/{profile}/{label}`, where the default bindings in the client app are
