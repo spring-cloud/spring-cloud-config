@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,10 +86,10 @@ public class EncryptionController {
 	@ExceptionHandler(KeyFormatException.class)
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> keyFormat() {
-		Map<String, Object> body = new HashMap<String, Object>();
+		Map<String, Object> body = new HashMap<>();
 		body.put("status", "BAD_REQUEST");
 		body.put("description", "Key data not in correct format (PEM or jks keystore)");
-		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(KeyNotAvailableException.class)
@@ -98,7 +98,7 @@ public class EncryptionController {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "NOT_FOUND");
 		body.put("description", "No public key available");
-		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
 	}
 
 	@RequestMapping(value = "encrypt/status", method = RequestMethod.GET)
@@ -147,9 +147,11 @@ public class EncryptionController {
 		checkEncryptorInstalled(name, profiles);
 		try {
 			String input = stripFormData(data, type, true);
-			String decrypted = this.helper.stripPrefix(this.encryptor.locate(
-					this.helper.getEncryptorKeys(name, profiles, input)).decrypt(
-							this.helper.stripPrefix(input)));
+			Map<String, String> encryptorKeys = this.helper.getEncryptorKeys(name,
+					profiles, input);
+			TextEncryptor encryptor = this.encryptor.locate(encryptorKeys);
+			String encryptedText = this.helper.stripPrefix(input);
+			String decrypted = this.helper.stripPrefix(encryptor.decrypt(encryptedText));
 			logger.info("Decrypted cipher data");
 			return decrypted;
 		}
@@ -210,7 +212,7 @@ public class EncryptionController {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "NO_KEY");
 		body.put("description", "No key was installed for encryption service");
-		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(InvalidCipherException.class)
@@ -219,7 +221,7 @@ public class EncryptionController {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "INVALID");
 		body.put("description", "Text not encrypted with this key");
-		return new ResponseEntity<Map<String, Object>>(body, HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
 	}
 
 }
