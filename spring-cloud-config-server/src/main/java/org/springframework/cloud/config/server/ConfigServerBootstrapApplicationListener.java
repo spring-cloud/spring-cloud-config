@@ -36,12 +36,18 @@ import org.springframework.core.env.PropertySource;
  * properties or a {@link SpringApplicationBuilder}). This is the same rule of precedence
  * as for anything else affecting the bootstrap process itself, e.g. setting
  * <code>spring.cloud.bootstrap.name</code> to something other than "bootstrap".
- * 
+ * <p>
+ * N.B. a config server can always be an "embedded" config client (using its own config
+ * repository as a property source) if you set
+ * <code>spring.cloud.config.server.bootstrap=true</code> in <code>bootstrap.yml</code>
+ * <code>bootstrap.yml</code>. This listener is only to prevent it from using HTTP to contact
+ * itself.
+ *
  * @author Dave Syer
  *
  */
 public class ConfigServerBootstrapApplicationListener implements
-		ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
+ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
 
 	public static final int DEFAULT_ORDER = Ordered.HIGHEST_PRECEDENCE + 4;
 
@@ -65,8 +71,8 @@ public class ConfigServerBootstrapApplicationListener implements
 		ConfigurableEnvironment environment = event.getEnvironment();
 		if (!environment.resolvePlaceholders("${spring.cloud.config.enabled:false}")
 				.equalsIgnoreCase("true")) {
-			if (!environment.getPropertySources().contains(propertySource.getName())) {
-				environment.getPropertySources().addLast(propertySource);
+			if (!environment.getPropertySources().contains(this.propertySource.getName())) {
+				environment.getPropertySources().addLast(this.propertySource);
 			}
 		}
 	}
