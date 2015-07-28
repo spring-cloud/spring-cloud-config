@@ -17,7 +17,56 @@ include::quickstart.adoc[]
 The Server provides an HTTP, resource-based API for external
 configuration (name-value pairs, or equivalent YAML content).  The
 server is easily embeddable in a Spring Boot application using the
-`@EnableConfigServer` annotation.
+`@EnableConfigServer` annotation. So this app is a config server:
+
+.ConfigServer.java
+[source,java]
+----
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigServer {
+  public static void main(String[] args) {
+    SpringApplication.run(ConfigServer.class, args);
+  }
+}
+----
+
+Like all Spring Boot apps it runs on port 8080 by default, but you
+can switch it to the conventional port 8888 in various ways. The
+easiest, which also sets a default configuration repository, 
+is by launching it with `spring.config.name=configserver` (there 
+is a `configserver.yml` in the Config Server jar). Another is
+to use your own `application.properties`, e.g.
+
+.application.properties
+[source,properties]
+----
+server.port: 8888
+spring.cloud.config.server.git.uri: file://${HOME}/config-repo
+----
+
+where `${HOME}/config-repo` is a git repository containing
+YAML and properties files.
+
+[TIP]
+====
+Here's a recipe for creating the git repository in the example 
+above:
+
+----
+$ cd $HOME
+$ mkdir config-repo
+$ cd config-repo
+$ git init .
+$ echo info.foo: bar > application.properties
+$ git add -A .
+$ git commit -m "Add application.properties"
+----
+====
+
+WARNING: using the local filesystem for your git repository is
+intended for testing only. Use a server to host your 
+configuration repositories in production.
 
 === Environment Repository
 
