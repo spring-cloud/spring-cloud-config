@@ -663,7 +663,78 @@ the config server URL.
 <p>The Server provides an HTTP, resource-based API for external
 configuration (name-value pairs, or equivalent YAML content).  The
 server is easily embeddable in a Spring Boot application using the
-<code>@EnableConfigServer</code> annotation.</p>
+<code>@EnableConfigServer</code> annotation. So this app is a config server:</p>
+</div>
+<div class="listingblock">
+<div class="title">ConfigServer.java</div>
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@SpringBootApplication
+@EnableConfigServer
+public class ConfigServer {
+  public static void main(String[] args) {
+    SpringApplication.run(ConfigServer.class, args);
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Like all Spring Boot apps it runs on port 8080 by default, but you
+can switch it to the conventional port 8888 in various ways. The
+easiest, which also sets a default configuration repository,
+is by launching it with <code>spring.config.name=configserver</code> (there
+is a <code>configserver.yml</code> in the Config Server jar). Another is
+to use your own <code>application.properties</code>, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="title">application.properties</div>
+<div class="content">
+<pre class="highlight"><code class="language-properties" data-lang="properties">server.port: 8888
+spring.cloud.config.server.git.uri: file://${HOME}/config-repo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where <code>${HOME}/config-repo</code> is a git repository containing
+YAML and properties files.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Here&#8217;s a recipe for creating the git repository in the example
+above:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ cd $HOME
+$ mkdir config-repo
+$ cd config-repo
+$ git init .
+$ echo info.foo: bar &gt; application.properties
+$ git add -A .
+$ git commit -m "Add application.properties"</pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+using the local filesystem for your git repository is
+intended for testing only. Use a server to host your
+configuration repositories in production.
+</td>
+</tr>
+</table>
 </div>
 <div class="sect2">
 <h3 id="_environment_repository">Environment Repository</h3>
@@ -1396,7 +1467,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-27 20:51:30 UTC
+Last updated 2015-07-28 06:45:53 UTC
 </div>
 </div>
 </body>
