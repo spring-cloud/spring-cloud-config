@@ -354,9 +354,9 @@ $ curl localhost:8888/decrypt -d 682bc583f4641835fa2db009355293665d2647dade3375c
 mysecret
 ----
 
-Take the encypted value and add the `{cipher}` prefix before you put
+Take the encrypted value and add the `{cipher}` prefix before you put
 it in the YAML or properties file, and before you commit and push it
-to a remote, potentially insecure store. The `/encypt` and `/decrypt` 
+to a remote, potentially insecure store. The `/encrypt` and `/decrypt`
 endpoints also both accept paths of the form `/*/{name}/{profiles}`
 which can be used to control cryptography per application (name)
 and profile when clients call into the main Environment resource.
@@ -376,7 +376,7 @@ $ spring decrypt --key foo 682bc583f4641835fa2db009355293665d2647dade3375c0ee201
 mysecret
 ----
 
-To use a key in a file (e.g. an RSA public key for encyption) prepend
+To use a key in a file (e.g. an RSA public key for encryption) prepend
 the key value with "@" and provide the file path, e.g.
 
 ----
