@@ -6,8 +6,6 @@
 
 include::intro.adoc[]
 
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/contributing-docs.adoc[]
-
 == Quick Start
 
 include::quickstart.adoc[]
