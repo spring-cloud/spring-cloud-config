@@ -39,6 +39,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -117,9 +118,18 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			args = new String[] { name, profile, label };
 			path = path + "/{label}";
 		}
-		ResponseEntity<Environment> response = restTemplate.exchange(uri + path,
-				HttpMethod.GET, new HttpEntity<Void>((Void) null),
-				Environment.class, args);
+		ResponseEntity<Environment> response = null;
+
+		try {
+			response = restTemplate.exchange(uri + path,
+					HttpMethod.GET, new HttpEntity<Void>((Void) null),
+					Environment.class, args);
+		} catch (HttpClientErrorException e) {
+			if(e.getStatusCode() != HttpStatus.NOT_FOUND ) {
+				throw e;
+			}
+		}
+
 		if (response==null || response.getStatusCode()!=HttpStatus.OK) {
 			return null;
 		}
