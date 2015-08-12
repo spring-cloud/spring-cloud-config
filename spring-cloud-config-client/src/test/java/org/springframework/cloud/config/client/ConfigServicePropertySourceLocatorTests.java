@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 
 import org.hamcrest.core.IsInstanceOf;
+import org.hamcrest.core.IsNull;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -106,34 +107,33 @@ public class ConfigServicePropertySourceLocatorTests {
 		assertNull(locator.locate(environment));
 	}
 
-//	@Test
-//	public void failFastWhenNotFound() throws Exception {
-//		ClientHttpRequestFactory requestFactory = Mockito
-//				.mock(ClientHttpRequestFactory.class);
-//		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-//		ClientHttpResponse response = Mockito.mock(ClientHttpResponse.class);
-//		Mockito.when(
-//				requestFactory.createRequest(Mockito.any(URI.class),
-//						Mockito.any(HttpMethod.class))).thenReturn(request);
-//		RestTemplate restTemplate = new RestTemplate(requestFactory);
-//		ConfigClientProperties defaults = new ConfigClientProperties(environment);
-//		defaults.setFailFast(true);
-//		locator = new ConfigServicePropertySourceLocator(defaults);
-//		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
-//		Mockito.when(request.execute()).thenReturn(response);
-//		HttpHeaders headers = new HttpHeaders();
-//		headers.setContentType(MediaType.APPLICATION_JSON);
-//		Mockito.when(response.getHeaders()).thenReturn(headers);
-//		Mockito.when(response.getStatusCode()).thenReturn(
-//				HttpStatus.NOT_FOUND);
-//		Mockito.when(response.getBody()).thenReturn(
-//				new ByteArrayInputStream("".getBytes()));
-//		locator.setRestTemplate(restTemplate);
-//		expected.expectCause(IsInstanceOf
-//				.<Throwable> instanceOf(HttpClientErrorException.class));
-//		expected.expectMessage("fail fast property is set");
-//		assertNull(locator.locate(environment));
-//	}
+	@Test
+	public void failFastWhenNotFound() throws Exception {
+		ClientHttpRequestFactory requestFactory = Mockito
+				.mock(ClientHttpRequestFactory.class);
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+		ClientHttpResponse response = Mockito.mock(ClientHttpResponse.class);
+		Mockito.when(
+				requestFactory.createRequest(Mockito.any(URI.class),
+						Mockito.any(HttpMethod.class))).thenReturn(request);
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
+		ConfigClientProperties defaults = new ConfigClientProperties(environment);
+		defaults.setFailFast(true);
+		locator = new ConfigServicePropertySourceLocator(defaults);
+		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
+		Mockito.when(request.execute()).thenReturn(response);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		Mockito.when(response.getHeaders()).thenReturn(headers);
+		Mockito.when(response.getStatusCode()).thenReturn(
+				HttpStatus.NOT_FOUND);
+		Mockito.when(response.getBody()).thenReturn(
+				new ByteArrayInputStream("".getBytes()));
+		locator.setRestTemplate(restTemplate);
+		expected.expectCause(IsNull.nullValue(Throwable.class));
+		expected.expectMessage("fail fast property is set");
+		assertNull(locator.locate(environment));
+	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
