@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 
 import org.hamcrest.core.IsInstanceOf;
+import org.hamcrest.core.IsNull;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -129,8 +130,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.when(response.getBody()).thenReturn(
 				new ByteArrayInputStream("".getBytes()));
 		locator.setRestTemplate(restTemplate);
-		expected.expectCause(IsInstanceOf
-				.<Throwable> instanceOf(HttpClientErrorException.class));
+		expected.expectCause(IsNull.nullValue(Throwable.class));
 		expected.expectMessage("fail fast property is set");
 		assertNull(locator.locate(environment));
 	}
