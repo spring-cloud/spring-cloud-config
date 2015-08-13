@@ -153,21 +153,26 @@ spring:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
           repos:
-            simple: https://github.com/pattern1/config-repo
+            simple: https://github.com/simple/config-repo
             special:
               pattern: pattern*,*pattern1*
-              uri: https://github.com/pattern2/config-repo
+              uri: https://github.com/special/config-repo
             local:
               pattern: local*
               uri: file:/home/configsvc/config-repo
 ----
 
-In the above example, if {application} does not match to any of the
+In the above example, if `{application}` does not match any of the
 patterns, it will use the default uri defined under
 "spring.cloud.config.server.git.uri". For the "simple" repository, the
-pattern is "simple" (i.e. it only matches one application).  The
-pattern format is a comma-separated list of application names with
-wildcards.
+pattern is "simple" (i.e. it only matches one application named "simple").
+The pattern format is a comma-separated list of application names with
+wildcards (a pattern beginning with a wildcard may need to be quoted).
+
+NOTE: the "one-liner" short cut used in the "simple" example above can
+only be used if the only property to be set is the URI. If you need to
+set anything else (credentials, pattern, etc.) you need to use the full
+form.
 
 Every repository can also optionally store config files in
 sub-directories, and patterns to search for those directories can be
