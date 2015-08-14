@@ -67,12 +67,12 @@ public class ConfigClientAutoConfiguration {
 	@ConfigurationProperties("health.config")
 	public static class Health {
 		/**
-		 * Flag to inidicate that the config server health indicator should be installed. 
+		 * Flag to indicate that the config server health indicator should be installed.
 		 */
 		boolean enabled;
 
 		public boolean isEnabled() {
-			return enabled;
+			return this.enabled;
 		}
 
 		public void setEnabled(boolean enabled) {
