@@ -338,6 +338,14 @@ spring:
     password: '{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'
 ----
 
+Encrypted values in a .properties file must not be wrapped in quotes, otherwise the value will not be decrypted:
+
+.application.properties
+----
+spring.datasource.username: dbuser
+spring.datasource.password: {cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ
+----
+
 You can safely push this plain text to a shared git repository and the
 secret password is protected.
 
