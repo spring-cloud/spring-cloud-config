@@ -69,6 +69,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	private boolean initialized;
 
+	/**
+	 * Flag to indicate that the repository should be cloned on startup (not on demand).
+	 * Generally leads to slower startup but faster first query.
+	 */
 	private boolean cloneOnStart = false;
 
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
@@ -186,9 +190,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	}
 
 	private boolean shouldPull(Git git, Ref ref) throws GitAPIException {
-		return git.status().call().isClean()
-				&& ref != null
-				&& git.getRepository().getConfig().getString("remote", "origin", "url") != null;
+		return git.status().call().isClean() && ref != null && git.getRepository()
+				.getConfig().getString("remote", "origin", "url") != null;
 	}
 
 	private boolean shouldTrack(Git git, String label) throws GitAPIException {
@@ -208,13 +211,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 			pull.call();
 		}
 		catch (Exception e) {
-			logger.warn("Could not pull remote for "
-					+ label
-					+ " (current ref="
-					+ ref
-					+ "), remote: "
-					+ git.getRepository().getConfig()
-					.getString("remote", "origin", "url"));
+			logger.warn("Could not pull remote for " + label + " (current ref=" + ref
+					+ "), remote: " + git.getRepository().getConfig().getString("remote",
+							"origin", "url"));
 		}
 	}
 
@@ -307,8 +306,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	}
 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
-		cmd.setCredentialsProvider(new UsernamePasswordCredentialsProvider(getUsername(),
-				getPassword()));
+		cmd.setCredentialsProvider(
+				new UsernamePasswordCredentialsProvider(getUsername(), getPassword()));
 	}
 
 	private void setTimeout(TransportCommand<?, ?> pull) {
