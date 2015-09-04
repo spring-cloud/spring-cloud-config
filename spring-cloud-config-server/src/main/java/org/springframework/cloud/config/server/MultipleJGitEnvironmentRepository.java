@@ -34,7 +34,7 @@ import org.springframework.util.StringUtils;
  * that matches on the application name (or even a list of patterns). Each sub-repository
  * additionally can have its own search paths (subdirectories inside the top level of the
  * repository).
- * 
+ *
  * @author Andy Chan (iceycake)
  * @author Dave Syer
  *
@@ -51,14 +51,17 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		super.afterPropertiesSet();
-		for (String name : repos.keySet()) {
-			PatternMatchingJGitEnvironmentRepository repo = repos.get(name);
+		for (String name : this.repos.keySet()) {
+			PatternMatchingJGitEnvironmentRepository repo = this.repos.get(name);
 			repo.setEnvironment(getEnvironment());
 			if (!StringUtils.hasText(repo.getName())) {
 				repo.setName(name);
 			}
 			if (repo.getPattern() == null || repo.getPattern().length == 0) {
 				repo.setPattern(new String[] { name });
+			}
+			if (getTimeout() != 0 && repo.getTimeout() == 0) {
+				repo.setTimeout(getTimeout());
 			}
 			repo.afterPropertiesSet();
 		}
@@ -74,7 +77,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-		for (PatternMatchingJGitEnvironmentRepository repository : repos.values()) {
+		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
 			Environment source = repository.findOne(application, profile, label);
 			if (source != null) {
 				return source;
@@ -84,8 +87,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		return super.findOne(application, profile, label);
 	}
 
-	public static class PatternMatchingJGitEnvironmentRepository extends
-			JGitEnvironmentRepository {
+	public static class PatternMatchingJGitEnvironmentRepository
+	extends JGitEnvironmentRepository {
 
 		private String[] pattern;
 		private String name;
@@ -98,15 +101,15 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			this();
 			setUri(uri);
 		}
-		
+
 		@Override
 		public Environment findOne(String application, String profile, String label) {
 
-			if (pattern == null || pattern.length == 0) {
+			if (this.pattern == null || this.pattern.length == 0) {
 				return null;
 			}
 
-			if (PatternMatchUtils.simpleMatch(pattern, application)) {
+			if (PatternMatchUtils.simpleMatch(this.pattern, application)) {
 				return super.findOne(application, profile, label);
 			}
 
@@ -115,7 +118,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 
 		public String getName() {
-			return name;
+			return this.name;
 		}
 
 		public void setName(String name) {
@@ -123,7 +126,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 
 		public String[] getPattern() {
-			return pattern;
+			return this.pattern;
 		}
 
 		public void setPattern(String[] pattern) {

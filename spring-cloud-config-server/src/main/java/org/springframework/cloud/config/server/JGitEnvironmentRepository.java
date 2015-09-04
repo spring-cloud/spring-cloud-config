@@ -85,6 +85,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 		this.cloneOnStart = cloneOnStart;
 	}
 
+	public int getTimeout() {
+		return this.timeout;
+	}
+
 	public void setTimeout(int timeout) {
 		this.timeout = timeout;
 	}
