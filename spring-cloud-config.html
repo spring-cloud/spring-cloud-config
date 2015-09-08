@@ -1087,6 +1087,16 @@ instance:</p>
 </div>
 </div>
 <div class="paragraph">
+<p>Encrypted values in a .properties file must not be wrapped in quotes, otherwise the value will not be decrypted:</p>
+</div>
+<div class="listingblock">
+<div class="title">application.properties</div>
+<div class="content">
+<pre>spring.datasource.username: dbuser
+spring.datasource.password: {cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ</pre>
+</div>
+</div>
+<div class="paragraph">
 <p>You can safely push this plain text to a shared git repository and the
 secret password is protected.</p>
 </div>
@@ -1479,7 +1489,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-09-05 09:03:13 UTC
+Last updated 2015-09-08 08:37:29 UTC
 </div>
 </div>
 </body>
