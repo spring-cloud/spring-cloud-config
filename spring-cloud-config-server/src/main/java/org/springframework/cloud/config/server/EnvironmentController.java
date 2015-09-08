@@ -76,7 +76,6 @@ public class EnvironmentController {
 
 	public EnvironmentController(EnvironmentRepository repository,
 			EnvironmentEncryptor environmentEncryptor) {
-		super();
 		this.repository = repository;
 		this.defaultLabel = repository.getDefaultLabel();
 		this.environmentEncryptor = environmentEncryptor;
@@ -85,7 +84,7 @@ public class EnvironmentController {
 	/**
 	 * Flag to indicate that YAML documents which are not a map should be stripped of the
 	 * "document" prefix that is added by Spring (to facilitate conversion to Properties).
-	 * 
+	 *
 	 * @param stripDocument the flag to set
 	 */
 	public void setStripDocumentFromYaml(boolean stripDocument) {
@@ -127,10 +126,11 @@ public class EnvironmentController {
 
 	@RequestMapping("/{label}/{name}-{profiles}.properties")
 	public ResponseEntity<String> labelledProperties(@PathVariable String name,
-			@PathVariable String profiles, @PathVariable String label) throws IOException {
+			@PathVariable String profiles, @PathVariable String label)
+					throws IOException {
 		validateNameAndProfiles(name, profiles);
-		Map<String, Object> properties = convertToProperties(labelled(name, profiles,
-				label));
+		Map<String, Object> properties = convertToProperties(
+				labelled(name, profiles, label));
 		return getSuccess(getPropertiesString(properties));
 	}
 
@@ -167,7 +167,8 @@ public class EnvironmentController {
 		return labelledYaml(name, profiles, this.defaultLabel);
 	}
 
-	@RequestMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
+	@RequestMapping({ "/{label}/{name}-{profiles}.yml",
+			"/{label}/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> labelledYaml(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label) throws Exception {
 		validateNameAndProfiles(name, profiles);
@@ -301,7 +302,7 @@ public class EnvironmentController {
 	}
 
 	private void postProcessProperties(Map<String, Object> propertiesMap) {
-		for (Iterator<String> iter = propertiesMap.keySet().iterator(); iter.hasNext(); ) {
+		for (Iterator<String> iter = propertiesMap.keySet().iterator(); iter.hasNext();) {
 			String key = iter.next();
 			if (key.equals("spring.profiles")) {
 				iter.remove();

@@ -489,7 +489,7 @@ TIP: the `{name:value}` prefixes can also be added to plaintext posted
 to the `/encrypt` endpoint, if you want to let the Config Server
 handle all encryption as well as decryption.
 
-=== Embedding the Config Server
+== Embedding the Config Server
 
 The Config Server runs best as a standalone application, but if you
 need to you can embed it in another application. Just use the
@@ -504,6 +504,41 @@ a flag to indicate that the server should configure itself from its
 own remote repository. The flag is off by default because it can delay
 startup, but when embedded in another application it makes sense to
 initialize the same way as any other application.
+
+== Push Notifications and Spring Cloud Bus
+
+Many source code repository providers (like Github or Gitlab for
+instance) will notify you of changes in a repository through a
+webhook. You can configure the webhook via the provider's user
+interface as a URL and a set of events in which you are
+interested. For instance
+https://developer.github.com/v3/activity/events/types/#pushevent[Github]
+will POST to the webhook with a JSON body containing a list of
+commits, and a header "X-Github-Event" equal to "push". If you add a
+dependency on the `spring-cloud-config-monitor` library and activate
+the Spring Cloud Bus in your Config Server, then a "/monitor" endpoint
+is enabled.
+
+When the webhook is activated the Config Server will send a
+`RefreshRemoteApplicationEvent` targeted at the applications it thinks
+might have changed. The change detection can be strategized, but by
+default it just looks for changes in files that match the application
+name (e.g. "foo.properties" is targeted at the "foo" application, and
+"application.properties" is targeted at all applications). The strategy if you want to override the behaviour is `PropertyPathNotificationExtractor` which accepts the request headers and body as parameters and returns a list of file paths that changed.
+
+The default configuration works out of the box with Github or
+Gitlab. In addition to the JSON notifications from Github and Gitlab
+you can trigger a change notification by POSTing to "/monitor" with a
+form-encoded body parameters `path={name}`. This will broadcast to
+applications matching the "{name}" pattern (can contain wildcards).
+
+NOTE: the `RefreshRemoteApplicationEvent` will only be transmitted if
+the `spring-cloud-bus` is activated in the Config Server and in the
+client application.
+
+NOTE: the default configuration also detects filesystem changes in
+local git repositories (the webhook is not used in that case but as
+soon as you edit a config file a refresh will be broadcast).
 
 == Spring Cloud Config Client
 
