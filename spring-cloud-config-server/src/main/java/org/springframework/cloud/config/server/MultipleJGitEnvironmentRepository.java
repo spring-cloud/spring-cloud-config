@@ -87,8 +87,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		return super.findOne(application, profile, label);
 	}
 
-	public static class PatternMatchingJGitEnvironmentRepository
-	extends JGitEnvironmentRepository {
+	public static class PatternMatchingJGitEnvironmentRepository extends
+			JGitEnvironmentRepository {
 
 		private String[] pattern;
 		private String name;
