@@ -46,7 +46,7 @@ public class CompositePropertyPathNotificationExtractorTests {
 	public void githubSample() throws Exception {
 		// See https://developer.github.com/v3/activity/events/types/#pushevent
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("gitpush.json").getInputStream(),
+				new ClassPathResource("github.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Github-Event", "push");
