@@ -19,6 +19,7 @@ package org.springframework.cloud.config.monitor;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -79,7 +80,7 @@ public class PropertyPathEndpoint
 		PropertyPathNotification notification = this.extractor.extract(headers, request);
 		if (notification != null) {
 
-			Set<String> services = new HashSet<>();
+			Set<String> services = new LinkedHashSet<>();
 
 			for (String path : notification.getPaths()) {
 				services.addAll(guessServiceName(path));
