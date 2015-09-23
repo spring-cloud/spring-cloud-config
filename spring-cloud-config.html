@@ -429,9 +429,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_key_management">Key Management</a></li>
 <li><a href="#_creating_a_key_store_for_testing">Creating a Key Store for Testing</a></li>
 <li><a href="#_using_multiple_keys_and_key_rotation">Using Multiple Keys and Key Rotation</a></li>
-<li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
 </ul>
 </li>
+<li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
+<li><a href="#_push_notifications_and_spring_cloud_bus">Push Notifications and Spring Cloud Bus</a></li>
 <li><a href="#_spring_cloud_config_client">Spring Cloud Config Client</a>
 <ul class="sectlevel2">
 <li><a href="#config-first-bootstrap">Config First Bootstrap</a></li>
@@ -1294,8 +1295,11 @@ handle all encryption as well as decryption.
 </table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_embedding_the_config_server">Embedding the Config Server</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_embedding_the_config_server">Embedding the Config Server</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The Config Server runs best as a standalone application, but if you
 need to you can embed it in another application. Just use the
@@ -1311,6 +1315,66 @@ own remote repository. The flag is off by default because it can delay
 startup, but when embedded in another application it makes sense to
 initialize the same way as any other application.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_push_notifications_and_spring_cloud_bus">Push Notifications and Spring Cloud Bus</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Many source code repository providers (like Github or Gitlab for
+instance) will notify you of changes in a repository through a
+webhook. You can configure the webhook via the provider&#8217;s user
+interface as a URL and a set of events in which you are
+interested. For instance
+<a href="https://developer.github.com/v3/activity/events/types/#pushevent">Github</a>
+will POST to the webhook with a JSON body containing a list of
+commits, and a header "X-Github-Event" equal to "push". If you add a
+dependency on the <code>spring-cloud-config-monitor</code> library and activate
+the Spring Cloud Bus in your Config Server, then a "/monitor" endpoint
+is enabled.</p>
+</div>
+<div class="paragraph">
+<p>When the webhook is activated the Config Server will send a
+<code>RefreshRemoteApplicationEvent</code> targeted at the applications it thinks
+might have changed. The change detection can be strategized, but by
+default it just looks for changes in files that match the application
+name (e.g. "foo.properties" is targeted at the "foo" application, and
+"application.properties" is targeted at all applications). The strategy if you want to override the behaviour is <code>PropertyPathNotificationExtractor</code> which accepts the request headers and body as parameters and returns a list of file paths that changed.</p>
+</div>
+<div class="paragraph">
+<p>The default configuration works out of the box with Github or
+Gitlab. In addition to the JSON notifications from Github and Gitlab
+you can trigger a change notification by POSTing to "/monitor" with a
+form-encoded body parameters <code>path={name}</code>. This will broadcast to
+applications matching the "{name}" pattern (can contain wildcards).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the <code>RefreshRemoteApplicationEvent</code> will only be transmitted if
+the <code>spring-cloud-bus</code> is activated in the Config Server and in the
+client application.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the default configuration also detects filesystem changes in
+local git repositories (the webhook is not used in that case but as
+soon as you edit a config file a refresh will be broadcast).
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -1489,7 +1553,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-09-18 14:23:16 UTC
+Last updated 2015-09-23 07:58:39 UTC
 </div>
 </div>
 </body>
