@@ -64,12 +64,13 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(
 			org.springframework.core.env.Environment environment) {
-		ConfigClientProperties client = defaults.override(environment);
+		ConfigClientProperties client = this.defaults.override(environment);
 		CompositePropertySource composite = new CompositePropertySource("configService");
 		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(client)
 				: this.restTemplate;
 		Exception error = null;
 		String errorBody = null;
+		logger.info("Fetching config from server at: " + client.getRawUri());
 		try {
 			String[] labels = new String[]{""};
 			if (StringUtils.hasText(client.getLabel())) {
@@ -790,7 +791,7 @@ final class Base64 {
 				// There's a bad input character in the Base64 stream.
 				throw new InvalidBase64CharacterException(String.format(
 						"Bad Base64 input character decimal %d in array position %d",
-						((int) source[i]) & 0xFF, i));
+						(source[i]) & 0xFF, i));
 			}
 		}
 
