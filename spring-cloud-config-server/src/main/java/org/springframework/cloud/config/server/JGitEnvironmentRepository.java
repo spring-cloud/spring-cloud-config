@@ -27,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
-import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
@@ -63,9 +62,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	private static final String FILE_URI_PREFIX = "file:";
 
 	/**
-	 * Timeout (in seconds) for obtaining HTTP or SSH connection (if applicable)
+	 * Timeout (in seconds) for obtaining HTTP or SSH connection (if applicable). Default 5 seconds.
 	 */
-	private int timeout = 0;
+	private int timeout = 5;
 
 	private boolean initialized;
 
@@ -243,7 +242,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 
 	private Git openGitRepository() throws IOException {
 		Git git = this.gitFactory.getGitByOpen(getWorkingDirectory());
-		tryFetch(git);
 		return git;
 	}
 
@@ -266,20 +264,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 			setCredentialsProvider(clone);
 		}
 		return clone.call();
-	}
-
-	private void tryFetch(Git git) {
-		try {
-			FetchCommand fetch = git.fetch();
-			setTimeout(fetch);
-			if (hasText(getUsername())) {
-				setCredentialsProvider(fetch);
-			}
-			fetch.call();
-		}
-		catch (Exception e) {
-			logger.warn("Remote repository not available");
-		}
 	}
 
 	private void deleteBaseDirIfExists() {

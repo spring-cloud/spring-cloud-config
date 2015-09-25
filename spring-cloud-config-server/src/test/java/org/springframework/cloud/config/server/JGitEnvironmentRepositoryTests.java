@@ -16,8 +16,14 @@
 
 package org.springframework.cloud.config.server;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +34,6 @@ import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.ConfigServerTestUtils;
-import org.springframework.cloud.config.server.JGitEnvironmentRepository;
 import org.springframework.core.env.StandardEnvironment;
 
 /**
@@ -40,134 +44,133 @@ public class JGitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
 	private JGitEnvironmentRepository repository = new JGitEnvironmentRepository(
-			environment);
+			this.environment);
 
 	private File basedir = new File("target/config");
 
 	@Before
 	public void init() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
-		repository.setUri(uri);
-		if (basedir.exists()) {
-			FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
+		this.repository.setUri(uri);
+		if (this.basedir.exists()) {
+			FileUtils.delete(this.basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 		}
 	}
 
 	@Test
 	public void vanilla() {
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties", environment
+		assertEquals(this.repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
 	}
 
 	@Test
 	public void nested() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
-		repository.setUri(uri);
-		repository.setSearchPaths(new String[] {"sub"});
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		this.repository.setUri(uri);
+		this.repository.setSearchPaths(new String[] {"sub"});
+		this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/sub/application.yml", environment
+		assertEquals(this.repository.getUri() + "/sub/application.yml", environment
 				.getPropertySources().get(0).getName());
 	}
 
 	@Test
 	public void nestedPattern() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
-		repository.setUri(uri);
-		repository.setSearchPaths(new String[] {"sub*"});
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		this.repository.setUri(uri);
+		this.repository.setSearchPaths(new String[] {"sub*"});
+		this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/sub/application.yml", environment
+		assertEquals(this.repository.getUri() + "/sub/application.yml", environment
 				.getPropertySources().get(0).getName());
 	}
 
 	@Test
 	public void branch() {
-		repository.setBasedir(basedir);
-		Environment environment = repository.findOne("bar", "staging", "raw");
+		this.repository.setBasedir(this.basedir);
+		Environment environment = this.repository.findOne("bar", "staging", "raw");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties", environment
+		assertEquals(this.repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
 	}
 
 	@Test
 	public void tag() {
-		repository.setBasedir(basedir);
-		Environment environment = repository.findOne("bar", "staging", "foo");
+		this.repository.setBasedir(this.basedir);
+		Environment environment = this.repository.findOne("bar", "staging", "foo");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties", environment
+		assertEquals(this.repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
 	}
 
 	@Test
 	public void basedir() {
-		repository.setBasedir(basedir);
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		this.repository.setBasedir(this.basedir);
+		this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties", environment
+		assertEquals(this.repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
 	}
 
 	@Test
 	public void basedirExists() throws Exception {
-		assertTrue(basedir.mkdirs());
-		assertTrue(new File(basedir, ".nothing").createNewFile());
-		repository.setBasedir(basedir);
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		assertTrue(this.basedir.mkdirs());
+		assertTrue(new File(this.basedir, ".nothing").createNewFile());
+		this.repository.setBasedir(this.basedir);
+		this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties", environment
+		assertEquals(this.repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
 	}
-	
+
 	@Test
 	public void uriWithHostOnly() throws Exception {
-		repository.setUri("git://localhost");
-		assertEquals("git://localhost/", repository.getUri());
+		this.repository.setUri("git://localhost");
+		assertEquals("git://localhost/", this.repository.getUri());
 	}
 
 	@Test
 	public void uriWithHostAndPath() throws Exception {
-		repository.setUri("git://localhost/foo/");
-		assertEquals("git://localhost/foo", repository.getUri());
+		this.repository.setUri("git://localhost/foo/");
+		assertEquals("git://localhost/foo", this.repository.getUri());
 	}
-	
+
 	@Test
-	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchCalled() 
+	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchCalled()
 			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
-		
+
 		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-				environment);
+				this.environment);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 		verify(mockCloneCommand, times(1)).call();
-		verify(mockGit, times(1)).fetch();
 	}
 
 	@Test
-	public void afterPropertiesSet_CloneOnStartFalse_CloneAndFetchNotCalled() 
+	public void afterPropertiesSet_CloneOnStartFalse_CloneAndFetchNotCalled()
 			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
-		
+
 		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-				environment);
+				this.environment);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.afterPropertiesSet();
@@ -176,16 +179,16 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void afterPropertiesSet_CloneOnStartTrueWithFileURL_CloneAndFetchNotCalled() 
+	public void afterPropertiesSet_CloneOnStartTrueWithFileURL_CloneAndFetchNotCalled()
 			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
-		
+
 		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-				environment);
+				this.environment);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("file://somefilesystem/somegitrepo");
 		envRepository.setCloneOnStart(true);
@@ -195,21 +198,23 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	class MockGitFactory extends JGitEnvironmentRepository.JGitFactory {
-		
+
 		private Git mockGit;
 		private CloneCommand mockCloneCommand;
-		
+
 		public MockGitFactory (Git mockGit, CloneCommand mockCloneCommand) {
 			this.mockGit = mockGit;
 			this.mockCloneCommand = mockCloneCommand;
 		}
-		
+
+		@Override
 		public Git getGitByOpen(File file) throws IOException {
-			return mockGit;
+			return this.mockGit;
 		}
 
+		@Override
 		public CloneCommand getCloneCommandByCloneRepository() {
-			return mockCloneCommand;
+			return this.mockCloneCommand;
 		}
 	}
 }
