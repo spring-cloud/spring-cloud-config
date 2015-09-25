@@ -15,12 +15,13 @@
  */
 package org.springframework.cloud.config.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.NativeEnvironmentRepository;
-import org.springframework.core.env.StandardEnvironment;
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * @author Dave Syer
@@ -28,40 +29,47 @@ import org.springframework.core.env.StandardEnvironment;
  */
 public class NativeEnvironmentRepositoryTests {
 
-	private NativeEnvironmentRepository repository = new NativeEnvironmentRepository(
-			new StandardEnvironment());
+	private NativeEnvironmentRepository repository;
+
+	@Before
+	public void init() {
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(
+				NativeEnvironmentRepositoryTests.class).web(false).run();
+		this.repository = new NativeEnvironmentRepository(context.getEnvironment());
+		context.close();
+	}
 
 	@Test
 	public void vanilla() {
-		Environment environment = repository.findOne("foo", "development", "master");
+		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertEquals(2, environment.getPropertySources().size());
 	}
 
 	@Test
 	public void ignoresExistingProfile() {
 		System.setProperty("spring.profiles.active", "cloud");
-		Environment environment = repository.findOne("foo", "main", "master");
+		Environment environment = this.repository.findOne("foo", "main", "master");
 		assertEquals(1, environment.getPropertySources().size());
 	}
 
 	@Test
 	public void prefixed() {
-		repository.setSearchLocations("classpath:/test");
-		Environment environment = repository.findOne("foo", "development", "master");
+		this.repository.setSearchLocations("classpath:/test");
+		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertEquals(2, environment.getPropertySources().size());
 	}
 
 	@Test
 	public void prefixedWithFile() {
-		repository.setSearchLocations("file:./src/test/resources/test");
-		Environment environment = repository.findOne("foo", "development", "master");
+		this.repository.setSearchLocations("file:./src/test/resources/test");
+		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertEquals(2, environment.getPropertySources().size());
 	}
 
 	@Test
 	public void labelled() {
-		repository.setSearchLocations("classpath:/test");
-		Environment environment = repository.findOne("foo", "development", "dev");
+		this.repository.setSearchLocations("classpath:/test");
+		Environment environment = this.repository.findOne("foo", "development", "dev");
 		assertEquals(3, environment.getPropertySources().size());
 		// position 1 because it has higher precendence than anything except the
 		// foo-development.properties
