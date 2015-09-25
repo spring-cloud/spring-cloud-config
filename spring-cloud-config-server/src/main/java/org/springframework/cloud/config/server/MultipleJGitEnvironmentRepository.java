@@ -16,7 +16,11 @@
 
 package org.springframework.cloud.config.server;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -87,10 +91,10 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		return super.findOne(application, profile, label);
 	}
 
-	public static class PatternMatchingJGitEnvironmentRepository extends
-			JGitEnvironmentRepository {
+	public static class PatternMatchingJGitEnvironmentRepository
+			extends JGitEnvironmentRepository {
 
-		private String[] pattern;
+		private String[] pattern = new String[0];
 		private String name;
 
 		public PatternMatchingJGitEnvironmentRepository() {
@@ -109,7 +113,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 				return null;
 			}
 
-			if (PatternMatchUtils.simpleMatch(this.pattern, application)) {
+			if (PatternMatchUtils.simpleMatch(this.pattern,
+					application + "/" + profile)) {
 				return super.findOne(application, profile, label);
 			}
 
@@ -130,7 +135,27 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 
 		public void setPattern(String[] pattern) {
-			this.pattern = pattern;
+			Collection<String> patterns = new ArrayList<>();
+			List<String> otherProfiles = new ArrayList<>();
+			for (String p : pattern) {
+				if (p != null) {
+					if (!p.contains("/")) {
+						// Match any profile
+						patterns.add(p + "/*");
+					}
+					if (!p.endsWith("*")) {
+						// If user supplies only one profile, allow others
+						otherProfiles.add(p + ",*");
+					}
+				}
+				patterns.add(p);
+			}
+			patterns.addAll(otherProfiles);
+			if (!patterns.contains(null)) {
+				// Make sure they are unique
+				patterns = new LinkedHashSet<>(patterns);
+			}
+			this.pattern = patterns.toArray(new String[0]);
 		}
 
 	}
