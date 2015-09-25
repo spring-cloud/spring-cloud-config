@@ -46,7 +46,7 @@ public class GithubPropertyPathNotificationExtractorTests {
 				new ClassPathResource("github.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
-		this.headers.set("X-Github-Event", "push");
+		this.headers.set("X-Github-Event".toLowerCase(), "push");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNotNull(extracted);
 		assertEquals("README.md", extracted.getPaths()[0]);
@@ -58,7 +58,7 @@ public class GithubPropertyPathNotificationExtractorTests {
 				new ClassPathResource("github.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
-		this.headers.set("X-Github-Event", "issues");
+		this.headers.set("X-Github-Event".toLowerCase(), "issues");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNull(extracted);
 	}
@@ -69,7 +69,7 @@ public class GithubPropertyPathNotificationExtractorTests {
 				new ClassPathResource("gitlab.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
-		this.headers.set("X-Github-Event", "push");
+		this.headers.set("X-Github-Event".toLowerCase(), "push");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNull(extracted);
 	}

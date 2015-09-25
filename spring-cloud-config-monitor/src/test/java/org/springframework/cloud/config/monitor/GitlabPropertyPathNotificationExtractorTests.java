@@ -46,7 +46,7 @@ public class GitlabPropertyPathNotificationExtractorTests {
 				new ClassPathResource("gitlab.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
-		this.headers.set("X-Gitlab-Event", "Push Event");
+		this.headers.set("X-Gitlab-Event".toLowerCase(), "Push Event");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNotNull(extracted);
 		assertEquals("application.yml", extracted.getPaths()[0]);
