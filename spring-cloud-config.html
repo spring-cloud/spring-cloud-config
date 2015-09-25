@@ -826,7 +826,10 @@ them from the shell with quotes '').</p>
 </div>
 <div class="paragraph">
 <p>Spring Cloud Config Server supports a single or multiple git
-repositories:</p>
+repositories with pattern matching on the application and profile
+name. The pattern format is a comma-separated list of
+<code>{application}/{profile}</code> names with wildcards (where a pattern
+beginning with a wildcard may need to be quoted). Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -839,7 +842,7 @@ repositories:</p>
           repos:
             simple: https://github.com/simple/config-repo
             special:
-              pattern: pattern*,*pattern1*
+              pattern: special*/dev*,*special*/dev*
               uri: https://github.com/special/config-repo
             local:
               pattern: local*
@@ -847,12 +850,14 @@ repositories:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>In the above example, if <code>{application}</code> does not match any of the
-patterns, it will use the default uri defined under
-"spring.cloud.config.server.git.uri". For the "simple" repository, the
-pattern is "simple" (i.e. it only matches one application named "simple").
-The pattern format is a comma-separated list of application names with
-wildcards (a pattern beginning with a wildcard may need to be quoted).</p>
+<p>If <code>{application}/{profile}</code> does not match any of the patterns, it
+will use the default uri defined under
+"spring.cloud.config.server.git.uri". In the above example, for the
+"simple" repository, the pattern is <code>simple/*</code> (i.e. it only matches
+one application named "simple" in all profiles). The "local"
+repository matches all application names beginning with "local" in all
+profiles (the <code>/*</code> suffix is added automatically to any pattern that
+doesn&#8217;t have a profile matcher).</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -865,6 +870,50 @@ the "one-liner" short cut used in the "simple" example above can
 only be used if the only property to be set is the URI. If you need to
 set anything else (credentials, pattern, etc.) you need to use the full
 form.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <code>pattern</code> property in the repo is actually an array, so you can
+use a YAML array (or <code>[0]</code>, <code>[1]</code>, etc. suffixes in properties files)
+to bind to multiple patterns. You may need to do this if you are going
+to run apps with multiple profiles. Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          repos:
+            development:
+              pattern:
+                - */development
+                - */staging
+              uri: https://github.com/development/config-repo
+            staging:
+              pattern:
+                - */qa
+                - */production
+              uri: https://github.com/staging/config-repo</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Spring Cloud will guess that a pattern containing a profile that
+doesn&#8217;t end in <code>*</code> implies that you actually want to match a list of
+profiles starting with this pattern (so <code>*/staging</code> is a shortcut for
+<code>["*/staging", "*/staging,*"]</code>). This is common where you need to run
+apps in the "development" profile locally but also the "cloud" profile
+remotely, for instance.
 </td>
 </tr>
 </table>
@@ -1553,7 +1602,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-09-25 08:27:57 UTC
+Last updated 2015-09-25 09:55:43 UTC
 </div>
 </div>
 </body>
