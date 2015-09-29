@@ -22,8 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
@@ -40,6 +38,7 @@ import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
@@ -54,9 +53,7 @@ import com.jcraft.jsch.Session;
  * @author Dave Syer
  * @author Roy Clarkson
  */
-public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository {
-
-	private static Log logger = LogFactory.getLog(JGitEnvironmentRepository.class);
+public class JGitEnvironmentRepository extends AbstractScmAccessor implements EnvironmentRepository, InitializingBean  {
 
 	private static final String DEFAULT_LABEL = "master";
 	private static final String FILE_URI_PREFIX = "file:";
@@ -73,6 +70,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 	 * Generally leads to slower startup but faster first query.
 	 */
 	private boolean cloneOnStart = false;
+
+	private EnvironmentCleaner cleaner = new EnvironmentCleaner();
 
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
@@ -133,7 +132,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 				}
 			}
 			catch (Exception e) {
-				logger.warn("Could not close git repository", e);
+				this.logger.warn("Could not close git repository", e);
 			}
 		}
 	}
@@ -173,7 +172,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 		environment.setSearchLocations(getSearchLocations(getWorkingDirectory()));
 		Environment result = environment.findOne(application, profile, "");
 		result.setLabel(label);
-		return clean(result);
+		return this.cleaner.clean(result, getWorkingDirectory().toURI().toString(), getUri());
 	}
 
 	private Ref checkout(Git git, String label) throws GitAPIException {
@@ -210,7 +209,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository 
 			pull.call();
 		}
 		catch (Exception e) {
-			logger.warn("Could not pull remote for " + label + " (current ref=" + ref
+			this.logger.warn("Could not pull remote for " + label + " (current ref=" + ref
 					+ "), remote: " + git.getRepository().getConfig().getString("remote",
 							"origin", "url"));
 		}
