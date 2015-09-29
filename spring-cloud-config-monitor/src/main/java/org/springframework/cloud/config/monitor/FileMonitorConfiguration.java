@@ -134,6 +134,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 		if (!this.running) {
 			this.directory = getFileRepo();
 			if (this.directory != null && !this.directory.isEmpty()) {
+				log.info("Monitoring for local config changes: " + this.directory);
 				try {
 					this.watcher = FileSystems.getDefault().newWatchService();
 					for (Path path : this.directory) {
@@ -143,6 +144,9 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				catch (IOException e) {
 				}
 			}
+			else {
+				log.info("Not monitoring for local config changes");
+			}
 			this.running = true;
 		}
 	}
@@ -150,11 +154,14 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	@Override
 	public synchronized void stop() {
 		if (this.running) {
-			try {
-				this.watcher.close();
-			}
-			catch (IOException e) {
-				log.error("Failed to close watcher for " + this.directory.toString(), e);
+			if (this.watcher != null) {
+				try {
+					this.watcher.close();
+				}
+				catch (IOException e) {
+					log.error("Failed to close watcher for " + this.directory.toString(),
+							e);
+				}
 			}
 			this.running = false;
 		}
@@ -205,8 +212,11 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	}
 
 	private Set<File> filesFromEvents() {
-		WatchKey key = this.watcher.poll();
 		Set<File> files = new LinkedHashSet<File>();
+		if (this.watcher == null) {
+			return files;
+		}
+		WatchKey key = this.watcher.poll();
 		while (key != null) {
 			for (WatchEvent<?> event : key.pollEvents()) {
 				if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE
