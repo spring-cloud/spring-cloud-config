@@ -31,8 +31,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -75,7 +75,7 @@ public class PropertyPathEndpoint
 	}
 
 	@RequestMapping(method = RequestMethod.POST)
-	public Set<String> notifyByPath(@RequestHeader MultiValueMap<String, String> headers,
+	public Set<String> notifyByPath(@RequestHeader HttpHeaders headers,
 			@RequestBody Map<String, Object> request) {
 		PropertyPathNotification notification = this.extractor.extract(headers, request);
 		if (notification != null) {
@@ -100,7 +100,7 @@ public class PropertyPathEndpoint
 	}
 
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-	public Set<String> notifyByForm(@RequestHeader MultiValueMap<String, String> headers, @RequestParam("path") List<String> request) {
+	public Set<String> notifyByForm(@RequestHeader HttpHeaders headers, @RequestParam("path") List<String> request) {
 		Map<String, Object> map = new HashMap<>();
 		String key = "path";
 		map.put(key, request);

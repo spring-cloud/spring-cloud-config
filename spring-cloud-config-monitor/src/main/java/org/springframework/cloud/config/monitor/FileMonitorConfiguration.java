@@ -41,9 +41,9 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.PatternMatchUtils;
 
 import lombok.extern.apachecommons.CommonsLog;
@@ -176,9 +176,8 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	@Scheduled(fixedRateString = "${spring.cloud.config.server.monitor.fixedDelay:5000}")
 	public void poll() {
 		for (File file : filesFromEvents()) {
-			this.endpoint.notifyByPath(new LinkedMultiValueMap<String, String>(),
-					Collections.<String, Object> singletonMap("path",
-							file.getAbsolutePath()));
+			this.endpoint.notifyByPath(new HttpHeaders(), Collections
+					.<String, Object> singletonMap("path", file.getAbsolutePath()));
 		}
 	}
 

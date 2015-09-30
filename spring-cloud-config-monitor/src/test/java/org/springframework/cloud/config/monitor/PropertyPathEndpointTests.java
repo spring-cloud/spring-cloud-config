@@ -25,7 +25,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.support.StaticApplicationContext;
-import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.http.HttpHeaders;
 
 /**
  * @author Dave Syer
@@ -46,9 +46,8 @@ public class PropertyPathEndpointTests {
 
 	@Test
 	public void testNotifyByForm() throws Exception {
-		assertEquals(0,
-				this.endpoint.notifyByForm(new LinkedMultiValueMap<String, String>(),
-						new ArrayList<String>()).size());
+		assertEquals(0, this.endpoint
+				.notifyByForm(new HttpHeaders(), new ArrayList<String>()).size());
 	}
 
 	@Test
@@ -57,16 +56,15 @@ public class PropertyPathEndpointTests {
 		request.add("/foo/bar.properties");
 		request.add("/application.properties");
 		assertEquals("[bar, *]",
-				this.endpoint
-						.notifyByForm(new LinkedMultiValueMap<String, String>(), request)
-						.toString());
+				this.endpoint.notifyByForm(new HttpHeaders(), request).toString());
 	}
 
 	@Test
 	public void testNotifyAll() throws Exception {
-		assertEquals("[*]", this.endpoint
-				.notifyByPath(new LinkedMultiValueMap<String, String>(), Collections
-						.<String, Object> singletonMap("path", "application.yml"))
+		assertEquals("[*]",
+				this.endpoint
+						.notifyByPath(new HttpHeaders(), Collections
+								.<String, Object> singletonMap("path", "application.yml"))
 				.toString());
 	}
 }
