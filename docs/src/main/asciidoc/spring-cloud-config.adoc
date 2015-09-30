@@ -596,9 +596,9 @@ server {
 
 NOTE: just like the source files for environment configuration, the
 "profile" is used to resolve the file name, so if you want a
-profile-specific file you can use a file called
-`logback-development.xml` to be resolved by
-`/\*/development/*/logback.xml`.
+profile-specific file then `/\*/development/*/logback.xml` will be
+resolved by a file called `logback-development.xml` (in preference
+to `logback.xml`).
 
 == Embedding the Config Server
 
