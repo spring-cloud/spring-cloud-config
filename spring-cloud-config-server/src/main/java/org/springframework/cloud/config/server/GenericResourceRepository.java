@@ -78,16 +78,18 @@ public class GenericResourceRepository
 			}
 			else {
 				String ext = StringUtils.getFilenameExtension(path);
+				String file = path;
 				if (ext != null) {
 					ext = "." + ext;
-					path = StringUtils.stripFilenameExtension(path);
+					file = StringUtils.stripFilenameExtension(path);
 				}
 				else {
 					ext = "";
 				}
-				paths.add(path + "-" + profile + ext);
+				paths.add(file + "-" + profile + ext);
 			}
 		}
+		paths.add(path);
 		return paths;
 	}
 
