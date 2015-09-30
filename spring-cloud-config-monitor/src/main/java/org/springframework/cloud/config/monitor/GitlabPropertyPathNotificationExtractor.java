@@ -34,7 +34,7 @@ public class GitlabPropertyPathNotificationExtractor
 	@Override
 	public PropertyPathNotification extract(MultiValueMap<String, String> headers,
 			Map<String, Object> request) {
-		if ("Push Event".equals(headers.getFirst("X-Gitlab-Event"))) {
+		if ("Push Event".equals(headers.getFirst("X-Gitlab-Event".toLowerCase()))) {
 			if (request.get("commits") instanceof Collection) {
 				// Gitlab doesn't tell us the files that changed so this is a broadcast to
 				// all apps

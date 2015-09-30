@@ -36,7 +36,7 @@ public class GithubPropertyPathNotificationExtractor
 	@Override
 	public PropertyPathNotification extract(MultiValueMap<String, String> headers,
 			Map<String, Object> request) {
-		if ("push".equals(headers.getFirst("X-Github-Event"))) {
+		if ("push".equals(headers.getFirst("X-Github-Event".toLowerCase()))) {
 			if (request.get("commits") instanceof Collection) {
 				Set<String> paths = new HashSet<>();
 				@SuppressWarnings("unchecked")
