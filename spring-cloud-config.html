@@ -431,6 +431,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_using_multiple_keys_and_key_rotation">Using Multiple Keys and Key Rotation</a></li>
 </ul>
 </li>
+<li><a href="#_serving_plain_text">Serving Plain Text</a></li>
 <li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
 <li><a href="#_push_notifications_and_spring_cloud_bus">Push Notifications and Spring Cloud Bus</a></li>
 <li><a href="#_spring_cloud_config_client">Spring Cloud Config Client</a>
@@ -1347,6 +1348,103 @@ handle all encryption as well as decryption.
 </div>
 </div>
 <div class="sect1">
+<h2 id="_serving_plain_text">Serving Plain Text</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Instead of using the <code>Environment</code> abstraction (or one of the
+alternative representations of it in YAML or properties format) your
+applications might need generic plain text configuration files,
+tailored to their environment. The Config Server provides these
+through an additional endpoint at <code>/{name}/{profile}/{label}/{path}</code>
+where "name", "profile" and "label" have the same meaning as the
+regular environment endpoint, but "path" is a file name
+(e.g. <code>log.xml</code>). The source files for this endpoint are located in
+the same way as for the environment endpoints: the same search path is
+used as for properties or YAML files, but instead of aggregating all
+matching resources, only the first one to match is returned.</p>
+</div>
+<div class="paragraph">
+<p>After a resource is located, placeholders in the normal format
+(<code>${&#8230;&#8203;}</code>) are resolved using the effective <code>Environment</code> for the
+application name, profile and label supplied. In this way the resource
+endpoint is tightly integrated with the environment
+endpoints. Example, if you have this layout for a GIT (or SVN)
+repository:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>application.yml
+nginx.conf</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where <code>nginx.conf</code> looks like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>server {
+    listen              80;
+    server_name         ${nginx.server.name};
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and <code>application.yml</code> like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">nginx:
+  server:
+    name: example.com
+---
+spring:
+  profiles: development
+nginx:
+  server:
+    name: develop.com</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>then the <code>/foo/default/master/nginx.conf</code> resource looks like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>server {
+    listen              80;
+    server_name         example.com;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and <code>/foo/development/master/nginx.conf</code> like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>server {
+    listen              80;
+    server_name         develop.com;
+}</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+just like the source files for environment configuration, the
+"profile" is used to resolve the file name, so if you want a
+profile-specific file you can use a file called
+<code>logback-development.xml</code> to be resolved by
+<code>/*/development/*/logback.xml</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_embedding_the_config_server">Embedding the Config Server</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1602,7 +1700,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-09-30 15:45:23 UTC
+Last updated 2015-09-30 16:20:31 UTC
 </div>
 </div>
 </body>
