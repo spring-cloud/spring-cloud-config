@@ -39,7 +39,6 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
@@ -53,13 +52,15 @@ import com.jcraft.jsch.Session;
  * @author Dave Syer
  * @author Roy Clarkson
  */
-public class JGitEnvironmentRepository extends AbstractScmAccessor implements EnvironmentRepository, InitializingBean  {
+public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
+		implements EnvironmentRepository, ResourceLocationService, InitializingBean {
 
 	private static final String DEFAULT_LABEL = "master";
 	private static final String FILE_URI_PREFIX = "file:";
 
 	/**
-	 * Timeout (in seconds) for obtaining HTTP or SSH connection (if applicable). Default 5 seconds.
+	 * Timeout (in seconds) for obtaining HTTP or SSH connection (if applicable). Default
+	 * 5 seconds.
 	 */
 	private int timeout = 5;
 
@@ -70,8 +71,6 @@ public class JGitEnvironmentRepository extends AbstractScmAccessor implements En
 	 * Generally leads to slower startup but faster first query.
 	 */
 	private boolean cloneOnStart = false;
-
-	private EnvironmentCleaner cleaner = new EnvironmentCleaner();
 
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
@@ -109,12 +108,33 @@ public class JGitEnvironmentRepository extends AbstractScmAccessor implements En
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
+	public String[] getLocations(String application, String profile, String label) {
+		refresh(application, label);
+		return getSearchLocations(getWorkingDirectory());
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		Assert.state(getUri() != null,
+				"You need to configure a uri for the git repository");
+		if (this.cloneOnStart) {
+			initClonedRepository();
+		}
+	}
+
+	/**
+	 * Get the working directory ready.
+	 */
+	private void refresh(String application, String label) {
 		initialize();
 		Git git = null;
 		try {
 			git = createGitClient();
-			return loadEnvironment(git, application, profile, label);
+			git.getRepository().getConfig().setString("branch", label, "merge", label);
+			Ref ref = checkout(git, label);
+			if (shouldPull(git, ref)) {
+				pull(git, label, ref);
+			}
 		}
 		catch (RefNotFoundException e) {
 			throw new NoSuchLabelException("No such label: " + label);
@@ -137,15 +157,6 @@ public class JGitEnvironmentRepository extends AbstractScmAccessor implements En
 		}
 	}
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		Assert.state(getUri() != null,
-				"You need to configure a uri for the git repository");
-		if (this.cloneOnStart) {
-			initClonedRepository();
-		}
-	}
-
 	/**
 	 * Clones the remote repository and then opens a connection to it.
 	 * @throws GitAPIException
@@ -158,21 +169,6 @@ public class JGitEnvironmentRepository extends AbstractScmAccessor implements En
 			openGitRepository();
 		}
 
-	}
-
-	private synchronized Environment loadEnvironment(Git git, String application,
-			String profile, String label) throws GitAPIException {
-		NativeEnvironmentRepository environment = new NativeEnvironmentRepository(
-				getEnvironment());
-		git.getRepository().getConfig().setString("branch", label, "merge", label);
-		Ref ref = checkout(git, label);
-		if (shouldPull(git, ref)) {
-			pull(git, label, ref);
-		}
-		environment.setSearchLocations(getSearchLocations(getWorkingDirectory()));
-		Environment result = environment.findOne(application, profile, "");
-		result.setLabel(label);
-		return this.cleaner.clean(result, getWorkingDirectory().toURI().toString(), getUri());
 	}
 
 	private Ref checkout(Git git, String label) throws GitAPIException {
@@ -299,8 +295,8 @@ public class JGitEnvironmentRepository extends AbstractScmAccessor implements En
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
 		checkout.setCreateBranch(true).setName(label)
-		.setUpstreamMode(SetupUpstreamMode.TRACK)
-		.setStartPoint("origin/" + label);
+				.setUpstreamMode(SetupUpstreamMode.TRACK)
+				.setStartPoint("origin/" + label);
 	}
 
 	private boolean isBranch(Git git, String label) throws GitAPIException {

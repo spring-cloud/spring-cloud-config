@@ -74,6 +74,10 @@ public class EnvironmentController {
 
 	private boolean stripDocument = true;
 
+	public EnvironmentController(EnvironmentRepository repository) {
+		this(repository, null);
+	}
+
 	public EnvironmentController(EnvironmentRepository repository,
 			EnvironmentEncryptor environmentEncryptor) {
 		this.repository = repository;

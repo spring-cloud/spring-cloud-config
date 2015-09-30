@@ -80,6 +80,17 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	}
 
 	@Override
+	public String[] getLocations(String application, String profile, String label) {
+		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
+			Environment source = repository.findOne(application, profile, label);
+			if (source != null) {
+				return repository.getLocations(application, profile, label);
+			}
+		}
+		return super.getLocations(application, profile, label);
+	}
+
+	@Override
 	public Environment findOne(String application, String profile, String label) {
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
 			Environment source = repository.findOne(application, profile, label);

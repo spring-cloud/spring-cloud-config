@@ -34,7 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.config.server.AbstractScmAccessor;
+import org.springframework.cloud.config.server.AbstractScmEnvironmentRepository;
 import org.springframework.cloud.config.server.NativeEnvironmentRepository;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.SmartLifecycle;
@@ -66,7 +66,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	PropertyPathEndpoint endpoint;
 
 	@Autowired(required = false)
-	AbstractScmAccessor scmRepository;
+	AbstractScmEnvironmentRepository scmRepository;
 
 	@Autowired(required = false)
 	NativeEnvironmentRepository nativeEnvironmentRepository;

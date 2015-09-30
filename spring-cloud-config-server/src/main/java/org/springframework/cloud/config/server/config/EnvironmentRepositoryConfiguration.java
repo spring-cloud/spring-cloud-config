@@ -50,11 +50,11 @@ public class EnvironmentRepositoryConfiguration {
 	protected static class NativeRepositoryConfiguration {
 
 		@Autowired
-		private ConfigurableEnvironment environment;		
-		
+		private ConfigurableEnvironment environment;
+
 		@Bean
 		public EnvironmentRepository environmentRepository() {
-			return new NativeEnvironmentRepository(environment);
+			return new NativeEnvironmentRepository(this.environment);
 		}
 
 	}
@@ -62,16 +62,16 @@ public class EnvironmentRepositoryConfiguration {
 	@Configuration
 	@ConditionalOnMissingBean(EnvironmentRepository.class)
 	protected static class GitRepositoryConfiguration {
-		
+
 		@Autowired
-		private ConfigurableEnvironment environment;		
-		
+		private ConfigurableEnvironment environment;
+
 		@Bean
 		public EnvironmentRepository environmentRepository() {
-			return new MultipleJGitEnvironmentRepository(environment);
+			return new MultipleJGitEnvironmentRepository(this.environment);
 		}
 	}
-	
+
 	@Configuration
 	@Profile("subversion")
 	protected static class SvnRepositoryConfiguration {
@@ -80,7 +80,7 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public EnvironmentRepository environmentRepository() {
-			return new SvnKitEnvironmentRepository(environment);
+			return new SvnKitEnvironmentRepository(this.environment);
 		}
 	}
 

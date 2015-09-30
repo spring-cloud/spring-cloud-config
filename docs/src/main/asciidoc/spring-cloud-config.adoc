@@ -526,6 +526,80 @@ TIP: the `{name:value}` prefixes can also be added to plaintext posted
 to the `/encrypt` endpoint, if you want to let the Config Server
 handle all encryption as well as decryption.
 
+== Serving Plain Text
+
+Instead of using the `Environment` abstraction (or one of the
+alternative representations of it in YAML or properties format) your
+applications might need generic plain text configuration files,
+tailored to their environment. The Config Server provides these
+through an additional endpoint at `/{name}/{profile}/{label}/{path}`
+where "name", "profile" and "label" have the same meaning as the
+regular environment endpoint, but "path" is a file name
+(e.g. `log.xml`). The source files for this endpoint are located in
+the same way as for the environment endpoints: the same search path is
+used as for properties or YAML files, but instead of aggregating all
+matching resources, only the first one to match is returned.
+
+After a resource is located, placeholders in the normal format
+(`${...}`) are resolved using the effective `Environment` for the
+application name, profile and label supplied. In this way the resource
+endpoint is tightly integrated with the environment
+endpoints. Example, if you have this layout for a GIT (or SVN)
+repository:
+
+----
+application.yml
+nginx.conf
+----
+
+where `nginx.conf` looks like this:
+
+----
+server {
+    listen              80;
+    server_name         ${nginx.server.name};
+}
+----
+
+and `application.yml` like this:
+
+[source,yaml]
+----
+nginx:
+  server:
+    name: example.com
+---
+spring:
+  profiles: development
+nginx:
+  server:
+    name: develop.com
+----
+
+then the `/foo/default/master/nginx.conf` resource looks like this:
+
+----
+server {
+    listen              80;
+    server_name         example.com;
+}
+----
+
+and `/foo/development/master/nginx.conf` like this:
+
+----
+server {
+    listen              80;
+    server_name         develop.com;
+}
+----
+
+NOTE: just like the source files for environment configuration, the
+"profile" is used to resolve the file name, so if you want a
+profile-specific file you can use a file called
+`logback-development.xml` to be resolved by
+`/\*/development/*/logback.xml`.
+
 == Embedding the Config Server
 
 The Config Server runs best as a standalone application, but if you

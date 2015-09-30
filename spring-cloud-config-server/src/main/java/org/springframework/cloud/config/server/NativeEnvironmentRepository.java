@@ -47,7 +47,8 @@ import org.springframework.util.StringUtils;
  * @author Roy Clarkson
  */
 @ConfigurationProperties("spring.cloud.config.server.native")
-public class NativeEnvironmentRepository implements EnvironmentRepository {
+public class NativeEnvironmentRepository
+		implements EnvironmentRepository, ResourceLocationService {
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
@@ -96,8 +97,8 @@ public class NativeEnvironmentRepository implements EnvironmentRepository {
 		String[] args = getArgs(config, label);
 		// Explicitly set the listeners (to exclude logging listener which would change
 		// log levels in the caller)
-		builder.application().setListeners(
-				Arrays.asList(new ConfigFileEnvironmentPostProcessor(),
+		builder.application()
+				.setListeners(Arrays.asList(new ConfigFileEnvironmentPostProcessor(),
 						new EnvironmentPostProcessingApplicationListener()));
 		ConfigurableApplicationContext context = builder.run(args);
 		environment.getPropertySources().remove("profiles");
@@ -110,13 +111,30 @@ public class NativeEnvironmentRepository implements EnvironmentRepository {
 		}
 	}
 
+	@Override
+	public String[] getLocations(String application, String profile, String label) {
+		String[] locations = this.searchLocations;
+		if (this.searchLocations == null) {
+			locations = DEFAULT_LOCATIONS;
+		}
+		List<String> output = new ArrayList<String>();
+		for (String location : locations) {
+			output.add(location);
+		}
+		for (String location : locations) {
+			if (isDirectory(location) && StringUtils.hasText(label)) {
+				output.add(location + label.trim() + "/");
+			}
+		}
+		return output.toArray(new String[0]);
+	}
+
 	private ConfigurableEnvironment getEnvironment(String profile) {
 		ConfigurableEnvironment environment = new StandardEnvironment();
 		environment.getPropertySources()
-				.addFirst(
-						new MapPropertySource("profiles", Collections
-								.<String, Object> singletonMap("spring.profiles.active",
-										profile)));
+				.addFirst(new MapPropertySource("profiles",
+						Collections.<String, Object> singletonMap(
+								"spring.profiles.active", profile)));
 		return environment;
 	}
 
@@ -134,18 +152,19 @@ public class NativeEnvironmentRepository implements EnvironmentRepository {
 				boolean matches = false;
 				String normal = name;
 				if (normal.startsWith("file:")) {
-					normal = StringUtils.cleanPath(new File(normal.substring("file:"
-							.length())).getAbsolutePath());
+					normal = StringUtils
+							.cleanPath(new File(normal.substring("file:".length()))
+									.getAbsolutePath());
 				}
-				for (String pattern : StringUtils
-						.commaDelimitedListToStringArray(getLocations(
-								this.searchLocations, result.getLabel()))) {
+				for (String pattern : getLocations(null, null, result.getLabel())) {
 					if (!pattern.contains(":")) {
 						pattern = "file:" + pattern;
 					}
 					if (pattern.startsWith("file:")) {
-						pattern = StringUtils.cleanPath(new File(pattern
-								.substring("file:".length())).getAbsolutePath()) + "/";
+						pattern = StringUtils
+								.cleanPath(new File(pattern.substring("file:".length()))
+										.getAbsolutePath())
+								+ "/";
 					}
 					if (logger.isTraceEnabled()) {
 						logger.trace("Testing pattern: " + pattern
@@ -179,25 +198,8 @@ public class NativeEnvironmentRepository implements EnvironmentRepository {
 		list.add("--spring.config.name=" + config);
 		list.add("--spring.cloud.bootstrap.enabled=false");
 		list.add("--encrypt.failOnError=" + this.failOnError);
-		String[] locations = this.searchLocations;
-		if (this.searchLocations == null) {
-			locations = DEFAULT_LOCATIONS;
-		}
-		list.add("--spring.config.location=" + getLocations(locations, label));
+		list.add("--spring.config.location=" + StringUtils.arrayToCommaDelimitedString(getLocations(null, null, label)));
 		return list.toArray(new String[0]);
-	}
-
-	private String getLocations(String[] locations, String label) {
-		List<String> output = new ArrayList<String>();
-		for (String location : locations) {
-			output.add(location);
-		}
-		for (String location : locations) {
-			if (isDirectory(location) && StringUtils.hasText(label)) {
-				output.add(location + label.trim() + "/");
-			}
-		}
-		return StringUtils.collectionToCommaDelimitedString(output);
 	}
 
 	public String[] getSearchLocations() {

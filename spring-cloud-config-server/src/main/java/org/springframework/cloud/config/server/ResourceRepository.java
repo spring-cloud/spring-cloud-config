@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server;
 
-import org.springframework.cloud.config.environment.Environment;
+import org.springframework.core.io.Resource;
 
 /**
  * @author Dave Syer
- * @author Roy Clarkson
+ *
  */
-public interface EnvironmentRepository {
+public interface ResourceRepository {
 
-	String getDefaultLabel();
-
-	Environment findOne(String application, String profile, String label);
+	Resource findOne(String name, String profile, String label, String path);
 
 }

@@ -20,6 +20,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.cloud.config.server.ConfigServerProperties;
 import org.springframework.cloud.config.server.EnvironmentController;
 import org.springframework.cloud.config.server.EnvironmentRepository;
+import org.springframework.cloud.config.server.ResourceController;
+import org.springframework.cloud.config.server.ResourceRepository;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +38,9 @@ public class ConfigServerMvcConfiguration {
 	private EnvironmentRepository repository;
 
 	@Autowired
+	private ResourceRepository resources;
+
+	@Autowired
 	private ConfigServerProperties server;
 
 	@Autowired(required=false)
@@ -43,19 +48,25 @@ public class ConfigServerMvcConfiguration {
 
 	@Bean
 	public EnvironmentController environmentController() {
-		EnvironmentController controller = new EnvironmentController(repository, environmentEncryptor);
+		EnvironmentController controller = new EnvironmentController(this.repository, this.environmentEncryptor);
 		controller.setDefaultLabel(getDefaultLabel());
-		controller.setOverrides(server.getOverrides());
-		controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
+		controller.setOverrides(this.server.getOverrides());
+		controller.setStripDocumentFromYaml(this.server.isStripDocumentFromYaml());
+		return controller;
+	}
+
+	@Bean
+	public ResourceController resourceController() {
+		ResourceController controller = new ResourceController(this.resources, environmentController());
 		return controller;
 	}
 
 	private String getDefaultLabel() {
-		if (StringUtils.hasText(server.getDefaultLabel())) {
-			return server.getDefaultLabel();
+		if (StringUtils.hasText(this.server.getDefaultLabel())) {
+			return this.server.getDefaultLabel();
 		}
 		else {
-			return repository.getDefaultLabel();
+			return this.repository.getDefaultLabel();
 		}
 	}
 }

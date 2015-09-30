@@ -5,7 +5,4 @@ spring:
         git:
           basedir: target/config
         overrides:
-          spring:
-            cloud:
-              config:
-                enabled: true
+          spring.cloud.config.enabled: true

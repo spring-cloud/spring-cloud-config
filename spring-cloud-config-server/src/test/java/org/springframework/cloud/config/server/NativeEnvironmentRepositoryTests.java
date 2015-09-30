@@ -71,7 +71,7 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("classpath:/test");
 		Environment environment = this.repository.findOne("foo", "development", "dev");
 		assertEquals(3, environment.getPropertySources().size());
-		// position 1 because it has higher precendence than anything except the
+		// position 1 because it has higher precedence than anything except the
 		// foo-development.properties
 		assertEquals("dev_bar",
 				environment.getPropertySources().get(1).getSource().get("foo"));

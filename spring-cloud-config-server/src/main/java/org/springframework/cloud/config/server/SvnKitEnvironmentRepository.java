@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -42,14 +41,12 @@ import org.tmatesoft.svn.core.wc2.SvnUpdate;
  * @author Roy Clarkson
  */
 @ConfigurationProperties("spring.cloud.config.server.svn")
-public class SvnKitEnvironmentRepository extends AbstractScmAccessor
+public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, InitializingBean {
 
 	private static Log logger = LogFactory.getLog(SvnKitEnvironmentRepository.class);
 
 	private static final String DEFAULT_LABEL = "trunk";
-
-	private EnvironmentCleaner cleaner = new EnvironmentCleaner();
 
 	@Override
 	public String getDefaultLabel() {
@@ -57,7 +54,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmAccessor
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
+	public String[] getLocations(String application, String profile, String label) {
 		SvnOperationFactory svnOperationFactory = new SvnOperationFactory();
 		if (hasText(getUsername())) {
 			svnOperationFactory
@@ -71,8 +68,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmAccessor
 			else {
 				checkout(svnOperationFactory);
 			}
-			return this.cleaner.clean(loadEnvironment(application, profile, label),
-					getWorkingDirectory().toURI().toString(), getUri());
+			return getLocations(label);
 		}
 		catch (SVNException e) {
 			throw new IllegalStateException("Cannot checkout repository", e);
@@ -82,10 +78,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmAccessor
 		}
 	}
 
-	private synchronized Environment loadEnvironment(String application, String profile,
-			String label) {
-		final NativeEnvironmentRepository environmentRepository = new NativeEnvironmentRepository(
-				getEnvironment());
+	private String[] getLocations(String label) {
 		String[] locations = getSearchLocations(getSvnPath(getWorkingDirectory(), label));
 		boolean exists = false;
 		for (String location : locations) {
@@ -100,8 +93,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmAccessor
 		if (!exists) {
 			throw new NoSuchLabelException("No label found for: " + label);
 		}
-		environmentRepository.setSearchLocations(locations);
-		return environmentRepository.findOne(application, profile, label);
+		return locations;
 	}
 
 	private void checkout(SvnOperationFactory svnOperationFactory) throws SVNException {
