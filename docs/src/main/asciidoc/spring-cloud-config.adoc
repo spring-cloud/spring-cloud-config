@@ -618,8 +618,8 @@ initialize the same way as any other application.
 
 == Push Notifications and Spring Cloud Bus
 
-Many source code repository providers (like Github or Gitlab for
-instance) will notify you of changes in a repository through a
+Many source code repository providers (like Github, Gitlab or Bitbucket
+for instance) will notify you of changes in a repository through a
 webhook. You can configure the webhook via the provider's user
 interface as a URL and a set of events in which you are
 interested. For instance
@@ -635,13 +635,17 @@ When the webhook is activated the Config Server will send a
 might have changed. The change detection can be strategized, but by
 default it just looks for changes in files that match the application
 name (e.g. "foo.properties" is targeted at the "foo" application, and
-"application.properties" is targeted at all applications). The strategy if you want to override the behaviour is `PropertyPathNotificationExtractor` which accepts the request headers and body as parameters and returns a list of file paths that changed.
+"application.properties" is targeted at all applications). The strategy
+if you want to override the behaviour is `PropertyPathNotificationExtractor`
+which accepts the request headers and body as parameters and returns a list
+of file paths that changed.
 
-The default configuration works out of the box with Github or
-Gitlab. In addition to the JSON notifications from Github and Gitlab
-you can trigger a change notification by POSTing to "/monitor" with a
-form-encoded body parameters `path={name}`. This will broadcast to
-applications matching the "{name}" pattern (can contain wildcards).
+The default configuration works out of the box with Github, Gitlab or
+Bitbucket. In addition to the JSON notifications from Github, Gitlab
+or Bitbucket you can trigger a change notification by POSTing to
+"/monitor" with a form-encoded body parameters `path={name}`. This will
+broadcast to applications matching the "{name}" pattern (can contain
+wildcards).
 
 NOTE: the `RefreshRemoteApplicationEvent` will only be transmitted if
 the `spring-cloud-bus` is activated in the Config Server and in the

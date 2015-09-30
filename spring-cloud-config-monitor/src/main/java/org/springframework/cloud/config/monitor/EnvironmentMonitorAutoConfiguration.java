@@ -54,4 +54,10 @@ public class EnvironmentMonitorAutoConfiguration {
 		return new GitlabPropertyPathNotificationExtractor();
 	}
 
+	@Bean
+	@ConditionalOnProperty(value="spring.cloud.config.server.monitor.bitbucket.enabled", havingValue="true", matchIfMissing=true)
+	public BitbucketPropertyPathNotificationExtractor bitbucketPropertyPathNotificationExtractor() {
+		return new BitbucketPropertyPathNotificationExtractor();
+	}
+
 }
