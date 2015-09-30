@@ -1468,8 +1468,8 @@ initialize the same way as any other application.</p>
 <h2 id="_push_notifications_and_spring_cloud_bus">Push Notifications and Spring Cloud Bus</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Many source code repository providers (like Github or Gitlab for
-instance) will notify you of changes in a repository through a
+<p>Many source code repository providers (like Github, Gitlab or Bitbucket
+for instance) will notify you of changes in a repository through a
 webhook. You can configure the webhook via the provider&#8217;s user
 interface as a URL and a set of events in which you are
 interested. For instance
@@ -1486,14 +1486,18 @@ is enabled.</p>
 might have changed. The change detection can be strategized, but by
 default it just looks for changes in files that match the application
 name (e.g. "foo.properties" is targeted at the "foo" application, and
-"application.properties" is targeted at all applications). The strategy if you want to override the behaviour is <code>PropertyPathNotificationExtractor</code> which accepts the request headers and body as parameters and returns a list of file paths that changed.</p>
+"application.properties" is targeted at all applications). The strategy
+if you want to override the behaviour is <code>PropertyPathNotificationExtractor</code>
+which accepts the request headers and body as parameters and returns a list
+of file paths that changed.</p>
 </div>
 <div class="paragraph">
-<p>The default configuration works out of the box with Github or
-Gitlab. In addition to the JSON notifications from Github and Gitlab
-you can trigger a change notification by POSTing to "/monitor" with a
-form-encoded body parameters <code>path={name}</code>. This will broadcast to
-applications matching the "{name}" pattern (can contain wildcards).</p>
+<p>The default configuration works out of the box with Github, Gitlab or
+Bitbucket. In addition to the JSON notifications from Github, Gitlab
+or Bitbucket you can trigger a change notification by POSTing to
+"/monitor" with a form-encoded body parameters <code>path={name}</code>. This will
+broadcast to applications matching the "{name}" pattern (can contain
+wildcards).</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1700,7 +1704,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-09-30 16:58:18 UTC
+Last updated 2015-09-30 19:01:09 UTC
 </div>
 </div>
 </body>
