@@ -19,6 +19,7 @@ package org.springframework.cloud.config.monitor;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,4 +41,17 @@ public class EnvironmentMonitorAutoConfiguration {
 	public PropertyPathEndpoint propertyPathEndpoint() {
 		return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors));
 	}
+
+	@Bean
+	@ConditionalOnProperty(value="spring.cloud.config.server.monitor.github.enabled", havingValue="true", matchIfMissing=true)
+	public GithubPropertyPathNotificationExtractor githubPropertyPathNotificationExtractor() {
+		return new GithubPropertyPathNotificationExtractor();
+	}
+
+	@Bean
+	@ConditionalOnProperty(value="spring.cloud.config.server.monitor.gitlab.enabled", havingValue="true", matchIfMissing=true)
+	public GitlabPropertyPathNotificationExtractor gitlabPropertyPathNotificationExtractor() {
+		return new GitlabPropertyPathNotificationExtractor();
+	}
+
 }
