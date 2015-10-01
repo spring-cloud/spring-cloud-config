@@ -51,7 +51,7 @@ public class GenericResourceRepository
 	@Override
 	public synchronized Resource findOne(String application, String profile, String label,
 			String path) {
-		String[] locations = this.service.getLocations(application, "default", label);
+		String[] locations = this.service.getLocations(application, "default", label).getLocations();
 		try {
 			for (int i = locations.length; i-- > 0;) {
 				String location = locations[i];

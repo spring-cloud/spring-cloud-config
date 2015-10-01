@@ -113,12 +113,17 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	@Override
-	public String[] getLocations(String application, String profile, String label) {
+	public Locations getLocations(String application, String profile, String label) {
 		if (label==null) {
 			label = this.defaultLabel;
 		}
-		refresh(application, label);
-		return getSearchLocations(getWorkingDirectory());
+		Ref ref = refresh(application, label);
+		String version = null;
+		if (ref != null) {
+			version = ref.getObjectId().getName();
+		}
+		return new Locations(getSearchLocations(getWorkingDirectory()),
+				version);
 	}
 
 	@Override
@@ -133,7 +138,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	/**
 	 * Get the working directory ready.
 	 */
-	private void refresh(String application, String label) {
+	private Ref refresh(String application, String label) {
 		initialize();
 		Git git = null;
 		try {
@@ -143,6 +148,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			if (shouldPull(git, ref)) {
 				pull(git, label, ref);
 			}
+			return ref;
 		}
 		catch (RefNotFoundException e) {
 			throw new NoSuchLabelException("No such label: " + label);

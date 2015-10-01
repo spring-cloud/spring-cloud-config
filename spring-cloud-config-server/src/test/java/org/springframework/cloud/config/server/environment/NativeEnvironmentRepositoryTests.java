@@ -21,11 +21,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * @author Dave Syer
+ * @author Spencer Gibb
  *
  */
 public class NativeEnvironmentRepositoryTests {
@@ -37,6 +37,7 @@ public class NativeEnvironmentRepositoryTests {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				NativeEnvironmentRepositoryTests.class).web(false).run();
 		this.repository = new NativeEnvironmentRepository(context.getEnvironment());
+		this.repository.setVersion("myversion");
 		context.close();
 	}
 
@@ -44,6 +45,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void vanilla() {
 		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertEquals(2, environment.getPropertySources().size());
+		assertEquals("version was wrong", "myversion", environment.getVersion());
 	}
 
 	@Test
@@ -51,6 +53,7 @@ public class NativeEnvironmentRepositoryTests {
 		System.setProperty("spring.profiles.active", "cloud");
 		Environment environment = this.repository.findOne("foo", "main", "master");
 		assertEquals(1, environment.getPropertySources().size());
+		assertEquals("version was wrong", "myversion", environment.getVersion());
 	}
 
 	@Test
@@ -58,6 +61,7 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("classpath:/test");
 		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertEquals(2, environment.getPropertySources().size());
+		assertEquals("version was wrong", "myversion", environment.getVersion());
 	}
 
 	@Test
@@ -65,6 +69,7 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("file:./src/test/resources/test");
 		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertEquals(2, environment.getPropertySources().size());
+		assertEquals("version was wrong", "myversion", environment.getVersion());
 	}
 
 	@Test
@@ -76,6 +81,7 @@ public class NativeEnvironmentRepositoryTests {
 		// foo-development.properties
 		assertEquals("dev_bar",
 				environment.getPropertySources().get(1).getSource().get("foo"));
+		assertEquals("version was wrong", "myversion", environment.getVersion());
 	}
 
 }
