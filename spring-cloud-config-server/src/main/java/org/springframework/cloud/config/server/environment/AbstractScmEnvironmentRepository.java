@@ -37,8 +37,10 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 	public synchronized Environment findOne(String application, String profile, String label) {
 		NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(
 				getEnvironment());
-		delegate.setSearchLocations(getLocations(application, profile, label));
+		Locations locations = getLocations(application, profile, label);
+		delegate.setSearchLocations(locations.getLocations());
 		Environment result = delegate.findOne(application, profile, "");
+		result.setVersion(locations.getVersion());
 		result.setLabel(label);
 		return this.cleaner.clean(result, getWorkingDirectory().toURI().toString(),
 				getUri());

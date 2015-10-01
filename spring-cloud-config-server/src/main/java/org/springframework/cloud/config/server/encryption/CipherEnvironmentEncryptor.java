@@ -58,7 +58,7 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 
 	private Environment decrypt(Environment environment, TextEncryptorLocator encryptor) {
 		Environment result = new Environment(environment.getName(),
-				environment.getProfiles(), environment.getLabel());
+				environment.getProfiles(), environment.getLabel(), environment.getVersion());
 		for (PropertySource source : environment.getPropertySources()) {
 			Map<Object, Object> map = new LinkedHashMap<Object, Object>(
 					source.getSource());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Simple plain text serializable encapsulation of a list of property sources. Basically a
  * DTO for {@link org.springframework.core.env.Environment}, but also applicable outside
  * the domain of a Spring application.
- * 
+ *
  * @author Dave Syer
+ * @author Spencer Gibb
  *
  */
 public class Environment {
@@ -41,18 +42,22 @@ public class Environment {
 
 	private List<PropertySource> propertySources = new ArrayList<PropertySource>();
 
+	private String version;
+
 	public Environment(String name, String... profiles) {
-		this(name, profiles, "master");
+		this(name, profiles, "master", null);
 	}
 
 	@JsonCreator
 	public Environment(@JsonProperty("name") String name,
 			@JsonProperty("profiles") String[] profiles,
-			@JsonProperty("label") String label) {
+			@JsonProperty("label") String label,
+			@JsonProperty("version") String version) {
 		super();
 		this.name = name;
 		this.profiles = profiles;
 		this.label = label;
+		this.version = version;
 	}
 
 	public void add(PropertySource propertySource) {
@@ -70,7 +75,7 @@ public class Environment {
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -78,7 +83,7 @@ public class Environment {
 	public String getLabel() {
 		return label;
 	}
-	
+
 	public void setLabel(String label) {
 		this.label = label;
 	}
@@ -91,10 +96,19 @@ public class Environment {
 		this.profiles = profiles;
 	}
 
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
 	@Override
 	public String toString() {
 		return "Environment [name=" + name + ", profiles=" + Arrays.asList(profiles)
-				+ ", label=" + label + ", propertySources=" + propertySources + "]";
+				+ ", label=" + label + ", propertySources=" + propertySources
+				+ ", version=" + version+ "]";
 	}
 
 }

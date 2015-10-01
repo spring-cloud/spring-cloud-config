@@ -80,6 +80,11 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			for (String label : labels) {
 				Environment result = getRemoteEnvironment(restTemplate, client.getRawUri(), client.getName(), client.getProfile(), label.trim());
 				if (result != null) {
+					logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s",
+							result.getName(),
+							result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
+							result.getLabel(), result.getVersion()));
+
 					for (PropertySource source : result.getPropertySources()) {
 						@SuppressWarnings("unchecked")
 						Map<String, Object> map = (Map<String, Object>) source

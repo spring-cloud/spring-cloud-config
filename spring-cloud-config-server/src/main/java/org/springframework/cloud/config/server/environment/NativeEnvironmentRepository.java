@@ -65,6 +65,11 @@ public class NativeEnvironmentRepository
 	 */
 	private boolean failOnError = false;
 
+	/**
+	 * Version string to be reported for native repository
+	 */
+	private String version;
+
 	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/",
 			"classpath:/config/", "file:./", "file:./config/" };
 
@@ -111,7 +116,7 @@ public class NativeEnvironmentRepository
 	}
 
 	@Override
-	public String[] getLocations(String application, String profile, String label) {
+	public Locations getLocations(String application, String profile, String label) {
 		String[] locations = this.searchLocations;
 		if (this.searchLocations == null) {
 			locations = DEFAULT_LOCATIONS;
@@ -125,7 +130,7 @@ public class NativeEnvironmentRepository
 				output.add(location + label.trim() + "/");
 			}
 		}
-		return output.toArray(new String[0]);
+		return new Locations(application, profile, label, this.version, output.toArray(new String[0]));
 	}
 
 	private ConfigurableEnvironment getEnvironment(String profile) {
@@ -139,7 +144,7 @@ public class NativeEnvironmentRepository
 
 	protected Environment clean(Environment value) {
 		Environment result = new Environment(value.getName(), value.getProfiles(),
-				value.getLabel());
+				value.getLabel(), this.version);
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName();
 			if (this.environment.getPropertySources().contains(name)) {
@@ -155,7 +160,7 @@ public class NativeEnvironmentRepository
 							.cleanPath(new File(normal.substring("file:".length()))
 									.getAbsolutePath());
 				}
-				for (String pattern : getLocations(null, null, result.getLabel())) {
+				for (String pattern : getLocations(null, null, result.getLabel()).getLocations()) {
 					if (!pattern.contains(":")) {
 						pattern = "file:" + pattern;
 					}
@@ -197,7 +202,7 @@ public class NativeEnvironmentRepository
 		list.add("--spring.config.name=" + config);
 		list.add("--spring.cloud.bootstrap.enabled=false");
 		list.add("--encrypt.failOnError=" + this.failOnError);
-		list.add("--spring.config.location=" + StringUtils.arrayToCommaDelimitedString(getLocations(null, null, label)));
+		list.add("--spring.config.location=" + StringUtils.arrayToCommaDelimitedString(getLocations(null, null, label).getLocations()));
 		return list.toArray(new String[0]);
 	}
 
@@ -214,6 +219,14 @@ public class NativeEnvironmentRepository
 			}
 			locations[i] = location;
 		}
+	}
+
+	public String getVersion() {
+		return this.version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
 	}
 
 	private boolean isDirectory(String location) {

@@ -17,6 +17,8 @@
 package org.springframework.cloud.config.server.environment;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -34,7 +36,6 @@ import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.environment.JGitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -64,8 +65,9 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties", environment
-				.getPropertySources().get(0).getName());
+		assertEquals(this.repository.getUri() + "/bar.properties",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
 	}
 
 	@Test
@@ -76,8 +78,15 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/sub/application.yml", environment
-				.getPropertySources().get(0).getName());
+		assertEquals(this.repository.getUri() + "/sub/application.yml",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
+	}
+
+	private void assertVersion(Environment environment) {
+		String version = environment.getVersion();
+		assertNotNull("version was null", version);
+		assertTrue("version length was wrong", version.length() >= 40 && version.length() <= 64);
 	}
 
 	@Test
@@ -88,8 +97,9 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/sub/application.yml", environment
-				.getPropertySources().get(0).getName());
+		assertEquals(this.repository.getUri() + "/sub/application.yml",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
 	}
 
 	@Test
@@ -97,8 +107,9 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.repository.findOne("bar", "staging", "raw");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties", environment
-				.getPropertySources().get(0).getName());
+		assertEquals(this.repository.getUri() + "/bar.properties",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
 	}
 
 	@Test
@@ -108,6 +119,8 @@ public class JGitEnvironmentRepositoryTests {
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
+		//TODO: why is the version null in tag?
+		assertNull("version was not null", environment.getVersion());
 	}
 
 	@Test
@@ -116,8 +129,9 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties", environment
-				.getPropertySources().get(0).getName());
+		assertEquals(this.repository.getUri() + "/bar.properties",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
 	}
 
 	@Test
@@ -128,8 +142,9 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties", environment
-				.getPropertySources().get(0).getName());
+		assertEquals(this.repository.getUri() + "/bar.properties",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
 	}
 
 	@Test
