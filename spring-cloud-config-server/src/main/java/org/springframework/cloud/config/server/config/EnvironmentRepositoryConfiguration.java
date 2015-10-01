@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Dave Syer
@@ -43,6 +44,22 @@ public class EnvironmentRepositoryConfiguration {
 	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
 	public ConfigServerHealthIndicator configServerHealthIndicator(EnvironmentRepository repository) {
 		return new ConfigServerHealthIndicator(repository);
+	}
+
+	protected static class BaseRepositoryConfiguration {
+
+		@Autowired
+		private ConfigServerProperties server;
+
+		protected String getDefaultLabel(EnvironmentRepository repository) {
+			if (StringUtils.hasText(this.server.getDefaultLabel())) {
+				return this.server.getDefaultLabel();
+			}
+			else {
+				return repository.getDefaultLabel();
+			}
+		}
+
 	}
 
 	@Configuration
@@ -61,26 +78,30 @@ public class EnvironmentRepositoryConfiguration {
 
 	@Configuration
 	@ConditionalOnMissingBean(EnvironmentRepository.class)
-	protected static class GitRepositoryConfiguration {
+	protected static class GitRepositoryConfiguration extends BaseRepositoryConfiguration {
 
 		@Autowired
 		private ConfigurableEnvironment environment;
 
 		@Bean
 		public EnvironmentRepository environmentRepository() {
-			return new MultipleJGitEnvironmentRepository(this.environment);
+			MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment);
+			repository.setDefaultLabel(getDefaultLabel(repository));
+			return repository;
 		}
 	}
 
 	@Configuration
 	@Profile("subversion")
-	protected static class SvnRepositoryConfiguration {
+	protected static class SvnRepositoryConfiguration extends BaseRepositoryConfiguration {
 		@Autowired
 		private ConfigurableEnvironment environment;
 
 		@Bean
 		public EnvironmentRepository environmentRepository() {
-			return new SvnKitEnvironmentRepository(this.environment);
+			SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment);
+			repository.setDefaultLabel(getDefaultLabel(repository));
+			return repository;
 		}
 	}
 

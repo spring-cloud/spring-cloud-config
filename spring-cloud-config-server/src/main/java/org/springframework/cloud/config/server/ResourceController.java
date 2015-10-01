@@ -50,12 +50,12 @@ public class ResourceController {
 
 	private ResourceRepository resourceRepository;
 
-	private EnvironmentController environmentController;
+	private EnvironmentRepository environmentRepository;
 
 	public ResourceController(ResourceRepository resourceRepository,
-			EnvironmentController environmentController) {
+			EnvironmentRepository environmentRepository) {
 		this.resourceRepository = resourceRepository;
-		this.environmentController = environmentController;
+		this.environmentRepository = environmentRepository;
 	}
 
 	@RequestMapping("/{name}/{profile}/{label}/{path:.*}")
@@ -66,7 +66,7 @@ public class ResourceController {
 		environment.getPropertySources().addAfter(
 				StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
 				new EnvironmentPropertySource(
-						this.environmentController.labelled(name, profile, label)));
+						this.environmentRepository.findOne(name, profile, label)));
 		String text = StreamUtils.copyToString(
 				this.resourceRepository.findOne(name, profile, label, path).getInputStream(),
 				Charset.forName("UTF-8"));

@@ -74,6 +74,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
+	private String defaultLabel = DEFAULT_LABEL;
+
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
 	}
@@ -104,7 +106,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	@Override
 	public String getDefaultLabel() {
-		return DEFAULT_LABEL;
+		return this.defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 	@Override

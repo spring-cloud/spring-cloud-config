@@ -51,7 +51,7 @@ public class ResourceControllerTests {
 		this.repository = new GenericResourceRepository(this.environmentRepository);
 		this.repository.setResourceLoader(this.context);
 		this.controller = new ResourceController(this.repository,
-				new EnvironmentController(this.environmentRepository));
+				this.environmentRepository);
 		this.context.close();
 	}
 

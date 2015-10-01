@@ -26,7 +26,6 @@ import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfigurati
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.EnvironmentControllerIntegrationTests.ControllerConfiguration;
-import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -57,6 +56,7 @@ public class EnvironmentControllerIntegrationTests {
 	@Before
 	public void init() {
 		Mockito.reset(this.repository);
+		Mockito.when(this.repository.getDefaultLabel()).thenReturn("master");
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 	}
 
@@ -135,8 +135,7 @@ public class EnvironmentControllerIntegrationTests {
 
 		@Bean
 		public EnvironmentController controller() {
-			return new EnvironmentController(environmentRepository(),
-					new CipherEnvironmentEncryptor(null));
+			return new EnvironmentController(environmentRepository());
 		}
 
 	}

@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
@@ -66,23 +64,10 @@ public class EnvironmentController {
 
 	private EnvironmentRepository repository;
 
-	private EnvironmentEncryptor environmentEncryptor;
-
-	private String defaultLabel;
-
-	private Map<String, String> overrides = new LinkedHashMap<>();
-
 	private boolean stripDocument = true;
 
 	public EnvironmentController(EnvironmentRepository repository) {
-		this(repository, null);
-	}
-
-	public EnvironmentController(EnvironmentRepository repository,
-			EnvironmentEncryptor environmentEncryptor) {
 		this.repository = repository;
-		this.defaultLabel = repository.getDefaultLabel();
-		this.environmentEncryptor = environmentEncryptor;
 	}
 
 	/**
@@ -98,14 +83,14 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
 	public Environment defaultLabel(@PathVariable String name,
 			@PathVariable String profiles) {
-		return labelled(name, profiles, this.defaultLabel);
+		return labelled(name, profiles, this.repository.getDefaultLabel());
 	}
 
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
 		if (label == null) {
-			label = this.defaultLabel;
+			label = this.repository.getDefaultLabel();
 		}
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
@@ -113,19 +98,13 @@ public class EnvironmentController {
 			label = label.replace("(_)", "/");
 		}
 		Environment environment = this.repository.findOne(name, profiles, label);
-		if (this.environmentEncryptor != null) {
-			environment = this.environmentEncryptor.decrypt(environment);
-		}
-		if (!this.overrides.isEmpty()) {
-			environment.addFirst(new PropertySource("overrides", this.overrides));
-		}
 		return environment;
 	}
 
 	@RequestMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name,
 			@PathVariable String profiles) throws IOException {
-		return labelledProperties(name, profiles, this.defaultLabel);
+		return labelledProperties(name, profiles, this.repository.getDefaultLabel());
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.properties")
@@ -141,7 +120,7 @@ public class EnvironmentController {
 	@RequestMapping("{name}-{profiles}.json")
 	public ResponseEntity<Map<String, Object>> jsonProperties(@PathVariable String name,
 			@PathVariable String profiles) throws Exception {
-		return labelledJsonProperties(name, profiles, this.defaultLabel);
+		return labelledJsonProperties(name, profiles, this.repository.getDefaultLabel());
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.json")
@@ -168,7 +147,7 @@ public class EnvironmentController {
 	@RequestMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> yaml(@PathVariable String name,
 			@PathVariable String profiles) throws Exception {
-		return labelledYaml(name, profiles, this.defaultLabel);
+		return labelledYaml(name, profiles, this.repository.getDefaultLabel());
 	}
 
 	@RequestMapping({ "/{label}/{name}-{profiles}.yml",
@@ -310,25 +289,6 @@ public class EnvironmentController {
 			String key = iter.next();
 			if (key.equals("spring.profiles")) {
 				iter.remove();
-			}
-		}
-	}
-
-	/**
-	 * @param defaultLabel
-	 */
-	public void setDefaultLabel(String defaultLabel) {
-		this.defaultLabel = defaultLabel;
-	}
-
-	/**
-	 * @param overrides the overrides to set
-	 */
-	public void setOverrides(Map<String, String> overrides) {
-		this.overrides = new HashMap<String, String>(overrides);
-		for (String key : overrides.keySet()) {
-			if (overrides.get(key).contains("$\\{")) {
-				this.overrides.put(key, overrides.get(key).replace("$\\{", "${"));
 			}
 		}
 	}

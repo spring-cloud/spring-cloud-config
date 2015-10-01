@@ -30,7 +30,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -55,8 +54,7 @@ public class EnvironmentControllerTests {
 	@Before
 	public void init() {
 		Mockito.when(this.repository.getDefaultLabel()).thenReturn("master");
-		this.controller = new EnvironmentController(this.repository,
-				new CipherEnvironmentEncryptor(null));
+		this.controller = new EnvironmentController(this.repository);
 	}
 
 	@Test
@@ -254,28 +252,6 @@ public class EnvironmentControllerTests {
 		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
 		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-spam.json")).andExpect(
 				MockMvcResultMatchers.status().isBadRequest());
-	}
-
-	@Test
-	public void allowOverrideFalse() throws Exception {
-		this.controller.setOverrides(Collections.singletonMap("foo", "bar"));
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("a.b.c", "d");
-		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master")).thenReturn(this.environment);
-		assertEquals("{foo=bar}", this.controller.defaultLabel("foo", "bar")
-				.getPropertySources().get(0).getSource().toString());
-	}
-
-	@Test
-	public void overrideWithEscapedPlaceholders() throws Exception {
-		this.controller.setOverrides(Collections.singletonMap("foo", "$\\{bar}"));
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("bar", "foo");
-		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master")).thenReturn(this.environment);
-		assertEquals("{foo=${bar}}", this.controller.defaultLabel("foo", "bar")
-				.getPropertySources().get(0).getSource().toString());
 	}
 
 }

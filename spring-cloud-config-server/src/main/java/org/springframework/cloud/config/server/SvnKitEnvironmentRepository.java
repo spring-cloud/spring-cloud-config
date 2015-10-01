@@ -48,9 +48,15 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 
 	private static final String DEFAULT_LABEL = "trunk";
 
+	private String defaultLabel = DEFAULT_LABEL;
+
 	@Override
 	public String getDefaultLabel() {
-		return DEFAULT_LABEL;
+		return this.defaultLabel ;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 	@Override

@@ -19,13 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.config.server.ConfigServerProperties;
 import org.springframework.cloud.config.server.EnvironmentController;
+import org.springframework.cloud.config.server.EnvironmentEncryptorEnvironmentRepository;
 import org.springframework.cloud.config.server.EnvironmentRepository;
 import org.springframework.cloud.config.server.ResourceController;
 import org.springframework.cloud.config.server.ResourceRepository;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Dave Syer
@@ -48,25 +48,20 @@ public class ConfigServerMvcConfiguration {
 
 	@Bean
 	public EnvironmentController environmentController() {
-		EnvironmentController controller = new EnvironmentController(this.repository, this.environmentEncryptor);
-		controller.setDefaultLabel(getDefaultLabel());
-		controller.setOverrides(this.server.getOverrides());
+		EnvironmentController controller = new EnvironmentController(encrypted());
 		controller.setStripDocumentFromYaml(this.server.isStripDocumentFromYaml());
 		return controller;
 	}
 
 	@Bean
 	public ResourceController resourceController() {
-		ResourceController controller = new ResourceController(this.resources, environmentController());
+		ResourceController controller = new ResourceController(this.resources, encrypted());
 		return controller;
 	}
 
-	private String getDefaultLabel() {
-		if (StringUtils.hasText(this.server.getDefaultLabel())) {
-			return this.server.getDefaultLabel();
-		}
-		else {
-			return this.repository.getDefaultLabel();
-		}
+	private EnvironmentEncryptorEnvironmentRepository encrypted() {
+		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(this.repository, this.environmentEncryptor);
+		encrypted.setOverrides(this.server.getOverrides());
+		return encrypted;
 	}
 }
