@@ -14,7 +14,7 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.ConfigServerApplication;
-import org.springframework.cloud.config.server.ConfigServerTestUtils;
+import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;

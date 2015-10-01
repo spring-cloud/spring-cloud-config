@@ -34,8 +34,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.config.server.AbstractScmEnvironmentRepository;
-import org.springframework.cloud.config.server.NativeEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.AbstractScmEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Configuration;

@@ -1,10 +1,10 @@
 # Bootstrap components
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
-org.springframework.cloud.config.server.ConfigServerBootstrapConfiguration
+org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapConfiguration
 
 # Application listeners
 org.springframework.context.ApplicationListener=\
-org.springframework.cloud.config.server.ConfigServerBootstrapApplicationListener
+org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapApplicationListener
 
 # Autoconfiguration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\

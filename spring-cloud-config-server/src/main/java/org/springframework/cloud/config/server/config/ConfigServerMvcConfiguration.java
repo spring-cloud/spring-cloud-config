@@ -17,13 +17,12 @@ package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.cloud.config.server.ConfigServerProperties;
-import org.springframework.cloud.config.server.EnvironmentController;
-import org.springframework.cloud.config.server.EnvironmentEncryptorEnvironmentRepository;
-import org.springframework.cloud.config.server.EnvironmentRepository;
-import org.springframework.cloud.config.server.ResourceController;
-import org.springframework.cloud.config.server.ResourceRepository;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
+import org.springframework.cloud.config.server.environment.EnvironmentController;
+import org.springframework.cloud.config.server.environment.EnvironmentEncryptorEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.resource.ResourceController;
+import org.springframework.cloud.config.server.resource.ResourceRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

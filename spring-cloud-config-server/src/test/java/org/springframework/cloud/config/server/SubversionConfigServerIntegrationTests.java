@@ -15,23 +15,24 @@
  */
 package org.springframework.cloud.config.server;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
+import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 /**
  * @author Michael Prankl
@@ -61,7 +62,7 @@ public class SubversionConfigServerIntegrationTests {
 	@Test
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate().getForObject("http://localhost:"
-				+ port + "/foo/development/", Environment.class);
+				+ this.port + "/foo/development/", Environment.class);
 		assertFalse(environment.getPropertySources().isEmpty());
 		assertEquals("overrides", environment.getPropertySources().get(0).getName());
 		assertEquals("{spring.cloud.config.enabled=true}", environment
@@ -70,7 +71,7 @@ public class SubversionConfigServerIntegrationTests {
 
 	@Test
 	public void defaultLabel() throws Exception {
-		EnvironmentRepository repository = context.getBean(EnvironmentRepository.class);
+		SvnKitEnvironmentRepository repository = this.context.getBean(SvnKitEnvironmentRepository.class);
 		assertEquals("trunk", repository.getDefaultLabel());
 	}
 

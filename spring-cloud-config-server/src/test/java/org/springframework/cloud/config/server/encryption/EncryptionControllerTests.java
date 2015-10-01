@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 
 import org.junit.Test;
-import org.springframework.cloud.config.server.ConfigServerProperties;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
@@ -34,9 +33,8 @@ import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
  */
 public class EncryptionControllerTests {
 
-	private ConfigServerProperties properties = new ConfigServerProperties();
 	private EncryptionController controller = new EncryptionController(
-			new SingleTextEncryptorLocator(Encryptors.noOpText()), this.properties);
+			new SingleTextEncryptorLocator(Encryptors.noOpText()));
 
 	@Test(expected = KeyNotInstalledException.class)
 	public void cannotDecryptWithoutKey() {
@@ -50,24 +48,24 @@ public class EncryptionControllerTests {
 
 	@Test
 	public void sunnyDayRsaKey() {
-		this.controller = new EncryptionController(new SingleTextEncryptorLocator(
-				new RsaSecretEncryptor()), this.properties);
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
 		String cipher = this.controller.encrypt("foo", MediaType.TEXT_PLAIN);
 		assertEquals("foo", this.controller.decrypt(cipher, MediaType.TEXT_PLAIN));
 	}
 
 	@Test
 	public void publicKey() {
-		this.controller = new EncryptionController(new SingleTextEncryptorLocator(
-				new RsaSecretEncryptor()), this.properties);
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
 		String key = this.controller.getPublicKey();
 		assertTrue("Wrong key format: " + key, key.startsWith("ssh-rsa"));
 	}
 
 	@Test
 	public void appAndProfile() {
-		this.controller = new EncryptionController(new SingleTextEncryptorLocator(
-				new RsaSecretEncryptor()), this.properties);
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
 		// Add space to input
 		String cipher = this.controller.encrypt("app", "default", "foo bar",
 				MediaType.TEXT_PLAIN);
@@ -78,8 +76,8 @@ public class EncryptionControllerTests {
 
 	@Test
 	public void formDataIn() {
-		this.controller = new EncryptionController(new SingleTextEncryptorLocator(
-				new RsaSecretEncryptor()), this.properties);
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
 		// Add space to input
 		String cipher = this.controller.encrypt("foo bar=",
 				MediaType.APPLICATION_FORM_URLENCODED);
@@ -90,8 +88,8 @@ public class EncryptionControllerTests {
 
 	@Test
 	public void formDataInWithPrefix() {
-		this.controller = new EncryptionController(new SingleTextEncryptorLocator(
-				new RsaSecretEncryptor()), this.properties);
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
 		// Add space to input
 		String cipher = this.controller.encrypt("{key:test}foo bar=",
 				MediaType.APPLICATION_FORM_URLENCODED);
@@ -111,7 +109,7 @@ public class EncryptionControllerTests {
 				return this.encryptor;
 			}
 		};
-		this.controller = new EncryptionController(locator, this.properties);
+		this.controller = new EncryptionController(locator);
 		// Add space to input
 		String cipher = this.controller.encrypt("app", "default", "foo bar",
 				MediaType.TEXT_PLAIN);

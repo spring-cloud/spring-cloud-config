@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
 
 import org.junit.Test;
-import org.springframework.cloud.config.server.ConfigServerProperties;
 import org.springframework.security.crypto.encrypt.Encryptors;
 
 /**
@@ -14,9 +13,8 @@ import org.springframework.security.crypto.encrypt.Encryptors;
 
 public class EncryptionControllerMultiTextEncryptorTests {
 
-	ConfigServerProperties properties = new ConfigServerProperties();
 	EncryptionController controller = new EncryptionController(
-			new SingleTextEncryptorLocator(Encryptors.noOpText()), this.properties);
+			new SingleTextEncryptorLocator(Encryptors.noOpText()));
 
 	String application = "application";
 	String profiles = "profile1,profile2";
@@ -25,8 +23,8 @@ public class EncryptionControllerMultiTextEncryptorTests {
 	@Test
 	public void shouldEncryptUsingApplicationAndProfiles() {
 
-		this.controller = new EncryptionController(new SingleTextEncryptorLocator(
-				Encryptors.text("application", "11")), this.properties);
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(Encryptors.text("application", "11")));
 
 		// when
 		String encrypted = this.controller.encrypt(this.application, this.profiles,

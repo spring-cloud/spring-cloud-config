@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.config.server.ConfigServerProperties;
 import org.springframework.cloud.context.encrypt.KeyFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -53,20 +52,28 @@ public class EncryptionController {
 
 	volatile private TextEncryptorLocator encryptor;
 
-	private final ConfigServerProperties properties;
-
 	private EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
 
-	public EncryptionController(TextEncryptorLocator encryptor,
-			ConfigServerProperties configServerProperties) {
+	private String defaultApplicationName = "application";
+
+	private String defaultProfile = "default";
+
+	public EncryptionController(TextEncryptorLocator encryptor) {
 		this.encryptor = encryptor;
-		this.properties = configServerProperties;
+	}
+
+	public void setDefaultApplicationName(String defaultApplicationName) {
+		this.defaultApplicationName = defaultApplicationName;
+	}
+
+	public void setDefaultProfile(String defaultProfile) {
+		this.defaultProfile = defaultProfile;
 	}
 
 	@RequestMapping(value = "/key", method = RequestMethod.GET)
 	public String getPublicKey() {
-		TextEncryptor encryptor = this.encryptor.locate(this.helper.getEncryptorKeys(
-				"application", "default", ""));
+		TextEncryptor encryptor = this.encryptor
+				.locate(this.helper.getEncryptorKeys("application", "default", ""));
 		if (!(encryptor instanceof RsaKeyHolder)) {
 			throw new KeyNotAvailableException();
 		}
@@ -75,8 +82,8 @@ public class EncryptionController {
 
 	@RequestMapping(value = "/key/{name}/{profiles}", method = RequestMethod.GET)
 	public String getPublicKey(@PathVariable String name, @PathVariable String profiles) {
-		TextEncryptor encryptor = this.encryptor.locate(this.helper.getEncryptorKeys(
-				name, profiles, ""));
+		TextEncryptor encryptor = this.encryptor
+				.locate(this.helper.getEncryptorKeys(name, profiles, ""));
 		if (!(encryptor instanceof RsaKeyHolder)) {
 			throw new KeyNotAvailableException();
 		}
@@ -111,8 +118,7 @@ public class EncryptionController {
 	public String encrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
 
-		return encrypt(this.properties.getDefaultApplicationName(),
-				this.properties.getDefaultProfile(), data, type);
+		return encrypt(this.defaultApplicationName, this.defaultProfile, data, type);
 	}
 
 	@RequestMapping(value = "/encrypt/{name}/{profiles}", method = RequestMethod.POST)
@@ -121,10 +127,10 @@ public class EncryptionController {
 		checkEncryptorInstalled(name, profiles);
 		try {
 			String input = stripFormData(data, type, false);
-			Map<String, String> keys = this.helper
-					.getEncryptorKeys(name, profiles, input);
-			String encrypted = this.helper.addPrefix(keys, this.encryptor.locate(keys)
-					.encrypt(input));
+			Map<String, String> keys = this.helper.getEncryptorKeys(name, profiles,
+					input);
+			String encrypted = this.helper.addPrefix(keys,
+					this.encryptor.locate(keys).encrypt(input));
 			logger.info("Encrypted data");
 			return encrypted;
 		}
@@ -137,8 +143,7 @@ public class EncryptionController {
 	public String decrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
 
-		return decrypt(this.properties.getDefaultApplicationName(),
-				this.properties.getDefaultProfile(), data, type);
+		return decrypt(this.defaultApplicationName, this.defaultProfile, data, type);
 	}
 
 	@RequestMapping(value = "/decrypt/{name}/{profiles}", method = RequestMethod.POST)
@@ -162,9 +167,8 @@ public class EncryptionController {
 
 	private void checkEncryptorInstalled(String name, String profiles) {
 		if (this.encryptor == null
-				|| this.encryptor
-				.locate(this.helper.getEncryptorKeys(name, profiles, ""))
-				.encrypt("FOO").equals("FOO")) {
+				|| this.encryptor.locate(this.helper.getEncryptorKeys(name, profiles, ""))
+						.encrypt("FOO").equals("FOO")) {
 			throw new KeyNotInstalledException();
 		}
 	}
