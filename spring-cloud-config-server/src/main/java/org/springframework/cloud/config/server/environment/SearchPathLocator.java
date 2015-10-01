@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.Arrays;
+
 /**
  * Strategy for locating a search path for resource (e.g. in the file system or
  * classpath).
@@ -25,6 +27,32 @@ package org.springframework.cloud.config.server.environment;
  */
 public interface SearchPathLocator {
 
-	String[] getLocations(String application, String profile, String label);
+	Locations getLocations(String application, String profile, String label);
 
+	class Locations {
+		private final String[] locations;
+		private final String version;
+
+		public Locations(String[] locations, String version) {
+			this.locations = locations;
+			this.version = version;
+		}
+
+		public String[] getLocations() {
+			return locations;
+		}
+
+		public String getVersion() {
+			return version;
+		}
+
+		@Override
+		public String toString() {
+			final StringBuffer sb = new StringBuffer("Locations{");
+			sb.append("locations=").append(locations == null ? "{}" : Arrays.asList(locations).toString());
+			sb.append(", version='").append(version).append('\'');
+			sb.append('}');
+			return sb.toString();
+		}
+	}
 }

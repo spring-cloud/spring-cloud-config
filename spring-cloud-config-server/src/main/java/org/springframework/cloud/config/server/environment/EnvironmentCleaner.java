@@ -26,7 +26,7 @@ public class EnvironmentCleaner {
 
 	public Environment clean(Environment value, String workingDir, String uri) {
 		Environment result = new Environment(value.getName(), value.getProfiles(),
-				value.getLabel());
+				value.getLabel(), value.getVersion());
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName().replace(workingDir, "");
 			name = name.replace("applicationConfig: [", "");

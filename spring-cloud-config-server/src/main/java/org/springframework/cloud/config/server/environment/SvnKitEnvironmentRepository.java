@@ -59,7 +59,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	@Override
-	public String[] getLocations(String application, String profile, String label) {
+	public Locations getLocations(String application, String profile, String label) {
 		if (label==null) {
 			label = this.defaultLabel;
 		}
@@ -70,13 +70,14 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 							false, getUsername(), getPassword()));
 		}
 		try {
+			String version;
 			if (new File(getWorkingDirectory(), ".svn").exists()) {
-				update(svnOperationFactory);
+				version = update(svnOperationFactory);
 			}
 			else {
-				checkout(svnOperationFactory);
+				version = checkout(svnOperationFactory);
 			}
-			return getLocations(label);
+			return new Locations(getLocations(label), version);
 		}
 		catch (SVNException e) {
 			throw new IllegalStateException("Cannot checkout repository", e);
@@ -104,20 +105,32 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		return locations;
 	}
 
-	private void checkout(SvnOperationFactory svnOperationFactory) throws SVNException {
+	private String checkout(SvnOperationFactory svnOperationFactory) throws SVNException {
 		logger.debug("Checking out " + getUri() + " to: "
 				+ getWorkingDirectory().getAbsolutePath());
 		final SvnCheckout checkout = svnOperationFactory.createCheckout();
 		checkout.setSource(SvnTarget.fromURL(SVNURL.parseURIEncoded(getUri())));
 		checkout.setSingleTarget(SvnTarget.fromFile(getWorkingDirectory()));
-		checkout.run();
+		Long id = checkout.run();
+		if (id == null) {
+			return null;
+		}
+		return id.toString();
 	}
 
-	private void update(SvnOperationFactory svnOperationFactory) throws SVNException {
+	private String update(SvnOperationFactory svnOperationFactory) throws SVNException {
 		logger.debug("Repo already checked out - updating instead.");
 		final SvnUpdate update = svnOperationFactory.createUpdate();
 		update.setSingleTarget(SvnTarget.fromFile(getWorkingDirectory()));
-		update.run();
+		long[] ids = update.run();
+		StringBuilder version = new StringBuilder();
+		for (long id : ids) {
+			if (version.length() > 0) {
+				version.append(",");
+			}
+			version.append(id);
+		}
+		return version.toString();
 	}
 
 	@Override
