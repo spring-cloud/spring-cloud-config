@@ -1173,6 +1173,21 @@ configured with a symmetric key or a full key pair):</p>
 mysecret</pre>
 </div>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+If you are testing like this with curl, then use
+<code>--data-urlencode</code> (instead of <code>-d</code>) or set an explicit <code>Content-Type:
+text/plain</code> to make sure curl encodes the data correctly when there
+are special characters ('+' is particularly tricky).
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>Take the encrypted value and add the <code>{cipher}</code> prefix before you put
 it in the YAML or properties file, and before you commit and push it
@@ -1704,7 +1719,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-10-02 10:41:03 UTC
+Last updated 2015-10-06 16:49:43 UTC
 </div>
 </div>
 </body>
