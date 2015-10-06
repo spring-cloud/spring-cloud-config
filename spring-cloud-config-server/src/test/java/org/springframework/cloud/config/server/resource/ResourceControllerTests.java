@@ -24,8 +24,6 @@ import org.junit.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
-import org.springframework.cloud.config.server.resource.GenericResourceRepository;
-import org.springframework.cloud.config.server.resource.ResourceController;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
@@ -64,6 +62,13 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = this.controller.resolve("foo", "bar", "dev", "template.json");
 		assertEquals("{\n  \"foo\": \"dev_bar\"\n}", resource);
+	}
+
+	@Test
+	public void templateReplacementNotForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		String resource = new String(this.controller.binary("foo", "bar", "dev", "template.json"));
+		assertEquals("{\n  \"foo\": \"${foo}\"\n}", resource);
 	}
 
 	@Test

@@ -26,6 +26,7 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,6 +75,20 @@ public class ResourceController {
 		// Mask out escaped placeholders
 		text = text.replace("\\${", "$_{");
 		return environment.resolvePlaceholders(text).replace("$_{", "${");
+	}
+
+	@RequestMapping(value="/{name}/{profile}/{label}/{path:.*}", produces=MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	public synchronized byte[] binary(@PathVariable String name,
+			@PathVariable String profile, @PathVariable String label,
+			@PathVariable String path) throws IOException {
+		StandardEnvironment environment = new StandardEnvironment();
+		environment.getPropertySources().addAfter(
+				StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
+				new EnvironmentPropertySource(
+						this.environmentRepository.findOne(name, profile, label)));
+		byte[] text = StreamUtils.copyToByteArray(
+				this.resourceRepository.findOne(name, profile, label, path).getInputStream());
+		return text;
 	}
 
 	@ExceptionHandler(NoSuchResourceException.class)
