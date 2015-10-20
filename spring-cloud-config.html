@@ -429,9 +429,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_key_management">Key Management</a></li>
 <li><a href="#_creating_a_key_store_for_testing">Creating a Key Store for Testing</a></li>
 <li><a href="#_using_multiple_keys_and_key_rotation">Using Multiple Keys and Key Rotation</a></li>
-<li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
 </ul>
 </li>
+<li><a href="#_serving_plain_text">Serving Plain Text</a></li>
+<li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
+<li><a href="#_push_notifications_and_spring_cloud_bus">Push Notifications and Spring Cloud Bus</a></li>
 <li><a href="#_spring_cloud_config_client">Spring Cloud Config Client</a>
 <ul class="sectlevel2">
 <li><a href="#config-first-bootstrap">Config First Bootstrap</a></li>
@@ -450,9 +452,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p>Spring Cloud Config provides server and client-side support for externalized configuration in a distributed system. With the Config Server you have a central place to manage external properties for applications across all environments. The concepts on both client and server map identically to the Spring <code>Environment</code> and <code>PropertySource</code> abstractions, so they fit very well with Spring applications, but can be used with any application running in any language. As an application moves through the deployment pipeline from dev to test and into production you can manage the configuration between those environments and be certain that applications have everything they need to run when they migrate. The default implementation of the server storage backend uses git so it easily supports labelled versions of configuration environments, as well as being accessible to a wide range of tooling for managing the content.  It is easy to add alternative implementations and plug them in with Spring configuration.</p>
-</div>
-<div class="paragraph">
-<p><a href="https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/contributing-docs.adoc" class="bare">https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/contributing-docs.adoc</a></p>
 </div>
 </div>
 </div>
@@ -663,7 +662,78 @@ the config server URL.
 <p>The Server provides an HTTP, resource-based API for external
 configuration (name-value pairs, or equivalent YAML content).  The
 server is easily embeddable in a Spring Boot application using the
-<code>@EnableConfigServer</code> annotation.</p>
+<code>@EnableConfigServer</code> annotation. So this app is a config server:</p>
+</div>
+<div class="listingblock">
+<div class="title">ConfigServer.java</div>
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@SpringBootApplication
+@EnableConfigServer
+public class ConfigServer {
+  public static void main(String[] args) {
+    SpringApplication.run(ConfigServer.class, args);
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Like all Spring Boot apps it runs on port 8080 by default, but you
+can switch it to the conventional port 8888 in various ways. The
+easiest, which also sets a default configuration repository,
+is by launching it with <code>spring.config.name=configserver</code> (there
+is a <code>configserver.yml</code> in the Config Server jar). Another is
+to use your own <code>application.properties</code>, e.g.</p>
+</div>
+<div class="listingblock">
+<div class="title">application.properties</div>
+<div class="content">
+<pre class="highlight"><code class="language-properties" data-lang="properties">server.port: 8888
+spring.cloud.config.server.git.uri: file://${HOME}/config-repo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where <code>${HOME}/config-repo</code> is a git repository containing
+YAML and properties files.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Here&#8217;s a recipe for creating the git repository in the example
+above:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ cd $HOME
+$ mkdir config-repo
+$ cd config-repo
+$ git init .
+$ echo info.foo: bar &gt; application.properties
+$ git add -A .
+$ git commit -m "Add application.properties"</pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+using the local filesystem for your git repository is
+intended for testing only. Use a server to host your
+configuration repositories in production.
+</td>
+</tr>
+</table>
 </div>
 <div class="sect2">
 <h3 id="_environment_repository">Environment Repository</h3>
@@ -757,7 +827,10 @@ them from the shell with quotes '').</p>
 </div>
 <div class="paragraph">
 <p>Spring Cloud Config Server supports a single or multiple git
-repositories:</p>
+repositories with pattern matching on the application and profile
+name. The pattern format is a comma-separated list of
+<code>{application}/{profile}</code> names with wildcards (where a pattern
+beginning with a wildcard may need to be quoted). Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -768,22 +841,83 @@ repositories:</p>
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
           repos:
-            simple: https://github.com/pattern1/config-repo
+            simple: https://github.com/simple/config-repo
             special:
-              pattern: pattern*,*pattern1*
-              uri: https://github.com/pattern2/config-repo
+              pattern: special*/dev*,*special*/dev*
+              uri: https://github.com/special/config-repo
             local:
               pattern: local*
               uri: file:/home/configsvc/config-repo</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In the above example, if {application} does not match to any of the
-patterns, it will use the default uri defined under
-"spring.cloud.config.server.git.uri". For the "simple" repository, the
-pattern is "simple" (i.e. it only matches one application).  The
-pattern format is a comma-separated list of application names with
-wildcards.</p>
+<p>If <code>{application}/{profile}</code> does not match any of the patterns, it
+will use the default uri defined under
+"spring.cloud.config.server.git.uri". In the above example, for the
+"simple" repository, the pattern is <code>simple/*</code> (i.e. it only matches
+one application named "simple" in all profiles). The "local"
+repository matches all application names beginning with "local" in all
+profiles (the <code>/*</code> suffix is added automatically to any pattern that
+doesn&#8217;t have a profile matcher).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the "one-liner" short cut used in the "simple" example above can
+only be used if the only property to be set is the URI. If you need to
+set anything else (credentials, pattern, etc.) you need to use the full
+form.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <code>pattern</code> property in the repo is actually an array, so you can
+use a YAML array (or <code>[0]</code>, <code>[1]</code>, etc. suffixes in properties files)
+to bind to multiple patterns. You may need to do this if you are going
+to run apps with multiple profiles. Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          repos:
+            development:
+              pattern:
+                - */development
+                - */staging
+              uri: https://github.com/development/config-repo
+            staging:
+              pattern:
+                - */qa
+                - */production
+              uri: https://github.com/staging/config-repo</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Spring Cloud will guess that a pattern containing a profile that
+doesn&#8217;t end in <code>*</code> implies that you actually want to match a list of
+profiles starting with this pattern (so <code>*/staging</code> is a shortcut for
+<code>["*/staging", "*/staging,*"]</code>). This is common where you need to run
+apps in the "development" profile locally but also the "cloud" profile
+remotely, for instance.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Every repository can also optionally store config files in
@@ -1004,6 +1138,16 @@ instance:</p>
 </div>
 </div>
 <div class="paragraph">
+<p>Encrypted values in a .properties file must not be wrapped in quotes, otherwise the value will not be decrypted:</p>
+</div>
+<div class="listingblock">
+<div class="title">application.properties</div>
+<div class="content">
+<pre>spring.datasource.username: dbuser
+spring.datasource.password: {cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ</pre>
+</div>
+</div>
+<div class="paragraph">
 <p>You can safely push this plain text to a shared git repository and the
 secret password is protected.</p>
 </div>
@@ -1029,10 +1173,25 @@ configured with a symmetric key or a full key pair):</p>
 mysecret</pre>
 </div>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+If you are testing like this with curl, then use
+<code>--data-urlencode</code> (instead of <code>-d</code>) or set an explicit <code>Content-Type:
+text/plain</code> to make sure curl encodes the data correctly when there
+are special characters ('+' is particularly tricky).
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
-<p>Take the encypted value and add the <code>{cipher}</code> prefix before you put
+<p>Take the encrypted value and add the <code>{cipher}</code> prefix before you put
 it in the YAML or properties file, and before you commit and push it
-to a remote, potentially insecure store. The <code>/encypt</code> and <code>/decrypt</code>
+to a remote, potentially insecure store. The <code>/encrypt</code> and <code>/decrypt</code>
 endpoints also both accept paths of the form <code>/*/{name}/{profiles}</code>
 which can be used to control cryptography per application (name)
 and profile when clients call into the main Environment resource.</p>
@@ -1065,7 +1224,7 @@ mysecret</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>To use a key in a file (e.g. an RSA public key for encyption) prepend
+<p>To use a key in a file (e.g. an RSA public key for encryption) prepend
 the key value with "@" and provide the file path, e.g.</p>
 </div>
 <div class="listingblock">
@@ -1201,8 +1360,108 @@ handle all encryption as well as decryption.
 </table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_embedding_the_config_server">Embedding the Config Server</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_serving_plain_text">Serving Plain Text</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Instead of using the <code>Environment</code> abstraction (or one of the
+alternative representations of it in YAML or properties format) your
+applications might need generic plain text configuration files,
+tailored to their environment. The Config Server provides these
+through an additional endpoint at <code>/{name}/{profile}/{label}/{path}</code>
+where "name", "profile" and "label" have the same meaning as the
+regular environment endpoint, but "path" is a file name
+(e.g. <code>log.xml</code>). The source files for this endpoint are located in
+the same way as for the environment endpoints: the same search path is
+used as for properties or YAML files, but instead of aggregating all
+matching resources, only the first one to match is returned.</p>
+</div>
+<div class="paragraph">
+<p>After a resource is located, placeholders in the normal format
+(<code>${&#8230;&#8203;}</code>) are resolved using the effective <code>Environment</code> for the
+application name, profile and label supplied. In this way the resource
+endpoint is tightly integrated with the environment
+endpoints. Example, if you have this layout for a GIT (or SVN)
+repository:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>application.yml
+nginx.conf</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where <code>nginx.conf</code> looks like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>server {
+    listen              80;
+    server_name         ${nginx.server.name};
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and <code>application.yml</code> like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">nginx:
+  server:
+    name: example.com
+---
+spring:
+  profiles: development
+nginx:
+  server:
+    name: develop.com</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>then the <code>/foo/default/master/nginx.conf</code> resource looks like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>server {
+    listen              80;
+    server_name         example.com;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and <code>/foo/development/master/nginx.conf</code> like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>server {
+    listen              80;
+    server_name         develop.com;
+}</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+just like the source files for environment configuration, the
+"profile" is used to resolve the file name, so if you want a
+profile-specific file then <code>/*/development/*/logback.xml</code> will be
+resolved by a file called <code>logback-development.xml</code> (in preference
+to <code>logback.xml</code>).
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_embedding_the_config_server">Embedding the Config Server</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The Config Server runs best as a standalone application, but if you
 need to you can embed it in another application. Just use the
@@ -1218,6 +1477,70 @@ own remote repository. The flag is off by default because it can delay
 startup, but when embedded in another application it makes sense to
 initialize the same way as any other application.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_push_notifications_and_spring_cloud_bus">Push Notifications and Spring Cloud Bus</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Many source code repository providers (like Github, Gitlab or Bitbucket
+for instance) will notify you of changes in a repository through a
+webhook. You can configure the webhook via the provider&#8217;s user
+interface as a URL and a set of events in which you are
+interested. For instance
+<a href="https://developer.github.com/v3/activity/events/types/#pushevent">Github</a>
+will POST to the webhook with a JSON body containing a list of
+commits, and a header "X-Github-Event" equal to "push". If you add a
+dependency on the <code>spring-cloud-config-monitor</code> library and activate
+the Spring Cloud Bus in your Config Server, then a "/monitor" endpoint
+is enabled.</p>
+</div>
+<div class="paragraph">
+<p>When the webhook is activated the Config Server will send a
+<code>RefreshRemoteApplicationEvent</code> targeted at the applications it thinks
+might have changed. The change detection can be strategized, but by
+default it just looks for changes in files that match the application
+name (e.g. "foo.properties" is targeted at the "foo" application, and
+"application.properties" is targeted at all applications). The strategy
+if you want to override the behaviour is <code>PropertyPathNotificationExtractor</code>
+which accepts the request headers and body as parameters and returns a list
+of file paths that changed.</p>
+</div>
+<div class="paragraph">
+<p>The default configuration works out of the box with Github, Gitlab or
+Bitbucket. In addition to the JSON notifications from Github, Gitlab
+or Bitbucket you can trigger a change notification by POSTing to
+"/monitor" with a form-encoded body parameters <code>path={name}</code>. This will
+broadcast to applications matching the "{name}" pattern (can contain
+wildcards).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the <code>RefreshRemoteApplicationEvent</code> will only be transmitted if
+the <code>spring-cloud-bus</code> is activated in the Config Server and in the
+client application.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the default configuration also detects filesystem changes in
+local git repositories (the webhook is not used in that case but as
+soon as you edit a config file a refresh will be broadcast).
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -1396,7 +1719,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-10-15 17:12:11 UTC
+Last updated 2015-10-20 13:24:17 UTC
 </div>
 </div>
 </body>
