@@ -42,6 +42,13 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void emptySearchLocations() {
+		this.repository.setSearchLocations((String[])null);
+		Environment environment = this.repository.findOne("foo", "development", "master");
+		assertEquals(2, environment.getPropertySources().size());
+	}
+
+	@Test
 	public void vanilla() {
 		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertEquals(2, environment.getPropertySources().size());

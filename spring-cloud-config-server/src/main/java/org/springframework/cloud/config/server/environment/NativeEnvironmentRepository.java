@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.config.ConfigFileEnvironmentPostProcessor;
@@ -58,7 +59,7 @@ public class NativeEnvironmentRepository
 	 * Locations to search for configuration files. Defaults to the same as a Spring Boot
 	 * app so [classpath:/,classpath:/config/,file:./,file:./config/].
 	 */
-	private String[] searchLocations;
+	private String[] searchLocations = new String[0];
 
 	/**
 	 * Flag to determine how to handle exceptions during decryption (default false).
@@ -97,7 +98,7 @@ public class NativeEnvironmentRepository
 				PropertyPlaceholderAutoConfiguration.class);
 		ConfigurableEnvironment environment = getEnvironment(profile);
 		builder.environment(environment);
-		builder.web(false).showBanner(false);
+		builder.web(false).bannerMode(Mode.OFF);
 		String[] args = getArgs(config, label);
 		// Explicitly set the listeners (to exclude logging listener which would change
 		// log levels in the caller)
@@ -118,7 +119,7 @@ public class NativeEnvironmentRepository
 	@Override
 	public Locations getLocations(String application, String profile, String label) {
 		String[] locations = this.searchLocations;
-		if (this.searchLocations == null) {
+		if (this.searchLocations == null || this.searchLocations.length == 0) {
 			locations = DEFAULT_LOCATIONS;
 		}
 		List<String> output = new ArrayList<String>();
@@ -130,15 +131,16 @@ public class NativeEnvironmentRepository
 				output.add(location + label.trim() + "/");
 			}
 		}
-		return new Locations(application, profile, label, this.version, output.toArray(new String[0]));
+		return new Locations(application, profile, label, this.version,
+				output.toArray(new String[0]));
 	}
 
 	private ConfigurableEnvironment getEnvironment(String profile) {
 		ConfigurableEnvironment environment = new StandardEnvironment();
 		environment.getPropertySources()
 				.addFirst(new MapPropertySource("profiles",
-						Collections.<String, Object> singletonMap(
-								"spring.profiles.active", profile)));
+						Collections.<String, Object>singletonMap("spring.profiles.active",
+								profile)));
 		return environment;
 	}
 
@@ -160,7 +162,8 @@ public class NativeEnvironmentRepository
 							.cleanPath(new File(normal.substring("file:".length()))
 									.getAbsolutePath());
 				}
-				for (String pattern : getLocations(null, null, result.getLabel()).getLocations()) {
+				for (String pattern : getLocations(null, null, result.getLabel())
+						.getLocations()) {
 					if (!pattern.contains(":")) {
 						pattern = "file:" + pattern;
 					}
@@ -202,7 +205,8 @@ public class NativeEnvironmentRepository
 		list.add("--spring.config.name=" + config);
 		list.add("--spring.cloud.bootstrap.enabled=false");
 		list.add("--encrypt.failOnError=" + this.failOnError);
-		list.add("--spring.config.location=" + StringUtils.arrayToCommaDelimitedString(getLocations(null, null, label).getLocations()));
+		list.add("--spring.config.location=" + StringUtils.arrayToCommaDelimitedString(
+				getLocations(null, null, label).getLocations()));
 		return list.toArray(new String[0]);
 	}
 
@@ -212,12 +216,14 @@ public class NativeEnvironmentRepository
 
 	public void setSearchLocations(String... locations) {
 		this.searchLocations = locations;
-		for (int i = 0; i < locations.length; i++) {
-			String location = locations[i];
-			if (isDirectory(location) && !location.endsWith("/")) {
-				location = location + "/";
+		if (locations != null) {
+			for (int i = 0; i < locations.length; i++) {
+				String location = locations[i];
+				if (isDirectory(location) && !location.endsWith("/")) {
+					location = location + "/";
+				}
+				locations[i] = location;
 			}
-			locations[i] = location;
 		}
 	}
 
