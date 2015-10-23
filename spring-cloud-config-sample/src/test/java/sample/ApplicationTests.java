@@ -1,5 +1,9 @@
 package sample;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,10 +18,6 @@ import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
@@ -59,9 +59,9 @@ public class ApplicationTests {
 
 	@Test
 	public void contextLoads() {
-		String foo = new TestRestTemplate().getForObject("http://localhost:" + port
-				+ "/env/info.foo", String.class);
-		assertEquals("bar", foo);
+		String foo = new TestRestTemplate()
+				.getForObject("http://localhost:" + port + "/env/info.foo", String.class);
+		assertEquals("{\"info.foo\":\"bar\"}", foo);
 	}
 
 	public static void main(String[] args) throws IOException {
