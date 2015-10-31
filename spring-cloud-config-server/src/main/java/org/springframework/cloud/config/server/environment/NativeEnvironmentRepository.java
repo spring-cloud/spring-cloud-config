@@ -27,9 +27,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.config.ConfigFileEnvironmentPostProcessor;
+import org.springframework.boot.context.config.ConfigFileApplicationListener;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.env.EnvironmentPostProcessingApplicationListener;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -103,8 +102,7 @@ public class NativeEnvironmentRepository
 		// Explicitly set the listeners (to exclude logging listener which would change
 		// log levels in the caller)
 		builder.application()
-				.setListeners(Arrays.asList(new ConfigFileEnvironmentPostProcessor(),
-						new EnvironmentPostProcessingApplicationListener()));
+				.setListeners(Arrays.asList(new ConfigFileApplicationListener()));
 		ConfigurableApplicationContext context = builder.run(args);
 		environment.getPropertySources().remove("profiles");
 		try {
