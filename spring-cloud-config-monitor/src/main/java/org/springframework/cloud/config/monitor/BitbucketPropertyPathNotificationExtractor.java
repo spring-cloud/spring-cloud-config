@@ -39,7 +39,7 @@ public class BitbucketPropertyPathNotificationExtractor
 		if ("repo:push".equals(headers.getFirst("X-Event-Key")) &&
 				StringUtils.hasText(headers.getFirst("X-Hook-UUID"))) {
 			Object push = request.get("push");
-			if (push instanceof Map && ((Map)push).get("changes") instanceof Collection) {
+			if (push instanceof Map && ((Map<?,?>)push).get("changes") instanceof Collection) {
 				// Bitbucket doesn't tell us the files that changed so this is a
 				// broadcast to all apps
 				return new PropertyPathNotification("application.yml");

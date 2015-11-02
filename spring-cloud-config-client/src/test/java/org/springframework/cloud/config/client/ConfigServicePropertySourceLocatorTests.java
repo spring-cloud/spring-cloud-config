@@ -26,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -38,7 +37,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	private ConfigurableEnvironment environment = new StandardEnvironment();
 
 	private ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
-			new ConfigClientProperties(environment));
+			new ConfigClientProperties(this.environment));
 
 	private RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
 
@@ -47,8 +46,8 @@ public class ConfigServicePropertySourceLocatorTests {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithoutLabel(new ResponseEntity<Environment>(body,
 				HttpStatus.OK));
-		locator.setRestTemplate(restTemplate);
-		assertNotNull(locator.locate(environment));
+		this.locator.setRestTemplate(this.restTemplate);
+		assertNotNull(this.locator.locate(this.environment));
 	}
 
 	@Test
@@ -56,26 +55,26 @@ public class ConfigServicePropertySourceLocatorTests {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithLabel(
 				new ResponseEntity<Environment>(body, HttpStatus.OK), "v1.0.0");
-		locator.setRestTemplate(restTemplate);
-		EnvironmentTestUtils.addEnvironment(environment,
+		this.locator.setRestTemplate(this.restTemplate);
+		EnvironmentTestUtils.addEnvironment(this.environment,
 				"spring.cloud.config.label:v1.0.0");
-		assertNotNull(locator.locate(environment));
+		assertNotNull(this.locator.locate(this.environment));
 	}
 
 	@Test
 	public void sunnyDayWithNoSuchLabel() {
 		mockRequestResponseWithLabel(new ResponseEntity<Void>((Void) null,
 				HttpStatus.NOT_FOUND), "nosuchlabel");
-		locator.setRestTemplate(restTemplate);
-		assertNull(locator.locate(environment));
+		this.locator.setRestTemplate(this.restTemplate);
+		assertNull(this.locator.locate(this.environment));
 	}
 
 	@Test
 	public void failsQuietly() {
 		mockRequestResponseWithoutLabel(new ResponseEntity<String>("Wah!",
 				HttpStatus.INTERNAL_SERVER_ERROR));
-		locator.setRestTemplate(restTemplate);
-		assertNull(locator.locate(environment));
+		this.locator.setRestTemplate(this.restTemplate);
+		assertNull(this.locator.locate(this.environment));
 	}
 
 	@Test
@@ -88,9 +87,9 @@ public class ConfigServicePropertySourceLocatorTests {
 				requestFactory.createRequest(Mockito.any(URI.class),
 						Mockito.any(HttpMethod.class))).thenReturn(request);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
-		ConfigClientProperties defaults = new ConfigClientProperties(environment);
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setFailFast(true);
-		locator = new ConfigServicePropertySourceLocator(defaults);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
 		Mockito.when(request.execute()).thenReturn(response);
 		HttpHeaders headers = new HttpHeaders();
@@ -100,11 +99,11 @@ public class ConfigServicePropertySourceLocatorTests {
 				HttpStatus.INTERNAL_SERVER_ERROR);
 		Mockito.when(response.getBody()).thenReturn(
 				new ByteArrayInputStream("{}".getBytes()));
-		locator.setRestTemplate(restTemplate);
-		expected.expectCause(IsInstanceOf
+		this.locator.setRestTemplate(restTemplate);
+		this.expected.expectCause(IsInstanceOf
 				.<Throwable> instanceOf(HttpServerErrorException.class));
-		expected.expectMessage("fail fast property is set");
-		assertNull(locator.locate(environment));
+		this.expected.expectMessage("fail fast property is set");
+		assertNull(this.locator.locate(this.environment));
 	}
 
 	@Test
@@ -117,9 +116,9 @@ public class ConfigServicePropertySourceLocatorTests {
 				requestFactory.createRequest(Mockito.any(URI.class),
 						Mockito.any(HttpMethod.class))).thenReturn(request);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
-		ConfigClientProperties defaults = new ConfigClientProperties(environment);
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setFailFast(true);
-		locator = new ConfigServicePropertySourceLocator(defaults);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
 		Mockito.when(request.execute()).thenReturn(response);
 		HttpHeaders headers = new HttpHeaders();
@@ -129,16 +128,16 @@ public class ConfigServicePropertySourceLocatorTests {
 				HttpStatus.NOT_FOUND);
 		Mockito.when(response.getBody()).thenReturn(
 				new ByteArrayInputStream("".getBytes()));
-		locator.setRestTemplate(restTemplate);
-		expected.expectCause(IsNull.nullValue(Throwable.class));
-		expected.expectMessage("fail fast property is set");
-		assertNull(locator.locate(environment));
+		this.locator.setRestTemplate(restTemplate);
+		this.expected.expectCause(IsNull.nullValue(Throwable.class));
+		this.expected.expectMessage("fail fast property is set");
+		assertNull(this.locator.locate(this.environment));
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		Mockito.when(
-				restTemplate.exchange(Mockito.any(String.class),
+				this.restTemplate.exchange(Mockito.any(String.class),
 						Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
 						Mockito.any(Class.class), Matchers.anyString(),
 						Matchers.anyString(), Matchers.eq(label))).thenReturn(response);
@@ -147,7 +146,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithoutLabel(ResponseEntity<?> response) {
 		Mockito.when(
-				restTemplate.exchange(Mockito.any(String.class),
+				this.restTemplate.exchange(Mockito.any(String.class),
 						Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
 						Mockito.any(Class.class), Matchers.anyString(),
 						Matchers.anyString())).thenReturn(response);
