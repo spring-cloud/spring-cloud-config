@@ -40,10 +40,10 @@ to use your own `application.properties`, e.g.
 [source,properties]
 ----
 server.port: 8888
-spring.cloud.config.server.git.uri: file://${HOME}/config-repo
+spring.cloud.config.server.git.uri: file://${user.home}/config-repo
 ----
 
-where `${HOME}/config-repo` is a git repository containing
+where `${user.home}/config-repo` is a git repository containing
 YAML and properties files.
 
 [TIP]

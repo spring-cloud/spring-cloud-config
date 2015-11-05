@@ -25,6 +25,9 @@ import org.springframework.cloud.config.server.resource.ResourceController;
 import org.springframework.cloud.config.server.resource.ResourceRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 /**
  * @author Dave Syer
@@ -32,7 +35,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnWebApplication
-public class ConfigServerMvcConfiguration {
+public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
+
 	@Autowired
 	private EnvironmentRepository repository;
 
@@ -42,8 +46,15 @@ public class ConfigServerMvcConfiguration {
 	@Autowired
 	private ConfigServerProperties server;
 
-	@Autowired(required=false)
+	@Autowired(required = false)
 	private EnvironmentEncryptor environmentEncryptor;
+
+	@Override
+	public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+		configurer.mediaType("properties", MediaType.valueOf("text/plain"));
+		configurer.mediaType("yml", MediaType.valueOf("text/yaml"));
+		configurer.mediaType("yaml", MediaType.valueOf("text/yaml"));
+	}
 
 	@Bean
 	public EnvironmentController environmentController() {
@@ -54,12 +65,14 @@ public class ConfigServerMvcConfiguration {
 
 	@Bean
 	public ResourceController resourceController() {
-		ResourceController controller = new ResourceController(this.resources, encrypted());
+		ResourceController controller = new ResourceController(this.resources,
+				encrypted());
 		return controller;
 	}
 
 	private EnvironmentEncryptorEnvironmentRepository encrypted() {
-		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(this.repository, this.environmentEncryptor);
+		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
+				this.repository, this.environmentEncryptor);
 		encrypted.setOverrides(this.server.getOverrides());
 		return encrypted;
 	}

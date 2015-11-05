@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Configuration;
 public class ConfigServerApplication {
 
 	public static void main(String[] args) {
-		new SpringApplicationBuilder(ConfigServerApplication.class).properties(
-				"spring.config.name=configserver", "debug=true").run(args);
+		new SpringApplicationBuilder(ConfigServerApplication.class)
+				.properties("spring.config.name=configserver").run(args);
 	}
 
 }

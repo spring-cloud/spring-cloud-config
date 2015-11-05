@@ -5,9 +5,9 @@ $ cd spring-cloud-config-server
 $ mvn spring-boot:run
 ----
 
-The server is a Spring Boot application so you can build the jar file
-and run that (`java -jar ...`) or pull it down from a Maven
-repository. Then try it out as a client:
+The server is a Spring Boot application so you can run it from your
+IDE instead if you prefer (the main class is
+`ConfigServerApplication`). Then try it out a client:
 
 ----
 $ curl localhost:8888/foo/development
