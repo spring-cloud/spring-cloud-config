@@ -468,9 +468,9 @@ $ mvn spring-boot:run</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The server is a Spring Boot application so you can build the jar file
-and run that (<code>java -jar &#8230;&#8203;</code>) or pull it down from a Maven
-repository. Then try it out as a client:</p>
+<p>The server is a Spring Boot application so you can run it from your
+IDE instead if you prefer (the main class is
+<code>ConfigServerApplication</code>). Then try it out a client:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -688,11 +688,11 @@ to use your own <code>application.properties</code>, e.g.</p>
 <div class="title">application.properties</div>
 <div class="content">
 <pre class="highlight"><code class="language-properties" data-lang="properties">server.port: 8888
-spring.cloud.config.server.git.uri: file://${HOME}/config-repo</code></pre>
+spring.cloud.config.server.git.uri: file://${user.home}/config-repo</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>where <code>${HOME}/config-repo</code> is a git repository containing
+<p>where <code>${user.home}/config-repo</code> is a git repository containing
 YAML and properties files.</p>
 </div>
 <div class="admonitionblock tip">
@@ -1719,7 +1719,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-11-02 15:10:02 UTC
+Last updated 2015-11-05 06:14:00 UTC
 </div>
 </div>
 </body>
