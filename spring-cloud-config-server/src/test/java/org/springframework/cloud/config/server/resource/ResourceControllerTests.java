@@ -78,4 +78,11 @@ public class ResourceControllerTests {
 		assertEquals("foo: ${foo}", resource);
 	}
 
+	@Test
+	public void labelWithSlash() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		String resource = this.controller.resolve("foo", "bar", "dev(_)spam", "foo.txt");
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+
 }
