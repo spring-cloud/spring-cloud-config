@@ -87,6 +87,11 @@ public class ResourceController {
 			@PathVariable String profile, @PathVariable String label,
 			@PathVariable String path) throws IOException {
 		StandardEnvironment environment = new StandardEnvironment();
+		if (label != null && label.contains("(_)")) {
+			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
+			// by Spring MVC
+			label = label.replace("(_)", "/");
+		}
 		environment.getPropertySources().addAfter(
 				StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
 				new EnvironmentPropertySource(

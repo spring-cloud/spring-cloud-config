@@ -85,4 +85,11 @@ public class ResourceControllerTests {
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
+	@Test
+	public void labelWithSlashForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		byte[] resource = this.controller.binary("foo", "bar", "dev(_)spam", "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+
 }
