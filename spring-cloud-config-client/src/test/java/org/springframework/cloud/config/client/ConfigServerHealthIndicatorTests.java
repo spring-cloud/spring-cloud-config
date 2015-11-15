@@ -16,16 +16,16 @@
 
 package org.springframework.cloud.config.client;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Collections;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
+
+import java.util.Collections;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Dave Syer
@@ -35,7 +35,10 @@ public class ConfigServerHealthIndicatorTests {
 
 	private ConfigServicePropertySourceLocator locator = Mockito
 			.mock(ConfigServicePropertySourceLocator.class);
-	private ConfigServerHealthIndicator indicator = new ConfigServerHealthIndicator(
+
+	private Environment environment = Mockito
+			.mock(Environment.class);
+	private ConfigServerHealthIndicator indicator = new ConfigServerHealthIndicator(environment,
 			locator);
 
 	@Test
