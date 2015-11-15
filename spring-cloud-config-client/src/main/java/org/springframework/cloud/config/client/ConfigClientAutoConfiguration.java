@@ -16,6 +16,7 @@
 package org.springframework.cloud.config.client;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -57,10 +58,14 @@ public class ConfigClientAutoConfiguration {
 	@ConditionalOnProperty(value = "health.config.enabled", matchIfMissing = true)
 	protected static class ConfigServerHealthIndicatorConfiguration {
 
+
+		@Autowired
+		private Environment environment;
+
 		@Bean
 		public ConfigServerHealthIndicator configServerHealthIndicator(
 				ConfigServicePropertySourceLocator locator) {
-			return new ConfigServerHealthIndicator(locator);
+			return new ConfigServerHealthIndicator(this.environment, locator);
 		}
 	}
 
