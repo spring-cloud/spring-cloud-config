@@ -1,14 +1,13 @@
 package org.springframework.cloud.config.client;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health.Builder;
-import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Spencer Gibb
@@ -18,13 +17,8 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
     private ConfigServicePropertySourceLocator locator;
 	private Environment env;
 
-    public ConfigServerHealthIndicator(ConfigServicePropertySourceLocator locator) {
-        this.env = new AbstractEnvironment() {
-        	@Override
-        	public String[] getActiveProfiles() {
-        		return new String[] {"default"};
-        	}
-		};
+    public ConfigServerHealthIndicator(Environment environment, ConfigServicePropertySourceLocator locator) {
+        this.env = environment;
         this.locator = locator;
     }
 
