@@ -15,13 +15,22 @@
  */
 package org.springframework.cloud.config.server.encryption;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
@@ -96,6 +105,19 @@ public class EncryptionControllerTests {
 		String decrypt = this.controller.decrypt(cipher + "=",
 				MediaType.APPLICATION_FORM_URLENCODED);
 		assertEquals("Wrong decrypted plaintext: " + decrypt, "foo bar", decrypt);
+	}
+
+	@Test
+	public void prefixStrippedBeforeEncrypt() {
+		TextEncryptor encryptor = mock(TextEncryptor.class);
+		when(encryptor.encrypt(anyString())).thenReturn("myEncryptedValue");
+
+		this.controller = new EncryptionController(new SingleTextEncryptorLocator(encryptor));
+		this.controller.encrypt("{key:test}foo", MediaType.TEXT_PLAIN);
+
+		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		verify(encryptor, atLeastOnce()).encrypt(captor.capture());
+		assertThat("Prefix must be stripped prior to encrypt", captor.getValue(), not(containsString("{key:test}")));
 	}
 
 	@Test
