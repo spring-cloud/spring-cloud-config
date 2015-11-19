@@ -129,8 +129,9 @@ public class EncryptionController {
 			String input = stripFormData(data, type, false);
 			Map<String, String> keys = this.helper.getEncryptorKeys(name, profiles,
 					input);
+			String textToEncrypt = this.helper.stripPrefix(input);
 			String encrypted = this.helper.addPrefix(keys,
-					this.encryptor.locate(keys).encrypt(input));
+					this.encryptor.locate(keys).encrypt(textToEncrypt));
 			logger.info("Encrypted data");
 			return encrypted;
 		}
@@ -156,7 +157,7 @@ public class EncryptionController {
 					profiles, input);
 			TextEncryptor encryptor = this.encryptor.locate(encryptorKeys);
 			String encryptedText = this.helper.stripPrefix(input);
-			String decrypted = this.helper.stripPrefix(encryptor.decrypt(encryptedText));
+			String decrypted = encryptor.decrypt(encryptedText);
 			logger.info("Decrypted cipher data");
 			return decrypted;
 		}
