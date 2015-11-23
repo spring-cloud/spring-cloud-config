@@ -59,7 +59,7 @@ public abstract class BaseConfigServicePropertySourceLocator<C extends BaseConfi
 		CompositePropertySource composite = new CompositePropertySource("configService");
 		Exception error = null;
 		String errorBody = null;
-		logger.info("Fetching config from server at: " + context.getConfigClientProperties().getRawUri());
+		logger.info("Fetching config from server");
 		try {
 			String[] labels = new String[] { "" };
 			if (StringUtils.hasText(context.getConfigClientProperties().getLabel())) {

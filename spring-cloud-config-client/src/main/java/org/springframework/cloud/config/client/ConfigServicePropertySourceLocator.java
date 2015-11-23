@@ -19,6 +19,8 @@ package org.springframework.cloud.config.client;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpEntity;
@@ -42,6 +44,8 @@ import org.springframework.web.client.RestTemplate;
 public class ConfigServicePropertySourceLocator
 		extends BaseConfigServicePropertySourceLocator<ConfigServicePropertySourceLocator.SimpleContext> {
 
+	private static Log logger = LogFactory.getLog(ConfigServicePropertySourceLocator.class);
+	
 	private RestTemplate restTemplate;
 
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaults) {
@@ -68,8 +72,10 @@ public class ConfigServicePropertySourceLocator
 		}
 		ResponseEntity<Environment> response = null;
 
+		String fullUri = context.getConfigClientProperties().getRawUri() + path;
+		logger.info("Fetching config from server at: " + fullUri);
 		try {
-			response = context.getRestTemplate().exchange(context.getConfigClientProperties().getRawUri() + path, HttpMethod.GET,
+			response = context.getRestTemplate().exchange(fullUri, HttpMethod.GET,
 					new HttpEntity<Void>((Void) null), Environment.class, args);
 		} catch (HttpClientErrorException e) {
 			if(e.getStatusCode() != HttpStatus.NOT_FOUND ) {
