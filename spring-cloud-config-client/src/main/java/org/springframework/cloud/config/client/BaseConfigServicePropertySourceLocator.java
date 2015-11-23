@@ -43,17 +43,15 @@ public abstract class BaseConfigServicePropertySourceLocator<C extends BaseConfi
 	private static Log logger = LogFactory.getLog(BaseConfigServicePropertySourceLocator.class);
 
 	private final ConfigClientProperties defaults;
-	private final Class<C> contextClass;
 
-	public BaseConfigServicePropertySourceLocator(ConfigClientProperties defaults, Class<C> contextClass) {
+	public BaseConfigServicePropertySourceLocator(ConfigClientProperties defaults) {
 		this.defaults = defaults;
-		this.contextClass = contextClass;
 	}
 
 	@Override
 	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(org.springframework.core.env.Environment environment) {
-		C context = newContext(environment);
+		C context = newContext();
 		fillContext(context, environment);
 
 		CompositePropertySource composite = new CompositePropertySource("configService");
@@ -100,14 +98,7 @@ public abstract class BaseConfigServicePropertySourceLocator<C extends BaseConfi
 
 	}
 	
-	protected C newContext(org.springframework.core.env.Environment environment) {
-		try {
-			C context = contextClass.newInstance();
-			return context;
-		} catch (Exception e) {
-			throw new IllegalArgumentException("Error creating new context instance. Must have default ctor", e);
-		}
-	}
+	protected abstract C newContext();
 
 	protected void fillContext(C context, org.springframework.core.env.Environment environment) {
 		ConfigClientProperties client = defaults.override(environment);

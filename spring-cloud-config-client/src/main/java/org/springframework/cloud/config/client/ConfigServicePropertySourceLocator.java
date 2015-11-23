@@ -49,7 +49,7 @@ public class ConfigServicePropertySourceLocator
 	private RestTemplate restTemplate;
 
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaults) {
-		super(defaults, SimpleContext.class);
+		super(defaults);
 	}
 
 	@Override
@@ -88,6 +88,11 @@ public class ConfigServicePropertySourceLocator
 		}
 		Environment result = response.getBody();
 		return result;
+	}
+	
+	@Override
+	protected SimpleContext newContext() {
+		return new SimpleContext();
 	}
 
 	public static class SimpleContext extends BaseConfigServicePropertySourceLocator.Context {
