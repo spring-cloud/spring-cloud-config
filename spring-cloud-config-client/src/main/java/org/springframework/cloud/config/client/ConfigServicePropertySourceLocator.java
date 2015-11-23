@@ -69,7 +69,7 @@ public class ConfigServicePropertySourceLocator
 		ResponseEntity<Environment> response = null;
 
 		try {
-			response = restTemplate.exchange(context.getConfigClientProperties().getRawUri() + path, HttpMethod.GET,
+			response = context.getRestTemplate().exchange(context.getConfigClientProperties().getRawUri() + path, HttpMethod.GET,
 					new HttpEntity<Void>((Void) null), Environment.class, args);
 		} catch (HttpClientErrorException e) {
 			if(e.getStatusCode() != HttpStatus.NOT_FOUND ) {
