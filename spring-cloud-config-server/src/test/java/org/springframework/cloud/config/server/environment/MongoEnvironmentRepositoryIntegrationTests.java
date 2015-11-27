@@ -66,23 +66,18 @@ public class MongoEnvironmentRepositoryIntegrationTests {
 	@Test
 	public void defaultRepo() throws IOException {
 		// Setup
+		mongoOps.dropCollection("testapp");
 		MongoPropertySource ps = new MongoPropertySource();
 		ps.put("testkey", "testval");
 		mongoOps.save(ps, "testapp");
-		try {
-			// Test
-			Map<String, Object> props = new HashMap<>();
-			props.put("spring.profiles.active", "mongodb");
-			props.put("spring.cloud.config.server.mongodb.database", "testdb");
-			context = new SpringApplicationBuilder(TestConfiguration.class).web(false).properties(props).run();
-			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-			Environment environment = repository.findOne("testapp", "default", null);
-			assertEquals(1, environment.getPropertySources().size());
-		}
-		finally {
-			// Cleanup
-			mongoOps.dropCollection("testapp");
-		}
+		// Test
+		Map<String, Object> props = new HashMap<>();
+		props.put("spring.profiles.active", "mongodb");
+		props.put("spring.cloud.config.server.mongodb.database", "testdb");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false).properties(props).run();
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		Environment environment = repository.findOne("testapp", "default", null);
+		assertEquals(1, environment.getPropertySources().size());
 	}
 
 	
