@@ -20,17 +20,20 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.MongoEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.SearchPathLocator;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
  * @author Dave Syer
- *
+ * @author Venil Noronha
  */
 @Configuration
 @ConditionalOnMissingBean(EnvironmentRepository.class)
@@ -94,6 +97,26 @@ public class EnvironmentRepositoryConfiguration {
 			}
 			return repository;
 		}
+	}
+	
+	@Configuration
+	@Profile("mongodb")
+	protected static class MongoRepositoryConfiguration {
+
+		@Autowired
+		private ConfigurableEnvironment environment;
+
+		@Bean
+		public SearchPathLocator searchPathLocator() {
+			return new NativeEnvironmentRepository(environment);
+		}
+
+		@Bean
+		@Primary
+		public EnvironmentRepository environmentRepository() {
+			return new MongoEnvironmentRepository();
+		}
+
 	}
 
 }
