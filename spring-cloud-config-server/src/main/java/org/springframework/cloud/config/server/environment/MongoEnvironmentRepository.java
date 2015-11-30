@@ -22,134 +22,40 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.MongoClient;
-import com.mongodb.MongoCredential;
-import com.mongodb.ServerAddress;
 
 /**
  * Simple implementation of {@link EnvironmentRepository} that is backed by
  * MongoDB. The resulting Environment is composed of property sources located
  * using the application name as the MongoDB collection while MongoDB document's
- * `profile` and `label` key values represent the Spring profile and label
+ * 'profile' and 'label' key values represent the Spring profile and label
  * respectively.
  *
  * @author Venil Noronha
  */
-@ConfigurationProperties("spring.cloud.config.server.mongodb")
-public class MongoEnvironmentRepository implements EnvironmentRepository, InitializingBean, DisposableBean {
+public class MongoEnvironmentRepository implements EnvironmentRepository {
 
-	private static final String DEFAULT_HOST = "127.0.0.1";
-	private static final int DEFAULT_PORT = 27017;
 	private static final String DEFAULT_PROFILE = "default";
 
-	/**
-	 * The host.
-	 */
-	private String host = DEFAULT_HOST;
+	private MongoTemplate mongoTemplate;
 	
-	/**
-	 * The port.
-	 */
-	private int port = DEFAULT_PORT;
-	
-	/**
-	 * The database name.
-	 */
-	private String database;
-	
-	/**
-	 * The username.
-	 */
-	private String username;
-	
-	/**
-	 * The password.
-	 */
-	private String password;
-
-	public String getHost() {
-		return host;
-	}
-
-	public void setHost(String host) {
-		this.host = host;
-	}
-
-	public int getPort() {
-		return port;
-	}
-
-	public void setPort(int port) {
-		this.port = port;
-	}
-
-	public String getDatabase() {
-		return database;
-	}
-
-	public void setDatabase(String database) {
-		this.database = database;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	private MongoClient mongoClient;
-	private MongoOperations mongoOps;
-	
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		Assert.state(getDatabase() != null, "You need to configure mongodb database name");
-		ServerAddress seed = new ServerAddress(host, port);
-		if (username != null && password != null) {
-			MongoCredential cred = MongoCredential.createCredential(username, database, password.toCharArray());
-			mongoClient = new MongoClient(Collections.singletonList(seed), Collections.singletonList(cred));
-		}
-		else {
-			mongoClient = new MongoClient(Collections.singletonList(seed));
-		}
-		mongoOps = new MongoTemplate(mongoClient, database);
-	}
-
-	@Override
-	public void destroy() throws Exception {
-		mongoClient.close();
+	public void setMongoTemplate(MongoTemplate mongoTemplate) {
+		this.mongoTemplate = mongoTemplate;
 	}
 
 	@Override
 	public Environment findOne(String name, String profile, String label) {
 		String[] profilesArr = StringUtils.commaDelimitedListToStringArray(profile);
-		Environment environment = new Environment(name, profilesArr, label, null);
 		final List<String> profiles = Arrays.asList(profilesArr.clone());
 		for (int i = 0; i < profiles.size(); i ++) {
 			String currProfile = profiles.get(i);
 			if (DEFAULT_PROFILE.equals(currProfile)) {
-				profiles.set(i, null); // `null` profile value in MongoDB is considered default
+				profiles.set(i, null); // 'null' profile value in MongoDB is considered default
 				break;
 			}
 		}
@@ -157,21 +63,28 @@ public class MongoEnvironmentRepository implements EnvironmentRepository, Initia
 		if (label != null) {
 			query.addCriteria(Criteria.where("label").is(label));
 		}
-		List<MongoPropertySource> sources = mongoOps.find(query, MongoPropertySource.class, name);
-		Collections.sort(sources, new Comparator<MongoPropertySource>() {
-			@Override
-			public int compare(MongoPropertySource s1, MongoPropertySource s2) {
-				Object p1 = s1.get("profile");
-				Object p2 = s2.get("profile");
-				int i1 = profiles.indexOf(p1 != null ? p1 : DEFAULT_PROFILE);
-				int i2 = profiles.indexOf(p2 != null ? p2 : DEFAULT_PROFILE);
-				return Double.compare(i1, i2);
+		Environment environment;
+		try {
+			List<MongoPropertySource> sources = mongoTemplate.find(query, MongoPropertySource.class, name);
+			Collections.sort(sources, new Comparator<MongoPropertySource>() {
+				@Override
+				public int compare(MongoPropertySource s1, MongoPropertySource s2) {
+					Object p1 = s1.get("profile");
+					Object p2 = s2.get("profile");
+					int i1 = profiles.indexOf(p1 != null ? p1 : DEFAULT_PROFILE);
+					int i2 = profiles.indexOf(p2 != null ? p2 : DEFAULT_PROFILE);
+					return Double.compare(i1, i2);
+				}
+			});
+			environment = new Environment(name, profilesArr, label, null);
+			for (MongoPropertySource source : sources) {
+				String sourceName = String.format("%s-%s-%s", name, source.get("profile"), source.get("label"));
+				PropertySource propSource = new PropertySource(sourceName, source);
+				environment.add(propSource);
 			}
-		});
-		for (MongoPropertySource source : sources) {
-			String sourceName = String.format("%s-%s-%s", name, source.get("profile"), source.get("label"));
-			PropertySource propSource = new PropertySource(sourceName, source);
-			environment.add(propSource);
+		}
+		catch (Exception e) {
+			throw new IllegalStateException("Cannot load environment", e);
 		}
 		return environment;
 	}

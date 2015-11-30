@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 /**
  * @author Dave Syer
@@ -105,6 +106,9 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Autowired
 		private ConfigurableEnvironment environment;
+		
+		@Autowired
+		private MongoTemplate mongoTemplate;
 
 		@Bean
 		public SearchPathLocator searchPathLocator() {
@@ -114,7 +118,9 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		@Primary
 		public EnvironmentRepository environmentRepository() {
-			return new MongoEnvironmentRepository();
+			MongoEnvironmentRepository mongoEnvironmentRepository = new MongoEnvironmentRepository();
+			mongoEnvironmentRepository.setMongoTemplate(mongoTemplate);
+			return mongoEnvironmentRepository;
 		}
 
 	}
