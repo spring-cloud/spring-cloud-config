@@ -16,6 +16,7 @@
 package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -102,6 +103,7 @@ public class EnvironmentRepositoryConfiguration {
 	
 	@Configuration
 	@Profile("mongodb")
+	@ConditionalOnClass(MongoTemplate.class)
 	protected static class MongoRepositoryConfiguration {
 
 		@Autowired
