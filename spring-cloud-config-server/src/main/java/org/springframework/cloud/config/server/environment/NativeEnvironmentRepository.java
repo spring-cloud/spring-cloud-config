@@ -122,21 +122,27 @@ public class NativeEnvironmentRepository
 		}
 		List<String> output = new ArrayList<String>();
 		for (String location : locations) {
-			String value = location;
-			if (application != null) {
-				value = value.replace("{application}", application);
-			}
+			String[] profiles = new String[] { profile };
 			if (profile != null) {
-				value = value.replace("{profile}", profile);
+				profiles = StringUtils.commaDelimitedListToStringArray(profile);
 			}
-			if (label != null) {
-				value = value.replace("{label}", label);
-			}
-			if (!value.endsWith("/")) {
-				value = value + "/";
-			}
-			if (isDirectory(value)) {
-				output.add(value);
+			for (String prof : profiles) {
+				String value = location;
+				if (application != null) {
+					value = value.replace("{application}", application);
+				}
+				if (prof != null) {
+					value = value.replace("{profile}", prof);
+				}
+				if (label != null) {
+					value = value.replace("{label}", label);
+				}
+				if (!value.endsWith("/")) {
+					value = value + "/";
+				}
+				if (isDirectory(value)) {
+					output.add(value);
+				}
 			}
 		}
 		for (String location : locations) {
@@ -175,9 +181,10 @@ public class NativeEnvironmentRepository
 							.cleanPath(new File(normal.substring("file:".length()))
 									.getAbsolutePath());
 				}
-				String profile = result.getProfiles() == null ? null : StringUtils.arrayToCommaDelimitedString(result.getProfiles());
-				for (String pattern : getLocations(result.getName(), profile, result.getLabel())
-						.getLocations()) {
+				String profile = result.getProfiles() == null ? null
+						: StringUtils.arrayToCommaDelimitedString(result.getProfiles());
+				for (String pattern : getLocations(result.getName(), profile,
+						result.getLabel()).getLocations()) {
 					if (!pattern.contains(":")) {
 						pattern = "file:" + pattern;
 					}

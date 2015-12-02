@@ -23,9 +23,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -33,7 +35,7 @@ import org.springframework.core.env.StandardEnvironment;
  * @author Dave Syer
  *
  */
-public class MultipleJGitEnvironmentUriTemplateRepositoryTests {
+public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
 	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(
@@ -77,6 +79,17 @@ public class MultipleJGitEnvironmentUriTemplateRepositoryTests {
 	}
 
 	@Test
+	public void missingRepo() {
+		Environment environment = this.repository.findOne("missing-config-repo",
+				"staging", "master");
+		assertEquals("Wrong property sources: " + environment, 1,
+				environment.getPropertySources().size());
+		assertEquals(this.repository.getUri() + "/application.yml",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
+	}
+
+	@Test
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("test1-config-repo", "staging",
 				"master");
@@ -98,6 +111,16 @@ public class MultipleJGitEnvironmentUriTemplateRepositoryTests {
 						+ "/application.properties",
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
+	}
+
+	@Test
+	@Ignore("not supported yet (placeholders in search paths)")
+	public void profilesInSearchPaths() {
+		this.repository.setSearchPaths("{profile}");
+		Locations locations = this.repository.getLocations("foo", "dev,one,two",
+				"master");
+		assertEquals(3, locations.getLocations().length);
+		assertEquals("classpath:/test/dev/", locations.getLocations()[0]);
 	}
 
 	private void assertVersion(Environment environment) {

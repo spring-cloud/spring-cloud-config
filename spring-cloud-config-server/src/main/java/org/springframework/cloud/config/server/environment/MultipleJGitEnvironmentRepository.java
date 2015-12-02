@@ -87,17 +87,24 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	public Locations getLocations(String application, String profile, String label) {
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
 			if (repository.matches(application, profile, label)) {
-				JGitEnvironmentRepository candidate = getRepository(repository,
-						application, profile, label);
-				Environment source = candidate.findOne(application, profile, label);
-				if (source != null) {
-					return repository.getLocations(application, profile, label);
+				for (JGitEnvironmentRepository candidate : getRepositories(repository,
+						application, profile, label)) {
+					try {
+						Environment source = candidate.findOne(application, profile,
+								label);
+						if (source != null) {
+							return candidate.getLocations(application, profile, label);
+						}
+					}
+					catch (Exception e) {
+						continue;
+					}
 				}
 			}
 		}
-		JGitEnvironmentRepository candidate = getRepository(this,
-				application, profile, label);
-		if (candidate==this) {
+		JGitEnvironmentRepository candidate = getRepository(this, application, profile,
+				label);
+		if (candidate == this) {
 			return super.getLocations(application, profile, label);
 		}
 		return candidate.getLocations(application, profile, label);
@@ -107,20 +114,41 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	public Environment findOne(String application, String profile, String label) {
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
 			if (repository.matches(application, profile, label)) {
-				JGitEnvironmentRepository candidate = getRepository(repository,
-						application, profile, label);
-				Environment source = candidate.findOne(application, profile, label);
-				if (source != null) {
-					return source;
+				for (JGitEnvironmentRepository candidate : getRepositories(repository,
+						application, profile, label)) {
+					try {
+						Environment source = candidate.findOne(application, profile,
+								label);
+						if (source != null) {
+							return source;
+						}
+					}
+					catch (Exception e) {
+						this.logger.info(
+								"Cannot load configuration from " + candidate.getUri());
+						continue;
+					}
 				}
 			}
 		}
-		JGitEnvironmentRepository candidate = getRepository(this,
-				application, profile, label);
-		if (candidate==this) {
+		JGitEnvironmentRepository candidate = getRepository(this, application, profile,
+				label);
+		if (candidate == this) {
 			return super.findOne(application, profile, label);
 		}
 		return candidate.findOne(application, profile, label);
+	}
+
+	private List<JGitEnvironmentRepository> getRepositories(
+			JGitEnvironmentRepository repository, String application, String profile,
+			String label) {
+		List<JGitEnvironmentRepository> list = new ArrayList<>();
+		String[] profiles = profile == null ? new String[] { null }
+				: StringUtils.commaDelimitedListToStringArray(profile);
+		for (int i = profiles.length; i-- > 0;) {
+			list.add(getRepository(repository, application, profiles[i], label));
+		}
+		return list;
 	}
 
 	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository repository,
@@ -129,13 +157,13 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			return repository;
 		}
 		String key = repository.getUri();
-		if (application!=null) {
+		if (application != null) {
 			key = key.replace("{application}", application);
 		}
-		if (profile!=null) {
+		if (profile != null) {
 			key = key.replace("{profile}", profile);
 		}
-		if (label!=null) {
+		if (label != null) {
 			key = key.replace("{label}", label);
 		}
 		if (!this.repos.containsKey(key)) {
@@ -173,10 +201,12 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			if (this.pattern == null || this.pattern.length == 0) {
 				return false;
 			}
-
-			if (PatternMatchUtils.simpleMatch(this.pattern,
-					application + "/" + profile)) {
-				return true;
+			String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+			for (int i = profiles.length; i-- > 0;) {
+				if (PatternMatchUtils.simpleMatch(this.pattern,
+						application + "/" + profiles[i])) {
+					return true;
+				}
 			}
 			return false;
 		}

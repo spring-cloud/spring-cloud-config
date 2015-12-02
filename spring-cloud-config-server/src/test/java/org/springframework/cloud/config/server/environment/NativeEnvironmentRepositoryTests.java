@@ -111,6 +111,15 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void placeholdersProfiles() {
+		this.repository.setSearchLocations("classpath:/test/{profile}/");
+		Environment environment = this.repository.findOne("foo", "dev,mysql", "master");
+		assertEquals(2, environment.getPropertySources().size());
+		assertEquals("mysql",
+				environment.getPropertySources().get(0).getSource().get("foo"));
+	}
+
+	@Test
 	public void placeholdersApplicationAndProfile() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/{application}/");
 		Environment environment = this.repository.findOne("app", "dev", "master");
@@ -125,6 +134,14 @@ public class NativeEnvironmentRepositoryTests {
 		Locations locations = this.repository.getLocations("foo", "dev", "master");
 		assertEquals(1, locations.getLocations().length);
 		assertEquals("classpath:/test/foo/", locations.getLocations()[0]);
+	}
+
+	@Test
+	public void locationProfilesApplication() {
+		this.repository.setSearchLocations("classpath:/test/{profile}");
+		Locations locations = this.repository.getLocations("foo", "dev,one,two", "master");
+		assertEquals(3, locations.getLocations().length);
+		assertEquals("classpath:/test/dev/", locations.getLocations()[0]);
 	}
 
 	@Test
