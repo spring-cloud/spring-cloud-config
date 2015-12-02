@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -23,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -47,6 +49,8 @@ import org.springframework.util.StringUtils;
 public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository {
 
 	private Map<String, PatternMatchingJGitEnvironmentRepository> repos = new LinkedHashMap<String, PatternMatchingJGitEnvironmentRepository>();
+
+	private Map<String, JGitEnvironmentRepository> placeholders = new LinkedHashMap<String, JGitEnvironmentRepository>();
 
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
@@ -82,24 +86,72 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	@Override
 	public Locations getLocations(String application, String profile, String label) {
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
-			Environment source = repository.findOne(application, profile, label);
-			if (source != null) {
-				return repository.getLocations(application, profile, label);
+			if (repository.matches(application, profile, label)) {
+				JGitEnvironmentRepository candidate = getRepository(repository,
+						application, profile, label);
+				Environment source = candidate.findOne(application, profile, label);
+				if (source != null) {
+					return repository.getLocations(application, profile, label);
+				}
 			}
 		}
-		return super.getLocations(application, profile, label);
+		JGitEnvironmentRepository candidate = getRepository(this,
+				application, profile, label);
+		if (candidate==this) {
+			return super.getLocations(application, profile, label);
+		}
+		return candidate.getLocations(application, profile, label);
 	}
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
-			Environment source = repository.findOne(application, profile, label);
-			if (source != null) {
-				return source;
+			if (repository.matches(application, profile, label)) {
+				JGitEnvironmentRepository candidate = getRepository(repository,
+						application, profile, label);
+				Environment source = candidate.findOne(application, profile, label);
+				if (source != null) {
+					return source;
+				}
 			}
 		}
+		JGitEnvironmentRepository candidate = getRepository(this,
+				application, profile, label);
+		if (candidate==this) {
+			return super.findOne(application, profile, label);
+		}
+		return candidate.findOne(application, profile, label);
+	}
 
-		return super.findOne(application, profile, label);
+	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository repository,
+			String application, String profile, String label) {
+		if (!repository.getUri().contains("{")) {
+			return repository;
+		}
+		String key = repository.getUri();
+		if (application!=null) {
+			key = key.replace("{application}", application);
+		}
+		if (profile!=null) {
+			key = key.replace("{profile}", profile);
+		}
+		if (label!=null) {
+			key = key.replace("{label}", label);
+		}
+		if (!this.repos.containsKey(key)) {
+			this.placeholders.put(key, getRepository(repository, key));
+		}
+		return this.placeholders.get(key);
+	}
+
+	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository source,
+			String uri) {
+		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(null);
+		File basedir = repository.getBasedir();
+		BeanUtils.copyProperties(source, repository);
+		repository.setUri(uri);
+		repository.setBasedir(basedir);
+		return repository;
 	}
 
 	public static class PatternMatchingJGitEnvironmentRepository
@@ -115,6 +167,18 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		public PatternMatchingJGitEnvironmentRepository(String uri) {
 			this();
 			setUri(uri);
+		}
+
+		public boolean matches(String application, String profile, String label) {
+			if (this.pattern == null || this.pattern.length == 0) {
+				return false;
+			}
+
+			if (PatternMatchUtils.simpleMatch(this.pattern,
+					application + "/" + profile)) {
+				return true;
+			}
+			return false;
 		}
 
 		@Override

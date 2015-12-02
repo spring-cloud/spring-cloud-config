@@ -142,11 +142,33 @@ avoid ambiguity with other URL paths). Be careful with the brackets in
 the URL if you are using a command line client like curl (e.g. escape
 them from the shell with quotes '').
 
-Spring Cloud Config Server supports a single or multiple git
-repositories with pattern matching on the application and profile
-name. The pattern format is a comma-separated list of
-`{application}/{profile}` names with wildcards (where a pattern
-beginning with a wildcard may need to be quoted). Example:
+===== Placeholders in Git URI
+
+Spring Cloud Config Server supports a git repository URL with
+placeholders for the `{application}` and `{profile}` (and `{label}` if
+you need it, but remember that the label is applied as a git label
+anyway). So you can easily support a "one repo per application" policy
+using (for example):
+
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/myorg/{application}
+----
+
+or a "one repo per profile" policy using a similar pattern but with
+`{profile}`.
+
+===== Pattern Matching and Multiple Repositories
+
+There is also support for more complex requirements with pattern
+matching on the application and profile name. The pattern format is a
+comma-separated list of `{application}/{profile}` names with wildcards
+(where a pattern beginning with a wildcard may need to be
+quoted). Example:
 
 ----
 spring:
@@ -279,7 +301,9 @@ of the box when you store keys in the default directories (`~/.ssh`)
 and the uri points to an SSH location,
 e.g. "git@github.com:configuration/cloud-configuration". The
 repository is accessed using JGit, so any documentation you find on
-that should be applicable.
+that should be applicable. HTTPS proxy settings can be set in
+`~/.git/config` or in the same way as for any other JVM process via
+system properties (`-Dhttps.proxyHost` and `-Dhttps.proxyPort`).
 
 ==== File System Backend
 
@@ -291,20 +315,83 @@ profile just launch the Config Server with
 "spring.profiles.active=native".
 
 WARNING: The default value of the `searchLocations` is identical to a
-local Spring Boot application (so
-`[classpath:/, classpath:/config, file:./, file:./config]`) which will
-expose the `application.properties` from the server to all clients.
+local Spring Boot application (so `[classpath:/, classpath:/config,
+file:./, file:./config]`). This does not expose the
+`application.properties` from the server to all clients because any
+property sources present in the server are removed before being sent
+to the client.
 
 TIP: A filesystem backend is great for getting started quickly and
 for testing. To use it in production you need to be sure that the 
 file system is reliable, and shared across all instances of the
 Config Server.
 
-This repository implementation maps the `{label}` parameter of the
-HTTP resource to a suffix on the search path, so properties files are
-loaded from each search location *and* a subdirectory with the same
-name as the label (the labelled properties take precedence in the
-Spring Environment).
+The search locations can contain placeholders for `{application}`,
+`{profile}` and `{label}`. In this way you can segregate the
+directories in the path, and choose a strategy that makes sense for
+you (e.g. sub-directory per application, or sub-directory per
+profile).
+
+If you don't use placeholders in the search locations, this repository
+also appends the `{label}` parameter of the HTTP resource to a suffix
+on the search path, so properties files are loaded from each search
+location *and* a subdirectory with the same name as the label (the
+labelled properties take precedence in the Spring Environment). Thus
+the default behaviour with no placeholders is the same as adding a
+search location ending with `/{label}/. For example `file:/tmp/config`
+is the same as `file:/tmp/config,file:/tmp/config/{label}`
+
+==== Sharing Configiration With All Applications
+
+With file-based (i.e. git, svn and native) repositories, resources
+with file names in `application*` are shared between all client
+applications (so `application.properties`, `application.yml`,
+`application-*.properties` etc.). You can use resources with these
+file names to configure global defaults and have them overridden by
+application-specific files as necessary.
+
+The #_property_overrides[property overrides] feature can also be used
+for setting global defaults, and with placeholders applications are
+allowed to override them locally.
+
+TIP: With the "native" profile (local file system backend) it is
+recommended that you use an explicit search location that isn't part
+of the server's own configuration. Otherwise the `application*`
+resources in the default search locations are removed because they are
+part of the server.
+
+==== Property Overrides
+
+The Config Server has an "overrides" feature that allows the operator
+to provide configuration properties to all applications that cannot be
+accidentally changed by the application using the normal Spring Boot
+hooks. To declare overrides just add a map of name-value pairs to
+`spring.cloud.config.server.overrides`. For example
+
+----
+spring:
+  cloud:
+    config:
+      server:
+        foo: bar
+----
+
+will cause all applications that are config clients to read `foo=bar`
+independent of their own configuration. (Of course an application can
+use the data in the Config Server in any way it likes, so overrides
+are not enforceable, but they do provide useful default behaviour if
+they are Spring Cloud Config clients.)
+
+TIP: Normal, Spring environment placeholders with "${}" can be escaped
+(and resolved on the client) by using backslash ("\") to escape the
+"$", e.g. `\${app.foo:bar}` resolves to "bar" unless the app provides
+its own "app.foo". Note that in YAML you don't need to escape the
+backslash itself, but in properties files you do, when you configure
+the overrides on the server.
+
+You can change the priority of all overrides in the client to be more
+like default values, allowing applications to supply their own values
+in environment variables or System properties, by setting the flag `
 
 === Health Indicator
 

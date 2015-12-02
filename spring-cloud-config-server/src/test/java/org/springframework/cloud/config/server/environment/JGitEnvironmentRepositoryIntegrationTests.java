@@ -56,7 +56,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE);
 		}
-		ConfigServerTestUtils.deleteLocalRepo("config-copy");
+		ConfigServerTestUtils.deleteLocalRepo("");
 	}
 
 	@After

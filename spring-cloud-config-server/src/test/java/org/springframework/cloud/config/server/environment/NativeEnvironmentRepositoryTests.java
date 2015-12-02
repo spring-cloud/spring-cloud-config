@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
@@ -43,7 +44,7 @@ public class NativeEnvironmentRepositoryTests {
 
 	@Test
 	public void emptySearchLocations() {
-		this.repository.setSearchLocations((String[])null);
+		this.repository.setSearchLocations((String[]) null);
 		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertEquals(2, environment.getPropertySources().size());
 	}
@@ -89,6 +90,50 @@ public class NativeEnvironmentRepositoryTests {
 		assertEquals("dev_bar",
 				environment.getPropertySources().get(1).getSource().get("foo"));
 		assertEquals("version was wrong", "myversion", environment.getVersion());
+	}
+
+	@Test
+	public void placeholdersLabel() {
+		this.repository.setSearchLocations("classpath:/test/{label}/");
+		Environment environment = this.repository.findOne("foo", "development", "dev");
+		assertEquals(1, environment.getPropertySources().size());
+		assertEquals("dev_bar",
+				environment.getPropertySources().get(0).getSource().get("foo"));
+	}
+
+	@Test
+	public void placeholdersProfile() {
+		this.repository.setSearchLocations("classpath:/test/{profile}/");
+		Environment environment = this.repository.findOne("foo", "dev", "master");
+		assertEquals(1, environment.getPropertySources().size());
+		assertEquals("dev_bar",
+				environment.getPropertySources().get(0).getSource().get("foo"));
+	}
+
+	@Test
+	public void placeholdersApplicationAndProfile() {
+		this.repository.setSearchLocations("classpath:/test/{profile}/{application}/");
+		Environment environment = this.repository.findOne("app", "dev", "master");
+		assertEquals(1, environment.getPropertySources().size());
+		assertEquals("app",
+				environment.getPropertySources().get(0).getSource().get("foo"));
+	}
+
+	@Test
+	public void locationPlaceholdersApplication() {
+		this.repository.setSearchLocations("classpath:/test/{application}");
+		Locations locations = this.repository.getLocations("foo", "dev", "master");
+		assertEquals(1, locations.getLocations().length);
+		assertEquals("classpath:/test/foo/", locations.getLocations()[0]);
+	}
+
+	@Test
+	public void placeholdersNoTrailingSlash() {
+		this.repository.setSearchLocations("classpath:/test/{label}");
+		Environment environment = this.repository.findOne("foo", "development", "dev");
+		assertEquals(1, environment.getPropertySources().size());
+		assertEquals("dev_bar",
+				environment.getPropertySources().get(0).getSource().get("foo"));
 	}
 
 }

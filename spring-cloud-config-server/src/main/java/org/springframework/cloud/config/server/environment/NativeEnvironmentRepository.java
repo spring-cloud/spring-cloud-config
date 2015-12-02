@@ -98,7 +98,7 @@ public class NativeEnvironmentRepository
 		ConfigurableEnvironment environment = getEnvironment(profile);
 		builder.environment(environment);
 		builder.web(false).bannerMode(Mode.OFF);
-		String[] args = getArgs(config, label);
+		String[] args = getArgs(config, profile, label);
 		// Explicitly set the listeners (to exclude logging listener which would change
 		// log levels in the caller)
 		builder.application()
@@ -122,7 +122,22 @@ public class NativeEnvironmentRepository
 		}
 		List<String> output = new ArrayList<String>();
 		for (String location : locations) {
-			output.add(location);
+			String value = location;
+			if (application != null) {
+				value = value.replace("{application}", application);
+			}
+			if (profile != null) {
+				value = value.replace("{profile}", profile);
+			}
+			if (label != null) {
+				value = value.replace("{label}", label);
+			}
+			if (!value.endsWith("/")) {
+				value = value + "/";
+			}
+			if (isDirectory(value)) {
+				output.add(value);
+			}
 		}
 		for (String location : locations) {
 			if (isDirectory(location) && StringUtils.hasText(label)) {
@@ -160,7 +175,8 @@ public class NativeEnvironmentRepository
 							.cleanPath(new File(normal.substring("file:".length()))
 									.getAbsolutePath());
 				}
-				for (String pattern : getLocations(null, null, result.getLabel())
+				String profile = result.getProfiles() == null ? null : StringUtils.arrayToCommaDelimitedString(result.getProfiles());
+				for (String pattern : getLocations(result.getName(), profile, result.getLabel())
 						.getLocations()) {
 					if (!pattern.contains(":")) {
 						pattern = "file:" + pattern;
@@ -195,8 +211,9 @@ public class NativeEnvironmentRepository
 		return result;
 	}
 
-	private String[] getArgs(String config, String label) {
+	private String[] getArgs(String application, String profile, String label) {
 		List<String> list = new ArrayList<String>();
+		String config = application;
 		if (!config.startsWith("application")) {
 			config = "application," + config;
 		}
@@ -204,7 +221,7 @@ public class NativeEnvironmentRepository
 		list.add("--spring.cloud.bootstrap.enabled=false");
 		list.add("--encrypt.failOnError=" + this.failOnError);
 		list.add("--spring.config.location=" + StringUtils.arrayToCommaDelimitedString(
-				getLocations(null, null, label).getLocations()));
+				getLocations(application, profile, label).getLocations()));
 		return list.toArray(new String[0]);
 	}
 
@@ -234,8 +251,8 @@ public class NativeEnvironmentRepository
 	}
 
 	private boolean isDirectory(String location) {
-		return !location.endsWith(".properties") && !location.endsWith(".yml")
-				&& !location.endsWith(".yaml");
+		return !location.contains("{") && !location.endsWith(".properties")
+				&& !location.endsWith(".yml") && !location.endsWith(".yaml");
 	}
 
 }
