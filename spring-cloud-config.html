@@ -825,12 +825,38 @@ avoid ambiguity with other URL paths). Be careful with the brackets in
 the URL if you are using a command line client like curl (e.g. escape
 them from the shell with quotes '').</p>
 </div>
+<div class="sect4">
+<h5 id="_placeholders_in_git_uri">Placeholders in Git URI</h5>
 <div class="paragraph">
-<p>Spring Cloud Config Server supports a single or multiple git
-repositories with pattern matching on the application and profile
-name. The pattern format is a comma-separated list of
-<code>{application}/{profile}</code> names with wildcards (where a pattern
-beginning with a wildcard may need to be quoted). Example:</p>
+<p>Spring Cloud Config Server supports a git repository URL with
+placeholders for the <code>{application}</code> and <code>{profile}</code> (and <code>{label}</code> if
+you need it, but remember that the label is applied as a git label
+anyway). So you can easily support a "one repo per application" policy
+using (for example):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/myorg/{application}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>or a "one repo per profile" policy using a similar pattern but with
+<code>{profile}</code>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_pattern_matching_and_multiple_repositories">Pattern Matching and Multiple Repositories</h5>
+<div class="paragraph">
+<p>There is also support for more complex requirements with pattern
+matching on the application and profile name. The pattern format is a
+comma-separated list of <code>{application}/{profile}</code> names with wildcards
+(where a pattern beginning with a wildcard may need to be
+quoted). Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -995,7 +1021,10 @@ of the box when you store keys in the default directories (<code>~/.ssh</code>)
 and the uri points to an SSH location,
 e.g. "<a href="mailto:git@github.com">git@github.com</a>:configuration/cloud-configuration". The
 repository is accessed using JGit, so any documentation you find on
-that should be applicable.</p>
+that should be applicable. HTTPS proxy settings can be set in
+<code>~/.git/config</code> or in the same way as for any other JVM process via
+system properties (<code>-Dhttps.proxyHost</code> and <code>-Dhttps.proxyPort</code>).</p>
+</div>
 </div>
 </div>
 <div class="sect3">
@@ -1016,9 +1045,11 @@ profile just launch the Config Server with
 </td>
 <td class="content">
 The default value of the <code>searchLocations</code> is identical to a
-local Spring Boot application (so
-<code>[classpath:/, classpath:/config, file:./, file:./config]</code>) which will
-expose the <code>application.properties</code> from the server to all clients.
+local Spring Boot application (so <code>[classpath:/, classpath:/config,
+file:./, file:./config]</code>). This does not expose the
+<code>application.properties</code> from the server to all clients because any
+property sources present in the server are removed before being sent
+to the client.
 </td>
 </tr>
 </table>
@@ -1039,11 +1070,101 @@ Config Server.
 </table>
 </div>
 <div class="paragraph">
-<p>This repository implementation maps the <code>{label}</code> parameter of the
-HTTP resource to a suffix on the search path, so properties files are
-loaded from each search location <strong>and</strong> a subdirectory with the same
-name as the label (the labelled properties take precedence in the
-Spring Environment).</p>
+<p>The search locations can contain placeholders for <code>{application}</code>,
+<code>{profile}</code> and <code>{label}</code>. In this way you can segregate the
+directories in the path, and choose a strategy that makes sense for
+you (e.g. sub-directory per application, or sub-directory per
+profile).</p>
+</div>
+<div class="paragraph">
+<p>If you don&#8217;t use placeholders in the search locations, this repository
+also appends the <code>{label}</code> parameter of the HTTP resource to a suffix
+on the search path, so properties files are loaded from each search
+location <strong>and</strong> a subdirectory with the same name as the label (the
+labelled properties take precedence in the Spring Environment). Thus
+the default behaviour with no placeholders is the same as adding a
+search location ending with <code>/{label}/. For example `file:/tmp/config</code>
+is the same as <code>file:/tmp/config,file:/tmp/config/{label}</code></p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_sharing_configiration_with_all_applications">Sharing Configiration With All Applications</h4>
+<div class="paragraph">
+<p>With file-based (i.e. git, svn and native) repositories, resources
+with file names in <code>application*</code> are shared between all client
+applications (so <code>application.properties</code>, <code>application.yml</code>,
+<code>application-*.properties</code> etc.). You can use resources with these
+file names to configure global defaults and have them overridden by
+application-specific files as necessary.</p>
+</div>
+<div class="paragraph">
+<p>The #_property_overrides[property overrides] feature can also be used
+for setting global defaults, and with placeholders applications are
+allowed to override them locally.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+With the "native" profile (local file system backend) it is
+recommended that you use an explicit search location that isn&#8217;t part
+of the server&#8217;s own configuration. Otherwise the <code>application*</code>
+resources in the default search locations are removed because they are
+part of the server.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_property_overrides">Property Overrides</h4>
+<div class="paragraph">
+<p>The Config Server has an "overrides" feature that allows the operator
+to provide configuration properties to all applications that cannot be
+accidentally changed by the application using the normal Spring Boot
+hooks. To declare overrides just add a map of name-value pairs to
+<code>spring.cloud.config.server.overrides</code>. For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring:
+  cloud:
+    config:
+      server:
+        foo: bar</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>will cause all applications that are config clients to read <code>foo=bar</code>
+independent of their own configuration. (Of course an application can
+use the data in the Config Server in any way it likes, so overrides
+are not enforceable, but they do provide useful default behaviour if
+they are Spring Cloud Config clients.)</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+Normal, Spring environment placeholders with "${}" can be escaped
+(and resolved on the client) by using backslash ("\") to escape the
+"$", e.g. <code>\${app.foo:bar}</code> resolves to "bar" unless the app provides
+its own "app.foo". Note that in YAML you don&#8217;t need to escape the
+backslash itself, but in properties files you do, when you configure
+the overrides on the server.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>You can change the priority of all overrides in the client to be more
+like default values, allowing applications to supply their own values
+in environment variables or System properties, by setting the flag `</p>
 </div>
 </div>
 </div>
@@ -1719,7 +1840,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-12-01 18:12:06 UTC
+Last updated 2015-12-02 11:47:17 UTC
 </div>
 </div>
 </body>
