@@ -483,7 +483,7 @@ IDE instead if you prefer (the main class is
 </div>
 <div class="paragraph">
 <p>The default strategy for locating property sources is to clone a git
-repository (at "spring.cloud.config.server.git.uri") and use it to
+repository (at <code>spring.cloud.config.server.git.uri</code>) and use it to
 initialize a mini <code>SpringApplication</code>. The mini-application&#8217;s
 <code>Environment</code> is used to enumerate property sources and publish them
 via a JSON endpoint.</p>
@@ -501,7 +501,7 @@ via a JSON endpoint.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>where the "application" is injected as the "spring.config.name" in the
+<p>where the "application" is injected as the <code>spring.config.name</code> in the
 <code>SpringApplication</code> (i.e. what is normally "application" in a regular
 Spring Boot app), "profile" is an active profile (or comma-separated
 list of properties), and "label" is an optional git label (defaults to
@@ -518,12 +518,12 @@ from a git repository (which must be provided):</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
-	  server:
-	    git:
-	      uri: https://github.com/spring-cloud-samples/config-repo</pre>
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo</code></pre>
 </div>
 </div>
 <div class="sect2">
@@ -589,8 +589,7 @@ users. Example Maven configuration:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>@Configuration
-@EnableAutoConfiguration
+<pre>@SpringBootApplication
 @RestController
 public class Application {
 
@@ -773,11 +772,11 @@ one wins (like adding entries to a <code>Map</code>).</p>
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   application:
     name: foo
   profiles:
-    active: dev,mysql</pre>
+    active: dev,mysql</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -836,12 +835,12 @@ using (for example):</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
         git:
-          uri: https://github.com/myorg/{application}</pre>
+          uri: https://github.com/myorg/{application}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -860,7 +859,7 @@ quoted). Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -873,7 +872,7 @@ quoted). Example:</p>
               uri: https://github.com/special/config-repo
             local:
               pattern: local*
-              uri: file:/home/configsvc/config-repo</pre>
+              uri: file:/home/configsvc/config-repo</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -909,7 +908,7 @@ to run apps with multiple profiles. Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -925,7 +924,7 @@ to run apps with multiple profiles. Example:</p>
               pattern:
                 - */qa
                 - */production
-              uri: https://github.com/staging/config-repo</pre>
+              uri: https://github.com/staging/config-repo</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -952,13 +951,13 @@ specified as <code>searchPaths</code>. For example at the top level:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
-          searchPaths: foo,bar*</pre>
+          searchPaths: foo,bar*</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -973,7 +972,7 @@ at startup. For example at the top level:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -990,7 +989,7 @@ at startup. For example at the top level:</p>
                 uri: http://git/team-b/config-repo.git
             team-c:
                 pattern: team-c-*
-                uri: http://git/team-a/config-repo.git</pre>
+                uri: http://git/team-a/config-repo.git</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1005,14 +1004,14 @@ e.g.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
           username: trolley
-          password: strongpassword</pre>
+          password: strongpassword</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1130,11 +1129,11 @@ hooks. To declare overrides just add a map of name-value pairs to
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
-        foo: bar</pre>
+        foo: bar</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1182,7 +1181,7 @@ along with custom profiles and custom labels, e.g.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -1192,7 +1191,7 @@ along with custom profiles and custom labels, e.g.</p>
               label: mylabel
             myservice-dev:
               name: myservice
-              profiles: development</pre>
+              profiles: development</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1236,7 +1235,7 @@ in the JRE lib/security directory with the ones that you downloaded).
 </table>
 </div>
 <div class="paragraph">
-<p>If the remote property sources contain encryted content
+<p>If the remote property sources contain encrypted content
 (values starting with <code>{cipher}</code>) they will be decrypted before
 sending to clients over HTTP. The main advantage of this set up is
 that the property values don&#8217;t have to be in plain text when they are
@@ -1252,10 +1251,10 @@ instance:</p>
 <div class="listingblock">
 <div class="title">application.yml</div>
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   datasource:
     username: dbuser
-    password: '{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'</pre>
+    password: '{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1421,12 +1420,12 @@ your <code>application.yml</code> for the Config Server:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>encrypt:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">encrypt:
   keyStore:
     location: classpath:/server.jks
     password: letmein
     alias: mytestkey
-    secret: changeme</pre>
+    secret: changeme</code></pre>
 </div>
 </div>
 </div>
@@ -1444,8 +1443,8 @@ i.e. with a cipher text like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>foo:
-  bar: `{cipher}{key:testkey}...`</pre>
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">foo:
+  bar: `{cipher}{key:testkey}...`</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1731,7 +1730,7 @@ to set <code>spring.cloud.config.failFast=true</code>, and then you need to add
 <code>spring-retry</code> and <code>spring-boot-starter-aop</code> to your classpath. The default
 behaviour is to retry 6 times with an initial backoff interval of 1000ms and an
 exponential multiplier of 1.1 for subsequent backoffs. You can configure these
-properties (and others) using <code>spring.config.retry.*</code> configuration properties.</p>
+properties (and others) using <code>spring.cloud.config.retry.*</code> configuration properties.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -1789,10 +1788,10 @@ properties, e.g.</p>
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
-     uri: https://user:secret@myconfig.mycompany.com</pre>
+     uri: https://user:secret@myconfig.mycompany.com</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1801,12 +1800,12 @@ properties, e.g.</p>
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
      uri: https://myconfig.mycompany.com
      username: user
-     password: secret</pre>
+     password: secret</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1823,10 +1822,10 @@ works locally and for a user-provided service on Cloud Foundry named
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre>spring:
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
-     uri: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:8888}</pre>
+     uri: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:8888}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1840,7 +1839,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-12-02 13:21:07 UTC
+Last updated 2015-12-17 17:03:33 UTC
 </div>
 </div>
 </body>
