@@ -93,6 +93,7 @@ one wins (like adding entries to a `Map`).
 Example: a client application has this bootstrap configuration:
 
 .bootstrap.yml
+[source,yaml]
 ----
 spring:
   application:
@@ -150,6 +151,7 @@ you need it, but remember that the label is applied as a git label
 anyway). So you can easily support a "one repo per application" policy
 using (for example):
 
+[source,yaml]
 ----
 spring:
   cloud:
@@ -170,6 +172,7 @@ comma-separated list of `{application}/{profile}` names with wildcards
 (where a pattern beginning with a wildcard may need to be
 quoted). Example:
 
+[source,yaml]
 ----
 spring:
   cloud:
@@ -206,6 +209,7 @@ use a YAML array (or `[0]`, `[1]`, etc. suffixes in properties files)
 to bind to multiple patterns. You may need to do this if you are going
 to run apps with multiple profiles. Example:
 
+[source,yaml]
 ----
 spring:
   cloud:
@@ -237,6 +241,7 @@ Every repository can also optionally store config files in
 sub-directories, and patterns to search for those directories can be
 specified as `searchPaths`. For example at the top level:
 
+[source,yaml]
 ----
 spring:
   cloud:
@@ -255,6 +260,7 @@ By default the server clones remote repositories when configuration
 is first requested. The server can be configured to clone the repositories
 at startup. For example at the top level:
 
+[source,yaml]
 ----
 spring:
   cloud:
@@ -285,6 +291,7 @@ To use HTTP basic authentication on the remote repository add the
 "username" and "password" properties separately (not in the URL), 
 e.g.
 
+[source,yaml]
 ----
 spring:
   cloud:
@@ -368,6 +375,7 @@ accidentally changed by the application using the normal Spring Boot
 hooks. To declare overrides just add a map of name-value pairs to
 `spring.cloud.config.server.overrides`. For example
 
+[source,yaml]
 ----
 spring:
   cloud:
@@ -403,6 +411,7 @@ label provided by the `EnvironmentRepository` implementation.
 You can configure the Health Indicator to check more applications
 along with custom profiles and custom labels, e.g.
 
+[source,yaml]
 ----
 spring:
   cloud:
@@ -442,7 +451,7 @@ You can download the "Java Cryptography Extension (JCE) Unlimited Strength Juris
 from Oracle, and follow instructions for installation (essentially replace the 2 policy files
 in the JRE lib/security directory with the ones that you downloaded).
 
-If the remote property sources contain encryted content
+If the remote property sources contain encrypted content
 (values starting with `{cipher}`) they will be decrypted before
 sending to clients over HTTP. The main advantage of this set up is
 that the property values don't have to be in plain text when they are
@@ -455,6 +464,7 @@ applications it might contain an `application.yml` like this, for
 instance:
 
 .application.yml
+[source,yaml]
 ----
 spring:
   datasource:
@@ -572,6 +582,7 @@ $ keytool -genkeypair -alias mytestkey -keyalg RSA \
 Put the `server.jks` file in the classpath (for instance) and then in
 your `application.yml` for the Config Server:
 
+[source,yaml]
 ----
 encrypt:
   keyStore:
@@ -592,7 +603,7 @@ keystore (`encrypt.keystore.location`) the default locator will look
 for keys in the store with aliases as supplied by the "key" prefix,
 i.e. with a cipher text like this:
 
-
+[source,yaml]
 ----
 foo:
   bar: `{cipher}{key:testkey}...`
@@ -806,7 +817,7 @@ to set `spring.cloud.config.failFast=true`, and then you need to add
 `spring-retry` and `spring-boot-starter-aop` to your classpath. The default
 behaviour is to retry 6 times with an initial backoff interval of 1000ms and an
 exponential multiplier of 1.1 for subsequent backoffs. You can configure these
-properties (and others) using `spring.config.retry.*` configuration properties.
+properties (and others) using `spring.cloud.config.retry.*` configuration properties.
 
 TIP: To take full control of the retry add a `@Bean` of type
 `RetryOperationsInterceptor` with id "configServerRetryInterceptor". Spring
@@ -838,6 +849,7 @@ that via the config server URI, or via separate username and password
 properties, e.g.
 
 .bootstrap.yml
+[source,yaml]
 ----
 spring:
   cloud:
@@ -848,6 +860,7 @@ spring:
 or
 
 .bootstrap.yml
+[source,yaml]
 ----
 spring:
   cloud:
@@ -867,6 +880,7 @@ works locally and for a user-provided service on Cloud Foundry named
 "configserver":
 
 .bootstrap.yml
+[source,yaml]
 ----
 spring:
   cloud:
