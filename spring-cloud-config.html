@@ -1311,10 +1311,13 @@ are special characters ('+' is particularly tricky).
 <div class="paragraph">
 <p>Take the encrypted value and add the <code>{cipher}</code> prefix before you put
 it in the YAML or properties file, and before you commit and push it
-to a remote, potentially insecure store. The <code>/encrypt</code> and <code>/decrypt</code>
-endpoints also both accept paths of the form <code>/*/{name}/{profiles}</code>
-which can be used to control cryptography per application (name)
-and profile when clients call into the main Environment resource.</p>
+to a remote, potentially insecure store.</p>
+</div>
+<div class="paragraph">
+<p>The <code>/encrypt</code> and <code>/decrypt</code> endpoints also both accept paths of the
+form <code>/*/{name}/{profiles}</code> which can be used to control cryptography
+per application (name) and profile when clients call into the main
+Environment resource.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1326,7 +1329,7 @@ and profile when clients call into the main Environment resource.</p>
 to control the cryptography in this granular way you must also
 provide a <code>@Bean</code> of type <code>TextEncryptorLocator</code> that creates a
 different encryptor per name and profiles. The one that is provided
-by default does not do this.
+by default does not do this (so all encryptions use the same key).
 </td>
 </tr>
 </table>
@@ -1839,7 +1842,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-12-18 10:20:31 UTC
+Last updated 2015-12-18 10:23:53 UTC
 </div>
 </div>
 </body>
