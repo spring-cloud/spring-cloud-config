@@ -27,12 +27,14 @@ import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncry
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.cloud.config.server.encryption.KeyStoreTextEncryptorLocator;
 import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
+import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
+import org.springframework.util.StringUtils;
 
 /**
  * Auto configuration for text encryptors and environment encryptors (non-web stuff).
@@ -45,13 +47,20 @@ import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
  *
  */
 @Configuration
+@EnableConfigurationProperties(KeyProperties.class)
 public class EncryptionAutoConfiguration {
 
 	@ConditionalOnMissingBean(TextEncryptor.class)
 	protected static class DefaultTextEncryptorConfiguration {
 
+		@Autowired
+		private KeyProperties key;
+
 		@Bean
 		public TextEncryptor nullTextEncryptor() {
+			if (StringUtils.hasText(this.key.getKey())) {
+				return new EncryptorFactory().create(this.key.getKey());
+			}
 			return Encryptors.noOpText();
 		}
 

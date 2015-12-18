@@ -70,7 +70,7 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 		return controller;
 	}
 
-	private EnvironmentEncryptorEnvironmentRepository encrypted() {
+	private EnvironmentRepository encrypted() {
 		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
 				this.repository, this.environmentEncryptor);
 		encrypted.setOverrides(this.server.getOverrides());
