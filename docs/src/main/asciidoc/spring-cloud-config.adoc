@@ -392,10 +392,10 @@ they are Spring Cloud Config clients.)
 
 TIP: Normal, Spring environment placeholders with "${}" can be escaped
 (and resolved on the client) by using backslash ("\") to escape the
-"$", e.g. `\${app.foo:bar}` resolves to "bar" unless the app provides
-its own "app.foo". Note that in YAML you don't need to escape the
-backslash itself, but in properties files you do, when you configure
-the overrides on the server.
+"$" or the "{", e.g. `\${app.foo:bar}` resolves to "bar" unless the
+app provides its own "app.foo". Note that in YAML you don't need to
+escape the backslash itself, but in properties files you do, when you
+configure the overrides on the server.
 
 You can change the priority of all overrides in the client to be more
 like default values, allowing applications to supply their own values
