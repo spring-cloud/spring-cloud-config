@@ -319,6 +319,9 @@ public class EnvironmentController {
 	public void setOverrides(Map<String, String> overrides) {
 		this.overrides = new HashMap<String, String>(overrides);
 		for (String key : overrides.keySet()) {
+			if (overrides.get(key).contains("\\{")) {
+				this.overrides.put(key, overrides.get(key).replace("\\{", "{"));
+			}
 			if (overrides.get(key).contains("$\\{")) {
 				this.overrides.put(key, overrides.get(key).replace("$\\{", "${"));
 			}
