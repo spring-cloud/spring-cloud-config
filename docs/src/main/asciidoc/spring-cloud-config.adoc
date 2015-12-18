@@ -508,15 +508,17 @@ are special characters ('+' is particularly tricky).
 
 Take the encrypted value and add the `{cipher}` prefix before you put
 it in the YAML or properties file, and before you commit and push it
-to a remote, potentially insecure store. The `/encrypt` and `/decrypt`
-endpoints also both accept paths of the form `/*/{name}/{profiles}`
-which can be used to control cryptography per application (name)
-and profile when clients call into the main Environment resource.
+to a remote, potentially insecure store. 
+
+The `/encrypt` and `/decrypt` endpoints also both accept paths of the
+form `/*/{name}/{profiles}` which can be used to control cryptography
+per application (name) and profile when clients call into the main
+Environment resource.
 
 NOTE: to control the cryptography in this granular way you must also 
 provide a `@Bean` of type `TextEncryptorLocator` that creates a
 different encryptor per name and profiles. The one that is provided
-by default does not do this.
+by default does not do this (so all encryptions use the same key).
 
 The `spring` command line client (with Spring Cloud CLI extensions
 installed) can also be used to encrypt and decrypt, e.g.
