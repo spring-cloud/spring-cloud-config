@@ -1152,10 +1152,10 @@ they are Spring Cloud Config clients.)</p>
 <td class="content">
 Normal, Spring environment placeholders with "${}" can be escaped
 (and resolved on the client) by using backslash ("\") to escape the
-"$", e.g. <code>\${app.foo:bar}</code> resolves to "bar" unless the app provides
-its own "app.foo". Note that in YAML you don&#8217;t need to escape the
-backslash itself, but in properties files you do, when you configure
-the overrides on the server.
+"$" or the "{", e.g. <code>\${app.foo:bar}</code> resolves to "bar" unless the
+app provides its own "app.foo". Note that in YAML you don&#8217;t need to
+escape the backslash itself, but in properties files you do, when you
+configure the overrides on the server.
 </td>
 </tr>
 </table>
@@ -1839,7 +1839,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-12-17 17:03:33 UTC
+Last updated 2015-12-18 10:20:31 UTC
 </div>
 </div>
 </body>
