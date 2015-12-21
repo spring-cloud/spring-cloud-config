@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,118 +18,65 @@ package org.springframework.cloud.config.client;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.env.CompositePropertySource;
-import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Dave Syer
+ * @author Jeffrey Nelson
  *
  */
 @Order(0)
-public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
+public class ConfigServicePropertySourceLocator
+		extends BaseConfigServicePropertySourceLocator<ConfigServicePropertySourceLocator.SimpleContext> {
 
-	private static Log logger = LogFactory
-			.getLog(ConfigServicePropertySourceLocator.class);
-
+	private static Log logger = LogFactory.getLog(ConfigServicePropertySourceLocator.class);
+	
 	private RestTemplate restTemplate;
-	private ConfigClientProperties defaults;
 
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaults) {
-		this.defaults = defaults;
+		super(defaults);
 	}
 
 	@Override
-	@Retryable(interceptor = "configServerRetryInterceptor")
-	public org.springframework.core.env.PropertySource<?> locate(
-			org.springframework.core.env.Environment environment) {
-		ConfigClientProperties client = this.defaults.override(environment);
-		CompositePropertySource composite = new CompositePropertySource("configService");
-		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(client)
-				: this.restTemplate;
-		Exception error = null;
-		String errorBody = null;
-		logger.info("Fetching config from server at: " + client.getRawUri());
-		try {
-			String[] labels = new String[]{""};
-			if (StringUtils.hasText(client.getLabel())) {
-				labels = StringUtils.commaDelimitedListToStringArray(client.getLabel());
-			}
-			// Try all the labels until one works
-			for (String label : labels) {
-				Environment result = getRemoteEnvironment(restTemplate, client.getRawUri(), client.getName(), client.getProfile(), label.trim());
-				if (result != null) {
-					logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s",
-							result.getName(),
-							result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
-							result.getLabel(), result.getVersion()));
-
-					for (PropertySource source : result.getPropertySources()) {
-						@SuppressWarnings("unchecked")
-						Map<String, Object> map = (Map<String, Object>) source
-								.getSource();
-						composite.addPropertySource(new MapPropertySource(source
-								.getName(), map));
-					}
-					return composite;
-				}
-			}
-		}
-		catch (HttpServerErrorException e) {
-			error = e;
-			if (MediaType.APPLICATION_JSON.includes(e.getResponseHeaders()
-					.getContentType())) {
-				errorBody = e.getResponseBodyAsString();
-			}
-		}
-		catch (Exception e) {
-			error = e;
-		}
-		if (client != null && client.isFailFast()) {
-			throw new IllegalStateException(
-					"Could not locate PropertySource and the fail fast property is set, failing",
-					error);
-		}
-		logger.warn("Could not locate PropertySource: "
-				+ (errorBody == null ? error==null ? "label not found" : error.getMessage() : errorBody));
-		return null;
-
+	protected void fillContext(SimpleContext context, org.springframework.core.env.Environment environment) {
+		super.fillContext(context, environment);
+		RestTemplate restTemplate = this.restTemplate == null
+				? getSecureRestTemplate(context.getConfigClientProperties()) : this.restTemplate;
+		context.setRestTemplate(restTemplate);
 	}
 
-	private Environment getRemoteEnvironment(RestTemplate restTemplate, String uri, String name, String profile, String label) {
+	@Override
+	protected Environment getRemoteEnvironment(SimpleContext context) {
 		String path = "/{name}/{profile}";
-		Object[] args = new String[] { name, profile };
-		if (StringUtils.hasText(label)) {
-			args = new String[] { name, profile, label };
+		Object[] args = new String[] { context.getConfigClientProperties().getName(),
+				context.getConfigClientProperties().getProfile() };
+		if (StringUtils.hasText(context.getLabel())) {
+			args = new String[] { context.getConfigClientProperties().getName(),
+					context.getConfigClientProperties().getProfile(), context.getLabel() };
 			path = path + "/{label}";
 		}
 		ResponseEntity<Environment> response = null;
 
+		String fullUri = context.getConfigClientProperties().getRawUri() + path;
+		logger.info("Fetching config from server at: " + fullUri);
 		try {
-			response = restTemplate.exchange(uri + path,
-					HttpMethod.GET, new HttpEntity<Void>((Void) null),
-					Environment.class, args);
+			response = context.getRestTemplate().exchange(fullUri, HttpMethod.GET,
+					new HttpEntity<Void>((Void) null), Environment.class, args);
 		} catch (HttpClientErrorException e) {
 			if(e.getStatusCode() != HttpStatus.NOT_FOUND ) {
 				throw e;
@@ -141,6 +88,23 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		Environment result = response.getBody();
 		return result;
+	}
+	
+	@Override
+	protected SimpleContext newContext() {
+		return new SimpleContext();
+	}
+
+	public static class SimpleContext extends BaseConfigServicePropertySourceLocator.Context {
+		private RestTemplate restTemplate;
+
+		public RestTemplate getRestTemplate() {
+			return restTemplate;
+		}
+
+		public void setRestTemplate(RestTemplate restTemplate) {
+			this.restTemplate = restTemplate;
+		}
 	}
 
 	public void setRestTemplate(RestTemplate restTemplate) {
