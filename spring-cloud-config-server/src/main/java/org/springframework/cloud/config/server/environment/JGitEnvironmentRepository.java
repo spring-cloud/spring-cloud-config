@@ -161,7 +161,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		finally {
 			try {
 				if (git != null) {
-					git.getRepository().close();
+					git.close();
 				}
 			}
 			catch (Exception e) {

@@ -24,8 +24,6 @@ import org.junit.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
-import org.springframework.cloud.config.server.resource.GenericResourceRepository;
-import org.springframework.cloud.config.server.resource.NoSuchResourceException;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
@@ -36,6 +34,7 @@ public class GenericResourceRepositoryTests {
 
 	private GenericResourceRepository repository;
 	private ConfigurableApplicationContext context;
+	private NativeEnvironmentRepository nativeRepository;
 
 	@After
 	public void close() {
@@ -48,8 +47,9 @@ public class GenericResourceRepositoryTests {
 	public void init() {
 		this.context = new SpringApplicationBuilder(
 				NativeEnvironmentRepositoryTests.class).web(false).run();
+		this.nativeRepository = new NativeEnvironmentRepository(this.context.getEnvironment());
 		this.repository = new GenericResourceRepository(
-				new NativeEnvironmentRepository(this.context.getEnvironment()));
+				this.nativeRepository);
 		this.repository.setResourceLoader(this.context);
 		this.context.close();
 	}
@@ -61,6 +61,12 @@ public class GenericResourceRepositoryTests {
 
 	@Test
 	public void locateProfiledResource() {
+		assertNotNull(this.repository.findOne("blah", "local", "master", "foo.txt"));
+	}
+
+	@Test
+	public void locateProfiledResourceWithPlaceholder() {
+		this.nativeRepository.setSearchLocations("classpath:/test/{profile}");
 		assertNotNull(this.repository.findOne("blah", "local", "master", "foo.txt"));
 	}
 
