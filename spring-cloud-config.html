@@ -1617,17 +1617,41 @@ to <code>logback.xml</code>).
 <div class="paragraph">
 <p>The Config Server runs best as a standalone application, but if you
 need to you can embed it in another application. Just use the
-<code>@EnableConfigServer</code> annotation and (optionally) set
-<code>spring.cloud.config.server.prefix</code> to a path prefix, e.g. "/config",
-to serve the resources under a prefix. The prefix should start but not
-end with a "/". It is applied to the <code>@RequestMappings</code> in the Config
-Server (i.e. underneath the Spring Boot prefixes <code>server.servletPath</code>
-and <code>server.contextPath</code>). Another optional property that can be
+<code>@EnableConfigServer</code> annotation. An optional property that can be
 useful in this case is <code>spring.cloud.config.server.bootstrap</code> which is
 a flag to indicate that the server should configure itself from its
 own remote repository. The flag is off by default because it can delay
 startup, but when embedded in another application it makes sense to
 initialize the same way as any other application.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+It should be obvious, but remember that if you use the bootstrap
+flag the config server will need to have its name and repository URI
+configured in <code>bootstrap.yml</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To change the location of the server endpoints you can (optionally)
+set <code>spring.cloud.config.server.prefix</code>, e.g. "/config", to serve the
+resources under a prefix. The prefix should start but not end with a
+"/". It is applied to the <code>@RequestMappings</code> in the Config Server
+(i.e. underneath the Spring Boot prefixes <code>server.servletPath</code> and
+<code>server.contextPath</code>).</p>
+</div>
+<div class="paragraph">
+<p>If you want to read the configuration for an application directly from
+the backend repository (instead of from the config server) that&#8217;s
+basically an embedded config server with no endpoints. You can switch
+off the endpoints entirely if you don&#8217;t use the <code>@EnableConfigServer</code>
+annotation (just set <code>spring.cloud.config.server.bootstrap=true</code>).</p>
 </div>
 </div>
 </div>
@@ -1871,7 +1895,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-12-21 10:53:35 UTC
+Last updated 2015-12-21 11:54:31 UTC
 </div>
 </div>
 </body>
