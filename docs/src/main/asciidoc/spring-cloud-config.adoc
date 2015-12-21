@@ -46,6 +46,9 @@ spring.cloud.config.server.git.uri: file://${user.home}/config-repo
 where `${user.home}/config-repo` is a git repository containing
 YAML and properties files.
 
+NOTE: in Windows you need an extra "/" in the file URL if it is 
+absolute with a drive prefix, e.g. `file:///${user.home}/config-repo`.
+
 [TIP]
 ====
 Here's a recipe for creating the git repository in the example 
@@ -317,9 +320,15 @@ system properties (`-Dhttps.proxyHost` and `-Dhttps.proxyPort`).
 There is also a "native" profile in the Config Server that doesn't use
 Git, but just loads the config files from the local classpath or file
 system (any static URL you want to point to with
-"spring.cloud.config.server.native.searchLocations"). To use the native
-profile just launch the Config Server with
-"spring.profiles.active=native".
+"spring.cloud.config.server.native.searchLocations"). To use the
+native profile just launch the Config Server with
+"spring.profiles.active=native". 
+
+NOTE: Remember to use the `file:` prefix for file resources (the
+default without a prefix is usually the classpath). Just as with any
+Spring Boot configuration you can embed `${}`-style environment
+placeholders, but remember that absolute paths in Windows require an
+extra "/", e.g. `file:///${user.home}/config-repo`
 
 WARNING: The default value of the `searchLocations` is identical to a
 local Spring Boot application (so `[classpath:/, classpath:/config,
