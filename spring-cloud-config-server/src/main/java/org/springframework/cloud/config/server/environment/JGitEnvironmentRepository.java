@@ -74,6 +74,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
+    private Git git;
+
 	private String defaultLabel = DEFAULT_LABEL;
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
@@ -271,12 +273,17 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		if (hasText(getUsername())) {
 			setCredentialsProvider(clone);
 		}
-		return clone.call();
+        git = clone.call();
+        return git;
 	}
 
 	private void deleteBaseDirIfExists() {
 		if (getBasedir().exists()) {
 			try {
+				// check if git repo is already initialized and close it to prevent file locking issue on windows
+				if (git != null) {
+                    git.close();
+                }
 				FileUtils.delete(getBasedir(), FileUtils.RECURSIVE);
 			}
 			catch (IOException e) {
