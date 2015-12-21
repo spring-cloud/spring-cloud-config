@@ -113,7 +113,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	@Override
-	public Locations getLocations(String application, String profile, String label) {
+	public synchronized Locations getLocations(String application, String profile, String label) {
 		if (label==null) {
 			label = this.defaultLabel;
 		}
