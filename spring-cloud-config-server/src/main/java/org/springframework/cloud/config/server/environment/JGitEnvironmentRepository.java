@@ -113,8 +113,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	@Override
-	public synchronized Locations getLocations(String application, String profile, String label) {
-		if (label==null) {
+	public synchronized Locations getLocations(String application, String profile,
+			String label) {
+		if (label == null) {
 			label = this.defaultLabel;
 		}
 		Ref ref = refresh(application, label);
@@ -122,7 +123,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		if (ref != null) {
 			version = ref.getObjectId().getName();
 		}
-		return new Locations(application, profile, label, version, getSearchLocations(getWorkingDirectory()));
+		return new Locations(application, profile, label, version,
+				getSearchLocations(getWorkingDirectory()));
 	}
 
 	@Override
@@ -178,8 +180,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private void initClonedRepository() throws GitAPIException, IOException {
 		if (!getUri().startsWith(FILE_URI_PREFIX)) {
 			deleteBaseDirIfExists();
-			cloneToBasedir();
-			openGitRepository();
+			Git git = cloneToBasedir();
+			if (git != null) {
+				git.close();
+			}
+			git = openGitRepository();
+			if (git != null) {
+				git.close();
+			}
 		}
 
 	}
