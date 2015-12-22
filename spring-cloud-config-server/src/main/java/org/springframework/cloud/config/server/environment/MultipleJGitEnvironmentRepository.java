@@ -166,7 +166,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		if (label != null) {
 			key = key.replace("{label}", label);
 		}
-		if (!this.repos.containsKey(key)) {
+		if (!this.placeholders.containsKey(key)) {
 			this.placeholders.put(key, getRepository(repository, key));
 		}
 		return this.placeholders.get(key);
