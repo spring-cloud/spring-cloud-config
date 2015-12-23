@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.resource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
 
@@ -50,80 +51,82 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(method = RequestMethod.GET, value = "${spring.cloud.config.server.prefix:}")
 public class ResourceController {
 
-	private ResourceRepository resourceRepository;
+    private ResourceRepository resourceRepository;
 
-	private EnvironmentRepository environmentRepository;
+    private EnvironmentRepository environmentRepository;
 
-	public ResourceController(ResourceRepository resourceRepository,
-			EnvironmentRepository environmentRepository) {
-		this.resourceRepository = resourceRepository;
-		this.environmentRepository = environmentRepository;
-	}
+    public ResourceController(ResourceRepository resourceRepository,
+            EnvironmentRepository environmentRepository) {
+        this.resourceRepository = resourceRepository;
+        this.environmentRepository = environmentRepository;
+    }
 
-	@RequestMapping("/{name}/{profile}/{label}/{path:.*}")
-	public synchronized String resolve(@PathVariable String name,
-			@PathVariable String profile, @PathVariable String label,
-			@PathVariable String path) throws IOException {
-		StandardEnvironment environment = new StandardEnvironment();
-		if (label != null && label.contains("(_)")) {
-			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
-			// by Spring MVC
-			label = label.replace("(_)", "/");
-		}
-		environment.getPropertySources().addAfter(
-				StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
-				new EnvironmentPropertySource(
-						this.environmentRepository.findOne(name, profile, label)));
-		String text = StreamUtils.copyToString(
-				this.resourceRepository.findOne(name, profile, label, path).getInputStream(),
-				Charset.forName("UTF-8"));
-		// Mask out escaped placeholders
-		text = text.replace("\\${", "$_{");
-		return environment.resolvePlaceholders(text).replace("$_{", "${");
-	}
+    @RequestMapping("/{name}/{profile}/{label}/{path:.*}")
+    public synchronized String resolve(@PathVariable String name,
+            @PathVariable String profile, @PathVariable String label,
+            @PathVariable String path) throws IOException {
+        StandardEnvironment environment = new StandardEnvironment();
+        if (label != null && label.contains("(_)")) {
+            // "(_)" is uncommon in a git branch name, but "/" cannot be matched
+            // by Spring MVC
+            label = label.replace("(_)", "/");
+        }
+        environment.getPropertySources().addAfter(
+                StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
+                new EnvironmentPropertySource(
+                        this.environmentRepository.findOne(name, profile, label)));
 
-	@RequestMapping(value="/{name}/{profile}/{label}/{path:.*}", produces=MediaType.APPLICATION_OCTET_STREAM_VALUE)
-	public synchronized byte[] binary(@PathVariable String name,
-			@PathVariable String profile, @PathVariable String label,
-			@PathVariable String path) throws IOException {
-		StandardEnvironment environment = new StandardEnvironment();
-		if (label != null && label.contains("(_)")) {
-			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
-			// by Spring MVC
-			label = label.replace("(_)", "/");
-		}
-		environment.getPropertySources().addAfter(
-				StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
-				new EnvironmentPropertySource(
-						this.environmentRepository.findOne(name, profile, label)));
-		byte[] text = StreamUtils.copyToByteArray(
-				this.resourceRepository.findOne(name, profile, label, path).getInputStream());
-		return text;
-	}
+        // ensure InputStream will be closed to prevent file locks on Windows
+        try (InputStream is = this.resourceRepository.findOne(name, profile, label, path).getInputStream()) {
+            String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
+            // Mask out escaped placeholders
+            text = text.replace("\\${", "$_{");
+            return environment.resolvePlaceholders(text).replace("$_{", "${");
+        }
+    }
 
-	@ExceptionHandler(NoSuchResourceException.class)
-	@ResponseStatus(HttpStatus.NOT_FOUND)
-	public void notFound(NoSuchResourceException e) {
-	}
+    @RequestMapping(value = "/{name}/{profile}/{label}/{path:.*}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public synchronized byte[] binary(@PathVariable String name,
+            @PathVariable String profile, @PathVariable String label,
+            @PathVariable String path) throws IOException {
+        StandardEnvironment environment = new StandardEnvironment();
+        if (label != null && label.contains("(_)")) {
+            // "(_)" is uncommon in a git branch name, but "/" cannot be matched
+            // by Spring MVC
+            label = label.replace("(_)", "/");
+        }
+        environment.getPropertySources().addAfter(
+                StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
+                new EnvironmentPropertySource(
+                        this.environmentRepository.findOne(name, profile, label)));
+        try (InputStream is = this.resourceRepository.findOne(name, profile, label, path).getInputStream()) {
+            return StreamUtils.copyToByteArray(is);
+        }
+    }
 
-	private static class EnvironmentPropertySource extends PropertySource<Environment> {
+    @ExceptionHandler(NoSuchResourceException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public void notFound(NoSuchResourceException e) {
+    }
 
-		public EnvironmentPropertySource(Environment sources) {
-			super("cloudEnvironment", sources);
-		}
+    private static class EnvironmentPropertySource extends PropertySource<Environment> {
 
-		@Override
-		public Object getProperty(String name) {
-			for (org.springframework.cloud.config.environment.PropertySource source : getSource()
-					.getPropertySources()) {
-				Map<?, ?> map = source.getSource();
-				if (map.containsKey(name)) {
-					return map.get(name);
-				}
-			}
-			return null;
-		}
+        public EnvironmentPropertySource(Environment sources) {
+            super("cloudEnvironment", sources);
+        }
 
-	}
+        @Override
+        public Object getProperty(String name) {
+            for (org.springframework.cloud.config.environment.PropertySource source : getSource()
+                    .getPropertySources()) {
+                Map<?, ?> map = source.getSource();
+                if (map.containsKey(name)) {
+                    return map.get(name);
+                }
+            }
+            return null;
+        }
+
+    }
 
 }
