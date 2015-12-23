@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.resource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
 
@@ -74,15 +75,18 @@ public class ResourceController {
 				StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
 				new EnvironmentPropertySource(
 						this.environmentRepository.findOne(name, profile, label)));
-		String text = StreamUtils.copyToString(
-				this.resourceRepository.findOne(name, profile, label, path).getInputStream(),
-				Charset.forName("UTF-8"));
-		// Mask out escaped placeholders
-		text = text.replace("\\${", "$_{");
-		return environment.resolvePlaceholders(text).replace("$_{", "${");
+
+		// ensure InputStream will be closed to prevent file locks on Windows
+		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
+				.getInputStream()) {
+			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
+			// Mask out escaped placeholders
+			text = text.replace("\\${", "$_{");
+			return environment.resolvePlaceholders(text).replace("$_{", "${");
+		}
 	}
 
-	@RequestMapping(value="/{name}/{profile}/{label}/{path:.*}", produces=MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@RequestMapping(value = "/{name}/{profile}/{label}/{path:.*}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public synchronized byte[] binary(@PathVariable String name,
 			@PathVariable String profile, @PathVariable String label,
 			@PathVariable String path) throws IOException {
@@ -96,9 +100,10 @@ public class ResourceController {
 				StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
 				new EnvironmentPropertySource(
 						this.environmentRepository.findOne(name, profile, label)));
-		byte[] text = StreamUtils.copyToByteArray(
-				this.resourceRepository.findOne(name, profile, label, path).getInputStream());
-		return text;
+		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
+				.getInputStream()) {
+			return StreamUtils.copyToByteArray(is);
+		}
 	}
 
 	@ExceptionHandler(NoSuchResourceException.class)
