@@ -99,9 +99,9 @@ public class ResourceController {
                 StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
                 new EnvironmentPropertySource(
                         this.environmentRepository.findOne(name, profile, label)));
-        byte[] text = StreamUtils.copyToByteArray(
-                this.resourceRepository.findOne(name, profile, label, path).getInputStream());
-        return text;
+        try (InputStream is = this.resourceRepository.findOne(name, profile, label, path).getInputStream()) {
+            return StreamUtils.copyToByteArray(is);
+        }
     }
 
     @ExceptionHandler(NoSuchResourceException.class)
