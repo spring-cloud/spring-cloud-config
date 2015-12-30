@@ -48,6 +48,9 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 
 	private static final String DEFAULT_LABEL = "trunk";
 
+	/**
+	 * The default label for environment properties requests.
+	 */
 	private String defaultLabel = DEFAULT_LABEL;
 
 	public String getDefaultLabel() {

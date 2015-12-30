@@ -46,6 +46,9 @@ public class ConfigClientProperties {
 	 */
 	private String profile = "default";
 
+	/**
+	 * Name of application used to fetch remote properties.
+	 */
 	@Value("${spring.application.name:application}")
 	private String name;
 
@@ -79,7 +82,7 @@ public class ConfigClientProperties {
 	 * Flag to indicate that failure to connect to the server is fatal (default false).
 	 */
 	private boolean failFast = false;
-	
+
 	private ConfigClientProperties() {
 	}
 
@@ -92,7 +95,7 @@ public class ConfigClientProperties {
 	}
 
 	public boolean isEnabled() {
-		return enabled;
+		return this.enabled;
 	}
 
 	public void setEnabled(boolean enabled) {
@@ -104,7 +107,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getUri() {
-		return uri;
+		return this.uri;
 	}
 
 	public void setUri(String url) {
@@ -112,7 +115,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	public void setName(String name) {
@@ -120,7 +123,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getProfile() {
-		return profile;
+		return this.profile;
 	}
 
 	public void setProfile(String env) {
@@ -128,7 +131,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getLabel() {
-		return label;
+		return this.label;
 	}
 
 	public void setLabel(String label) {
@@ -152,7 +155,7 @@ public class ConfigClientProperties {
 	}
 
 	public Discovery getDiscovery() {
-		return discovery;
+		return this.discovery;
 	}
 
 	public void setDiscovery(Discovery discovery) {
@@ -160,7 +163,7 @@ public class ConfigClientProperties {
 	}
 
 	public boolean isFailFast() {
-		return failFast;
+		return this.failFast;
 	}
 
 	public void setFailFast(boolean failFast) {
@@ -205,10 +208,10 @@ public class ConfigClientProperties {
 	}
 
 	private String[] getUsernamePassword() {
-		if (StringUtils.hasText(password)) {
+		if (StringUtils.hasText(this.password)) {
 			return new String[] {
-					StringUtils.hasText(username) ? username.trim() : "user",
-					password.trim() };
+					StringUtils.hasText(this.username) ? this.username.trim() : "user",
+					this.password.trim() };
 		}
 		return new String[2];
 	}
@@ -216,11 +219,18 @@ public class ConfigClientProperties {
 	public static class Discovery {
 		public static final String DEFAULT_CONFIG_SERVER = "CONFIGSERVER";
 
+		/**
+		 * Flag to indicate that config server discovery is enabled (config server URL will be
+		 * looked up via discovery).
+		 */
 		private boolean enabled;
+		/**
+		 * Service id to locate config server.
+		 */
 		private String serviceId = DEFAULT_CONFIG_SERVER;
 
 		public boolean isEnabled() {
-			return enabled;
+			return this.enabled;
 		}
 
 		public void setEnabled(boolean enabled) {
@@ -228,7 +238,7 @@ public class ConfigClientProperties {
 		}
 
 		public String getServiceId() {
-			return serviceId;
+			return this.serviceId;
 		}
 
 		public void setServiceId(String serviceId) {
@@ -241,27 +251,28 @@ public class ConfigClientProperties {
 			org.springframework.core.env.Environment environment) {
 		ConfigClientProperties override = new ConfigClientProperties();
 		BeanUtils.copyProperties(this, override);
-		override.setName(environment.resolvePlaceholders("${"
-				+ ConfigClientProperties.PREFIX
-				+ ".name:${spring.application.name:application}}"));
+		override.setName(
+				environment.resolvePlaceholders("${" + ConfigClientProperties.PREFIX
+						+ ".name:${spring.application.name:application}}"));
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
-			override.setProfile(environment.getProperty(ConfigClientProperties.PREFIX
-					+ ".profile"));
+			override.setProfile(
+					environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
 		}
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".label")) {
-			override.setLabel(environment.getProperty(ConfigClientProperties.PREFIX
-					+ ".label"));
+			override.setLabel(
+					environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
 		}
 		return override;
 	}
 
 	@Override
 	public String toString() {
-		return "ConfigClientProperties [enabled=" + enabled + ", profile=" + profile
-				+ ", name=" + name + ", label=" + (label == null ? "" : label)
-				+ ", username=" + username + ", password=" + password + ", uri=" + uri
-				+ ", discovery.enabled=" + discovery.enabled + ", failFast=" + failFast
-				+ "]";
+		return "ConfigClientProperties [enabled=" + this.enabled + ", profile="
+				+ this.profile + ", name=" + this.name + ", label="
+				+ (this.label == null ? "" : this.label) + ", username=" + this.username
+				+ ", password=" + this.password + ", uri=" + this.uri
+				+ ", discovery.enabled=" + this.discovery.enabled + ", failFast="
+				+ this.failFast + "]";
 	}
 
 }

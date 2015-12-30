@@ -39,11 +39,26 @@ import org.springframework.util.StringUtils;
 public class AbstractScmAccessor {
 
 	protected Log logger = LogFactory.getLog(getClass());
+	/**
+	 * Base directory for local working copy of repository.
+	 */
 	private File basedir;
+	/**
+	 * URI of remote repository.
+	 */
 	private String uri;
 	private ConfigurableEnvironment environment;
+	/**
+	 * Username for authentication with remote repository.
+	 */
 	private String username;
+	/**
+	 * Password for authentication with remote repository.
+	 */
 	private String password;
+	/**
+	 * Search paths to use within local working copy. By default searches only the root.
+	 */
 	private String[] searchPaths = new String[0];
 
 	public AbstractScmAccessor(ConfigurableEnvironment environment) {
