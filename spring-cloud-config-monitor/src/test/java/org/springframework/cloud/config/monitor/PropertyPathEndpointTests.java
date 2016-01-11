@@ -67,4 +67,41 @@ public class PropertyPathEndpointTests {
 								.<String, Object> singletonMap("path", "application.yml"))
 				.toString());
 	}
+
+	@Test
+	public void testNotifyAllWithProfile() throws Exception {
+		assertEquals("[*:local]",
+				this.endpoint
+						.notifyByPath(new HttpHeaders(), Collections
+								.<String, Object> singletonMap("path", "application-local.yml"))
+				.toString());
+	}
+
+	@Test
+	public void testNotifyOne() throws Exception {
+		assertEquals("[foo]",
+				this.endpoint
+						.notifyByPath(new HttpHeaders(), Collections
+								.<String, Object> singletonMap("path", "foo.yml"))
+				.toString());
+	}
+
+	@Test
+	public void testNotifyOneWithProfile() throws Exception {
+		assertEquals("[foo:local, foo-local]",
+				this.endpoint
+						.notifyByPath(new HttpHeaders(), Collections
+								.<String, Object> singletonMap("path", "foo-local.yml"))
+				.toString());
+	}
+
+	@Test
+	public void testNotifyMultiDash() throws Exception {
+		assertEquals("[foo:local-dev, foo-local:dev, foo-local-dev]",
+				this.endpoint
+						.notifyByPath(new HttpHeaders(), Collections
+								.<String, Object> singletonMap("path", "foo-local-dev.yml"))
+				.toString());
+	}
+
 }

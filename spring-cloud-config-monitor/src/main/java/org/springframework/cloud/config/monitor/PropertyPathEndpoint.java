@@ -18,7 +18,6 @@ package org.springframework.cloud.config.monitor;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +99,8 @@ public class PropertyPathEndpoint
 	}
 
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-	public Set<String> notifyByForm(@RequestHeader HttpHeaders headers, @RequestParam("path") List<String> request) {
+	public Set<String> notifyByForm(@RequestHeader HttpHeaders headers,
+			@RequestParam("path") List<String> request) {
 		Map<String, Object> map = new HashMap<>();
 		String key = "path";
 		map.put(key, request);
@@ -108,19 +108,29 @@ public class PropertyPathEndpoint
 	}
 
 	private Set<String> guessServiceName(String path) {
-		Set<String> services = new HashSet<>();
+		Set<String> services = new LinkedHashSet<>();
 		if (path != null) {
 			String stem = StringUtils
 					.stripFilenameExtension(StringUtils.getFilename(path));
-			// TODO: correlate with service registry, and if stem=="application"
-			// return all, otherwise return only the matching service
-			if (services.isEmpty()) {
-				if ("application".equals(stem)) {
-					services.add("*");
+			// TODO: correlate with service registry
+			int index = stem.indexOf("-");
+			while (index >= 0) {
+				String name = stem.substring(0, index);
+				String profile = stem.substring(index+1);
+				if ("application".equals(name)) {
+					services.add("*:" + profile);
 				}
-				else {
-					services.add(stem);
+				else if (!name.startsWith("application")) {
+					services.add(name + ":" + profile);
 				}
+				index = stem.indexOf("-", index + 1);
+			}
+			String name = stem;
+			if ("application".equals(name)) {
+				services.add("*");
+			}
+			else if (!name.startsWith("application")) {
+				services.add(name);
 			}
 		}
 		return services;
