@@ -1264,13 +1264,15 @@ in the JRE lib/security directory with the ones that you downloaded).
 </table>
 </div>
 <div class="paragraph">
-<p>If the remote property sources contain encrypted content
-(values starting with <code>{cipher}</code>) they will be decrypted before
-sending to clients over HTTP. The main advantage of this set up is
-that the property values don&#8217;t have to be in plain text when they are
-"at rest" (e.g. in a git repository). If a value cannot be decrypted
-it is replaced with an empty string, largely to prevent cipher text
-being used as a password and accidentally leaking.</p>
+<p>If the remote property sources contain encrypted content (values
+starting with <code>{cipher}</code>) they will be decrypted before sending to
+clients over HTTP. The main advantage of this set up is that the
+property values don&#8217;t have to be in plain text when they are "at rest"
+(e.g. in a git repository). If a value cannot be decrypted it is
+removed from the property source and an additional property is added
+with the same key, but prefixed with "invalid." and a value that means
+"not applicable" (usually "&lt;n/a&gt;"). This is largely to prevent cipher
+text being used as a password and accidentally leaking.</p>
 </div>
 <div class="paragraph">
 <p>If you are setting up a remote config repository for config client
@@ -1895,7 +1897,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-01-08 13:21:56 UTC
+Last updated 2016-01-11 16:51:28 UTC
 </div>
 </div>
 </body>
