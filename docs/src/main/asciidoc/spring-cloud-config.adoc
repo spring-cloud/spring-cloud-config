@@ -460,13 +460,15 @@ You can download the "Java Cryptography Extension (JCE) Unlimited Strength Juris
 from Oracle, and follow instructions for installation (essentially replace the 2 policy files
 in the JRE lib/security directory with the ones that you downloaded).
 
-If the remote property sources contain encrypted content
-(values starting with `{cipher}`) they will be decrypted before
-sending to clients over HTTP. The main advantage of this set up is
-that the property values don't have to be in plain text when they are
-"at rest" (e.g. in a git repository). If a value cannot be decrypted
-it is replaced with an empty string, largely to prevent cipher text
-being used as a password and accidentally leaking.
+If the remote property sources contain encrypted content (values
+starting with `{cipher}`) they will be decrypted before sending to
+clients over HTTP. The main advantage of this set up is that the
+property values don't have to be in plain text when they are "at rest"
+(e.g. in a git repository). If a value cannot be decrypted it is
+removed from the property source and an additional property is added
+with the same key, but prefixed with "invalid." and a value that means
+"not applicable" (usually "<n/a>"). This is largely to prevent cipher
+text being used as a password and accidentally leaking.
 
 If you are setting up a remote config repository for config client
 applications it might contain an `application.yml` like this, for
