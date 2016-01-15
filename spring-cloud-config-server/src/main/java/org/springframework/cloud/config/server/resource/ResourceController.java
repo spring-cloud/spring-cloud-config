@@ -48,7 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  */
 @RestController
-@RequestMapping(method = RequestMethod.GET, value = "${spring.cloud.config.server.prefix:}")
+@RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ResourceController {
 
 	private ResourceRepository resourceRepository;

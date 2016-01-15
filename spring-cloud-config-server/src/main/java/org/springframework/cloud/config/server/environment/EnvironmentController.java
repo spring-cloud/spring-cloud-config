@@ -57,7 +57,7 @@ import org.yaml.snakeyaml.nodes.Tag;
  *
  */
 @RestController
-@RequestMapping(method = RequestMethod.GET, value = "${spring.cloud.config.server.prefix:}")
+@RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EnvironmentController {
 
 	private static final String MAP_PREFIX = "map";

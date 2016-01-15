@@ -51,7 +51,7 @@ import lombok.extern.apachecommons.CommonsLog;
  */
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("${spring.cloud.config.monitor.endpoint.path:}/monitor")
+@RequestMapping(path = "${spring.cloud.config.monitor.endpoint.path:}/monitor", produces = MediaType.APPLICATION_JSON_VALUE)
 @CommonsLog
 public class PropertyPathEndpoint
 		implements ApplicationEventPublisherAware, ApplicationContextAware {

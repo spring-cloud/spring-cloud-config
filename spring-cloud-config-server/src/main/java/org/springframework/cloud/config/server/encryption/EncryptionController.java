@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  */
 @RestController
-@RequestMapping("${spring.cloud.config.server.prefix:}")
+@RequestMapping(path = "${spring.cloud.config.server.prefix:}", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EncryptionController {
 
 	private static Log logger = LogFactory.getLog(EncryptionController.class);
