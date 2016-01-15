@@ -61,14 +61,14 @@ public class ResourceControllerTests {
 	public void templateReplacement() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = this.controller.resolve("foo", "bar", "dev", "template.json");
-		assertEquals("{\n  \"foo\": \"dev_bar\"\n}", resource);
+		assertEquals(String.format("{%n  \"foo\": \"dev_bar\"%n}"), resource);
 	}
 
 	@Test
 	public void templateReplacementNotForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = new String(this.controller.binary("foo", "bar", "dev", "template.json"));
-		assertEquals("{\n  \"foo\": \"${foo}\"\n}", resource);
+		assertEquals(String.format("{%n  \"foo\": \"${foo}\"%n}"), resource);
 	}
 
 	@Test
