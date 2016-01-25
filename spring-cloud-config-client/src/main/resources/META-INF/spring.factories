@@ -4,4 +4,5 @@ org.springframework.cloud.config.client.ConfigClientAutoConfiguration
 
 # Bootstrap components
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
-org.springframework.cloud.config.client.ConfigServiceBootstrapConfiguration
+org.springframework.cloud.config.client.ConfigServiceBootstrapConfiguration,\
+org.springframework.cloud.config.client.DiscoveryClientConfigServiceBootstrapConfiguration
