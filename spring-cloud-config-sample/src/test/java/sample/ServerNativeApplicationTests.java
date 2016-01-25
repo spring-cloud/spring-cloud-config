@@ -1,9 +1,8 @@
 package sample;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -28,7 +27,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 public class ServerNativeApplicationTests {
 
 	private static int configPort = 0;
-	
+
 	@Autowired
 	private ConfigurableEnvironment environment;
 
@@ -48,20 +47,19 @@ public class ServerNativeApplicationTests {
 				.getEmbeddedServletContainer().getPort();
 		System.setProperty("config.port", "" + configPort);
 	}
-	
+
 	@AfterClass
 	public static void close() {
-		System.clearProperty("config.port");		
+		System.clearProperty("config.port");
 		if (server!=null) {
 			server.close();
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test
 	public void contextLoads() {
 		// The remote config was bad so there is no bootstrap
-		assertTrue(((Map)environment.getPropertySources().get("bootstrap").getSource()).isEmpty());
+		assertFalse(this.environment.getPropertySources().contains("bootstrap"));
 	}
 
 	public static void main(String[] args) throws IOException {
