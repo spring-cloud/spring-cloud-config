@@ -1768,6 +1768,28 @@ default service id is "CONFIGSERVER" but you can change that on the
 client with <code>spring.cloud.config.discovery.serviceId</code> (and on the server
 in the usual way for a service, e.g. by setting <code>spring.application.name</code>).</p>
 </div>
+<div class="paragraph">
+<p>The discovery client implementations all support some kind of metadata
+map (e.g. for Eureka we have <code>eureka.instance.metadataMap</code>). Some
+additional properties of the Config Server may need to be configured
+in its service registration metadata so that clients can connect
+correctly. If the Config Server is secured with HTTP Basic you can
+configure the credentials as "username" and "password". And if the
+Config Server has a context path you can set "configPath". Example,
+for a Config Server that is a Eureka client:</p>
+</div>
+<div class="listingblock">
+<div class="title">bootstrap.yml</div>
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">eureka:
+  instance:
+    ...
+    metadataMap:
+      username: osufhalskjrtl
+      password: lviuhlszvaorhvlo5847
+      configPath: /config</code></pre>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="config-client-fail-fast">Config Client Fail Fast</h3>
@@ -1897,7 +1919,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-01-15 23:04:36 UTC
+Last updated 2016-01-25 09:53:44 UTC
 </div>
 </div>
 </body>
