@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.util.UtilAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -37,6 +38,7 @@ import org.springframework.context.event.EventListener;
 @ConditionalOnProperty(value = "spring.cloud.config.discovery.enabled", matchIfMissing = false)
 @Configuration
 @Import({ UtilAutoConfiguration.class })
+@EnableDiscoveryClient
 public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
 	private static Log logger = LogFactory.getLog(DiscoveryClientConfigServiceBootstrapConfiguration.class);
