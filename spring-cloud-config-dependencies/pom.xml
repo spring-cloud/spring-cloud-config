@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.cloud</groupId>
-	<artifactId>spring-cloud-config</artifactId>
+	<artifactId>spring-cloud-config-dependencies</artifactId>
 	<version>1.0.4.BUILD-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Config</name>
@@ -10,32 +10,19 @@
 	<url>http://projects.spring.io/spring-cloud/</url>
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
-		<artifactId>spring-cloud-build</artifactId>
+		<artifactId>spring-cloud-dependencies-parent</artifactId>
 		<version>1.0.4.BUILD-SNAPSHOT</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<scm>
-		<url>https://github.com/spring-cloud/spring-cloud-config</url>
-		<connection>scm:git:git://github.com/spring-cloud/spring-cloud-config.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/spring-cloud/spring-cloud-config.git</developerConnection>
-		<tag>HEAD</tag>
-	</scm>
     <properties>
         <bintray.package>config</bintray.package>
         <spring-cloud-commons.version>1.0.4.BUILD-SNAPSHOT</spring-cloud-commons.version>
     </properties>
-	<modules>
-	  <module>spring-cloud-config-dependencies</module>
-	  <module>spring-cloud-config-client</module>
-	  <module>spring-cloud-config-server</module>
-	  <module>spring-cloud-config-sample</module>
-	  <module>docs</module>
-	</modules>
     <dependencyManagement>
       <dependencies>
 		<dependency>
 		  <groupId>org.springframework.cloud</groupId>
-		  <artifactId>spring-cloud-commons-parent</artifactId>
+		  <artifactId>spring-cloud-commons-dependencies</artifactId>
 		  <version>${spring-cloud-commons.version}</version>
 		  <type>pom</type>
 		  <scope>import</scope>
