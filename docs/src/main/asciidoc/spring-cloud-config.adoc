@@ -390,7 +390,8 @@ spring:
   cloud:
     config:
       server:
-        foo: bar
+        overrides:
+          foo: bar
 ----
 
 will cause all applications that are config clients to read `foo=bar`
