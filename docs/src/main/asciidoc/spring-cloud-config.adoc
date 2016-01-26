@@ -357,7 +357,7 @@ the default behaviour with no placeholders is the same as adding a
 search location ending with `/{label}/. For example `file:/tmp/config`
 is the same as `file:/tmp/config,file:/tmp/config/{label}`
 
-==== Sharing Configiration With All Applications
+==== Sharing Configuration With All Applications
 
 With file-based (i.e. git, svn and native) repositories, resources
 with file names in `application*` are shared between all client
