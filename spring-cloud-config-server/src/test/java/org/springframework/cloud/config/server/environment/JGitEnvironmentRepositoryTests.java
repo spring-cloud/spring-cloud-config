@@ -83,6 +83,19 @@ public class JGitEnvironmentRepositoryTests {
 		assertVersion(environment);
 	}
 
+	@Test
+	public void placeholderInSearchPath() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
+		this.repository.setUri(uri);
+		this.repository.setSearchPaths(new String[] {"{application}"});
+		this.repository.findOne("sub", "staging", "master");
+		Environment environment = this.repository.findOne("sub", "staging", "master");
+		assertEquals(1, environment.getPropertySources().size());
+		assertEquals(this.repository.getUri() + "/sub/application.yml",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
+	}
+
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
 		assertNotNull("version was null", version);

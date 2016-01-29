@@ -315,6 +315,28 @@ that should be applicable. HTTPS proxy settings can be set in
 `~/.git/config` or in the same way as for any other JVM process via
 system properties (`-Dhttps.proxyHost` and `-Dhttps.proxyPort`).
 
+===== Placeholders in Git Search Paths
+
+Spring Cloud Config Server also supports a search path with
+placeholders for the `{application}` and `{profile}` (and `{label}` if
+you need it). Example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          searchPaths: {application}
+----
+
+searches the repository for files in the same name as the directory
+(as well as the top level). Wildcards are also valid in a search 
+path with placeholders (any matching directory is included in the 
+search).
+
 ==== File System Backend
 
 There is also a "native" profile in the Config Server that doesn't use

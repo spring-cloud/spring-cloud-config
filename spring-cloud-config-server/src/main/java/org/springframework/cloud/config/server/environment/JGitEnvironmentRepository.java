@@ -124,7 +124,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			version = ref.getObjectId().getName();
 		}
 		return new Locations(application, profile, label, version,
-				getSearchLocations(getWorkingDirectory()));
+				getSearchLocations(getWorkingDirectory(), application, profile, label));
 	}
 
 	@Override

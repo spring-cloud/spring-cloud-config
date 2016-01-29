@@ -146,8 +146,11 @@ public class NativeEnvironmentRepository
 			}
 		}
 		for (String location : locations) {
-			if (isDirectory(location) && StringUtils.hasText(label)) {
-				output.add(location + label.trim() + "/");
+			if (StringUtils.hasText(label)) {
+				String labelled = location + label.trim() + "/";
+				if (isDirectory(labelled)) {
+					output.add(labelled);
+				}
 			}
 		}
 		return new Locations(application, profile, label, this.version,

@@ -54,7 +54,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	private String defaultLabel = DEFAULT_LABEL;
 
 	public String getDefaultLabel() {
-		return this.defaultLabel ;
+		return this.defaultLabel;
 	}
 
 	public void setDefaultLabel(String defaultLabel) {
@@ -62,8 +62,9 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	@Override
-	public synchronized Locations getLocations(String application, String profile, String label) {
-		if (label==null) {
+	public synchronized Locations getLocations(String application, String profile,
+			String label) {
+		if (label == null) {
 			label = this.defaultLabel;
 		}
 		SvnOperationFactory svnOperationFactory = new SvnOperationFactory();
@@ -80,7 +81,8 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 			else {
 				version = checkout(svnOperationFactory);
 			}
-			return new Locations(application, profile, label, version, getLocations(label));
+			return new Locations(application, profile, label, version,
+					getPaths(application, profile, label));
 		}
 		catch (SVNException e) {
 			throw new IllegalStateException("Cannot checkout repository", e);
@@ -90,8 +92,8 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		}
 	}
 
-	private String[] getLocations(String label) {
-		String[] locations = getSearchLocations(getSvnPath(getWorkingDirectory(), label));
+	private String[] getPaths(String application, String profile, String label) {
+		String[] locations = getSearchLocations(getSvnPath(getWorkingDirectory(), label), application, profile, label);
 		boolean exists = false;
 		for (String location : locations) {
 			location = location.startsWith("file:") ? location.substring("file:".length())

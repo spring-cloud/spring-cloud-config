@@ -20,14 +20,20 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.util.FileUtils;
+import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.UrlResource;
-import org.springframework.util.PatternMatchUtils;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.util.StringUtils;
 
 /**
@@ -36,7 +42,9 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  *
  */
-public class AbstractScmAccessor {
+public class AbstractScmAccessor implements ResourceLoaderAware {
+
+	private static final String[] DEFAULT_LOCATIONS = new String[] {"/"};
 
 	protected Log logger = LogFactory.getLog(getClass());
 	/**
@@ -59,11 +67,18 @@ public class AbstractScmAccessor {
 	/**
 	 * Search paths to use within local working copy. By default searches only the root.
 	 */
-	private String[] searchPaths = new String[0];
+	private String[] searchPaths = DEFAULT_LOCATIONS;
+
+	private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
 	public AbstractScmAccessor(ConfigurableEnvironment environment) {
 		this.environment = environment;
 		this.basedir = createBaseDir();
+	}
+
+	@Override
+	public void setResourceLoader(ResourceLoader resourceLoader) {
+		this.resourceLoader = resourceLoader;
 	}
 
 	protected File createBaseDir() {
@@ -76,7 +91,8 @@ public class AbstractScmAccessor {
 						FileUtils.delete(basedir, FileUtils.RECURSIVE);
 					}
 					catch (IOException e) {
-						AbstractScmAccessor.this.logger.warn("Failed to delete temporary directory on exit: " + e);
+						AbstractScmAccessor.this.logger.warn(
+								"Failed to delete temporary directory on exit: " + e);
 					}
 				}
 			});
@@ -100,7 +116,7 @@ public class AbstractScmAccessor {
 			uri = uri.substring(0, uri.length() - 1);
 		}
 		int index = uri.indexOf("://");
-		if (index>0 && !uri.substring(index+"://".length()).contains("/")) {
+		if (index > 0 && !uri.substring(index + "://".length()).contains("/")) {
 			// If there's no context path add one
 			uri = uri + "/";
 		}
@@ -149,25 +165,63 @@ public class AbstractScmAccessor {
 				return new UrlResource(StringUtils.cleanPath(this.uri)).getFile();
 			}
 			catch (Exception e) {
-				throw new IllegalStateException("Cannot convert uri to file: " + this.uri);
+				throw new IllegalStateException(
+						"Cannot convert uri to file: " + this.uri);
 			}
 		}
 		return this.basedir;
 	}
 
-	protected String[] getSearchLocations(File dir) {
-		List<String> locations = new ArrayList<String>();
-		locations.add(dir.toURI().toString());
-		String[] list = dir.list();
-		if (list!=null) {
-			for (String path : list) {
-				File file = new File(dir, path);
-				if (file.isDirectory() && PatternMatchUtils.simpleMatch(this.searchPaths, path)) {
-					locations.add(file.toURI().toString());
+	protected String[] getSearchLocations(File dir, String application, String profile,
+			String label) {
+		String[] locations = this.searchPaths;
+		if (locations == null || locations.length == 0) {
+			locations = DEFAULT_LOCATIONS;
+		} else {
+			locations = StringUtils.concatenateStringArrays(DEFAULT_LOCATIONS, locations);
+		}
+		Collection<String> output = new LinkedHashSet<String>();
+		for (String location : locations) {
+			String[] profiles = new String[] { profile };
+			if (profile != null) {
+				profiles = StringUtils.commaDelimitedListToStringArray(profile);
+			}
+			for (String prof : profiles) {
+				String value = location;
+				if (application != null) {
+					value = value.replace("{application}", application);
+				}
+				if (prof != null) {
+					value = value.replace("{profile}", prof);
+				}
+				if (label != null) {
+					value = value.replace("{label}", label);
+				}
+				if (!value.endsWith("/")) {
+					value = value + "/";
+				}
+				output.addAll(matchingDirectories(dir, value));
+			}
+		}
+		return output.toArray(new String[0]);
+	}
+
+	private List<String> matchingDirectories(File dir, String value) {
+		List<String> output = new ArrayList<String>();
+		try {
+			PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(
+					this.resourceLoader);
+			String path = new File(dir, value).toURI().toString();
+			for (Resource resource : resolver.getResources(path)) {
+				if (resource.getFile().isDirectory()) {
+					output.add(resource.getURI().toString());
 				}
 			}
 		}
-		return locations.toArray(new String[0]);
+		catch (IOException e) {
+		}
+		return output;
 	}
+
 
 }
