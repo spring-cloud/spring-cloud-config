@@ -1038,6 +1038,31 @@ that should be applicable. HTTPS proxy settings can be set in
 system properties (<code>-Dhttps.proxyHost</code> and <code>-Dhttps.proxyPort</code>).</p>
 </div>
 </div>
+<div class="sect4">
+<h5 id="_placeholders_in_git_search_paths">Placeholders in Git Search Paths</h5>
+<div class="paragraph">
+<p>Spring Cloud Config Server also supports a search path with
+placeholders for the <code>{application}</code> and <code>{profile}</code> (and <code>{label}</code> if
+you need it). Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          searchPaths: {application}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>searches the repository for files in the same name as the directory
+(as well as the top level). Wildcards are also valid in a search
+path with placeholders (any matching directory is included in the
+search).</p>
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_file_system_backend">File System Backend</h4>
@@ -1920,7 +1945,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-01-26 10:01:39 UTC
+Last updated 2016-01-29 10:11:18 UTC
 </div>
 </div>
 </body>
