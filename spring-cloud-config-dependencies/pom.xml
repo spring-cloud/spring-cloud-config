@@ -62,24 +62,6 @@
         </dependency>
 		</dependencies>
 	</dependencyManagement>
-	<distributionManagement>
-		<downloadUrl>https://github.com/spring-cloud</downloadUrl>
-		<site>
-			<id>spring-docs</id>
-			<url>scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-cloud/docs/${project.artifactId}/${project.version}
-		</url>
-		</site>
-		<repository>
-			<id>repo.spring.io</id>
-			<name>Spring Release Repository</name>
-			<url>https://repo.spring.io/libs-release-local</url>
-		</repository>
-		<snapshotRepository>
-			<id>repo.spring.io</id>
-			<name>Spring Snapshot Repository</name>
-			<url>https://repo.spring.io/libs-snapshot-local</url>
-		</snapshotRepository>
-	</distributionManagement>
 	<profiles>
 		<profile>
 			<id>spring</id>
