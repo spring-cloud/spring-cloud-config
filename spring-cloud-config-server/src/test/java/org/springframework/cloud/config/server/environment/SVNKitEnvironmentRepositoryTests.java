@@ -75,6 +75,23 @@ public class SVNKitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void basedirWithSpace() throws Exception{
+		File basedirWithSpace = new File("target/config with space");
+		if (basedirWithSpace.exists()) {
+			FileUtils.delete(basedirWithSpace, FileUtils.RECURSIVE | FileUtils.RETRY);
+		}
+
+		repository.setBasedir(basedirWithSpace);
+
+		Environment environment = repository.findOne("bar", "staging", "trunk");
+		assertEquals(2, environment.getPropertySources().size());
+		assertTrue(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties"));
+		assertTrue(environment.getPropertySources().get(1).getName()
+				.contains("application.yml"));
+	}
+
+	@Test
 	public void branch() {
 		Environment environment = repository.findOne("bar", "staging",
 				"branches/demobranch");

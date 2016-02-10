@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.io.File;
+import java.net.URI;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -96,10 +97,9 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		String[] locations = getSearchLocations(getSvnPath(getWorkingDirectory(), label), application, profile, label);
 		boolean exists = false;
 		for (String location : locations) {
-			location = location.startsWith("file:") ? location.substring("file:".length())
-					: location;
 			location = StringUtils.cleanPath(location);
-			if (new File(location).exists()) {
+			URI locationUri = URI.create(location);
+			if (new File(locationUri).exists()) {
 				exists = true;
 				break;
 			}
