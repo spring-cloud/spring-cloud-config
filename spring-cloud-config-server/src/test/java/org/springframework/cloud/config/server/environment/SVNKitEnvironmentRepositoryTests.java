@@ -16,20 +16,21 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
-
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.environment.NoSuchLabelException;
-import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
+import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.StandardEnvironment;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Michael Prankl
@@ -39,7 +40,7 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
 	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(
-			environment);
+			this.environment);
 
 	private File basedir = new File("target/config");
 
@@ -47,15 +48,15 @@ public class SVNKitEnvironmentRepositoryTests {
 	public void init() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
 				"src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
-		repository.setUri(uri);
-		if (basedir.exists()) {
-			FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
+		this.repository.setUri(uri);
+		if (this.basedir.exists()) {
+			FileUtils.delete(this.basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 		}
 	}
 
 	@Test
 	public void vanilla() {
-		Environment environment = repository.findOne("bar", "staging", "trunk");
+		Environment environment = this.repository.findOne("bar", "staging", "trunk");
 		assertEquals(2, environment.getPropertySources().size());
 		assertTrue(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties"));
@@ -65,8 +66,8 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	@Test
 	public void basedir() {
-		repository.setBasedir(basedir);
-		Environment environment = repository.findOne("bar", "staging", "trunk");
+		this.repository.setBasedir(this.basedir);
+		Environment environment = this.repository.findOne("bar", "staging", "trunk");
 		assertEquals(2, environment.getPropertySources().size());
 		assertTrue(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties"));
@@ -75,15 +76,15 @@ public class SVNKitEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void basedirWithSpace() throws Exception{
+	public void basedirWithSpace() throws Exception {
 		File basedirWithSpace = new File("target/config with space");
 		if (basedirWithSpace.exists()) {
 			FileUtils.delete(basedirWithSpace, FileUtils.RECURSIVE | FileUtils.RETRY);
 		}
 
-		repository.setBasedir(basedirWithSpace);
+		this.repository.setBasedir(basedirWithSpace);
 
-		Environment environment = repository.findOne("bar", "staging", "trunk");
+		Environment environment = this.repository.findOne("bar", "staging", "trunk");
 		assertEquals(2, environment.getPropertySources().size());
 		assertTrue(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties"));
@@ -93,7 +94,7 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	@Test
 	public void branch() {
-		Environment environment = repository.findOne("bar", "staging",
+		Environment environment = this.repository.findOne("bar", "staging",
 				"branches/demobranch");
 		assertEquals(1, environment.getPropertySources().size());
 		assertTrue(environment.getPropertySources().get(0).getName()
@@ -102,8 +103,8 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	@Test
 	public void vanilla_with_update() {
-		repository.findOne("bar", "staging", "trunk");
-		Environment environment = repository.findOne("bar", "staging", "trunk");
+		this.repository.findOne("bar", "staging", "trunk");
+		Environment environment = this.repository.findOne("bar", "staging", "trunk");
 		assertEquals(2, environment.getPropertySources().size());
 		assertTrue(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties"));
@@ -111,10 +112,31 @@ public class SVNKitEnvironmentRepositoryTests {
 				.contains("application.yml"));
 	}
 
-	@Test(expected=NoSuchLabelException.class)
+	@Test(expected = NoSuchLabelException.class)
 	public void invalidLabel() {
-		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
+		Environment environment = this.repository.findOne("bar", "staging",
+				"unknownlabel");
 		assertEquals(0, environment.getPropertySources().size());
+	}
+
+	@EnableAutoConfiguration
+	@Configuration
+	@EnableConfigServer
+	protected static class TestApplication {
+
+		public static void main(String[] args) throws Exception {
+			File basedir = new File("target/config");
+			String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
+					"src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
+			if (basedir.exists()) {
+				FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
+			}
+			new SpringApplicationBuilder(TestApplication.class).profiles("subversion")
+					.properties("server.port=8888",
+							"spring.cloud.config.server.svn.uri:" + uri)
+					.run(args);
+		}
+
 	}
 
 }
