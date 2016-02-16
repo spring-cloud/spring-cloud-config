@@ -177,7 +177,7 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 		String[] locations = this.searchPaths;
 		if (locations == null || locations.length == 0) {
 			locations = DEFAULT_LOCATIONS;
-		} else {
+		} else if (locations!=DEFAULT_LOCATIONS) {
 			locations = StringUtils.concatenateStringArrays(DEFAULT_LOCATIONS, locations);
 		}
 		Collection<String> output = new LinkedHashSet<String>();
