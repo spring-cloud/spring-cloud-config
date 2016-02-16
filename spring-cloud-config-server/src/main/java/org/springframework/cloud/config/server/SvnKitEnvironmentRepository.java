@@ -53,7 +53,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
+	public synchronized Environment findOne(String application, String profile, String label) {
 		SvnOperationFactory svnOperationFactory = new SvnOperationFactory();
 		if (hasText(getUsername())) {
 			svnOperationFactory
