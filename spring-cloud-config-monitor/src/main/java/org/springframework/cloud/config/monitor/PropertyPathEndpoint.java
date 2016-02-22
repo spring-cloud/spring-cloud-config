@@ -51,7 +51,7 @@ import lombok.extern.apachecommons.CommonsLog;
  */
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(path = "${spring.cloud.config.monitor.endpoint.path:}/monitor", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "${spring.cloud.config.monitor.endpoint.path:}/monitor")
 @CommonsLog
 public class PropertyPathEndpoint
 		implements ApplicationEventPublisherAware, ApplicationContextAware {
@@ -116,7 +116,7 @@ public class PropertyPathEndpoint
 			int index = stem.indexOf("-");
 			while (index >= 0) {
 				String name = stem.substring(0, index);
-				String profile = stem.substring(index+1);
+				String profile = stem.substring(index + 1);
 				if ("application".equals(name)) {
 					services.add("*:" + profile);
 				}

@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  */
 @RestController
-@RequestMapping(path = "${spring.cloud.config.server.prefix:}", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "${spring.cloud.config.server.prefix:}")
 public class EncryptionController {
 
 	private static Log logger = LogFactory.getLog(EncryptionController.class);
@@ -111,7 +111,7 @@ public class EncryptionController {
 	@RequestMapping(value = "encrypt/status", method = RequestMethod.GET)
 	public Map<String, Object> status() {
 		checkEncryptorInstalled("application", "default");
-		return Collections.<String, Object> singletonMap("status", "OK");
+		return Collections.<String, Object>singletonMap("status", "OK");
 	}
 
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
