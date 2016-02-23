@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.config.monitor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -29,6 +26,11 @@ import org.springframework.http.HttpHeaders;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Dave Syer
@@ -64,7 +66,8 @@ public class CompositePropertyPathNotificationExtractorTests {
 		this.headers.set("X-Gitlab-Event", "Push Hook");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNotNull(extracted);
-		assertEquals("application.yml", extracted.getPaths()[0]);
+		String[] paths = extracted.getPaths();
+		assertThat("paths was wrong", paths, arrayContainingInAnyOrder("oldapp.yml", "newapp.properties", "application.yml"));
 	}
 
 	@Test

@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.config.monitor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.util.Map;
 
 import org.junit.Test;
@@ -28,6 +24,10 @@ import org.springframework.http.HttpHeaders;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Dave Syer
@@ -59,17 +59,6 @@ public class GithubPropertyPathNotificationExtractorTests {
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Github-Event", "issues");
-		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
-		assertNull(extracted);
-	}
-
-	@Test
-	public void gitlabNotDetected() throws Exception {
-		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("gitlab.json").getInputStream(),
-				new TypeReference<Map<String, Object>>() {
-				});
-		this.headers.set("X-Github-Event", "push");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNull(extracted);
 	}
