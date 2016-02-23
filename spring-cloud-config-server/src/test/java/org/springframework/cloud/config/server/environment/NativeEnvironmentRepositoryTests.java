@@ -137,9 +137,19 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void locationPlaceholdersMultipleApplication() {
+		this.repository.setSearchLocations("classpath:/test/{application}");
+		Locations locations = this.repository.getLocations("foo,bar", "dev", "master");
+		assertEquals(2, locations.getLocations().length);
+		assertEquals("classpath:/test/foo/", locations.getLocations()[0]);
+		assertEquals("classpath:/test/bar/", locations.getLocations()[1]);
+	}
+
+	@Test
 	public void locationProfilesApplication() {
 		this.repository.setSearchLocations("classpath:/test/{profile}");
-		Locations locations = this.repository.getLocations("foo", "dev,one,two", "master");
+		Locations locations = this.repository.getLocations("foo", "dev,one,two",
+				"master");
 		assertEquals(3, locations.getLocations().length);
 		assertEquals("classpath:/test/dev/", locations.getLocations()[0]);
 	}

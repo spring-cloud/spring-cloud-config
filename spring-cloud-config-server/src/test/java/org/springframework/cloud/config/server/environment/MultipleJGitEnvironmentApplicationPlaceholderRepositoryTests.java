@@ -114,7 +114,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	}
 
 	@Test
-	@Ignore("not supported yet (placeholders in search paths)")
+	@Ignore("not supported yet (placeholders in search paths with lists)")
 	public void profilesInSearchPaths() {
 		this.repository.setSearchPaths("{profile}");
 		Locations locations = this.repository.getLocations("foo", "dev,one,two",

@@ -126,22 +126,28 @@ public class NativeEnvironmentRepository
 			if (profile != null) {
 				profiles = StringUtils.commaDelimitedListToStringArray(profile);
 			}
+			String[] apps = new String[] { application };
+			if (application != null) {
+				apps = StringUtils.commaDelimitedListToStringArray(application);
+			}
 			for (String prof : profiles) {
-				String value = location;
-				if (application != null) {
-					value = value.replace("{application}", application);
-				}
-				if (prof != null) {
-					value = value.replace("{profile}", prof);
-				}
-				if (label != null) {
-					value = value.replace("{label}", label);
-				}
-				if (!value.endsWith("/")) {
-					value = value + "/";
-				}
-				if (isDirectory(value)) {
-					output.add(value);
+				for (String app : apps) {
+					String value = location;
+					if (application != null) {
+						value = value.replace("{application}", app);
+					}
+					if (prof != null) {
+						value = value.replace("{profile}", prof);
+					}
+					if (label != null) {
+						value = value.replace("{label}", label);
+					}
+					if (!value.endsWith("/")) {
+						value = value + "/";
+					}
+					if (isDirectory(value)) {
+						output.add(value);
+					}
 				}
 			}
 		}

@@ -44,7 +44,7 @@ import org.springframework.util.StringUtils;
  */
 public class AbstractScmAccessor implements ResourceLoaderAware {
 
-	private static final String[] DEFAULT_LOCATIONS = new String[] {"/"};
+	private static final String[] DEFAULT_LOCATIONS = new String[] { "/" };
 
 	protected Log logger = LogFactory.getLog(getClass());
 	/**
@@ -177,7 +177,8 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 		String[] locations = this.searchPaths;
 		if (locations == null || locations.length == 0) {
 			locations = DEFAULT_LOCATIONS;
-		} else if (locations!=DEFAULT_LOCATIONS) {
+		}
+		else if (locations != DEFAULT_LOCATIONS) {
 			locations = StringUtils.concatenateStringArrays(DEFAULT_LOCATIONS, locations);
 		}
 		Collection<String> output = new LinkedHashSet<String>();
@@ -186,21 +187,27 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 			if (profile != null) {
 				profiles = StringUtils.commaDelimitedListToStringArray(profile);
 			}
+			String[] apps = new String[] { application };
+			if (application != null) {
+				apps = StringUtils.commaDelimitedListToStringArray(application);
+			}
 			for (String prof : profiles) {
-				String value = location;
-				if (application != null) {
-					value = value.replace("{application}", application);
+				for (String app : apps) {
+					String value = location;
+					if (app != null) {
+						value = value.replace("{application}", app);
+					}
+					if (prof != null) {
+						value = value.replace("{profile}", prof);
+					}
+					if (label != null) {
+						value = value.replace("{label}", label);
+					}
+					if (!value.endsWith("/")) {
+						value = value + "/";
+					}
+					output.addAll(matchingDirectories(dir, value));
 				}
-				if (prof != null) {
-					value = value.replace("{profile}", prof);
-				}
-				if (label != null) {
-					value = value.replace("{label}", label);
-				}
-				if (!value.endsWith("/")) {
-					value = value + "/";
-				}
-				output.addAll(matchingDirectories(dir, value));
 			}
 		}
 		return output.toArray(new String[0]);
@@ -222,6 +229,5 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 		}
 		return output;
 	}
-
 
 }
