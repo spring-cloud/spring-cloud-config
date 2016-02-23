@@ -69,6 +69,12 @@ WARNING: using the local filesystem for your git repository is
 intended for testing only. Use a server to host your 
 configuration repositories in production.
 
+WARNING: the initial clone of your configuration repository will
+be quick and efficient if you only keep text files in it. If you start
+to store binary files, especially large ones, you may experience
+delays on the first request for configuration and/or out of memory
+errors in the server.
+
 === Environment Repository
 
 Where do you want to store the configuration data for the Config
