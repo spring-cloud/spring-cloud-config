@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +43,8 @@ import org.springframework.context.event.EventListener;
 @EnableDiscoveryClient
 public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
-	private static Log logger = LogFactory.getLog(DiscoveryClientConfigServiceBootstrapConfiguration.class);
+	private static Log logger = LogFactory
+			.getLog(DiscoveryClientConfigServiceBootstrapConfiguration.class);
 
 	@Autowired
 	private ConfigClientProperties config;
@@ -57,8 +60,13 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 	private void refresh() {
 		try {
 			logger.debug("Locating configserver via discovery");
-			ServiceInstance server = this.client
-					.getInstances(this.config.getDiscovery().getServiceId()).get(0);
+			String serviceId = this.config.getDiscovery().getServiceId();
+			List<ServiceInstance> instances = this.client.getInstances(serviceId);
+			if (instances.isEmpty()) {
+				logger.warn("No instances found of configserver (" + serviceId + ")");
+				return;
+			}
+			ServiceInstance server = instances.get(0);
 			String url = getHomePage(server);
 			if (server.getMetadata().containsKey("password")) {
 				String user = server.getMetadata().get("user");
