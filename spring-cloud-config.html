@@ -747,6 +747,22 @@ configuration repositories in production.
 </tr>
 </table>
 </div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+the initial clone of your configuration repository will
+be quick and efficient if you only keep text files in it. If you start
+to store binary files, especially large ones, you may experience
+delays on the first request for configuration and/or out of memory
+errors in the server.
+</td>
+</tr>
+</table>
+</div>
 <div class="sect2">
 <h3 id="_environment_repository">Environment Repository</h3>
 <div class="paragraph">
@@ -1945,7 +1961,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-02-23 00:50:04 UTC
+Last updated 2016-02-23 13:46:36 UTC
 </div>
 </div>
 </body>
