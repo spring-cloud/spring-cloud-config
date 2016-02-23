@@ -329,7 +329,7 @@ spring:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
-          searchPaths: {application}
+          searchPaths: '{application}'
 ----
 
 searches the repository for files in the same name as the directory
