@@ -26,8 +26,7 @@ import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.config.client.ConfigClientProperties;
-import org.springframework.cloud.util.UtilAutoConfiguration;
+import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.junit.Assert.assertEquals;
