@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -62,7 +63,7 @@ public class EnvironmentControllerTests {
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar").getBody();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertEquals("a:\n  b:\n    c: d\n", yaml);
 	}
 
@@ -74,8 +75,15 @@ public class EnvironmentControllerTests {
 		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c",
 				"e")));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar").getBody();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertEquals("a:\n  b:\n    c: e\n", yaml);
+	}
+
+	@Test
+	public void placeholdersResolvedInYaml() throws Exception {
+		whenPlaceholders();
+		String yaml = this.controller.yaml("foo", "bar", true).getBody();
+		assertEquals("a:\n  b:\n    c: bar\nfoo: bar\n", yaml);
 	}
 
 	@Test
@@ -85,7 +93,7 @@ public class EnvironmentControllerTests {
 		map.put("a.b[1]", "d");
 		this.environment.add(new PropertySource("one", map));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar").getBody();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertEquals("a:\n  b:\n  - c\n  - d\n", yaml);
 	}
 
@@ -95,7 +103,7 @@ public class EnvironmentControllerTests {
 		map.put("document", "blah");
 		this.environment.add(new PropertySource("one", map));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar").getBody();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertEquals("blah\n", yaml);
 	}
 
@@ -106,7 +114,7 @@ public class EnvironmentControllerTests {
 		map.put("document[1]", "d");
 		this.environment.add(new PropertySource("one", map));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar").getBody();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertEquals("- c\n- d\n", yaml);
 	}
 
@@ -117,7 +125,7 @@ public class EnvironmentControllerTests {
 		map.put("document[1].a", "d");
 		this.environment.add(new PropertySource("one", map));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar").getBody();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertEquals("- a: c\n- a: d\n", yaml);
 	}
 
@@ -129,7 +137,7 @@ public class EnvironmentControllerTests {
 		map.put("a.b[1].c", "d");
 		this.environment.add(new PropertySource("one", map));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar").getBody();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertTrue("Wrong output: " + yaml,
 				"a:\n  b:\n  - d: e\n    c: d\n  - c: d\n".equals(yaml)
 				|| "a:\n  b:\n  - c: d\n    d: e\n  - c: d\n".equals(yaml));
@@ -142,7 +150,7 @@ public class EnvironmentControllerTests {
 		map.put("b[1].c", "d");
 		this.environment.add(new PropertySource("one", map));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar").getBody();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertEquals("b:\n- c: d\n- c: d\n", yaml);
 	}
 
@@ -153,8 +161,30 @@ public class EnvironmentControllerTests {
 		map.put("x.a.b[1].c", "d");
 		this.environment.add(new PropertySource("one", map));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar").getBody();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertEquals("x:\n  a:\n    b:\n    - c: d\n    - c: d\n", yaml);
+	}
+
+	@Test
+	public void placeholdersResolvedInProperties() throws Exception {
+		whenPlaceholders();
+		String text = this.controller.properties("foo", "bar", true).getBody();
+		assertEquals("a.b.c: bar\nfoo: bar", text);
+	}
+
+	@Test
+	public void placeholdersResolvedInJson() throws Exception {
+		whenPlaceholders();
+		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
+		assertEquals("{\"a\":{\"b\":{\"c\":\"bar\"}},\"foo\":\"bar\"}", json);
+	}
+
+	private void whenPlaceholders() {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("foo", "bar");
+		this.environment.add(new PropertySource("one", map));
+		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "${foo}")));
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
 	}
 
 	@Test

@@ -19,11 +19,8 @@ package org.springframework.cloud.config.server.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.Map;
 
-import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
-import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -35,6 +32,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 
 /**
  * An HTTP endpoint for serving up templated plain text resources from an underlying
@@ -65,24 +65,19 @@ public class ResourceController {
 	public synchronized String resolve(@PathVariable String name,
 			@PathVariable String profile, @PathVariable String label,
 			@PathVariable String path) throws IOException {
-		StandardEnvironment environment = new StandardEnvironment();
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
-		environment.getPropertySources().addAfter(
-				StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
-				new EnvironmentPropertySource(
-						this.environmentRepository.findOne(name, profile, label)));
+		StandardEnvironment environment = prepareEnvironment(
+						this.environmentRepository.findOne(name, profile, label));
 
 		// ensure InputStream will be closed to prevent file locks on Windows
 		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
 				.getInputStream()) {
 			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
-			// Mask out escaped placeholders
-			text = text.replace("\\${", "$_{");
-			return environment.resolvePlaceholders(text).replace("$_{", "${");
+			return resolvePlaceholders(environment, text);
 		}
 	}
 
@@ -90,16 +85,13 @@ public class ResourceController {
 	public synchronized byte[] binary(@PathVariable String name,
 			@PathVariable String profile, @PathVariable String label,
 			@PathVariable String path) throws IOException {
-		StandardEnvironment environment = new StandardEnvironment();
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
-		environment.getPropertySources().addAfter(
-				StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
-				new EnvironmentPropertySource(
-						this.environmentRepository.findOne(name, profile, label)));
+		//TODO: is this line needed for side effects?
+		prepareEnvironment(this.environmentRepository.findOne(name, profile, label));
 		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
 				.getInputStream()) {
 			return StreamUtils.copyToByteArray(is);
@@ -109,26 +101,6 @@ public class ResourceController {
 	@ExceptionHandler(NoSuchResourceException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public void notFound(NoSuchResourceException e) {
-	}
-
-	private static class EnvironmentPropertySource extends PropertySource<Environment> {
-
-		public EnvironmentPropertySource(Environment sources) {
-			super("cloudEnvironment", sources);
-		}
-
-		@Override
-		public Object getProperty(String name) {
-			for (org.springframework.cloud.config.environment.PropertySource source : getSource()
-					.getPropertySources()) {
-				Map<?, ?> map = source.getSource();
-				if (map.containsKey(name)) {
-					return map.get(name);
-				}
-			}
-			return null;
-		}
-
 	}
 
 }

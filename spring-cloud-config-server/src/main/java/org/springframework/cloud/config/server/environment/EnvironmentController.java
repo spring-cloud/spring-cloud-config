@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
@@ -43,10 +42,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.*;
 
 /**
  * @author Dave Syer
@@ -63,11 +67,17 @@ public class EnvironmentController {
 	private static final String MAP_PREFIX = "map";
 
 	private EnvironmentRepository repository;
+	private ObjectMapper objectMapper;
 
 	private boolean stripDocument = true;
 
 	public EnvironmentController(EnvironmentRepository repository) {
+		this(repository, new ObjectMapper());
+	}
+
+	public EnvironmentController(EnvironmentRepository repository, ObjectMapper objectMapper) {
 		this.repository = repository;
+		this.objectMapper = objectMapper;
 	}
 
 	/**
@@ -100,33 +110,49 @@ public class EnvironmentController {
 
 	@RequestMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name,
-			@PathVariable String profiles) throws IOException {
-		return labelledProperties(name, profiles, null);
+			@PathVariable String profiles,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws IOException {
+		return labelledProperties(name, profiles, null, resolvePlaceholders);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.properties")
 	public ResponseEntity<String> labelledProperties(@PathVariable String name,
-			@PathVariable String profiles, @PathVariable String label)
-					throws IOException {
+			@PathVariable String profiles, @PathVariable String label,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws IOException {
 		validateNameAndProfiles(name, profiles);
-		Map<String, Object> properties = convertToProperties(
-				labelled(name, profiles, label));
-		return getSuccess(getPropertiesString(properties));
+		Environment environment = labelled(name, profiles, label);
+		Map<String, Object> properties = convertToProperties(environment);
+		String propertiesString = getPropertiesString(properties);
+		if (resolvePlaceholders) {
+			propertiesString = resolvePlaceholders(prepareEnvironment(environment), propertiesString);
+		}
+		return getSuccess(propertiesString);
 	}
 
 	@RequestMapping("{name}-{profiles}.json")
-	public ResponseEntity<Map<String, Object>> jsonProperties(@PathVariable String name,
-			@PathVariable String profiles) throws Exception {
-		return labelledJsonProperties(name, profiles, null);
+	public ResponseEntity<String> jsonProperties(@PathVariable String name,
+			@PathVariable String profiles,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws Exception {
+		return labelledJsonProperties(name, profiles, null, resolvePlaceholders);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.json")
-	public ResponseEntity<Map<String, Object>> labelledJsonProperties(
+	public ResponseEntity<String> labelledJsonProperties(
 			@PathVariable String name, @PathVariable String profiles,
-			@PathVariable String label) throws Exception {
+			@PathVariable String label,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws Exception {
 		validateNameAndProfiles(name, profiles);
-		Map<String, Object> properties = convertToMap(labelled(name, profiles, label));
-		return getSuccess(properties, MediaType.APPLICATION_JSON);
+		Environment environment = labelled(name, profiles, label);
+		Map<String, Object> properties = convertToMap(environment);
+		String json = this.objectMapper.writeValueAsString(properties);
+		if (resolvePlaceholders) {
+			json = resolvePlaceholders(prepareEnvironment(environment), json);
+		}
+		return getSuccess(json, MediaType.APPLICATION_JSON);
 	}
 
 	private String getPropertiesString(Map<String, Object> properties) {
@@ -143,16 +169,20 @@ public class EnvironmentController {
 
 	@RequestMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> yaml(@PathVariable String name,
-			@PathVariable String profiles) throws Exception {
-		return labelledYaml(name, profiles, null);
+			@PathVariable String profiles,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws Exception {
+		return labelledYaml(name, profiles, null, resolvePlaceholders);
 	}
 
-	@RequestMapping({ "/{label}/{name}-{profiles}.yml",
-			"/{label}/{name}-{profiles}.yaml" })
+	@RequestMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> labelledYaml(@PathVariable String name,
-			@PathVariable String profiles, @PathVariable String label) throws Exception {
+			@PathVariable String profiles, @PathVariable String label,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws Exception {
 		validateNameAndProfiles(name, profiles);
-		Map<String, Object> result = convertToMap(labelled(name, profiles, label));
+		Environment environment = labelled(name, profiles, label);
+		Map<String, Object> result = convertToMap(environment);
 		if (this.stripDocument && result.size() == 1
 				&& result.keySet().iterator().next().equals("document")) {
 			Object value = result.get("document");
@@ -163,15 +193,20 @@ public class EnvironmentController {
 				return getSuccess(new Yaml().dumpAs(value, Tag.STR, FlowStyle.BLOCK));
 			}
 		}
-		return getSuccess(new Yaml().dumpAsMap(result));
+		String yaml = new Yaml().dumpAsMap(result);
+
+		if (resolvePlaceholders) {
+			yaml = resolvePlaceholders(prepareEnvironment(environment), yaml);
+		}
+
+		return getSuccess(yaml);
 	}
 
 	private Map<String, Object> convertToMap(Environment input) throws BindException {
-		Map<String, Object> target = new LinkedHashMap<String, Object>();
-		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<Map<String, Object>>(
-				target);
+		Map<String, Object> target = new LinkedHashMap<>();
+		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<>(target);
 		Map<String, Object> data = convertToProperties(input);
-		LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>();
+		LinkedHashMap<String, Object> properties = new LinkedHashMap<>();
 		for (String key : data.keySet()) {
 			properties.put(MAP_PREFIX + "." + key, data.get(key));
 		}
@@ -213,8 +248,7 @@ public class EnvironmentController {
 				HttpStatus.OK);
 	}
 
-	private ResponseEntity<Map<String, Object>> getSuccess(Map<String, Object> body,
-			MediaType mediaType) {
+	private ResponseEntity<String> getSuccess(String body, MediaType mediaType) {
 		return new ResponseEntity<>(body, getHttpHeaders(mediaType), HttpStatus.OK);
 	}
 
@@ -268,8 +302,8 @@ public class EnvironmentController {
 	}
 
 	private Map<String, Object> convertToProperties(Environment profiles) {
-		Map<String, Object> map = new TreeMap<String, Object>();
-		List<PropertySource> sources = new ArrayList<PropertySource>(
+		Map<String, Object> map = new TreeMap<>();
+		List<PropertySource> sources = new ArrayList<>(
 				profiles.getPropertySources());
 		Collections.reverse(sources);
 		for (PropertySource source : sources) {

@@ -29,6 +29,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * @author Dave Syer
  * @author Roy Clarkson
@@ -49,6 +51,9 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 	@Autowired(required = false)
 	private EnvironmentEncryptor environmentEncryptor;
 
+	@Autowired(required = false)
+	private ObjectMapper objectMapper = new ObjectMapper();
+
 	@Override
 	public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
 		configurer.mediaType("properties", MediaType.valueOf("text/plain"));
@@ -58,7 +63,7 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 
 	@Bean
 	public EnvironmentController environmentController() {
-		EnvironmentController controller = new EnvironmentController(encrypted());
+		EnvironmentController controller = new EnvironmentController(encrypted(), this.objectMapper);
 		controller.setStripDocumentFromYaml(this.server.isStripDocumentFromYaml());
 		return controller;
 	}
