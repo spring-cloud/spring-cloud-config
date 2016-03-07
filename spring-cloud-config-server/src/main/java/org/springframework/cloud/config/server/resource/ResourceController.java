@@ -19,11 +19,9 @@ package org.springframework.cloud.config.server.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.Map;
 
-import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
-import org.springframework.core.env.PropertySource;
+import org.springframework.cloud.config.server.support.EnvironmentPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -109,26 +107,6 @@ public class ResourceController {
 	@ExceptionHandler(NoSuchResourceException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public void notFound(NoSuchResourceException e) {
-	}
-
-	private static class EnvironmentPropertySource extends PropertySource<Environment> {
-
-		public EnvironmentPropertySource(Environment sources) {
-			super("cloudEnvironment", sources);
-		}
-
-		@Override
-		public Object getProperty(String name) {
-			for (org.springframework.cloud.config.environment.PropertySource source : getSource()
-					.getPropertySources()) {
-				Map<?, ?> map = source.getSource();
-				if (map.containsKey(name)) {
-					return map.get(name);
-				}
-			}
-			return null;
-		}
-
 	}
 
 }
