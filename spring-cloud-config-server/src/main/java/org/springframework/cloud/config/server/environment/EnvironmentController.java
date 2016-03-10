@@ -48,7 +48,9 @@ import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
 
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.*;
 
 /**
  * @author Dave Syer
@@ -65,11 +67,17 @@ public class EnvironmentController {
 	private static final String MAP_PREFIX = "map";
 
 	private EnvironmentRepository repository;
+	private ObjectMapper objectMapper;
 
 	private boolean stripDocument = true;
 
 	public EnvironmentController(EnvironmentRepository repository) {
+		this(repository, new ObjectMapper());
+	}
+
+	public EnvironmentController(EnvironmentRepository repository, ObjectMapper objectMapper) {
 		this.repository = repository;
+		this.objectMapper = objectMapper;
 	}
 
 	/**
@@ -103,7 +111,7 @@ public class EnvironmentController {
 	@RequestMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name,
 			@PathVariable String profiles,
-			@RequestParam(defaultValue = "false") boolean resolvePlaceholders)
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
 		return labelledProperties(name, profiles, null, resolvePlaceholders);
 	}
@@ -111,36 +119,40 @@ public class EnvironmentController {
 	@RequestMapping("/{label}/{name}-{profiles}.properties")
 	public ResponseEntity<String> labelledProperties(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label,
-			@RequestParam(defaultValue = "false") boolean resolvePlaceholders)
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
 		validateNameAndProfiles(name, profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToProperties(environment);
 		String propertiesString = getPropertiesString(properties);
 		if (resolvePlaceholders) {
-			propertiesString = resolvePlaceholders(environment, propertiesString);
+			propertiesString = resolvePlaceholders(prepareEnvironment(environment), propertiesString);
 		}
 		return getSuccess(propertiesString);
 	}
 
 	@RequestMapping("{name}-{profiles}.json")
-	public ResponseEntity<Map<String, Object>> jsonProperties(@PathVariable String name,
+	public ResponseEntity<String> jsonProperties(@PathVariable String name,
 			@PathVariable String profiles,
-			@RequestParam(defaultValue = "false") boolean resolvePlaceholders)
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws Exception {
 		return labelledJsonProperties(name, profiles, null, resolvePlaceholders);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.json")
-	public ResponseEntity<Map<String, Object>> labelledJsonProperties(
+	public ResponseEntity<String> labelledJsonProperties(
 			@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label,
-			@RequestParam(defaultValue = "false") boolean resolvePlaceholders)
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws Exception {
 		validateNameAndProfiles(name, profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToMap(environment);
-		return getSuccess(properties, MediaType.APPLICATION_JSON);
+		String json = this.objectMapper.writeValueAsString(properties);
+		if (resolvePlaceholders) {
+			json = resolvePlaceholders(prepareEnvironment(environment), json);
+		}
+		return getSuccess(json, MediaType.APPLICATION_JSON);
 	}
 
 	private String getPropertiesString(Map<String, Object> properties) {
@@ -158,7 +170,7 @@ public class EnvironmentController {
 	@RequestMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> yaml(@PathVariable String name,
 			@PathVariable String profiles,
-			@RequestParam(defaultValue = "false") boolean resolvePlaceholders)
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws Exception {
 		return labelledYaml(name, profiles, null, resolvePlaceholders);
 	}
@@ -166,11 +178,11 @@ public class EnvironmentController {
 	@RequestMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> labelledYaml(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label,
-			@RequestParam(defaultValue = "false") boolean resolvePlaceholders)
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws Exception {
 		validateNameAndProfiles(name, profiles);
-		Environment found = labelled(name, profiles, label);
-		Map<String, Object> result = convertToMap(found);
+		Environment environment = labelled(name, profiles, label);
+		Map<String, Object> result = convertToMap(environment);
 		if (this.stripDocument && result.size() == 1
 				&& result.keySet().iterator().next().equals("document")) {
 			Object value = result.get("document");
@@ -184,7 +196,7 @@ public class EnvironmentController {
 		String yaml = new Yaml().dumpAsMap(result);
 
 		if (resolvePlaceholders) {
-			yaml = resolvePlaceholders(found, yaml);
+			yaml = resolvePlaceholders(prepareEnvironment(environment), yaml);
 		}
 
 		return getSuccess(yaml);
@@ -236,8 +248,7 @@ public class EnvironmentController {
 				HttpStatus.OK);
 	}
 
-	private ResponseEntity<Map<String, Object>> getSuccess(Map<String, Object> body,
-			MediaType mediaType) {
+	private ResponseEntity<String> getSuccess(String body, MediaType mediaType) {
 		return new ResponseEntity<>(body, getHttpHeaders(mediaType), HttpStatus.OK);
 	}
 

@@ -173,12 +173,10 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
-	@Ignore("until json placeholders are resolved")
 	public void placeholdersResolvedInJson() throws Exception {
 		whenPlaceholders();
-		Map<String, Object> map = this.controller.jsonProperties("foo", "bar", true).getBody();
-		assertEquals("bar", map.get("a.b.c"));
-		assertEquals("bar", map.get("foo"));
+		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
+		assertEquals("{\"a\":{\"b\":{\"c\":\"bar\"}},\"foo\":\"bar\"}", json);
 	}
 
 	private void whenPlaceholders() {
