@@ -177,7 +177,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	public void poll() {
 		for (File file : filesFromEvents()) {
 			this.endpoint.notifyByPath(new HttpHeaders(), Collections
-					.<String, Object> singletonMap("path", file.getAbsolutePath()));
+					.<String, Object>singletonMap("path", file.getAbsolutePath()));
 		}
 	}
 
@@ -273,7 +273,10 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				public FileVisitResult preVisitDirectory(Path dir,
 						BasicFileAttributes attrs) throws IOException {
 					FileVisitResult fileVisitResult = super.preVisitDirectory(dir, attrs);
-					registerWatch(dir);
+					// No need to monitor the git metadata
+					if (!dir.toFile().getPath().contains(".git")) {
+						registerWatch(dir);
+					}
 					return fileVisitResult;
 				}
 
