@@ -274,9 +274,10 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 						BasicFileAttributes attrs) throws IOException {
 					FileVisitResult fileVisitResult = super.preVisitDirectory(dir, attrs);
 					// No need to monitor the git metadata
-					if (!dir.toFile().getPath().contains(".git")) {
-						registerWatch(dir);
+					if (dir.toFile().getPath().contains(".git")) {
+						return FileVisitResult.SKIP_SUBTREE;
 					}
+					registerWatch(dir);
 					return fileVisitResult;
 				}
 
