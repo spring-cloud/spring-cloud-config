@@ -869,7 +869,7 @@ eureka:
   instance:
     ...
     metadataMap:
-      username: osufhalskjrtl
+      user: osufhalskjrtl
       password: lviuhlszvaorhvlo5847
       configPath: /config
 ----
