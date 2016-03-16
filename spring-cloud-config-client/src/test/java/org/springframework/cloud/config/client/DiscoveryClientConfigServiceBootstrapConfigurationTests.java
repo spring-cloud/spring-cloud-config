@@ -16,9 +16,15 @@
 
 package org.springframework.cloud.config.client;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.BDDMockito.given;
+
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
@@ -27,10 +33,9 @@ import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
+import org.springframework.cloud.config.client.ConfigClientProperties.ConfigServerEndpoint;
+import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.BDDMockito.given;
 
 /**
  * @author Dave Syer
@@ -61,55 +66,107 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 
 	@Test
 	public void onWhenRequested() throws Exception {
-		given(this.client.getInstances("CONFIGSERVER"))
-				.willReturn(Arrays.asList(this.info));
+		given(this.client
+				.getInstances(ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER))
+						.willReturn(Arrays.asList(this.info));
 		setup("spring.cloud.config.discovery.enabled=true");
 		assertEquals(1, this.context.getBeanNamesForType(
 				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
-		Mockito.verify(this.client).getInstances("CONFIGSERVER");
-		ConfigClientProperties locator = this.context
-				.getBean(ConfigClientProperties.class);
-		assertEquals("http://foo:8877/", locator.getRawUri());
+		Mockito.verify(this.client)
+				.getInstances(ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER);
+		ConfigServerEndpointRepository configServerEndpointRepository = this.context
+				.getBean(ConfigServerEndpointRepository.class);
+		assertEquals("http://foo:8877/", configServerEndpointRepository
+				.getConfigServerEndpoints().iterator().next().getRawUri());
 	}
 
 	@Test
 	public void secureWhenRequested() throws Exception {
 		this.info = new DefaultServiceInstance("app", "foo", 443, true);
-		given(this.client.getInstances("CONFIGSERVER"))
+		given(this.client.getInstances(ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER))
 				.willReturn(Arrays.asList(this.info));
 		setup("spring.cloud.config.discovery.enabled=true");
 		assertEquals(1, this.context.getBeanNamesForType(
 				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
-		Mockito.verify(this.client).getInstances("CONFIGSERVER");
-		ConfigClientProperties locator = this.context
-				.getBean(ConfigClientProperties.class);
-		assertEquals("https://foo:443/", locator.getRawUri());
+		Mockito.verify(this.client).getInstances(ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER);
+		ConfigServerEndpointRepository configServerEndpointRepository = this.context
+				.getBean(ConfigServerEndpointRepository.class);
+		assertEquals("https://foo:443/", configServerEndpointRepository
+				.getConfigServerEndpoints().iterator().next().getRawUri());
 	}
 
 	@Test
 	public void setsPasssword() throws Exception {
 		this.info.getMetadata().put("password", "bar");
-		given(this.client.getInstances("CONFIGSERVER"))
-				.willReturn(Arrays.asList(this.info));
+		given(this.client
+				.getInstances(ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER))
+						.willReturn(Arrays.asList(this.info));
 		setup("spring.cloud.config.discovery.enabled=true");
-		ConfigClientProperties locator = this.context
-				.getBean(ConfigClientProperties.class);
-		assertEquals("http://foo:8877/", locator.getRawUri());
-		assertEquals("bar", locator.getPassword());
-		assertEquals("user", locator.getUsername());
+		ConfigServerEndpointRepository configServerEndpointRepository = this.context
+				.getBean(ConfigServerEndpointRepository.class);
+		ConfigServerEndpoint configServerEndpoint = configServerEndpointRepository
+				.getConfigServerEndpoints().iterator().next();
+		assertEquals("http://foo:8877/", configServerEndpoint.getRawUri());
+		assertEquals("bar", configServerEndpoint.getCredentials().getPassword());
+		assertEquals(ConfigServerEndpoint.DEFAULT_USERNAME_user,
+				configServerEndpoint.getCredentials().getUsername());
 	}
 
 	@Test
 	public void setsPath() throws Exception {
 		this.info.getMetadata().put("configPath", "/bar");
-		given(this.client.getInstances("CONFIGSERVER"))
-				.willReturn(Arrays.asList(this.info));
+		given(this.client
+				.getInstances(ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER))
+						.willReturn(Arrays.asList(this.info));
 		setup("spring.cloud.config.discovery.enabled=true");
-		ConfigClientProperties locator = this.context
-				.getBean(ConfigClientProperties.class);
-		assertEquals("http://foo:8877/bar", locator.getRawUri());
+		ConfigServerEndpointRepository configServerEndpointRepository = this.context
+				.getBean(ConfigServerEndpointRepository.class);
+		assertEquals("http://foo:8877/bar", configServerEndpointRepository
+				.getConfigServerEndpoints().iterator().next().getRawUri());
+	}
+	
+	@Test
+	public void setsPathWithMissingLeadingSlash() throws Exception {
+		this.info.getMetadata().put("configPath", "bar");
+		given(this.client
+				.getInstances(ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER))
+						.willReturn(Arrays.asList(this.info));
+		setup("spring.cloud.config.discovery.enabled=true");
+		ConfigServerEndpointRepository configServerEndpointRepository = this.context
+				.getBean(ConfigServerEndpointRepository.class);
+		assertEquals("http://foo:8877/bar", configServerEndpointRepository
+				.getConfigServerEndpoints().iterator().next().getRawUri());
 	}
 
+	@Test
+	public void multipleServer() throws Exception {
+		ServiceInstance server2 = new DefaultServiceInstance(this.info.getServiceId(), "foo2", 8878, false);
+		server2.getMetadata().put("configPath", "/bar2");
+		server2.getMetadata().put("password", "secret");
+
+		this.info.getMetadata().put("configPath", "bar");
+		given(this.client
+				.getInstances(ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER))
+						.willReturn(Arrays.asList(this.info, server2));
+		setup("spring.cloud.config.discovery.enabled=true");
+		ConfigServerEndpointRepository configServerEndpointRepository = this.context
+				.getBean(ConfigServerEndpointRepository.class);
+		List<ConfigServerEndpoint> configServerEndpoints = configServerEndpointRepository
+				.getConfigServerEndpoints();
+		assertEquals(2, configServerEndpoints.size());
+		
+		ConfigServerEndpoint configServerEndpoint1 = configServerEndpoints.get(0);
+		Assert.assertNull(configServerEndpoint1.getCredentials());
+		assertEquals("http://foo:8877/bar", configServerEndpoint1.getRawUri());
+		
+		ConfigServerEndpoint configServerEndpoint2 = configServerEndpoints.get(1);
+		assertEquals("http://foo2:8878/bar2", configServerEndpoint2.getRawUri());
+		Credentials credentials = configServerEndpoint2.getCredentials();
+		assertNotNull(credentials);
+		assertEquals(ConfigServerEndpoint.DEFAULT_USERNAME_user, credentials.getUsername());
+		assertEquals("secret", credentials.getPassword());
+	}
+	
 	private void setup(String... env) {
 		this.context = new AnnotationConfigApplicationContext();
 		EnvironmentTestUtils.addEnvironment(this.context, env);
@@ -119,7 +176,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 		this.context.register(UtilAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class,
 				DiscoveryClientConfigServiceBootstrapConfiguration.class,
-				ConfigClientProperties.class);
+				ConfigClientProperties.class, ConfigServerEndpointRepository.class);
 		this.context.refresh();
 	}
 

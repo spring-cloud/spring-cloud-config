@@ -16,10 +16,14 @@
 
 package org.springframework.cloud.config.client;
 
+import static java.util.Objects.requireNonNull;
+
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
@@ -28,10 +32,158 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Dave Syer
+ * @author Felix Kissel
  *
  */
 @ConfigurationProperties(ConfigClientProperties.PREFIX)
 public class ConfigClientProperties {
+	
+	static class ConfigSelectionProperties {
+		
+		private final String name;
+		
+		private final String label;
+		
+		private final String profile;
+
+		public ConfigSelectionProperties(String name, String label, String profile) {
+			this.name = name;
+			this.label = label;
+			this.profile = profile;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getProfile() {
+			return profile;
+		}
+		
+		public String[] getLabels() {
+			if (StringUtils.hasText(this.label)) {
+				return StringUtils.trimArrayElements(
+						StringUtils.commaDelimitedListToStringArray(this.label));
+			}
+			else {
+				return new String[] { "" };
+			}
+		}
+		
+	}
+	
+	static class Credentials extends UsernamePasswordPair{
+
+		// Visible for testing
+		Credentials(String username, String password) {
+			super(requireNonNull(username), requireNonNull(password));
+		}
+
+		@Override
+		public String toString() {
+			return "Credentials [getUsername()=" + getUsername() + ", getPassword()=******]";
+		}
+		
+	}
+	static class UsernamePasswordPair {
+
+		private final String username;
+		
+		private final String password;
+
+		UsernamePasswordPair(String username, String password) {
+			this.username = StringUtils.hasText(username) ? username.trim() : null;
+			this.password = StringUtils.hasText(password) ? password.trim() : null;
+		}
+
+		public String getUsername() {
+			return username;
+		}
+		
+		public String getPassword() {
+			return password;
+		}
+		
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + " [username=" + username + ", password=" + password + "]";
+		}
+
+	}
+	
+	static class ConfigServerEndpoint {
+
+		private final String rawUri;
+		
+		private final Credentials credentials;
+
+		// Visible for testing
+		static final String DEFAULT_USERNAME_user = "user";
+
+		public ConfigServerEndpoint(String rawUri, Credentials credentials) {
+			this.rawUri = rawUri;
+			this.credentials = credentials;
+		}
+
+		public String getRawUri() {
+			return rawUri;
+		}
+
+		public Credentials getCredentials() {
+			return credentials;
+		}
+		
+		@Override
+		public String toString() {
+			return "ConfigServerEndpoint [rawUri=" + rawUri + ", credentials="
+					+ credentials + "]";
+		}
+
+		static ConfigServerEndpoint create(String uri,
+				UsernamePasswordPair explicitCredentials) {
+			try {
+				URL url = new URL(uri);
+				String userInfo = url.getUserInfo();
+				String uriWithoutCredentials = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null)
+						.build().toUriString();
+				
+				UsernamePasswordPair uriCredentials = determineUriCreds(userInfo);
+		
+				String username = explicitCredentials.getUsername() != null
+						? explicitCredentials.getUsername() : uriCredentials.getUsername();
+				String password = explicitCredentials.getPassword() != null
+						? explicitCredentials.getPassword() : uriCredentials.getPassword();
+		
+				ConfigClientProperties.Credentials resultCredentials;
+				if (password != null) {
+					resultCredentials = new ConfigClientProperties.Credentials(
+							username == null ? DEFAULT_USERNAME_user : username,
+							password);
+				}
+				else {
+					resultCredentials = null;
+				}
+				return new ConfigClientProperties.ConfigServerEndpoint(uriWithoutCredentials, resultCredentials);
+			}
+			catch (MalformedURLException e) {
+				throw new IllegalStateException("Invalid URL: " + uri);
+			}
+		}
+		
+		private static UsernamePasswordPair determineUriCreds(String userInfo) {
+			if(userInfo == null || userInfo.trim().equals(":")) {
+				return new UsernamePasswordPair(null, null);
+			}
+			if (userInfo.contains(":")) {
+				String[] split = userInfo.split(":", -1);
+				return new UsernamePasswordPair(split[0], split[1]);
+			}
+			else {
+				return new UsernamePasswordPair(userInfo, null);
+			}
+		}
+
+	}
 
 	public static final String PREFIX = "spring.cloud.config";
 
@@ -83,6 +235,7 @@ public class ConfigClientProperties {
 	 */
 	private boolean failFast = false;
 
+	@SuppressWarnings("unused")
 	private ConfigClientProperties() {
 	}
 
@@ -102,8 +255,13 @@ public class ConfigClientProperties {
 		this.enabled = enabled;
 	}
 
+	/**
+	 * @deprecated use {@link #getConfigServerEndpoints()} instead
+	 * @return the without uri-credentials for the first config server address
+	 */
+	@Deprecated
 	public String getRawUri() {
-		return extractCredentials()[2];
+		return getSingleConfigServerEndpoint().getRawUri();
 	}
 
 	public String getUri() {
@@ -138,16 +296,28 @@ public class ConfigClientProperties {
 		this.label = label;
 	}
 
+	/**
+	 * @deprecated use {@link #getConfigServerEndpoints()} instead
+	 * @return the username for the first config server address; might be null
+	 */
+	@Deprecated
 	public String getUsername() {
-		return extractCredentials()[0];
+		Credentials credentials = getSingleConfigServerEndpoint().getCredentials();
+		return credentials == null ? null : credentials.getUsername();
 	}
 
 	public void setUsername(String username) {
 		this.username = username;
 	}
-
+	
+	/**
+	 * @deprecated use {@link #getConfigServerEndpoints()} instead
+	 * @return the password for the first config server address; might be null
+	 */
+	@Deprecated
 	public String getPassword() {
-		return extractCredentials()[1];
+		Credentials credentials = getSingleConfigServerEndpoint().getCredentials();
+		return credentials == null ? null : credentials.getPassword();
 	}
 
 	public void setPassword(String password) {
@@ -170,50 +340,44 @@ public class ConfigClientProperties {
 		this.failFast = failFast;
 	}
 
-	private String[] extractCredentials() {
-		String[] result = new String[3];
-		String uri = this.uri;
-		result[2] = uri;
-		String[] creds = getUsernamePassword();
-		result[0] = creds[0];
-		result[1] = creds[1];
-		try {
-			URL url = new URL(uri);
-			String userInfo = url.getUserInfo();
-			if (StringUtils.isEmpty(userInfo) || ":".equals(userInfo)) {
-				return result;
-			}
-			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build()
-					.toUriString();
-			result[2] = bare;
-			if (!userInfo.contains(":")) {
-				userInfo = userInfo + ":";
-			}
-			String[] split = userInfo.split(":");
-			result[0] = split[0];
-			result[1] = split[1];
-			if (creds[1] != null) {
-				// Explicit username / password takes precedence
-				result[1] = creds[1];
-				if ("user".equals(creds[0])) {
-					// But the username can be overridden
-					result[0] = split[0];
-				}
-			}
-			return result;
-		}
-		catch (MalformedURLException e) {
-			throw new IllegalStateException("Invalid URL: " + uri);
-		}
+	private ConfigServerEndpoint determineConfigServerEndpoint(String uri) {
+		return ConfigServerEndpoint.create(uri, getExplicitCredentials());
 	}
 
-	private String[] getUsernamePassword() {
-		if (StringUtils.hasText(this.password)) {
-			return new String[] {
-					StringUtils.hasText(this.username) ? this.username.trim() : "user",
-					this.password.trim() };
+	
+	/**
+	 * @return a list of ConfigServerEndpoint, might be empty
+	 */
+	public List<ConfigServerEndpoint> getConfigServerEndpoints() {
+		if(StringUtils.isEmpty(this.uri)) {
+			return Collections.emptyList();
 		}
-		return new String[2];
+		String[] uris = StringUtils.commaDelimitedListToStringArray(this.uri);
+		List<ConfigServerEndpoint> result = new ArrayList<>();
+		for (String oneUri : uris) {
+			if(StringUtils.hasText(oneUri)) {
+				result.add(determineConfigServerEndpoint(oneUri.trim()));
+			}
+		}
+		return result;
+	}
+	
+	private ConfigServerEndpoint getSingleConfigServerEndpoint() {
+		List<ConfigServerEndpoint> configServerEndpoints = getConfigServerEndpoints();
+		if(configServerEndpoints.size() != 1) {
+			throw new IllegalStateException(
+					"not a configuration with exactly one uri: " + this.uri);
+		}
+		return configServerEndpoints.iterator().next();
+	}
+
+	private UsernamePasswordPair getExplicitCredentials() {
+		if (StringUtils.hasText(this.password)) {
+			return new UsernamePasswordPair(this.username, this.password);
+		}
+		else {
+			return new UsernamePasswordPair(null, null);
+		}
 	}
 
 	public static class Discovery {
@@ -247,22 +411,23 @@ public class ConfigClientProperties {
 
 	}
 
-	public ConfigClientProperties override(
+	public ConfigSelectionProperties getConfigSelectionProperties(
 			org.springframework.core.env.Environment environment) {
-		ConfigClientProperties override = new ConfigClientProperties();
-		BeanUtils.copyProperties(this, override);
-		override.setName(
-				environment.resolvePlaceholders("${" + ConfigClientProperties.PREFIX
-						+ ".name:${spring.application.name:application}}"));
+		String name = environment.resolvePlaceholders("${" + ConfigClientProperties.PREFIX
+				+ ".name:${spring.application.name:application}}");
+		String profile;
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
-			override.setProfile(
-					environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
+			profile = environment.getProperty(ConfigClientProperties.PREFIX + ".profile");
+		} else {
+			profile = this.getProfile();
 		}
+		String label;
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".label")) {
-			override.setLabel(
-					environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
+			label = environment.getProperty(ConfigClientProperties.PREFIX + ".label");
+		} else {
+			label = this.getLabel();
 		}
-		return override;
+		return new ConfigSelectionProperties(name, label, profile);
 	}
 
 	@Override

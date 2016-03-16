@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,6 +28,8 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
+import org.springframework.cloud.config.client.ConfigClientProperties.ConfigServerEndpoint;
+import org.springframework.cloud.config.client.ConfigClientProperties.UsernamePasswordPair;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -36,6 +40,7 @@ import org.springframework.context.event.EventListener;
  * discovery.
  *
  * @author Dave Syer
+ * @author Felix Kissel
  */
 @ConditionalOnProperty(value = "spring.cloud.config.discovery.enabled", matchIfMissing = false)
 @Configuration
@@ -48,6 +53,9 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
 	@Autowired
 	private ConfigClientProperties config;
+	
+	@Autowired
+	private ConfigServerEndpointRepository configServerEndpointSelector;
 
 	@Autowired
 	private DiscoveryClient client;
@@ -66,31 +74,46 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 				logger.warn("No instances found of configserver (" + serviceId + ")");
 				return;
 			}
-			ServiceInstance server = instances.get(0);
-			String url = getHomePage(server);
-			if (server.getMetadata().containsKey("password")) {
-				String user = server.getMetadata().get("user");
-				user = user == null ? "user" : user;
-				this.config.setUsername(user);
-				String password = server.getMetadata().get("password");
-				this.config.setPassword(password);
-			}
-			if (server.getMetadata().containsKey("configPath")) {
-				String path = server.getMetadata().get("configPath");
-				if (url.endsWith("/") && path.startsWith("/")) {
-					url = url.substring(0, url.length() - 1);
+			List<ConfigServerEndpoint> configServerEndpoints = new ArrayList<>();
+			for (ServiceInstance server : instances) {
+				UsernamePasswordPair usernamePasswordPair = determineUsernamePasswordPair(
+						server.getMetadata());
+				StringBuilder uri = new StringBuilder();
+				uri.append(server.getUri().toString());
+				if (server.getMetadata().containsKey("configPath")) {
+					String path = server.getMetadata().get("configPath");
+					if(!path.startsWith("/")) {
+						uri.append("/");
+					}
+					uri.append(path);
+				} else if(!uri.toString().endsWith("/")) {
+					// should we always append "/", even if configPath was given?
+					uri.append("/");
 				}
-				url = url + path;
+				ConfigServerEndpoint configServerEndpoint = ConfigServerEndpoint
+						.create(uri.toString(), usernamePasswordPair);
+				logger.debug("add configServerEndpoint " + configServerEndpoint);
+				configServerEndpoints.add(configServerEndpoint);
 			}
-			this.config.setUri(url);
+			this.configServerEndpointSelector.setConfigServerEndpoints(configServerEndpoints);
 		}
 		catch (Exception ex) {
 			logger.warn("Could not locate configserver via discovery", ex);
 		}
 	}
 
-	private String getHomePage(ServiceInstance server) {
-		return server.getUri().toString() + "/";
+	private static UsernamePasswordPair determineUsernamePasswordPair(
+			Map<String, String> serverMetadata) {
+		UsernamePasswordPair usernamePasswordPair;
+		if (serverMetadata.containsKey("password")) {
+			String user = serverMetadata.get("user");
+			String password = serverMetadata.get("password");
+			usernamePasswordPair = new UsernamePasswordPair(user, password);
+		}
+		else {
+			usernamePasswordPair = new UsernamePasswordPair(null, null);
+		}
+		return usernamePasswordPair;
 	}
 
 }

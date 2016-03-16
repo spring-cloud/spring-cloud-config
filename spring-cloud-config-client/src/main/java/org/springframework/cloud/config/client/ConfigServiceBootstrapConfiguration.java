@@ -34,6 +34,7 @@ import org.springframework.retry.interceptor.RetryOperationsInterceptor;
 
 /**
  * @author Dave Syer
+ * @author Felix Kissel
  *
  */
 @Configuration
@@ -48,12 +49,20 @@ public class ConfigServiceBootstrapConfiguration {
 		ConfigClientProperties client = new ConfigClientProperties(this.environment);
 		return client;
 	}
+	
+	@Bean
+	public ConfigServerEndpointRepository configServerEndpointSelector() {
+		ConfigServerEndpointRepository configServerEndpointSelector = new ConfigServerEndpointRepository();
+		configServerEndpointSelector.setConfigServerEndpoints(
+				configClientProperties().getConfigServerEndpoints());
+		return configServerEndpointSelector;
+	}
 
 	@Bean
 	@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
 	public ConfigServicePropertySourceLocator configServicePropertySource() {
 		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
-				configClientProperties());
+				configClientProperties(), configServerEndpointSelector());
 		return locator;
 	}
 

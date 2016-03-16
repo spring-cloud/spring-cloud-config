@@ -35,9 +35,17 @@ public class ConfigServicePropertySourceLocatorTests {
 	public ExpectedException expected = ExpectedException.none();
 
 	private ConfigurableEnvironment environment = new StandardEnvironment();
+	
+	private final ConfigClientProperties configClientProperties = new ConfigClientProperties(this.environment);
 
 	private ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
-			new ConfigClientProperties(this.environment));
+			this.configClientProperties, new ConfigServerEndpointRepository() {
+				{
+					setConfigServerEndpoints(
+							ConfigServicePropertySourceLocatorTests.this.configClientProperties
+									.getConfigServerEndpoints());
+				}
+			});
 
 	private RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
 
@@ -89,7 +97,14 @@ public class ConfigServicePropertySourceLocatorTests {
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setFailFast(true);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		this.locator = new ConfigServicePropertySourceLocator(defaults,
+				new ConfigServerEndpointRepository() {
+					{
+						setConfigServerEndpoints(
+								ConfigServicePropertySourceLocatorTests.this.configClientProperties
+										.getConfigServerEndpoints());
+					}
+				});
 		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
 		Mockito.when(request.execute()).thenReturn(response);
 		HttpHeaders headers = new HttpHeaders();
@@ -118,7 +133,14 @@ public class ConfigServicePropertySourceLocatorTests {
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setFailFast(true);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		this.locator = new ConfigServicePropertySourceLocator(defaults,
+				new ConfigServerEndpointRepository() {
+					{
+						setConfigServerEndpoints(
+								ConfigServicePropertySourceLocatorTests.this.configClientProperties
+										.getConfigServerEndpoints());
+					}
+				});
 		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
 		Mockito.when(request.execute()).thenReturn(response);
 		HttpHeaders headers = new HttpHeaders();
@@ -150,5 +172,35 @@ public class ConfigServicePropertySourceLocatorTests {
 						Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
 						Mockito.any(Class.class), Matchers.anyString(),
 						Matchers.anyString())).thenReturn(response);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void multipleUrls() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setUri("http://localhost1:9999,http://localhost2:9999");
+		ConfigServerEndpointRepository configServerEndpointSelector = new ConfigServerEndpointRepository();
+		configServerEndpointSelector.setConfigServerEndpoints(defaults.getConfigServerEndpoints());
+		this.locator = new ConfigServicePropertySourceLocator(defaults, configServerEndpointSelector);
+		RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
+		Mockito.when(restTemplate.exchange(Matchers.startsWith("http://localhost1:9999"),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), Matchers.anyVararg())).thenThrow(new RuntimeException("ups, i'm down")).thenReturn(null);
+		Mockito.when(restTemplate.exchange(Matchers.startsWith("http://localhost2:9999"),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), Matchers.anyVararg())).thenThrow(new RuntimeException("ups, i'm down"));
+		this.locator.setRestTemplate(restTemplate);
+		
+		this.locator.locate(this.environment);
+		Mockito.verify(restTemplate).exchange(Matchers.startsWith("http://localhost1:9999"),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), Matchers.anyVararg());
+		Mockito.verify(restTemplate).exchange(Matchers.startsWith("http://localhost2:9999"),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), Matchers.anyVararg());
+		this.locator.locate(this.environment);
+		Mockito.verify(restTemplate, Mockito.times(2)).exchange(Matchers.startsWith("http://localhost1:9999"),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), Matchers.anyVararg());
 	}
 }

@@ -18,11 +18,15 @@ package org.springframework.cloud.config.client;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
+import org.springframework.cloud.config.client.ConfigClientProperties.ConfigSelectionProperties;
+import org.springframework.cloud.config.client.ConfigClientProperties.ConfigServerEndpoint;
+import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.annotation.Order;
@@ -45,6 +49,7 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Dave Syer
+ * @author Felix Kissel
  *
  */
 @Order(0)
@@ -52,39 +57,71 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private static Log logger = LogFactory
 			.getLog(ConfigServicePropertySourceLocator.class);
-
-	private RestTemplate restTemplate;
+	
+    private RestTemplate restTemplate;
+	
 	private ConfigClientProperties defaults;
+	
+	private final ConfigServerEndpointRepository configServerEndpointRepository;
 
-	public ConfigServicePropertySourceLocator(ConfigClientProperties defaults) {
+	public ConfigServicePropertySourceLocator(ConfigClientProperties defaults,
+			ConfigServerEndpointRepository configServerEndpointRepository) {
 		this.defaults = defaults;
+		this.configServerEndpointRepository = configServerEndpointRepository;
 	}
 
 	@Override
 	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(
 			org.springframework.core.env.Environment environment) {
-		ConfigClientProperties client = this.defaults.override(environment);
-		CompositePropertySource composite = new CompositePropertySource("configService");
-		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(client)
+		List<ConfigServerEndpoint> configServerEndpoints = this.configServerEndpointRepository.getConfigServerEndpoints();
+		if(configServerEndpoints.isEmpty()) {
+			if(this.defaults.isFailFast()) {
+				throw new IllegalStateException("missing configServerEndpoint");
+			} else {
+				return null;
+			}
+		}
+		
+		final ConfigSelectionProperties configSelectionProperties = this.defaults.getConfigSelectionProperties(environment);
+		RuntimeException lastException = null; 
+		for (ConfigServerEndpoint configServerEndpoint : configServerEndpoints) {
+			try {
+				return this.locate(configServerEndpoint, configSelectionProperties);
+			}
+			catch (RuntimeException e) {
+				lastException = e;
+			}
+		}
+		assert lastException != null;
+		if(this.defaults.isFailFast()) {
+			throw new IllegalStateException(
+					"Could not locate PropertySource and the fail fast property is set, failing",
+					lastException instanceof NotFoundException ? null : lastException);
+		}
+		return null;
+	}
+
+
+	private org.springframework.core.env.PropertySource<?> locate(
+			ConfigServerEndpoint configServerEndpoint,
+			ConfigSelectionProperties configSelectionProperties) {
+		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(configServerEndpoint.getCredentials())
 				: this.restTemplate;
 		Exception error = null;
 		String errorBody = null;
-		logger.info("Fetching config from server at: " + client.getRawUri());
+		logger.info("Fetching config from server at: " + configServerEndpoint.getRawUri());
 		try {
-			String[] labels = new String[]{""};
-			if (StringUtils.hasText(client.getLabel())) {
-				labels = StringUtils.commaDelimitedListToStringArray(client.getLabel());
-			}
 			// Try all the labels until one works
-			for (String label : labels) {
-				Environment result = getRemoteEnvironment(restTemplate, client.getRawUri(), client.getName(), client.getProfile(), label.trim());
+			for (String label : configSelectionProperties.getLabels()) {
+				Environment result = getRemoteEnvironment(restTemplate, configServerEndpoint.getRawUri(), configSelectionProperties.getName(), configSelectionProperties.getProfile(), label);
 				if (result != null) {
 					logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s",
 							result.getName(),
 							result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
 							result.getLabel(), result.getVersion()));
 
+					CompositePropertySource composite = new CompositePropertySource("configService");
 					for (PropertySource source : result.getPropertySources()) {
 						@SuppressWarnings("unchecked")
 						Map<String, Object> map = (Map<String, Object>) source
@@ -106,15 +143,14 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		catch (Exception e) {
 			error = e;
 		}
-		if (client != null && client.isFailFast()) {
-			throw new IllegalStateException(
-					"Could not locate PropertySource and the fail fast property is set, failing",
-					error);
-		}
-		logger.warn("Could not locate PropertySource: "
+		logger.warn("Could not locate PropertySource for " + configServerEndpoint.getRawUri() + ": "
 				+ (errorBody == null ? error==null ? "label not found" : error.getMessage() : errorBody));
-		return null;
+		throw error instanceof HttpServerErrorException ? (HttpServerErrorException)error : new NotFoundException();
+	}
+	
+	private static class NotFoundException extends RuntimeException {
 
+		private static final long serialVersionUID = 1L;
 	}
 
 	private Environment getRemoteEnvironment(RestTemplate restTemplate, String uri, String name, String profile, String label) {
@@ -147,13 +183,12 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		this.restTemplate = restTemplate;
 	}
 
-	private RestTemplate getSecureRestTemplate(ConfigClientProperties client) {
+	private RestTemplate getSecureRestTemplate(Credentials credentials) {
 		RestTemplate template = new RestTemplate();
-		String password = client.getPassword();
-		if (password != null) {
+		if (credentials != null) {
 			template.setInterceptors(Arrays
 					.<ClientHttpRequestInterceptor> asList(new BasicAuthorizationInterceptor(
-							client.getUsername(), password)));
+							credentials.getUsername(), credentials.getPassword())));
 		}
 		return template;
 	}
