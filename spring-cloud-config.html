@@ -437,6 +437,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_key_management">Key Management</a></li>
 <li><a href="#_creating_a_key_store_for_testing">Creating a Key Store for Testing</a></li>
 <li><a href="#_using_multiple_keys_and_key_rotation">Using Multiple Keys and Key Rotation</a></li>
+<li><a href="#_serving_encrypted_properties">Serving Encrypted Properties</a></li>
 </ul>
 </li>
 <li><a href="#_serving_plain_text">Serving Plain Text</a></li>
@@ -1564,6 +1565,19 @@ handle all encryption as well as decryption.
 </table>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_serving_encrypted_properties">Serving Encrypted Properties</h3>
+<div class="paragraph">
+<p>Sometimes you want the clients to decrypt the configuration locally,
+instead of doing it in the server. In that case you can still have
+/encrypt and /decrypt endpoints (if you provide the <code>encrypt.*</code>
+configuration to locate a key), but you need to explicitly switch off
+the decryption of outgoing properties using
+<code>spring.cloud.config.server.encrypt.enabled=false</code>. If you don&#8217;t care
+about the endpoints, then it should work if you configure neither the
+key nor the enabled flag.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1969,7 +1983,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-16 19:07:58 UTC
+Last updated 2016-03-18 11:58:16 UTC
 </div>
 </div>
 </body>
