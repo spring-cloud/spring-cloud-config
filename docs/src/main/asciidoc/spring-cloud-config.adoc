@@ -434,7 +434,18 @@ TIP: the `{name:value}` prefixes can also be added to plaintext posted
 to the `/encrypt` endpoint, if you want to let the Config Server
 handle all encryption as well as decryption.
 
-=== Embedding the Config Server
+=== Serving Encrypted Properties
+
+Sometimes you want the clients to decrypt the configuration locally,
+instead of doing it in the server. In that case you can still have
+/encrypt and /decrypt endpoints (if you provide the `encrypt.*`
+configuration to locate a key), but you need to explicitly switch off
+the decryption of outgoing properties using
+`spring.cloud.config.server.encrypt.enabled=false`. If you don't care
+about the endpoints, then it should work if you configure neither the
+key nor the enabled flag.
+
+== Embedding the Config Server
 
 The Config Server runs best as a standalone application, but if you
 need to you can embed it in another application. Just use the
