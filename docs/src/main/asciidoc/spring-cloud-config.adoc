@@ -841,8 +841,8 @@ property `spring.cloud.config.uri`) and initializes Spring
 
 The net result of this is that all client apps that want to consume
 the Config Server need a `bootstrap.yml` (or an environment variable)
-with the server address in `spring.cloud.config.uri` (defaults to
-"http://localhost:8888").
+with one or multiple, comma separated server addresses in 
+`spring.cloud.config.uri` (defaults to "http://localhost:8888"). 
 
 [[eureka-first-bootstrap]]
 === Eureka First Bootstrap
