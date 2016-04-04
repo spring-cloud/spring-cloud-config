@@ -31,6 +31,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
 
 /**
  * @author Dave Syer
@@ -61,12 +62,12 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 
 	@Test
 	public void onWhenRequested() throws Exception {
-		given(this.client.getInstances("CONFIGSERVER"))
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
 				.willReturn(Arrays.asList(this.info));
 		setup("spring.cloud.config.discovery.enabled=true");
 		assertEquals(1, this.context.getBeanNamesForType(
 				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
-		Mockito.verify(this.client).getInstances("CONFIGSERVER");
+		Mockito.verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
 		ConfigClientProperties locator = this.context
 				.getBean(ConfigClientProperties.class);
 		assertEquals("http://foo:8877/", locator.getRawUri());
@@ -75,12 +76,12 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 	@Test
 	public void secureWhenRequested() throws Exception {
 		this.info = new DefaultServiceInstance("app", "foo", 443, true);
-		given(this.client.getInstances("CONFIGSERVER"))
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
 				.willReturn(Arrays.asList(this.info));
 		setup("spring.cloud.config.discovery.enabled=true");
 		assertEquals(1, this.context.getBeanNamesForType(
 				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
-		Mockito.verify(this.client).getInstances("CONFIGSERVER");
+		Mockito.verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
 		ConfigClientProperties locator = this.context
 				.getBean(ConfigClientProperties.class);
 		assertEquals("https://foo:443/", locator.getRawUri());
@@ -89,7 +90,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 	@Test
 	public void setsPasssword() throws Exception {
 		this.info.getMetadata().put("password", "bar");
-		given(this.client.getInstances("CONFIGSERVER"))
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
 				.willReturn(Arrays.asList(this.info));
 		setup("spring.cloud.config.discovery.enabled=true");
 		ConfigClientProperties locator = this.context
@@ -102,7 +103,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 	@Test
 	public void setsPath() throws Exception {
 		this.info.getMetadata().put("configPath", "/bar");
-		given(this.client.getInstances("CONFIGSERVER"))
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
 				.willReturn(Arrays.asList(this.info));
 		setup("spring.cloud.config.discovery.enabled=true");
 		ConfigClientProperties locator = this.context

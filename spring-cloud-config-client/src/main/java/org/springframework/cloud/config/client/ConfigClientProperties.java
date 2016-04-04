@@ -217,7 +217,7 @@ public class ConfigClientProperties {
 	}
 
 	public static class Discovery {
-		public static final String DEFAULT_CONFIG_SERVER = "CONFIGSERVER";
+		public static final String DEFAULT_CONFIG_SERVER = "configserver";
 
 		/**
 		 * Flag to indicate that config server discovery is enabled (config server URL will be
