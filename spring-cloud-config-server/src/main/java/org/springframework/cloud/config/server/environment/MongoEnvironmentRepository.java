@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.config.YamlProcessor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -40,46 +42,44 @@ import org.springframework.util.StringUtils;
  */
 public class MongoEnvironmentRepository implements EnvironmentRepository {
 
+	private static final String ID = "_id";
+	private static final String LABEL = "label";
+	private static final String PROFILE = "profile";
 	private static final String DEFAULT_PROFILE = "default";
 
 	private MongoTemplate mongoTemplate;
-	
+	private MapFlattener mapFlattener;
+
 	public void setMongoTemplate(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
+		this.mapFlattener = new MapFlattener();
 	}
 
 	@Override
 	public Environment findOne(String name, String profile, String label) {
 		String[] profilesArr = StringUtils.commaDelimitedListToStringArray(profile);
 		final List<String> profiles = Arrays.asList(profilesArr.clone());
-		for (int i = 0; i < profiles.size(); i ++) {
+		for (int i = 0; i < profiles.size(); i++) {
 			String currProfile = profiles.get(i);
 			if (DEFAULT_PROFILE.equals(currProfile)) {
 				profiles.set(i, null); // 'null' profile value in MongoDB is considered default
 				break;
 			}
 		}
-		Query query = new Query().addCriteria(Criteria.where("profile").in(profiles.toArray()));
+		Query query = new Query().addCriteria(Criteria.where(PROFILE).in(profiles.toArray()));
 		if (label != null) {
-			query.addCriteria(Criteria.where("label").is(label));
+			query.addCriteria(Criteria.where(LABEL).is(label));
 		}
 		Environment environment;
 		try {
 			List<MongoPropertySource> sources = mongoTemplate.find(query, MongoPropertySource.class, name);
-			Collections.sort(sources, new Comparator<MongoPropertySource>() {
-				@Override
-				public int compare(MongoPropertySource s1, MongoPropertySource s2) {
-					Object p1 = s1.get("profile");
-					Object p2 = s2.get("profile");
-					int i1 = profiles.indexOf(p1 != null ? p1 : DEFAULT_PROFILE);
-					int i2 = profiles.indexOf(p2 != null ? p2 : DEFAULT_PROFILE);
-					return Double.compare(i1, i2);
-				}
-			});
+			sortSourcesByProfileOrder(sources, profiles);
 			environment = new Environment(name, profilesArr, label, null);
 			for (MongoPropertySource source : sources) {
-				String sourceName = String.format("%s-%s-%s", name, source.get("profile"), source.get("label"));
-				PropertySource propSource = new PropertySource(sourceName, source);
+				String sourceName = generatePropertySourceName(name, source);
+				cleanSource(source);
+				Map<String, Object> pureSource = mapFlattener.flatten(source);
+				PropertySource propSource = new PropertySource(sourceName, pureSource);
 				environment.add(propSource);
 			}
 		}
@@ -88,11 +88,55 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 		}
 		return environment;
 	}
-	
-	public static class MongoPropertySource extends HashMap<Object, Object> {
+
+	private void sortSourcesByProfileOrder(List<MongoPropertySource> sources,
+			final List<String> profiles) {
+		Collections.sort(sources, new Comparator<MongoPropertySource>() {
+			@Override
+			public int compare(MongoPropertySource s1, MongoPropertySource s2) {
+				Object p1 = s1.get(PROFILE);
+				Object p2 = s2.get(PROFILE);
+				int i1 = profiles.indexOf(p1 != null ? p1 : DEFAULT_PROFILE);
+				int i2 = profiles.indexOf(p2 != null ? p2 : DEFAULT_PROFILE);
+				return Double.compare(i1, i2);
+			}
+		});
+	}
+
+	private String generatePropertySourceName(String environmentName, MongoPropertySource source) {
+		String sourceName;
+		String profile = (String) source.get(PROFILE);
+		if (profile == null) {
+			profile = DEFAULT_PROFILE;
+		}
+		String label = (String) source.get(LABEL);
+		if (label != null) {
+			sourceName = String.format("%s-%s-%s", environmentName, profile, label);
+		}
+		else {
+			sourceName = String.format("%s-%s", environmentName, profile);
+		}
+		return sourceName;
+	}
+
+	private void cleanSource(MongoPropertySource source) {
+		source.remove(ID);
+		source.remove(LABEL);
+		source.remove(PROFILE);
+	}
+
+	public static class MongoPropertySource extends LinkedHashMap<String, Object> {
 
 		private static final long serialVersionUID = -902368693790845431L;
-		
+
+	}
+
+	private class MapFlattener extends YamlProcessor {
+
+		public Map<String, Object> flatten(Map<String, Object> source) {
+			return getFlattenedMap(source);
+		}
+
 	}
 
 }
