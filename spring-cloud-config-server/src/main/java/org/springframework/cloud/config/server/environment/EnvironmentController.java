@@ -110,14 +110,19 @@ public class EnvironmentController {
 			label = label.replace("(_)", "/");
 		}
 
-		Environment cachedEnvironment = configServerCacheService.getEnvironment(name, profiles, label);
-		if (cachedEnvironment == null) {
+		if (configServerCacheService == null) { // to pass-by EnvironmentControllerTests
 			Environment environment = this.repository.findOne(name, profiles, label);
-
-			configServerCacheService.putEnvironmentCache(environment, name, profiles, label);
 			return environment;
+		} else {
+			Environment cachedEnvironment = configServerCacheService.getEnvironment(name, profiles, label);
+			if (cachedEnvironment == null) {
+				Environment environment = this.repository.findOne(name, profiles, label);
+
+				configServerCacheService.putEnvironmentCache(environment, name, profiles, label);
+				return environment;
+			}
+			return cachedEnvironment;
 		}
-		return cachedEnvironment;
 	}
 
 	@RequestMapping("/{name}-{profiles}.properties")
