@@ -27,9 +27,11 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.ConfigServerCacheService;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
@@ -71,6 +73,9 @@ public class EnvironmentController {
 
 	private boolean stripDocument = true;
 
+	@Autowired
+	ConfigServerCacheService configServerCacheService;
+
 	public EnvironmentController(EnvironmentRepository repository) {
 		this(repository, new ObjectMapper());
 	}
@@ -104,8 +109,15 @@ public class EnvironmentController {
 			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
-		Environment environment = this.repository.findOne(name, profiles, label);
-		return environment;
+
+		Environment cachedEnvironment = configServerCacheService.getEnvironment(name, profiles, label);
+		if (cachedEnvironment == null) {
+			Environment environment = this.repository.findOne(name, profiles, label);
+
+			configServerCacheService.putEnvironmentCache(environment, name, profiles, label);
+			return environment;
+		}
+		return cachedEnvironment;
 	}
 
 	@RequestMapping("/{name}-{profiles}.properties")
