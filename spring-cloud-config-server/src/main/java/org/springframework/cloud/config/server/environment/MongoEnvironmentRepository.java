@@ -122,10 +122,7 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 
 	private String generatePropertySourceName(String environmentName, MongoPropertySource source) {
 		String sourceName;
-		String profile = (String) source.get(PROFILE);
-		if (profile == null) {
-			profile = DEFAULT;
-		}
+		String profile = source.containsKey(PROFILE) ? (String) source.get(PROFILE) : DEFAULT;
 		String label = (String) source.get(LABEL);
 		if (label != null) {
 			sourceName = String.format("%s-%s-%s", environmentName, profile, label);
