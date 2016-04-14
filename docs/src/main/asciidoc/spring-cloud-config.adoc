@@ -118,9 +118,9 @@ If the repository is file-based, the server will create an
 `Environment` from `application.yml` (shared between all clients), and
 `foo.yml` (with `foo.yml` taking precedence). If the YAML files have
 documents inside them that point to Spring profiles, those are applied
-with higher precendence (in order of the profiles listed), and if
+with higher precedence (in order of the profiles listed), and if
 there are profile-specific YAML (or properties) files these are also
-applied with higher precedence than the defaults. Higher precendence
+applied with higher precedence than the defaults. Higher precedence
 translates to a `PropertySource` listed earlier in the
 `Environment`. (These are the same rules as apply in a standalone
 Spring Boot application.)
