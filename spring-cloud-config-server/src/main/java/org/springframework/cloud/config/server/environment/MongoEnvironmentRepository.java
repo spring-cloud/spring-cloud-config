@@ -16,10 +16,12 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +47,9 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 	private static final String ID = "_id";
 	private static final String LABEL = "label";
 	private static final String PROFILE = "profile";
-	private static final String DEFAULT_PROFILE = "default";
+	private static final String DEFAULT = "default";
+	private static final String DEFAULT_PROFILE = null;
+	private static final String DEFAULT_LABEL = null;
 
 	private MongoTemplate mongoTemplate;
 	private MapFlattener mapFlattener;
@@ -58,22 +62,28 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 	@Override
 	public Environment findOne(String name, String profile, String label) {
 		String[] profilesArr = StringUtils.commaDelimitedListToStringArray(profile);
-		final List<String> profiles = Arrays.asList(profilesArr.clone());
+
+		List<String> profiles = new ArrayList<String>(Arrays.asList(profilesArr.clone()));
 		for (int i = 0; i < profiles.size(); i++) {
-			String currProfile = profiles.get(i);
-			if (DEFAULT_PROFILE.equals(currProfile)) {
-				profiles.set(i, null); // 'null' profile value in MongoDB is considered default
-				break;
+			if (DEFAULT.equals(profiles.get(i))) {
+				profiles.set(i, DEFAULT_PROFILE);
 			}
 		}
-		Query query = new Query().addCriteria(Criteria.where(PROFILE).in(profiles.toArray()));
-		if (label != null) {
-			query.addCriteria(Criteria.where(LABEL).is(label));
-		}
+		profiles.add(DEFAULT_PROFILE); // Default configuration will have 'null' profile
+		profiles = sortedUnique(profiles);
+
+		List<String> labels = Arrays.asList(label, DEFAULT_LABEL); // Default configuration will have 'null' label
+		labels = sortedUnique(labels);
+
+		Query query = new Query();
+		query.addCriteria(Criteria.where(PROFILE).in(profiles.toArray()));
+		query.addCriteria(Criteria.where(LABEL).in(labels.toArray()));
+
 		Environment environment;
 		try {
 			List<MongoPropertySource> sources = mongoTemplate.find(query, MongoPropertySource.class, name);
-			sortSourcesByProfileOrder(sources, profiles);
+			sortSources(sources, labels, LABEL, DEFAULT_LABEL);
+			sortSources(sources, profiles, PROFILE, DEFAULT_PROFILE);
 			environment = new Environment(name, profilesArr, label, null);
 			for (MongoPropertySource source : sources) {
 				String sourceName = generatePropertySourceName(name, source);
@@ -86,20 +96,27 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot load environment", e);
 		}
+
 		return environment;
 	}
 
-	private void sortSourcesByProfileOrder(List<MongoPropertySource> sources,
-			final List<String> profiles) {
+	private ArrayList<String> sortedUnique(List<String> values) {
+		return new ArrayList<String>(new LinkedHashSet<String>(values));
+	}
+
+	private void sortSources(List<MongoPropertySource> sources,
+			final List<String> valuesOrder, final String key, final String defaultValue) {
 		Collections.sort(sources, new Comparator<MongoPropertySource>() {
+
 			@Override
 			public int compare(MongoPropertySource s1, MongoPropertySource s2) {
-				Object p1 = s1.get(PROFILE);
-				Object p2 = s2.get(PROFILE);
-				int i1 = profiles.indexOf(p1 != null ? p1 : DEFAULT_PROFILE);
-				int i2 = profiles.indexOf(p2 != null ? p2 : DEFAULT_PROFILE);
+				Object p1 = s1.get(key);
+				Object p2 = s2.get(key);
+				int i1 = valuesOrder.indexOf(p1 != null ? p1 : defaultValue);
+				int i2 = valuesOrder.indexOf(p2 != null ? p2 : defaultValue);
 				return Double.compare(i1, i2);
 			}
+
 		});
 	}
 
@@ -107,7 +124,7 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 		String sourceName;
 		String profile = (String) source.get(PROFILE);
 		if (profile == null) {
-			profile = DEFAULT_PROFILE;
+			profile = DEFAULT;
 		}
 		String label = (String) source.get(LABEL);
 		if (label != null) {
@@ -131,7 +148,7 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 
 	}
 
-	private class MapFlattener extends YamlProcessor {
+	private static class MapFlattener extends YamlProcessor {
 
 		public Map<String, Object> flatten(Map<String, Object> source) {
 			return getFlattenedMap(source);
