@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public class MongoEnvironmentRepositoryIntegrationTests {
 
 	@Before
 	public void init() {
-		
+
 	}
 
 	@After
@@ -66,17 +66,68 @@ public class MongoEnvironmentRepositoryIntegrationTests {
 		MongoTemplate mongoTemplate = this.context.getBean(MongoTemplate.class);
 		mongoTemplate.dropCollection("testapp");
 		MongoPropertySource ps = new MongoPropertySource();
-		ps.put("testkey", "testval");
+		ps.getSource().put("testkey", "testval");
 		mongoTemplate.save(ps, "testapp");
 		// Test
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("testapp", "default", null);
+		assertEquals("testapp-default", environment.getPropertySources().get(0).getName());
 		assertEquals(1, environment.getPropertySources().size());
 		assertEquals(true, environment.getPropertySources().get(0).getSource().containsKey("testkey"));
 		assertEquals("testval", environment.getPropertySources().get(0).getSource().get("testkey"));
 	}
-
 	
+	@Test
+	public void nestedPropertySource() {
+		// Prepare context
+		Map<String, Object> props = new HashMap<>();
+		props.put("spring.profiles.active", "mongodb");
+		props.put("spring.data.mongodb.database", "testdb");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false).properties(props).run();
+		// Prepare test
+		MongoTemplate mongoTemplate = this.context.getBean(MongoTemplate.class);
+		mongoTemplate.dropCollection("testapp");
+		MongoPropertySource ps = new MongoPropertySource();
+		Map<String, String> inner = new HashMap<String, String>();
+		inner.put("inner", "value");
+		ps.getSource().put("outer", inner);
+		mongoTemplate.save(ps, "testapp");
+		// Test
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		Environment environment = repository.findOne("testapp", "default", null);
+		assertEquals("testapp-default", environment.getPropertySources().get(0).getName());
+		assertEquals(1, environment.getPropertySources().size());
+		assertEquals(true, environment.getPropertySources().get(0).getSource().containsKey("outer.inner"));
+		assertEquals("value", environment.getPropertySources().get(0).getSource().get("outer.inner"));
+	}
+
+	@Test
+	public void repoWithProfileAndLabelInSource() {
+		// Prepare context
+		Map<String, Object> props = new HashMap<>();
+		props.put("spring.profiles.active", "mongodb");
+		props.put("spring.data.mongodb.database", "testdb");
+		context = new SpringApplicationBuilder(TestConfiguration.class).web(false).properties(props).run();
+		// Prepare test
+		MongoTemplate mongoTemplate = this.context.getBean(MongoTemplate.class);
+		mongoTemplate.dropCollection("testapp");
+		MongoPropertySource ps = new MongoPropertySource();
+		ps.setProfile("confprofile");
+		ps.setLabel("conflabel");
+		ps.getSource().put("profile", "sourceprofile");
+		ps.getSource().put("label", "sourcelabel");
+		mongoTemplate.save(ps, "testapp");
+		// Test
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		Environment environment = repository.findOne("testapp", "confprofile", "conflabel");
+		assertEquals(1, environment.getPropertySources().size());
+		assertEquals("testapp-confprofile-conflabel", environment.getPropertySources().get(0).getName());
+		assertEquals(true, environment.getPropertySources().get(0).getSource().containsKey("profile"));
+		assertEquals("sourceprofile", environment.getPropertySources().get(0).getSource().get("profile"));
+		assertEquals(true, environment.getPropertySources().get(0).getSource().containsKey("label"));
+		assertEquals("sourcelabel", environment.getPropertySources().get(0).getSource().get("label"));
+	}
+
 	@Configuration
 	@Import({
 		PropertyPlaceholderAutoConfiguration.class,
@@ -85,7 +136,7 @@ public class MongoEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepositoryConfiguration.class
 	})
 	protected static class TestConfiguration {
-		
+
 	}
 
 }

@@ -44,7 +44,6 @@ import org.springframework.util.StringUtils;
  */
 public class MongoEnvironmentRepository implements EnvironmentRepository {
 
-	private static final String ID = "_id";
 	private static final String LABEL = "label";
 	private static final String PROFILE = "profile";
 	private static final String DEFAULT = "default";
@@ -62,7 +61,6 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 	@Override
 	public Environment findOne(String name, String profile, String label) {
 		String[] profilesArr = StringUtils.commaDelimitedListToStringArray(profile);
-
 		List<String> profiles = new ArrayList<String>(Arrays.asList(profilesArr.clone()));
 		for (int i = 0; i < profiles.size(); i++) {
 			if (DEFAULT.equals(profiles.get(i))) {
@@ -82,14 +80,13 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 		Environment environment;
 		try {
 			List<MongoPropertySource> sources = mongoTemplate.find(query, MongoPropertySource.class, name);
-			sortSources(sources, labels, LABEL, DEFAULT_LABEL);
-			sortSources(sources, profiles, PROFILE, DEFAULT_PROFILE);
+			sortSourcesByLabel(sources, labels);
+			sortSourcesByProfile(sources, profiles);
 			environment = new Environment(name, profilesArr, label, null);
-			for (MongoPropertySource source : sources) {
-				String sourceName = generatePropertySourceName(name, source);
-				cleanSource(source);
-				Map<String, Object> pureSource = mapFlattener.flatten(source);
-				PropertySource propSource = new PropertySource(sourceName, pureSource);
+			for (MongoPropertySource propertySource : sources) {
+				String sourceName = generateSourceName(name, propertySource);
+				Map<String, Object> flatSource = mapFlattener.flatten(propertySource.getSource());
+				PropertySource propSource = new PropertySource(sourceName, flatSource);
 				environment.add(propSource);
 			}
 		}
@@ -104,26 +101,42 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 		return new ArrayList<String>(new LinkedHashSet<String>(values));
 	}
 
-	private void sortSources(List<MongoPropertySource> sources,
-			final List<String> valuesOrder, final String key, final String defaultValue) {
+	private void sortSourcesByLabel(List<MongoPropertySource> sources,
+			final List<String> labels) {
 		Collections.sort(sources, new Comparator<MongoPropertySource>() {
 
 			@Override
 			public int compare(MongoPropertySource s1, MongoPropertySource s2) {
-				Object p1 = s1.get(key);
-				Object p2 = s2.get(key);
-				int i1 = valuesOrder.indexOf(p1 != null ? p1 : defaultValue);
-				int i2 = valuesOrder.indexOf(p2 != null ? p2 : defaultValue);
-				return Double.compare(i1, i2);
+				String l1 = s1.getLabel();
+				String l2 = s2.getLabel();
+				int i1 = labels.indexOf(l1 != null ? l1 : DEFAULT_LABEL);
+				int i2 = labels.indexOf(l2 != null ? l2 : DEFAULT_LABEL);
+				return Integer.compare(i1, i2);
+			}
+
+		});
+	}
+	
+	private void sortSourcesByProfile(List<MongoPropertySource> sources,
+			final List<String> profiles) {
+		Collections.sort(sources, new Comparator<MongoPropertySource>() {
+
+			@Override
+			public int compare(MongoPropertySource s1, MongoPropertySource s2) {
+				String p1 = s1.getProfile();
+				String p2 = s2.getProfile();
+				int i1 = profiles.indexOf(p1 != null ? p1 : DEFAULT_PROFILE);
+				int i2 = profiles.indexOf(p2 != null ? p2 : DEFAULT_PROFILE);
+				return Integer.compare(i1, i2);
 			}
 
 		});
 	}
 
-	private String generatePropertySourceName(String environmentName, MongoPropertySource source) {
+	private String generateSourceName(String environmentName, MongoPropertySource source) {
 		String sourceName;
-		String profile = source.containsKey(PROFILE) ? (String) source.get(PROFILE) : DEFAULT;
-		String label = (String) source.get(LABEL);
+		String profile = source.getProfile() != null ? source.getProfile() : DEFAULT;
+		String label = source.getLabel();
 		if (label != null) {
 			sourceName = String.format("%s-%s-%s", environmentName, profile, label);
 		}
@@ -133,15 +146,35 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 		return sourceName;
 	}
 
-	private void cleanSource(MongoPropertySource source) {
-		source.remove(ID);
-		source.remove(LABEL);
-		source.remove(PROFILE);
-	}
+	public static class MongoPropertySource {
 
-	public static class MongoPropertySource extends LinkedHashMap<String, Object> {
+		private String profile;
+		private String label;
+		private LinkedHashMap<String, Object> source = new LinkedHashMap<String, Object>();
+		
+		public String getProfile() {
+			return profile;
+		}
 
-		private static final long serialVersionUID = -902368693790845431L;
+		public void setProfile(String profile) {
+			this.profile = profile;
+		}
+
+		public String getLabel() {
+			return label;
+		}
+
+		public void setLabel(String label) {
+			this.label = label;
+		}
+
+		public LinkedHashMap<String, Object> getSource() {
+			return source;
+		}
+
+		public void setSource(LinkedHashMap<String, Object> source) {
+			this.source = source;
+		}
 
 	}
 
