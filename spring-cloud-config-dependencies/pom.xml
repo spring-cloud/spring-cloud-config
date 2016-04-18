@@ -5,16 +5,16 @@
 	<parent>
 		<artifactId>spring-cloud-dependencies-parent</artifactId>
 		<groupId>org.springframework.cloud</groupId>
-		<version>1.1.0.BUILD-SNAPSHOT</version>
+		<version>1.1.0.RC2</version>
         <relativePath/>
 	</parent>
 	<artifactId>spring-cloud-config-dependencies</artifactId>
-	<version>1.1.0.BUILD-SNAPSHOT</version>
+	<version>1.1.0.RC2</version>
 	<packaging>pom</packaging>
 	<name>spring-cloud-config-dependencies</name>
 	<description>Spring Cloud Config Dependencies</description>
 	<properties>
-		<spring-cloud-commons.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-commons.version>
+		<spring-cloud-commons.version>1.1.0.RC3</spring-cloud-commons.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -28,27 +28,22 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-config</artifactId>
-	        <version>1.1.0.BUILD-SNAPSHOT</version>
+	        <version>1.1.0.RC2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-config-client</artifactId>
-	        <version>1.1.0.BUILD-SNAPSHOT</version>
+	        <version>1.1.0.RC2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-config-server</artifactId>
-	        <version>1.1.0.BUILD-SNAPSHOT</version>
+	        <version>1.1.0.RC2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-config-monitor</artifactId>
-	        <version>1.1.0.BUILD-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.retry</groupId>
-			<artifactId>spring-retry</artifactId>
-			<version>1.1.2.RELEASE</version>
+	        <version>1.1.0.RC2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
