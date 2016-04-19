@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.resource;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
 import org.junit.Before;
@@ -61,14 +62,14 @@ public class ResourceControllerTests {
 	public void templateReplacement() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = this.controller.resolve("foo", "bar", "dev", "template.json");
-		assertEquals(String.format("{%n  \"foo\": \"dev_bar\"%n}"), resource);
+		assertTrue("Wrong content: " + resource, resource.matches("\\{\\s*\"foo\": \"dev_bar\"\\s*\\}"));
 	}
 
 	@Test
 	public void templateReplacementNotForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = new String(this.controller.binary("foo", "bar", "dev", "template.json"));
-		assertEquals(String.format("{%n  \"foo\": \"${foo}\"%n}"), resource);
+		assertTrue("Wrong content: " + resource, resource.matches("\\{\\s*\"foo\": \"\\$\\{foo\\}\"\\s*\\}"));
 	}
 
 	@Test
