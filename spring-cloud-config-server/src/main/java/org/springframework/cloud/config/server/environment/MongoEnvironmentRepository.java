@@ -107,26 +107,22 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 
 			@Override
 			public int compare(MongoPropertySource s1, MongoPropertySource s2) {
-				String l1 = s1.getLabel();
-				String l2 = s2.getLabel();
-				int i1 = labels.indexOf(l1 != null ? l1 : DEFAULT_LABEL);
-				int i2 = labels.indexOf(l2 != null ? l2 : DEFAULT_LABEL);
+				int i1 = labels.indexOf(s1.getLabel());
+				int i2 = labels.indexOf(s2.getLabel());
 				return Integer.compare(i1, i2);
 			}
 
 		});
 	}
-	
+
 	private void sortSourcesByProfile(List<MongoPropertySource> sources,
 			final List<String> profiles) {
 		Collections.sort(sources, new Comparator<MongoPropertySource>() {
 
 			@Override
 			public int compare(MongoPropertySource s1, MongoPropertySource s2) {
-				String p1 = s1.getProfile();
-				String p2 = s2.getProfile();
-				int i1 = profiles.indexOf(p1 != null ? p1 : DEFAULT_PROFILE);
-				int i2 = profiles.indexOf(p2 != null ? p2 : DEFAULT_PROFILE);
+				int i1 = profiles.indexOf(s1.getProfile());
+				int i2 = profiles.indexOf(s2.getProfile());
 				return Integer.compare(i1, i2);
 			}
 
@@ -151,7 +147,7 @@ public class MongoEnvironmentRepository implements EnvironmentRepository {
 		private String profile;
 		private String label;
 		private LinkedHashMap<String, Object> source = new LinkedHashMap<String, Object>();
-		
+
 		public String getProfile() {
 			return profile;
 		}
