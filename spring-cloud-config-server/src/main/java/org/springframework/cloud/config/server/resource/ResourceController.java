@@ -100,7 +100,7 @@ public class ResourceController {
 		}
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/{label}/{path:.*}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public synchronized byte[] binary(@PathVariable String name,
 			@PathVariable String profile, @PathVariable String label,
 			HttpServletRequest request) throws IOException {
