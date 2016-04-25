@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,9 +87,23 @@ public class ResourceControllerTests {
 	}
 
 	@Test
+	public void resourceWithSlash() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		String resource = this.controller.resolve("foo", "bar", "dev", "spam/foo.txt");
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+
+	@Test
 	public void labelWithSlashForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		byte[] resource = this.controller.binary("foo", "bar", "dev(_)spam", "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+
+	@Test
+	public void resourceWithSlashForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		byte[] resource = this.controller.binary("foo", "bar", "dev", "spam/foo.txt");
 		assertEquals("foo: dev_bar/spam", new String(resource));
 	}
 
