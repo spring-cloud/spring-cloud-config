@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.server.resource;
 
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -27,7 +30,6 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,10 +37,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.HandlerMapping;
-
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 
 /**
  * An HTTP endpoint for serving up templated plain text resources from an underlying
@@ -66,31 +64,22 @@ public class ResourceController {
 	}
 
 	@RequestMapping("/{name}/{profile}/{label}/**")
-	public String resolve(@PathVariable String name,
-			@PathVariable String profile, @PathVariable String label,
-			HttpServletRequest request) throws IOException {
-		String pattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-		if (pattern == null) {
-			throw new IllegalStateException("Required request attribute '" +
-					HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE + "' is not set");
-		}
-		String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-		if (path == null) {
-			throw new IllegalStateException("Required request attribute '" +
-					HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE + "' is not set");
-		}
-		path = new AntPathMatcher().extractPathWithinPattern(pattern, path);
+	public String resolve(@PathVariable String name, @PathVariable String profile,
+			@PathVariable String label, HttpServletRequest request) throws IOException {
+		String path = request.getPathInfo()
+				.substring(String.format("/%s/%s/%s/", name, profile, label).length());
 		return resolve(name, profile, label, path);
 	}
 
-	synchronized String resolve(String name, String profile, String label, String path) throws IOException {
+	synchronized String resolve(String name, String profile, String label, String path)
+			throws IOException {
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
 		StandardEnvironment environment = prepareEnvironment(
-						this.environmentRepository.findOne(name, profile, label));
+				this.environmentRepository.findOne(name, profile, label));
 
 		// ensure InputStream will be closed to prevent file locks on Windows
 		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
@@ -104,27 +93,19 @@ public class ResourceController {
 	public synchronized byte[] binary(@PathVariable String name,
 			@PathVariable String profile, @PathVariable String label,
 			HttpServletRequest request) throws IOException {
-		String pattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-		if (pattern == null) {
-			throw new IllegalStateException("Required request attribute '" +
-					HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE + "' is not set");
-		}
-		String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-		if (path == null) {
-			throw new IllegalStateException("Required request attribute '" +
-					HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE + "' is not set");
-		}
-		path = new AntPathMatcher().extractPathWithinPattern(pattern, path);
+		String path = request.getPathInfo()
+				.substring(String.format("/%s/%s/%s/", name, profile, label).length());
 		return binary(name, profile, label, path);
 	}
 
-	synchronized byte[] binary(String name, String profile, String label, String path) throws IOException {
+	synchronized byte[] binary(String name, String profile, String label, String path)
+			throws IOException {
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
-		//TODO: is this line needed for side effects?
+		// TODO: is this line needed for side effects?
 		prepareEnvironment(this.environmentRepository.findOne(name, profile, label));
 		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
 				.getInputStream()) {

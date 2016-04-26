@@ -26,6 +26,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 /**
  * @author Dave Syer
@@ -94,6 +95,15 @@ public class ResourceControllerTests {
 	}
 
 	@Test
+	public void resourceWithSlashRequest() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		request.setPathInfo("/foo/bar/dev/" + "spam/foo.txt");
+		String resource = this.controller.resolve("foo", "bar", "dev", request);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+
+	@Test
 	public void labelWithSlashForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		byte[] resource = this.controller.binary("foo", "bar", "dev(_)spam", "foo.txt");
@@ -104,6 +114,15 @@ public class ResourceControllerTests {
 	public void resourceWithSlashForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		byte[] resource = this.controller.binary("foo", "bar", "dev", "spam/foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+
+	@Test
+	public void resourceWithSlashForBinaryRequest() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		request.setPathInfo("/foo/bar/dev/" + "spam/foo.txt");
+		byte[] resource = this.controller.binary("foo", "bar", "dev", request );
 		assertEquals("foo: dev_bar/spam", new String(resource));
 	}
 
