@@ -446,7 +446,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_spring_cloud_config_client">Spring Cloud Config Client</a>
 <ul class="sectlevel2">
 <li><a href="#config-first-bootstrap">Config First Bootstrap</a></li>
-<li><a href="#eureka-first-bootstrap">Eureka First Bootstrap</a></li>
+<li><a href="#discovery-first-bootstrap">Discovery First Bootstrap</a></li>
 <li><a href="#config-client-fail-fast">Config Client Fail Fast</a></li>
 <li><a href="#config-client-retry">Config Client Retry</a></li>
 <li><a href="#_locating_remote_configuration_resources">Locating Remote Configuration Resources</a></li>
@@ -1812,23 +1812,25 @@ with the server address in <code>spring.cloud.config.uri</code> (defaults to
 </div>
 </div>
 <div class="sect2">
-<h3 id="eureka-first-bootstrap">Eureka First Bootstrap</h3>
+<h3 id="discovery-first-bootstrap">Discovery First Bootstrap</h3>
 <div class="paragraph">
-<p>If you are using Spring Cloud Netflix and Eureka Service Discovery,
-then you can have the Config Server register with Eureka if you want
-to, but in the default "Config First" mode, clients won&#8217;t be able to
-take advantage of the registration.</p>
+<p>If you are using a `DiscoveryClient implementation, such as Spring Cloud Netflix
+and Eureka Service Discovery or Spring Cloud Consul (Spring Cloud Zookeeper does
+not support this yet), then you can have the Config Server register with the
+Discovery Service if you want to, but in the default "Config First" mode,
+clients won&#8217;t be able to take advantage of the registration.</p>
 </div>
 <div class="paragraph">
-<p>If you prefer to use Eureka to locate the Config Server, you can do
+<p>If you prefer to use <code>DiscoveryClient</code> to locate the Config Server, you can do
 that by setting <code>spring.cloud.config.discovery.enabled=true</code> (default
 "false"). The net result of that is that client apps all need a
-<code>bootstrap.yml</code> (or an environment variable) with the Eureka server
-address, e.g. in <code>eureka.client.serviceUrl.defaultZone</code>.  The price
-for using this option is an extra network round trip on start up to
+<code>bootstrap.yml</code> (or an environment variable) with the appropriate discovery
+configuration. For example, with Spring Cloud Netflix, you need to define the
+Eureka server address, e.g. in <code>eureka.client.serviceUrl.defaultZone</code>.  The
+price for using this option is an extra network round trip on start up to
 locate the service registration. The benefit is that the Config Server
-can change its co-ordinates, as long as Eureka is a fixed point. The
-default service id is "CONFIGSERVER" but you can change that on the
+can change its co-ordinates, as long as the Discovery Service is a fixed point. The
+default service id is "configserver" but you can change that on the
 client with <code>spring.cloud.config.discovery.serviceId</code> (and on the server
 in the usual way for a service, e.g. by setting <code>spring.application.name</code>).</p>
 </div>
@@ -1983,7 +1985,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-04-26 11:32:07 UTC
+Last updated 2016-05-02 17:02:28 UTC
 </div>
 </div>
 </body>
