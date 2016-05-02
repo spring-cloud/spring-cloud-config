@@ -301,10 +301,10 @@ public class EnvironmentController {
 		}
 	}
 
-	private Map<String, Object> convertToProperties(Environment profiles) {
+	private Map<String, Object> convertToProperties(Environment environment) {
 		Map<String, Object> map = new TreeMap<>();
 		List<PropertySource> sources = new ArrayList<>(
-				profiles.getPropertySources());
+				environment.getPropertySources());
 		Collections.reverse(sources);
 		for (PropertySource source : sources) {
 			@SuppressWarnings("unchecked")
