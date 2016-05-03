@@ -98,6 +98,28 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void arrayOverridenInYaml() throws Exception {
+		// Add overriden values first, will get reversed when properties are combined
+		Map<String, Object> twoMap = new LinkedHashMap<String, Object>();
+		twoMap.put("a.b[0]", "f");
+		twoMap.put("a.b[1]", "h");
+		this.environment.add(new PropertySource("two", twoMap));
+
+		// Add more values in array than present in first source
+		Map<String, Object> oneMap = new LinkedHashMap<String, Object>();
+		oneMap.put("a.b[0]", "c");
+		oneMap.put("a.b[1]", "d");
+		oneMap.put("a.b[2]", "z");
+		this.environment.add(new PropertySource("one", oneMap));
+
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+
+		// Result will not contain original, extra values from oneMap
+		assertEquals("a:\n  b:\n  - f\n  - h\n", yaml);
+	}
+
+	@Test
 	public void textAtTopLevelInYaml() throws Exception {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("document", "blah");
