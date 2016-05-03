@@ -40,6 +40,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 /**
  * @author Dave Syer
  * @author Roy Clarkson
+ * @author Daniel Frey
  */
 public class EnvironmentControllerTests {
 

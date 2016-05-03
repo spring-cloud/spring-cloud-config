@@ -58,6 +58,7 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  * @author Roy Clarkson
  * @author Bartosz Wojtkiewicz
  * @author Rafal Zukowski
+ * @author Daniel Frey
  *
  */
 @RestController
