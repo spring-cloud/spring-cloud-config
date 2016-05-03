@@ -302,12 +302,12 @@ public class EnvironmentController {
 		}
 	}
 
-	private Map<String, Object> convertToProperties(Environment profiles) {
+	private Map<String, Object> convertToProperties(Environment environment) {
 
 		// Map of unique keys containing full map of properties for each unique key
 		Map<String, Map<String, Object>> map = new TreeMap<>();
 		List<PropertySource> sources = new ArrayList<>(
-				profiles.getPropertySources());
+				environment.getPropertySources());
 		Collections.reverse(sources);
 		for (PropertySource source : sources) {
 

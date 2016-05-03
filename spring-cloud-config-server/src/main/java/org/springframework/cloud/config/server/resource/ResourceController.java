@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UrlPathHelper;
 
 /**
  * An HTTP endpoint for serving up templated plain text resources from an underlying
@@ -57,18 +58,28 @@ public class ResourceController {
 
 	private EnvironmentRepository environmentRepository;
 
+	private UrlPathHelper helper = new UrlPathHelper();
+
 	public ResourceController(ResourceRepository resourceRepository,
 			EnvironmentRepository environmentRepository) {
 		this.resourceRepository = resourceRepository;
 		this.environmentRepository = environmentRepository;
+		this.helper.setAlwaysUseFullPath(true);
 	}
 
 	@RequestMapping("/{name}/{profile}/{label}/**")
 	public String resolve(@PathVariable String name, @PathVariable String profile,
 			@PathVariable String label, HttpServletRequest request) throws IOException {
-		String path = request.getPathInfo()
-				.substring(String.format("/%s/%s/%s/", name, profile, label).length());
+		String path = getFilePath(request, name, profile, label);
 		return resolve(name, profile, label, path);
+	}
+
+	private String getFilePath(HttpServletRequest request, String name, String profile,
+			String label) {
+		String stem = String.format("/%s/%s/%s/", name, profile, label);
+		String path = this.helper.getPathWithinApplication(request);
+		path = path.substring(path.indexOf(stem) + stem.length());
+		return path;
 	}
 
 	synchronized String resolve(String name, String profile, String label, String path)
@@ -93,8 +104,7 @@ public class ResourceController {
 	public synchronized byte[] binary(@PathVariable String name,
 			@PathVariable String profile, @PathVariable String label,
 			HttpServletRequest request) throws IOException {
-		String path = request.getPathInfo()
-				.substring(String.format("/%s/%s/%s/", name, profile, label).length());
+		String path = getFilePath(request, name, profile, label);
 		return binary(name, profile, label, path);
 	}
 

@@ -98,7 +98,17 @@ public class ResourceControllerTests {
 	public void resourceWithSlashRequest() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setPathInfo("/foo/bar/dev/" + "spam/foo.txt");
+		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
+		String resource = this.controller.resolve("foo", "bar", "dev", request);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+
+	@Test
+	public void resourceWithSlashRequestAndServletPath() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		request.setServletPath("/spring");
+		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
 		String resource = this.controller.resolve("foo", "bar", "dev", request);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
@@ -121,7 +131,7 @@ public class ResourceControllerTests {
 	public void resourceWithSlashForBinaryRequest() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setPathInfo("/foo/bar/dev/" + "spam/foo.txt");
+		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
 		byte[] resource = this.controller.binary("foo", "bar", "dev", request );
 		assertEquals("foo: dev_bar/spam", new String(resource));
 	}
