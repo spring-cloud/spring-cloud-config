@@ -61,6 +61,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Bartosz Wojtkiewicz
  * @author Rafal Zukowski
  * @author Ivan Corrales Solera
+ * @author Daniel Frey
  *
  */
 @RestController
@@ -307,17 +308,45 @@ public class EnvironmentController {
 		}
 	}
 
-	private Map<String, Object> convertToProperties(Environment environment) {
-		Map<String, Object> map = new TreeMap<>();
-		List<PropertySource> sources = new ArrayList<>(environment.getPropertySources());
+	private Map<String, Object> convertToProperties(Environment profiles) {
+
+		// Map of unique keys containing full map of properties for each unique key
+		Map<String, Map<String, Object>> map = new TreeMap<>();
+		List<PropertySource> sources = new ArrayList<>(profiles.getPropertySources());
 		Collections.reverse(sources);
 		for (PropertySource source : sources) {
+
 			@SuppressWarnings("unchecked")
-			Map<String, String> value = (Map<String, String>) source.getSource();
-			map.putAll(value);
+			Map<String, Object> value = (Map<String, Object>) source.getSource();
+			for (String key : value.keySet()) {
+
+				if (!key.contains("[")) {
+
+					// Not an array, add unique key to the map
+					map.put(key, value);
+
+				}
+				else {
+
+					// An existing array might have already been added to the property map
+					// of an unequal size
+					// to the current array. Replace the array key in the current map
+					map.put(key.substring(0, key.indexOf('[') - 1), value);
+				}
+			}
+
 		}
-		postProcessProperties(map);
-		return map;
+
+		// Combine all unique keys into a combined map
+		Map<String, Object> combinedMap = new TreeMap<>();
+		for (Entry<String, Map<String, Object>> entry : map.entrySet()) {
+
+			combinedMap.putAll(entry.getValue());
+
+		}
+
+		postProcessProperties(combinedMap);
+		return combinedMap;
 	}
 
 	private void postProcessProperties(Map<String, Object> propertiesMap) {
