@@ -64,7 +64,7 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 	 * @param overrides the overrides to set
 	 */
 	public void setOverrides(Map<String, String> overrides) {
-		this.overrides = new HashMap<String, String>(overrides);
+		this.overrides = new HashMap<>(overrides);
 		for (String key : overrides.keySet()) {
 			if (overrides.get(key).contains("\\{")) {
 				this.overrides.put(key, overrides.get(key).replace("\\{", "{"));

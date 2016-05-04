@@ -23,6 +23,7 @@ import org.springframework.cloud.config.server.environment.EnvironmentRepository
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -96,4 +97,12 @@ public class EnvironmentRepositoryConfiguration {
 		}
 	}
 
+	@Configuration
+	@Profile("vault")
+	protected static class VaultConfiguration {
+		@Bean
+		public EnvironmentRepository environmentRepository() {
+			return new VaultEnvironmentRepository();
+		}
+	}
 }
