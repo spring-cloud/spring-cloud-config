@@ -15,18 +15,7 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import javax.servlet.http.HttpServletResponse;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -38,19 +27,18 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.*;
+import java.util.Map.Entry;
 
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.*;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 
 /**
  * @author Dave Syer
@@ -58,6 +46,7 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  * @author Roy Clarkson
  * @author Bartosz Wojtkiewicz
  * @author Rafal Zukowski
+ * @author Ivan Corrales Solera
  *
  */
 @RestController
@@ -121,7 +110,7 @@ public class EnvironmentController {
 			@PathVariable String profiles, @PathVariable String label,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
-		validateNameAndProfiles(name, profiles);
+		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToProperties(environment);
 		String propertiesString = getPropertiesString(properties);
@@ -145,7 +134,7 @@ public class EnvironmentController {
 			@PathVariable String label,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws Exception {
-		validateNameAndProfiles(name, profiles);
+		validateProfiles( profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToMap(environment);
 		String json = this.objectMapper.writeValueAsString(properties);
@@ -180,7 +169,7 @@ public class EnvironmentController {
 			@PathVariable String profiles, @PathVariable String label,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws Exception {
-		validateNameAndProfiles(name, profiles);
+		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> result = convertToMap(environment);
 		if (this.stripDocument && result.size() == 1
@@ -230,8 +219,8 @@ public class EnvironmentController {
 		response.sendError(HttpStatus.BAD_REQUEST.value());
 	}
 
-	private void validateNameAndProfiles(String name, String profiles) {
-		if (name.contains("-") || profiles.contains("-")) {
+	private void validateProfiles(String profiles) {
+		if (profiles.contains("-")) {
 			throw new IllegalArgumentException(
 					"Properties output not supported for name or profiles containing hyphens");
 		}
