@@ -60,7 +60,7 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 
 	@Override
 	public Environment findOne(String application, String env, String label) {
-		Environment result = new Environment(application, StringUtils.commaDelimitedListToStringArray(env), label, null);
+		Environment result = new Environment(application, StringUtils.commaDelimitedListToStringArray(env), label, null, null);
 		for (org.springframework.core.env.PropertySource<?> source : this.environment.getPropertySources()) {
 			String name = source.getName();
 			if (!this.standardSources.contains(name) && source instanceof MapPropertySource) {
