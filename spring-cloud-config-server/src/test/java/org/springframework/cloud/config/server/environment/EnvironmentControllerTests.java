@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -40,6 +39,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 /**
  * @author Dave Syer
  * @author Roy Clarkson
+ * @author Ivan Corrales Solera
  */
 public class EnvironmentControllerTests {
 
@@ -251,11 +251,11 @@ public class EnvironmentControllerTests {
 
 	@Test
 	public void mappingForLabelledYamlWithHyphen() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "bar-spam", "other")).thenReturn(
+		Mockito.when(this.repository.findOne("foo-bar-foo2-bar2", "spam", "other")).thenReturn(
 				this.environment);
 		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-spam.yml")).andExpect(
-				MockMvcResultMatchers.status().isBadRequest());
+		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-foo2-bar2-spam.yml")).andExpect(
+				MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
 	}
 
 	@Test
@@ -276,11 +276,12 @@ public class EnvironmentControllerTests {
 
 	@Test
 	public void mappingForLabelledJsonPropertiesWithHyphen() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "bar-spam", "other")).thenReturn(
+		Mockito.when(this.repository.findOne("foo-bar-foo2-bar2", "spam", "other")).thenReturn(
 				this.environment);
 		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-spam.json")).andExpect(
-				MockMvcResultMatchers.status().isBadRequest());
+		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-foo2-bar2-spam.json")).andExpect(
+				MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+
 	}
 
 }

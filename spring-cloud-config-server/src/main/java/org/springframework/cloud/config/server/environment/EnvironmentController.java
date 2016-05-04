@@ -15,6 +15,9 @@
  */
 package org.springframework.cloud.config.server.environment;
 
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
@@ -50,14 +54,13 @@ import org.yaml.snakeyaml.nodes.Tag;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.*;
-
 /**
  * @author Dave Syer
  * @author Spencer Gibb
  * @author Roy Clarkson
  * @author Bartosz Wojtkiewicz
  * @author Rafal Zukowski
+ * @author Ivan Corrales Solera
  *
  */
 @RestController
@@ -75,7 +78,8 @@ public class EnvironmentController {
 		this(repository, new ObjectMapper());
 	}
 
-	public EnvironmentController(EnvironmentRepository repository, ObjectMapper objectMapper) {
+	public EnvironmentController(EnvironmentRepository repository,
+			ObjectMapper objectMapper) {
 		this.repository = repository;
 		this.objectMapper = objectMapper;
 	}
@@ -112,7 +116,7 @@ public class EnvironmentController {
 	public ResponseEntity<String> properties(@PathVariable String name,
 			@PathVariable String profiles,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws IOException {
+					throws IOException {
 		return labelledProperties(name, profiles, null, resolvePlaceholders);
 	}
 
@@ -120,13 +124,14 @@ public class EnvironmentController {
 	public ResponseEntity<String> labelledProperties(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws IOException {
-		validateNameAndProfiles(name, profiles);
+					throws IOException {
+		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToProperties(environment);
 		String propertiesString = getPropertiesString(properties);
 		if (resolvePlaceholders) {
-			propertiesString = resolvePlaceholders(prepareEnvironment(environment), propertiesString);
+			propertiesString = resolvePlaceholders(prepareEnvironment(environment),
+					propertiesString);
 		}
 		return getSuccess(propertiesString);
 	}
@@ -135,17 +140,16 @@ public class EnvironmentController {
 	public ResponseEntity<String> jsonProperties(@PathVariable String name,
 			@PathVariable String profiles,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws Exception {
+					throws Exception {
 		return labelledJsonProperties(name, profiles, null, resolvePlaceholders);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.json")
-	public ResponseEntity<String> labelledJsonProperties(
-			@PathVariable String name, @PathVariable String profiles,
-			@PathVariable String label,
+	public ResponseEntity<String> labelledJsonProperties(@PathVariable String name,
+			@PathVariable String profiles, @PathVariable String label,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws Exception {
-		validateNameAndProfiles(name, profiles);
+					throws Exception {
+		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToMap(environment);
 		String json = this.objectMapper.writeValueAsString(properties);
@@ -171,16 +175,17 @@ public class EnvironmentController {
 	public ResponseEntity<String> yaml(@PathVariable String name,
 			@PathVariable String profiles,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws Exception {
+					throws Exception {
 		return labelledYaml(name, profiles, null, resolvePlaceholders);
 	}
 
-	@RequestMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
+	@RequestMapping({ "/{label}/{name}-{profiles}.yml",
+			"/{label}/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> labelledYaml(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws Exception {
-		validateNameAndProfiles(name, profiles);
+					throws Exception {
+		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> result = convertToMap(environment);
 		if (this.stripDocument && result.size() == 1
@@ -204,7 +209,8 @@ public class EnvironmentController {
 
 	private Map<String, Object> convertToMap(Environment input) throws BindException {
 		Map<String, Object> target = new LinkedHashMap<>();
-		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<>(target);
+		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<>(
+				target);
 		Map<String, Object> data = convertToProperties(input);
 		LinkedHashMap<String, Object> properties = new LinkedHashMap<>();
 		for (String key : data.keySet()) {
@@ -230,8 +236,8 @@ public class EnvironmentController {
 		response.sendError(HttpStatus.BAD_REQUEST.value());
 	}
 
-	private void validateNameAndProfiles(String name, String profiles) {
-		if (name.contains("-") || profiles.contains("-")) {
+	private void validateProfiles(String profiles) {
+		if (profiles.contains("-")) {
 			throw new IllegalArgumentException(
 					"Properties output not supported for name or profiles containing hyphens");
 		}
@@ -303,8 +309,7 @@ public class EnvironmentController {
 
 	private Map<String, Object> convertToProperties(Environment environment) {
 		Map<String, Object> map = new TreeMap<>();
-		List<PropertySource> sources = new ArrayList<>(
-				environment.getPropertySources());
+		List<PropertySource> sources = new ArrayList<>(environment.getPropertySources());
 		Collections.reverse(sources);
 		for (PropertySource source : sources) {
 			@SuppressWarnings("unchecked")
