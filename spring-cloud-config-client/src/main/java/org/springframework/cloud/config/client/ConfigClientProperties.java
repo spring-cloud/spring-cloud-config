@@ -34,6 +34,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class ConfigClientProperties {
 
 	public static final String PREFIX = "spring.cloud.config";
+	public static final String TOKEN_HEADER = "X-Config-Token";
 
 	/**
 	 * Flag to say that remote configuration is enabled. Default true;
@@ -82,6 +83,11 @@ public class ConfigClientProperties {
 	 * Flag to indicate that failure to connect to the server is fatal (default false).
 	 */
 	private boolean failFast = false;
+
+	/**
+	 * Security Token passed thru to underlying environment repository.
+	 */
+	private String token;
 
 	private ConfigClientProperties() {
 	}
@@ -168,6 +174,14 @@ public class ConfigClientProperties {
 
 	public void setFailFast(boolean failFast) {
 		this.failFast = failFast;
+	}
+
+	public String getToken() {
+		return this.token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
 	}
 
 	private String[] extractCredentials() {
@@ -272,7 +286,7 @@ public class ConfigClientProperties {
 				+ (this.label == null ? "" : this.label) + ", username=" + this.username
 				+ ", password=" + this.password + ", uri=" + this.uri
 				+ ", discovery.enabled=" + this.discovery.enabled + ", failFast="
-				+ this.failFast + "]";
+				+ this.failFast + ", token=" + this.token + "]";
 	}
 
 }

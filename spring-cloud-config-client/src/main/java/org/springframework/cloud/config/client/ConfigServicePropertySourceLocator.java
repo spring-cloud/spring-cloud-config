@@ -29,6 +29,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
+
 /**
  * @author Dave Syer
  *
@@ -54,31 +57,33 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			.getLog(ConfigServicePropertySourceLocator.class);
 
 	private RestTemplate restTemplate;
-	private ConfigClientProperties defaults;
+	private ConfigClientProperties defaultProperties;
 
-	public ConfigServicePropertySourceLocator(ConfigClientProperties defaults) {
-		this.defaults = defaults;
+	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
+		this.defaultProperties = defaultProperties;
 	}
 
 	@Override
 	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(
 			org.springframework.core.env.Environment environment) {
-		ConfigClientProperties client = this.defaults.override(environment);
+		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(client)
+		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(properties)
 				: this.restTemplate;
 		Exception error = null;
 		String errorBody = null;
-		logger.info("Fetching config from server at: " + client.getRawUri());
+		logger.info("Fetching config from server at: " + properties.getRawUri());
 		try {
-			String[] labels = new String[]{""};
-			if (StringUtils.hasText(client.getLabel())) {
-				labels = StringUtils.commaDelimitedListToStringArray(client.getLabel());
+			String[] labels = new String[] { "" };
+			if (StringUtils.hasText(properties.getLabel())) {
+				labels = StringUtils.commaDelimitedListToStringArray(properties.getLabel());
 			}
 			// Try all the labels until one works
 			for (String label : labels) {
-				Environment result = getRemoteEnvironment(restTemplate, client.getRawUri(), client.getName(), client.getProfile(), label.trim());
+				Environment result = getRemoteEnvironment(restTemplate,
+						properties.getRawUri(), properties.getName(),
+						properties.getProfile(), label.trim(), properties.getToken());
 				if (result != null) {
 					logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s",
 							result.getName(),
@@ -106,7 +111,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		catch (Exception e) {
 			error = e;
 		}
-		if (client != null && client.isFailFast()) {
+		if (properties.isFailFast()) {
 			throw new IllegalStateException(
 					"Could not locate PropertySource and the fail fast property is set, failing",
 					error);
@@ -117,7 +122,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	}
 
-	private Environment getRemoteEnvironment(RestTemplate restTemplate, String uri, String name, String profile, String label) {
+	private Environment getRemoteEnvironment(RestTemplate restTemplate, String uri,
+			String name, String profile, String label, String token) {
 		String path = "/{name}/{profile}";
 		Object[] args = new String[] { name, profile };
 		if (StringUtils.hasText(label)) {
@@ -127,16 +133,21 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		ResponseEntity<Environment> response = null;
 
 		try {
-			response = restTemplate.exchange(uri + path,
-					HttpMethod.GET, new HttpEntity<Void>((Void) null),
-					Environment.class, args);
-		} catch (HttpClientErrorException e) {
-			if(e.getStatusCode() != HttpStatus.NOT_FOUND ) {
+			HttpHeaders headers = new HttpHeaders();
+			if (StringUtils.hasText(token)) {
+				headers.add(TOKEN_HEADER, token);
+			}
+			final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
+			response = restTemplate.exchange(uri + path, HttpMethod.GET,
+					entity, Environment.class, args);
+		}
+		catch (HttpClientErrorException e) {
+			if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
 				throw e;
 			}
 		}
 
-		if (response==null || response.getStatusCode()!=HttpStatus.OK) {
+		if (response == null || response.getStatusCode() != HttpStatus.OK) {
 			return null;
 		}
 		Environment result = response.getBody();

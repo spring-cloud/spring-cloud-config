@@ -24,6 +24,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
+
 /**
  * @author Spencer Gibb
  */
@@ -31,7 +33,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class VaultEnvironmentRepository implements EnvironmentRepository {
 
 	public static final String VAULT_TOKEN = "X-Vault-Token";
-	public static final String TOKEN_NAME = "X-ConfigClient-Token";
 
 	@NotEmpty
 	private String host = "127.0.0.1";
@@ -109,9 +110,9 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 
 		HttpHeaders headers = new HttpHeaders();
 
-		String token = request.getHeader(TOKEN_NAME);
+		String token = request.getHeader(TOKEN_HEADER);
 		if (!StringUtils.hasLength(token)) {
-			throw new IllegalArgumentException("Missing required header: "+TOKEN_NAME);
+			throw new IllegalArgumentException("Missing required header: "+TOKEN_HEADER);
 		}
 		headers.add(VAULT_TOKEN, token);
 		try {

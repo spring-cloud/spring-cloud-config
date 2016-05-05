@@ -51,9 +51,9 @@ public class ConfigServiceBootstrapConfiguration {
 
 	@Bean
 	@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
-	public ConfigServicePropertySourceLocator configServicePropertySource() {
+	public ConfigServicePropertySourceLocator configServicePropertySource(ConfigClientProperties properties) {
 		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
-				configClientProperties());
+				properties);
 		return locator;
 	}
 
