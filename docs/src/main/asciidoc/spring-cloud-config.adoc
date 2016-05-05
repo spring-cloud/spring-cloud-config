@@ -682,6 +682,36 @@ the decryption of outgoing properties using
 about the endpoints, then it should work if you configure neither the
 key nor the enabled flag.
 
+== Serving Alternative Formats
+
+The default JSON format from the environment endpoints is perfect for
+consumption by Spring applications because it maps directly onto the
+`Environment` abstraction. If you prefer you can consume the same data
+as YAML or Java properties by adding a suffix to the resource path
+(".yml", ".yaml" or ".properties"). This can be useful for consumption
+by applications that do not care about the structure of the JSON
+endpoints, or the extra metadata they provide, for example an
+application that is not using Spring might benefit fro mthe simplicity
+of this approach.
+
+The YAML and properties representations have an additional flag
+(provided as a boolean query parameter `resolvePlaceholders`) to
+signal that placeholders in the source documents, in the standard
+Spring `${...}` form, should be resolved in the output where possible
+before rendering. This is a useful feature for consumers that don't
+know about the Spring placeholder conventions.
+
+NOTE: there are limitations in using the YAML or properties formats,
+mainly in relation to the loss of metadata. The JSON is structured as
+an ordered list of property sources, for example, with names that
+correlate with the source. The YAML and properties forms are coalesced
+into a single map, even if the origin of the values has multiple
+sources, and the names of teh original source files are lost. The YAML
+representation is not necessarily a faithful representation of the
+YAML source in a backing repository either: it is constructed from a
+list of flat property sources, and assumptions have to be made about
+the form of the keys.
+
 == Serving Plain Text
 
 Instead of using the `Environment` abstraction (or one of the

@@ -39,10 +39,6 @@ Spring Boot app), "profile" is an active profile (or comma-separated
 list of properties), and "label" is an optional git label (defaults to
 "master".)
 
-The YAML and properties forms are coalesced into a single
-map, even if the origin of the values (reflected in the
-"propertySources" of the "standard" form) has multiple sources.
-
 Spring Cloud Config Server pulls configuration for remote clients
 from a git repository (which must be provided):
 
