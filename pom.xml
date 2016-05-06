@@ -56,6 +56,9 @@
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
 				</repository>
 				<repository>
 					<id>spring-milestones</id>
@@ -82,6 +85,9 @@
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
 				</pluginRepository>
 				<pluginRepository>
 					<id>spring-milestones</id>
