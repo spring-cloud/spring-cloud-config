@@ -239,8 +239,13 @@ public class JGitEnvironmentRepositoryTests {
 		Git git = mock(Git.class);
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
 
 		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(false);
 
@@ -258,8 +263,13 @@ public class JGitEnvironmentRepositoryTests {
 		Git git = mock(Git.class);
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
 
 		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
@@ -278,8 +288,13 @@ public class JGitEnvironmentRepositoryTests {
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
 		Ref ref = mock(Ref.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
 
 		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(false);
 
