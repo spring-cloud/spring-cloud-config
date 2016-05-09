@@ -440,6 +440,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_serving_encrypted_properties">Serving Encrypted Properties</a></li>
 </ul>
 </li>
+<li><a href="#_serving_alternative_formats">Serving Alternative Formats</a></li>
 <li><a href="#_serving_plain_text">Serving Plain Text</a></li>
 <li><a href="#_embedding_the_config_server">Embedding the Config Server</a></li>
 <li><a href="#_push_notifications_and_spring_cloud_bus">Push Notifications and Spring Cloud Bus</a></li>
@@ -515,11 +516,6 @@ via a JSON endpoint.</p>
 Spring Boot app), "profile" is an active profile (or comma-separated
 list of properties), and "label" is an optional git label (defaults to
 "master".)</p>
-</div>
-<div class="paragraph">
-<p>The YAML and properties forms are coalesced into a single
-map, even if the origin of the values (reflected in the
-"propertySources" of the "standard" form) has multiple sources.</p>
 </div>
 <div class="paragraph">
 <p>Spring Cloud Config Server pulls configuration for remote clients
@@ -1062,6 +1058,20 @@ that should be applicable. HTTPS proxy settings can be set in
 <code>~/.git/config</code> or in the same way as for any other JVM process via
 system properties (<code>-Dhttps.proxyHost</code> and <code>-Dhttps.proxyPort</code>).</p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+If you don&#8217;t know where your <code>~/.git</code> directory is us <code>git config
+--global</code> to manipulate the settings (e.g. <code>git config --global
+http.sslVerify false</code>).
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_placeholders_in_git_search_paths">Placeholders in Git Search Paths</h5>
@@ -1581,6 +1591,51 @@ key nor the enabled flag.</p>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_serving_alternative_formats">Serving Alternative Formats</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The default JSON format from the environment endpoints is perfect for
+consumption by Spring applications because it maps directly onto the
+<code>Environment</code> abstraction. If you prefer you can consume the same data
+as YAML or Java properties by adding a suffix to the resource path
+(".yml", ".yaml" or ".properties"). This can be useful for consumption
+by applications that do not care about the structure of the JSON
+endpoints, or the extra metadata they provide, for example an
+application that is not using Spring might benefit fro mthe simplicity
+of this approach.</p>
+</div>
+<div class="paragraph">
+<p>The YAML and properties representations have an additional flag
+(provided as a boolean query parameter <code>resolvePlaceholders</code>) to
+signal that placeholders in the source documents, in the standard
+Spring <code>${&#8230;&#8203;}</code> form, should be resolved in the output where possible
+before rendering. This is a useful feature for consumers that don&#8217;t
+know about the Spring placeholder conventions.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+there are limitations in using the YAML or properties formats,
+mainly in relation to the loss of metadata. The JSON is structured as
+an ordered list of property sources, for example, with names that
+correlate with the source. The YAML and properties forms are coalesced
+into a single map, even if the origin of the values has multiple
+sources, and the names of the original source files are lost. The YAML
+representation is not necessarily a faithful representation of the
+YAML source in a backing repository either: it is constructed from a
+list of flat property sources, and assumptions have to be made about
+the form of the keys.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_serving_plain_text">Serving Plain Text</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1985,7 +2040,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-05 18:39:56 UTC
+Last updated 2016-05-09 16:39:55 UTC
 </div>
 </div>
 </body>
