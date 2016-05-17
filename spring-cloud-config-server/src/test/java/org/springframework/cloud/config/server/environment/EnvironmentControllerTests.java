@@ -15,31 +15,53 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
+import org.springframework.cloud.config.client.ConfigClientProperties;
+import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
+import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.core.env.CompositePropertySource;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.mockito.Mockito;
-import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 /**
  * @author Dave Syer
  * @author Roy Clarkson
+ * @author Daniel Frey
  */
 public class EnvironmentControllerTests {
 
@@ -95,6 +117,57 @@ public class EnvironmentControllerTests {
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertEquals("a:\n  b:\n  - c\n  - d\n", yaml);
+	}
+
+	@Test
+	public void arrayOverridenInEnvironment() throws Exception {
+		// Add original values first source
+		Map<String, Object> oneMap = new LinkedHashMap<String, Object>();
+		oneMap.put("a.b[0]", "c");
+		oneMap.put("a.b[1]", "d");
+		oneMap.put("a.b[2]", "z");
+		this.environment.add(new PropertySource("one", oneMap));
+
+		// Add overridden values in second source
+		Map<String, Object> twoMap = new LinkedHashMap<String, Object>();
+		twoMap.put("a.b[0]", "f");
+		twoMap.put("a.b[1]", "h");
+		this.environment.addFirst(new PropertySource("two", twoMap));
+
+		Mockito.when(this.repository.findOne("foo", "bar", "two")).thenReturn(this.environment);
+		Environment environment = this.controller.labelled("foo", "bar", "two");
+    assertThat(environment, not( nullValue()));
+		assertThat(environment.getName(), equalTo("foo"));
+		assertThat(environment.getProfiles(), equalTo( new String[] {"master"}));
+		assertThat(environment.getLabel(), equalTo("master"));
+		assertThat(environment.getVersion(), nullValue());
+		assertThat(environment.getPropertySources(), hasSize(2));
+		assertThat(environment.getPropertySources().get(0).getName(), equalTo("two"));
+		assertThat(environment.getPropertySources().get(0).getSource().entrySet(), hasSize(2));
+		assertThat(environment.getPropertySources().get(1).getName(), equalTo("one"));
+		assertThat(environment.getPropertySources().get(1).getSource().entrySet(), hasSize(3));
+	}
+
+	@Test
+	public void arrayOverridenInYaml() throws Exception {
+		// Add original values first source
+		Map<String, Object> oneMap = new LinkedHashMap<String, Object>();
+		oneMap.put("a.b[0]", "c");
+		oneMap.put("a.b[1]", "d");
+		oneMap.put("a.b[2]", "z");
+		this.environment.add(new PropertySource("one", oneMap));
+
+		// Add overridden values in second source
+		Map<String, Object> twoMap = new LinkedHashMap<String, Object>();
+		twoMap.put("a.b[0]", "f");
+		twoMap.put("a.b[1]", "h");
+		this.environment.addFirst(new PropertySource("two", twoMap));
+
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+
+		// Result will not contain original, extra values from oneMap
+		assertEquals("a:\n  b:\n  - f\n  - h\n", yaml);
 	}
 
 	@Test
