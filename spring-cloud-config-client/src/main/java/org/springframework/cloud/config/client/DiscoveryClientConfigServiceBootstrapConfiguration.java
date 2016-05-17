@@ -25,6 +25,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
+import org.springframework.cloud.client.discovery.event.HeartbeatMonitor;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -52,9 +54,18 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 	@Autowired
 	private DiscoveryClient client;
 
+	private HeartbeatMonitor monitor = new HeartbeatMonitor();
+
 	@EventListener(ContextRefreshedEvent.class)
-	public void onApplicationEvent(ContextRefreshedEvent event) {
+	public void startup(ContextRefreshedEvent event) {
 		refresh();
+	}
+
+	@EventListener(HeartbeatEvent.class)
+	public void heartbeat(HeartbeatEvent event) {
+		if (monitor.update(event.getValue())) {
+			refresh();
+		}
 	}
 
 	private void refresh() {

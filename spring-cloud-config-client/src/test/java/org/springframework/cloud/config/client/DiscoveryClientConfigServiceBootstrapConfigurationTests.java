@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.config.client;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
+
 import java.util.Arrays;
 
 import org.junit.After;
@@ -26,12 +30,9 @@ import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
 
 /**
  * @author Dave Syer
@@ -68,6 +69,20 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 		assertEquals(1, this.context.getBeanNamesForType(
 				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
 		Mockito.verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
+		ConfigClientProperties locator = this.context
+				.getBean(ConfigClientProperties.class);
+		assertEquals("http://foo:8877/", locator.getRawUri());
+	}
+
+	@Test
+	public void onWhenHeartbeat() throws Exception {
+		setup("spring.cloud.config.discovery.enabled=true");
+		assertEquals(1, this.context.getBeanNamesForType(
+				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
+				.willReturn(Arrays.asList(this.info));
+		Mockito.verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
+		context.publishEvent(new HeartbeatEvent(context, "new"));
 		ConfigClientProperties locator = this.context
 				.getBean(ConfigClientProperties.class);
 		assertEquals("http://foo:8877/", locator.getRawUri());
