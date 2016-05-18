@@ -41,6 +41,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 /**
  * @author Dave Syer
  * @author Roy Clarkson
+ * @author Ivan Corrales Solera
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = ControllerConfiguration.class)
@@ -84,6 +85,14 @@ public class EnvironmentControllerIntegrationTests {
 		this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-default.properties")).andExpect(
 				MockMvcResultMatchers.status().isOk());
 		Mockito.verify(this.repository).findOne("foo", "default", "label");
+	}
+
+	@Test
+	public void propertiesLabelWhenApplicationNameContainsHyphen() throws Exception {
+		Mockito.when(this.repository.findOne("foo-bar", "default", "label")).thenReturn(new Environment("foo-bar", "default"));
+		this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-bar-default.properties")).andExpect(
+				MockMvcResultMatchers.status().isOk());
+		Mockito.verify(this.repository).findOne("foo-bar", "default", "label");
 	}
 
 	@Test
