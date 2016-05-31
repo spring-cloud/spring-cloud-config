@@ -15,11 +15,15 @@
  */
 package org.springframework.cloud.config.server.config;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
@@ -101,8 +105,28 @@ public class EnvironmentRepositoryConfiguration {
 	@Profile("vault")
 	protected static class VaultConfiguration {
 		@Bean
-		public EnvironmentRepository environmentRepository() {
-			return new VaultEnvironmentRepository();
+		public EnvironmentRepository environmentRepository(HttpServletRequest request, EnvironmentWatch watch) {
+			return new VaultEnvironmentRepository(request, watch);
+		}
+	}
+
+	@Configuration
+	@ConditionalOnProperty(value = "spring.cloud.config.server.consul.watch.enabled")
+	protected static class ConsulEnvironmentWatchConfiguration {
+
+		@Bean
+		public EnvironmentWatch environmentWatch() {
+			return new ConsulEnvironmentWatch();
+		}
+	}
+
+	@Configuration
+	@ConditionalOnMissingBean(EnvironmentWatch.class)
+	protected static class DefaultEnvironmentWatch {
+
+		@Bean
+		public EnvironmentWatch environmentWatch() {
+			return new EnvironmentWatch.Default();
 		}
 	}
 }

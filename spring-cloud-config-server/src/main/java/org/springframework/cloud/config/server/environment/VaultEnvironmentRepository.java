@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Range;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -24,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 
 /**
@@ -53,18 +53,28 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 
 	private RestTemplate rest = new RestTemplate();
 
-	//TODO: is there a better way to do this?
-	@Autowired
+	//TODO: move to watchState:String on findOne?
 	private HttpServletRequest request;
+
+	private EnvironmentWatch watch;
+
+	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch) {
+		this.request = request;
+		this.watch = watch;
+	}
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
+
+		String state = request.getHeader(STATE_HEADER);
+		String newState = this.watch.watch(state);
+
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		List<String> scrubbedProfiles = scrubProfiles(profiles);
 
 		List<String> keys = findKeys(application, scrubbedProfiles);
 
-		Environment environment = new Environment(application, profiles, label, null);
+		Environment environment = new Environment(application, profiles, label, null, newState);
 
 		for (String key : keys) {
 			Map<String, String> data = read(key);

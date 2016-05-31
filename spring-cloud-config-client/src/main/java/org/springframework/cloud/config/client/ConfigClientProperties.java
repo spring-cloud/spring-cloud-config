@@ -35,6 +35,7 @@ public class ConfigClientProperties {
 
 	public static final String PREFIX = "spring.cloud.config";
 	public static final String TOKEN_HEADER = "X-Config-Token";
+	public static final String STATE_HEADER = "X-Config-State";
 
 	/**
 	 * Flag to say that remote configuration is enabled. Default true;
