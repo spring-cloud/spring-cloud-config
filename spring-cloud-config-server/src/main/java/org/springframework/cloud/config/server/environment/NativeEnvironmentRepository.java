@@ -98,6 +98,10 @@ public class NativeEnvironmentRepository
 		ConfigurableEnvironment environment = getEnvironment(profile);
 		builder.environment(environment);
 		builder.web(false).bannerMode(Mode.OFF);
+		if (!logger.isDebugEnabled()) {
+			// Make the mini-application startup less verbose
+			builder.logStartupInfo(false);
+		}
 		String[] args = getArgs(config, profile, label);
 		// Explicitly set the listeners (to exclude logging listener which would change
 		// log levels in the caller)
