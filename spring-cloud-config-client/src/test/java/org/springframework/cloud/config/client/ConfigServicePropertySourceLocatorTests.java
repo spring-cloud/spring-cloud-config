@@ -44,7 +44,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void sunnyDay() {
 		Environment body = new Environment("app", "master");
-		mockRequestResponseWithoutLabel(new ResponseEntity<Environment>(body,
+		mockRequestResponseWithoutLabel(new ResponseEntity<>(body,
 				HttpStatus.OK));
 		this.locator.setRestTemplate(this.restTemplate);
 		assertNotNull(this.locator.locate(this.environment));
@@ -54,7 +54,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	public void sunnyDayWithLabel() {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithLabel(
-				new ResponseEntity<Environment>(body, HttpStatus.OK), "v1.0.0");
+				new ResponseEntity<>(body, HttpStatus.OK), "v1.0.0");
 		this.locator.setRestTemplate(this.restTemplate);
 		EnvironmentTestUtils.addEnvironment(this.environment,
 				"spring.cloud.config.label:v1.0.0");
@@ -71,7 +71,7 @@ public class ConfigServicePropertySourceLocatorTests {
 
 	@Test
 	public void failsQuietly() {
-		mockRequestResponseWithoutLabel(new ResponseEntity<String>("Wah!",
+		mockRequestResponseWithoutLabel(new ResponseEntity<>("Wah!",
 				HttpStatus.INTERNAL_SERVER_ERROR));
 		this.locator.setRestTemplate(this.restTemplate);
 		assertNull(this.locator.locate(this.environment));
