@@ -15,8 +15,6 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import static org.springframework.util.StringUtils.hasText;
-
 import java.io.File;
 import java.net.URI;
 
@@ -30,10 +28,14 @@ import org.springframework.util.StringUtils;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNStatus;
 import org.tmatesoft.svn.core.wc2.SvnCheckout;
 import org.tmatesoft.svn.core.wc2.SvnOperationFactory;
 import org.tmatesoft.svn.core.wc2.SvnTarget;
 import org.tmatesoft.svn.core.wc2.SvnUpdate;
+
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * Subversion-backed {@link EnvironmentRepository}.
@@ -77,7 +79,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		try {
 			String version;
 			if (new File(getWorkingDirectory(), ".svn").exists()) {
-				version = update(svnOperationFactory);
+				version = update(svnOperationFactory, label);
 			}
 			else {
 				version = checkout(svnOperationFactory);
@@ -123,19 +125,31 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		return id.toString();
 	}
 
-	private String update(SvnOperationFactory svnOperationFactory) throws SVNException {
+	private String update(SvnOperationFactory svnOperationFactory, String label) throws SVNException {
 		logger.debug("Repo already checked out - updating instead.");
-		final SvnUpdate update = svnOperationFactory.createUpdate();
-		update.setSingleTarget(SvnTarget.fromFile(getWorkingDirectory()));
-		long[] ids = update.run();
-		StringBuilder version = new StringBuilder();
-		for (long id : ids) {
-			if (version.length() > 0) {
-				version.append(",");
+
+		try {
+			final SvnUpdate update = svnOperationFactory.createUpdate();
+			update.setSingleTarget(SvnTarget.fromFile(getWorkingDirectory()));
+			long[] ids = update.run();
+			StringBuilder version = new StringBuilder();
+			for (long id : ids) {
+				if (version.length() > 0) {
+					version.append(",");
+				}
+				version.append(id);
 			}
-			version.append(id);
+			return version.toString();
 		}
-		return version.toString();
+		catch (Exception e) {
+			this.logger.warn("Could not update remote for " + label + " (current local="
+					+ getWorkingDirectory().getPath() + "), remote: " + this.getUri()
+					+ ")");
+		}
+
+		final SVNStatus status = SVNClientManager.newInstance().getStatusClient()
+				.doStatus(getWorkingDirectory(), false);
+		return status != null ? status.getRevision().toString() : null;
 	}
 
 	@Override

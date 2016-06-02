@@ -15,8 +15,7 @@
  */
 package org.springframework.cloud.config.server;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import java.io.IOException;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,6 +32,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Michael Prankl
@@ -71,8 +74,16 @@ public class SubversionConfigServerIntegrationTests {
 
 	@Test
 	public void defaultLabel() throws Exception {
-		SvnKitEnvironmentRepository repository = this.context.getBean(SvnKitEnvironmentRepository.class);
+		SvnKitEnvironmentRepository repository = this.context
+				.getBean(SvnKitEnvironmentRepository.class);
 		assertEquals("trunk", repository.getDefaultLabel());
+	}
+
+	@Test
+	public void updateUnavailableRepo() throws IOException {
+		contextLoads();
+		assertTrue(ConfigServerTestUtils.deleteLocalRepo("svn-config-repo"));
+		contextLoads();
 	}
 
 }
