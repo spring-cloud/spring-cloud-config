@@ -83,9 +83,11 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			if (StringUtils.hasText(properties.getLabel())) {
 				labels = StringUtils.commaDelimitedListToStringArray(properties.getLabel());
 			}
+
+			String state = ConfigClientStateHolder.getState();
+
 			// Try all the labels until one works
 			for (String label : labels) {
-				String state = environment.getProperty("config.client.state");
 				Environment result = getRemoteEnvironment(restTemplate,
 						properties, label.trim(), state);
 				if (result != null) {

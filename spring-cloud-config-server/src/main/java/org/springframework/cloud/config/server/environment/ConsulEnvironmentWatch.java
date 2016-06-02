@@ -66,13 +66,7 @@ public class ConsulEnvironmentWatch implements EnvironmentWatch {
 		params.add(String.valueOf(this.port));
 		params.add(this.path);
 		params.add(this.wait);
-
-		if (StringUtils.hasText(state)) {
-			params.add(state);
-		}
-		else {
-			params.add("");
-		}
+		params.add (StringUtils.hasText(state) ? state : "");
 
 		try {
 			HttpHeaders headers = new HttpHeaders();
