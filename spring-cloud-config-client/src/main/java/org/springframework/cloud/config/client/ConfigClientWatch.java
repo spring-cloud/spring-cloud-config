@@ -54,7 +54,7 @@ public class ConfigClientWatch implements Closeable, EnvironmentAware {
 	}
 
 	@Scheduled(initialDelayString = "${spring.cloud.config.watch.initialDelay:180000}", fixedDelayString = "${spring.cloud.config.watch.delay:500}")
-	public void watchConfigKeyValues() {
+	public void watchConfigServer() {
 		if (this.running.get()) {
 			String state = this.environment.getProperty("config.client.state");
 			ConfigClientStateHolder.setState(state);
