@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
@@ -38,6 +39,7 @@ import org.springframework.core.env.StandardEnvironment;
  */
 public class SVNKitEnvironmentRepositoryTests {
 
+    private static final String REPOSITORY_NAME = "svn-config-repo";
 	private StandardEnvironment environment = new StandardEnvironment();
 	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(
 			this.environment);
@@ -47,7 +49,7 @@ public class SVNKitEnvironmentRepositoryTests {
 	@Before
 	public void init() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
-				"src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
+				"src/test/resources/" + REPOSITORY_NAME, "target/repos/" + REPOSITORY_NAME);
 		this.repository.setUri(uri);
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
@@ -56,7 +58,7 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	@Test
 	public void vanilla() {
-		Environment environment = this.repository.findOne("bar", "staging", "trunk");
+		Environment environment = this.findOne();
 		assertEquals(2, environment.getPropertySources().size());
 		assertTrue(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties"));
@@ -67,7 +69,7 @@ public class SVNKitEnvironmentRepositoryTests {
 	@Test
 	public void basedir() {
 		this.repository.setBasedir(this.basedir);
-		Environment environment = this.repository.findOne("bar", "staging", "trunk");
+		Environment environment = this.findOne();
 		assertEquals(2, environment.getPropertySources().size());
 		assertTrue(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties"));
@@ -84,7 +86,7 @@ public class SVNKitEnvironmentRepositoryTests {
 
 		this.repository.setBasedir(basedirWithSpace);
 
-		Environment environment = this.repository.findOne("bar", "staging", "trunk");
+		Environment environment = this.findOne();
 		assertEquals(2, environment.getPropertySources().size());
 		assertTrue(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties"));
@@ -103,8 +105,8 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	@Test
 	public void vanilla_with_update() {
-		this.repository.findOne("bar", "staging", "trunk");
-		Environment environment = this.repository.findOne("bar", "staging", "trunk");
+		this.findOne();
+		Environment environment = this.findOne();
 		assertEquals(2, environment.getPropertySources().size());
 		assertTrue(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties"));
@@ -119,6 +121,17 @@ public class SVNKitEnvironmentRepositoryTests {
 		assertEquals(0, environment.getPropertySources().size());
 	}
 
+	@Test
+	public void vanilla_with_update_after_repo_delete() throws IOException {
+        this.vanilla_with_update();
+        assertTrue(ConfigServerTestUtils.deleteLocalRepo(REPOSITORY_NAME));
+        this.vanilla();
+	}
+    
+    private Environment findOne(){
+        return this.repository.findOne("bar", "staging", "trunk");
+    }
+
 	@EnableAutoConfiguration
 	@Configuration
 	@EnableConfigServer
@@ -127,7 +140,7 @@ public class SVNKitEnvironmentRepositoryTests {
 		public static void main(String[] args) throws Exception {
 			File basedir = new File("target/config");
 			String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
-					"src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
+					"src/test/resources/" + REPOSITORY_NAME, "target/repos/" + REPOSITORY_NAME);
 			if (basedir.exists()) {
 				FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 			}
