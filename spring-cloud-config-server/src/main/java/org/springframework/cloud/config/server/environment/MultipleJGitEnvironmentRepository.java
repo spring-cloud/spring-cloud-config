@@ -100,7 +100,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 						}
 					}
 					catch (Exception e) {
-						this.logger.info("Cannot retrieve resource locations from "
+						this.logger.debug("Cannot retrieve resource locations from "
 								+ candidate.getUri() + ", cause: ("
 								+ e.getClass().getSimpleName() + ") " + e.getMessage());
 						continue;
