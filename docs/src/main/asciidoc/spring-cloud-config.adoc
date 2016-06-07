@@ -87,7 +87,7 @@ Server? The strategy that governs this behaviour is the
 
 * `{application}` maps to "spring.application.name" on the client side;
 
-* `{profile}` maps to "spring.active.profiles" on the client (comma separated list); and 
+* `{profile}` maps to "spring.profiles.active" on the client (comma separated list); and 
 
 * `{label}` which is a server side feature labelling a "versioned" set of config files.
 
