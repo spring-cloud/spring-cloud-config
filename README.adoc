@@ -32,7 +32,7 @@ Start the server:
 
 ----
 $ cd spring-cloud-config-server
-$ mvn spring-boot:run
+$ ./mvnw spring-boot:run
 ----
 
 The server is a Spring Boot application so you can run it from your
