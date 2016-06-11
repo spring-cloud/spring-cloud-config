@@ -27,9 +27,8 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
-
+import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
 /**
@@ -41,13 +40,13 @@ import org.springframework.core.env.StandardEnvironment;
 public class MultipleJGitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
-	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(environment);
+	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment);
 
 	@Before
 	public void init() throws Exception {
 		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
-		repository.setUri(defaultUri);
-		repository.setRepos(createRepositories());
+		this.repository.setUri(defaultUri);
+		this.repository.setRepos(createRepositories());
 	}
 
 	private Map<String, PatternMatchingJGitEnvironmentRepository> createRepositories() throws Exception {
@@ -60,7 +59,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	private PatternMatchingJGitEnvironmentRepository createRepository(String name, String pattern, String uri) {
 		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository();
-		repo.setEnvironment(environment);
+		repo.setEnvironment(this.environment);
 		repo.setName(name);
 		repo.setPattern(new String[] {pattern});
 		repo.setUri(uri);
@@ -69,9 +68,9 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepo() {
-		Environment environment = repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties",
+		assertEquals(this.repository.getUri() + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
 	}
@@ -85,57 +84,79 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	public void defaultRepoNested() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
-		repository.setUri(uri);
-		repository.setSearchPaths(new String[] {"sub"});
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		this.repository.setUri(uri);
+		this.repository.setSearchPaths(new String[] {"sub"});
+		this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/sub/application.yml",
+		assertEquals(this.repository.getUri() + "/sub/application.yml",
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
 	}
 
 	@Test
 	public void defaultRepoBranch() {
-		Environment environment = repository.findOne("bar", "staging", "raw");
+		Environment environment = this.repository.findOne("bar", "staging", "raw");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties",
+		assertEquals(this.repository.getUri() + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
 	}
 
 	@Test
 	public void defaultRepoTag() {
-		Environment environment = repository.findOne("bar", "staging", "foo");
+		Environment environment = this.repository.findOne("bar", "staging", "foo");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties", environment
+		assertEquals(this.repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
 		assertNull("version was not null", environment.getVersion());
 	}
 
 	@Test
 	public void defaultRepoBasedir() {
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(repository.getUri() + "/bar.properties",
+		assertEquals(this.repository.getUri() + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
 	}
 
 	@Test
 	public void mappingRepo() {
-		Environment environment = repository.findOne("test1-svc", "staging", "master");
+		Environment environment = this.repository.findOne("test1-svc", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(getUri("*test1*") + "/test1-svc.properties",
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
 	}
 
+	@Test
+	public void defaultLabel() {
+		this.repository.setDefaultLabel("raw");
+		Environment environment = this.repository.findOne("bar", "staging", null);
+		assertEquals("raw", environment.getLabel());
+		assertEquals(2, environment.getPropertySources().size());
+		assertEquals(this.repository.getUri() + "/bar.properties",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
+	}
+
+	@Test
+	public void mappingRepoWithDefaultLabel() {
+		Environment environment = this.repository.findOne("test1-svc", "staging", null);
+		assertEquals("master", environment.getLabel());
+		assertEquals(2, environment.getPropertySources().size());
+		assertEquals(getUri("*test1*") + "/test1-svc.properties",
+				environment.getPropertySources().get(0).getName());
+		assertVersion(environment);
+	}
+
+
 	private String getUri(String pattern) {
 		String uri = null;
 
-		Map<String, PatternMatchingJGitEnvironmentRepository> repoMappings  = repository.getRepos();
+		Map<String, PatternMatchingJGitEnvironmentRepository> repoMappings  = this.repository.getRepos();
 
 		for (PatternMatchingJGitEnvironmentRepository repo : repoMappings.values()) {
 			String[] mappingPattern = repo.getPattern();

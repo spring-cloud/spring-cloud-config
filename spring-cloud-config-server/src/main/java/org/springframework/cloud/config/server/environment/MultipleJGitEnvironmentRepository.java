@@ -120,6 +120,9 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 				for (JGitEnvironmentRepository candidate : getRepositories(repository,
 						application, profile, label)) {
 					try {
+						if (label==null) {
+							label = candidate.getDefaultLabel();
+						}
 						Environment source = candidate.findOne(application, profile,
 								label);
 						if (source != null) {
@@ -136,6 +139,9 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 		JGitEnvironmentRepository candidate = getRepository(this, application, profile,
 				label);
+		if (label==null) {
+			label = candidate.getDefaultLabel();
+		}
 		if (candidate == this) {
 			return super.findOne(application, profile, label);
 		}
