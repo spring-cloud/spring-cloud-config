@@ -27,6 +27,8 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import static org.springframework.util.StringUtils.hasText;
+
 /**
  * @author Spencer Gibb
  */
@@ -56,10 +58,20 @@ public class ConfigClientWatch implements Closeable, EnvironmentAware {
 	@Scheduled(initialDelayString = "${spring.cloud.config.watch.initialDelay:180000}", fixedDelayString = "${spring.cloud.config.watch.delay:500}")
 	public void watchConfigServer() {
 		if (this.running.get()) {
-			String state = this.environment.getProperty("config.client.state");
-			ConfigClientStateHolder.setState(state);
-			this.refresher.refresh();
+			String newState = this.environment.getProperty("config.client.state");
+            String oldState = ConfigClientStateHolder.getState();
+
+			// only refresh if state has changed
+			if (stateChanged(oldState, newState)) {
+				ConfigClientStateHolder.setState(newState);
+				this.refresher.refresh();
+			}
 		}
+	}
+
+	/* for testing */ boolean stateChanged(String oldState, String newState) {
+		return (!hasText(oldState) && hasText(newState))
+                || (hasText(oldState) && !oldState.equals(newState));
 	}
 
 	@Override
