@@ -33,5 +33,6 @@ public class ConfigClientWatchTests {
         assertThat(watch.stateChanged(null, "1"), is(true));
         assertThat(watch.stateChanged("1", "2"), is(true));
         assertThat(watch.stateChanged("1", null), is(true));
+        assertThat(watch.stateChanged("1", "1"), is(false));
     }
 }
