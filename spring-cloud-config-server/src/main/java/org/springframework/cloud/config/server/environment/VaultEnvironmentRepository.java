@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -45,7 +46,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 	@NotEmpty
 	private String backend = "secret";
 
-	@NotEmpty
+	/** The key in vault shared by all applications. Defaults to application. Set to empty to disable. */
 	private String defaultKey = "application";
 
 	@NotEmpty
@@ -89,8 +90,10 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 	private List<String> findKeys(String application, List<String> profiles) {
 		List<String> keys = new ArrayList<>();
 
-		keys.add(this.defaultKey);
-		addProfiles(keys, this.defaultKey, profiles);
+		if (StringUtils.hasText(this.defaultKey)) {
+			keys.add(this.defaultKey);
+			addProfiles(keys, this.defaultKey, profiles);
+		}
 
 		keys.add(application);
 		addProfiles(keys, application, profiles);
@@ -108,7 +111,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 	}
 
 	private void addProfiles(List<String> contexts, String baseContext,
-			List<String> profiles) {
+							 List<String> profiles) {
 		for (String profile : profiles) {
 			contexts.add(baseContext + this.profileSeparator + profile);
 		}
@@ -143,6 +146,30 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 		}
 
 		return Collections.emptyMap();
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
+
+	public void setPort(int port) {
+		this.port = port;
+	}
+
+	public void setScheme(String scheme) {
+		this.scheme = scheme;
+	}
+
+	public void setBackend(String backend) {
+		this.backend = backend;
+	}
+
+	public void setDefaultKey(String defaultKey) {
+		this.defaultKey = defaultKey;
+	}
+
+	public void setProfileSeparator(String profileSeparator) {
+		this.profileSeparator = profileSeparator;
 	}
 
 	static class VaultResponse {
