@@ -4,15 +4,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Range;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -35,20 +39,25 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 
 	public static final String VAULT_TOKEN = "X-Vault-Token";
 
+	/** Vault host. Defaults to 127.0.0.1. */
 	@NotEmpty
 	private String host = "127.0.0.1";
 
+	/** Vault port. Defaults to 8200. */
 	@Range(min = 1, max = 65535)
 	private int port = 8200;
 
+	/** Vault scheme. Defaults to http. */
 	private String scheme = "http";
 
+	/** Vault backend. Defaults to secret. */
 	@NotEmpty
 	private String backend = "secret";
 
 	/** The key in vault shared by all applications. Defaults to application. Set to empty to disable. */
 	private String defaultKey = "application";
 
+	/** Vault profile separator. Defaults to comma. */
 	@NotEmpty
 	private String profileSeparator = ",";
 
@@ -78,9 +87,15 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 		Environment environment = new Environment(application, profiles, label, null, newState);
 
 		for (String key : keys) {
-			Map<String, String> data = read(key);
-			if (data != null) {
-				environment.add(new PropertySource("vault:"+key, data));
+			// read raw 'data' key from vault
+			String data = read(key);
+			// data is in json format of which, yaml is a superset, so parse
+			final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
+			yaml.setResources(new ByteArrayResource(data.getBytes()));
+			Properties properties = yaml.getObject();
+
+			if (!properties.isEmpty()) {
+				environment.add(new PropertySource("vault:"+key, properties));
 			}
 		}
 
@@ -117,7 +132,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 		}
 	}
 
-	Map<String, String> read(String key) {
+	String read(String key) {
 		String url = String.format("%s://%s:%s/v1/{backend}/{key}", this.scheme,
 				this.host, this.port);
 
@@ -135,7 +150,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 
 			HttpStatus status = response.getStatusCode();
 			if (status == HttpStatus.OK) {
-				return response.getBody().data;
+				return response.getBody().getData();
 			}
 		}
 		catch (HttpStatusCodeException e) {
@@ -145,7 +160,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 			throw e;
 		}
 
-		return Collections.emptyMap();
+		return null;
 	}
 
 	public void setHost(String host) {
@@ -175,7 +190,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 	static class VaultResponse {
 		private String auth;
 
-		private Map<String, String> data;
+		private Object data;
 
 		@JsonProperty("lease_duration")
 		private long leaseDuration;
@@ -196,11 +211,12 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 			this.auth = auth;
 		}
 
-		public Map<String, String> getData() {
-			return data;
+		@JsonRawValue
+		public String getData() {
+			return data == null ? null : data.toString();
 		}
 
-		public void setData(Map<String, String> data) {
+		public void setData(JsonNode data) {
 			this.data = data;
 		}
 
