@@ -67,7 +67,7 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 	/**
 	 * Search paths to use within local working copy. By default searches only the root.
 	 */
-	private String[] searchPaths = DEFAULT_LOCATIONS;
+	private String[] searchPaths = DEFAULT_LOCATIONS.clone();
 
 	private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
