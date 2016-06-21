@@ -18,15 +18,19 @@ package org.springframework.cloud.config.server.environment;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.util.FileUtils;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -144,6 +148,20 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		repository.findOne("foo,bar", "staging", "master");
 		Environment environment = repository.findOne("staging", "foo,bar", "master");
 		assertEquals(3, environment.getPropertySources().size());
+	}
+
+	@Test
+	public void singleElementArrayIndexSearchPath() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("nested-repo");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.run("--spring.cloud.config.server.git.uri=" + uri,
+						"--spring.cloud.config.server.git.searchPaths[0]={application}");
+		JGitEnvironmentRepository repository = this.context
+				.getBean(JGitEnvironmentRepository.class);
+		assertThat(repository.getSearchPaths(), Matchers.arrayContaining("{application}"));
+		assertFalse(Arrays.equals(repository.getSearchPaths(),
+				new JGitEnvironmentRepository(repository.getEnvironment())
+						.getSearchPaths()));
 	}
 
 	@Test
