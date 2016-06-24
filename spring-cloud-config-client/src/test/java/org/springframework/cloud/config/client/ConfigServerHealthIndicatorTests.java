@@ -17,11 +17,16 @@
 package org.springframework.cloud.config.client;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.util.Collections;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
@@ -34,11 +39,11 @@ import org.springframework.core.env.PropertySource;
  */
 public class ConfigServerHealthIndicatorTests {
 
-	private ConfigServicePropertySourceLocator locator = Mockito
-			.mock(ConfigServicePropertySourceLocator.class);
-	private Environment environment = Mockito.mock(Environment.class);
+	private ConfigServicePropertySourceLocator locator =
+			mock(ConfigServicePropertySourceLocator.class);
+	private Environment environment = mock(Environment.class);
 	private ConfigServerHealthIndicator indicator = new ConfigServerHealthIndicator(
-			locator, environment);
+			locator, environment, new ConfigClientHealthProperties());
 
 	@Test
 	public void testDefaultStatus() {
@@ -48,15 +53,32 @@ public class ConfigServerHealthIndicatorTests {
 
 	@Test
 	public void testExceptionStatus() {
-		Mockito.doThrow(new IllegalStateException()).when(locator).locate(Mockito.any(Environment.class));
+		doThrow(new IllegalStateException()).when(locator).locate(any(Environment.class));
 		assertEquals(Status.DOWN, indicator.health().getStatus());
+		verify(locator, times(1)).locate(any(Environment.class));
 	}
 
 	@Test
 	public void testServerUp() {
 		PropertySource<?> source = new MapPropertySource("foo", Collections.<String,Object>emptyMap());
-		Mockito.doReturn(source).when(locator).locate(Mockito.any(Environment.class));
+		doReturn(source).when(locator).locate(any(Environment.class));
 		assertEquals(Status.UP, indicator.health().getStatus());
+		verify(locator, times(1)).locate(any(Environment.class));
 	}
+
+	@Test
+	public void healthIsCached() {
+		PropertySource<?> source = new MapPropertySource("foo", Collections.<String,Object>emptyMap());
+		doReturn(source).when(locator).locate(any(Environment.class));
+
+		// not cached
+		assertEquals(Status.UP, indicator.health().getStatus());
+
+		// cached
+		assertEquals(Status.UP, indicator.health().getStatus());
+
+		verify(locator, times(1)).locate(any(Environment.class));
+	}
+
 
 }

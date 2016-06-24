@@ -1166,6 +1166,10 @@ If you use another form of security you might need to <<custom-rest-template,pro
 `RestTemplate`>> to the `ConfigServicePropertySourceLocator` (e.g. by
 grabbing it in the bootstrap context and injecting one).
 
+==== Health Indicator
+
+The Config Client supplies a Spring Boot Health Indicator that attempts to load configuration from Config Server. The health indicator can be disabled by setting `health.config.enabled=false`. The response is also cached for performance reasons. The default cache time to live is 5 minutes. To change that value set the `health.config.time-to-live` property (in milliseconds).
+
 [[custom-rest-template]]
 ==== Providing A Custom RestTemplate
 
