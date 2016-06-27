@@ -347,6 +347,10 @@ searches the repository for files in the same name as the directory
 path with placeholders (any matching directory is included in the 
 search).
 
+==== Version Control Backend Filesystem Use
+
+WARNING: With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of `config-repo-`. On linux, for example it could be `/tmp/config-repo-<randomid>`. Some operating systems http://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349[routinely clean out] temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting `spring.cloud.config.server.git.basedir` or `spring.cloud.config.server.svn.basedir` to a directory that does not reside in the system temp structure.
+
 ==== File System Backend
 
 There is also a "native" profile in the Config Server that doesn't use
