@@ -1100,6 +1100,21 @@ search).</p>
 </div>
 </div>
 <div class="sect3">
+<h4 id="_version_control_backend_filesystem_use">Version Control Backend Filesystem Use</h4>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of <code>config-repo-</code>. On linux, for example it could be <code>/tmp/config-repo-&lt;randomid&gt;</code>. Some operating systems <a href="http://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349">routinely clean out</a> temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting <code>spring.cloud.config.server.git.basedir</code> or <code>spring.cloud.config.server.svn.basedir</code> to a directory that does not reside in the system temp structure.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
 <h4 id="_file_system_backend">File System Backend</h4>
 <div class="paragraph">
 <p>There is also a "native" profile in the Config Server that doesn&#8217;t use
@@ -2040,7 +2055,7 @@ grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-06-24 23:30:48 UTC
+Last updated 2016-06-27 21:19:05 UTC
 </div>
 </div>
 </body>
