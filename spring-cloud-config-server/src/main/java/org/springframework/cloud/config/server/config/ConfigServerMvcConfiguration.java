@@ -16,6 +16,7 @@
 package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentController;
@@ -43,9 +44,6 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 	private EnvironmentRepository repository;
 
 	@Autowired
-	private ResourceRepository resources;
-
-	@Autowired
 	private ConfigServerProperties server;
 
 	@Autowired(required = false)
@@ -69,8 +67,9 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 	}
 
 	@Bean
-	public ResourceController resourceController() {
-		ResourceController controller = new ResourceController(this.resources,
+	@ConditionalOnBean(ResourceRepository.class)
+	public ResourceController resourceController(ResourceRepository repository) {
+		ResourceController controller = new ResourceController(repository,
 				encrypted());
 		return controller;
 	}

@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -77,6 +78,18 @@ public class ConfigClientAutoConfiguration {
 
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
+		}
+	}
+
+	@Configuration
+	@ConditionalOnClass(ContextRefresher.class)
+	@ConditionalOnBean(ContextRefresher.class)
+	@ConditionalOnProperty(value = "spring.cloud.config.watch.enabled")
+	protected static class ConfigClientWatchConfiguration {
+
+		@Bean
+		public ConfigClientWatch configClientWatch(ContextRefresher contextRefresher) {
+			return new ConfigClientWatch(contextRefresher);
 		}
 	}
 

@@ -5,11 +5,11 @@
 	<parent>
 		<artifactId>spring-cloud-dependencies-parent</artifactId>
 		<groupId>org.springframework.cloud</groupId>
-		<version>1.1.2.BUILD-SNAPSHOT</version>
+		<version>1.1.1.RELEASE</version>
 		<relativePath/>
 	</parent>
 	<artifactId>spring-cloud-config-dependencies</artifactId>
-	<version>1.1.2.BUILD-SNAPSHOT</version>
+	<version>1.1.2.vault.BUILD-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>spring-cloud-config-dependencies</name>
 	<description>Spring Cloud Config Dependencies</description>
@@ -28,22 +28,22 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-config</artifactId>
-			<version>1.1.2.BUILD-SNAPSHOT</version>
+			<version>1.1.2.vault.BUILD-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-config-client</artifactId>
-			<version>1.1.2.BUILD-SNAPSHOT</version>
+			<version>1.1.2.vault.BUILD-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-config-server</artifactId>
-			<version>1.1.2.BUILD-SNAPSHOT</version>
+			<version>1.1.2.vault.BUILD-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-config-monitor</artifactId>
-			<version>1.1.2.BUILD-SNAPSHOT</version>
+			<version>1.1.2.vault.BUILD-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>

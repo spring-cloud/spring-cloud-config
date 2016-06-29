@@ -25,8 +25,7 @@ import org.springframework.cloud.config.environment.PropertySource;
 public class EnvironmentCleaner {
 
 	public Environment clean(Environment value, String workingDir, String uri) {
-		Environment result = new Environment(value.getName(), value.getProfiles(),
-				value.getLabel(), value.getVersion());
+		Environment result = new Environment(value);
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName().replace(workingDir, "");
 			name = name.replace("applicationConfig: [", "");

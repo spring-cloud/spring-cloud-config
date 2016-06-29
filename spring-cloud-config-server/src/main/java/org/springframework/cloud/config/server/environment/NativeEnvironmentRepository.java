@@ -178,7 +178,7 @@ public class NativeEnvironmentRepository
 
 	protected Environment clean(Environment value) {
 		Environment result = new Environment(value.getName(), value.getProfiles(),
-				value.getLabel(), this.version);
+				value.getLabel(), this.version, value.getState());
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName();
 			if (this.environment.getPropertySources().contains(name)) {
