@@ -440,7 +440,10 @@ table of configurable Vault properties.  All properties are prefixed with
 
 |===
 
-With you config server running you can make HTTP requests to the server to retrieve
+All configurable properties can be found in
+`org.springframework.cloud.config.server.environment.VaultEnvironmentRepository`.
+
+With your config server running you can make HTTP requests to the server to retrieve
 values from the Vault backend.  To do this you will need a token for your Vault server.
 
 First place some data in you Vault.  For example
