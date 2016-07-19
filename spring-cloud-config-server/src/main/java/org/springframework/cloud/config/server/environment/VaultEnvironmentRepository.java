@@ -61,16 +61,17 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 	@NotEmpty
 	private String profileSeparator = ",";
 
-	private RestTemplate rest = new RestTemplate();
+	private RestTemplate rest;
 
 	//TODO: move to watchState:String on findOne?
 	private HttpServletRequest request;
 
 	private EnvironmentWatch watch;
 
-	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch) {
+	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch, RestTemplate rest) {
 		this.request = request;
 		this.watch = watch;
+		this.rest = rest;
 	}
 
 	@Override
@@ -89,13 +90,15 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 		for (String key : keys) {
 			// read raw 'data' key from vault
 			String data = read(key);
-			// data is in json format of which, yaml is a superset, so parse
-			final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
-			yaml.setResources(new ByteArrayResource(data.getBytes()));
-			Properties properties = yaml.getObject();
+			if (data != null) {
+				// data is in json format of which, yaml is a superset, so parse
+				final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
+				yaml.setResources(new ByteArrayResource(data.getBytes()));
+				Properties properties = yaml.getObject();
 
-			if (!properties.isEmpty()) {
-				environment.add(new PropertySource("vault:"+key, properties));
+				if (!properties.isEmpty()) {
+					environment.add(new PropertySource("vault:" + key, properties));
+				}
 			}
 		}
 
