@@ -488,9 +488,30 @@ You should see a response similar to this after making the above request.
 }
 ----
 
+===== Multiple Properties Sources
 
+When using Vault you can provide your applications with multiple properties sources.
+For example, assume you have written data to the following paths in Vault.
+
+[source,sh]
+----
+secret/myApp,dev
+secret/myApp
+secret/application,dev
+secret/application
+----
+
+Properties written to `secret/application` are available to
+<<_vault_server,all applications using the Config Server>>.  An
+application with the name `myApp` would have any properties
+written to `secret/myApp` and `secret/application` available to it.
+When `myApp` has the `dev` profile enabled than properties written to
+all of the above paths would be available to it, with properties in
+the first path in the list taking priority over the others.
 
 ==== Sharing Configuration With All Applications
+
+===== File Based Repositories
 
 With file-based (i.e. git, svn and native) repositories, resources
 with file names in `application*` are shared between all client
@@ -508,6 +529,20 @@ recommended that you use an explicit search location that isn't part
 of the server's own configuration. Otherwise the `application*`
 resources in the default search locations are removed because they are
 part of the server.
+
+===== Vault Server
+
+When using Vault as a backend you can share configuration with
+all applications by placing configuration in
+`{backend}/application`.  For example, if you run this Vault command
+
+[source,sh]
+----
+$ vault write secret/application foo=bar baz=bam
+----
+
+All applications using the config server will have the properties
+`foo` and `baz` available to them.
 
 ==== Property Overrides
 
