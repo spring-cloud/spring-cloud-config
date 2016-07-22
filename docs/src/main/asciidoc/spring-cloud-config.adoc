@@ -393,7 +393,125 @@ the default behaviour with no placeholders is the same as adding a
 search location ending with `/{label}/. For example `file:/tmp/config`
 is the same as `file:/tmp/config,file:/tmp/config/{label}`
 
+==== Vault Backend
+
+Spring Cloud Config Server also supports https://www.vaultproject.io[Vault] as a backend.
+****
+Vault is a tool for securely accessing secrets. A secret is anything
+that you want to tightly control access to, such as API keys, passwords,
+certificates, and more. Vault provides a unified interface to any secret,
+while providing tight access control and recording a detailed audit log.
+****
+
+For more information on Vault see the https://www.vaultproject.io/intro/index.html[Vault quickstart guide].
+
+To enable the config server to use a Vault backend you must run your config server
+with the `vault` profile.  For example in your config server's `application.properties`
+you can add `spring.profiles.active=vault`.
+
+By default the config server will assume your Vault server is running at
+`http://127.0.0.1:8200`.  It also will assume that the name of backend
+is `secret` and the key is `application`.  All of these defaults can be
+configured in your config server's `application.properties`.  Below is a
+table of configurable Vault properties.  All properties are prefixed with
+`spring.cloud.config.server.vault`.
+
+
+|===
+|Name |Default Value
+
+|host
+|127.0.0.1
+
+|port
+|8200
+
+|scheme
+|http
+
+|backend
+|secret
+
+|defaultKey
+|application
+
+|profileSeparator
+|,
+
+|===
+
+All configurable properties can be found in
+`org.springframework.cloud.config.server.environment.VaultEnvironmentRepository`.
+
+With your config server running you can make HTTP requests to the server to retrieve
+values from the Vault backend.  To do this you will need a token for your Vault server.
+
+First place some data in you Vault.  For example
+
+[source,sh]
+----
+$ vault write secret/application foo=bar baz=bam
+$ vault write secret/myapp foo=myappsbar
+----
+
+Now make the HTTP request to your config server to retrieve the values.
+
+`$ curl -X "GET" "http://localhost:8888/myapp/default" -H "X-Config-Token: yourtoken"`
+
+You should see a response similar to this after making the above request.
+
+[source,json]
+----
+{
+   "name":"myapp",
+   "profiles":[
+      "default"
+   ],
+   "label":null,
+   "version":null,
+   "state":null,
+   "propertySources":[
+      {
+         "name":"vault:myapp",
+         "source":{
+            "foo":"myappsbar"
+         }
+      },
+      {
+         "name":"vault:application",
+         "source":{
+            "baz":"bam",
+            "foo":"bar"
+         }
+      }
+   ]
+}
+----
+
+===== Multiple Properties Sources
+
+When using Vault you can provide your applications with multiple properties sources.
+For example, assume you have written data to the following paths in Vault.
+
+[source,sh]
+----
+secret/myApp,dev
+secret/myApp
+secret/application,dev
+secret/application
+----
+
+Properties written to `secret/application` are available to
+<<_vault_server,all applications using the Config Server>>.  An
+application with the name `myApp` would have any properties
+written to `secret/myApp` and `secret/application` available to it.
+When `myApp` has the `dev` profile enabled than properties written to
+all of the above paths would be available to it, with properties in
+the first path in the list taking priority over the others.
+
 ==== Sharing Configuration With All Applications
+
+===== File Based Repositories
 
 With file-based (i.e. git, svn and native) repositories, resources
 with file names in `application*` are shared between all client
@@ -411,6 +529,20 @@ recommended that you use an explicit search location that isn't part
 of the server's own configuration. Otherwise the `application*`
 resources in the default search locations are removed because they are
 part of the server.
+
+===== Vault Server
+
+When using Vault as a backend you can share configuration with
+all applications by placing configuration in
+`{backend}/application`.  For example, if you run this Vault command
+
+[source,sh]
+----
+$ vault write secret/application foo=bar baz=bam
+----
+
+All applications using the config server will have the properties
+`foo` and `baz` available to them.
 
 ==== Property Overrides
 
@@ -1020,3 +1152,37 @@ If you use another form of security you might need to provide a
 `RestTemplate` to the `ConfigServicePropertySourceLocator` (e.g. by
 grabbing it in the bootstrap context and injecting one).
 
+==== Vault
+
+When using Vault as a backend to your config server the client will need to
+supply a token for the server to retrieve values from Vault.  This token
+can be provided within the client by setting `spring.cloud.config.token`
+in `bootstrap.yml`.
+
+.bootstrap.yml
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      token: YourVaultToken
+----
+
+=== Vault
+
+==== Nested Keys In Vault
+
+Vault supports the ability to nest keys in a value stored in Vault.  For example
+
+`echo -n '{"appA": {"secret": "appAsecret"}, "bar": "baz"}' | vault write secret/myapp -`
+
+This command will write a JSON object to your Vault.  To access these values in Spring
+you would use the traditional dot(.) annotation.  For example
+
+[source,java]
+----
+@Value("${appA.secret}")
+String name = "World";
+----
+
+The above code would set the `name` variable to `appAsecret`.
