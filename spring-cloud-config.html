@@ -452,6 +452,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#config-client-retry">Config Client Retry</a></li>
 <li><a href="#_locating_remote_configuration_resources">Locating Remote Configuration Resources</a></li>
 <li><a href="#_security_2">Security</a></li>
+<li><a href="#_vault_2">Vault</a></li>
 </ul>
 </li>
 </ul>
@@ -1191,7 +1192,157 @@ is the same as <code>file:/tmp/config,file:/tmp/config/{label}</code></p>
 </div>
 </div>
 <div class="sect3">
+<h4 id="_vault_backend">Vault Backend</h4>
+<div class="paragraph">
+<p>Spring Cloud Config Server also supports <a href="https://www.vaultproject.io">Vault</a> as a backend.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>Vault is a tool for securely accessing secrets. A secret is anything
+that you want to tightly control access to, such as API keys, passwords,
+certificates, and more. Vault provides a unified interface to any secret,
+while providing tight access control and recording a detailed audit log.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>For more information on Vault see the <a href="https://www.vaultproject.io/intro/index.html">Vault quickstart guide</a>.</p>
+</div>
+<div class="paragraph">
+<p>To enable the config server to use a Vault backend you must run your config server
+with the <code>vault</code> profile.  For example in your config server&#8217;s <code>application.properties</code>
+you can add <code>spring.profiles.active=vault</code>.</p>
+</div>
+<div class="paragraph">
+<p>By default the config server will assume your Vault server is running at
+<code><a href="http://127.0.0.1:8200" class="bare">http://127.0.0.1:8200</a></code>.  It also will assume that the name of backend
+is <code>secret</code> and the key is <code>application</code>.  All of these defaults can be
+configured in your config server&#8217;s <code>application.properties</code>.  Below is a
+table of configurable Vault properties.  All properties are prefixed with
+<code>spring.cloud.config.server.vault</code>.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">host</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">127.0.0.1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">port</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8200</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scheme</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">http</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">backend</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">secret</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defaultKey</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">application</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">profileSeparator</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">,</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>All configurable properties can be found in
+<code>org.springframework.cloud.config.server.environment.VaultEnvironmentRepository</code>.</p>
+</div>
+<div class="paragraph">
+<p>With your config server running you can make HTTP requests to the server to retrieve
+values from the Vault backend.  To do this you will need a token for your Vault server.</p>
+</div>
+<div class="paragraph">
+<p>First place some data in you Vault.  For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">$ vault write secret/application foo=bar baz=bam
+$ vault write secret/myapp foo=myappsbar</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now make the HTTP request to your config server to retrieve the values.</p>
+</div>
+<div class="paragraph">
+<p><code>$ curl -X "GET" "http://localhost:8888/myapp/default" -H "X-Config-Token: yourtoken"</code></p>
+</div>
+<div class="paragraph">
+<p>You should see a response similar to this after making the above request.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+   "name":"myapp",
+   "profiles":[
+      "default"
+   ],
+   "label":null,
+   "version":null,
+   "state":null,
+   "propertySources":[
+      {
+         "name":"vault:myapp",
+         "source":{
+            "foo":"myappsbar"
+         }
+      },
+      {
+         "name":"vault:application",
+         "source":{
+            "baz":"bam",
+            "foo":"bar"
+         }
+      }
+   ]
+}</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_multiple_properties_sources">Multiple Properties Sources</h5>
+<div class="paragraph">
+<p>When using Vault you can provide your applications with multiple properties sources.
+For example, assume you have written data to the following paths in Vault.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">secret/myApp,dev
+secret/myApp
+secret/application,dev
+secret/application</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Properties written to <code>secret/application</code> are available to
+<a href="#_vault_server">all applications using the Config Server</a>.  An
+application with the name <code>myApp</code> would have any properties
+written to <code>secret/myApp</code> and <code>secret/application</code> available to it.
+When <code>myApp</code> has the <code>dev</code> profile enabled than properties written to
+all of the above paths would be available to it, with properties in
+the first path in the list taking priority over the others.</p>
+</div>
+</div>
+</div>
+<div class="sect3">
 <h4 id="_sharing_configuration_with_all_applications">Sharing Configuration With All Applications</h4>
+<div class="sect4">
+<h5 id="_file_based_repositories">File Based Repositories</h5>
 <div class="paragraph">
 <p>With file-based (i.e. git, svn and native) repositories, resources
 with file names in <code>application*</code> are shared between all client
@@ -1220,6 +1371,24 @@ part of the server.
 </td>
 </tr>
 </table>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_vault_server">Vault Server</h5>
+<div class="paragraph">
+<p>When using Vault as a backend you can share configuration with
+all applications by placing configuration in
+<code>html5/application</code>.  For example, if you run this Vault command</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">$ vault write secret/application foo=bar baz=bam</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>All applications using the config server will have the properties
+<code>foo</code> and <code>baz</code> available to them.</p>
+</div>
 </div>
 </div>
 <div class="sect3">
@@ -2049,13 +2218,56 @@ works locally and for a user-provided service on Cloud Foundry named
 <code>RestTemplate</code> to the <code>ConfigServicePropertySourceLocator</code> (e.g. by
 grabbing it in the bootstrap context and injecting one).</p>
 </div>
+<div class="sect3">
+<h4 id="_vault">Vault</h4>
+<div class="paragraph">
+<p>When using Vault as a backend to your config server the client will need to
+supply a token for the server to retrieve values from Vault.  This token
+can be provided within the client by setting <code>spring.cloud.config.token</code>
+in <code>bootstrap.yml</code>.</p>
+</div>
+<div class="listingblock">
+<div class="title">bootstrap.yml</div>
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+  cloud:
+    config:
+      token: YourVaultToken</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vault_2">Vault</h3>
+<div class="sect3">
+<h4 id="_nested_keys_in_vault">Nested Keys In Vault</h4>
+<div class="paragraph">
+<p>Vault supports the ability to nest keys in a value stored in Vault.  For example</p>
+</div>
+<div class="paragraph">
+<p><code>echo -n '{"appA": {"secret": "appAsecret"}, "bar": "baz"}' | vault write secret/myapp -</code></p>
+</div>
+<div class="paragraph">
+<p>This command will write a JSON object to your Vault.  To access these values in Spring
+you would use the traditional dot(.) annotation.  For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Value("${appA.secret}")
+String name = "World";</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above code would set the <code>name</code> variable to <code>appAsecret</code>.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-07-19 14:31:42 UTC
+Last updated 2016-07-27 21:00:01 UTC
 </div>
 </div>
 </body>
