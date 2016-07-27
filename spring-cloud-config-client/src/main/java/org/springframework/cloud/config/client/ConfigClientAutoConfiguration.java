@@ -34,6 +34,7 @@ import org.springframework.core.env.Environment;
  * the config server, if there is one.
  *
  * @author Dave Syer
+ * @author Marcos Barbero
  *
  */
 @Configuration
@@ -60,8 +61,8 @@ public class ConfigClientAutoConfiguration {
 
 		@Bean
 		public ConfigServerHealthIndicator configServerHealthIndicator(
-				ConfigServicePropertySourceLocator locator) {
-			return new ConfigServerHealthIndicator(locator);
+				ConfigServicePropertySourceLocator locator, Environment environment) {
+			return new ConfigServerHealthIndicator(locator, environment);
 		}
 	}
 
