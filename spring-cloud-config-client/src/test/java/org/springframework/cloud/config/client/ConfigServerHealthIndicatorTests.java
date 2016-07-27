@@ -29,14 +29,16 @@ import org.springframework.core.env.PropertySource;
 
 /**
  * @author Dave Syer
+ * @author Marcos Barbero
  *
  */
 public class ConfigServerHealthIndicatorTests {
 
 	private ConfigServicePropertySourceLocator locator = Mockito
 			.mock(ConfigServicePropertySourceLocator.class);
+	private Environment environment = Mockito.mock(Environment.class);
 	private ConfigServerHealthIndicator indicator = new ConfigServerHealthIndicator(
-			locator);
+			locator, environment);
 
 	@Test
 	public void testDefaultStatus() {

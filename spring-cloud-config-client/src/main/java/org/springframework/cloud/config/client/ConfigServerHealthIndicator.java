@@ -5,32 +5,28 @@ import java.util.List;
 
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health.Builder;
-import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
 
 /**
  * @author Spencer Gibb
+ * @author Marcos Barbero
  */
 public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
-    private ConfigServicePropertySourceLocator locator;
-	private Environment env;
+	private ConfigServicePropertySourceLocator locator;
+	private Environment environment;
 
-    public ConfigServerHealthIndicator(ConfigServicePropertySourceLocator locator) {
-        this.env = new AbstractEnvironment() {
-        	@Override
-        	public String[] getActiveProfiles() {
-        		return new String[] {"default"};
-        	}
-		};
-        this.locator = locator;
-    }
+	public ConfigServerHealthIndicator(ConfigServicePropertySourceLocator locator,
+			Environment environment) {
+		this.environment = environment;
+		this.locator = locator;
+	}
 
     @Override
     protected void doHealthCheck(Builder builder) throws Exception {
-		PropertySource<?> propertySource = locator.locate(this.env);
+		PropertySource<?> propertySource = locator.locate(this.environment);
 		builder.up();
 		if (propertySource instanceof CompositePropertySource) {
 			List<String> sources = new ArrayList<>();
