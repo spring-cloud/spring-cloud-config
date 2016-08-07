@@ -205,8 +205,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private boolean shouldPull(Git git, Ref ref) throws GitAPIException {
-		return git.status().call().isClean() && ref != null && git.getRepository()
-				.getConfig().getString("remote", "origin", "url") != null;
+		final boolean isWorkingTreeClean = git.status().call().isClean();
+		final String originUrl = git.getRepository().getConfig().getString("remote",
+				"origin", "url");
+		if (!isWorkingTreeClean) {
+			this.logger.info("Cannot pull from remote " + originUrl
+					+ ", the working tree is not clean.");
+		}
+		return isWorkingTreeClean && ref != null && originUrl != null;
 	}
 
 	private boolean shouldTrack(Git git, String label) throws GitAPIException {
@@ -226,9 +232,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			pull.call();
 		}
 		catch (Exception e) {
-			this.logger.warn("Could not pull remote for " + label + " (current ref=" + ref
-					+ "), remote: " + git.getRepository().getConfig().getString("remote",
-							"origin", "url"));
+			this.logger
+					.warn("Could not pull remote for " + label + " (current ref=" + ref
+							+ "), remote: "
+							+ git.getRepository().getConfig().getString("remote",
+									"origin", "url")
+							+ ", cause: (" + e.getClass().getSimpleName() + ") "
+							+ e.getMessage());
 		}
 	}
 
