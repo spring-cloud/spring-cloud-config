@@ -166,6 +166,11 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			return repository;
 		}
 		String key = repository.getUri();
+
+		// cover the case where label is in the uri, but no label was sent with the request
+		if (key.contains("{label}") && label == null) {
+			label = repository.getDefaultLabel();
+		}
 		if (application != null) {
 			key = key.replace("{application}", application);
 		}
