@@ -24,9 +24,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
+import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.Ref;
@@ -220,9 +226,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		boolean shouldPull;
 		Status gitStatus = git.status().call();
 		if (this.isForcePull() && !gitStatus.isClean()) {
-            shouldPull = true;
-            logDirty(gitStatus);
-		} else {
+			shouldPull = true;
+			logDirty(gitStatus);
+		}
+		else {
 			shouldPull = gitStatus.isClean() && ref != null && git.getRepository()
 					.getConfig().getString("remote", "origin", "url") != null;
 		}
