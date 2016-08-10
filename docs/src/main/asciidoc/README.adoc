@@ -65,6 +65,21 @@ The refresh endpoint reports that the "foo" property changed.
 
 == Building
 
+=== JCE
+
+If you are getting an exception due to "Illegal key size" and you
+are using Sun’s JDK, you need to install the Java Cryptography
+Extension (JCE) Unlimited Strength Jurisdiction Policy Files. See
+the following links for more information:
+
+http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html[Java 6 JCE]
+
+http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html[Java 7 JCE]
+
+http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html[Java 8 JCE]
+
+Extract files into JDK/jre/lib/security folder (whichever version of JRE/JDK x64/x86 you are using).
+
 include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/building.adoc[]
 
 == Contributing
