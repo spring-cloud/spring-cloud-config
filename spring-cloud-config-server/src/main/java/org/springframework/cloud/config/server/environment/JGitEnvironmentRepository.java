@@ -20,15 +20,18 @@ import static org.springframework.util.StringUtils.hasText;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
@@ -51,6 +54,7 @@ import com.jcraft.jsch.Session;
  *
  * @author Dave Syer
  * @author Roy Clarkson
+ * @author Marcos Barbero
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -75,6 +79,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
 	private String defaultLabel = DEFAULT_LABEL;
+
+	/**
+	 * Flag to indicate that the repository should force pull. If true discard any local
+	 * changes and take from remote repository.
+	 */
+	private boolean forcePull;
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
@@ -110,6 +120,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	public void setDefaultLabel(String defaultLabel) {
 		this.defaultLabel = defaultLabel;
+	}
+
+	public boolean isForcePull() {
+		return forcePull;
+	}
+
+	public void setForcePull(boolean forcePull) {
+		this.forcePull = forcePull;
 	}
 
 	@Override
@@ -205,8 +223,34 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private boolean shouldPull(Git git, Ref ref) throws GitAPIException {
-		return git.status().call().isClean() && ref != null && git.getRepository()
-				.getConfig().getString("remote", "origin", "url") != null;
+		boolean shouldPull;
+		Status gitStatus = git.status().call();
+		if (this.isForcePull() && !gitStatus.isClean()) {
+			shouldPull = true;
+			logDirty(gitStatus);
+		}
+		else {
+			shouldPull = gitStatus.isClean() && ref != null && git.getRepository()
+					.getConfig().getString("remote", "origin", "url") != null;
+		}
+		return shouldPull;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void logDirty(Status status) {
+		Set<String> dirties = dirties(status.getAdded(), status.getChanged(),
+				status.getRemoved(), status.getMissing(), status.getModified(),
+				status.getConflicting(), status.getUntracked());
+		this.logger.warn(String.format("Dirty files found: %s", dirties));
+	}
+
+	@SuppressWarnings("unchecked")
+	private Set<String> dirties(Set<String>... changes) {
+		Set<String> dirties = new HashSet<>();
+		for (Set<String> files : changes) {
+			dirties.addAll(files);
+		}
+		return dirties;
 	}
 
 	private boolean shouldTrack(Git git, String label) throws GitAPIException {
