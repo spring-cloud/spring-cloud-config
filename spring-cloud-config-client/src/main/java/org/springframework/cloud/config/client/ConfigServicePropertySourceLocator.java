@@ -190,11 +190,23 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		requestFactory.setReadTimeout((60 * 1000 * 3) + 5000); //TODO 3m5s, make configurable?
 		RestTemplate template = new RestTemplate(requestFactory);
 		String password = client.getPassword();
+		String authorization = client.getAuthorization();
+
+                if (password != null && authorization != null) {
+                  throw new IllegalStateException("You must set either 'password' or 'authorization'");
+                }
+
 		if (password != null) {
 			template.setInterceptors(Arrays
 					.<ClientHttpRequestInterceptor> asList(new BasicAuthorizationInterceptor(
 							client.getUsername(), password)));
-		}
+		} else
+		if (authorization != null) {
+			template.setInterceptors(Arrays
+					.<ClientHttpRequestInterceptor>asList(new GenericAuthorization(
+							authorization)));
+                }
+
 		return template;
 	}
 
@@ -220,4 +232,21 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	}
 
+
+	private static class GenericAuthorization implements
+			ClientHttpRequestInterceptor {
+
+		private final String authorizationToken;
+
+		public GenericAuthorization(String authorizationToken) {
+			this.authorizationToken = (authorizationToken == null ? "" : authorizationToken);
+		}
+
+		@Override
+		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+				throws IOException {
+			request.getHeaders().add("Authorization", authorizationToken);
+			return execution.execute(request, body);
+		}
+	}
 }
