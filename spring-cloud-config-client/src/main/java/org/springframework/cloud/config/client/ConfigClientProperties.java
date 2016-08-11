@@ -90,6 +90,11 @@ public class ConfigClientProperties {
 	 */
 	private String token;
 
+	/**
+	 * Authorization token used by the client to connect to the server.
+	 */
+	private String authorization;
+
 	private ConfigClientProperties() {
 	}
 
@@ -184,6 +189,16 @@ public class ConfigClientProperties {
 	public void setToken(String token) {
 		this.token = token;
 	}
+
+	public String getAuthorization() {
+		return this.authorization;
+	}
+
+	public void setAuthorization(String authorization) {
+		this.authorization = authorization;
+	}
+
+
 
 	private String[] extractCredentials() {
 		String[] result = new String[3];
@@ -286,6 +301,7 @@ public class ConfigClientProperties {
 				+ this.profile + ", name=" + this.name + ", label="
 				+ (this.label == null ? "" : this.label) + ", username=" + this.username
 				+ ", password=" + this.password + ", uri=" + this.uri
+				+ ", authorization=" + this.authorization
 				+ ", discovery.enabled=" + this.discovery.enabled + ", failFast="
 				+ this.failFast + ", token=" + this.token + "]";
 	}
