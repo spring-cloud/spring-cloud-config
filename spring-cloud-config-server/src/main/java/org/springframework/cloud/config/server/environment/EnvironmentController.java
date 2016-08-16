@@ -117,7 +117,7 @@ public class EnvironmentController {
 	public ResponseEntity<String> properties(@PathVariable String name,
 			@PathVariable String profiles,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-					throws IOException {
+			throws IOException {
 		return labelledProperties(name, profiles, null, resolvePlaceholders);
 	}
 
@@ -125,7 +125,7 @@ public class EnvironmentController {
 	public ResponseEntity<String> labelledProperties(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-					throws IOException {
+			throws IOException {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToProperties(environment);
@@ -141,7 +141,7 @@ public class EnvironmentController {
 	public ResponseEntity<String> jsonProperties(@PathVariable String name,
 			@PathVariable String profiles,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-					throws Exception {
+			throws Exception {
 		return labelledJsonProperties(name, profiles, null, resolvePlaceholders);
 	}
 
@@ -149,7 +149,7 @@ public class EnvironmentController {
 	public ResponseEntity<String> labelledJsonProperties(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-					throws Exception {
+			throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToMap(environment);
@@ -176,7 +176,7 @@ public class EnvironmentController {
 	public ResponseEntity<String> yaml(@PathVariable String name,
 			@PathVariable String profiles,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-					throws Exception {
+			throws Exception {
 		return labelledYaml(name, profiles, null, resolvePlaceholders);
 	}
 
@@ -185,7 +185,7 @@ public class EnvironmentController {
 	public ResponseEntity<String> labelledYaml(@PathVariable String name,
 			@PathVariable String profiles, @PathVariable String label,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-					throws Exception {
+			throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> result = convertToMap(environment);
@@ -310,10 +310,12 @@ public class EnvironmentController {
 
 	private Map<String, Object> convertToProperties(Environment profiles) {
 
-		// Map of unique keys containing full map of properties for each unique key
-		Map<String, Map<String, Object>> map = new TreeMap<>();
+		// Map of unique keys containing full map of properties for each unique
+		// key
+		Map<String, Map<String, Object>> map = new LinkedHashMap<>();
 		List<PropertySource> sources = new ArrayList<>(profiles.getPropertySources());
 		Collections.reverse(sources);
+		Map<String, Object> combinedMap = new TreeMap<>();
 		for (PropertySource source : sources) {
 
 			@SuppressWarnings("unchecked")
@@ -323,26 +325,30 @@ public class EnvironmentController {
 				if (!key.contains("[")) {
 
 					// Not an array, add unique key to the map
-					map.put(key, value);
+					combinedMap.put(key, value.get(key));
 
 				}
 				else {
 
 					// An existing array might have already been added to the property map
-					// of an unequal size
-					// to the current array. Replace the array key in the current map
-					map.put(key.substring(0, key.indexOf('[') - 1), value);
+					// of an unequal size to the current array. Replace the array key in
+					// the current map.
+					key = key.substring(0, key.indexOf("["));
+					Map<String, Object> filtered = new TreeMap<>();
+					for (String index : value.keySet()) {
+						if (index.startsWith(key + "[")) {
+							filtered.put(index, value.get(index));
+						}
+					}
+					map.put(key, filtered);
 				}
 			}
 
 		}
 
-		// Combine all unique keys into a combined map
-		Map<String, Object> combinedMap = new TreeMap<>();
+		// Combine all unique keys for array values into the combined map
 		for (Entry<String, Map<String, Object>> entry : map.entrySet()) {
-
 			combinedMap.putAll(entry.getValue());
-
 		}
 
 		postProcessProperties(combinedMap);
