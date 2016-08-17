@@ -445,7 +445,9 @@ configure the overrides on the server.
 
 You can change the priority of all overrides in the client to be more
 like default values, allowing applications to supply their own values
-in environment variables or System properties, by setting the flag `
+in environment variables or System properties, by setting the flag
+`spring.cloud.config.overrideNone=true` (default is false) in the
+remote repository.
 
 === Health Indicator
 
