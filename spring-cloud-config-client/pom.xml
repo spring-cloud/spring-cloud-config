@@ -14,7 +14,7 @@
 		<relativePath>..</relativePath>
 	</parent>
 
-	<url>http://spring.io</url>
+	<url>https://spring.io</url>
 	<description>
 		<![CDATA[
       This project is a Spring configuration client.
