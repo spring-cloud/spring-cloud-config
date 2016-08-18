@@ -47,8 +47,7 @@ function retrieve_current_branch() {
       CURRENT_BRANCH=${CURRENT_BRANCH:-HEAD}
     fi
     echo "Current branch is [${CURRENT_BRANCH}]"
-    git checkout ${CURRENT_BRANCH}
-
+    git checkout ${CURRENT_BRANCH} || echo "Failed to check the branch... continuing with the script"
 }
 
 # Switches to the provided value of the release version. We always prefix it with `v`
@@ -178,7 +177,7 @@ function copy_docs_for_branch() {
     if ! git ls-files -i -o --exclude-standard --directory | grep -q ^${file}$; then
         # Not ignored...
         # We want users to access 1.0.0.RELEASE/ instead of 1.0.0.RELEASE/spring-cloud.sleuth.html
-        if [[ "${file}" == "${MAIN_ADOC_VALUE}.html" ]] ; then
+        if [[ ("${file}" == "${MAIN_ADOC_VALUE}.html") || ("${file}" == "${REPO_NAME}.html") ]] ; then
             # We don't want to copy the spring-cloud-sleuth.html
             # we want it to be converted to index.html
             cp -rf $f ${destination}/index.html
@@ -207,7 +206,9 @@ function commit_changes_if_applicable() {
 
 # Switch back to the previous branch and exit block
 function checkout_previous_branch() {
-    git checkout ${CURRENT_BRANCH}
+    # If -version was provided we need to come back to root project
+    cd ${ROOT_FOLDER}
+    git checkout ${CURRENT_BRANCH} || echo "Failed to check the branch... continuing with the script"
     if [ "$dirty" != "0" ]; then git stash pop; fi
     exit 0
 }
