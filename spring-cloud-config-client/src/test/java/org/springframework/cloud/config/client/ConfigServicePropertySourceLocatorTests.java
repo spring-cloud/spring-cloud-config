@@ -13,7 +13,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.springframework.boot.test.EnvironmentTestUtils;
+import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;

@@ -18,8 +18,7 @@ package org.springframework.cloud.config.client;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.springframework.boot.test.EnvironmentTestUtils;
-import org.springframework.cloud.config.client.ConfigClientProperties;
+import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 
