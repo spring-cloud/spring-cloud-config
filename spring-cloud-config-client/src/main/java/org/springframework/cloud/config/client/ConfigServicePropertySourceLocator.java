@@ -192,20 +192,19 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String password = client.getPassword();
 		String authorization = client.getAuthorization();
 
-                if (password != null && authorization != null) {
-                  throw new IllegalStateException("You must set either 'password' or 'authorization'");
-                }
+		if (password != null && authorization != null) {
+			throw new IllegalStateException(
+					"You must set either 'password' or 'authorization'");
+		}
 
 		if (password != null) {
-			template.setInterceptors(Arrays
-					.<ClientHttpRequestInterceptor> asList(new BasicAuthorizationInterceptor(
-							client.getUsername(), password)));
-		} else
-		if (authorization != null) {
-			template.setInterceptors(Arrays
-					.<ClientHttpRequestInterceptor>asList(new GenericAuthorization(
-							authorization)));
-                }
+			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
+					new BasicAuthorizationInterceptor(client.getUsername(), password)));
+		}
+		else if (authorization != null) {
+			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
+					new GenericAuthorization(authorization)));
+		}
 
 		return template;
 	}
