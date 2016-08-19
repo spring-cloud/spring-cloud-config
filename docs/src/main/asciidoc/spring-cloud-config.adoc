@@ -296,6 +296,14 @@ In this example the server clones team-a's config-repo on startup before it
 accepts any requests. All other repositories will not be cloned until 
 configuration from the repository is requested.
 
+NOTE: Setting a repository to be cloned when the Config Server starts up can
+help to identify a misconfigured configuration source (e.g., an invalid
+repository URI) quickly, while the Config Server is starting up. With
+`cloneOnStart` not enabled for a configuration source, the Config Server may
+start successfully with a misconfigured or invalid configuration source and
+not log an error until an application requests configuration from that
+configuration source.
+
 To use HTTP basic authentication on the remote repository add the
 "username" and "password" properties separately (not in the URL), 
 e.g.
