@@ -1032,6 +1032,24 @@ at startup. For example at the top level:</p>
 accepts any requests. All other repositories will not be cloned until
 configuration from the repository is requested.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Setting a repository to be cloned when the Config Server starts up can
+help to identify a misconfigured configuration source (e.g., an invalid
+repository URI) quickly, while the Config Server is starting up. With
+<code>cloneOnStart</code> not enabled for a configuration source, the Config Server may
+start successfully with a misconfigured or invalid configuration source and
+not log an error until an application requests configuration from that
+configuration source.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>To use HTTP basic authentication on the remote repository add the
 "username" and "password" properties separately (not in the URL),
@@ -2270,7 +2288,7 @@ String name = "World";</code></pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-08-19 21:00:06 UTC
+Last updated 2016-08-19 22:43:07 UTC
 </div>
 </div>
 </body>
