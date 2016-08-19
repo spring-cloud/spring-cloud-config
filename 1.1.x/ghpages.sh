@@ -19,6 +19,8 @@ function set_default_props() {
     echo "Path to Maven is [${MAVEN_PATH}]"
     REPO_NAME=${PWD##*/}
     echo "Repo name is [${REPO_NAME}]"
+    SPRING_CLOUD_STATIC_REPO=${SPRING_CLOUD_STATIC_REPO:-git@github.com:spring-cloud/spring-cloud-static.git}
+    echo "Spring Cloud Static repo is [${SPRING_CLOUD_STATIC_REPO}"
 }
 
 # Check if gh-pages exists and docs have been built
@@ -55,6 +57,13 @@ function switch_to_tag() {
     git checkout v${VERSION}
 }
 
+# Build the docs if switch is on
+function build_docs_if_applicable() {
+    if [[ "${BUILD}" == "yes" ]] ; then
+        ./mvnw clean install -P docs -pl docs -DskipTests
+    fi
+}
+
 # Get the name of the `docs.main` property
 # Get whitelisted branches - assumes that a `docs` module is available under `docs` profile
 function retrieve_doc_properties() {
@@ -85,8 +94,19 @@ function stash_changes() {
 # Switch to gh-pages branch to sync it with current branch
 function add_docs_from_target() {
     local DESTINATION_REPO_FOLDER
-    if [[ -z "${DESTINATION}" ]] ; then
+    if [[ -z "${DESTINATION}" && -z "${CLONE}" ]] ; then
         DESTINATION_REPO_FOLDER=${ROOT_FOLDER}
+    elif [[ "${CLONE}" == "yes" ]]; then
+        mkdir -p ${ROOT_FOLDER}/target
+        local clonedStatic=${ROOT_FOLDER}/target/spring-cloud-static
+        if [[ ! -e "${clonedStatic}/.git" ]]; then
+            echo "Cloning Spring Cloud Static to target"
+            git clone ${SPRING_CLOUD_STATIC_REPO} ${clonedStatic}
+        else
+            echo "Spring Cloud Static already cloned - will pull changes"
+            cd ${clonedStatic} && git checkout gh-pages && git pull origin gh-pages
+        fi
+        DESTINATION_REPO_FOLDER=${clonedStatic}/${REPO_NAME}
     else
         if [[ ! -e "${DESTINATION}/.git" ]]; then
             echo "[${DESTINATION}] is not a git repository"
@@ -215,8 +235,10 @@ function checkout_previous_branch() {
 
 # Assert if properties have been properly passed
 function assert_properties() {
-if [[ "${VERSION}" != "" && -z "${DESTINATION}" ]] ; then echo "Version was set but destination was not!"; exit 1;fi
-if [[ "${DESTINATION}" != "" && -z "${VERSION}" ]] ; then echo "Destination was set but version was not!"; exit 1;fi
+echo "VERSION [${VERSION}], DESTINATION [${DESTINATION}], CLONE [${CLONE}]"
+if [[ "${VERSION}" != "" && (-z "${DESTINATION}" && -z "${CLONE}") ]] ; then echo "Version was set but destination / clone was not!"; exit 1;fi
+if [[ ("${DESTINATION}" != "" && "${CLONE}" != "") && -z "${VERSION}" ]] ; then echo "Destination / clone was set but version was not!"; exit 1;fi
+if [[ "${DESTINATION}" != "" && "${CLONE}" == "yes" ]] ; then echo "Destination and clone was set. Pick one!"; exit 1;fi
 }
 
 # Prints the usage
@@ -233,13 +255,19 @@ the script will work in the following manner:
     with that version number will be created in the gh-pages branch. WARNING! No whitelist verification will take place
 - if the destination switch is passed (-d) then the script will check if the provided dir is a git repo and then will
     switch to gh-pages of that repo and copy the generated docs to `docs/<project-name>/<version>`
+- if the destination switch is passed (-d) then the script will check if the provided dir is a git repo and then will
+    switch to gh-pages of that repo and copy the generated docs to `docs/<project-name>/<version>`
 
 USAGE:
 
 You can use the following options:
 
 -v|--version        - the script will apply the whole procedure for a particular library version
--d|--destination    - the root of destination folder where the docs should be copied. E.g. point to spring-cloud-static folder
+-d|--destination    - the root of destination folder where the docs should be copied. You have to use the full path.
+                        E.g. point to spring-cloud-static folder. Can't be used with (-c)
+-b|--build          - will run the standard build process after checking out the branch
+-c|--clone          - will automatically clone the spring-cloud-static repo instead of providing the destination.
+                        Obviously can't be used with (-d)
 
 EOF
 }
@@ -267,6 +295,12 @@ case ${key} in
     DESTINATION="$2"
     shift # past argument
     ;;
+    -b|--build)
+    BUILD="yes"
+    ;;
+    -c|--clone)
+    CLONE="yes"
+    ;;
     -h|--help)
     print_usage
     exit 0
@@ -288,6 +322,7 @@ if [[ -z "${VERSION}" ]] ; then
 else
     switch_to_tag
 fi
+build_docs_if_applicable
 retrieve_doc_properties
 stash_changes
 add_docs_from_target
