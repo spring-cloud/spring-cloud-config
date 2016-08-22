@@ -128,6 +128,21 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void placeholdersNotResolvedInYamlFromSystemPropertiesWhenNotFlagged() throws Exception {
+		whenPlaceholdersSystemProps();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertEquals("a:\n  b:\n    c: ${foo}\n", yaml);
+	}
+
+	@Test
+	public void placeholdersNotResolvedInYamlFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
+		whenPlaceholdersSystemPropsWithDefault();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		// If there is a default value we can't prevent the placeholder being resolved
+		assertEquals("a:\n  b:\n    c: spam\n", yaml);
+	}
+
+	@Test
 	public void arrayInYaml() throws Exception {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("a.b[0]", "c");
@@ -278,6 +293,20 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void placeholdersNotResolvedInPropertiesFromSystemPropertiesWhenNotFlagged() throws Exception {
+		whenPlaceholdersSystemProps();
+		String text = this.controller.properties("foo", "bar", false).getBody();
+		assertEquals("a.b.c: ${foo}", text);
+	}
+
+	@Test
+	public void placeholdersNotResolvedInPropertiesFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
+		whenPlaceholdersSystemPropsWithDefault();
+		String text = this.controller.properties("foo", "bar", false).getBody();
+		assertEquals("a.b.c: ${foo:spam}", text);
+	}
+
+	@Test
 	public void placeholdersResolvedInJson() throws Exception {
 		whenPlaceholders();
 		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
@@ -298,6 +327,21 @@ public class EnvironmentControllerTests {
 		assertEquals("{\"a\":{\"b\":{\"c\":\"${foo}\"}}}", json);
 	}
 
+	@Test
+	public void placeholdersNotResolvedInJsonFromSystemPropertiesWhenNotFlagged() throws Exception {
+		whenPlaceholdersSystemProps();
+		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		assertEquals("{\"a\":{\"b\":{\"c\":\"${foo}\"}}}", json);
+	}
+
+	@Test
+	public void placeholdersResolvedInJsonFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
+		whenPlaceholdersSystemPropsWithDefault();
+		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		// If there is a default value we can't prevent the placeholder being resolved
+		assertEquals("{\"a\":{\"b\":{\"c\":\"spam\"}}}", json);
+	}
+
 	private void whenPlaceholders() {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("foo", "bar");
@@ -309,6 +353,12 @@ public class EnvironmentControllerTests {
 	private void whenPlaceholdersSystemProps() {
 		System.setProperty("foo", "bar");
 		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "${foo}")));
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+	}
+
+	private void whenPlaceholdersSystemPropsWithDefault() {
+		System.setProperty("foo", "bar");
+		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "${foo:spam}")));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
 	}
 
