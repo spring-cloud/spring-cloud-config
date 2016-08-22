@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,6 +62,11 @@ public class EnvironmentControllerTests {
 	@Before
 	public void init() {
 		this.controller = new EnvironmentController(this.repository);
+	}
+
+	@After
+	public void clean() {
+		System.clearProperty("foo");
 	}
 
 	@Test
@@ -105,6 +111,20 @@ public class EnvironmentControllerTests {
 		whenPlaceholders();
 		String yaml = this.controller.yaml("foo", "bar", true).getBody();
 		assertEquals("a:\n  b:\n    c: bar\nfoo: bar\n", yaml);
+	}
+
+	@Test
+	public void placeholdersNotResolvedInYaml() throws Exception {
+		whenPlaceholders();
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertEquals("a:\n  b:\n    c: ${foo}\nfoo: bar\n", yaml);
+	}
+
+	@Test
+	public void placeholdersNotResolvedInYamlFromSystemProperties() throws Exception {
+		whenPlaceholdersSystemProps();
+		String yaml = this.controller.yaml("foo", "bar", true).getBody();
+		assertEquals("a:\n  b:\n    c: ${foo}\n", yaml);
 	}
 
 	@Test
@@ -244,16 +264,50 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void placeholdersNotResolvedInProperties() throws Exception {
+		whenPlaceholders();
+		String text = this.controller.properties("foo", "bar", false).getBody();
+		assertEquals("a.b.c: ${foo}\nfoo: bar", text);
+	}
+
+	@Test
+	public void placeholdersNotResolvedInPropertiesFromSystemProperties() throws Exception {
+		whenPlaceholdersSystemProps();
+		String text = this.controller.properties("foo", "bar", true).getBody();
+		assertEquals("a.b.c: ${foo}", text);
+	}
+
+	@Test
 	public void placeholdersResolvedInJson() throws Exception {
 		whenPlaceholders();
 		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
 		assertEquals("{\"a\":{\"b\":{\"c\":\"bar\"}},\"foo\":\"bar\"}", json);
 	}
 
+	@Test
+	public void placeholdersNotResolvedInJson() throws Exception {
+		whenPlaceholders();
+		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		assertEquals("{\"a\":{\"b\":{\"c\":\"${foo}\"}},\"foo\":\"bar\"}", json);
+	}
+
+	@Test
+	public void placeholdersNotResolvedInJsonFromSystemProperties() throws Exception {
+		whenPlaceholdersSystemProps();
+		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
+		assertEquals("{\"a\":{\"b\":{\"c\":\"${foo}\"}}}", json);
+	}
+
 	private void whenPlaceholders() {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("foo", "bar");
 		this.environment.add(new PropertySource("one", map));
+		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "${foo}")));
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+	}
+
+	private void whenPlaceholdersSystemProps() {
+		System.setProperty("foo", "bar");
 		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "${foo}")));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
 	}
