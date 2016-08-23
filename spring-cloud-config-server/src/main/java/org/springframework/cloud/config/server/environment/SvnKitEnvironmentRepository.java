@@ -179,7 +179,15 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 
 	private File getSvnPath(File workingDirectory, String label) {
 		// use label as path relative to repository root
-		return new File(workingDirectory, label);
+		// if it doesn't exists check branches and then tags folders
+		File svnPath = new File(workingDirectory, label);
+		if(!svnPath.exists()) {
+			svnPath = new File(workingDirectory, "branches" + File.separator + label);
+		}
+		if(!svnPath.exists()) {
+			svnPath = new File(workingDirectory, "tags" + File.separator + label);
+		}
+		return svnPath; 
 	}
 
 }
