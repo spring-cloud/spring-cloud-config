@@ -104,6 +104,15 @@ public class SVNKitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void branch_no_folder() {
+		Environment environment = this.repository.findOne("bar", "staging",
+				"demobranch");
+		assertEquals(1, environment.getPropertySources().size());
+		assertTrue(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties"));
+	}
+
+	@Test
 	public void vanilla_with_update() {
 		this.findOne();
 		Environment environment = this.findOne();

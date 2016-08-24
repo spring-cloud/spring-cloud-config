@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.environment;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -141,6 +142,20 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		repository.findOne("bar", "staging", "unknownlabel");
 		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
 		assertEquals(0, environment.getPropertySources().size());
+	}
+
+	@Test
+	public void branchLabel() throws Exception {
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
+				"src/test/resources/svn-config-repo", "target/config");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.profiles("subversion")
+				.run("--spring.cloud.config.server.svn.uri=" + uri);
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		Environment environment = repository.findOne("bar", "staging", "demobranch");
+		assertTrue(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties"));
+		assertEquals(1, environment.getPropertySources().size());
 	}
 
 	@Configuration
