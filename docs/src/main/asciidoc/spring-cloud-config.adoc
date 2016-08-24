@@ -301,7 +301,7 @@ help to identify a misconfigured configuration source (e.g., an invalid
 repository URI) quickly, while the Config Server is starting up. With
 `cloneOnStart` not enabled for a configuration source, the Config Server may
 start successfully with a misconfigured or invalid configuration source and
-not log an error until an application requests configuration from that
+not detect an error until an application requests configuration from that
 configuration source.
 
 To use HTTP basic authentication on the remote repository add the
