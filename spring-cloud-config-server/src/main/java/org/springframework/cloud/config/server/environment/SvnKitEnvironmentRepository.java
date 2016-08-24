@@ -183,9 +183,9 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		File svnPath = new File(workingDirectory, label);
 		if(!svnPath.exists()) {
 			svnPath = new File(workingDirectory, "branches" + File.separator + label);
-		}
-		if(!svnPath.exists()) {
-			svnPath = new File(workingDirectory, "tags" + File.separator + label);
+			if(!svnPath.exists()) {
+				svnPath = new File(workingDirectory, "tags" + File.separator + label);
+			}
 		}
 		return svnPath; 
 	}
