@@ -85,12 +85,14 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 							result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
 							result.getLabel(), result.getVersion()));
 
-					for (PropertySource source : result.getPropertySources()) {
-						@SuppressWarnings("unchecked")
-						Map<String, Object> map = (Map<String, Object>) source
-								.getSource();
-						composite.addPropertySource(new MapPropertySource(source
-								.getName(), map));
+					if (result.getPropertySources() != null) { // result.getPropertySources() can be null if using xml
+						for (PropertySource source : result.getPropertySources()) {
+							@SuppressWarnings("unchecked")
+							Map<String, Object> map = (Map<String, Object>) source
+									.getSource();
+							composite.addPropertySource(new MapPropertySource(source
+									.getName(), map));
+						}
 					}
 					return composite;
 				}
