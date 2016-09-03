@@ -26,12 +26,21 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FileUtils;
 import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
@@ -48,6 +57,7 @@ import org.springframework.util.StreamUtils;
 /**
  * @author Dave Syer
  * @author Roy Clarkson
+ * @author Daniel Lavoie
  */
 public class JGitEnvironmentRepositoryIntegrationTests {
 
@@ -106,6 +116,67 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		environment = repository.findOne("bar", "staging", "master");
 		assertEquals("foo",
 				environment.getPropertySources().get(0).getSource().get("foo"));
+	}
+
+	/**
+	 * Tests a special use case where the remote repository has been updated with a forced
+	 * push conflicting with the local repo of the Config Server. The Config Server has to
+	 * reset hard on the new reference because a simple pull operation could result in a
+	 * conflicting local repository.
+	 */
+	@Test
+	public void pullDirtyRepo() throws Exception {
+		ConfigServerTestUtils.prepareLocalRepo();
+		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
+
+		// Create a remote bare repository.
+		Repository remote = ConfigServerTestUtils.prepareBareRemote();
+
+		Git git = Git.open(ResourceUtils.getFile(uri).getAbsoluteFile());
+		StoredConfig config = git.getRepository().getConfig();
+		config.setString("remote", "origin", "url",
+				remote.getDirectory().getAbsolutePath());
+		config.setString("remote", "origin", "fetch",
+				"+refs/heads/*:refs/remotes/origin/*");
+		config.save();
+
+		// Pushes the raw branch to remote repository.
+		git.push().call();
+
+		String commitToRevertBeforePull = git.log().setMaxCount(1).call().iterator()
+				.next().getName();
+
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.run("--spring.cloud.config.server.git.uri=" + uri);
+
+		JGitEnvironmentRepository repository = this.context
+				.getBean(JGitEnvironmentRepository.class);
+
+		// Fetches the repository for the first time.
+		repository.getLocations("bar", "test", "raw");
+
+		// Resets to the original commit.
+		git.reset().setMode(ResetType.HARD).setRef("master").call();
+
+		// Generate a conflicting commit who will be forced on the origin.
+		Path applicationFilePath = Paths
+				.get(ResourceUtils.getFile(uri).getAbsoluteFile() + "/application.yml");
+
+		Files.write(applicationFilePath,
+				Arrays.asList("info:", "  foo: bar", "raw: false"),
+				StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING);
+		git.add().addFilepattern(".").call();
+		git.commit().setMessage("Conflicting commit.").call();
+		git.push().setForce(true).call();
+
+		// Reset to the raw branch.
+		git.reset().setMode(ResetType.HARD).setRef(commitToRevertBeforePull).call();
+
+		// Triggers the repository refresh.
+		repository.getLocations("bar", "test", "raw");
+
+		Assert.assertTrue("Local repository is not cleaned after retreiving resources.",
+				git.status().call().isClean());
 	}
 
 	@Test
