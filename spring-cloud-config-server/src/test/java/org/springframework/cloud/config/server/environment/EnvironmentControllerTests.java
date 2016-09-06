@@ -138,8 +138,7 @@ public class EnvironmentControllerTests {
 	public void placeholdersNotResolvedInYamlFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
-		// If there is a default value we can't prevent the placeholder being resolved
-		assertEquals("a:\n  b:\n    c: spam\n", yaml);
+		assertEquals("a:\n  b:\n    c: ${foo:spam}\n", yaml);
 	}
 
 	@Test
@@ -338,8 +337,7 @@ public class EnvironmentControllerTests {
 	public void placeholdersResolvedInJsonFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
 		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
-		// If there is a default value we can't prevent the placeholder being resolved
-		assertEquals("{\"a\":{\"b\":{\"c\":\"spam\"}}}", json);
+		assertEquals("{\"a\":{\"b\":{\"c\":\"${foo:spam}\"}}}", json);
 	}
 
 	private void whenPlaceholders() {

@@ -31,17 +31,13 @@ import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,14 +58,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Rafal Zukowski
  * @author Ivan Corrales Solera
  * @author Daniel Frey
+ * @author Ryan Lynch
  *
  */
 @RestController
 @RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
-
-	private static final String MAP_PREFIX = "map";
-
+	
 	private EnvironmentRepository repository;
 	private ObjectMapper objectMapper;
 
@@ -208,23 +203,134 @@ public class EnvironmentController {
 		return getSuccess(yaml);
 	}
 
-	private Map<String, Object> convertToMap(Environment input) throws BindException {
+	/**
+	 * Converts the environment properties into a Map
+	 * @param input The environment from which the properties will be converted to a map
+	 * @return A map of the properties
+	 */
+	private Map<String, Object> convertToMap(Environment input) {
 		Map<String, Object> target = new LinkedHashMap<>();
-		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<>(
-				target);
 		Map<String, Object> data = convertToProperties(input);
-		LinkedHashMap<String, Object> properties = new LinkedHashMap<>();
-		for (String key : data.keySet()) {
-			properties.put(MAP_PREFIX + "." + key, data.get(key));
+		for(String key: data.keySet()) {
+			Object value = data.get(key);
+			recursiveKeyValueToMap(target, key, value);
 		}
-		addArrays(target, properties);
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MapPropertySource("properties", properties));
-		factory.setPropertySources(propertySources);
-		factory.bindPropertiesToTarget();
-		@SuppressWarnings("unchecked")
-		Map<String, Object> result = (Map<String, Object>) target.get(MAP_PREFIX);
-		return result == null ? new LinkedHashMap<String, Object>() : result;
+		return target;
+	}
+
+	private void recursiveKeyValueToMap(Map<String, Object> parent, String key, Object value) {
+		//will hold the root of the key if nested and/or part of an array
+		//for example foo.bar->rootKey=foo  foo[1].bar->rootKey=foo
+		String rootKey;
+
+		//determine if we have a nested key and assign rootKey variable, will nested will cause recursion to happen
+		int periodIndex = key.indexOf('.');
+		if(periodIndex > 0) {
+			rootKey = key.substring(0, periodIndex);
+		}else{
+			rootKey = key;
+		}
+
+		//if rootKey key is an array then remove array annotation from  rootKey value
+		// and also determine index position
+		// if there is an array then arrayIndexPosition will be 0 or greater
+		// also note that for it to be an array it must be proper
+		// in that it ends with an [INTERGER] and the number must be a 0 or greater
+		int arrayIndexPosition = -1;
+		int beginBracketIndex = rootKey.indexOf('[');
+		if (beginBracketIndex > 0) {
+			int endBracketIndex = rootKey.indexOf(']');
+			if (endBracketIndex > 0) {
+				//get position
+				String positionStr = rootKey.substring(beginBracketIndex + 1, endBracketIndex);
+				try {
+					int tempPosition = Integer.parseInt(positionStr);
+					if (tempPosition >= 0) {
+						//we have a live one, treat as an array
+						arrayIndexPosition = tempPosition;
+						//assign the proper rootKey
+						rootKey = rootKey.substring(0,beginBracketIndex);
+					}
+				} catch (NumberFormatException nfe) {
+					//do nothing, don't treat this as an array. Should we error out?
+				}
+			}
+		}
+
+		//get the existing value from the parent if it exists
+		Object existingRootFromParent = parent.get(rootKey);
+
+		//now work on this
+		if(periodIndex > 0) { //if key contains a period after element 0, then we will need to act recursive
+			Map<String, Object> newParent = null; //this will hold the new parent we will pass back into the recursive call
+			if (arrayIndexPosition > -1) {
+				//we have an array item so lets to that logic
+				//get the rootKey item, without the array part if it exists.
+				if (existingRootFromParent != null && existingRootFromParent instanceof ArrayList) {
+					//we have an existing new parent and it is an array
+					//just add (or replace) the new item in the array
+					@SuppressWarnings("unchecked")
+					ArrayList<Map<String, Object>> listItem = (ArrayList<Map<String, Object>>) existingRootFromParent;
+					listItem.ensureCapacity(arrayIndexPosition);
+					try {
+						newParent = listItem.get(arrayIndexPosition);
+					}catch(IndexOutOfBoundsException ioobe) {
+						//do nothing
+					}
+					if (newParent == null) {
+						newParent = new TreeMap<>();
+						listItem.add(arrayIndexPosition, newParent);
+					}
+					parent.put(rootKey, listItem);
+				}
+				if (newParent == null) {
+					//an existing new parent was not found or it isn't an array, create new or replace
+					newParent = new TreeMap<>();
+					@SuppressWarnings("unchecked")
+					ArrayList<Map<String, Object>> listItem = new ArrayList<>(arrayIndexPosition > 10 ? arrayIndexPosition : 10);
+					listItem.add(arrayIndexPosition, newParent);
+					parent.put(rootKey, listItem);
+				}
+
+			} else if (existingRootFromParent != null && existingRootFromParent instanceof TreeMap) {
+				//this is not an array and existing value is a hashmap so just use it.
+				@SuppressWarnings("unchecked")
+				Map<String, Object> newParentTemp = (Map<String, Object>) existingRootFromParent;
+				newParent = newParentTemp; //just to avoid compiler warnings
+				parent.put(rootKey, newParent);
+			} else {
+				//no existing value so create a new one
+				newParent = new TreeMap<>();
+				parent.put(rootKey, newParent);
+			}
+
+			//okay, prep work done, lets get recursive!!!
+			//first get new key which is the part of the key after the first period
+			String newKey = key.substring(periodIndex + 1);
+			recursiveKeyValueToMap(newParent, newKey, value);
+
+		}else {
+			//we have reached the top of the recursion calls since the key no longer (or never had) a period
+			if(arrayIndexPosition >= 0) {
+				//we have an array
+				//first make sure if the parent item exists, is it an array already?
+				ArrayList<Object> listItem;
+				if(existingRootFromParent != null && existingRootFromParent instanceof ArrayList) {
+					@SuppressWarnings("unchecked")
+					ArrayList<Object> listItemTemp = (ArrayList<Object>)existingRootFromParent;
+					listItem = listItemTemp; //just to avoid compiler warnings
+					listItem.ensureCapacity(arrayIndexPosition);
+				}else{
+					//existing item either doesn't exist, create a new array (possibily overwriting prior value)
+					listItem = new ArrayList<>(arrayIndexPosition > 10 ? arrayIndexPosition : 10);
+				}
+				listItem.add(arrayIndexPosition, value);
+				parent.put(rootKey, listItem);
+			}else{
+				//no array, just put the value attached to the key.
+				parent.put(rootKey, value);
+			}
+		}
 	}
 
 	@ExceptionHandler(NoSuchLabelException.class)
