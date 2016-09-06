@@ -15,6 +15,9 @@
  */
 package org.springframework.cloud.config.server.test;
 
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.RepositoryCache.FileKey;
+import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
@@ -24,8 +27,22 @@ import java.io.IOException;
 
 /**
  * @author Dave Syer
+ * @author Daniel Lavoie
  */
 public class ConfigServerTestUtils {
+	public static Repository prepareBareRemote() throws IOException {
+		// Create a folder in the temp folder that will act as the remote repository
+		File remoteDir = File.createTempFile("remote", "");
+		remoteDir.delete();
+		remoteDir.mkdirs();
+
+		// Create a bare repository
+		FileKey fileKey = FileKey.exact(remoteDir, FS.DETECTED);
+		Repository remoteRepo = fileKey.open(false);
+		remoteRepo.create(true);
+
+		return remoteRepo;
+	}
 
 	public static String prepareLocalRepo() throws IOException {
 		return prepareLocalRepo("./", "target/repos", "config-repo", "target/config");
