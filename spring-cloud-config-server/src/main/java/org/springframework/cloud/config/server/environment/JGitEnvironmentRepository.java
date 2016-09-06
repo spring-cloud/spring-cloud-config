@@ -24,14 +24,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.ResetCommand;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
@@ -55,6 +59,7 @@ import com.jcraft.jsch.Session;
  * @author Dave Syer
  * @author Roy Clarkson
  * @author Marcos Barbero
+ * @author Daniel Lavoie
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -166,6 +171,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			Ref ref = checkout(git, label);
 			if (shouldPull(git, ref)) {
 				pull(git, label, ref);
+
+				if (!isClean(git)) {
+					logger.warn("The local repository is dirty. Reseting it to origin/"
+							+ label + ".");
+
+					fetch(git, label, "origin");
+					resetHard(git, label, "refs/remotes/origin/" + label);
+				}
 			}
 			return ref;
 		}
@@ -262,6 +275,36 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private boolean shouldTrack(Git git, String label) throws GitAPIException {
 		return isBranch(git, label) && !isLocalBranch(git, label);
+	}
+
+	private void fetch(Git git, String label, String remote) {
+		FetchCommand fetch = git.fetch().setRemote(remote);
+		setTimeout(fetch);
+		try {
+			if (hasText(getUsername())) {
+				setCredentialsProvider(fetch);
+			}
+
+			fetch.call();
+		}
+		catch (Exception ex) {
+			this.logger.warn("Could not fetch remote for " + label + " remote: " + git
+					.getRepository().getConfig().getString("remote", "origin", "url"));
+		}
+	}
+
+	private void resetHard(Git git, String label, String ref) {
+		ResetCommand reset = git.reset();
+		reset.setRef(ref);
+		reset.setMode(ResetType.HARD);
+		try {
+			reset.call();
+		}
+		catch (Exception ex) {
+			this.logger.warn("Could not reset to remote for " + label + " (current ref="
+					+ ref + "), remote: " + git.getRepository().getConfig()
+							.getString("remote", "origin", "url"));
+		}
 	}
 
 	/**
@@ -367,6 +410,20 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private void setTimeout(TransportCommand<?, ?> pull) {
 		pull.setTimeout(this.timeout);
+	}
+
+	private boolean isClean(Git git) {
+		StatusCommand status = git.status();
+		try {
+			return status.call().isClean();
+		}
+		catch (Exception e) {
+			this.logger
+					.warn("Could not execute status command on local repository. Cause: ("
+							+ e.getClass().getSimpleName() + ") " + e.getMessage());
+
+			return false;
+		}
 	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
