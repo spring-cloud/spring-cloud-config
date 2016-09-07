@@ -3,6 +3,7 @@
 :githubmaster: {github}/tree/master
 :docslink: {githubmaster}/docs/src/main/asciidoc
 :toc:
+:nofooter:
 
 include::intro.adoc[]
 
@@ -31,8 +32,8 @@ public class ConfigServer {
 
 Like all Spring Boot apps it runs on port 8080 by default, but you
 can switch it to the conventional port 8888 in various ways. The
-easiest, which also sets a default configuration repository, 
-is by launching it with `spring.config.name=configserver` (there 
+easiest, which also sets a default configuration repository,
+is by launching it with `spring.config.name=configserver` (there
 is a `configserver.yml` in the Config Server jar). Another is
 to use your own `application.properties`, e.g.
 
@@ -46,12 +47,12 @@ spring.cloud.config.server.git.uri: file://${user.home}/config-repo
 where `${user.home}/config-repo` is a git repository containing
 YAML and properties files.
 
-NOTE: in Windows you need an extra "/" in the file URL if it is 
+NOTE: in Windows you need an extra "/" in the file URL if it is
 absolute with a drive prefix, e.g. `file:///${user.home}/config-repo`.
 
 [TIP]
 ====
-Here's a recipe for creating the git repository in the example 
+Here's a recipe for creating the git repository in the example
 above:
 
 ----
@@ -66,7 +67,7 @@ $ git commit -m "Add application.properties"
 ====
 
 WARNING: using the local filesystem for your git repository is
-intended for testing only. Use a server to host your 
+intended for testing only. Use a server to host your
 configuration repositories in production.
 
 WARNING: the initial clone of your configuration repository will
@@ -87,7 +88,7 @@ Server? The strategy that governs this behaviour is the
 
 * `{application}` maps to "spring.application.name" on the client side;
 
-* `{profile}` maps to "spring.profiles.active" on the client (comma separated list); and 
+* `{profile}` maps to "spring.profiles.active" on the client (comma separated list); and
 
 * `{label}` which is a server side feature labelling a "versioned" set of config files.
 
@@ -112,7 +113,7 @@ spring:
 ----
 
 (as usual with a Spring Boot application, these properties could also
-be set as environment variables or command line arguments). 
+be set as environment variables or command line arguments).
 
 If the repository is file-based, the server will create an
 `Environment` from `application.yml` (shared between all clients), and
@@ -265,7 +266,7 @@ In this example the server searches for config files in the top level
 and in the "foo/" sub-directory and also any sub-directory whose name
 begins with "bar".
 
-By default the server clones remote repositories when configuration 
+By default the server clones remote repositories when configuration
 is first requested. The server can be configured to clone the repositories
 at startup. For example at the top level:
 
@@ -289,11 +290,11 @@ spring:
             team-c:
                 pattern: team-c-*
                 uri: http://git/team-a/config-repo.git
-                
+
 ----
 
-In this example the server clones team-a's config-repo on startup before it 
-accepts any requests. All other repositories will not be cloned until 
+In this example the server clones team-a's config-repo on startup before it
+accepts any requests. All other repositories will not be cloned until
 configuration from the repository is requested.
 
 NOTE: Setting a repository to be cloned when the Config Server starts up can
@@ -305,7 +306,7 @@ not detect an error until an application requests configuration from that
 configuration source.
 
 To use HTTP basic authentication on the remote repository add the
-"username" and "password" properties separately (not in the URL), 
+"username" and "password" properties separately (not in the URL),
 e.g.
 
 [source,yaml]
@@ -352,8 +353,8 @@ spring:
 ----
 
 searches the repository for files in the same name as the directory
-(as well as the top level). Wildcards are also valid in a search 
-path with placeholders (any matching directory is included in the 
+(as well as the top level). Wildcards are also valid in a search
+path with placeholders (any matching directory is included in the
 search).
 
 ==== Version Control Backend Filesystem Use
@@ -367,7 +368,7 @@ Git, but just loads the config files from the local classpath or file
 system (any static URL you want to point to with
 "spring.cloud.config.server.native.searchLocations"). To use the
 native profile just launch the Config Server with
-"spring.profiles.active=native". 
+"spring.profiles.active=native".
 
 NOTE: Remember to use the `file:` prefix for file resources (the
 default without a prefix is usually the classpath). Just as with any
@@ -383,7 +384,7 @@ property sources present in the server are removed before being sent
 to the client.
 
 TIP: A filesystem backend is great for getting started quickly and
-for testing. To use it in production you need to be sure that the 
+for testing. To use it in production you need to be sure that the
 file system is reliable, and shared across all instances of the
 Config Server.
 
@@ -622,7 +623,7 @@ You can disable the Health Indicator by setting `spring.cloud.config.server.heal
 You are free to secure your Config Server in any way that makes sense
 to you (from physical network security to OAuth2 bearer
 tokens), and Spring Security and Spring Boot make it easy to do pretty
-much anything. 
+much anything.
 
 To use the default Spring Boot configured HTTP Basic security, just
 include Spring Security on the classpath (e.g. through
@@ -699,14 +700,14 @@ are special characters ('+' is particularly tricky).
 
 Take the encrypted value and add the `{cipher}` prefix before you put
 it in the YAML or properties file, and before you commit and push it
-to a remote, potentially insecure store. 
+to a remote, potentially insecure store.
 
 The `/encrypt` and `/decrypt` endpoints also both accept paths of the
 form `/*/{name}/{profiles}` which can be used to control cryptography
 per application (name) and profile when clients call into the main
 Environment resource.
 
-NOTE: to control the cryptography in this granular way you must also 
+NOTE: to control the cryptography in this granular way you must also
 provide a `@Bean` of type `TextEncryptorLocator` that creates a
 different encryptor per name and profiles. The one that is provided
 by default does not do this (so all encryptions use the same key).
@@ -747,8 +748,8 @@ PEM-encoded text value (in `encrypt.key`), or via a keystore (e.g. as
 created by the `keytool` utility that comes with the JDK). The
 keystore properties are `encrypt.keyStore.\*` with `*` equal to
 
-* `location` (a `Resource` location), 
-* `password` (to unlock the keystore) and 
+* `location` (a `Resource` location),
+* `password` (to unlock the keystore) and
 * `alias` (to identify which key in the store is to be
 used).
 
@@ -1082,7 +1083,7 @@ an Exception.
 === Config Client Retry
 
 If you expect that the config server may occasionally be unavailable when
-your app starts, you can ask it to keep trying after a failure. First you need 
+your app starts, you can ask it to keep trying after a failure. First you need
 to set `spring.cloud.config.failFast=true`, and then you need to add
 `spring-retry` and `spring-boot-starter-aop` to your classpath. The default
 behaviour is to retry 6 times with an initial backoff interval of 1000ms and an
@@ -1105,10 +1106,10 @@ All of them can be overridden by setting `spring.cloud.config.\*`
 (where `*` is "name", "profile" or "label"). The "label" is useful for
 rolling back to previous versions of configuration; with the default
 Config Server implementation it can be a git label, branch name or
-commit id. Label can also be provided as a comma-separated list, in 
+commit id. Label can also be provided as a comma-separated list, in
 which case the items in the list are tried on-by-one until one succeeds.
 This can be useful when working on a feature branch, for instance,
-when you might want to align the config label with your branch, but 
+when you might want to align the config label with your branch, but
 make it optional (e.g. `spring.cloud.config.label=myfeature,develop`).
 
 === Security
