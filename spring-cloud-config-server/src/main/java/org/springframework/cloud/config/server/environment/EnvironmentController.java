@@ -300,12 +300,12 @@ public class EnvironmentController {
 		 * 2) A TreeMap -  Example: foo.bar.hello.world and we are again process the "hello" portion of the property.
 		 * 			Here the parent "bar" is not an array so we treat it as a key value Map
 		 **/
-		Object existingRootFromParent = currLeafMapNode.get(currentLeafNodeKey);
+		Object existingNodeFromParent = currLeafMapNode.get(currentLeafNodeKey);
 
 		if(periodIndex > 0) {
 			//we still have more property name nodes to process so we will get recursive
 			//first, get the new node parent which will then hold the map of the current leaf node being processed
-			Map<String, Object> newNestedMapNode = getNestedMapNode(currLeafMapNode, currentLeafNodeKey, existingRootFromParent, arrayIndexPosition);
+			Map<String, Object> newNestedMapNode = getNestedMapNode(currLeafMapNode, currentLeafNodeKey, existingNodeFromParent, arrayIndexPosition);
 
 			//first get remaining part of the key which is the part after the first period
 			String remainingKey = currKeyName.substring(periodIndex + 1);
@@ -316,30 +316,32 @@ public class EnvironmentController {
 		}else {
 			//we are at the last node of the property and thus the end of the recursion so
 			//go ahead and actually assign the value
-			Object propertyValue = getLeafPropertyValue(existingRootFromParent, propValue, arrayIndexPosition);
+			Object propertyValue = getLeafPropertyValue(existingNodeFromParent, propValue, arrayIndexPosition);
 			currLeafMapNode.put(currentLeafNodeKey, propertyValue);
 		}
 	}
 
 	/**
-	 *
-	 * @param currLeafMapNode
-	 * @param currentNodeKey
-	 * @param existingRootFromParent
-	 * @param arrayIndexPosition
-	 * @return
+	 * This method is responsible for mapping a nested property. A nested property is any part of the property
+     * that is not the last element.  This is different because it will ultimately have a Map returned from
+     * which the next item in the property name will be mapped.
+	 * @param currLeafMapNode The current leaf map from which we will work from
+	 * @param currentNodeKey The remaining key name that hasn't been processed yet
+	 * @param existingNodeFromParent The node that possibly already exists from teh currLeafMapNode.  Null if it doesn't exist
+	 * @param arrayIndexPosition Index position if this is an array.  -1 if its not an array.
+	 * @return The new leaf map node which can be used in the next key level.
 	 */
-	private Map<String, Object> getNestedMapNode(Map<String, Object> currLeafMapNode, String currentNodeKey, Object existingRootFromParent, int arrayIndexPosition) {
+	private Map<String, Object> getNestedMapNode(Map<String, Object> currLeafMapNode, String currentNodeKey, Object existingNodeFromParent, int arrayIndexPosition) {
 		Map<String, Object> newNestedMapNode = null;
 		if (arrayIndexPosition > -1) {
             //we have an array item so lets to that logic
             //get the rootKey item, without the array part if it exists.
 
-            if (existingRootFromParent != null && existingRootFromParent instanceof ArrayList) {
+            if (existingNodeFromParent != null && existingNodeFromParent instanceof ArrayList) {
                 //we have an existing new parent and it is an array
                 //just add (or replace) the new item in the array
                 @SuppressWarnings("unchecked")
-                ArrayList<Map<String, Object>> listItem = (ArrayList<Map<String, Object>>) existingRootFromParent;
+                ArrayList<Map<String, Object>> listItem = (ArrayList<Map<String, Object>>) existingNodeFromParent;
                 listItem.ensureCapacity(arrayIndexPosition + 1);
 
 				//do we already have an item at this position
@@ -364,10 +366,10 @@ public class EnvironmentController {
             }
 
 
-        } else if (existingRootFromParent != null && existingRootFromParent instanceof TreeMap) {
+        } else if (existingNodeFromParent != null && existingNodeFromParent instanceof TreeMap) {
             //this is not an array and existing value is a hashmap so just use it.
             @SuppressWarnings("unchecked")
-            Map<String, Object> newParentTemp = (Map<String, Object>) existingRootFromParent;
+            Map<String, Object> newParentTemp = (Map<String, Object>) existingNodeFromParent;
             newNestedMapNode = newParentTemp; //just to avoid compiler warnings
 			currLeafMapNode.put(currentNodeKey, newNestedMapNode);
         } else {
