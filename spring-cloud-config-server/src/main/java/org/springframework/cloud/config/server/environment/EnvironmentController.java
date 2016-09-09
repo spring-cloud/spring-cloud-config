@@ -224,7 +224,7 @@ public class EnvironmentController {
 	 * @return A map of the properties
 	 */
 	private Map<String, Object> convertToMap(Environment input) {
-		Map<String, Object> target = new LinkedHashMap<>();
+		LinkedHashMap<String, Object> target = new LinkedHashMap<>();
 		Map<String, Object> data = convertToProperties(input);
 		for(String key: data.keySet()) {
 			Object value = data.get(key);
@@ -256,7 +256,7 @@ public class EnvironmentController {
 	 * @param propValue The value that will be assigned to the property once we finish traversing the property name
 	 * @see #convertToMap(Environment)
 	 */
-	private void recursivePropertyToMap(Map<String, Object> currLeafMapNode, String currKeyName, Object propValue) {
+	private void recursivePropertyToMap(LinkedHashMap<String, Object> currLeafMapNode, String currKeyName, Object propValue) {
 		//will hold the root of the key if nested and/or part of an array
 		//for example foo.bar->rootKey=foo  foo[1].bar->rootKey=foo
 		String currentLeafNodeKey;
@@ -305,7 +305,7 @@ public class EnvironmentController {
 		if(periodIndex > 0) {
 			//we still have more property name nodes to process so we will get recursive
 			//first, get the new node parent which will then hold the map of the current leaf node being processed
-			Map<String, Object> newNestedMapNode = getNestedMapNode(currLeafMapNode, currentLeafNodeKey, existingNodeFromParent, arrayIndexPosition);
+			LinkedHashMap<String, Object> newNestedMapNode = getNestedMapNode(currLeafMapNode, currentLeafNodeKey, existingNodeFromParent, arrayIndexPosition);
 
 			//first get remaining part of the key which is the part after the first period
 			String remainingKey = currKeyName.substring(periodIndex + 1);
@@ -331,54 +331,43 @@ public class EnvironmentController {
 	 * @param arrayIndexPosition Index position if this is an array.  -1 if its not an array.
 	 * @return The new leaf map node which can be used in the next key level.
 	 */
-	private Map<String, Object> getNestedMapNode(Map<String, Object> currLeafMapNode, String currentNodeKey, Object existingNodeFromParent, int arrayIndexPosition) {
-		Map<String, Object> newNestedMapNode = null;
+	private LinkedHashMap<String, Object> getNestedMapNode(LinkedHashMap<String, Object> currLeafMapNode, String currentNodeKey, Object existingNodeFromParent, int arrayIndexPosition) {
+		LinkedHashMap<String, Object> newNestedMapLeafNode = null;
 		if (arrayIndexPosition > -1) {
             //we have an array item so lets to that logic
-            //get the rootKey item, without the array part if it exists.
-
+            ArrayList<LinkedHashMap<String, Object>> listItem = null;
             if (existingNodeFromParent != null && existingNodeFromParent instanceof ArrayList) {
-                //we have an existing new parent and it is an array
-                //just add (or replace) the new item in the array
+                //we have an existing array
                 @SuppressWarnings("unchecked")
-                ArrayList<Map<String, Object>> listItem = (ArrayList<Map<String, Object>>) existingNodeFromParent;
-                listItem.ensureCapacity(arrayIndexPosition + 1);
-
-				//do we already have an item at this position
-                try {
-                    newNestedMapNode = listItem.get(arrayIndexPosition);
-                }catch(IndexOutOfBoundsException ioobe) {
-                    //do nothing, there should be a non exception producing version of get
-                }
-                if (newNestedMapNode == null) {
-                	//item at this position doesn't exist, so create it.
-                    newNestedMapNode = new TreeMap<>();
-                    listItem.add(arrayIndexPosition, newNestedMapNode);
-                }
+                ArrayList<LinkedHashMap<String, Object>> tempListItem = (ArrayList<LinkedHashMap<String, Object>>) existingNodeFromParent;
+                listItem = tempListItem; //avoiding compiler warnings
+            }else{
+                //new array
+                listItem = new ArrayList<>(arrayIndexPosition > 10 ? arrayIndexPosition : 10);
+                currLeafMapNode.put(currentNodeKey, listItem);
             }
-            if (newNestedMapNode == null) {
-                //an existing mapNode for the current nodeKey was not found or it isn't an array, create new or replace
-                newNestedMapNode = new TreeMap<>();
-                @SuppressWarnings("unchecked")
-                ArrayList<Map<String, Object>> listItem = new ArrayList<>(arrayIndexPosition > 10 ? arrayIndexPosition : 10);
-                listItem.add(arrayIndexPosition, newNestedMapNode);
-				currLeafMapNode.put(currentNodeKey, listItem);
-            }
+			//make sure array is initialized at least to current position
+			if(listItem.size() < arrayIndexPosition + 1) {
+				listItem.ensureCapacity(arrayIndexPosition + 1);
+				for(int i = listItem.size(); i <= arrayIndexPosition; i++) {
+					listItem.add(i, new LinkedHashMap<String, Object>());
+				}
+			}
+            newNestedMapLeafNode = listItem.get(arrayIndexPosition);
 
-
-        } else if (existingNodeFromParent != null && existingNodeFromParent instanceof TreeMap) {
+        } else if (existingNodeFromParent != null && existingNodeFromParent instanceof LinkedHashMap) {
             //this is not an array and existing value is a hashmap so just use it.
             @SuppressWarnings("unchecked")
-            Map<String, Object> newParentTemp = (Map<String, Object>) existingNodeFromParent;
-            newNestedMapNode = newParentTemp; //just to avoid compiler warnings
-			currLeafMapNode.put(currentNodeKey, newNestedMapNode);
+			LinkedHashMap<String, Object> newParentTemp = (LinkedHashMap<String, Object>) existingNodeFromParent;
+            newNestedMapLeafNode = newParentTemp; //just to avoid compiler warnings
+			currLeafMapNode.put(currentNodeKey, newNestedMapLeafNode);
         } else {
             //no existing value so create a new one
-            newNestedMapNode = new TreeMap<>();
-			currLeafMapNode.put(currentNodeKey, newNestedMapNode);
+            newNestedMapLeafNode = new LinkedHashMap<>();
+			currLeafMapNode.put(currentNodeKey, newNestedMapLeafNode);
         }
 
-		return newNestedMapNode;
+		return newNestedMapLeafNode;
 	}
 
 	/**
@@ -393,7 +382,7 @@ public class EnvironmentController {
 	 * @param propValue The value of the property
 	 * @param arrayIndexPosition If the node property value is an array say like, foo.bar[2] then in this example the
 	 *                           arrayIndexPosition would be 2.  If it is not an array then the value must be -1 or less.
-	 * @see #recursivePropertyToMap(Map, String, Object)
+	 * @see #recursivePropertyToMap(LinkedHashMap, String, Object)
 	 */
 	private Object getLeafPropertyValue(Object existingRootFromParent, Object propValue, int arrayIndexPosition) {
 		if(arrayIndexPosition >= 0) {
@@ -404,12 +393,17 @@ public class EnvironmentController {
                 @SuppressWarnings("unchecked")
                 ArrayList<Object> listItemTemp = (ArrayList<Object>)existingRootFromParent;
                 listItem = listItemTemp; //just to avoid compiler warnings
-                listItem.ensureCapacity(arrayIndexPosition);
             }else{
                 //existing item either doesn't exist, create a new array (possibily overwriting prior value)
                 listItem = new ArrayList<>(arrayIndexPosition > 10 ? arrayIndexPosition : 10);
             }
-            listItem.add(arrayIndexPosition, propValue);
+			if(listItem.size() < arrayIndexPosition + 1) {
+				listItem.ensureCapacity(arrayIndexPosition + 1);
+				for(int i = listItem.size(); i <= arrayIndexPosition; i++) {
+					listItem.add(i, null);
+				}
+			}
+            listItem.set(arrayIndexPosition, propValue);
 			return listItem;
         }else{
             //no array, just put the value attached to the key.
