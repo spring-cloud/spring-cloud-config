@@ -31,17 +31,12 @@ import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,13 +57,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Rafal Zukowski
  * @author Ivan Corrales Solera
  * @author Daniel Frey
+ * @author Ryan Lynch
  *
  */
 @RestController
 @RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
-
-	private static final String MAP_PREFIX = "map";
 
 	private EnvironmentRepository repository;
 	private ObjectMapper objectMapper;
@@ -208,23 +202,213 @@ public class EnvironmentController {
 		return getSuccess(yaml);
 	}
 
-	private Map<String, Object> convertToMap(Environment input) throws BindException {
-		Map<String, Object> target = new LinkedHashMap<>();
-		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<>(
-				target);
+	/**
+	 * Converts the environment properties into a Map for use in converting them to json and yaml.
+	 * For example if we have the following three properties
+	 * foo.bar=hello
+	 * foo.array[0]=goodbye
+	 * blah.boo=world
+	 *
+	 * baseMap("foo",
+	 * 		map("bar", "hello")
+	 * 		map("array", ["goodbye"]))
+	 * baseMap("blah",
+	 * 		map("boo","world"))
+	 *
+	 * 	A side effect is that if there are conflicting property values then the last item will win. For example,
+	 * 	foo.bar=world
+	 * 	foo.bar=winner
+	 * 	In this scenario foo.bar=winner will be the result.
+	 *
+	 * @param input The environment from which the properties will be converted to a map
+	 * @return A map of the properties
+	 */
+	private Map<String, Object> convertToMap(Environment input) {
+		LinkedHashMap<String, Object> target = new LinkedHashMap<>();
 		Map<String, Object> data = convertToProperties(input);
-		LinkedHashMap<String, Object> properties = new LinkedHashMap<>();
-		for (String key : data.keySet()) {
-			properties.put(MAP_PREFIX + "." + key, data.get(key));
+		for(String key: data.keySet()) {
+			Object value = data.get(key);
+			recursivePropertyToMap(target, key, value);
 		}
-		addArrays(target, properties);
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MapPropertySource("properties", properties));
-		factory.setPropertySources(propertySources);
-		factory.bindPropertiesToTarget();
-		@SuppressWarnings("unchecked")
-		Map<String, Object> result = (Map<String, Object>) target.get(MAP_PREFIX);
-		return result == null ? new LinkedHashMap<String, Object>() : result;
+		return target;
+	}
+
+	/**
+	 * This method works by recursively calling itself while it traversing up the property name as separated by zero or more periods.
+	 * For example if we have a property prop.foo.bar[1].hello=world the recursion would look like this...
+	 * recursivePropertyToMap(rootMapOfAllProperties, "prop.foo.bar[0].hello", "world")
+	 * recursivePropertyToMap(mapOfPropProperty, "foo.bar[0].hello", "world")
+	 * recursivePropertyToMap(mapOfBarProperty, "bar[0].hello", "world")
+	 * recursivePropertyToMap(mapOfHelloProperty, "hello", "world")
+	 *
+	 * The last call for the key item "hello" will actually set the property value of the property. The result
+	 * will be the the currMapNode that is first passed in will be populated by
+	 * map("prop",
+	 * 		map("foo",
+	 * 			map("bar",
+	 * 				[map("hello", "world")])))
+	 *
+	 * 	The expectation is that this will be called from #convertToMap using the same target map object
+	 * 	thus resulting in a map containing all the property values.
+	 *
+	 * @param currLeafMapNode The current "leaf" of the Map for the key
+	 * @param currKeyName The key name to be worked on.
+	 * @param propValue The value that will be assigned to the property once we finish traversing the property name
+	 * @see #convertToMap(Environment)
+	 */
+	private void recursivePropertyToMap(LinkedHashMap<String, Object> currLeafMapNode, String currKeyName, Object propValue) {
+		//will hold the root of the key if nested and/or part of an array
+		//for example foo.bar->rootKey=foo  foo[1].bar->rootKey=foo
+		String currentLeafNodeKey;
+
+		//determine if we have a nested key and assign rootKey variable, will nested will cause recursion to happen
+		int periodIndex = currKeyName.indexOf('.');
+		if(periodIndex > 0) {
+			currentLeafNodeKey = currKeyName.substring(0, periodIndex);
+		}else{
+			currentLeafNodeKey = currKeyName;
+		}
+
+		//See if we have an array and if yes determine its index position
+		//must be in the format of propName[NUMBER] where number is 0 or greater
+		int arrayIndexPosition = -1;
+		int beginBracketIndex = currentLeafNodeKey.indexOf('[');
+		if (beginBracketIndex > 0) {
+			int endBracketIndex = currentLeafNodeKey.indexOf(']');
+			if (endBracketIndex > 0) {
+				//get position
+				String positionStr = currentLeafNodeKey.substring(beginBracketIndex + 1, endBracketIndex);
+				try {
+					int tempPosition = Integer.parseInt(positionStr);
+					if (tempPosition >= 0) {
+						//we have a live one, treat as an array
+						arrayIndexPosition = tempPosition;
+						//assign the proper rootKey
+						currentLeafNodeKey = currentLeafNodeKey.substring(0,beginBracketIndex);
+					}
+				} catch (NumberFormatException nfe) {
+					//do nothing, don't treat this as an array. Should we error out?
+				}
+			}
+		}
+
+		/**
+		 * get the existing value from the parent if it exists. We need to treat this as an object because it could be a
+		 * one of two different types
+		 * 1) An ArrayList - Example: foo.bar[1].hello.world and we are processing the "hello" portion of the property.
+		 * 			Here the parent "bar[1]" is an array.
+		 * 2) A TreeMap -  Example: foo.bar.hello.world and we are again process the "hello" portion of the property.
+		 * 			Here the parent "bar" is not an array so we treat it as a key value Map
+		 **/
+		Object existingNodeFromParent = currLeafMapNode.get(currentLeafNodeKey);
+
+		if(periodIndex > 0) {
+			//we still have more property name nodes to process so we will get recursive
+			//first, get the new node parent which will then hold the map of the current leaf node being processed
+			LinkedHashMap<String, Object> newNestedMapNode = getNestedMapNode(currLeafMapNode, currentLeafNodeKey, existingNodeFromParent, arrayIndexPosition);
+
+			//first get remaining part of the key which is the part after the first period
+			String remainingKey = currKeyName.substring(periodIndex + 1);
+
+			//now lets get recursive and process the next item in the property name
+			recursivePropertyToMap(newNestedMapNode, remainingKey, propValue);
+
+		}else {
+			//we are at the last node of the property and thus the end of the recursion so
+			//go ahead and actually assign the value
+			Object propertyValue = getLeafPropertyValue(existingNodeFromParent, propValue, arrayIndexPosition);
+			currLeafMapNode.put(currentLeafNodeKey, propertyValue);
+		}
+	}
+
+	/**
+	 * This method is responsible for mapping a nested property. A nested property is any part of the property
+     * that is not the last element.  This is different because it will ultimately have a Map returned from
+     * which the next item in the property name will be mapped.
+	 * @param currLeafMapNode The current leaf map from which we will work from
+	 * @param currentNodeKey The remaining key name that hasn't been processed yet
+	 * @param existingNodeFromParent The node that possibly already exists from teh currLeafMapNode.  Null if it doesn't exist
+	 * @param arrayIndexPosition Index position if this is an array.  -1 if its not an array.
+	 * @return The new leaf map node which can be used in the next key level.
+	 */
+	private LinkedHashMap<String, Object> getNestedMapNode(LinkedHashMap<String, Object> currLeafMapNode, String currentNodeKey, Object existingNodeFromParent, int arrayIndexPosition) {
+		LinkedHashMap<String, Object> newNestedMapLeafNode = null;
+		if (arrayIndexPosition > -1) {
+            //we have an array item so lets to that logic
+            ArrayList<LinkedHashMap<String, Object>> listItem = null;
+            if (existingNodeFromParent != null && existingNodeFromParent instanceof ArrayList) {
+                //we have an existing array
+                @SuppressWarnings("unchecked")
+                ArrayList<LinkedHashMap<String, Object>> tempListItem = (ArrayList<LinkedHashMap<String, Object>>) existingNodeFromParent;
+                listItem = tempListItem; //avoiding compiler warnings
+            }else{
+                //new array
+                listItem = new ArrayList<>(arrayIndexPosition > 10 ? arrayIndexPosition : 10);
+                currLeafMapNode.put(currentNodeKey, listItem);
+            }
+			//make sure array is initialized at least to current position
+			if(listItem.size() < arrayIndexPosition + 1) {
+				listItem.ensureCapacity(arrayIndexPosition + 1);
+				for(int i = listItem.size(); i <= arrayIndexPosition; i++) {
+					listItem.add(i, new LinkedHashMap<String, Object>());
+				}
+			}
+            newNestedMapLeafNode = listItem.get(arrayIndexPosition);
+
+        } else if (existingNodeFromParent != null && existingNodeFromParent instanceof LinkedHashMap) {
+            //this is not an array and existing value is a hashmap so just use it.
+            @SuppressWarnings("unchecked")
+			LinkedHashMap<String, Object> newParentTemp = (LinkedHashMap<String, Object>) existingNodeFromParent;
+            newNestedMapLeafNode = newParentTemp; //just to avoid compiler warnings
+			currLeafMapNode.put(currentNodeKey, newNestedMapLeafNode);
+        } else {
+            //no existing value so create a new one
+            newNestedMapLeafNode = new LinkedHashMap<>();
+			currLeafMapNode.put(currentNodeKey, newNestedMapLeafNode);
+        }
+
+		return newNestedMapLeafNode;
+	}
+
+	/**
+	 * Returns the value object to be assigned to the last node in the map of a property. If the last item
+	 * is not an array then it will return the propValue itself otherwise it will handle array logic.
+	 * The array logic is as follows
+	 * 		- If existing root exists and it is an array, great.  Use the existing array and place our new value
+	 * 			at the arrayIndexPosition - WARING: possibly overwriting a previous value.
+	 * 		- If existing root doesn't exist or is not an array then create a new array and assign value of
+	 * 			arrayIndexPosition.  WARNING: If the existing root does exist it will be overwritten.
+	 * @param existingRootFromParent Any existing value item that may already exist, null if it doesn't exist
+	 * @param propValue The value of the property
+	 * @param arrayIndexPosition If the node property value is an array say like, foo.bar[2] then in this example the
+	 *                           arrayIndexPosition would be 2.  If it is not an array then the value must be -1 or less.
+	 * @see #recursivePropertyToMap(LinkedHashMap, String, Object)
+	 */
+	private Object getLeafPropertyValue(Object existingRootFromParent, Object propValue, int arrayIndexPosition) {
+		if(arrayIndexPosition >= 0) {
+            //we have an array
+            //first make sure if the parent item exists, is it an array already?
+            ArrayList<Object> listItem;
+            if(existingRootFromParent != null && existingRootFromParent instanceof ArrayList) {
+                @SuppressWarnings("unchecked")
+                ArrayList<Object> listItemTemp = (ArrayList<Object>)existingRootFromParent;
+                listItem = listItemTemp; //just to avoid compiler warnings
+            }else{
+                //existing item either doesn't exist, create a new array (possibily overwriting prior value)
+                listItem = new ArrayList<>(arrayIndexPosition > 10 ? arrayIndexPosition : 10);
+            }
+			if(listItem.size() < arrayIndexPosition + 1) {
+				listItem.ensureCapacity(arrayIndexPosition + 1);
+				for(int i = listItem.size(); i <= arrayIndexPosition; i++) {
+					listItem.add(i, null);
+				}
+			}
+            listItem.set(arrayIndexPosition, propValue);
+			return listItem;
+        }else{
+            //no array, just put the value attached to the key.
+			return propValue;
+        }
 	}
 
 	@ExceptionHandler(NoSuchLabelException.class)
@@ -257,55 +441,6 @@ public class EnvironmentController {
 
 	private ResponseEntity<String> getSuccess(String body, MediaType mediaType) {
 		return new ResponseEntity<>(body, getHttpHeaders(mediaType), HttpStatus.OK);
-	}
-
-	/**
-	 * Create Lists of the right size for any YAML arrays that are going to need to be
-	 * bound. Some of this might be do-able in RelaxedDataBinder, but we need to do it
-	 * here for now. Only supports arrays at leaf level currently (i.e. the properties
-	 * keys end in [*]).
-	 *
-	 * @param target the target Map
-	 * @param properties the properties (with key names to check)
-	 */
-	private void addArrays(Map<String, Object> target, Map<String, Object> properties) {
-		for (String key : properties.keySet()) {
-			int index = key.indexOf("[");
-			Map<String, Object> current = target;
-			if (index > 0) {
-				String stem = key.substring(0, index);
-				String[] keys = StringUtils.delimitedListToStringArray(stem, ".");
-				for (int i = 0; i < keys.length - 1; i++) {
-					if (current.get(keys[i]) == null) {
-						LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-						current.put(keys[i], map);
-						current = map;
-					}
-					else {
-						@SuppressWarnings("unchecked")
-						Map<String, Object> map = (Map<String, Object>) current
-								.get(keys[i]);
-						current = map;
-					}
-				}
-				String name = keys[keys.length - 1];
-				if (current.get(name) == null) {
-					current.put(name, new ArrayList<>());
-				}
-				@SuppressWarnings("unchecked")
-				List<Object> value = (List<Object>) current.get(name);
-				int position = Integer
-						.valueOf(key.substring(index + 1, key.indexOf("]")));
-				while (position >= value.size()) {
-					if (key.indexOf("].", index) > 0) {
-						value.add(new LinkedHashMap<String, Object>());
-					}
-					else {
-						value.add("");
-					}
-				}
-			}
-		}
 	}
 
 	private Map<String, Object> convertToProperties(Environment profiles) {

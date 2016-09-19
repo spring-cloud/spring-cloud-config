@@ -138,8 +138,7 @@ public class EnvironmentControllerTests {
 	public void placeholdersNotResolvedInYamlFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
-		// If there is a default value we can't prevent the placeholder being resolved
-		assertEquals("a:\n  b:\n    c: spam\n", yaml);
+		assertEquals("a:\n  b:\n    c: ${foo:spam}\n", yaml);
 	}
 
 	@Test
@@ -272,6 +271,82 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void arrayOfObjectWithMissingElementsInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("x.a.b[0].c", "d");
+		map.put("x.a.b[1].c", "d");
+		map.put("x.a.b[5].c", "d");
+		this.environment.add(new PropertySource("one", map));
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertEquals("x:\n  a:\n    b:\n    - c: d\n    - c: d\n    - {}\n    - {}\n    - {}\n    - c: d\n", yaml);
+	}
+
+
+	/**
+	 * This test result could be questionable.  Spring itself will throw an InvalidPropertyException which extends
+	 * FatalBeanException which I don't think is valid in this context.  Totally open to ideas here.
+	 * @see org.springframework.beans.InvalidPropertyException
+	 * @see org.springframework.beans.FatalBeanException
+	 */
+	@Test
+	public void arrayOfObjectWithNegativeElementsInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("x.a.b[0].c", "d");
+		map.put("x.a.b[-1].c", "d");
+		map.put("x.a.b[5].c", "d");
+		this.environment.add(new PropertySource("one", map));
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertEquals("x:\n  a:\n    b[-1]:\n      c: d\n    b:\n    - c: d\n    - {}\n    - {}\n    - {}\n    - {}\n    - c: d\n", yaml);
+	}
+
+	@Test
+	public void arrayOfObjectWithInvalidNumberElementInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("x.a.b[0].c", "d");
+		map.put("x.a.b[not_a_number].c", "d");
+		map.put("x.a.b[5].c", "e");
+		this.environment.add(new PropertySource("one", map));
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertEquals("x:\n  a:\n    b:\n    - c: d\n    - {}\n    - {}\n    - {}\n    - {}\n    - c: e\n    b[not_a_number]:\n      c: d\n", yaml);
+	}
+
+    @Test
+    public void arrayAtEndOfObjectWithMissingElementsInYaml() throws Exception {
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("x.a.b[0]", "d");
+        map.put("x.a.b[2]", "d");
+        this.environment.add(new PropertySource("one", map));
+        Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+        String yaml = this.controller.yaml("foo", "bar", false).getBody();
+        assertEquals("x:\n  a:\n    b:\n    - d\n    - null\n    - d\n", yaml);
+    }
+
+    @Test
+    public void arrayAtEndOfObjectWithNegativeElementsInYaml() throws Exception {
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("x.a.b[0]", "d");
+        map.put("x.a.b[-1]", "d");
+        this.environment.add(new PropertySource("one", map));
+        Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+        String yaml = this.controller.yaml("foo", "bar", false).getBody();
+        assertEquals("x:\n  a:\n    b[-1]: d\n    b:\n    - d\n", yaml);
+    }
+
+    @Test
+    public void arrayAtEndOfObjectWithInvalidNumberElementInYaml() throws Exception {
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("x.a.b[0]", "d");
+        map.put("x.a.b[not_a_number]", "d");
+        this.environment.add(new PropertySource("one", map));
+        Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+        String yaml = this.controller.yaml("foo", "bar", false).getBody();
+        assertEquals("x:\n  a:\n    b:\n    - d\n    b[not_a_number]: d\n", yaml);
+    }
+
+	@Test
 	public void placeholdersResolvedInProperties() throws Exception {
 		whenPlaceholders();
 		String text = this.controller.properties("foo", "bar", true).getBody();
@@ -338,8 +413,7 @@ public class EnvironmentControllerTests {
 	public void placeholdersResolvedInJsonFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
 		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
-		// If there is a default value we can't prevent the placeholder being resolved
-		assertEquals("{\"a\":{\"b\":{\"c\":\"spam\"}}}", json);
+		assertEquals("{\"a\":{\"b\":{\"c\":\"${foo:spam}\"}}}", json);
 	}
 
 	private void whenPlaceholders() {
