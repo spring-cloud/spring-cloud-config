@@ -152,7 +152,7 @@ public class EnvironmentController {
 			throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
-		Map<String, Object> properties = convertToMap(environment);
+		Map<String, Object> properties = convertToMap(environment, resolvePlaceholders);
 		String json = this.objectMapper.writeValueAsString(properties);
 		if (resolvePlaceholders) {
 			json = resolvePlaceholders(prepareEnvironment(environment), json);
@@ -188,7 +188,7 @@ public class EnvironmentController {
 			throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
-		Map<String, Object> result = convertToMap(environment);
+		Map<String, Object> result = convertToMap(environment, resolvePlaceholders);
 		if (this.stripDocument && result.size() == 1
 				&& result.keySet().iterator().next().equals("document")) {
 			Object value = result.get("document");
@@ -208,10 +208,13 @@ public class EnvironmentController {
 		return getSuccess(yaml);
 	}
 
-	private Map<String, Object> convertToMap(Environment input) throws BindException {
+	private Map<String, Object> convertToMap(Environment input, boolean resolvePlaceholders) throws BindException {
 		Map<String, Object> target = new LinkedHashMap<>();
 		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<>(
 				target);
+		if (!resolvePlaceholders) {
+			factory.setResolvePlaceholders(false);
+		}
 		Map<String, Object> data = convertToProperties(input);
 		LinkedHashMap<String, Object> properties = new LinkedHashMap<>();
 		for (String key : data.keySet()) {
