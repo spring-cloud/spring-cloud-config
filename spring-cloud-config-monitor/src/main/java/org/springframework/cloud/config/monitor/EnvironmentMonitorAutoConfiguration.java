@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration
 @ConditionalOnWebApplication
-@Import(FileMonitorConfiguration.class)
+@Import({FileMonitorConfiguration.class, PropertyPathNotificationExtractorConfiguration.class})
 public class EnvironmentMonitorAutoConfiguration {
 
 	@Autowired(required=false)
@@ -40,24 +40,6 @@ public class EnvironmentMonitorAutoConfiguration {
 	@Bean
 	public PropertyPathEndpoint propertyPathEndpoint() {
 		return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors));
-	}
-
-	@Bean
-	@ConditionalOnProperty(value="spring.cloud.config.server.monitor.github.enabled", havingValue="true", matchIfMissing=true)
-	public GithubPropertyPathNotificationExtractor githubPropertyPathNotificationExtractor() {
-		return new GithubPropertyPathNotificationExtractor();
-	}
-
-	@Bean
-	@ConditionalOnProperty(value="spring.cloud.config.server.monitor.gitlab.enabled", havingValue="true", matchIfMissing=true)
-	public GitlabPropertyPathNotificationExtractor gitlabPropertyPathNotificationExtractor() {
-		return new GitlabPropertyPathNotificationExtractor();
-	}
-
-	@Bean
-	@ConditionalOnProperty(value="spring.cloud.config.server.monitor.bitbucket.enabled", havingValue="true", matchIfMissing=true)
-	public BitbucketPropertyPathNotificationExtractor bitbucketPropertyPathNotificationExtractor() {
-		return new BitbucketPropertyPathNotificationExtractor();
 	}
 
 }
