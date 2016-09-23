@@ -5,6 +5,8 @@
 :toc:
 :nofooter:
 
+*{spring-cloud-version}*
+
 include::intro.adoc[]
 
 == Quick Start
