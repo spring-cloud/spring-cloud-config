@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.config.server.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.server.environment.SearchPathLocator;
@@ -28,11 +29,12 @@ import org.springframework.context.annotation.Configuration;
  *
  */
 @Configuration
-@ConditionalOnMissingBean(ResourceRepository.class)
 @EnableConfigurationProperties(ConfigServerProperties.class)
+@ConditionalOnMissingBean(ResourceRepository.class)
 public class ResourceRepositoryConfiguration {
 
 	@Bean
+	@ConditionalOnBean(SearchPathLocator.class)
 	public ResourceRepository resourceRepository(SearchPathLocator service) {
 		return new GenericResourceRepository(service);
 	}
