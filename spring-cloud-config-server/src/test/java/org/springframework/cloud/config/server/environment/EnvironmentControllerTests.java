@@ -15,10 +15,7 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -47,6 +44,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
  * @author Roy Clarkson
  * @author Ivan Corrales Solera
  * @author Daniel Frey
+ * @author Ian Bondoc
  */
 public class EnvironmentControllerTests {
 
@@ -255,6 +253,47 @@ public class EnvironmentControllerTests {
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertTrue("Wrong output: " + yaml, "a:\n  b:\n  - d: e\n    c: d\n  - c: d\n".equals(yaml)
 				|| "a:\n  b:\n  - c: d\n    d: e\n  - c: d\n".equals(yaml));
+	}
+
+	@Test
+	public void nestedArraysOfObjectInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a.b[0].c", "x");
+		map.put("a.b[2].e[0].d", "z");
+		map.put("a.b[0].d[2]", "yy");
+		map.put("a.b[0].d[0]", "xx");
+		map.put("a.b[2].c", "y");
+		this.environment.add(new PropertySource("one", map));
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		String expected =
+				"a:\n" +
+				"  b:\n" +
+				"  - c: x\n" +
+				"    d:\n" +
+				"    - xx\n" +
+				"    - null\n" +
+				"    - yy\n" +
+				"  - null\n" +
+				"  - c: y\n" +
+				"    e:\n" +
+				"    - d: z\n";
+		assertThat("Wrong output: " + yaml, yaml, is(expected));
+	}
+
+	@Test
+	public void nestedArraysOfObjectInJson() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a.b[0].c", "x");
+		map.put("a.b[0].d[0]", "xx");
+		map.put("a.b[0].d[1]", "yy");
+		map.put("a.b[1].c", "y");
+		map.put("a.b[1].e[0].d", "z");
+		this.environment.add(new PropertySource("one", map));
+		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
+		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		System.err.println(json);
+		assertThat("Wrong output: " + json, json, is("{\"a\":{\"b\":[{\"c\":\"x\",\"d\":[\"xx\",\"yy\"]},{\"c\":\"y\",\"e\":[{\"d\":\"z\"}]}]}}"));
 	}
 
 	@Test

@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -62,13 +64,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Rafal Zukowski
  * @author Ivan Corrales Solera
  * @author Daniel Frey
+ * @author Ian Bondoc
  *
  */
 @RestController
 @RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
-
-	private static final String MAP_PREFIX = "map";
 
 	private EnvironmentRepository repository;
 	private ObjectMapper objectMapper;
@@ -152,7 +153,7 @@ public class EnvironmentController {
 			throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
-		Map<String, Object> properties = convertToMap(environment, resolvePlaceholders);
+		Map<String, Object> properties = convertToMap(environment);
 		String json = this.objectMapper.writeValueAsString(properties);
 		if (resolvePlaceholders) {
 			json = resolvePlaceholders(prepareEnvironment(environment), json);
@@ -188,7 +189,7 @@ public class EnvironmentController {
 			throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
-		Map<String, Object> result = convertToMap(environment, resolvePlaceholders);
+		Map<String, Object> result = convertToMap(environment);
 		if (this.stripDocument && result.size() == 1
 				&& result.keySet().iterator().next().equals("document")) {
 			Object value = result.get("document");
@@ -208,26 +209,62 @@ public class EnvironmentController {
 		return getSuccess(yaml);
 	}
 
-	private Map<String, Object> convertToMap(Environment input, boolean resolvePlaceholders) throws BindException {
-		Map<String, Object> target = new LinkedHashMap<>();
-		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<>(
-				target);
-		if (!resolvePlaceholders) {
-			factory.setResolvePlaceholders(false);
+	private Map<String, Object> convertToMap(Environment input) throws BindException {
+		Map<String, Object> properties = convertToProperties(input);
+		Pattern arrayPattern = Pattern.compile("(.*)\\[(\\d+)]");
+		Map<String, Object> rootMap = new LinkedHashMap<>();
+		for (Map.Entry<String, Object> property : properties.entrySet()) {
+			String propertyKey = property.getKey();
+			Object propertyValue = property.getValue();
+			String[] yamlKeys = propertyKey.split("\\.");
+			Map<String, Object> currentMap = rootMap;
+			for (int i = 0; i < yamlKeys.length; i++) {
+				Matcher arrayMatcher = arrayPattern.matcher(yamlKeys[i]);
+				int arrayIndex = -1;
+				String yamlKey;
+				if (arrayMatcher.matches()) {
+					yamlKey = arrayMatcher.group(1);
+					arrayIndex = Integer.parseInt(arrayMatcher.group(2));
+				} else {
+					yamlKey = yamlKeys[i];
+				}
+				boolean isLeaf = i + 1 == yamlKeys.length;
+				if (arrayIndex > -1) {
+					@SuppressWarnings("unchecked")
+					ArrayList<Object> array = (ArrayList<Object>) currentMap.get(yamlKey);
+					if (array == null) {
+						array = new ArrayList<>();
+						currentMap.put(yamlKey, array);
+					}
+					// fill array if necessary
+					while (array.size() <= arrayIndex) {
+						array.add(null);
+					}
+					if (isLeaf) {
+						array.set(arrayIndex, propertyValue);
+					} else {
+						@SuppressWarnings("unchecked")
+						Map<String, Object> childMap = (Map<String, Object>) array.get(arrayIndex);
+						if (childMap == null) {
+							childMap = new LinkedHashMap<>();
+							array.set(arrayIndex, childMap);
+						}
+						currentMap = childMap;
+					}
+				} else if (isLeaf) {
+					currentMap.put(yamlKey, propertyValue);
+				} else {
+					@SuppressWarnings("unchecked")
+					Map<String, Object> childMap = (Map<String, Object>) currentMap.get(yamlKey);
+					if (childMap == null) {
+						childMap = new LinkedHashMap<>();
+						currentMap.put(yamlKey, childMap);
+					}
+					currentMap = childMap;
+				}
+			}
 		}
-		Map<String, Object> data = convertToProperties(input);
-		LinkedHashMap<String, Object> properties = new LinkedHashMap<>();
-		for (String key : data.keySet()) {
-			properties.put(MAP_PREFIX + "." + key, data.get(key));
-		}
-		addArrays(target, properties);
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MapPropertySource("properties", properties));
-		factory.setPropertySources(propertySources);
-		factory.bindPropertiesToTarget();
-		@SuppressWarnings("unchecked")
-		Map<String, Object> result = (Map<String, Object>) target.get(MAP_PREFIX);
-		return result == null ? new LinkedHashMap<String, Object>() : result;
+		return rootMap;
 	}
 
 	@ExceptionHandler(NoSuchLabelException.class)
@@ -260,55 +297,6 @@ public class EnvironmentController {
 
 	private ResponseEntity<String> getSuccess(String body, MediaType mediaType) {
 		return new ResponseEntity<>(body, getHttpHeaders(mediaType), HttpStatus.OK);
-	}
-
-	/**
-	 * Create Lists of the right size for any YAML arrays that are going to need to be
-	 * bound. Some of this might be do-able in RelaxedDataBinder, but we need to do it
-	 * here for now. Only supports arrays at leaf level currently (i.e. the properties
-	 * keys end in [*]).
-	 *
-	 * @param target the target Map
-	 * @param properties the properties (with key names to check)
-	 */
-	private void addArrays(Map<String, Object> target, Map<String, Object> properties) {
-		for (String key : properties.keySet()) {
-			int index = key.indexOf("[");
-			Map<String, Object> current = target;
-			if (index > 0) {
-				String stem = key.substring(0, index);
-				String[] keys = StringUtils.delimitedListToStringArray(stem, ".");
-				for (int i = 0; i < keys.length - 1; i++) {
-					if (current.get(keys[i]) == null) {
-						LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-						current.put(keys[i], map);
-						current = map;
-					}
-					else {
-						@SuppressWarnings("unchecked")
-						Map<String, Object> map = (Map<String, Object>) current
-								.get(keys[i]);
-						current = map;
-					}
-				}
-				String name = keys[keys.length - 1];
-				if (current.get(name) == null) {
-					current.put(name, new ArrayList<>());
-				}
-				@SuppressWarnings("unchecked")
-				List<Object> value = (List<Object>) current.get(name);
-				int position = Integer
-						.valueOf(key.substring(index + 1, key.indexOf("]")));
-				while (position >= value.size()) {
-					if (key.indexOf("].", index) > 0) {
-						value.add(new LinkedHashMap<String, Object>());
-					}
-					else {
-						value.add("");
-					}
-				}
-			}
-		}
 	}
 
 	private Map<String, Object> convertToProperties(Environment profiles) {
