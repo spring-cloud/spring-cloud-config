@@ -33,16 +33,12 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -209,37 +205,60 @@ public class EnvironmentController {
 		return getSuccess(yaml);
 	}
 
+	/**
+	 * Method {@code convertToMap} converts an {@code Environment} to a nested Map which represents a yml/json structure.
+	 *
+	 * @param input
+	 * @return
+	 * @throws BindException
+	 */
 	private Map<String, Object> convertToMap(Environment input) throws BindException {
+		// First use the current convertToProperties to get a flat Map from the environment
 		Map<String, Object> properties = convertToProperties(input);
+
+		// A regex pattern to be used for identifying key of arrays (e.g. some-key[0])
+		// and to capture the key portion and the array index portion
 		Pattern arrayPattern = Pattern.compile("(.*)\\[(\\d+)]");
+
+		// The root map which holds all the first level properties
 		Map<String, Object> rootMap = new LinkedHashMap<>();
+
+		// For each property
 		for (Map.Entry<String, Object> property : properties.entrySet()) {
 			String propertyKey = property.getKey();
 			Object propertyValue = property.getValue();
-			String[] yamlKeys = propertyKey.split("\\.");
+			// Break down the property key at dot (.) delimiter
+			String[] nestedKeys = propertyKey.split("\\.");
 			Map<String, Object> currentMap = rootMap;
-			for (int i = 0; i < yamlKeys.length; i++) {
-				Matcher arrayMatcher = arrayPattern.matcher(yamlKeys[i]);
+			// For each level of property key
+			for (int i = 0; i < nestedKeys.length; i++) {
+				Matcher arrayMatcher = arrayPattern.matcher(nestedKeys[i]);
+				// The arrayIndex would tell later on if the current nestedKey is an array or not (-1 is not an array)
 				int arrayIndex = -1;
-				String yamlKey;
+				String nestedKey;
+				// Identify the actual nestedKey (and arrayIndex if necessary)
 				if (arrayMatcher.matches()) {
-					yamlKey = arrayMatcher.group(1);
+					nestedKey = arrayMatcher.group(1);
 					arrayIndex = Integer.parseInt(arrayMatcher.group(2));
 				} else {
-					yamlKey = yamlKeys[i];
+					nestedKey = nestedKeys[i];
 				}
-				boolean isLeaf = i + 1 == yamlKeys.length;
+				// Identify if the current nestedKey is for the leaf (the key which contains the property value)
+				boolean isLeaf = i + 1 == nestedKeys.length;
 				if (arrayIndex > -1) {
+					// If currently nestedKey is an array, get the array
 					@SuppressWarnings("unchecked")
-					ArrayList<Object> array = (ArrayList<Object>) currentMap.get(yamlKey);
+					ArrayList<Object> array = (ArrayList<Object>) currentMap.get(nestedKey);
+					// Or create if necessary
 					if (array == null) {
 						array = new ArrayList<>();
-						currentMap.put(yamlKey, array);
+						currentMap.put(nestedKey, array);
 					}
-					// fill array if necessary
+					// Fill array if necessary (in the case the property keys are not naturally sorted)
 					while (array.size() <= arrayIndex) {
 						array.add(null);
 					}
+					// Either set the value if nestedKey is leaf or create a sub-map as an entry in the array
 					if (isLeaf) {
 						array.set(arrayIndex, propertyValue);
 					} else {
@@ -252,13 +271,16 @@ public class EnvironmentController {
 						currentMap = childMap;
 					}
 				} else if (isLeaf) {
-					currentMap.put(yamlKey, propertyValue);
+					// If current nestedKey is leaf, just set the value
+					currentMap.put(nestedKey, propertyValue);
 				} else {
+					// Else, the child element is always a nested Map
 					@SuppressWarnings("unchecked")
-					Map<String, Object> childMap = (Map<String, Object>) currentMap.get(yamlKey);
+					Map<String, Object> childMap = (Map<String, Object>) currentMap.get(nestedKey);
+					// Create if necessary
 					if (childMap == null) {
 						childMap = new LinkedHashMap<>();
-						currentMap.put(yamlKey, childMap);
+						currentMap.put(nestedKey, childMap);
 					}
 					currentMap = childMap;
 				}
