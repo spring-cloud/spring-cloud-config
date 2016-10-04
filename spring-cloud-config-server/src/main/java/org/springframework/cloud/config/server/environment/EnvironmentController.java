@@ -208,11 +208,10 @@ public class EnvironmentController {
 	/**
 	 * Method {@code convertToMap} converts an {@code Environment} to a nested Map which represents a yml/json structure.
 	 *
-	 * @param input
-	 * @return
-	 * @throws BindException
+	 * @param input the environment to be converted
+	 * @return the nested map containing the environment's properties
 	 */
-	private Map<String, Object> convertToMap(Environment input) throws BindException {
+	private Map<String, Object> convertToMap(Environment input) {
 		// First use the current convertToProperties to get a flat Map from the environment
 		Map<String, Object> properties = convertToProperties(input);
 
