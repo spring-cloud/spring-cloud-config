@@ -43,7 +43,6 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -60,6 +59,7 @@ import com.jcraft.jsch.Session;
  * @author Roy Clarkson
  * @author Marcos Barbero
  * @author Daniel Lavoie
+ * @author Michael Davis
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -405,7 +405,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
 		cmd.setCredentialsProvider(
-				new UsernamePasswordCredentialsProvider(getUsername(), getPassword()));
+				new AllowHostsUsernamePasswordCredentialProvider(getUsername(), getPassword()));
 	}
 
 	private void setTimeout(TransportCommand<?, ?> pull) {
