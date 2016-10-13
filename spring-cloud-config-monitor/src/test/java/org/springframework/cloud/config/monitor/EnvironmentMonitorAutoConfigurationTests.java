@@ -19,6 +19,7 @@ package org.springframework.cloud.config.monitor;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
@@ -26,7 +27,10 @@ import org.springframework.boot.autoconfigure.web.EmbeddedServletContainerAutoCo
 import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.MultiValueMap;
 
 /**
  * @author Dave Syer
@@ -48,5 +52,34 @@ public class EnvironmentMonitorAutoConfigurationTests {
 						"extractors")).size());
 		context.close();
 	}
+        
+        @Test
+	public void testCanAddCustomPropertyPathNotificationExtractor() {
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(
+                                CustomPropertyPathNotificationExtractorConfig.class,
+				EnvironmentMonitorAutoConfiguration.class,
+				EmbeddedServletContainerAutoConfiguration.class, ServerPropertiesAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
+						.run();
+		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
+		assertEquals(5,
+				((Collection<?>) ReflectionTestUtils.getField(
+						ReflectionTestUtils.getField(endpoint, "extractor"),
+						"extractors")).size());
+		context.close();
+	}
+        
+        @Configuration
+        static class CustomPropertyPathNotificationExtractorConfig {
+                @Bean
+                public PropertyPathNotificationExtractor customNotificationExtractor() {
+                        return new PropertyPathNotificationExtractor() {
+                                @Override
+                                public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> payload) {
+                                    throw new UnsupportedOperationException("doesn't do anything");
+                                }
+                        };
+                }
+        }
 
 }

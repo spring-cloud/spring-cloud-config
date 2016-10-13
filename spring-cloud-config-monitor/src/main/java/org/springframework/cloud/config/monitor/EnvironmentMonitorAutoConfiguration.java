@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Import;
 
 /**
  * @author Dave Syer
+ * @author Will Boyd
  *
  */
 @Configuration
@@ -42,22 +43,27 @@ public class EnvironmentMonitorAutoConfiguration {
 		return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors));
 	}
 
-	@Bean
-	@ConditionalOnProperty(value="spring.cloud.config.server.monitor.github.enabled", havingValue="true", matchIfMissing=true)
-	public GithubPropertyPathNotificationExtractor githubPropertyPathNotificationExtractor() {
-		return new GithubPropertyPathNotificationExtractor();
-	}
+	@Configuration
+	protected static class PropertyPathNotificationExtractorConfiguration {
 
-	@Bean
-	@ConditionalOnProperty(value="spring.cloud.config.server.monitor.gitlab.enabled", havingValue="true", matchIfMissing=true)
-	public GitlabPropertyPathNotificationExtractor gitlabPropertyPathNotificationExtractor() {
-		return new GitlabPropertyPathNotificationExtractor();
-	}
+		@Bean
+		@ConditionalOnProperty(value="spring.cloud.config.server.monitor.github.enabled", havingValue="true", matchIfMissing=true)
+		public GithubPropertyPathNotificationExtractor githubPropertyPathNotificationExtractor() {
+			return new GithubPropertyPathNotificationExtractor();
+		}
 
-	@Bean
-	@ConditionalOnProperty(value="spring.cloud.config.server.monitor.bitbucket.enabled", havingValue="true", matchIfMissing=true)
-	public BitbucketPropertyPathNotificationExtractor bitbucketPropertyPathNotificationExtractor() {
-		return new BitbucketPropertyPathNotificationExtractor();
+		@Bean
+		@ConditionalOnProperty(value="spring.cloud.config.server.monitor.gitlab.enabled", havingValue="true", matchIfMissing=true)
+		public GitlabPropertyPathNotificationExtractor gitlabPropertyPathNotificationExtractor() {
+			return new GitlabPropertyPathNotificationExtractor();
+		}
+
+		@Bean
+		@ConditionalOnProperty(value="spring.cloud.config.server.monitor.bitbucket.enabled", havingValue="true", matchIfMissing=true)
+		public BitbucketPropertyPathNotificationExtractor bitbucketPropertyPathNotificationExtractor() {
+			return new BitbucketPropertyPathNotificationExtractor();
+		}
+
 	}
 
 }
