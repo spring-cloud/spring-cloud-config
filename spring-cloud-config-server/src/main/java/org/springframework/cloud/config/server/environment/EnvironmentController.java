@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -39,7 +37,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -215,75 +212,13 @@ public class EnvironmentController {
 		// First use the current convertToProperties to get a flat Map from the environment
 		Map<String, Object> properties = convertToProperties(input);
 
-		// A regex pattern to be used for identifying key of arrays (e.g. some-key[0])
-		// and to capture the key portion and the array index portion
-		Pattern arrayPattern = Pattern.compile("(.*)\\[(\\d+)]");
-
 		// The root map which holds all the first level properties
 		Map<String, Object> rootMap = new LinkedHashMap<>();
-
-		// For each property
-		for (Map.Entry<String, Object> property : properties.entrySet()) {
-			String propertyKey = property.getKey();
-			Object propertyValue = property.getValue();
-			// Break down the property key at dot (.) delimiter
-			String[] nestedKeys = propertyKey.split("\\.");
-			Map<String, Object> currentMap = rootMap;
-			// For each level of property key
-			for (int i = 0; i < nestedKeys.length; i++) {
-				Matcher arrayMatcher = arrayPattern.matcher(nestedKeys[i]);
-				// The arrayIndex would tell later on if the current nestedKey is an array or not (-1 is not an array)
-				int arrayIndex = -1;
-				String nestedKey;
-				// Identify the actual nestedKey (and arrayIndex if necessary)
-				if (arrayMatcher.matches()) {
-					nestedKey = arrayMatcher.group(1);
-					arrayIndex = Integer.parseInt(arrayMatcher.group(2));
-				} else {
-					nestedKey = nestedKeys[i];
-				}
-				// Identify if the current nestedKey is for the leaf (the key which contains the property value)
-				boolean isLeaf = i + 1 == nestedKeys.length;
-				if (arrayIndex > -1) {
-					// If currently nestedKey is an array, get the array
-					@SuppressWarnings("unchecked")
-					ArrayList<Object> array = (ArrayList<Object>) currentMap.get(nestedKey);
-					// Or create if necessary
-					if (array == null) {
-						array = new ArrayList<>();
-						currentMap.put(nestedKey, array);
-					}
-					// Fill array if necessary (in the case the property keys are not naturally sorted)
-					while (array.size() <= arrayIndex) {
-						array.add(null);
-					}
-					// Either set the value if nestedKey is leaf or create a sub-map as an entry in the array
-					if (isLeaf) {
-						array.set(arrayIndex, propertyValue);
-					} else {
-						@SuppressWarnings("unchecked")
-						Map<String, Object> childMap = (Map<String, Object>) array.get(arrayIndex);
-						if (childMap == null) {
-							childMap = new LinkedHashMap<>();
-							array.set(arrayIndex, childMap);
-						}
-						currentMap = childMap;
-					}
-				} else if (isLeaf) {
-					// If current nestedKey is leaf, just set the value
-					currentMap.put(nestedKey, propertyValue);
-				} else {
-					// Else, the child element is always a nested Map
-					@SuppressWarnings("unchecked")
-					Map<String, Object> childMap = (Map<String, Object>) currentMap.get(nestedKey);
-					// Create if necessary
-					if (childMap == null) {
-						childMap = new LinkedHashMap<>();
-						currentMap.put(nestedKey, childMap);
-					}
-					currentMap = childMap;
-				}
-			}
+		for (Map.Entry<String, Object> entry : properties.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			PropertyNavigator nav = new PropertyNavigator(key);
+			nav.setMapValue(rootMap, value);
 		}
 		return rootMap;
 	}
@@ -376,4 +311,145 @@ public class EnvironmentController {
 		}
 	}
 
+	/**
+	 * Class {@code PropertyNavigator} is used to navigate through the property key and create necessary Maps and Lists
+	 * making up the nested structure to finally set the property value at the leaf node.
+	 * <p>
+	 * The following rules in yml/json are implemented:
+	 * <pre>
+	 * 1. an array element can be:
+	 *    - a value (leaf)
+	 *    - a map
+	 *    - a nested array
+	 * 2. a map value can be:
+	 *    - a value (leaf)
+	 *    - a nested map
+	 *    - an array
+	 * </pre>
+	 */
+	private static class PropertyNavigator {
+
+		enum NodeType {LEAF, MAP, ARRAY}
+
+		final String propertyKey;
+		int currentPos;
+		NodeType valueType;
+
+		PropertyNavigator(String propertyKey) {
+			this.propertyKey = propertyKey;
+			currentPos = -1;
+			valueType = NodeType.MAP;
+		}
+
+		void setMapValue(Map<String, Object> map, Object value) {
+			String key = getKey();
+			if (NodeType.MAP.equals(valueType)) {
+				Map<String, Object> nestedMap = (Map<String, Object>) map.get(key);
+				if (nestedMap == null) {
+					nestedMap = new LinkedHashMap<>();
+					map.put(key, nestedMap);
+				}
+				setMapValue(nestedMap, value);
+			} else if (NodeType.ARRAY.equals(valueType)) {
+				List<Object> list = (List<Object>) map.get(key);
+				if (list == null) {
+					list = new ArrayList<>();
+					map.put(key, list);
+				}
+				setListValue(list, value);
+			} else {
+				map.put(key, value);
+			}
+		}
+
+		void setListValue(List<Object> list, Object value) {
+			int index = getIndex();
+			// Fill missing elements if needed
+			while (list.size() <= index) {
+				list.add(null);
+			}
+			if (NodeType.MAP.equals(valueType)) {
+				Map<String, Object> map = (Map<String, Object>) list.get(index);
+				if (map == null) {
+					map = new LinkedHashMap<>();
+					list.set(index, map);
+				}
+				setMapValue(map, value);
+			} else if (NodeType.ARRAY.equals(valueType)) {
+				List<Object> nestedList = (List<Object>) list.get(index);
+				if (nestedList == null) {
+					nestedList = new ArrayList<>();
+					list.set(index, nestedList);
+				}
+				setListValue(nestedList, value);
+			} else {
+				list.set(index, value);
+			}
+		}
+
+		int getIndex() {
+			// Consider [
+			int start = currentPos + 1;
+
+			for (int i = start; i < propertyKey.length(); i++) {
+				char c = propertyKey.charAt(i);
+				if (c == ']') {
+					currentPos = i;
+					break;
+				} else if (!Character.isDigit(c)) {
+					throw new IllegalArgumentException("Invalid key: " + propertyKey);
+				}
+			}
+			// If no closing ] or if '[]'
+			if (currentPos < start || currentPos == start) {
+				throw new IllegalArgumentException("Invalid key: " + propertyKey);
+			} else {
+				int index = Integer.parseInt(propertyKey.substring(start, currentPos));
+				// Skip the closing ]
+				currentPos++;
+				if (currentPos == propertyKey.length()) {
+					valueType = NodeType.LEAF;
+				} else {
+					switch (propertyKey.charAt(currentPos)) {
+						case '.':
+							valueType = NodeType.MAP;
+							break;
+						case '[':
+							valueType = NodeType.ARRAY;
+							break;
+						default:
+							throw new IllegalArgumentException("Invalid key: " + propertyKey);
+					}
+				}
+				return index;
+			}
+		}
+
+		String getKey() {
+			// Consider initial value or previous char '.' or '['
+			int start = currentPos + 1;
+			char_loop:
+			for (int i = start; i < propertyKey.length(); i++) {
+				switch (propertyKey.charAt(i)) {
+					case '.':
+						currentPos = i;
+						valueType = NodeType.MAP;
+						break char_loop;
+					case '[':
+						currentPos = i;
+						valueType = NodeType.ARRAY;
+						break char_loop;
+				}
+			}
+			// If there's no delimiter then it's a key of a leaf
+			if (currentPos < start) {
+				currentPos = propertyKey.length();
+				valueType = NodeType.LEAF;
+				// Else if we encounter '..' or '.[' or start of the property is . or [ then it's invalid
+			} else if (currentPos == start) {
+				throw new IllegalArgumentException("Invalid key: " + propertyKey);
+			}
+			return propertyKey.substring(start, currentPos);
+		}
+	}
 }

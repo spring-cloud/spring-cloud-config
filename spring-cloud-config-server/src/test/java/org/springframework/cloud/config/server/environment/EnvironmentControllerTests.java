@@ -267,6 +267,8 @@ public class EnvironmentControllerTests {
 		map.put("a.b[0].d[2]", "yy");
 		map.put("a.b[0].d[0]", "xx");
 		map.put("a.b[2].c", "y");
+		map.put("a.b[3][0]", "r");
+		map.put("a.b[3][1]", "s");
 		this.environment.add(new PropertySource("one", map));
 		Mockito.when(this.repository.findOne("foo", "bar", null)).thenReturn(this.environment);
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
@@ -281,7 +283,9 @@ public class EnvironmentControllerTests {
 				"  - null\n" +
 				"  - c: y\n" +
 				"    e:\n" +
-				"    - d: z\n";
+				"    - d: z\n" +
+				"  - - r\n" +
+				"    - s\n";
 		assertThat("Wrong output: " + yaml, yaml, is(expected));
 	}
 
