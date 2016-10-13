@@ -200,7 +200,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 					try {
 						paths.add(Paths.get(resource.getURI()));
 					}
-					catch (IOException e) {
+					catch (Exception e) {
 						log.error("Cannot resolve URI for path: " + path);
 					}
 				}
