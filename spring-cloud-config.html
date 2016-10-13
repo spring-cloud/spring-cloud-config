@@ -2243,6 +2243,12 @@ works locally and for a user-provided service on Cloud Foundry named
 grabbing it in the bootstrap context and injecting one).</p>
 </div>
 <div class="sect3">
+<h4 id="_health_indicator_2">Health Indicator</h4>
+<div class="paragraph">
+<p>The Config Client supplies a Spring Boot Health Indicator that attempts to load configuration from Config Server. The health indicator can be disabled by setting <code>health.config.enabled=false</code>. The response is also cached for performance reasons. The default cache time to live is 5 minutes. To change that value set the <code>health.config.time-to-live</code> property (in milliseconds).</p>
+</div>
+</div>
+<div class="sect3">
 <h4 id="custom-rest-template">Providing A Custom RestTemplate</h4>
 <div class="paragraph">
 <p>In some cases you might need to customize the requests made to the config server from
