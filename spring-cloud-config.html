@@ -2238,9 +2238,65 @@ works locally and for a user-provided service on Cloud Foundry named
 </div>
 </div>
 <div class="paragraph">
-<p>If you use another form of security you might need to provide a
-<code>RestTemplate</code> to the <code>ConfigServicePropertySourceLocator</code> (e.g. by
+<p>If you use another form of security you might need to <a href="#custom-rest-template">provide a
+<code>RestTemplate</code></a> to the <code>ConfigServicePropertySourceLocator</code> (e.g. by
 grabbing it in the bootstrap context and injecting one).</p>
+</div>
+<div class="sect3">
+<h4 id="custom-rest-template">Providing A Custom RestTemplate</h4>
+<div class="paragraph">
+<p>In some cases you might need to customize the requests made to the config server from
+the client.  Typically this involves passing special <code>Authorization</code> headers to
+authenticate requests to the server.  To provide a custom <code>RestTemplate</code> follow the
+steps below.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Set <code>spring.cloud.config.enabled=false</code> to disable the existing config server
+property source.</p>
+</li>
+<li>
+<p>Create a new configuration bean with an implementation of <code>PropertySourceLocator</code>.</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="title">CustomConfigServiceBootstrapConfiguration.java</div>
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class CustomConfigServiceBootstrapConfiguration {
+    @Bean
+    public ConfigClientProperties configClientProperties() {
+        ConfigClientProperties client = new ConfigClientProperties(this.environment);
+        client.setEnabled(false);
+        return client;
+    }
+
+    @Bean
+    public ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
+        ConfigClientProperties clientProperties = configClientProperties();
+       ConfigServicePropertySourceLocator configServicePropertySourceLocator =  new ConfigServicePropertySourceLocator(clientProperties);
+        configServicePropertySourceLocator.setRestTemplate(customRestTemplate(clientProperties));
+        return configServicePropertySourceLocator;
+    }
+}</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>In <code>resource/META_INF</code> create a file called
+<code>spring.factories</code> and specify your custom configuration.</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="title">spring.factorties</div>
+<div class="content">
+<pre class="highlight"><code class="language-properties" data-lang="properties">org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration</code></pre>
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_vault">Vault</h4>
