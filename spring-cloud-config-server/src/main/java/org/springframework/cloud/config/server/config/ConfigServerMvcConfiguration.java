@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.cloud.config.server.support.ConfigServerCacheService;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentController;
 import org.springframework.cloud.config.server.environment.EnvironmentEncryptorEnvironmentRepository;
@@ -57,6 +58,11 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 		configurer.mediaType("properties", MediaType.valueOf("text/plain"));
 		configurer.mediaType("yml", MediaType.valueOf("text/yaml"));
 		configurer.mediaType("yaml", MediaType.valueOf("text/yaml"));
+	}
+
+	@Bean
+	public ConfigServerCacheService configServerCacheService() {
+		return new ConfigServerCacheService();
 	}
 
 	@Bean

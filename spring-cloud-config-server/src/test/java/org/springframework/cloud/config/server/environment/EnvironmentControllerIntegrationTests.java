@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfigurati
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.EnvironmentControllerIntegrationTests.ControllerConfiguration;
+import org.springframework.cloud.config.server.support.ConfigServerCacheService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -131,6 +132,11 @@ public class EnvironmentControllerIntegrationTests {
 	@EnableWebMvc
 	@Import(PropertyPlaceholderAutoConfiguration.class)
 	public static class ControllerConfiguration {
+
+		@Bean
+		public ConfigServerCacheService configServerCacheService() {
+			return new ConfigServerCacheService();
+		}
 
 		@Bean
 		public EnvironmentRepository environmentRepository() {
