@@ -1205,7 +1205,7 @@ public class CustomConfigServiceBootstrapConfiguration {
 }
 ----
 
-3.  In `resource/META_INF` create a file called
+3.  In `resources/META-INF` create a file called
 `spring.factories` and specify your custom configuration.
 
 .spring.factorties
