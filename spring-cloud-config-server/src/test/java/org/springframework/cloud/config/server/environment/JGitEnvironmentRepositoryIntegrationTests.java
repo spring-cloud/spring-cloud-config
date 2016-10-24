@@ -483,6 +483,27 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		return localRef.getObjectId().getName();
 	}
 
+	public void passphrase() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		final String passphrase = "thisismypassphrase";
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.run("--spring.cloud.config.server.git.uri=" + uri,
+						"--spring.cloud.config.server.git.passphrase=" + passphrase);
+		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
+		assertThat(repository.getPassphrase(), Matchers.containsString(passphrase));
+	}
+
+	@Test
+	public void strictHostKeyChecking() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		final boolean strictHostKeyChecking = true;
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.run("--spring.cloud.config.server.git.uri=" + uri,
+						"--spring.cloud.config.server.git.strict-host-key-checking=" + strictHostKeyChecking);
+		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
+		assertEquals(repository.isStrictHostKeyChecking(), strictHostKeyChecking);
+	}
+
 	@Configuration
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
