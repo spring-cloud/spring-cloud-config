@@ -121,6 +121,17 @@ public class EncryptionController {
 		return encrypt(this.defaultApplicationName, this.defaultProfile, data, type);
 	}
 
+	@RequestMapping(value = "/encrypt/validate", method = RequestMethod.POST)
+	public ResponseEntity<String> validate(@RequestBody String data,
+			@RequestHeader("Content-Type") MediaType type) {
+		try {
+			decrypt(data, type);
+			return new ResponseEntity("Valid", HttpStatus.OK);
+		} catch (IllegalStateException ex) {
+			return new ResponseEntity<String>("Invalid", HttpStatus.BAD_REQUEST);
+		}
+	}
+
 	@RequestMapping(value = "/encrypt/{name}/{profiles}", method = RequestMethod.POST)
 	public String encrypt(@PathVariable String name, @PathVariable String profiles,
 			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {

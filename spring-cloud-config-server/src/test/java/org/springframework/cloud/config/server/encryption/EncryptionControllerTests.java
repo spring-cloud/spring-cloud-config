@@ -31,7 +31,9 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
@@ -139,6 +141,25 @@ public class EncryptionControllerTests {
 		String decrypt = this.controller.decrypt("app", "default", cipher,
 				MediaType.TEXT_PLAIN);
 		assertEquals("Wrong decrypted plaintext: " + decrypt, "foo bar", decrypt);
+	}
+
+	@Test
+	public void validateShouldReturn200IfPassedValidEncryptedValue() {
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
+		String cipher = this.controller.encrypt("foo", MediaType.TEXT_PLAIN);
+		ResponseEntity<String> response = this.controller.validate(cipher, MediaType.TEXT_PLAIN);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+	}
+
+	@Test
+	public void validateShouldReturn400IfPassedInvalidEncryptedValue() {
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
+		String cipher = this.controller.encrypt("foo", MediaType.TEXT_PLAIN);
+		cipher = ((char) (cipher.charAt(0) + 1)) + cipher.substring(1);
+		ResponseEntity<String> response = this.controller.validate(cipher, MediaType.TEXT_PLAIN);
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	}
 
 }
