@@ -171,6 +171,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			Ref ref = checkout(git, label);
 			if (shouldPull(git, ref)) {
 				pull(git, label, ref);
+				ref = git.getRepository().getRef(ref.getName());
 
 				if (!isClean(git)) {
 					logger.warn("The local repository is dirty. Reseting it to origin/"
