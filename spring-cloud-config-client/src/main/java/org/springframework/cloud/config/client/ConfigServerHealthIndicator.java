@@ -16,17 +16,23 @@ import org.springframework.core.env.PropertySource;
 public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	private ConfigServicePropertySourceLocator locator;
+	private ConfigClientHealthProperties properties;
 	private Environment environment;
 
+	private long lastAccess = 0;
+
+	private PropertySource<?> cached;
+
 	public ConfigServerHealthIndicator(ConfigServicePropertySourceLocator locator,
-			Environment environment) {
+			Environment environment, ConfigClientHealthProperties properties) {
 		this.environment = environment;
 		this.locator = locator;
+		this.properties = properties;
 	}
 
     @Override
     protected void doHealthCheck(Builder builder) throws Exception {
-		PropertySource<?> propertySource = locator.locate(this.environment);
+		PropertySource<?> propertySource = getPropertySource();
 		builder.up();
 		if (propertySource instanceof CompositePropertySource) {
 			List<String> sources = new ArrayList<>();
@@ -40,4 +46,21 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 			builder.unknown().withDetail("error", "no property sources located");
 		}
     }
+
+	private PropertySource<?> getPropertySource() {
+		long accessTime = System.currentTimeMillis();
+		if (isCacheStale(accessTime)) {
+			this.lastAccess = accessTime;
+			this.cached = locator.locate(this.environment);
+		}
+		return this.cached;
+	}
+
+	private boolean isCacheStale(long accessTime) {
+		if (this.cached == null) {
+			return true;
+		}
+		return (accessTime - this.lastAccess) >= this.properties.getTimeToLive();
+	}
+
 }

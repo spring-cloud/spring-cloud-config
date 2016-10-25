@@ -1,3 +1,6 @@
+image::https://circleci.com/gh/spring-cloud/spring-cloud-config/tree/master.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud/spring-cloud-config/tree/master"]
+image::https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/master/graph/badge.svg["Codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/master"]
+image::https://api.codacy.com/project/badge/Grade/f064024a072c477e97dca6ed5a70fccd?branch=master["Codacy code quality", link="https://www.codacy.com/app/Spring-Cloud/spring-cloud-config?branch=master&utm_source=github.com&utm_medium=referral&utm_content=spring-cloud/spring-cloud-config&utm_campaign=Badge_Grade"]
 
 include::intro.adoc[]
 
@@ -76,7 +79,7 @@ http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.ht
 
 http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html[Java 7 JCE]
 
-http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html[Java 8 JCE]
+http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html[Java 8 JCE]
 
 Extract files into JDK/jre/lib/security folder (whichever version of JRE/JDK x64/x86 you are using).
 

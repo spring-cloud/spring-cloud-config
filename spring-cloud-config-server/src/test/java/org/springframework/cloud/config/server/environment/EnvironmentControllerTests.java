@@ -138,7 +138,15 @@ public class EnvironmentControllerTests {
 	public void placeholdersNotResolvedInYamlFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
-		// If there is a default value we can't prevent the placeholder being resolved
+		// If there is a default value we prevent the placeholder being resolved
+		assertEquals("a:\n  b:\n    c: ${foo:spam}\n", yaml);
+	}
+
+	@Test
+	public void placeholdersResolvedInYamlFromSystemPropertiesWhenFlagged() throws Exception {
+		whenPlaceholdersSystemPropsWithDefault();
+		String yaml = this.controller.yaml("foo", "bar", true).getBody();
+		// If there is a default value we do not prevent the placeholder being resolved
 		assertEquals("a:\n  b:\n    c: spam\n", yaml);
 	}
 
@@ -335,10 +343,18 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
-	public void placeholdersResolvedInJsonFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
+	public void placeholdersNotResolvedInJsonFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
 		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
-		// If there is a default value we can't prevent the placeholder being resolved
+		// If there is a default value we prevent the placeholder being resolved
+		assertEquals("{\"a\":{\"b\":{\"c\":\"${foo:spam}\"}}}", json);
+	}
+
+	@Test
+	public void placeholdersResolvedInJsonFromSystemPropertiesWhenFlagged() throws Exception {
+		whenPlaceholdersSystemPropsWithDefault();
+		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
+		// If there is a default value we do not prevent the placeholder being resolved
 		assertEquals("{\"a\":{\"b\":{\"c\":\"spam\"}}}", json);
 	}
 
@@ -392,7 +408,6 @@ public class EnvironmentControllerTests {
 		mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json"))
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(MockMvcResultMatchers.content().string("{}"));
-		;
 	}
 
 	@Test

@@ -57,7 +57,7 @@ public class EnvironmentRepositoryConfiguration {
 		private ConfigurableEnvironment environment;
 
 		@Bean
-		public EnvironmentRepository environmentRepository() {
+		public NativeEnvironmentRepository environmentRepository() {
 			return new NativeEnvironmentRepository(this.environment);
 		}
 
@@ -74,7 +74,7 @@ public class EnvironmentRepositoryConfiguration {
 		private ConfigServerProperties server;
 
 		@Bean
-		public EnvironmentRepository environmentRepository() {
+		public MultipleJGitEnvironmentRepository environmentRepository() {
 			MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment);
 			if (this.server.getDefaultLabel()!=null) {
 				repository.setDefaultLabel(this.server.getDefaultLabel());
@@ -93,7 +93,7 @@ public class EnvironmentRepositoryConfiguration {
 		private ConfigServerProperties server;
 
 		@Bean
-		public EnvironmentRepository environmentRepository() {
+		public SvnKitEnvironmentRepository environmentRepository() {
 			SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment);
 			if (this.server.getDefaultLabel()!=null) {
 				repository.setDefaultLabel(this.server.getDefaultLabel());

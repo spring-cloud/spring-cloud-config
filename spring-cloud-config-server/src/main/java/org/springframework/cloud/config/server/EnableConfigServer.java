@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Import;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import({ EnvironmentRepositoryConfiguration.class, ResourceRepositoryConfiguration.class,
+@Import({ ResourceRepositoryConfiguration.class, EnvironmentRepositoryConfiguration.class, 
 		ConfigServerEncryptionConfiguration.class, ConfigServerMvcConfiguration.class })
 public @interface EnableConfigServer {
 

@@ -200,7 +200,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 					try {
 						paths.add(Paths.get(resource.getURI()));
 					}
-					catch (IOException e) {
+					catch (Exception e) {
 						log.error("Cannot resolve URI for path: " + path);
 					}
 				}
@@ -301,8 +301,14 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 		if (log.isDebugEnabled()) {
 			log.debug("registering: " + dir + " for file creation events");
 		}
+		try {
 		dir.register(this.watcher, StandardWatchEventKinds.ENTRY_CREATE,
 				StandardWatchEventKinds.ENTRY_MODIFY);
+		} catch (IOException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new IOException("Cannot register watcher for " + dir, e);
+		}
 	}
 
 }
