@@ -40,12 +40,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ConditionalOnWebApplication
 public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 
-	@Autowired
-	private EnvironmentRepository repository;
-
-	@Autowired
-	private ConfigServerProperties server;
-
 	@Autowired(required = false)
 	private EnvironmentEncryptor environmentEncryptor;
 
@@ -60,24 +54,24 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 	}
 
 	@Bean
-	public EnvironmentController environmentController() {
-		EnvironmentController controller = new EnvironmentController(encrypted(), this.objectMapper);
-		controller.setStripDocumentFromYaml(this.server.isStripDocumentFromYaml());
+	public EnvironmentController environmentController(EnvironmentRepository envRepository, ConfigServerProperties server) {
+		EnvironmentController controller = new EnvironmentController(encrypted(envRepository, server), this.objectMapper);
+		controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
 		return controller;
 	}
 
 	@Bean
 	@ConditionalOnBean(ResourceRepository.class)
-	public ResourceController resourceController(ResourceRepository repository) {
+	public ResourceController resourceController(ResourceRepository repository, EnvironmentRepository envRepository, ConfigServerProperties server) {
 		ResourceController controller = new ResourceController(repository,
-				encrypted());
+				encrypted(envRepository, server));
 		return controller;
 	}
 
-	private EnvironmentRepository encrypted() {
+	private EnvironmentRepository encrypted(EnvironmentRepository envRepository, ConfigServerProperties server) {
 		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
-				this.repository, this.environmentEncryptor);
-		encrypted.setOverrides(this.server.getOverrides());
+				envRepository, this.environmentEncryptor);
+		encrypted.setOverrides(server.getOverrides());
 		return encrypted;
 	}
 }

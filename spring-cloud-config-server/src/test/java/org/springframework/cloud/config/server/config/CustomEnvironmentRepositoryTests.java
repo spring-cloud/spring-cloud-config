@@ -41,7 +41,7 @@ import static org.junit.Assert.assertFalse;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestApplication.class, properties = { "server.port:0",
+@SpringBootTest(classes = TestApplication.class, properties = {
 		"spring.config.name:configserver" }, webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext

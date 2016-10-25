@@ -40,7 +40,6 @@ import org.springframework.web.client.RestTemplate;
  */
 @Configuration
 @ConditionalOnMissingBean(EnvironmentRepository.class)
-@EnableConfigurationProperties(ConfigServerProperties.class)
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
