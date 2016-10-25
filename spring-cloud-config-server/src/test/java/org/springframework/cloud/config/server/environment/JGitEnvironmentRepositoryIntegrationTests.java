@@ -16,6 +16,12 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -50,8 +56,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StreamUtils;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Dave Syer
@@ -395,13 +399,13 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		String updatedRemoteVersion = remoteRef.getObjectId().getName();
 
 		//make sure our versions have been updated
-		assertEquals(updatedRemoteVersion, updatedLocalVersion);
-		assertNotEquals(updatedRemoteVersion, remoteVersion);
-		assertNotEquals(updatedLocalVersion, localVersion);
+		Assert.assertEquals(updatedRemoteVersion, updatedLocalVersion);
+		Assert.assertNotEquals(updatedRemoteVersion, remoteVersion);
+		Assert.assertNotEquals(updatedLocalVersion, localVersion);
 
 		//make sure our environment also reflects the updated version
 		//this used to have a bug
-		assertEquals(environment.getVersion(), updatedRemoteVersion);
+		Assert.assertEquals(environment.getVersion(), updatedRemoteVersion);
 
 
 
