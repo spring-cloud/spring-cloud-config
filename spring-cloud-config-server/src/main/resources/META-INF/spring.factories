@@ -8,5 +8,6 @@ org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapApplicati
 
 # Autoconfiguration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.cloud.config.server.config.ConfigServerAutoConfiguration,\
 org.springframework.cloud.config.server.config.EncryptionAutoConfiguration,\
 org.springframework.cloud.config.server.config.SingleEncryptorAutoConfiguration

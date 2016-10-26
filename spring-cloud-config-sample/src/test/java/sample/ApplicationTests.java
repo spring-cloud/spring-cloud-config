@@ -1,35 +1,33 @@
 package sample;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.TestRestTemplate;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = Application.class)
+import static org.junit.Assert.assertEquals;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = Application.class,
 // Normally spring.cloud.config.enabled:true is the default but since we have the config
 // server on the classpath we need to set it explicitly
-@IntegrationTest({ "server.port:0", "spring.cloud.config.enabled:true" })
-@WebAppConfiguration
+	properties = { "spring.cloud.config.enabled:true" }, webEnvironment = RANDOM_PORT)
 public class ApplicationTests {
 
 	private static int configPort = 0;
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port;
 
 	private static ConfigurableApplicationContext server;
