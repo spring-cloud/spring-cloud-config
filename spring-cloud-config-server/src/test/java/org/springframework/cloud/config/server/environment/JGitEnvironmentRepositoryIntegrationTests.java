@@ -184,7 +184,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		locations = repository.getLocations("bar", "test", "raw");
 		assertEquals(locations.getVersion(), commitToRevertBeforePull);
 
-		Assert.assertTrue("Local repository is not cleaned after retrieving resources.",
+		assertTrue("Local repository is not cleaned after retrieving resources.",
 				git.status().call().isClean());
 	}
 
