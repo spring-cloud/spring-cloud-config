@@ -37,6 +37,7 @@ import java.util.Arrays;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
@@ -159,7 +160,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.getBean(JGitEnvironmentRepository.class);
 
 		// Fetches the repository for the first time.
-		repository.getLocations("bar", "test", "raw");
+		SearchPathLocator.Locations locations = repository.getLocations("bar", "test", "raw");
+		assertEquals(locations.getVersion(), commitToRevertBeforePull);
 
 		// Resets to the original commit.
 		git.reset().setMode(ResetType.HARD).setRef("master").call();
@@ -179,9 +181,10 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		git.reset().setMode(ResetType.HARD).setRef(commitToRevertBeforePull).call();
 
 		// Triggers the repository refresh.
-		repository.getLocations("bar", "test", "raw");
+		locations = repository.getLocations("bar", "test", "raw");
+		assertEquals(locations.getVersion(), commitToRevertBeforePull);
 
-		Assert.assertTrue("Local repository is not cleaned after retreiving resources.",
+		Assert.assertTrue("Local repository is not cleaned after retrieving resources.",
 				git.status().call().isClean());
 	}
 
@@ -359,18 +362,11 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		config.save();
 
 		//get commit ids
-		CheckoutCommand checkout = localGit.checkout();
-		checkout.setName("master");
-		Ref localRef = checkout.call();
-		String localVersion = localRef.getObjectId().getName();
-
-		checkout = remoteGit.checkout();
-		checkout.setName("master");
-		Ref remoteRef = checkout.call();
-		String remoteVersion = remoteRef.getObjectId().getName();
+		String startingLocalVersion = getCommitID(localGit, "master");
+		String startingRemoteVersion = getCommitID(remoteGit, "master");
 
 		//verify the remote and local repo have the same commit ID
-		assertEquals(remoteVersion, localVersion);
+		assertEquals(startingRemoteVersion, startingLocalVersion);
 
 		//setup our test spring application pointing to the local repo
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
@@ -379,7 +375,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		Environment environment = repository.findOne("bar", "staging", "master");
 
 		//make sure the environments version is the same as the remote repo version
-		assertEquals(environment.getVersion(), remoteVersion);
+		assertEquals(environment.getVersion(), startingRemoteVersion);
 
 		//update the remote repo
 		FileOutputStream out = new FileOutputStream(remoteDir.getAbsolutePath() + "/bar.properties");
@@ -391,27 +387,24 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		environment = repository.findOne("bar", "staging", "master");
 
 		//do some more check outs to get updated version numbers
-		checkout = localGit.checkout();
-		checkout.setName("master");
-		localRef = checkout.call();
-		String updatedLocalVersion = localRef.getObjectId().getName();
-
-		checkout = remoteGit.checkout();
-		checkout.setName("master");
-		remoteRef = checkout.call();
-		String updatedRemoteVersion = remoteRef.getObjectId().getName();
+		String updatedLocalVersion = getCommitID(localGit, "master");
+		String updatedRemoteVersion = getCommitID(remoteGit, "master");
 
 		//make sure our versions have been updated
 		assertEquals(updatedRemoteVersion, updatedLocalVersion);
-		assertNotEquals(updatedRemoteVersion, remoteVersion);
-		assertNotEquals(updatedLocalVersion, localVersion);
+		assertNotEquals(updatedRemoteVersion, startingRemoteVersion);
+		assertNotEquals(updatedLocalVersion, startingLocalVersion);
 
 		//make sure our environment also reflects the updated version
 		//this used to have a bug
 		assertEquals(environment.getVersion(), updatedRemoteVersion);
+	}
 
-
-
+	private String getCommitID(Git git, String label) throws GitAPIException {
+		CheckoutCommand checkout = git.checkout();
+		checkout.setName(label);
+		Ref localRef = checkout.call();
+		return localRef.getObjectId().getName();
 	}
 
 	@Configuration
