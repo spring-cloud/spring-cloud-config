@@ -377,7 +377,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		if (hasText(getUsername())) {
 			setCredentialsProvider(clone);
 		}
-		return clone.call();
+		try {
+			return clone.call();
+		}
+		catch (GitAPIException e) {
+			deleteBaseDirIfExists();
+			throw e;
+		}
 	}
 
 	private void deleteBaseDirIfExists() {
