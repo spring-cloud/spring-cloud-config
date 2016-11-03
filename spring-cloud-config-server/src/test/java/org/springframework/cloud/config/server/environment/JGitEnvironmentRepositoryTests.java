@@ -16,20 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -47,6 +33,20 @@ import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
+
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Dave Syer
@@ -349,11 +349,12 @@ public class JGitEnvironmentRepositoryTests {
 		
 		try {
 			envRepository.findOne("bar", "staging", "master");
-		} catch (Exception ex) {
-			// expected
+		} 
+		catch (Exception ex) {
+			// expected - ignore
 		}
-		assertFalse("baseDir should be deleted when clone fails", this.basedir.exists());
 		
+		assertFalse("baseDir should be deleted when clone fails", this.basedir.exists());
 	}
 
 	class MockGitFactory extends JGitEnvironmentRepository.JGitFactory {
