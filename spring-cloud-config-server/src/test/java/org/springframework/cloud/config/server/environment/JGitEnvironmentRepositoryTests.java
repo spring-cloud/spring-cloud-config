@@ -16,25 +16,9 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.api.StatusCommand;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.lib.StoredConfig;
-import org.eclipse.jgit.util.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
-import org.springframework.core.env.StandardEnvironment;
-
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -45,6 +29,24 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.util.FileUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.core.env.StandardEnvironment;
 
 /**
  * @author Dave Syer
@@ -328,6 +330,30 @@ public class JGitEnvironmentRepositoryTests {
 		boolean shouldPull = repo.shouldPull(git, ref);
 
 		assertThat("shouldPull was false", shouldPull, is(true));
+	}
+	
+	@Test
+	public void shouldDeleteBaseDirWhenCloneFails()	throws Exception {
+		Git mockGit = mock(Git.class);
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.call()).thenThrow(new TransportException("failed to clone"));
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setBasedir(this.basedir);
+		
+		try {
+			envRepository.findOne("bar", "staging", "master");
+		} catch (Exception ex) {
+			// expected
+		}
+		assertFalse("baseDir should be deleted when clone fails", this.basedir.exists());
+		
 	}
 
 	class MockGitFactory extends JGitEnvironmentRepository.JGitFactory {
