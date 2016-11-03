@@ -1,5 +1,5 @@
 /*
- * Copyright 2016  Michael Davis
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,33 +24,39 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
 
 /**
- * This is based on the class org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
- * but provides better support for ssh git urls. The idea was borrowed from:
- * https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/porcelain/CloneRemoteRepositoryWithAuthentication.java
- * by Dominik Stadler.
+ * This is based on the class
+ * org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider but provides better
+ * support for ssh git urls. The idea was borrowed from:
+ * https://github.com/centic9/jgit-cookbook/blob/master/src/main/java/org/dstadler/jgit/
+ * porcelain/CloneRemoteRepositoryWithAuthentication.java by Dominik Stadler.
  * 
  * @author Michael Davis
  *
  */
 public class AllowHostsUsernamePasswordCredentialProvider extends CredentialsProvider {
-	
+
+	private static final String PASSWORD_PROMPT = "Password: ";
 	private String username;
 	private char[] password;
-	
-    public AllowHostsUsernamePasswordCredentialProvider(String username, String password) {
+
+	public AllowHostsUsernamePasswordCredentialProvider(String username,
+			String password) {
 		this.username = username;
 		this.password = password.toCharArray();
 	}
 
 	@Override
-    public boolean supports(CredentialItem... items) {
+	public boolean supports(CredentialItem... items) {
 
 		for (CredentialItem i : items) {
 
-			if (i instanceof CredentialItem.Username)
+			if (i instanceof CredentialItem.Password)
 				continue;
 
-			else if (i instanceof CredentialItem.Password)
+			if (i instanceof CredentialItem.StringType)
+				continue;
+
+			else if (i instanceof CredentialItem.Username)
 				continue;
 
 			else if (i instanceof CredentialItem.YesNoType)
@@ -61,44 +67,47 @@ public class AllowHostsUsernamePasswordCredentialProvider extends CredentialsPro
 
 		}
 		return true;
-    }
+	}
 
-    @Override
-    public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
+	@Override
+	public boolean get(URIish uri, CredentialItem... items)
+			throws UnsupportedCredentialItem {
 
 		for (CredentialItem i : items) {
+
+			if (i instanceof CredentialItem.Password) {
+				((CredentialItem.Password) i).setValue(password);
+				continue;
+			}
+
+			if (i instanceof CredentialItem.StringType
+					&& PASSWORD_PROMPT.equals(i.getPromptText())) {
+				((CredentialItem.StringType) i).setValue(new String(password));
+				continue;
+			}
 
 			if (i instanceof CredentialItem.Username) {
 				((CredentialItem.Username) i).setValue(username);
 				continue;
 			}
-			if (i instanceof CredentialItem.Password) {
-				((CredentialItem.Password) i).setValue(password);
-				continue;
-			}
-			if (i instanceof CredentialItem.StringType) {
-				if (i.getPromptText().equals("Password: ")) {
-					((CredentialItem.StringType) i).setValue(new String(
-							password));
-					continue;
-				}
-			}
-            if(i instanceof CredentialItem.YesNoType) {
-                ((CredentialItem.YesNoType)i).setValue(true);
-                return true;
-            }
-			throw new UnsupportedCredentialItem(uri, i.getClass().getName()
-					+ ":" + i.getPromptText());
-		}
-		
-		return true;
-    }
 
-    @Override
-    public boolean isInteractive() {
-        return false;
-    }
-    
+			if (i instanceof CredentialItem.YesNoType) {
+				((CredentialItem.YesNoType) i).setValue(true);
+				return true;
+			}
+
+			throw new UnsupportedCredentialItem(uri,
+					i.getClass().getName() + ":" + i.getPromptText());
+		}
+
+		return true;
+	}
+
+	@Override
+	public boolean isInteractive() {
+		return false;
+	}
+
 	public void clear() {
 		username = null;
 

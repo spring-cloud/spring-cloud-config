@@ -328,6 +328,13 @@ of the box when you store keys in the default directories (`~/.ssh`)
 and the uri points to an SSH location,
 e.g. "git@github.com:configuration/cloud-configuration". It is important that all
 keys in ~/.ssh/known_hosts are in "ssh-rsa" format. The new "ecdsa-sha2-nistp256" format is NOT supported.
+
+Alternatively you can set the property
+`spring.cloud.config.server.git.allow-ssh=true`. 
+This essentially tells the ssh client to trust all hosts.
+This is useful in cloud environments 
+where you may not be able to set up the known_hosts file on each node in a cluster.
+
 The repository is accessed using JGit, so any documentation you find on
 that should be applicable. HTTPS proxy settings can be set in
 `~/.git/config` or in the same way as for any other JVM process via

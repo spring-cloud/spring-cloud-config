@@ -40,9 +40,11 @@ import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -91,6 +93,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private boolean forcePull;
 
+	/**
+	 * This flag indicates that when given a git url using ssh, it should effectively say
+	 * "yes" to the question: "Do you accept this host's keys?"
+	 * 
+	 * This may be configured using the property spring.cloud.config.server.git.allow-ssh
+	 */
+	private boolean allowSsh = false;
+
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
 	}
@@ -133,6 +143,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	public void setForcePull(boolean forcePull) {
 		this.forcePull = forcePull;
+	}
+
+	public boolean isAllowSsh() {
+		return allowSsh;
+	}
+
+	public void setAllowSsh(boolean allowSsh) {
+		this.allowSsh = allowSsh;
 	}
 
 	@Override
@@ -404,8 +422,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
-		cmd.setCredentialsProvider(
-				new AllowHostsUsernamePasswordCredentialProvider(getUsername(), getPassword()));
+		CredentialsProvider credentialProvider = allowSsh
+				? new AllowHostsUsernamePasswordCredentialProvider(getUsername(),
+						getPassword())
+				: new UsernamePasswordCredentialsProvider(getUsername(), getPassword());
+				
+		cmd.setCredentialsProvider(credentialProvider);
 	}
 
 	private void setTimeout(TransportCommand<?, ?> pull) {
