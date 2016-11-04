@@ -139,8 +139,7 @@ public class JGitEnvironmentRepositoryTests {
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
-		//TODO: why is the version null in tag?
-		assertNull("version was not null", environment.getVersion());
+		assertVersion(environment);
 	}
 
 	@Test
@@ -253,33 +252,9 @@ public class JGitEnvironmentRepositoryTests {
 				this.environment);
 		repo.setForcePull(true);
 
-		boolean shouldPull = repo.shouldPull(git, null);
+		boolean shouldPull = repo.shouldPull(git);
 
 		assertThat("shouldPull was false", shouldPull, is(true));
-	}
-
-	@Test
-	public void shouldPullForcepullClean() throws Exception {
-		Git git = mock(Git.class);
-		StatusCommand statusCommand = mock(StatusCommand.class);
-		Status status = mock(Status.class);
-		Repository repository = mock(Repository.class);
-		StoredConfig storedConfig = mock(StoredConfig.class);
-
-		when(git.status()).thenReturn(statusCommand);
-		when(git.getRepository()).thenReturn(repository);
-		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
-		when(statusCommand.call()).thenReturn(status);
-		when(status.isClean()).thenReturn(true);
-
-		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
-				this.environment);
-		repo.setForcePull(true);
-
-		boolean shouldPull = repo.shouldPull(git, null);
-
-		assertThat("shouldPull was true", shouldPull, is(false));
 	}
 
 	@Test
@@ -287,7 +262,6 @@ public class JGitEnvironmentRepositoryTests {
 		Git git = mock(Git.class);
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
-		Ref ref = mock(Ref.class);
 		Repository repository = mock(Repository.class);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 
@@ -301,7 +275,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
 				this.environment);
 
-		boolean shouldPull = repo.shouldPull(git, ref);
+		boolean shouldPull = repo.shouldPull(git);
 
 		assertThat("shouldPull was true", shouldPull, is(false));
 	}
@@ -311,7 +285,6 @@ public class JGitEnvironmentRepositoryTests {
 		Git git = mock(Git.class);
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
-		Ref ref = mock(Ref.class);
 		Repository repository = mock(Repository.class);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 
@@ -325,7 +298,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
 				this.environment);
 
-		boolean shouldPull = repo.shouldPull(git, ref);
+		boolean shouldPull = repo.shouldPull(git);
 
 		assertThat("shouldPull was false", shouldPull, is(true));
 	}

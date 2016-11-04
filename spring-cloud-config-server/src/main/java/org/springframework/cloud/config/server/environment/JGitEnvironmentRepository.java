@@ -24,22 +24,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jgit.api.CheckoutCommand;
-import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
-import org.eclipse.jgit.api.FetchCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
-import org.eclipse.jgit.api.PullCommand;
-import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
-import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.api.StatusCommand;
-import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
@@ -60,6 +52,7 @@ import com.jcraft.jsch.Session;
  * @author Roy Clarkson
  * @author Marcos Barbero
  * @author Daniel Lavoie
+ * @author Ryan Lynch
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -141,11 +134,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		if (label == null) {
 			label = this.defaultLabel;
 		}
-		Ref ref = refresh(application, label);
-		String version = null;
-		if (ref != null) {
-			version = ref.getObjectId().getName();
-		}
+		String version = refresh(application, label);
 		return new Locations(application, profile, label, version,
 				getSearchLocations(getWorkingDirectory(), application, profile, label));
 	}
@@ -162,27 +151,29 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	/**
 	 * Get the working directory ready.
 	 */
-	private Ref refresh(String application, String label) {
+	private String refresh(String application, String label) {
 		initialize();
 		Git git = null;
 		try {
 			git = createGitClient();
-			git.getRepository().getConfig().setString("branch", label, "merge", label);
-			Ref ref = checkout(git, label);
-			if (shouldPull(git, ref)) {
-				pull(git, label, ref);
-				//a pull causes the ref retrieved from the checkout to be invalid
-				//so refreshing it.
-				ref = git.getRepository().getRef(ref.getName());
-				if (!isClean(git)) {
-					logger.warn("The local repository is dirty. Reseting it to origin/"
-							+ label + ".");
-
-					fetch(git, label, "origin");
-					resetHard(git, label, "refs/remotes/origin/" + label);
+			if (shouldPull(git)) {
+				fetch(git, label);
+				checkout(git, label);
+				if(isBranch(git, label)) {
+					merge(git, label);
+					if (!isClean(git)) {
+						logger.warn("The local repository is dirty. Resetting it to origin/"
+								+ label + ".");
+						resetHard(git, label, "refs/remotes/origin/" + label);
+					}
 				}
+
 			}
-			return ref;
+			else{
+				checkout(git, label);
+			}
+			//always return what is currently HEAD as the version
+			return git.getRepository().getRef("HEAD").getObjectId().getName();
 		}
 		catch (RefNotFoundException e) {
 			throw new NoSuchLabelException("No such label: " + label);
@@ -237,7 +228,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		return checkout.call();
 	}
 
-	/* for testing */ boolean shouldPull(Git git, Ref ref) throws GitAPIException {
+	/* for testing */ boolean shouldPull(Git git) throws GitAPIException {
 		boolean shouldPull;
 		Status gitStatus = git.status().call();
 		boolean isWorkingTreeClean = gitStatus.isClean();
@@ -249,7 +240,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			logDirty(gitStatus);
 		}
 		else {
-			shouldPull = isWorkingTreeClean && ref != null && originUrl != null;
+			shouldPull = isWorkingTreeClean && originUrl != null;
 		}
 		if (!isWorkingTreeClean && !this.forcePull) {
 			this.logger.info("Cannot pull from remote " + originUrl
@@ -279,33 +270,61 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		return isBranch(git, label) && !isLocalBranch(git, label);
 	}
 
-	private void fetch(Git git, String label, String remote) {
-		FetchCommand fetch = git.fetch().setRemote(remote);
+	private FetchResult fetch(Git git, String label) {
+		FetchCommand fetch = git.fetch().setRemote("origin");
 		setTimeout(fetch);
 		try {
 			if (hasText(getUsername())) {
 				setCredentialsProvider(fetch);
 			}
 
-			fetch.call();
+			FetchResult result = fetch.call();
+			if(result.getTrackingRefUpdates() != null && result.getTrackingRefUpdates().size() > 0) {
+				this.logger.info("Fetched for remote " + label + " and found " + result.getTrackingRefUpdates().size()
+					+ " updates");
+			}
+			return result;
 		}
 		catch (Exception ex) {
 			this.logger.warn("Could not fetch remote for " + label + " remote: " + git
 					.getRepository().getConfig().getString("remote", "origin", "url"));
+			return null;
 		}
 	}
 
-	private void resetHard(Git git, String label, String ref) {
+	private MergeResult merge(Git git, String label) {
+		try {
+			MergeCommand merge = git.merge();
+			merge.include(git.getRepository().getRef("origin/" + label));
+			MergeResult result = merge.call();
+			if(!result.getMergeStatus().isSuccessful()) {
+				this.logger.warn("Merged from remote " + label + " with result " + result.getMergeStatus());
+			}
+			return result;
+		}
+		catch (Exception ex) {
+			this.logger.warn("Could not merge remote for " + label + " remote: " + git
+					.getRepository().getConfig().getString("remote", "origin", "url"));
+			return null;
+		}
+	}
+
+	private Ref resetHard(Git git, String label, String ref) {
 		ResetCommand reset = git.reset();
 		reset.setRef(ref);
 		reset.setMode(ResetType.HARD);
 		try {
-			reset.call();
+			Ref resetRef = reset.call();
+			if(resetRef != null) {
+				this.logger.info("Reset label " + label + " to version " + resetRef.getObjectId());
+			}
+			return resetRef;
 		}
 		catch (Exception ex) {
 			this.logger.warn("Could not reset to remote for " + label + " (current ref="
 					+ ref + "), remote: " + git.getRepository().getConfig()
 							.getString("remote", "origin", "url"));
+			return null;
 		}
 	}
 

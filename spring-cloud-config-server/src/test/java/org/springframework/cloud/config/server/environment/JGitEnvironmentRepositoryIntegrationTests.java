@@ -44,7 +44,6 @@ import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FileUtils;
 import org.hamcrest.Matchers;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
@@ -57,7 +56,6 @@ import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.util.FileSystemUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StreamUtils;
 
@@ -335,60 +333,30 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void testVersionUpdate() throws Exception {
-		//setup local repository
-		ConfigServerTestUtils.prepareLocalRepo();
-		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
-		File localRepoFile = ResourceUtils.getFile(uri);
-		Git localGit = Git.open(localRepoFile.getAbsoluteFile());
+		JGitConfigServerTestData testData = JGitConfigServerTestData.prepareClonedGitRepository(TestConfiguration.class);
 
-		//setup remote repository
-		File remoteDir = new File("target/repos/clone");
-		if(remoteDir.exists()) {
-			FileSystemUtils.deleteRecursively(remoteDir);
-		}else{
-			remoteDir.mkdirs();
-		}
-		Git remoteGit = Git.cloneRepository()
-				.setURI( "file://" + localRepoFile.getAbsolutePath() )
-				.setDirectory( remoteDir )
-				.setBranch("master")
-				.setCloneAllBranches(true)
-				.call();
-		StoredConfig config = localGit.getRepository().getConfig();
-		config.setString("remote", "origin", "url",
-				remoteDir.getAbsolutePath());
-		config.setString("remote", "origin", "fetch",
-				"+refs/heads/*:refs/remotes/origin/*");
-		config.save();
+		//get our starting versions
+		String startingLocalVersion = getCommitID(testData.getClonedGit().getGit(), "master");
+		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
 
-		//get commit ids
-		String startingLocalVersion = getCommitID(localGit, "master");
-		String startingRemoteVersion = getCommitID(remoteGit, "master");
-
-		//verify the remote and local repo have the same commit ID
-		assertEquals(startingRemoteVersion, startingLocalVersion);
-
-		//setup our test spring application pointing to the local repo
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				.properties("spring.cloud.config.server.git.uri:" + "file://" + localRepoFile.getAbsolutePath()).run();
-		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("bar", "staging", "master");
+		//make sure we get the right version out of the gate
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
 
 		//make sure the environments version is the same as the remote repo version
 		assertEquals(environment.getVersion(), startingRemoteVersion);
 
 		//update the remote repo
-		FileOutputStream out = new FileOutputStream(remoteDir.getAbsolutePath() + "/bar.properties");
+		FileOutputStream out = new FileOutputStream(new File(testData.getServerGit().getGitWorkingDirectory(), "bar.properties"));
 		StreamUtils.copy("foo: foo", Charset.defaultCharset(), out);
-		remoteGit.add().addFilepattern("bar.properties").call();
-		remoteGit.commit().setMessage("Updated for pull").call();
+		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
+		testData.getServerGit().getGit().commit().setMessage("Updated for pull").call();
 
 		//pull the environment again which should update the local repo from the just updated remote repo
-		environment = repository.findOne("bar", "staging", "master");
+		environment = testData.getRepository().findOne("bar", "staging", "master");
 
 		//do some more check outs to get updated version numbers
-		String updatedLocalVersion = getCommitID(localGit, "master");
-		String updatedRemoteVersion = getCommitID(remoteGit, "master");
+		String updatedLocalVersion = getCommitID(testData.getClonedGit().getGit(), "master");
+		String updatedRemoteVersion = getCommitID(testData.getClonedGit().getGit(), "master");
 
 		//make sure our versions have been updated
 		assertEquals(updatedRemoteVersion, updatedLocalVersion);
@@ -398,6 +366,103 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		//make sure our environment also reflects the updated version
 		//this used to have a bug
 		assertEquals(environment.getVersion(), updatedRemoteVersion);
+	}
+
+	@Test
+	public void testNewRemoteBranch() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData.prepareClonedGitRepository(TestConfiguration.class);
+
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
+		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertEquals(fooProperty, "bar");
+
+		testData.getServerGit().getGit().branchCreate()
+				.setName("testNewRemoteBranch")
+				.call();
+
+		testData.getServerGit().getGit().checkout()
+				.setName("testNewRemoteBranch")
+				.call();
+
+		//update the remote repo
+		FileOutputStream out = new FileOutputStream(
+				new File(testData.getServerGit().getGitWorkingDirectory(), "/bar.properties"));
+		StreamUtils.copy("foo: branchBar", Charset.defaultCharset(), out);
+		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
+		testData.getServerGit().getGit().commit().setMessage("Updated for branch test").call();
+
+		environment = testData.getRepository().findOne("bar", "staging", "testNewRemoteBranch");
+		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertEquals(fooProperty, "branchBar");
+	}
+
+	@Test
+	public void testNewRemoteTag() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData.prepareClonedGitRepository(TestConfiguration.class);
+
+		Git serverGit = testData.getServerGit().getGit();
+
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
+		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertEquals(fooProperty, "bar");
+
+		serverGit.checkout().setName("master").call();
+
+		//create a new tag
+		serverGit.tag().setName("testTag").setMessage("Testing a tag").call();
+
+		//update the remote repo
+		FileOutputStream out = new FileOutputStream(
+				new File(testData.getServerGit().getGitWorkingDirectory(), "/bar.properties"));
+		StreamUtils.copy("foo: testAfterTag", Charset.defaultCharset(), out);
+		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
+		testData.getServerGit().getGit().commit().setMessage("Updated for branch test").call();
+
+		environment = testData.getRepository().findOne("bar", "staging", "master");
+		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertEquals(fooProperty, "testAfterTag");
+
+		environment = testData.getRepository().findOne("bar", "staging", "testTag");
+		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertEquals(fooProperty, "bar");
+	}
+
+	@Test
+	public void testNewCommitID() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData.prepareClonedGitRepository(TestConfiguration.class);
+
+		//get our starting versions
+		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
+
+		//make sure we get the right version out of the gate
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
+		assertEquals(environment.getVersion(), startingRemoteVersion);
+
+		//update the remote repo
+		FileOutputStream out = new FileOutputStream(new File(testData.getServerGit().getGitWorkingDirectory(), "bar.properties"));
+		StreamUtils.copy("foo: barNewCommit", Charset.defaultCharset(), out);
+		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
+		testData.getServerGit().getGit().commit().setMessage("Updated for pull").call();
+		String updatedRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
+
+		//do a normal request and verify we get the new version
+		environment = testData.getRepository().findOne("bar", "staging", "master");
+		assertEquals(environment.getVersion(), updatedRemoteVersion);
+		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertEquals(fooProperty, "barNewCommit");
+
+		//request the prior commit ID and make sure we get it
+		environment = testData.getRepository().findOne("bar", "staging", startingRemoteVersion);
+		assertEquals(environment.getVersion(), startingRemoteVersion);
+		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertEquals(fooProperty, "bar");
+	}
+
+
+	@Test(expected = NoSuchLabelException.class)
+	public void testUnknownLabelWithRemote() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData.prepareClonedGitRepository(TestConfiguration.class);
+		testData.getRepository().findOne("bar", "staging", "BADLabel");
 	}
 
 	private String getCommitID(Git git, String label) throws GitAPIException {
