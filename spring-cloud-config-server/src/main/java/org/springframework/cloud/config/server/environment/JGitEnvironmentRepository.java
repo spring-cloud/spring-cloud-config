@@ -24,10 +24,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.FetchCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
+import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.Ref;
@@ -157,10 +167,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		try {
 			git = createGitClient();
 			if (shouldPull(git)) {
-				fetch(git, label);
+				FetchResult fetchResult = fetch(git, label);
+                //checkout after fetch so we can get any new branches, tags, ect.
 				checkout(git, label);
 				if(isBranch(git, label)) {
-					merge(git, label);
+                    //merge results from fetch
+                    MergeResult mergeResult = merge(git, label);
 					if (!isClean(git)) {
 						logger.warn("The local repository is dirty. Resetting it to origin/"
 								+ label + ".");
@@ -170,6 +182,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 			}
 			else{
+                //nothing to update so just checkout
 				checkout(git, label);
 			}
 			//always return what is currently HEAD as the version
@@ -325,29 +338,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 					+ ref + "), remote: " + git.getRepository().getConfig()
 							.getString("remote", "origin", "url"));
 			return null;
-		}
-	}
-
-	/**
-	 * Assumes we are on a tracking branch (should be safe)
-	 */
-	private void pull(Git git, String label, Ref ref) {
-		PullCommand pull = git.pull();
-		setTimeout(pull);
-		try {
-			if (hasText(getUsername())) {
-				setCredentialsProvider(pull);
-			}
-			pull.call();
-		}
-		catch (Exception e) {
-			this.logger
-					.warn("Could not pull remote for " + label + " (current ref=" + ref
-							+ "), remote: "
-							+ git.getRepository().getConfig().getString("remote",
-									"origin", "url")
-							+ ", cause: (" + e.getClass().getSimpleName() + ") "
-							+ e.getMessage());
 		}
 	}
 

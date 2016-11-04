@@ -27,6 +27,7 @@ import java.io.File;
 
 /**
  * Class that holds objects that can be used for testing
+ * @author Ryan Lynch
  */
 public class JGitConfigServerTestData {
 

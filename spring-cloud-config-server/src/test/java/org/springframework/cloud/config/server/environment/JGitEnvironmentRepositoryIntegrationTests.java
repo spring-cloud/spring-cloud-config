@@ -63,6 +63,7 @@ import org.springframework.util.StreamUtils;
  * @author Dave Syer
  * @author Roy Clarkson
  * @author Daniel Lavoie
+ * @author Ryan Lynch
  */
 public class JGitEnvironmentRepositoryIntegrationTests {
 
