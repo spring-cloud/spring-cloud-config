@@ -168,11 +168,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			git = createGitClient();
 			if (shouldPull(git)) {
 				FetchResult fetchResult = fetch(git, label);
-                //checkout after fetch so we can get any new branches, tags, ect.
+				//checkout after fetch so we can get any new branches, tags, ect.
 				checkout(git, label);
 				if(isBranch(git, label)) {
-                    //merge results from fetch
-                    MergeResult mergeResult = merge(git, label);
+                			//merge results from fetch
+                    			MergeResult mergeResult = merge(git, label);
 					if (!isClean(git)) {
 						logger.warn("The local repository is dirty. Resetting it to origin/"
 								+ label + ".");
@@ -182,7 +182,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 			}
 			else{
-                //nothing to update so just checkout
+				//nothing to update so just checkout
 				checkout(git, label);
 			}
 			//always return what is currently HEAD as the version
