@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.NotMergedException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -34,7 +33,6 @@ import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.internal.matchers.Any;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
@@ -329,7 +327,6 @@ public class JGitEnvironmentRepositoryTests {
 
 		//refresh()->fetch
 		FetchCommand fetchCommand = mock(FetchCommand.class);
-		FetchResult fetchResult = mock(FetchResult.class);
 		when(git.fetch()).thenReturn(fetchCommand);
 		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
 		when(fetchCommand.call()).thenThrow(new InvalidRemoteException("invalid mock remote")); //here is our exception we are testing
