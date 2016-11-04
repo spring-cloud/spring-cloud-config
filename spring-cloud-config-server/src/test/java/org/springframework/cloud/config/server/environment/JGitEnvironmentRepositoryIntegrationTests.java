@@ -174,13 +174,15 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		git.add().addFilepattern(".").call();
 		git.commit().setMessage("Conflicting commit.").call();
 		git.push().setForce(true).call();
+		String conflictingCommit = git.log().setMaxCount(1).call().iterator()
+				.next().getName();
 
 		// Reset to the raw branch.
 		git.reset().setMode(ResetType.HARD).setRef(commitToRevertBeforePull).call();
 
 		// Triggers the repository refresh.
 		locations = repository.getLocations("bar", "test", "raw");
-		assertEquals(locations.getVersion(), commitToRevertBeforePull);
+		assertEquals(locations.getVersion(), conflictingCommit);
 
 		assertTrue("Local repository is not cleaned after retrieving resources.",
 				git.status().call().isClean());
