@@ -56,14 +56,13 @@ public class AllowHostsUsernamePasswordCredentialProvider extends CredentialsPro
 			if (i instanceof CredentialItem.StringType)
 				continue;
 
-			else if (i instanceof CredentialItem.Username)
+			if (i instanceof CredentialItem.Username)
 				continue;
 
-			else if (i instanceof CredentialItem.YesNoType)
+			if (i instanceof CredentialItem.YesNoType)
 				continue;
 
-			else
-				return false;
+			return false;
 
 		}
 		return true;
