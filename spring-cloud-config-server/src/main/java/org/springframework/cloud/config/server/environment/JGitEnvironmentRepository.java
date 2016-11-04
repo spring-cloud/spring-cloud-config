@@ -144,7 +144,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		if (label == null) {
 			label = this.defaultLabel;
 		}
-		String version = refresh(application, label);
+		String version = refresh(label);
 		return new Locations(application, profile, label, version,
 				getSearchLocations(getWorkingDirectory(), application, profile, label));
 	}
@@ -161,25 +161,24 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	/**
 	 * Get the working directory ready.
 	 */
-	private String refresh(String application, String label) {
+	private String refresh(String label) {
 		initialize();
 		Git git = null;
 		try {
 			git = createGitClient();
 			if (shouldPull(git)) {
-				FetchResult fetchResult = fetch(git, label);
+				fetch(git, label);
 				//checkout after fetch so we can get any new branches, tags, ect.
 				checkout(git, label);
 				if(isBranch(git, label)) {
-                			//merge results from fetch
-                    			MergeResult mergeResult = merge(git, label);
+					//merge results from fetch
+					merge(git, label);
 					if (!isClean(git)) {
 						logger.warn("The local repository is dirty. Resetting it to origin/"
 								+ label + ".");
 						resetHard(git, label, "refs/remotes/origin/" + label);
 					}
 				}
-
 			}
 			else{
 				//nothing to update so just checkout
@@ -241,7 +240,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		return checkout.call();
 	}
 
-	/* for testing */ boolean shouldPull(Git git) throws GitAPIException {
+
+	public /*public for testing*/ boolean shouldPull(Git git) throws GitAPIException {
 		boolean shouldPull;
 		Status gitStatus = git.status().call();
 		boolean isWorkingTreeClean = gitStatus.isClean();

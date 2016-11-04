@@ -18,16 +18,23 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.NotMergedException;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.matchers.Any;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
@@ -39,10 +46,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Dave Syer
@@ -299,6 +303,185 @@ public class JGitEnvironmentRepositoryTests {
 		boolean shouldPull = repo.shouldPull(git);
 
 		assertThat("shouldPull was false", shouldPull, is(true));
+	}
+
+	@Test
+	public void testFetchException() throws Exception {
+
+		Git git = mock(Git.class);
+		CloneCommand cloneCommand = mock(CloneCommand.class);
+		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
+				this.environment);
+		this.repository.setGitFactory(factory);
+
+		//refresh()->shouldPull
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		when(git.status()).thenReturn(statusCommand);
+		Repository repository = mock(Repository.class);
+		when(git.getRepository()).thenReturn(repository);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		//refresh()->fetch
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+		FetchResult fetchResult = mock(FetchResult.class);
+		when(git.fetch()).thenReturn(fetchCommand);
+		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
+		when(fetchCommand.call()).thenThrow(new InvalidRemoteException("invalid mock remote")); //here is our exception we are testing
+
+		//refresh()->checkout
+		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
+		//refresh()->checkout->containsBranch
+		ListBranchCommand listBranchCommand = mock(ListBranchCommand.class);
+		when(git.checkout()).thenReturn(checkoutCommand);
+		when(git.branchList()).thenReturn(listBranchCommand);
+		List<Ref> refs = new ArrayList<>();
+		Ref ref = mock(Ref.class);
+		refs.add(ref);
+		when(ref.getName()).thenReturn("/master");
+		when(listBranchCommand.call()).thenReturn(refs);
+
+		//refresh()->merge
+		MergeCommand mergeCommand = mock(MergeCommand.class);
+		when(git.merge()).thenReturn(mergeCommand);
+		when(mergeCommand.call()).thenThrow(new NotMergedException()); //here is our exception we are testing
+
+		//refresh()->return git.getRepository().getRef("HEAD").getObjectId().getName();
+		Ref headRef = mock(Ref.class);
+		when(repository.getRef(anyString())).thenReturn(headRef);
+
+		ObjectId newObjectId = ObjectId.fromRaw(new int[]{1,2,3,4,5});
+		when(headRef.getObjectId()).thenReturn(newObjectId);
+
+		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", null);
+		assertEquals(locations.getVersion(),newObjectId.getName());
+	}
+
+
+	@Test
+    public void testMergeException() throws Exception {
+
+		Git git = mock(Git.class);
+		CloneCommand cloneCommand = mock(CloneCommand.class);
+		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
+				this.environment);
+		this.repository.setGitFactory(factory);
+
+		//refresh()->shouldPull
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		when(git.status()).thenReturn(statusCommand);
+		Repository repository = mock(Repository.class);
+		when(git.getRepository()).thenReturn(repository);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		//refresh()->fetch
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+		FetchResult fetchResult = mock(FetchResult.class);
+		when(git.fetch()).thenReturn(fetchCommand);
+		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
+		when(fetchCommand.call()).thenReturn(fetchResult);
+		when(fetchResult.getTrackingRefUpdates()).thenReturn(Collections.EMPTY_LIST);
+
+		//refresh()->checkout
+		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
+		//refresh()->checkout->containsBranch
+		ListBranchCommand listBranchCommand = mock(ListBranchCommand.class);
+		when(git.checkout()).thenReturn(checkoutCommand);
+		when(git.branchList()).thenReturn(listBranchCommand);
+		List<Ref> refs = new ArrayList<>();
+		Ref ref = mock(Ref.class);
+		refs.add(ref);
+		when(ref.getName()).thenReturn("/master");
+		when(listBranchCommand.call()).thenReturn(refs);
+
+		//refresh()->merge
+		MergeCommand mergeCommand = mock(MergeCommand.class);
+		when(git.merge()).thenReturn(mergeCommand);
+		when(mergeCommand.call()).thenThrow(new NotMergedException()); //here is our exception we are testing
+
+		//refresh()->return git.getRepository().getRef("HEAD").getObjectId().getName();
+		Ref headRef = mock(Ref.class);
+		when(repository.getRef(anyString())).thenReturn(headRef);
+
+		ObjectId newObjectId = ObjectId.fromRaw(new int[]{1,2,3,4,5});
+		when(headRef.getObjectId()).thenReturn(newObjectId);
+
+		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
+		assertEquals(locations.getVersion(),newObjectId.getName());
+    }
+
+	@Test
+	public void testResetHardException() throws Exception {
+
+		Git git = mock(Git.class);
+		CloneCommand cloneCommand = mock(CloneCommand.class);
+		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
+				this.environment);
+		this.repository.setGitFactory(factory);
+
+		//refresh()->shouldPull
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		when(git.status()).thenReturn(statusCommand);
+		Repository repository = mock(Repository.class);
+		when(git.getRepository()).thenReturn(repository);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true).thenReturn(false);
+
+		//refresh()->fetch
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+		FetchResult fetchResult = mock(FetchResult.class);
+		when(git.fetch()).thenReturn(fetchCommand);
+		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
+		when(fetchCommand.call()).thenReturn(fetchResult);
+		when(fetchResult.getTrackingRefUpdates()).thenReturn(Collections.EMPTY_LIST);
+
+		//refresh()->checkout
+		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
+		//refresh()->checkout->containsBranch
+		ListBranchCommand listBranchCommand = mock(ListBranchCommand.class);
+		when(git.checkout()).thenReturn(checkoutCommand);
+		when(git.branchList()).thenReturn(listBranchCommand);
+		List<Ref> refs = new ArrayList<>();
+		Ref ref = mock(Ref.class);
+		refs.add(ref);
+		when(ref.getName()).thenReturn("/master");
+		when(listBranchCommand.call()).thenReturn(refs);
+
+		//refresh()->merge
+		MergeCommand mergeCommand = mock(MergeCommand.class);
+		when(git.merge()).thenReturn(mergeCommand);
+		when(mergeCommand.call()).thenThrow(new NotMergedException()); //here is our exception we are testing
+
+		//refresh()->hardReset
+		ResetCommand resetCommand = mock(ResetCommand.class);
+		when(git.reset()).thenReturn(resetCommand);
+		when(resetCommand.call()).thenReturn(ref);
+
+		//refresh()->return git.getRepository().getRef("HEAD").getObjectId().getName();
+		Ref headRef = mock(Ref.class);
+		when(repository.getRef(anyString())).thenReturn(headRef);
+
+		ObjectId newObjectId = ObjectId.fromRaw(new int[]{1,2,3,4,5});
+		when(headRef.getObjectId()).thenReturn(newObjectId);
+
+		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
+		assertEquals(locations.getVersion(),newObjectId.getName());
 	}
 
 	class MockGitFactory extends JGitEnvironmentRepository.JGitFactory {
