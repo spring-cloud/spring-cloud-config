@@ -31,9 +31,14 @@ import java.io.File;
  */
 public class JGitConfigServerTestData {
 
+    private LocalGit serverGit;
+    private LocalGit clonedGit;
+    private JGitEnvironmentRepository repository;
+    private ConfigurableApplicationContext context;
+
     public static class LocalGit {
-        Git git;
-        File gitWorkingDirectory;
+        private Git git;
+        private File gitWorkingDirectory;
 
         public LocalGit(Git git, File gitWorkingDirectory) {
             this.git = git;
@@ -48,11 +53,6 @@ public class JGitConfigServerTestData {
             return this.gitWorkingDirectory;
         }
     }
-
-    private LocalGit serverGit;
-    private LocalGit clonedGit;
-    private JGitEnvironmentRepository repository;
-    private ConfigurableApplicationContext context;
 
     public JGitConfigServerTestData(LocalGit serverGit, LocalGit clonedGit,
                                     JGitEnvironmentRepository repository, ConfigurableApplicationContext context) {
