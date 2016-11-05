@@ -281,9 +281,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private FetchResult fetch(Git git, String label) {
-		FetchCommand fetch = git.fetch()
-                .setRemote("origin")
-                .setTagOpt(TagOpt.FETCH_TAGS);
+		FetchCommand fetch = git.fetch();
+		fetch.setRemote("origin");
+		fetch.setTagOpt(TagOpt.FETCH_TAGS);
+
 		setTimeout(fetch);
 		try {
 			if (hasText(getUsername())) {

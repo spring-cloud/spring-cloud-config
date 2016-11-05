@@ -428,9 +428,17 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		environment = testData.getRepository().findOne("bar", "staging", "testTag");
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "bar");
+
+        //now move the tag and test again
+        serverGit.tag().setName("testTag").setForceUpdate(true).setMessage("Testing a moved tag").call();
+
+        environment = testData.getRepository().findOne("bar", "staging", "testTag");
+        fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+        assertEquals(fooProperty, "testAfterTag");
+
 	}
 
-	@Test
+    @Test
 	public void testNewCommitID() throws Exception {
 		JGitConfigServerTestData testData = JGitConfigServerTestData.prepareClonedGitRepository(TestConfiguration.class);
 
