@@ -41,11 +41,8 @@ import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.transport.FetchResult;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
-import org.eclipse.jgit.transport.SshSessionFactory;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -167,7 +164,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		try {
 			git = createGitClient();
 			if (shouldPull(git)) {
-				fetch(git, label);:wQ
+				fetch(git, label);
 				//checkout after fetch so we can get any new branches, tags, ect.
 				checkout(git, label);
 				if(isBranch(git, label)) {
@@ -284,7 +281,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private FetchResult fetch(Git git, String label) {
-		FetchCommand fetch = git.fetch().setRemote("origin");
+		FetchCommand fetch = git.fetch()
+                .setRemote("origin")
+                .setTagOpt(TagOpt.FETCH_TAGS);
 		setTimeout(fetch);
 		try {
 			if (hasText(getUsername())) {
