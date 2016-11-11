@@ -1,21 +1,19 @@
-/**
- * ---Begin Copyright Notice---20160101T000000Z
+/*
+ * Copyright 2013-2015 the original author or authors.
  *
- * NOTICE
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * THIS SOFTWARE IS THE PROPERTY OF AND CONTAINS CONFIDENTIAL INFORMATION OF
- * INFOR AND/OR ITS AFFILIATES OR SUBSIDIARIES AND SHALL NOT BE DISCLOSED
- * WITHOUT PRIOR WRITTEN PERMISSION. LICENSED CUSTOMERS MAY COPY AND ADAPT
- * THIS SOFTWARE FOR THEIR OWN USE IN ACCORDANCE WITH THE TERMS OF THEIR
- * SOFTWARE LICENSE AGREEMENT. ALL OTHER RIGHTS RESERVED.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * (c) COPYRIGHT 2016 INFOR. ALL RIGHTS RESERVED. THE WORD AND DESIGN MARKS
- * SET FORTH HEREIN ARE TRADEMARKS AND/OR REGISTERED TRADEMARKS OF INFOR
- * AND/OR ITS AFFILIATES AND SUBSIDIARIES. ALL RIGHTS RESERVED. ALL OTHER
- * TRADEMARKS LISTED HEREIN ARE THE PROPERTY OF THEIR RESPECTIVE OWNERS.
- *
- * ---End Copyright Notice---
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.credentials;
 
 import static org.springframework.util.StringUtils.hasText;
@@ -44,7 +42,7 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 //import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 
 /**
- * @author dlaidlaw
+ * @author Don Laidlaw
  *
  */
 public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
