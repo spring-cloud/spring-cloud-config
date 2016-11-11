@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import static org.springframework.util.StringUtils.hasText;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -84,6 +82,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
 	private String defaultLabel = DEFAULT_LABEL;
+	
+	/**
+	 * The credentials provider to use to connect to the Git repository.
+	 */
+	private CredentialsProvider gitCredentialsProvider;
 
 	/**
 	 * Flag to indicate that the repository should force pull. If true discard any local
@@ -287,7 +290,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 		setTimeout(fetch);
 		try {
-			if (hasText(getUsername())) {
+//			if (hasText(getUsername())) {
+			if (gitCredentialsProvider != null) {
 				setCredentialsProvider(fetch);
 			}
 
@@ -385,7 +389,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		CloneCommand clone = this.gitFactory.getCloneCommandByCloneRepository()
 				.setURI(getUri()).setDirectory(getBasedir());
 		setTimeout(clone);
-		if (hasText(getUsername())) {
+//		if (hasText(getUsername())) {
+		if (gitCredentialsProvider != null) {
 			setCredentialsProvider(clone);
 		}
 		try {
@@ -421,8 +426,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
-		cmd.setCredentialsProvider(
-				new UsernamePasswordCredentialsProvider(getUsername(), getPassword()));
+		if (gitCredentialsProvider != null) {
+			cmd.setCredentialsProvider(gitCredentialsProvider);
+		}
+//		cmd.setCredentialsProvider(
+//				new UsernamePasswordCredentialsProvider(getUsername(), getPassword()));
 	}
 
 	private void setTimeout(TransportCommand<?, ?> pull) {
@@ -487,5 +495,19 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			CloneCommand command = Git.cloneRepository();
 			return command;
 		}
+	}
+
+	/**
+	 * @return the gitCredentialsProvider
+	 */
+	public CredentialsProvider getGitCredentialsProvider() {
+		return gitCredentialsProvider;
+	}
+
+	/**
+	 * @param gitCredentialsProvider the gitCredentialsProvider to set
+	 */
+	public void setGitCredentialsProvider(CredentialsProvider gitCredentialsProvider) {
+		this.gitCredentialsProvider = gitCredentialsProvider;
 	}
 }
