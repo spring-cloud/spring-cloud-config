@@ -62,7 +62,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		super.setGitCredentialsProvider(GitCredentialsProviderFactory.createFor(getUri(), getUsername(), getPassword()));
+		GitCredentialsProviderFactory credentialFactory = new GitCredentialsProviderFactory();
+		super.setGitCredentialsProvider(credentialFactory.createFor(getUri(), getUsername(), getPassword()));
 		super.afterPropertiesSet();
 		for (String name : this.repos.keySet()) {
 			PatternMatchingJGitEnvironmentRepository repo = this.repos.get(name);
@@ -82,7 +83,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 				user = getUsername();
 				pass = getPassword();
 			}
-			repo.setGitCredentialsProvider(GitCredentialsProviderFactory.createFor(repo.getUri(), user, pass));
+			repo.setGitCredentialsProvider(credentialFactory.createFor(repo.getUri(), user, pass));
 			repo.afterPropertiesSet();
 		}
 	}

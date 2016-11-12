@@ -18,15 +18,21 @@ package org.springframework.cloud.config.server.credentials;
 
 import static org.springframework.util.StringUtils.hasText;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 /**
+ * A CredentialsProvider factory for Git repositories. Can handle AWS CodeCommit 
+ * repositories and other repositories with username/password.
  * 
  * @author Don Laidlaw
  *
  */
 public class GitCredentialsProviderFactory {
+	protected Log logger = LogFactory.getLog(getClass());
+
 	
 	/**
 	 * Search for a credential provider that will handle the specified URI. If
@@ -37,15 +43,28 @@ public class GitCredentialsProviderFactory {
 	 * @param password the password provided for the repository (may be null)
 	 * @return the first matched credentials provider or the default or null.
 	 */
-	public static CredentialsProvider createFor(String uri, String username, String password) {
+	public CredentialsProvider createFor(String uri, String username, String password) {
 		CredentialsProvider provider = null;
 		if (AwsCodeCommitCredentialProvider.canHandle(uri)) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Creating AwsCodeCommitCredentialsProvider for git uri "
+						+ uri);
+			}
 			AwsCodeCommitCredentialProvider aws = new AwsCodeCommitCredentialProvider();
 			aws.setUsername(username);
 			aws.setPassword(password);
 			provider = aws;
 		} else if (hasText(username)) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Creating UsernamePasswordCredentialsProvider for git uri "
+						+ uri);
+			}
 			provider = new UsernamePasswordCredentialsProvider(username, password.toCharArray());
+		} else {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Not Creating CredentialsProvider for git uri "
+						+ uri);
+			}
 		}
 		
 		return provider;
