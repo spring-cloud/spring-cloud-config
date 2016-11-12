@@ -307,6 +307,8 @@ start successfully with a misconfigured or invalid configuration source and
 not detect an error until an application requests configuration from that
 configuration source.
 
+===== Authentication
+
 To use HTTP basic authentication on the remote repository add the
 "username" and "password" properties separately (not in the URL),
 e.g.
@@ -336,6 +338,25 @@ system properties (`-Dhttps.proxyHost` and `-Dhttps.proxyPort`).
 TIP: If you don't know where your `~/.git` directory is us `git config
 --global` to manipulate the settings (e.g. `git config --global
 http.sslVerify false`).
+
+===== Authentication with AWS CodeCommit
+
+http://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html[AWS CodeCommit] authentication can also be
+done. AWS CodeCommit uses an authentication helper when using Git from the command line. This helper is not
+used with the JGit library, so a JGit CredentialProvider for AWS CodeCommit will be created if the Git
+URI matches the AWS CodeCommit pattern. AWS CodeCommit URIs always look like
+https://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}.
+
+If you provide a username and password with an AWS CodeCommit URI, then these must be
+the http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html[AWS accessKeyId and secretAccessKey]
+to be used to access the repository. If you do not specify a username and password,
+then the accessKeyId and secretAccessKey will be retrieved using the 
+http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[AWS Default Credential Provider Chain].
+
+If your Git URI matches the CodeCommit URI pattern (above) then you must provide
+valid AWS credentials in the username and password, or in one of the locations supported
+by the default credential provider chain. AWS EC2 instances may use
+http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html[IAM Roles for EC2 Instances].
 
 ===== Placeholders in Git Search Paths
 
