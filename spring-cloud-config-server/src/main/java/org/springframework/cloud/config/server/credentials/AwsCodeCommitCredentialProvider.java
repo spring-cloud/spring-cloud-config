@@ -28,6 +28,8 @@ import java.util.TimeZone;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -35,9 +37,9 @@ import org.eclipse.jgit.transport.URIish;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.util.ValidationUtils;
 
 /**
  * Provides a jgit {@link CredentialsProvider} implementation that can provide
@@ -64,6 +66,8 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	private static final String HMAC_SHA256 = "HmacSHA256";	//$NON-NLS-1$
 	private static final char[] hexArray = "0123456789abcdef".toCharArray();	//$NON-NLS-1$
 	
+	protected Log logger = LogFactory.getLog(getClass());
+
 	/**
 	 * The AWSCredentialsProvider will be used to provide the access key and secret
 	 * key if they are not specified.
@@ -121,8 +125,14 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	private AWSCredentials retrieveAwsCredentials() {
 		if (awsCredentialProvider == null) {
 			if (username != null && password != null) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Creating static AWSCredentialProvider for configured credentials");
+				}
 				awsCredentialProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(username, password));
 			} else {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Creating DefaultAWSCredentialsProviderChain to lookup AWS credentials");
+				}
 				awsCredentialProvider = new DefaultAWSCredentialsProviderChain();
 			}
 		}
@@ -136,11 +146,23 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 */
 	@Override
 	public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
-		AWSCredentials awsCredentials = retrieveAwsCredentials();
-		String awsKey = awsCredentials.getAWSAccessKeyId();
-		String awsSecretKey = awsCredentials.getAWSSecretKey();
-		
-		String codeCommitPassword = calculateCodeCommitPassword(uri, awsSecretKey);
+		String codeCommitPassword;
+		String awsKey;
+		String awsSecretKey;
+		try {
+			AWSCredentials awsCredentials = retrieveAwsCredentials();
+			awsKey = awsCredentials.getAWSAccessKeyId();
+			awsSecretKey = awsCredentials.getAWSSecretKey();
+		} catch (Throwable t) {
+			logger.warn("Unable to retrieve AWS Credentials", t);
+			return false;
+		}
+		try {
+			codeCommitPassword = calculateCodeCommitPassword(uri, awsSecretKey);
+		} catch (Throwable t) {
+			logger.warn("Error calculating the AWS CodeCommit password", t);
+			return false;
+		}
 		
 		for (CredentialItem i : items) {
 			if (i instanceof CredentialItem.Username) {
@@ -332,4 +354,24 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		this.password = password;
 	}
 
+	/**
+	 * Simple implementation of AWSCredentialsProvider that just wraps static AWSCredentials.
+	 * AWS Actually provides this class in newer versions of the AWS API.
+	 */
+	public class AWSStaticCredentialsProvider implements AWSCredentialsProvider {
+
+	    private final AWSCredentials credentials;
+
+	    public AWSStaticCredentialsProvider(AWSCredentials credentials) {
+	        this.credentials = ValidationUtils.assertNotNull(credentials, "credentials");
+	    }
+
+	    public AWSCredentials getCredentials() {
+	        return credentials;
+	    }
+
+	    public void refresh() {
+	    }
+
+	}
 }
