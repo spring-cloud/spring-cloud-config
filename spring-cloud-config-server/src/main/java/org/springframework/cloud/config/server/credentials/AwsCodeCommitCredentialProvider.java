@@ -39,15 +39,30 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 
-//import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-
 /**
+ * Provides a jgit {@link CredentialsProvider} implementation that can provide
+ * the appropriate credentials to connect to an AWS CodeCommit repository.
+ * <p>
+ * From the command line, you can configure git to use AWS code commit with a
+ * credential helper. However, jgit does not support credential helper commands,
+ * but it does provider a CredentialsProvider abstract class we can extend.
+ * </p>
+ * Connecting to an AWS CodeCommit (codecommit) repository requires an AWS access key
+ * and secret key. These are used to calculate a signature for the git request. The
+ * AWS access key is used as the codecommit username, and the calculated signature
+ * is used as the password. The process for calculating this signature is documented
+ * very well at http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html.
+ * </p>
+ * 
  * @author Don Laidlaw
  *
  */
 public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
-	
-	private final static char[] hexArray = "0123456789abcdef".toCharArray();
+
+	private static final String SHA_256 = "SHA-256";		//$NON-NLS-1$
+	private static final String UTF8 = "UTF8";				//$NON-NLS-1$
+	private static final String HMAC_SHA256 = "HmacSHA256";	//$NON-NLS-1$
+	private static final char[] hexArray = "0123456789abcdef".toCharArray();	//$NON-NLS-1$
 	
 	/**
 	 * The AWSCredentialsProvider will be used to provide the access key and secret
@@ -79,7 +94,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 
 
 	/**
-	 * We support username and password only.
+	 * We support username and password credential items only.
 	 * @see org.eclipse.jgit.transport.CredentialsProvider#supports(org.eclipse.jgit.transport.CredentialItem[])
 	 */
 	@Override
@@ -96,7 +111,14 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		return true;
 	}
 	
-	private AWSCredentials awsCredentials() {
+	/**
+	 * Get the AWSCredentials. If an AWSCredentialProvider was specified, use that, otherwise,
+	 * create a new AWSCredentialsProvider. If the username and password are provided, then
+	 * use those directly as AWSCredentials. Otherwise us the {@link DefaultAWSCredentialsProviderChain}
+	 * as is standard with AWS applications. 
+	 * @return the AWS credentials.
+	 */
+	private AWSCredentials retrieveAwsCredentials() {
 		if (awsCredentialProvider == null) {
 			if (username != null && password != null) {
 				awsCredentialProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(username, password));
@@ -114,13 +136,45 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 */
 	@Override
 	public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
-		AWSCredentials awsCredentials = awsCredentials();
+		AWSCredentials awsCredentials = retrieveAwsCredentials();
 		String awsKey = awsCredentials.getAWSAccessKeyId();
 		String awsSecretKey = awsCredentials.getAWSSecretKey();
 		
+		String codeCommitPassword = calculateCodeCommitPassword(uri, awsSecretKey);
+		
+		for (CredentialItem i : items) {
+			if (i instanceof CredentialItem.Username) {
+				((CredentialItem.Username) i).setValue(awsKey);
+				continue;
+			}
+			if (i instanceof CredentialItem.Password) {
+				((CredentialItem.Password) i).setValue(codeCommitPassword.toCharArray());
+				continue;
+			}
+			if (i instanceof CredentialItem.StringType) {
+				if (i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
+					((CredentialItem.StringType) i).setValue(new String(codeCommitPassword));
+					continue;
+				}
+			}
+			throw new UnsupportedCredentialItem(uri, i.getClass().getName() + ":" + i.getPromptText()); //$NON-NLS-1$
+		}
+
+		return true;
+	}
+	
+	/**
+	 * Calculate the AWS CodeCommit password for the provided URI and AWS secret key.
+	 * This uses the algorithm published by AWS at 
+	 * http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
+	 * @param uri the codecommit repository uri
+	 * @param awsSecretKey the aws secret key
+	 * @return the password to use in the git request
+	 */
+	private static String calculateCodeCommitPassword(URIish uri, String awsSecretKey) {
         String[] split = uri.getHost().split("\\.");
         if (split.length < 3) {
-            throw new UnsupportedCredentialItem(uri, "Can not detect region from URI");
+            throw new CredentialException("Cannot detect AWS region from URI", null);
         }
         String region = split[1];
 
@@ -131,38 +185,23 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
         String dateStamp = dateFormat.format(now);
         String shortDateStamp = dateStamp.substring(0, 8);
         
-        String toSign = "AWS4-HMAC-SHA256\n" +
-                dateStamp + "\n" +
-                shortDateStamp + "/" + region + "/codecommit/aws4_request\n"
-                + bytesToHex(digest(uri));
-
-		byte[] signedRequest;
+        String codeCommitPassword;
 		try {
-			signedRequest = sign(awsSecretKey, shortDateStamp, region, toSign);
+			StringBuilder stringToSign = new StringBuilder();
+			stringToSign.append("AWS4-HMAC-SHA256\n")
+				.append(dateStamp).append("\n")
+				.append(shortDateStamp)
+				.append("/").append(region)
+				.append("/codecommit/aws4_request\n")
+				.append(bytesToHexString(canonicalRequestDigest(uri)));
+
+			byte[] signedRequest = sign(awsSecretKey, shortDateStamp, region, stringToSign.toString());
+			codeCommitPassword = dateStamp + "Z" + bytesToHexString(signedRequest);
 		} catch (Exception e) {
-			throw new CredentialException("Error calculating AWS Signature", e);
-		}
-		String pass = dateStamp + "Z" + bytesToHex(signedRequest);
-
-		for (CredentialItem i : items) {
-			if (i instanceof CredentialItem.Username) {
-				((CredentialItem.Username) i).setValue(awsKey);
-				continue;
-			}
-			if (i instanceof CredentialItem.Password) {
-				((CredentialItem.Password) i).setValue(pass.toCharArray());
-				continue;
-			}
-			if (i instanceof CredentialItem.StringType) {
-				if (i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
-					((CredentialItem.StringType) i).setValue(new String(pass));
-					continue;
-				}
-			}
-			throw new UnsupportedCredentialItem(uri, i.getClass().getName() + ":" + i.getPromptText()); //$NON-NLS-1$
+			throw new CredentialException("Error calculating AWS CodeCommit password", e);
 		}
 
-		return true;
+		return codeCommitPassword;
 	}
 	
 	/**
@@ -175,14 +214,14 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	}
 
 	private static byte[] hmacSha256(String data, byte[] key) throws Exception {
-	    String algorithm="HmacSHA256";
+	    String algorithm = HMAC_SHA256;
 	    Mac mac = Mac.getInstance(algorithm);
 	    mac.init(new SecretKeySpec(key, algorithm));
-	    return mac.doFinal(data.getBytes("UTF8"));
+	    return mac.doFinal(data.getBytes(UTF8));
 	}
 	
 	private static byte[] sign(String secret, String shortDateStamp, String region, String toSign) throws Exception {
-	    byte[] kSecret = ("AWS4" + secret).getBytes("UTF8");
+	    byte[] kSecret = ("AWS4" + secret).getBytes(UTF8);
 	    byte[] kDate = hmacSha256(shortDateStamp, kSecret);
 	    byte[] kRegion = hmacSha256(region, kDate);
 	    byte[] kService = hmacSha256("codecommit", kRegion);
@@ -190,17 +229,25 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	    return hmacSha256(toSign, kSigning);
 	}
 	
-	private static byte[] digest(URIish uri) {
-		String canonicalRequest = "GIT\n" + uri.getPath() + "\n" + "\n" + "host:" + uri.getHost() + "\n" + "\n"
-				+ "host\n";
-		MessageDigest digest;
-		try {
-			digest = MessageDigest.getInstance("SHA-256");
-		} catch (NoSuchAlgorithmException e) {
-			throw new CredentialException("No SHA-256 message digest algorithm found", e);
-		}
+	/**
+	 * Creates a message digest
+	 * @param uri
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 */
+	private static byte[] canonicalRequestDigest(URIish uri) throws NoSuchAlgorithmException {
+		StringBuilder canonicalRequest = new StringBuilder();
+		canonicalRequest.append("GIT\n")		// codecommit uses GIT as the request method
+			.append(uri.getPath()).append("\n")	// URI request path
+			.append("\n")						// Query string, always empty for codecommit
+						// Next is canonical headers, codecommit only requires the host header
+			.append("host:").append(uri.getHost()).append("\n")
+			.append("\n")						// canonical headers are always terminated by newline
+			.append("host\n");					// The list of canonical headers, only one for codecommit
+
+		MessageDigest digest = MessageDigest.getInstance(SHA_256);
 		
-		return digest.digest(canonicalRequest.getBytes());
+		return digest.digest(canonicalRequest.toString().getBytes());
 	}
 	
 	/**
@@ -208,7 +255,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 * @param bytes the bytes
 	 * @return a string of hex characters encoding the bytes.
 	 */
-    private static String bytesToHex(byte[] bytes) {
+    private static String bytesToHexString(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
