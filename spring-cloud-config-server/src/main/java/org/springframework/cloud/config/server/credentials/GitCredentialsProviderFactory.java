@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.springframework.util.ClassUtils;
 
 /**
  * A CredentialsProvider factory for Git repositories. Can handle AWS CodeCommit 
@@ -45,7 +46,7 @@ public class GitCredentialsProviderFactory {
 	 */
 	public CredentialsProvider createFor(String uri, String username, String password) {
 		CredentialsProvider provider = null;
-		if (AwsCodeCommitCredentialProvider.canHandle(uri)) {
+		if (awsAvailable() && AwsCodeCommitCredentialProvider.canHandle(uri)) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Creating AwsCodeCommitCredentialsProvider for git uri "
 						+ uri);
@@ -68,6 +69,24 @@ public class GitCredentialsProviderFactory {
 		}
 		
 		return provider;
+	}
+	
+	/**
+	 * Check to see if the AWS Authentication API is available.
+	 * @return true if the com.amazonaws.auth.DefaultAWSCredentialsProviderChain is present,
+	 * 		false otherwise.
+	 */
+	private boolean awsAvailable() {
+		boolean available = ClassUtils.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
+		if (available && logger.isDebugEnabled()) {
+			logger.debug(
+					"com.amazonaws.auth.DefaultAWSCredentialsProviderChain is available, "
+					+ "enabling AwsCodeCommitCredentialProvider");
+		} else if (logger.isDebugEnabled()) {
+			logger.debug("com.amazonaws.auth.DefaultAWSCredentialsProviderChain is not available, "
+					+ "disabling AwsCodeCommitCredentialProvider");
+		}
+		return available;
 	}
 	
 }
