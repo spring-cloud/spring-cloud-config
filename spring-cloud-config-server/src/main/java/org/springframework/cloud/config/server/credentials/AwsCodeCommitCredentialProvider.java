@@ -125,14 +125,8 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	private AWSCredentials retrieveAwsCredentials() {
 		if (awsCredentialProvider == null) {
 			if (username != null && password != null) {
-				if (logger.isDebugEnabled()) {
-					logger.debug("Creating static AWSCredentialProvider for configured credentials");
-				}
 				awsCredentialProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(username, password));
 			} else {
-				if (logger.isDebugEnabled()) {
-					logger.debug("Creating DefaultAWSCredentialsProviderChain to lookup AWS credentials");
-				}
 				awsCredentialProvider = new DefaultAWSCredentialsProviderChain();
 			}
 		}
@@ -193,7 +187,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 */
 	private static String calculateCodeCommitPassword(URIish uri, String awsSecretKey) {
         String[] split = uri.getHost().split("\\.");
-        if (split.length < 3) {
+        if (split.length < 4) {
             throw new CredentialException("Cannot detect AWS region from URI", null);
         }
         String region = split[1];

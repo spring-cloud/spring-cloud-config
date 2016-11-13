@@ -54,25 +54,12 @@ public class GitCredentialsProviderFactory {
 	public CredentialsProvider createFor(String uri, String username, String password) {
 		CredentialsProvider provider = null;
 		if (awsAvailable() && AwsCodeCommitCredentialProvider.canHandle(uri)) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Creating AwsCodeCommitCredentialsProvider for git uri "
-						+ uri);
-			}
 			AwsCodeCommitCredentialProvider aws = new AwsCodeCommitCredentialProvider();
 			aws.setUsername(username);
 			aws.setPassword(password);
 			provider = aws;
 		} else if (hasText(username)) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Creating UsernamePasswordCredentialsProvider for git uri "
-						+ uri);
-			}
 			provider = new UsernamePasswordCredentialsProvider(username, password.toCharArray());
-		} else {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Not Creating CredentialsProvider for git uri "
-						+ uri);
-			}
 		}
 		
 		return provider;
@@ -84,21 +71,8 @@ public class GitCredentialsProviderFactory {
 	 * 		false otherwise.
 	 */
 	private boolean awsAvailable() {
-		boolean available = false;
-		if (awsCodeCommitEnabled) {
-			available = ClassUtils.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
-			if (available && logger.isDebugEnabled()) {
-				logger.debug(
-						"com.amazonaws.auth.DefaultAWSCredentialsProviderChain is available, "
-						+ "enabling AwsCodeCommitCredentialProvider");
-			} else if (logger.isDebugEnabled()) {
-				logger.debug("com.amazonaws.auth.DefaultAWSCredentialsProviderChain is not available, "
-						+ "disabling AwsCodeCommitCredentialProvider");
-			}
-		} else if (logger.isDebugEnabled()) {
-			logger.debug("AWS Code Commit credentials provider is disabled");
-		}
-		return available;
+		return awsCodeCommitEnabled
+			&& ClassUtils.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
 	}
 
 	/**
