@@ -231,6 +231,10 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	@Override
 	public void reset(URIish uri) {
 		// Should throw out cached info.
+		// Note that even though the credentials (password) we calculate here is
+		// valid for 15 minutes, we do not cache it. Instead we just re-calculate
+		// it each time we need it. However, the AWSCredentialProvider will cache
+		// its AWSCredentials object.
 	}
 
 	private static byte[] hmacSha256(String data, byte[] key) throws Exception {

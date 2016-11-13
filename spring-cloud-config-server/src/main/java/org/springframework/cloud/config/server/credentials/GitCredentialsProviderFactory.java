@@ -34,6 +34,13 @@ import org.springframework.util.ClassUtils;
 public class GitCredentialsProviderFactory {
 	protected Log logger = LogFactory.getLog(getClass());
 
+	/**
+	 * Enable the AWS Code Commit credentials provider for Git URI's
+	 * that match the AWS Code Commit pattern of
+	 * https://git-codecommit.${AWS_REGION}.amazonaws.com/${repoPath}.
+	 * Enabled by default.
+	 */
+	protected boolean awsCodeCommitEnabled = true;
 	
 	/**
 	 * Search for a credential provider that will handle the specified URI. If
@@ -77,16 +84,35 @@ public class GitCredentialsProviderFactory {
 	 * 		false otherwise.
 	 */
 	private boolean awsAvailable() {
-		boolean available = ClassUtils.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
-		if (available && logger.isDebugEnabled()) {
-			logger.debug(
-					"com.amazonaws.auth.DefaultAWSCredentialsProviderChain is available, "
-					+ "enabling AwsCodeCommitCredentialProvider");
+		boolean available = false;
+		if (awsCodeCommitEnabled) {
+			available = ClassUtils.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
+			if (available && logger.isDebugEnabled()) {
+				logger.debug(
+						"com.amazonaws.auth.DefaultAWSCredentialsProviderChain is available, "
+						+ "enabling AwsCodeCommitCredentialProvider");
+			} else if (logger.isDebugEnabled()) {
+				logger.debug("com.amazonaws.auth.DefaultAWSCredentialsProviderChain is not available, "
+						+ "disabling AwsCodeCommitCredentialProvider");
+			}
 		} else if (logger.isDebugEnabled()) {
-			logger.debug("com.amazonaws.auth.DefaultAWSCredentialsProviderChain is not available, "
-					+ "disabling AwsCodeCommitCredentialProvider");
+			logger.debug("AWS Code Commit credentials provider is disabled");
 		}
 		return available;
+	}
+
+	/**
+	 * @return the awsCodeCommitEnabled
+	 */
+	public boolean isAwsCodeCommitEnabled() {
+		return awsCodeCommitEnabled;
+	}
+
+	/**
+	 * @param awsCodeCommitEnabled the awsCodeCommitEnabled to set
+	 */
+	public void setAwsCodeCommitEnabled(boolean awsCodeCommitEnabled) {
+		this.awsCodeCommitEnabled = awsCodeCommitEnabled;
 	}
 	
 }
