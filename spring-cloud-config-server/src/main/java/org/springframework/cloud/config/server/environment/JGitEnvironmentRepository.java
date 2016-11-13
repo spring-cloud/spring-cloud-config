@@ -290,7 +290,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 		setTimeout(fetch);
 		try {
-//			if (hasText(getUsername())) {
 			if (gitCredentialsProvider != null) {
 				setCredentialsProvider(fetch);
 			}
@@ -389,7 +388,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		CloneCommand clone = this.gitFactory.getCloneCommandByCloneRepository()
 				.setURI(getUri()).setDirectory(getBasedir());
 		setTimeout(clone);
-//		if (hasText(getUsername())) {
 		if (gitCredentialsProvider != null) {
 			setCredentialsProvider(clone);
 		}
@@ -429,8 +427,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		if (gitCredentialsProvider != null) {
 			cmd.setCredentialsProvider(gitCredentialsProvider);
 		}
-//		cmd.setCredentialsProvider(
-//				new UsernamePasswordCredentialsProvider(getUsername(), getPassword()));
 	}
 
 	private void setTimeout(TransportCommand<?, ?> pull) {

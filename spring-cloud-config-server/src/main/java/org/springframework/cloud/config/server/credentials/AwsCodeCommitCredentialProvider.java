@@ -173,11 +173,9 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 				((CredentialItem.Password) i).setValue(codeCommitPassword.toCharArray());
 				continue;
 			}
-			if (i instanceof CredentialItem.StringType) {
-				if (i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
-					((CredentialItem.StringType) i).setValue(new String(codeCommitPassword));
-					continue;
-				}
+			if (i instanceof CredentialItem.StringType && i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
+				((CredentialItem.StringType) i).setValue(codeCommitPassword);
+				continue;
 			}
 			throw new UnsupportedCredentialItem(uri, i.getClass().getName() + ":" + i.getPromptText()); //$NON-NLS-1$
 		}
@@ -371,6 +369,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	    }
 
 	    public void refresh() {
+	    	// Nothing to do for static credentials.
 	    }
 
 	}

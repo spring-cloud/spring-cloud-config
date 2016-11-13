@@ -358,6 +358,9 @@ valid AWS credentials in the username and password, or in one of the locations s
 by the default credential provider chain. AWS EC2 instances may use
 http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html[IAM Roles for EC2 Instances].
 
+Note: The aws-java-sdk-core jar is an optional dependency. If the aws-java-sdk-core jar is not on your
+classpath, then the AWS Code Commit credential provider will not be created regardless of the git server URI. 
+
 ===== Placeholders in Git Search Paths
 
 Spring Cloud Config Server also supports a search path with
