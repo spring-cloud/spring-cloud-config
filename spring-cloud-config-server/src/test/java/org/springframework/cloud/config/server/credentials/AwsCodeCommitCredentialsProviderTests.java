@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import java.net.URISyntaxException;
 
+import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.URIish;
 import org.junit.Before;
@@ -39,6 +40,7 @@ public class AwsCodeCommitCredentialsProviderTests {
 	private static final String PASSWORD = "secret";
 	private static final String USER = "test";
 	private static final String AWS_REPO = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test";
+	private static final String BAD_REPO = "https://amazonaws.com/v1/repos/test";
 
 	private AwsCodeCommitCredentialProvider provider;
 	
@@ -64,6 +66,21 @@ public class AwsCodeCommitCredentialsProviderTests {
 			new CredentialItem.Password()
 		}));
 	}
+
+	@Test
+	public void testNotSupportsOther() {
+		assertFalse(provider.supports(new CredentialItem[] {
+			new CredentialItem.YesNoType("OK To Login?")	// this is not ok
+		}));
+		assertFalse(provider.supports(new CredentialItem[] {
+			new CredentialItem.StringType("OK To Login?", true)	// this is not ok
+		}));
+		assertFalse(provider.supports(new CredentialItem[] {
+				new CredentialItem.Username(),	// this is ok
+				new CredentialItem.Password(),	// this is ok
+				new CredentialItem.StringType("OK To Login?", true) // this is not ok
+		}));
+	}
 	
 	@Test
 	public void testAwsCredentialsProviderIsNullInitially() {
@@ -79,6 +96,28 @@ public class AwsCodeCommitCredentialsProviderTests {
 		awsProvider = provider.getAwsCredentialProvider();
 		assertNotNull(awsProvider);
 		assertTrue(awsProvider instanceof AwsCodeCommitCredentialProvider.AWSStaticCredentialsProvider);
+	}
+	
+	@Test
+	public void testBadUriReturnsFalse() throws UnsupportedCredentialItem, URISyntaxException {
+		CredentialItem[] credentialItems = makeCredentialItems();
+		assertFalse(provider.get(new URIish(BAD_REPO), credentialItems));
+	}
+	
+	@Test
+	public void testThrowsUnsupportedCredentialException() throws URISyntaxException {
+		CredentialItem[] goodCredentialItems = makeCredentialItems();
+		CredentialItem[] badCredentialItems = new CredentialItem[] {
+				goodCredentialItems[0],
+				goodCredentialItems[1],
+				new CredentialItem.YesNoType("OK?")
+		};
+		try {
+			provider.get(new URIish(AWS_REPO), badCredentialItems);
+			fail("Expected UnsupportedCredentialItem exception");
+		} catch (UnsupportedCredentialItem e) {
+			assertNotNull(e.getMessage());
+		}
 	}
 	
 	@Test
