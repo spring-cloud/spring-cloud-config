@@ -58,7 +58,8 @@ public class GitCredentialsProviderFactory {
 			aws.setUsername(username);
 			aws.setPassword(password);
 			provider = aws;
-		} else if (hasText(username)) {
+		}
+		else if (hasText(username)) {
 			provider = new UsernamePasswordCredentialsProvider(username, password.toCharArray());
 		}
 		

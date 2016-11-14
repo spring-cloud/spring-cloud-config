@@ -61,30 +61,31 @@ import com.amazonaws.util.ValidationUtils;
  */
 public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 
-	private static final String SHA_256 = "SHA-256";		//$NON-NLS-1$
-	private static final String UTF8 = "UTF8";				//$NON-NLS-1$
-	private static final String HMAC_SHA256 = "HmacSHA256";	//$NON-NLS-1$
-	private static final char[] hexArray = "0123456789abcdef".toCharArray();	//$NON-NLS-1$
-	
+	private static final String SHA_256 = "SHA-256"; //$NON-NLS-1$
+	private static final String UTF8 = "UTF8"; //$NON-NLS-1$
+	private static final String HMAC_SHA256 = "HmacSHA256"; //$NON-NLS-1$
+	private static final char[] hexArray = "0123456789abcdef".toCharArray(); //$NON-NLS-1$
+
 	protected Log logger = LogFactory.getLog(getClass());
 
 	/**
-	 * The AWSCredentialsProvider will be used to provide the access key and secret
-	 * key if they are not specified.
+	 * The AWSCredentialsProvider will be used to provide the access key and
+	 * secret key if they are not specified.
 	 */
 	private AWSCredentialsProvider awsCredentialProvider;
-	
+
 	/**
-	 * If the access and secret keys are provided, then the AWSCredentialsProvider will 
-	 * not be used. The username is the awsAccessKeyId.
+	 * If the access and secret keys are provided, then the
+	 * AWSCredentialsProvider will not be used. The username is the
+	 * awsAccessKeyId.
 	 */
-    private String username;
+	private String username;
 	
 	/**
 	 * If the access and secret keys are provided, then the AWSCredentialsProvider will 
 	 * not be used. The password is the awsSecretKey.
 	 */
-    private String password;
+	private String password;
 
 	/**
 	 * This credentials provider cannot run interactively.
@@ -106,9 +107,11 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		for (CredentialItem i : items) {
 			if (i instanceof CredentialItem.Username) {
 				continue;
-			} else if (i instanceof CredentialItem.Password) {
+			}
+			else if (i instanceof CredentialItem.Password) {
 				continue;
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
@@ -186,20 +189,20 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 * @return the password to use in the git request
 	 */
 	private static String calculateCodeCommitPassword(URIish uri, String awsSecretKey) {
-        String[] split = uri.getHost().split("\\.");
-        if (split.length < 4) {
-            throw new CredentialException("Cannot detect AWS region from URI", null);
-        }
-        String region = split[1];
+		String[] split = uri.getHost().split("\\.");
+		if (split.length < 4) {
+			throw new CredentialException("Cannot detect AWS region from URI", null);
+		}
+		String region = split[1];
 
-        Date now = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		Date now = new Date();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        String dateStamp = dateFormat.format(now);
-        String shortDateStamp = dateStamp.substring(0, 8);
-        
-        String codeCommitPassword;
+		String dateStamp = dateFormat.format(now);
+		String shortDateStamp = dateStamp.substring(0, 8);
+		
+		String codeCommitPassword;
 		try {
 			StringBuilder stringToSign = new StringBuilder();
 			stringToSign.append("AWS4-HMAC-SHA256\n")
@@ -232,19 +235,19 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	}
 
 	private static byte[] hmacSha256(String data, byte[] key) throws Exception {
-	    String algorithm = HMAC_SHA256;
-	    Mac mac = Mac.getInstance(algorithm);
-	    mac.init(new SecretKeySpec(key, algorithm));
-	    return mac.doFinal(data.getBytes(UTF8));
+		String algorithm = HMAC_SHA256;
+		Mac mac = Mac.getInstance(algorithm);
+		mac.init(new SecretKeySpec(key, algorithm));
+		return mac.doFinal(data.getBytes(UTF8));
 	}
 	
 	private static byte[] sign(String secret, String shortDateStamp, String region, String toSign) throws Exception {
-	    byte[] kSecret = ("AWS4" + secret).getBytes(UTF8);
-	    byte[] kDate = hmacSha256(shortDateStamp, kSecret);
-	    byte[] kRegion = hmacSha256(region, kDate);
-	    byte[] kService = hmacSha256("codecommit", kRegion);
-	    byte[] kSigning = hmacSha256("aws4_request", kService);
-	    return hmacSha256(toSign, kSigning);
+		byte[] kSecret = ("AWS4" + secret).getBytes(UTF8);
+		byte[] kDate = hmacSha256(shortDateStamp, kSecret);
+		byte[] kRegion = hmacSha256(region, kDate);
+		byte[] kService = hmacSha256("codecommit", kRegion);
+		byte[] kSigning = hmacSha256("aws4_request", kService);
+		return hmacSha256(toSign, kSigning);
 	}
 	
 	/**
@@ -273,15 +276,15 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 * @param bytes the bytes
 	 * @return a string of hex characters encoding the bytes.
 	 */
-    private static String bytesToHexString(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-        }
-        return new String(hexChars);
-    }
+	private static String bytesToHexString(byte[] bytes) {
+		char[] hexChars = new char[bytes.length * 2];
+		for (int j = 0; j < bytes.length; j++) {
+			int v = bytes[j] & 0xFF;
+			hexChars[j * 2] = hexArray[v >>> 4];
+			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+		}
+		return new String(hexChars);
+	}
 
 
 	/**
@@ -356,19 +359,19 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 */
 	public class AWSStaticCredentialsProvider implements AWSCredentialsProvider {
 
-	    private final AWSCredentials credentials;
+		private final AWSCredentials credentials;
 
-	    public AWSStaticCredentialsProvider(AWSCredentials credentials) {
-	        this.credentials = ValidationUtils.assertNotNull(credentials, "credentials");
-	    }
+		public AWSStaticCredentialsProvider(AWSCredentials credentials) {
+			this.credentials = ValidationUtils.assertNotNull(credentials, "credentials");
+		}
 
-	    public AWSCredentials getCredentials() {
-	        return credentials;
-	    }
+		public AWSCredentials getCredentials() {
+			return credentials;
+		}
 
-	    public void refresh() {
-	    	// Nothing to do for static credentials.
-	    }
+		public void refresh() {
+			// Nothing to do for static credentials.
+		}
 
 	}
 }
