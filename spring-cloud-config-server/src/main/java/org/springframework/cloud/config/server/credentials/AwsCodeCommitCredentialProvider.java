@@ -37,6 +37,7 @@ import org.eclipse.jgit.transport.URIish;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSSessionCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.util.ValidationUtils;
@@ -128,8 +129,10 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	private AWSCredentials retrieveAwsCredentials() {
 		if (awsCredentialProvider == null) {
 			if (username != null && password != null) {
+				logger.debug("Creating a static AWSCredentialsProvider");
 				awsCredentialProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(username, password));
 			} else {
+				logger.debug("Creating a default AWSCredentialsProvider");
 				awsCredentialProvider = new DefaultAWSCredentialsProviderChain();
 			}
 		}
@@ -144,12 +147,21 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	@Override
 	public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
 		String codeCommitPassword;
-		String awsKey;
+		String awsAccessKey;
 		String awsSecretKey;
 		try {
 			AWSCredentials awsCredentials = retrieveAwsCredentials();
-			awsKey = awsCredentials.getAWSAccessKeyId();
+			StringBuilder awsKey = new StringBuilder();
+			awsKey.append(awsCredentials.getAWSAccessKeyId());
 			awsSecretKey = awsCredentials.getAWSSecretKey();
+			if (awsCredentials instanceof AWSSessionCredentials) {
+				AWSSessionCredentials sessionCreds = (AWSSessionCredentials) awsCredentials; 
+				if (sessionCreds.getSessionToken() != null) {
+					awsKey.append('%')
+						.append(sessionCreds.getSessionToken());
+				}
+			}
+			awsAccessKey = awsKey.toString();
 		} catch (Throwable t) {
 			logger.warn("Unable to retrieve AWS Credentials", t);
 			return false;
@@ -163,15 +175,18 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		
 		for (CredentialItem i : items) {
 			if (i instanceof CredentialItem.Username) {
-				((CredentialItem.Username) i).setValue(awsKey);
+				((CredentialItem.Username) i).setValue(awsAccessKey);
+				logger.trace("Returning username " + awsAccessKey);
 				continue;
 			}
 			if (i instanceof CredentialItem.Password) {
 				((CredentialItem.Password) i).setValue(codeCommitPassword.toCharArray());
+				logger.trace("Returning password " + codeCommitPassword);
 				continue;
 			}
 			if (i instanceof CredentialItem.StringType && i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
 				((CredentialItem.StringType) i).setValue(codeCommitPassword);
+				logger.trace("Returning password string " + codeCommitPassword);
 				continue;
 			}
 			throw new UnsupportedCredentialItem(uri, i.getClass().getName() + ":" + i.getPromptText()); //$NON-NLS-1$
@@ -188,7 +203,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 * @param awsSecretKey the aws secret key
 	 * @return the password to use in the git request
 	 */
-	private static String calculateCodeCommitPassword(URIish uri, String awsSecretKey) {
+	static String calculateCodeCommitPassword(URIish uri, String awsSecretKey) {
 		String[] split = uri.getHost().split("\\.");
 		if (split.length < 4) {
 			throw new CredentialException("Cannot detect AWS region from URI", null);
