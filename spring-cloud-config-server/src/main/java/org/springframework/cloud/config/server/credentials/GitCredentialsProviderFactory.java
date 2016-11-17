@@ -54,13 +54,18 @@ public class GitCredentialsProviderFactory {
 	public CredentialsProvider createFor(String uri, String username, String password) {
 		CredentialsProvider provider = null;
 		if (awsAvailable() && AwsCodeCommitCredentialProvider.canHandle(uri)) {
+			logger.debug("Constructing AwsCodeCommitCredentialProvider for URI " + uri);
 			AwsCodeCommitCredentialProvider aws = new AwsCodeCommitCredentialProvider();
 			aws.setUsername(username);
 			aws.setPassword(password);
 			provider = aws;
 		}
 		else if (hasText(username)) {
+			logger.debug("Constructing UsernamePasswordCredentialsProvider for URI " + uri);
 			provider = new UsernamePasswordCredentialsProvider(username, password.toCharArray());
+		}
+		else {
+			logger.debug("No credentials provider required for URI " + uri);
 		}
 		
 		return provider;
