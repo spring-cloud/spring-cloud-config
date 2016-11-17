@@ -203,7 +203,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 * @param awsSecretKey the aws secret key
 	 * @return the password to use in the git request
 	 */
-	static String calculateCodeCommitPassword(URIish uri, String awsSecretKey) {
+	protected static String calculateCodeCommitPassword(URIish uri, String awsSecretKey) {
 		String[] split = uri.getHost().split("\\.");
 		if (split.length < 4) {
 			throw new CredentialException("Cannot detect AWS region from URI", null);
