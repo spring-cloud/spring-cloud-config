@@ -33,8 +33,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FileUtils;
@@ -53,6 +55,7 @@ import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StreamUtils;
 
@@ -324,6 +327,90 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "unknownlabel");
+	}
+
+	@Test
+	public void testVersionUpdate() throws Exception {
+		//setup local repository
+		ConfigServerTestUtils.prepareLocalRepo();
+		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
+		File localRepoFile = ResourceUtils.getFile(uri);
+		Git localGit = Git.open(localRepoFile.getAbsoluteFile());
+
+		//setup remote repository
+		File remoteDir = new File("target/repos/clone");
+		if(remoteDir.exists()) {
+			FileSystemUtils.deleteRecursively(remoteDir);
+		}else{
+			remoteDir.mkdirs();
+		}
+		Git remoteGit = Git.cloneRepository()
+				.setURI( "file://" + localRepoFile.getAbsolutePath() )
+				.setDirectory( remoteDir )
+				.setBranch("master")
+				.setCloneAllBranches(true)
+				.call();
+		StoredConfig config = localGit.getRepository().getConfig();
+		config.setString("remote", "origin", "url",
+				remoteDir.getAbsolutePath());
+		config.setString("remote", "origin", "fetch",
+				"+refs/heads/*:refs/remotes/origin/*");
+		config.save();
+
+		//get commit ids
+		CheckoutCommand checkout = localGit.checkout();
+		checkout.setName("master");
+		Ref localRef = checkout.call();
+		String localVersion = localRef.getObjectId().getName();
+
+		checkout = remoteGit.checkout();
+		checkout.setName("master");
+		Ref remoteRef = checkout.call();
+		String remoteVersion = remoteRef.getObjectId().getName();
+
+		//verify the remote and local repo have the same commit ID
+		assertEquals(remoteVersion, localVersion);
+
+		//setup our test spring application pointing to the local repo
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.properties("spring.cloud.config.server.git.uri:" + "file://" + localRepoFile.getAbsolutePath()).run();
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		Environment environment = repository.findOne("bar", "staging", "master");
+
+		//make sure the environments version is the same as the remote repo version
+		assertEquals(environment.getVersion(), remoteVersion);
+
+		//update the remote repo
+		FileOutputStream out = new FileOutputStream(remoteDir.getAbsolutePath() + "/bar.properties");
+		StreamUtils.copy("foo: foo", Charset.defaultCharset(), out);
+		remoteGit.add().addFilepattern("bar.properties").call();
+		remoteGit.commit().setMessage("Updated for pull").call();
+
+		//pull the environment again which should update the local repo from the just updated remote repo
+		environment = repository.findOne("bar", "staging", "master");
+
+		//do some more check outs to get updated version numbers
+		checkout = localGit.checkout();
+		checkout.setName("master");
+		localRef = checkout.call();
+		String updatedLocalVersion = localRef.getObjectId().getName();
+
+		checkout = remoteGit.checkout();
+		checkout.setName("master");
+		remoteRef = checkout.call();
+		String updatedRemoteVersion = remoteRef.getObjectId().getName();
+
+		//make sure our versions have been updated
+		Assert.assertEquals(updatedRemoteVersion, updatedLocalVersion);
+		Assert.assertNotEquals(updatedRemoteVersion, remoteVersion);
+		Assert.assertNotEquals(updatedLocalVersion, localVersion);
+
+		//make sure our environment also reflects the updated version
+		//this used to have a bug
+		Assert.assertEquals(environment.getVersion(), updatedRemoteVersion);
+
+
+
 	}
 
 	@Configuration
