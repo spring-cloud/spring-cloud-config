@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.client;
 
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,7 +78,7 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 				logger.warn("No instances found of configserver (" + serviceId + ")");
 				return;
 			}
-			ServiceInstance server = instances.get(0);
+			ServiceInstance server = getServiceInstance(instances);
 			String url = getHomePage(server);
 			if (server.getMetadata().containsKey("password")) {
 				String user = server.getMetadata().get("user");
@@ -102,6 +103,15 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
 	private String getHomePage(ServiceInstance server) {
 		return server.getUri().toString() + "/";
+	}
+	
+	private ServiceInstance getServiceInstance(List<ServiceInstance> instances) {
+	  int indexToGet = 0;
+	  if (config.getDiscovery().isRandomize()) {
+	    Random random = new Random();
+	    indexToGet = random.nextInt(instances.size());
+	  }
+	  return instances.get(indexToGet);
 	}
 
 }
