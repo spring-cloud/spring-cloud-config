@@ -428,19 +428,16 @@ public class EnvironmentController {
 		private String getKey() {
 			// Consider initial value or previous char '.' or '['
 			int start = currentPos + 1;
-			char_loop:
 			for (int i = start; i < propertyKey.length(); i++) {
-				switch (propertyKey.charAt(i)) {
-					case '.':
-						currentPos = i;
-						valueType = NodeType.MAP;
-						break char_loop;
-					case '[':
-						currentPos = i;
-						valueType = NodeType.ARRAY;
-						break char_loop;
-					default:
-						continue;
+				char currentChar = propertyKey.charAt(i);
+				if (currentChar == '.') {
+					valueType = NodeType.MAP;
+					currentPos = i;
+					break;
+				} else if (currentChar == '[') {
+					valueType = NodeType.ARRAY;
+					currentPos = i;
+					break;
 				}
 			}
 			// If there's no delimiter then it's a key of a leaf
