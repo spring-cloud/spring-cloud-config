@@ -329,19 +329,19 @@ public class EnvironmentController {
 	 */
 	private static class PropertyNavigator {
 
-		enum NodeType {LEAF, MAP, ARRAY}
+		private enum NodeType {LEAF, MAP, ARRAY}
 
-		final String propertyKey;
-		int currentPos;
-		NodeType valueType;
+		private final String propertyKey;
+		private int currentPos;
+		private NodeType valueType;
 
-		PropertyNavigator(String propertyKey) {
+		private PropertyNavigator(String propertyKey) {
 			this.propertyKey = propertyKey;
 			currentPos = -1;
 			valueType = NodeType.MAP;
 		}
 
-		void setMapValue(Map<String, Object> map, Object value) {
+		private void setMapValue(Map<String, Object> map, Object value) {
 			String key = getKey();
 			if (NodeType.MAP.equals(valueType)) {
 				Map<String, Object> nestedMap = (Map<String, Object>) map.get(key);
@@ -362,7 +362,7 @@ public class EnvironmentController {
 			}
 		}
 
-		void setListValue(List<Object> list, Object value) {
+		private void setListValue(List<Object> list, Object value) {
 			int index = getIndex();
 			// Fill missing elements if needed
 			while (list.size() <= index) {
@@ -387,7 +387,7 @@ public class EnvironmentController {
 			}
 		}
 
-		int getIndex() {
+		private int getIndex() {
 			// Consider [
 			int start = currentPos + 1;
 
@@ -425,7 +425,7 @@ public class EnvironmentController {
 			}
 		}
 
-		String getKey() {
+		private String getKey() {
 			// Consider initial value or previous char '.' or '['
 			int start = currentPos + 1;
 			char_loop:
@@ -439,6 +439,8 @@ public class EnvironmentController {
 						currentPos = i;
 						valueType = NodeType.ARRAY;
 						break char_loop;
+					default:
+						continue;
 				}
 			}
 			// If there's no delimiter then it's a key of a leaf
