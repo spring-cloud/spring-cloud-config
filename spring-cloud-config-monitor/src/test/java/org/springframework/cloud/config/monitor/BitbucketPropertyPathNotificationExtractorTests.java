@@ -50,6 +50,16 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 		assertNotNull(extracted);
 		assertEquals("application.yml", extracted.getPaths()[0]);
 	}
+        
+        @Test
+	public void bitbucketPullRequestFulfillmentDetected() throws Exception {
+		// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Merged
+		Map<String, Object> value = readPayload("bitbucket.json");
+		setHeaders("pullrequest:fulfilled");
+		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
+		assertNotNull(extracted);
+		assertEquals("application.yml", extracted.getPaths()[0]);
+	}
 
 	private void setHeaders(String eventKey) {
 		this.headers.set("X-Event-Key", eventKey);
@@ -57,7 +67,7 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 	}
 
 	@Test
-	public void notAPushNotDetected() throws Exception {
+	public void notAPushOrPullRequestNotDetected() throws Exception {
 		assertNotExtracted("bitbucket.json", "issue:created");
 	}
 

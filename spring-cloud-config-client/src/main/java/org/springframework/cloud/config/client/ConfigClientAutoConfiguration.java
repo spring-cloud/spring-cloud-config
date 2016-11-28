@@ -53,6 +53,11 @@ public class ConfigClientAutoConfiguration {
 		return client;
 	}
 
+	@Bean
+	public ConfigClientHealthProperties configClientHealthProperties() {
+		return new ConfigClientHealthProperties();
+	}
+
 	@Configuration
 	@ConditionalOnClass(HealthIndicator.class)
 	@ConditionalOnBean(ConfigServicePropertySourceLocator.class)
@@ -61,24 +66,9 @@ public class ConfigClientAutoConfiguration {
 
 		@Bean
 		public ConfigServerHealthIndicator configServerHealthIndicator(
-				ConfigServicePropertySourceLocator locator, Environment environment) {
-			return new ConfigServerHealthIndicator(locator, environment);
-		}
-	}
-
-	@ConfigurationProperties("health.config")
-	public static class Health {
-		/**
-		 * Flag to indicate that the config server health indicator should be installed.
-		 */
-		boolean enabled;
-
-		public boolean isEnabled() {
-			return this.enabled;
-		}
-
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
+				ConfigServicePropertySourceLocator locator,
+				ConfigClientHealthProperties properties, Environment environment) {
+			return new ConfigServerHealthIndicator(locator, environment, properties);
 		}
 	}
 

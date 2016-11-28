@@ -1162,9 +1162,57 @@ spring:
 
 ----
 
-If you use another form of security you might need to provide a
-`RestTemplate` to the `ConfigServicePropertySourceLocator` (e.g. by
+If you use another form of security you might need to <<custom-rest-template,provide a
+`RestTemplate`>> to the `ConfigServicePropertySourceLocator` (e.g. by
 grabbing it in the bootstrap context and injecting one).
+
+==== Health Indicator
+
+The Config Client supplies a Spring Boot Health Indicator that attempts to load configuration from Config Server. The health indicator can be disabled by setting `health.config.enabled=false`. The response is also cached for performance reasons. The default cache time to live is 5 minutes. To change that value set the `health.config.time-to-live` property (in milliseconds).
+
+[[custom-rest-template]]
+==== Providing A Custom RestTemplate
+
+In some cases you might need to customize the requests made to the config server from
+the client.  Typically this involves passing special `Authorization` headers to
+authenticate requests to the server.  To provide a custom `RestTemplate` follow the
+steps below.
+
+1.  Set `spring.cloud.config.enabled=false` to disable the existing config server
+property source.
+
+2.  Create a new configuration bean with an implementation of `PropertySourceLocator`.
+
+.CustomConfigServiceBootstrapConfiguration.java
+[source,java]
+----
+@Configuration
+public class CustomConfigServiceBootstrapConfiguration {
+    @Bean
+    public ConfigClientProperties configClientProperties() {
+        ConfigClientProperties client = new ConfigClientProperties(this.environment);
+        client.setEnabled(false);
+        return client;
+    }
+
+    @Bean
+    public ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
+        ConfigClientProperties clientProperties = configClientProperties();
+       ConfigServicePropertySourceLocator configServicePropertySourceLocator =  new ConfigServicePropertySourceLocator(clientProperties);
+        configServicePropertySourceLocator.setRestTemplate(customRestTemplate(clientProperties));
+        return configServicePropertySourceLocator;
+    }
+}
+----
+
+3.  In `resources/META-INF` create a file called
+`spring.factories` and specify your custom configuration.
+
+.spring.factorties
+[source,properties]
+----
+org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration
+----
 
 ==== Vault
 

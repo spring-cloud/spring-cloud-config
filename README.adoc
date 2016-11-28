@@ -242,7 +242,7 @@ http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.ht
 
 http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html[Java 7 JCE]
 
-http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html[Java 8 JCE]
+http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html[Java 8 JCE]
 
 Extract files into JDK/jre/lib/security folder (whichever version of JRE/JDK x64/x86 you are using).
 
@@ -305,11 +305,11 @@ a modified file in the correct place. Just commit it and push the change.
 If you don't have an IDE preference we would recommend that you use
 http://www.springsource.com/developer/sts[Spring Tools Suite] or
 http://eclipse.org[Eclipse] when working with the code. We use the
-http://eclipse.org/m2e/[m2eclipe] eclipse plugin for maven support. Other IDEs and tools
+http://eclipse.org/m2e/[m2eclipse] eclipse plugin for maven support. Other IDEs and tools
 should also work without issue as long as they use Maven 3.3.3 or better.
 
 ==== Importing into eclipse with m2eclipse
-We recommend the http://eclipse.org/m2e/[m2eclipe] eclipse plugin when working with
+We recommend the http://eclipse.org/m2e/[m2eclipse] eclipse plugin when working with
 eclipse. If you don't already have m2eclipse installed it is available from the "eclipse
 marketplace".
 

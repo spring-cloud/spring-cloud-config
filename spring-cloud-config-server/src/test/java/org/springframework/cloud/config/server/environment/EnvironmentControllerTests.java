@@ -393,7 +393,7 @@ public class EnvironmentControllerTests {
 	public void placeholdersNotResolvedInJsonFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
 		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
-		// If there is a default value we do not prevent the placeholder being resolved
+		// If there is a default value we prevent the placeholder being resolved
 		assertEquals("{\"a\":{\"b\":{\"c\":\"${foo:spam}\"}}}", json);
 	}
 
@@ -401,7 +401,7 @@ public class EnvironmentControllerTests {
 	public void placeholdersResolvedInJsonFromSystemPropertiesWhenFlagged() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
 		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
-		// If there is a default value we prevent the placeholder being resolved
+		// If there is a default value we do not prevent the placeholder being resolved
 		assertEquals("{\"a\":{\"b\":{\"c\":\"spam\"}}}", json);
 	}
 
@@ -455,7 +455,6 @@ public class EnvironmentControllerTests {
 		mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json"))
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(MockMvcResultMatchers.content().string("{}"));
-		;
 	}
 
 	@Test

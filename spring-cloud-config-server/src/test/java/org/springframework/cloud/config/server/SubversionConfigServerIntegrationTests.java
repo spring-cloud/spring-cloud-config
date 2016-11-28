@@ -21,36 +21,35 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.TestRestTemplate;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 /**
  * @author Michael Prankl
  * @author Dave Syer
  * @author Roy Clarkson
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = ConfigServerApplication.class)
-@IntegrationTest({ "server.port:0", "spring.config.name:configserver",
-		"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo" })
-@WebAppConfiguration
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = ConfigServerApplication.class,
+	properties = { "spring.config.name:configserver",
+		"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo" },
+	webEnvironment = RANDOM_PORT)
 @ActiveProfiles("subversion")
 public class SubversionConfigServerIntegrationTests {
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port;
 
 	@Autowired
