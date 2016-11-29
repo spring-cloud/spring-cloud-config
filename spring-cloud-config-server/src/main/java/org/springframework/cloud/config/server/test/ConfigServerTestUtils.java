@@ -19,6 +19,8 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryCache.FileKey;
 import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.FileUtils;
+import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
 
@@ -109,6 +111,15 @@ public class ConfigServerTestUtils {
 	public static boolean deleteLocalRepo(String path) throws IOException {
 		File dest = new File("target/repos/" + path);
 		return FileSystemUtils.deleteRecursively(dest);
+	}
+
+	public static Object getProperty(Environment env, String sourceNameEndsWith, String property) {
+		for(PropertySource source: env.getPropertySources()) {
+			if(source.getName().endsWith(sourceNameEndsWith)) {
+				return source.getSource().get(property);
+			}
+		}
+		return null;
 	}
 
 }

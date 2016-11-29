@@ -109,7 +109,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties", environment
 				.getPropertySources().get(0).getName());
-		assertNull("version was not null", environment.getVersion());
+		assertVersion(environment);
 	}
 
 	@Test
