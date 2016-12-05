@@ -32,6 +32,7 @@ import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.NotMergedException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -48,6 +49,7 @@ import org.springframework.core.env.StandardEnvironment;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -488,6 +490,31 @@ public class JGitEnvironmentRepositoryTests {
 
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertEquals(locations.getVersion(),newObjectId.getName());
+	}
+	
+	@Test
+	public void shouldDeleteBaseDirWhenCloneFails()	throws Exception {
+		Git mockGit = mock(Git.class);
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.call()).thenThrow(new TransportException("failed to clone"));
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setBasedir(this.basedir);
+		
+		try {
+			envRepository.findOne("bar", "staging", "master");
+		} 
+		catch (Exception ex) {
+			// expected - ignore
+		}
+		
+		assertFalse("baseDir should be deleted when clone fails", this.basedir.exists());
 	}
 
 	class MockGitFactory extends JGitEnvironmentRepository.JGitFactory {
