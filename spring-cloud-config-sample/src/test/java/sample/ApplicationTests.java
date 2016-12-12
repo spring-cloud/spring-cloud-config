@@ -9,8 +9,8 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
 import org.springframework.boot.context.embedded.LocalServerPort;
-import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -22,7 +22,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(classes = Application.class,
 // Normally spring.cloud.config.enabled:true is the default but since we have the config
 // server on the classpath we need to set it explicitly
-	properties = { "spring.cloud.config.enabled:true" }, webEnvironment = RANDOM_PORT)
+	properties = { "spring.cloud.config.enabled:true",
+			"management.security.enabled=false" }, webEnvironment = RANDOM_PORT)
 public class ApplicationTests {
 
 	private static int configPort = 0;
