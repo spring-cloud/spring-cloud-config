@@ -111,7 +111,7 @@ public class PropertyPathEndpoint
 		Set<String> services = new LinkedHashSet<>();
 		if (path != null) {
 			String stem = StringUtils
-					.stripFilenameExtension(StringUtils.getFilename(path));
+					.stripFilenameExtension(StringUtils.getFilename(StringUtils.cleanPath(path)));
 			// TODO: correlate with service registry
 			int index = stem.indexOf("-");
 			while (index >= 0) {

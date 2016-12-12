@@ -87,6 +87,15 @@ public class PropertyPathEndpointTests {
 	}
 
 	@Test
+	public void testNotifyOneWithWindowsPath() throws Exception {
+		assertEquals("[foo]",
+				this.endpoint
+						.notifyByPath(new HttpHeaders(), Collections
+								.<String, Object> singletonMap("path", "C:\\config\\foo.yml"))
+				.toString());
+	}
+
+	@Test
 	public void testNotifyOneWithProfile() throws Exception {
 		assertEquals("[foo:local, foo-local]",
 				this.endpoint
