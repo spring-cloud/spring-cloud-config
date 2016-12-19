@@ -39,6 +39,7 @@ import org.springframework.cloud.config.server.environment.NativeEnvironmentRepo
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
@@ -182,11 +183,13 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	}
 
 	private Set<Path> getFileRepo() {
-		if (this.scmRepository != null
-				&& this.scmRepository.getUri().startsWith("file:")) {
+		if (this.scmRepository != null) {
 			try {
-				return Collections.singleton(Paths.get(this.resourceLoader
-						.getResource(this.scmRepository.getUri()).getURI()));
+
+				Resource resource = this.resourceLoader.getResource(this.scmRepository.getUri());
+				if (resource instanceof FileSystemResource) {
+					return Collections.singleton(Paths.get(resource.getURI()));
+				}
 			}
 			catch (IOException e) {
 				log.error("Cannot resolve URI for path: " + this.scmRepository.getUri());
