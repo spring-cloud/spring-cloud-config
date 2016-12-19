@@ -48,19 +48,6 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration
-	@Profile("native")
-	protected static class NativeRepositoryConfiguration {
-
-		@Autowired
-		private ConfigurableEnvironment environment;
-
-		@Bean
-		public NativeEnvironmentRepository nativeEnvironmentRepository() {
-			return new NativeEnvironmentRepository(this.environment);
-		}
-	}
-
-	@Configuration
 	@ConditionalOnMissingBean(EnvironmentRepository.class)
 	protected static class DefaultRepositoryConfiguration {
 
@@ -77,6 +64,19 @@ public class EnvironmentRepositoryConfiguration {
 				repository.setDefaultLabel(this.server.getDefaultLabel());
 			}
 			return repository;
+		}
+	}
+
+	@Configuration
+	@Profile("native")
+	protected static class NativeRepositoryConfiguration {
+
+		@Autowired
+		private ConfigurableEnvironment environment;
+
+		@Bean
+		public NativeEnvironmentRepository nativeEnvironmentRepository() {
+			return new NativeEnvironmentRepository(this.environment);
 		}
 	}
 
