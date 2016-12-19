@@ -273,7 +273,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.git.uri=" + uri,
 						"--spring.cloud.config.server.git.cloneOnStart=true");
 		EnvironmentRepository repository = this.context
-				.getBean(EnvironmentRepository.class);
+				.getBean(JGitEnvironmentRepository.class);
 		assertTrue(((JGitEnvironmentRepository) repository).isCloneOnStart());
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());

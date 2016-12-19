@@ -64,6 +64,10 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		this.defaultLabel = defaultLabel;
 	}
 
+	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment) {
+		super(environment);
+	}
+
 	@Override
 	public synchronized Locations getLocations(String application, String profile,
 			String label) {
@@ -168,10 +172,6 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 
 	}
 
-	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment) {
-		super(environment);
-	}
-
 	@Override
 	protected File getWorkingDirectory() {
 		return this.getBasedir();
@@ -191,6 +191,11 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 			}
 		}
 		return svnPath; 
+	}
+
+	@Override
+	public void setOrder(int order) {
+		super.setOrder(order);
 	}
 
 }

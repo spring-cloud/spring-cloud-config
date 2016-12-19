@@ -1,0 +1,9 @@
+spring:
+  cloud:
+    config:
+      server:
+        overrides:
+          spring:
+            cloud:
+              config:
+                enabled: true

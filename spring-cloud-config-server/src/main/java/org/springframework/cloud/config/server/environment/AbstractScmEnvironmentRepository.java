@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.AbstractScmAccessor;
+import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
@@ -25,9 +26,10 @@ import org.springframework.core.env.ConfigurableEnvironment;
  *
  */
 public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccessor
-		implements EnvironmentRepository, SearchPathLocator {
+		implements OrderedEnvironmentRepository, SearchPathLocator {
 
 	private EnvironmentCleaner cleaner = new EnvironmentCleaner();
+	private int order = Ordered.LOWEST_PRECEDENCE;
 
 	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
@@ -46,4 +48,12 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 				getUri());
 	}
 
+	@Override
+	public int getOrder() {
+		return order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
+	}
 }

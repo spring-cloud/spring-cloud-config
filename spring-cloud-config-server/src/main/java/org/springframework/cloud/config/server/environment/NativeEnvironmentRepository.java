@@ -47,8 +47,8 @@ import org.springframework.util.StringUtils;
  * @author Roy Clarkson
  */
 @ConfigurationProperties("spring.cloud.config.server.native")
-public class NativeEnvironmentRepository
-		implements EnvironmentRepository, SearchPathLocator {
+public class NativeEnvironmentRepository extends AbstractOrderedEnvironmentRepository
+		implements SearchPathLocator {
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 

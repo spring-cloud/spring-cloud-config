@@ -35,7 +35,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
  * @author Spencer Gibb
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
-public class VaultEnvironmentRepository implements EnvironmentRepository {
+public class VaultEnvironmentRepository extends AbstractOrderedEnvironmentRepository {
 
 	public static final String VAULT_TOKEN = "X-Vault-Token";
 
@@ -188,6 +188,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository {
 
 	public void setProfileSeparator(String profileSeparator) {
 		this.profileSeparator = profileSeparator;
+	}
+
+	@Override
+	public void setOrder(int order) {
+		super.setOrder(order);
 	}
 
 	static class VaultResponse {
