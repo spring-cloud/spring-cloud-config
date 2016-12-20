@@ -575,7 +575,7 @@ spring:
       server:
         svn:
           uri: file:///path/to/svn/repo
-		  order: 2
+          order: 2
 		git:
 		  uri: file:///path/to/git/repo
 		  order: 1
