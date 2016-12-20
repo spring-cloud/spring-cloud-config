@@ -21,7 +21,6 @@ import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doReturn;
