@@ -34,6 +34,7 @@ import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.core.Ordered;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -55,8 +56,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
  * @author Mark Paluch
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
-public class VaultEnvironmentRepository extends AbstractOrderedEnvironmentRepository
-		implements InitializingBean{
+public class VaultEnvironmentRepository implements EnvironmentRepository, InitializingBean, Ordered {
 
 	public static final String VAULT_TOKEN = "X-Vault-Token";
 
@@ -81,6 +81,8 @@ public class VaultEnvironmentRepository extends AbstractOrderedEnvironmentReposi
 	/** Vault profile separator. Defaults to comma. */
 	@NotEmpty
 	private String profileSeparator = ",";
+
+	private int order = Ordered.LOWEST_PRECEDENCE;
 
 	private RestTemplate rest;
 
@@ -230,9 +232,13 @@ public class VaultEnvironmentRepository extends AbstractOrderedEnvironmentReposi
 		this.profileSeparator = profileSeparator;
 	}
 
-	@Override
 	public void setOrder(int order) {
-		super.setOrder(order);
+		this.order = order;
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)

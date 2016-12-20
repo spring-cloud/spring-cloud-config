@@ -20,6 +20,8 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doReturn;
@@ -30,13 +32,14 @@ import static org.mockito.Mockito.mock;
  */
 public class CompositeEnvironmentRepositoryTests {
 
-	private class TestOrderedEnvironmentRepository extends AbstractOrderedEnvironmentRepository implements SearchPathLocator {
+	private class TestOrderedEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
 
 		private Environment env;
 		private Locations locations;
+		private int order = Ordered.LOWEST_PRECEDENCE;
 
 		public TestOrderedEnvironmentRepository(int order, Environment env, Locations locations) {
-			setOrder(order);
+			this.order = order;
 			this.env = env;
 			this.locations = locations;
 		}
@@ -49,6 +52,11 @@ public class CompositeEnvironmentRepositoryTests {
 		@Override
 		public Locations getLocations(String application, String profile, String label) {
 			return locations;
+		}
+
+		@Override
+		public int getOrder() {
+			return order;
 		}
 	}
 
@@ -80,7 +88,7 @@ public class CompositeEnvironmentRepositoryTests {
 		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc1});
 		SearchPathLocator.Locations loc2 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc5, sLoc4});
 		SearchPathLocator.Locations loc3 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc3, sLoc2});
-		List<OrderedEnvironmentRepository> repos = new ArrayList<OrderedEnvironmentRepository>();
+		List<EnvironmentRepository> repos = new ArrayList<EnvironmentRepository>();
 		repos.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		repos.add(new TestOrderedEnvironmentRepository(2, e3, loc2));
 		repos.add(new TestOrderedEnvironmentRepository(1, e2, loc3));

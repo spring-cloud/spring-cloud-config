@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
-import org.springframework.cloud.config.server.environment.OrderedEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.SearchPathLocator;
 import org.springframework.context.annotation.Bean;
@@ -32,27 +32,26 @@ import org.springframework.context.annotation.Primary;
  * @author Ryan Baxter
  */
 @Configuration
-@ConditionalOnBean(OrderedEnvironmentRepository.class)
 public class CompositeConfiguration {
 
-	private List<OrderedEnvironmentRepository> environmentRepos = new ArrayList<>();
+	private List<EnvironmentRepository> environmentRepos = new ArrayList<>();
 
 	@Bean
 	@Primary
 	@ConditionalOnBean(SearchPathLocator.class)
-	public SearchPathCompositeEnvironmentRepository compositeEnvironmentRepository() {
+	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository() {
 		return new SearchPathCompositeEnvironmentRepository(environmentRepos);
 	}
 
 	@Bean
 	@Primary
 	@ConditionalOnMissingBean(SearchPathLocator.class)
-	public CompositeEnvironmentRepository compositeEnvironmentRepository2() {
+	public CompositeEnvironmentRepository compositeEnvironmentRepository() {
 		return new CompositeEnvironmentRepository(environmentRepos);
 	}
 
 	@Autowired
-	private void setEnvironmentRepos(List<OrderedEnvironmentRepository> repos) {
+	private void setEnvironmentRepos(List<EnvironmentRepository> repos) {
 		this.environmentRepos = repos;
 	}
 

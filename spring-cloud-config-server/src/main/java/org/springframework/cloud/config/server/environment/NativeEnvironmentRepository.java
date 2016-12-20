@@ -32,6 +32,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
@@ -47,8 +48,7 @@ import org.springframework.util.StringUtils;
  * @author Roy Clarkson
  */
 @ConfigurationProperties("spring.cloud.config.server.native")
-public class NativeEnvironmentRepository extends AbstractOrderedEnvironmentRepository
-		implements SearchPathLocator {
+public class NativeEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
@@ -74,6 +74,8 @@ public class NativeEnvironmentRepository extends AbstractOrderedEnvironmentRepos
 			"classpath:/config/", "file:./", "file:./config/" };
 
 	private ConfigurableEnvironment environment;
+
+	private int order = Ordered.LOWEST_PRECEDENCE;
 
 	public NativeEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
@@ -275,4 +277,12 @@ public class NativeEnvironmentRepository extends AbstractOrderedEnvironmentRepos
 				&& !location.endsWith(".yml") && !location.endsWith(".yaml");
 	}
 
+	@Override
+	public int getOrder() {
+		return order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
+	}
 }

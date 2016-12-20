@@ -21,18 +21,18 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.OrderComparator;
 
 /**
- * An {@link EnvironmentRepository} composed of multiple ordered {@link OrderedEnvironmentRepository}s.
+ * An {@link EnvironmentRepository} composed of multiple ordered {@link EnvironmentRepository}s.
  * @author Ryan Baxter
  */
 public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
-	protected List<OrderedEnvironmentRepository> environmentRepositories;
+	protected List<EnvironmentRepository> environmentRepositories;
 
 	/**
 	 * Creates a new {@link CompositeEnvironmentRepository}.
-	 * @param environmentRepositories The list of {@link OrderedEnvironmentRepository}s to create the composite from.
+	 * @param environmentRepositories The list of {@link EnvironmentRepository}s to create the composite from.
 	 */
-	public CompositeEnvironmentRepository(List<OrderedEnvironmentRepository> environmentRepositories) {
+	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories) {
 		//Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
 		this.environmentRepositories = environmentRepositories;
@@ -42,7 +42,7 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	public Environment findOne(String application, String profile, String label) {
 		Environment env = new Environment(application, new String[]{profile}, label, null, null);
 		for(EnvironmentRepository repo : environmentRepositories) {
-			env.add(repo.findOne(application, profile, label).getPropertySources());
+			env.addAll(repo.findOne(application, profile, label).getPropertySources());
 		}
 		return env;
 	}

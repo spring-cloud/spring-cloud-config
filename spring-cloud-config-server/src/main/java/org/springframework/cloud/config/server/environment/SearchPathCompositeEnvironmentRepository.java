@@ -27,9 +27,9 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 
 	/**
 	 * Creates a new {@link SearchPathCompositeEnvironmentRepository}.
-	 * @param environmentRepositories The {@link OrderedEnvironmentRepository}s to create this composite from.
+	 * @param environmentRepositories The {@link EnvironmentRepository}s to create this composite from.
 	 */
-	public SearchPathCompositeEnvironmentRepository(List<OrderedEnvironmentRepository> environmentRepositories) {
+	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories) {
 		super(environmentRepositories);
 	}
 
