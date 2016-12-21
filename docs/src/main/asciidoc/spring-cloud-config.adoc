@@ -600,7 +600,11 @@ repo does not contain a branch called `master` the entire request will fail.
 It is also possible to provide your own `EnvironmentRepository` bean
 to be included as part of a composite environment in addition to
 using one of the environment repositories from Spring Cloud.  To do this your bean
-must implement both the `EnvironmentRepository` and `Ordered` interfaces.
+must implement the `EnvironmentRepository` interface.  If you would like to control
+the priority of you custom `EnvironmentRepository` within the composite
+environment you should also implement the `Ordered` interface and override the
+`getOrdered` method.  If you do not implement the `Ordered` interface than your
+`EnvironmentRepository` will be given the lowest priority.
 
 ==== Property Overrides
 
