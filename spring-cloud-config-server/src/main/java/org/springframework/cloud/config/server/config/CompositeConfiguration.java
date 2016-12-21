@@ -51,7 +51,7 @@ public class CompositeConfiguration {
 	}
 
 	@Autowired
-	private void setEnvironmentRepos(List<EnvironmentRepository> repos) {
+	public void setEnvironmentRepos(List<EnvironmentRepository> repos) {
 		this.environmentRepos = repos;
 	}
 
