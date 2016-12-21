@@ -1414,6 +1414,81 @@ all applications by placing configuration in
 </div>
 </div>
 <div class="sect3">
+<h4 id="_composite_environment_repositories">Composite Environment Repositories</h4>
+<div class="paragraph">
+<p>In some scenarios you may wish to pull configuration data from multiple
+environment repositories.  To do this just enable
+multiple profiles in your config server&#8217;s application properties or YAML file.
+If, for example, you want to pull configuration data from a Git repository
+as well as a SVN repository you would set the following properties for your
+configuration server.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+  profiles:
+    active: git, svn
+  cloud:
+    config:
+      server:
+        svn:
+          uri: file:///path/to/svn/repo
+          order: 2
+        git:
+          uri: file:///path/to/git/repo
+          order: 1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In addition to each repo specifying a URI, you can also specify an <code>order</code> property.
+The <code>order</code> property allows you to specify the priority order for all your repositories.
+The lower the numerical value of the <code>order</code> property the higher priority it will have.
+The priority order of a repository will help resolve any potential conflicts between
+repositories that contain values for the same properties.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Any type of failure when retrieving values from an environment repositoy
+will result in a failure for the entire composite environment.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+When using a composite environment it is important that all repos contain
+the same label(s).  If you have an environment similar to the one above and you request
+configuration data with the label <code>master</code> but the SVN
+repo does not contain a branch called <code>master</code> the entire request will fail.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect4">
+<h5 id="_custom_composite_environment_repositories">Custom Composite Environment Repositories</h5>
+<div class="paragraph">
+<p>It is also possible to provide your own <code>EnvironmentRepository</code> bean
+to be included as part of a composite environment in addition to
+using one of the environment repositories from Spring Cloud.  To do this your bean
+must implement the <code>EnvironmentRepository</code> interface.  If you would like to control
+the priority of you custom <code>EnvironmentRepository</code> within the composite
+environment you should also implement the <code>Ordered</code> interface and override the
+<code>getOrdered</code> method.  If you do not implement the <code>Ordered</code> interface than your
+<code>EnvironmentRepository</code> will be given the lowest priority.</p>
+</div>
+</div>
+</div>
+<div class="sect3">
 <h4 id="_property_overrides">Property Overrides</h4>
 <div class="paragraph">
 <p>The Config Server has an "overrides" feature that allows the operator
