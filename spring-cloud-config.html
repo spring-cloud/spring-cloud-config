@@ -1121,6 +1121,70 @@ path with placeholders (any matching directory is included in the
 search).</p>
 </div>
 </div>
+<div class="sect4">
+<h5 id="_force_pull_in_git_repositories">Force pull in Git Repositories</h5>
+<div class="paragraph">
+<p>As mentioned before Spring Cloud Config Server makes a clone of the
+remote git repository and if somehow the local copy gets dirty (e.g.
+folder content changes by OS process) so Spring Cloud Config Server
+cannot update the local copy from remote repository.</p>
+</div>
+<div class="paragraph">
+<p>To solve this there is a <code>force-pull</code> property that will make Spring Cloud
+Config Server force pull from remote repository if the local copy is dirty.
+Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          force-pull: true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you have a multiple repositories configuration you can configure the
+<code>force-pull</code> property per repository. Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://git/common/config-repo.git
+          force-pull: true
+          repos:
+            team-a:
+                pattern: team-a-*
+                uri: http://git/team-a/config-repo.git
+                force-pull: true
+            team-b:
+                pattern: team-b-*
+                uri: http://git/team-b/config-repo.git
+                force-pull: true
+            team-c:
+                pattern: team-c-*
+                uri: http://git/team-a/config-repo.git</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The default value for <code>force-pull</code> property is <code>false</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_version_control_backend_filesystem_use">Version Control Backend Filesystem Use</h4>
