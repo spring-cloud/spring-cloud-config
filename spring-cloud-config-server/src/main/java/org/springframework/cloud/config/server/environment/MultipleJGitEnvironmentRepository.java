@@ -293,4 +293,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	}
 
+	@Override
+	public void setOrder(int order) {
+		super.setOrder(order);
+	}
 }

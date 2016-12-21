@@ -20,7 +20,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
@@ -36,16 +35,36 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Dave Syer
+ * @author Ryan Baxter
  *
  */
 @Configuration
-@ConditionalOnMissingBean(EnvironmentRepository.class)
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
 	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
 	public ConfigServerHealthIndicator configServerHealthIndicator(EnvironmentRepository repository) {
 		return new ConfigServerHealthIndicator(repository);
+	}
+
+	@Configuration
+	@ConditionalOnMissingBean(EnvironmentRepository.class)
+	protected static class DefaultRepositoryConfiguration {
+
+		@Autowired
+		private ConfigurableEnvironment environment;
+
+		@Autowired
+		private ConfigServerProperties server;
+
+		@Bean
+		public MultipleJGitEnvironmentRepository defaultEnvironmentRepository() {
+			MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment);
+			if (this.server.getDefaultLabel()!=null) {
+				repository.setDefaultLabel(this.server.getDefaultLabel());
+			}
+			return repository;
+		}
 	}
 
 	@Configuration
@@ -56,31 +75,14 @@ public class EnvironmentRepositoryConfiguration {
 		private ConfigurableEnvironment environment;
 
 		@Bean
-		public NativeEnvironmentRepository environmentRepository() {
+		public NativeEnvironmentRepository nativeEnvironmentRepository() {
 			return new NativeEnvironmentRepository(this.environment);
 		}
-
 	}
 
 	@Configuration
-	@ConditionalOnMissingBean(EnvironmentRepository.class)
-	protected static class GitRepositoryConfiguration {
-
-		@Autowired
-		private ConfigurableEnvironment environment;
-
-		@Autowired
-		private ConfigServerProperties server;
-
-		@Bean
-		public MultipleJGitEnvironmentRepository environmentRepository() {
-			MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment);
-			if (this.server.getDefaultLabel()!=null) {
-				repository.setDefaultLabel(this.server.getDefaultLabel());
-			}
-			return repository;
-		}
-	}
+	@Profile("git")
+	protected static class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {}
 
 	@Configuration
 	@Profile("subversion")
@@ -92,7 +94,7 @@ public class EnvironmentRepositoryConfiguration {
 		private ConfigServerProperties server;
 
 		@Bean
-		public SvnKitEnvironmentRepository environmentRepository() {
+		public SvnKitEnvironmentRepository svnKitEnvironmentRepository() {
 			SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment);
 			if (this.server.getDefaultLabel()!=null) {
 				repository.setDefaultLabel(this.server.getDefaultLabel());
@@ -105,7 +107,7 @@ public class EnvironmentRepositoryConfiguration {
 	@Profile("vault")
 	protected static class VaultConfiguration {
 		@Bean
-		public EnvironmentRepository environmentRepository(HttpServletRequest request, EnvironmentWatch watch) {
+		public VaultEnvironmentRepository valutEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch) {
 			return new VaultEnvironmentRepository(request, watch, new RestTemplate());
 		}
 	}

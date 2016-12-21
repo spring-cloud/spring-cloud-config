@@ -556,6 +556,56 @@ $ vault write secret/application foo=bar baz=bam
 All applications using the config server will have the properties
 `foo` and `baz` available to them.
 
+==== Composite Environment Repositories
+
+In some scenarios you may wish to pull configuration data from multiple
+environment repositories.  To do this just enable
+multiple profiles in your config server's application properties or YAML file.
+If, for example, you want to pull configuration data from a Git repository
+as well as a SVN repository you would set the following properties for your
+configuration server.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: git, svn
+  cloud:
+    config:
+      server:
+        svn:
+          uri: file:///path/to/svn/repo
+          order: 2
+        git:
+          uri: file:///path/to/git/repo
+          order: 1
+----
+
+In addition to each repo specifying a URI, you can also specify an `order` property.
+The `order` property allows you to specify the priority order for all your repositories.
+The lower the numerical value of the `order` property the higher priority it will have.
+The priority order of a repository will help resolve any potential conflicts between
+repositories that contain values for the same properties.
+
+NOTE:  Any type of failure when retrieving values from an environment repositoy
+will result in a failure for the entire composite environment.
+
+NOTE:  When using a composite environment it is important that all repos contain
+the same label(s).  If you have an environment similar to the one above and you request
+configuration data with the label `master` but the SVN
+repo does not contain a branch called `master` the entire request will fail.
+
+===== Custom Composite Environment Repositories
+
+It is also possible to provide your own `EnvironmentRepository` bean
+to be included as part of a composite environment in addition to
+using one of the environment repositories from Spring Cloud.  To do this your bean
+must implement the `EnvironmentRepository` interface.  If you would like to control
+the priority of you custom `EnvironmentRepository` within the composite
+environment you should also implement the `Ordered` interface and override the
+`getOrdered` method.  If you do not implement the `Ordered` interface than your
+`EnvironmentRepository` will be given the lowest priority.
+
 ==== Property Overrides
 
 The Config Server has an "overrides" feature that allows the operator

@@ -49,10 +49,4 @@ public class NativeConfigServerIntegrationTests {
 				+ port + "/bad/default/", String.class);
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
 	}
-
-	public static void main(String[] args) {
-		new SpringApplicationBuilder(ConfigServerApplication.class).profiles("native").properties(
-				"spring.config.name=configserver").run(args);
-	}
-
 }
