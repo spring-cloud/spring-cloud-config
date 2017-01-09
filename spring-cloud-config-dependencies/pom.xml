@@ -39,6 +39,17 @@
 			<groupId>org.springframework.vault</groupId>
 			<artifactId>spring-vault-core</artifactId>
 			<version>1.0.0.M1</version>
+			<!-- Let spring boot manage spring version -->
+			<exclusions>
+				<exclusion>
+                    <groupId>org.springframework</groupId>
+					<artifactId>spring-beans</artifactId>
+                </exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-core</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
