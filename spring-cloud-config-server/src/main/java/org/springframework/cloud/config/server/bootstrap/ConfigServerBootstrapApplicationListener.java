@@ -39,9 +39,8 @@ import org.springframework.core.env.PropertySource;
  * <p>
  * N.B. a config server can always be an "embedded" config client (using its own config
  * repository as a property source) if you set
- * <code>spring.cloud.config.server.bootstrap=true</code> in <code>bootstrap.yml</code>
- * <code>bootstrap.yml</code>. This listener is only to prevent it from using HTTP to contact
- * itself.
+ * <code>spring.cloud.config.server.bootstrap=true</code> in <code>bootstrap.yml</code>.
+ * This listener is only to prevent it from using HTTP to contact itself.
  *
  * @author Dave Syer
  *
