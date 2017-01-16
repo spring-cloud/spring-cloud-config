@@ -24,6 +24,7 @@ import java.util.List;
 
 
 import org.eclipse.jgit.api.CheckoutCommand;
+import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
@@ -40,19 +41,34 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.transport.CredentialItem;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.OpenSshConfig;
+import org.eclipse.jgit.transport.SshSessionFactory;
+import org.eclipse.jgit.transport.URIish;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
+import java.lang.reflect.Method;
+
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
@@ -68,6 +84,9 @@ public class JGitEnvironmentRepositoryTests {
 			this.environment);
 
 	private File basedir = new File("target/config");
+
+	@Rule
+	public final ExpectedException exception = ExpectedException.none();
 
 	@Before
 	public void init() throws Exception {
@@ -176,6 +195,8 @@ public class JGitEnvironmentRepositoryTests {
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
 	}
+
+
 
 	@Test
 	public void uriWithHostOnly() throws Exception {
@@ -516,6 +537,113 @@ public class JGitEnvironmentRepositoryTests {
 		
 		assertFalse("baseDir should be deleted when clone fails", this.basedir.exists());
 	}
+
+	@Test
+	public void usernamePasswordShouldSetCredentials() throws Exception {
+		Git mockGit = mock(Git.class);
+		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("git+ssh://git@somegitserver/somegitrepo");
+		envRepository.setBasedir(new File("./mybasedir"));
+		final String username = "someuser";
+		final String password = "mypassword";
+		envRepository.setUsername(username);
+		envRepository.setPassword(password);
+		envRepository.setCloneOnStart(true);
+		envRepository.afterPropertiesSet();
+
+		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
+
+		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
+		CredentialItem.Username usernameCredential = new CredentialItem.Username();
+		CredentialItem.Password passwordCredential = new CredentialItem.Password();
+		assertTrue(provider.supports(usernameCredential));
+		assertTrue(provider.supports(passwordCredential));
+
+		provider.get(new URIish(), usernameCredential);
+		assertEquals(usernameCredential.getValue(), username);
+		provider.get(new URIish(), passwordCredential);
+		assertEquals(String.valueOf(passwordCredential.getValue()), password);
+	}
+
+	@Test
+	public void passphraseShouldSetCredentials() throws Exception {
+		final String passphrase = "mypassphrase";
+		Git mockGit = mock(Git.class);
+		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("git+ssh://git@somegitserver/somegitrepo");
+		envRepository.setBasedir(new File("./mybasedir"));
+		envRepository.setPassphrase(passphrase);
+		envRepository.setCloneOnStart(true);
+		envRepository.afterPropertiesSet();
+
+		assertTrue(mockCloneCommand.hasPassphraseCredentialsProvider());
+
+		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
+		assertFalse(provider.isInteractive());
+
+		CredentialItem.StringType stringCredential = new CredentialItem.StringType(PassphraseCredentialsProvider.PROMPT, true);
+
+		assertTrue(provider.supports(stringCredential));
+		provider.get(new URIish(), stringCredential);
+		assertEquals(stringCredential.getValue(), passphrase);
+	}
+
+	@Test
+	public void strictHostKeyCheckShouldCheck() throws Exception {
+		String uri = "git+ssh://git@somegitserver/somegitrepo";
+		SshSessionFactory.setInstance(null);
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment);
+		envRepository.setUri(uri);
+		envRepository.setBasedir(new File("./mybasedir"));
+		envRepository.setStrictHostKeyChecking(true);
+		envRepository.setCloneOnStart(true);
+		try {
+			// this will throw but we don't care about connecting.
+			envRepository.afterPropertiesSet();
+		} catch (Exception e) {
+			final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect()).lookup("github.com");
+			JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory.getInstance();
+			// There's no public method that can be used to inspect the ssh configuration, so we'll reflect
+			// the configure method to allow us to check that the config property is set as expected.
+			Method configure = factory.getClass().getDeclaredMethod("configure", OpenSshConfig.Host.class, Session.class );
+			configure.setAccessible(true);
+			Session session = mock(Session.class);
+			ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+			ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+			configure.invoke(factory, hc, session );
+			verify(session).setConfig(keyCaptor.capture(), valueCaptor.capture());
+			configure.setAccessible(false);
+			assertTrue("yes".equals(valueCaptor.getValue()));
+		}
+	}
+
+	class MockCloneCommand extends CloneCommand {
+		private Git mockGit;
+
+		public MockCloneCommand(Git mockGit) {
+			this.mockGit = mockGit;
+		}
+
+		@Override
+		public Git call() throws GitAPIException, InvalidRemoteException {
+			return mockGit;
+		}
+
+		public boolean hasPassphraseCredentialsProvider() {
+			return credentialsProvider instanceof PassphraseCredentialsProvider;
+		}
+
+		public CredentialsProvider getCredentialsProvider() {
+			return credentialsProvider;
+		}
+	}
+
 
 	class MockGitFactory extends JGitEnvironmentRepository.JGitFactory {
 

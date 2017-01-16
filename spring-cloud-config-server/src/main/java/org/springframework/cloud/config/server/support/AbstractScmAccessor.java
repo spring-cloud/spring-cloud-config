@@ -65,6 +65,14 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 	 */
 	private String password;
 	/**
+	 * Passphrase for unlocking your ssh private key.
+	 */
+	private String passphrase;
+ 	/**
+  	 * Reject incoming SSH host keys from remote servers not in the known host list.
+  	 */
+	private boolean strictHostKeyChecking;
+	/**
 	 * Search paths to use within local working copy. By default searches only the root.
 	 */
 	private String[] searchPaths = DEFAULT_LOCATIONS.clone();
@@ -157,6 +165,22 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public String getPassphrase() {
+		return passphrase;
+	}
+
+	public void setPassphrase(String passphrase) {
+		this.passphrase = passphrase;
+	}
+
+	public boolean isStrictHostKeyChecking() {
+		return strictHostKeyChecking;
+	}
+
+	public void setStrictHostKeyChecking(boolean strictHostKeyChecking) {
+		this.strictHostKeyChecking = strictHostKeyChecking;
 	}
 
 	protected File getWorkingDirectory() {
