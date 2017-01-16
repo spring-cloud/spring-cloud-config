@@ -18,13 +18,12 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 import org.eclipse.jgit.api.CheckoutCommand;
-import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
@@ -33,17 +32,17 @@ import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
-import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.NotMergedException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
-import org.eclipse.jgit.transport.FetchResult;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.transport.SshSessionFactory;
@@ -61,7 +60,7 @@ import org.springframework.cloud.config.server.support.PassphraseCredentialsProv
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
-import java.lang.reflect.Method;
+import com.jcraft.jsch.Session;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.is;
@@ -71,7 +70,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Dave Syer
@@ -195,8 +197,6 @@ public class JGitEnvironmentRepositoryTests {
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
 	}
-
-
 
 	@Test
 	public void uriWithHostOnly() throws Exception {
@@ -390,7 +390,6 @@ public class JGitEnvironmentRepositoryTests {
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", null);
 		assertEquals(locations.getVersion(),newObjectId.getName());
 	}
-
 
 	@Test
     public void testMergeException() throws Exception {

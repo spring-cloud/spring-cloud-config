@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import static org.springframework.util.StringUtils.hasText;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -41,8 +39,12 @@ import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.transport.*;
+import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
+import org.eclipse.jgit.transport.SshSessionFactory;
+import org.eclipse.jgit.transport.TagOpt;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
@@ -52,6 +54,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.jcraft.jsch.Session;
+
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * An {@link EnvironmentRepository} backed by a single git repository.
