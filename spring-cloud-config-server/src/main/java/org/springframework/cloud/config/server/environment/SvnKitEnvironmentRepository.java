@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -64,8 +65,8 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		this.defaultLabel = defaultLabel;
 	}
 
-	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment) {
-		super(environment);
+	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment, ConfigServerProperties serverSettings) {
+		super(environment, serverSettings);
 	}
 
 	@Override

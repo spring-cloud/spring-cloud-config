@@ -27,6 +27,7 @@ import java.util.Map;
 import org.springframework.beans.BeanUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
@@ -55,8 +56,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	private Map<String, JGitEnvironmentRepository> placeholders = new LinkedHashMap<String, JGitEnvironmentRepository>();
 
-	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment) {
-		super(environment);
+	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment, ConfigServerProperties serverSettings) {
+		super(environment, serverSettings);
 	}
 
 	@Override
@@ -64,6 +65,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		super.afterPropertiesSet();
 		for (String name : this.repos.keySet()) {
 			PatternMatchingJGitEnvironmentRepository repo = this.repos.get(name);
+			repo.setServerSettings(getServerSettings());
 			repo.setEnvironment(getEnvironment());
 			if (!StringUtils.hasText(repo.getName())) {
 				repo.setName(name);
@@ -194,9 +196,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		return this.placeholders.get(key);
 	}
 
-	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository source,
-			String uri) {
-		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(null);
+	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository source, String uri) {
+		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(null,getServerSettings());
 		File basedir = repository.getBasedir();
 		BeanUtils.copyProperties(source, repository);
 		repository.setUri(uri);
@@ -217,7 +218,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		private String name;
 
 		public PatternMatchingJGitEnvironmentRepository() {
-			super(null);
+			super(null, null);
 		}
 
 		public PatternMatchingJGitEnvironmentRepository(String uri) {

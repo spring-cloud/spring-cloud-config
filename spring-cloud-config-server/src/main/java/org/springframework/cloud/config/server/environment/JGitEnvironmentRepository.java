@@ -47,6 +47,7 @@ import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
@@ -96,8 +97,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private boolean forcePull;
 
-	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
-		super(environment);
+	public JGitEnvironmentRepository(ConfigurableEnvironment environment, ConfigServerProperties serverSettings) {
+		super(environment, serverSettings);
 	}
 
 	public boolean isCloneOnStart() {

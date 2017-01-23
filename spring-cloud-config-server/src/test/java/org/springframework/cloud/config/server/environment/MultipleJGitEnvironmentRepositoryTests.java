@@ -27,6 +27,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
@@ -40,7 +41,8 @@ import org.springframework.core.env.StandardEnvironment;
 public class MultipleJGitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
-	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment);
+	private ConfigServerProperties serverSettings = new ConfigServerProperties();
+	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment, serverSettings);
 
 	@Before
 	public void init() throws Exception {
@@ -60,6 +62,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	private PatternMatchingJGitEnvironmentRepository createRepository(String name, String pattern, String uri) {
 		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository();
 		repo.setEnvironment(this.environment);
+		repo.setServerSettings(serverSettings);
 		repo.setName(name);
 		repo.setPattern(new String[] {pattern});
 		repo.setUri(uri);
