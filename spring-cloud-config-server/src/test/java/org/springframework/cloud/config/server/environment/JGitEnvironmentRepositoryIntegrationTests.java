@@ -241,7 +241,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.getBean(JGitEnvironmentRepository.class);
 		assertThat(repository.getSearchPaths(), Matchers.arrayContaining("{application}"));
 		assertFalse(Arrays.equals(repository.getSearchPaths(),
-				new JGitEnvironmentRepository(repository.getEnvironment())
+				new JGitEnvironmentRepository(repository.getEnvironment(), repository.getServerSettings())
 						.getSearchPaths()));
 	}
 

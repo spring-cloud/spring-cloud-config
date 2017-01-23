@@ -56,6 +56,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
@@ -82,8 +83,9 @@ import static org.mockito.Mockito.when;
 public class JGitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
+	private ConfigServerProperties serverSettings = new ConfigServerProperties();
 	private JGitEnvironmentRepository repository = new JGitEnvironmentRepository(
-			this.environment);
+			this.environment, serverSettings);
 
 	private File basedir = new File("target/config");
 
@@ -220,7 +222,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setCloneOnStart(true);
@@ -238,7 +240,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.afterPropertiesSet();
@@ -256,7 +258,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("file://somefilesystem/somegitrepo");
 		envRepository.setCloneOnStart(true);
@@ -281,7 +283,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(status.isClean()).thenReturn(false);
 
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 		repo.setForcePull(true);
 
 		boolean shouldPull = repo.shouldPull(git);
@@ -305,7 +307,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(status.isClean()).thenReturn(false);
 
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 
 		boolean shouldPull = repo.shouldPull(git);
 
@@ -328,7 +330,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(status.isClean()).thenReturn(true);
 
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 
 		boolean shouldPull = repo.shouldPull(git);
 
@@ -342,7 +344,7 @@ public class JGitEnvironmentRepositoryTests {
 		CloneCommand cloneCommand = mock(CloneCommand.class);
 		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 		this.repository.setGitFactory(factory);
 
 		//refresh()->shouldPull
@@ -398,7 +400,7 @@ public class JGitEnvironmentRepositoryTests {
 		CloneCommand cloneCommand = mock(CloneCommand.class);
 		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 		this.repository.setGitFactory(factory);
 
 		//refresh()->shouldPull
@@ -456,7 +458,7 @@ public class JGitEnvironmentRepositoryTests {
 		CloneCommand cloneCommand = mock(CloneCommand.class);
 		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 		this.repository.setGitFactory(factory);
 
 		//refresh()->shouldPull
@@ -522,7 +524,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockCloneCommand.call()).thenThrow(new TransportException("failed to clone"));
 
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-				this.environment);
+				this.environment, serverSettings);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setBasedir(this.basedir);
@@ -542,7 +544,7 @@ public class JGitEnvironmentRepositoryTests {
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment);
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment, serverSettings);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("git+ssh://git@somegitserver/somegitrepo");
 		envRepository.setBasedir(new File("./mybasedir"));
@@ -573,7 +575,7 @@ public class JGitEnvironmentRepositoryTests {
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment);
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment, serverSettings);
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("git+ssh://git@somegitserver/somegitrepo");
 		envRepository.setBasedir(new File("./mybasedir"));
@@ -597,7 +599,7 @@ public class JGitEnvironmentRepositoryTests {
 	public void strictHostKeyCheckShouldCheck() throws Exception {
 		String uri = "git+ssh://git@somegitserver/somegitrepo";
 		SshSessionFactory.setInstance(null);
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment);
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment, serverSettings);
 		envRepository.setUri(uri);
 		envRepository.setBasedir(new File("./mybasedir"));
 		envRepository.setStrictHostKeyChecking(true);

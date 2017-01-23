@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -34,8 +35,9 @@ import static org.junit.Assert.assertTrue;
 public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
+	private ConfigServerProperties serverSettings = new ConfigServerProperties();
 	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(
-			this.environment);
+			this.environment, serverSettings);
 	private String defaultUri;
 
 	@Before

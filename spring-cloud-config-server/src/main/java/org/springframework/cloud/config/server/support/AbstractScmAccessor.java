@@ -19,6 +19,8 @@ package org.springframework.cloud.config.server.support;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -27,6 +29,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.util.FileUtils;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -56,6 +59,11 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 	 */
 	private String uri;
 	private ConfigurableEnvironment environment;
+
+	/**
+	 * Configuration setting of the config server.
+	 */
+	private ConfigServerProperties serverSettings;
 	/**
 	 * Username for authentication with remote repository.
 	 */
@@ -79,9 +87,9 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 
 	private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-	public AbstractScmAccessor(ConfigurableEnvironment environment) {
+	public AbstractScmAccessor(ConfigurableEnvironment environment, ConfigServerProperties serverSettings) {
 		this.environment = environment;
-		this.basedir = createBaseDir();
+		this.serverSettings = serverSettings;
 	}
 
 	@Override
@@ -91,24 +99,44 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 
 	protected File createBaseDir() {
 		try {
-			final File basedir = Files.createTempDirectory("config-repo-").toFile();
-			Runtime.getRuntime().addShutdownHook(new Thread() {
-				@Override
-				public void run() {
-					try {
-						FileUtils.delete(basedir, FileUtils.RECURSIVE);
-					}
-					catch (IOException e) {
-						AbstractScmAccessor.this.logger.warn(
-								"Failed to delete temporary directory on exit: " + e);
-					}
+			Path baseDirSetting;
+			final File basedir;
+			if (serverSettings != null && serverSettings.getBaseDir() != null) {
+				String subDir = "";
+				if (uri != null) {
+					subDir = File.separator + this.uri.replaceAll("\\W", "\\_");
 				}
-			});
+				baseDirSetting = Paths.get(serverSettings.getBaseDir() + subDir);
+				basedir = Files.createDirectories(baseDirSetting).toFile();
+			} else {
+				basedir = Files.createTempDirectory("config-repo-").toFile();
+				Runtime.getRuntime().addShutdownHook(new Thread() {
+					@Override
+					public void run() {
+						try {
+							FileUtils.delete(basedir, FileUtils.RECURSIVE);
+						}
+						catch (IOException e) {
+							AbstractScmAccessor.this.logger.warn(
+									"Failed to delete temporary directory on exit: " + e);
+						}
+					}
+				});
+
+			}
 			return basedir;
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Cannot create temp dir", e);
 		}
+	}
+
+	public ConfigServerProperties getServerSettings() {
+		return serverSettings;
+	}
+
+	public void setServerSettings(ConfigServerProperties serverSettings) {
+		this.serverSettings = serverSettings;
 	}
 
 	public ConfigurableEnvironment getEnvironment() {
@@ -140,6 +168,9 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 	}
 
 	public File getBasedir() {
+		if(basedir == null){
+			basedir = createBaseDir();
+		}
 		return this.basedir;
 	}
 

@@ -68,6 +68,11 @@ public class ConfigServerProperties {
 	private String defaultProfile = "default";
 
 	/**
+	 * Base directory for local working copy of repository. If not set the default temporary-file directory will be used.
+	 */
+	private String baseDir;
+
+	/**
 	 * Decryption configuration for when server handles encrypted properties before sending them to clients.
 	 */
 	private Encrypt encrypt = new Encrypt();
@@ -130,6 +135,14 @@ public class ConfigServerProperties {
 
 	public void setDefaultProfile(String defaultProfile) {
 		this.defaultProfile = defaultProfile;
+	}
+
+	public String getBaseDir() {
+		return baseDir;
+	}
+
+	public void setBaseDir(String baseDir) {
+		this.baseDir = baseDir;
 	}
 
 	public static class Encrypt {

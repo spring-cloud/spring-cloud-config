@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.EnableConfigServer;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.StandardEnvironment;
@@ -41,8 +42,9 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	private static final String REPOSITORY_NAME = "svn-config-repo";
 	private StandardEnvironment environment = new StandardEnvironment();
+	private ConfigServerProperties serverSettings = new ConfigServerProperties();
 	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(
-			this.environment);
+			this.environment, serverSettings);
 
 	private File basedir = new File("target/config");
 

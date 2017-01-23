@@ -59,7 +59,7 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public MultipleJGitEnvironmentRepository defaultEnvironmentRepository() {
-			MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment);
+			MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment, server);
 			if (this.server.getDefaultLabel()!=null) {
 				repository.setDefaultLabel(this.server.getDefaultLabel());
 			}
@@ -95,7 +95,7 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public SvnKitEnvironmentRepository svnKitEnvironmentRepository() {
-			SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment);
+			SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment, server);
 			if (this.server.getDefaultLabel()!=null) {
 				repository.setDefaultLabel(this.server.getDefaultLabel());
 			}
