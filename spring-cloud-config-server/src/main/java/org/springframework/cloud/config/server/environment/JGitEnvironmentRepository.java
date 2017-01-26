@@ -428,8 +428,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private void setCredentialsProvider(TransportCommand<?, ?> cmd) {
-		//	Don	if (gitCredentialsProvider != null) {
-		//			cmd.setCredentialsProvider(gitCredentialsProvider);
 		if (hasText(getUsername())) {
 			cmd.setCredentialsProvider(
 					new UsernamePasswordCredentialsProvider(getUsername(), getPassword()));
