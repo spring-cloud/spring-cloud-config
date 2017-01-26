@@ -16,13 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,6 +51,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StreamUtils;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Dave Syer
@@ -481,6 +481,27 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		checkout.setName(label);
 		Ref localRef = checkout.call();
 		return localRef.getObjectId().getName();
+	}
+
+	public void passphrase() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		final String passphrase = "thisismypassphrase";
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.run("--spring.cloud.config.server.git.uri=" + uri,
+						"--spring.cloud.config.server.git.passphrase=" + passphrase);
+		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
+		assertThat(repository.getPassphrase(), Matchers.containsString(passphrase));
+	}
+
+	@Test
+	public void strictHostKeyChecking() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		final boolean strictHostKeyChecking = true;
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.run("--spring.cloud.config.server.git.uri=" + uri,
+						"--spring.cloud.config.server.git.strict-host-key-checking=" + strictHostKeyChecking);
+		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
+		assertEquals(repository.isStrictHostKeyChecking(), strictHostKeyChecking);
 	}
 
 	@Configuration
