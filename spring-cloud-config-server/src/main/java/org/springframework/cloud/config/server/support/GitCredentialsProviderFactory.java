@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.server.credentials;
+package org.springframework.cloud.config.server.support;
+
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -49,9 +50,12 @@ public class GitCredentialsProviderFactory {
 	 * @param uri the URI of the repository (cannot be null)
 	 * @param username the username provided for the repository (may be null)
 	 * @param password the password provided for the repository (may be null)
+	 * @param passphrase the passphrase to unlock the ssh private key (may be null)
 	 * @return the first matched credentials provider or the default or null.
 	 */
-	public CredentialsProvider createFor(String uri, String username, String password) {
+	public CredentialsProvider createFor(String uri, 
+			String username, String password, String passphrase) {
+
 		CredentialsProvider provider = null;
 		if (awsAvailable() && AwsCodeCommitCredentialProvider.canHandle(uri)) {
 			logger.debug("Constructing AwsCodeCommitCredentialProvider for URI " + uri);
@@ -64,6 +68,11 @@ public class GitCredentialsProviderFactory {
 			logger.debug("Constructing UsernamePasswordCredentialsProvider for URI " + uri);
 			provider = new UsernamePasswordCredentialsProvider(username, password.toCharArray());
 		}
+		else if (hasText(passphrase)) {
+			logger.debug("Constructing PassphraseCredentialsProvider for URI " + uri);
+			provider = new PassphraseCredentialsProvider(passphrase);
+		}
+
 		else {
 			logger.debug("No credentials provider required for URI " + uri);
 		}

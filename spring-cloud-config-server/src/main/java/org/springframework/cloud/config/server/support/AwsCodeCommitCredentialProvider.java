@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.server.credentials;
+package org.springframework.cloud.config.server.support;
 
 import static org.springframework.util.StringUtils.hasText;
 

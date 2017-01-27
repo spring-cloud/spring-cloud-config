@@ -25,6 +25,8 @@ import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.URIish;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
+import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 
@@ -48,7 +50,7 @@ public class AwsCodeCommitCredentialsProviderTests {
 	public void init() {
 		GitCredentialsProviderFactory factory = new GitCredentialsProviderFactory();
 		provider = (AwsCodeCommitCredentialProvider) 
-				factory.createFor(AWS_REPO, USER, PASSWORD);
+				factory.createFor(AWS_REPO, USER, PASSWORD, null);
 	}
 	
 	@Test
