@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.support;
 
+
 import static org.springframework.util.StringUtils.hasText;
 
 import org.apache.commons.logging.Log;
@@ -54,6 +55,7 @@ public class GitCredentialsProviderFactory {
 	 */
 	public CredentialsProvider createFor(String uri, 
 			String username, String password, String passphrase) {
+
 		CredentialsProvider provider = null;
 		if (awsAvailable() && AwsCodeCommitCredentialProvider.canHandle(uri)) {
 			logger.debug("Constructing AwsCodeCommitCredentialProvider for URI " + uri);
@@ -70,6 +72,7 @@ public class GitCredentialsProviderFactory {
 			logger.debug("Constructing PassphraseCredentialsProvider for URI " + uri);
 			provider = new PassphraseCredentialsProvider(passphrase);
 		}
+
 		else {
 			logger.debug("No credentials provider required for URI " + uri);
 		}
