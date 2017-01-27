@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.server.credentials;
+package org.springframework.cloud.config.server.support;
 
 /**
  * @author Don Laidlaw

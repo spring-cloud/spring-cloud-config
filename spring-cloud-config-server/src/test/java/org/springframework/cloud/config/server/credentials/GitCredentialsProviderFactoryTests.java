@@ -22,6 +22,9 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
+import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
+import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
 
 /**
  * @author don laidlaw
@@ -43,33 +46,33 @@ public class GitCredentialsProviderFactoryTests {
 
 	@Test
 	public void testCreateForFileNoUsernameIsNull() {
-		CredentialsProvider provider = factory.createFor(FILE_REPO, null, null);
+		CredentialsProvider provider = factory.createFor(FILE_REPO, null, null, null);
 		assertNull(provider);
 	}
 
 	@Test
 	public void testCreateForFileWithUsername() {
-		CredentialsProvider provider = factory.createFor(FILE_REPO, USER, PASSWORD);
+		CredentialsProvider provider = factory.createFor(FILE_REPO, USER, PASSWORD, null);
 		assertNotNull(provider);
 		assertTrue(provider instanceof UsernamePasswordCredentialsProvider);
 	}
 
 	@Test
 	public void testCreateForServerNoUsernameIsNull() {
-		CredentialsProvider provider = factory.createFor(GIT_REPO, null, null);
+		CredentialsProvider provider = factory.createFor(GIT_REPO, null, null, null);
 		assertNull(provider);
 	}
 
 	@Test
 	public void testCreateForServerWithUsername() {
-		CredentialsProvider provider = factory.createFor(GIT_REPO, USER, PASSWORD);
+		CredentialsProvider provider = factory.createFor(GIT_REPO, USER, PASSWORD, null);
 		assertNotNull(provider);
 		assertTrue(provider instanceof UsernamePasswordCredentialsProvider);
 	}
 
 	@Test
 	public void testCreateForAwsNoUsername() {
-		CredentialsProvider provider = factory.createFor(AWS_REPO, null, null);
+		CredentialsProvider provider = factory.createFor(AWS_REPO, null, null, null);
 		assertNotNull(provider);
 		assertTrue(provider instanceof AwsCodeCommitCredentialProvider);
 		AwsCodeCommitCredentialProvider aws = (AwsCodeCommitCredentialProvider) provider;
@@ -79,7 +82,7 @@ public class GitCredentialsProviderFactoryTests {
 
 	@Test
 	public void testCreateForAwsWithUsername() {
-		CredentialsProvider provider = factory.createFor(AWS_REPO, USER, PASSWORD);
+		CredentialsProvider provider = factory.createFor(AWS_REPO, USER, PASSWORD, null);
 		assertNotNull(provider);
 		assertTrue(provider instanceof AwsCodeCommitCredentialProvider);
 		AwsCodeCommitCredentialProvider aws = (AwsCodeCommitCredentialProvider) provider;
@@ -90,11 +93,18 @@ public class GitCredentialsProviderFactoryTests {
 	@Test
 	public void testCreateForAwsDisabled() {
 		factory.setAwsCodeCommitEnabled(false);
-		CredentialsProvider provider = factory.createFor(AWS_REPO, null, null);
+		CredentialsProvider provider = factory.createFor(AWS_REPO, null, null, null);
 		assertNull(provider);
-		provider = factory.createFor(AWS_REPO, USER, PASSWORD);
+		provider = factory.createFor(AWS_REPO, USER, PASSWORD, null);
 		assertNotNull(provider);
 		assertTrue(provider instanceof UsernamePasswordCredentialsProvider);
+	}
+	
+	@Test
+	public void testCreatePassphraseCredentialProvider() {
+		CredentialsProvider provider = factory.createFor(GIT_REPO, null, null, PASSWORD);
+		assertNotNull(provider);
+		assertTrue(provider instanceof PassphraseCredentialsProvider);
 	}
 	
 
