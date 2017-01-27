@@ -813,6 +813,9 @@ $ curl localhost:8888/encrypt -d mysecret
 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
 ----
 
+NOTE: If the value you are encrypting has characters in it that need to be URL encoded you should use
+the `--data-urlencode` option to `curl` to make sure they are encoded properly.
+
 The inverse operation is also available via `/decrypt` (provided the server is
 configured with a symmetric key or a full key pair):
 
