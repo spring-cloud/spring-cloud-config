@@ -1752,6 +1752,19 @@ to encrypt values by POSTing to the <code>/encrypt</code> endpoint, e.g.</p>
 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda</pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+If the value you are encrypting has characters in it that need to be URL encoded you should use
+the <code>--data-urlencode</code> option to <code>curl</code> to make sure they are encoded properly.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>The inverse operation is also available via <code>/decrypt</code> (provided the server is
 configured with a symmetric key or a full key pair):</p>
