@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.config.server.support;
 
-
 import static org.springframework.util.StringUtils.hasText;
 
 import org.apache.commons.logging.Log;
