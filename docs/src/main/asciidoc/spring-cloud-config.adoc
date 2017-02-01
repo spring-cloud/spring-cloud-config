@@ -335,7 +335,7 @@ that should be applicable. HTTPS proxy settings can be set in
 `~/.git/config` or in the same way as for any other JVM process via
 system properties (`-Dhttps.proxyHost` and `-Dhttps.proxyPort`).
 
-TIP: If you don't know where your `~/.git` directory is us `git config
+TIP: If you don't know where your `~/.git` directory is use `git config
 --global` to manipulate the settings (e.g. `git config --global
 http.sslVerify false`).
 
