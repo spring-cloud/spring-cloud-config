@@ -115,7 +115,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getRawUri() {
-		return extractCredentials()[2];
+		return extractCredentials().uri;
 	}
 
 	public String getUri() {
@@ -151,7 +151,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getUsername() {
-		return extractCredentials()[0];
+		return extractCredentials().username;
 	}
 
 	public void setUsername(String username) {
@@ -159,7 +159,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getPassword() {
-		return extractCredentials()[1];
+		return extractCredentials().password;
 	}
 
 	public void setPassword(String password) {
@@ -198,37 +198,41 @@ public class ConfigClientProperties {
 		this.authorization = authorization;
 	}
 
-
-
-	private String[] extractCredentials() {
-		String[] result = new String[3];
+	private Credentials extractCredentials() {
+		Credentials result = new Credentials();
 		String uri = this.uri;
-		result[2] = uri;
-		String[] creds = getUsernamePassword();
-		result[0] = creds[0];
-		result[1] = creds[1];
+		result.uri = uri;
+		Credentials explicitCredentials = getUsernamePassword();
+		result.username = explicitCredentials.username;
+		result.password = explicitCredentials.password;
 		try {
 			URL url = new URL(uri);
 			String userInfo = url.getUserInfo();
+			// no credentials in url, return explicit credentials
 			if (StringUtils.isEmpty(userInfo) || ":".equals(userInfo)) {
 				return result;
 			}
 			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build()
 					.toUriString();
-			result[2] = bare;
+			result.uri = bare;
+			// handle the password only case
 			if (!userInfo.contains(":")) {
 				userInfo = userInfo + ":";
 			}
 			String[] split = userInfo.split(":");
-			result[0] = split[0];
-			result[1] = split[1];
-			if (creds[1] != null) {
+			// set username and password from uri
+			result.username = split[0];
+			result.password = split[1];
+
+			// override password if explicitly set
+			if (explicitCredentials.password != null) {
 				// Explicit username / password takes precedence
-				result[1] = creds[1];
-				if ("user".equals(creds[0])) {
-					// But the username can be overridden
-					result[0] = split[0];
-				}
+				result.password = explicitCredentials.password;
+			}
+			// override username if explicitly set
+			if (!"user".equals(explicitCredentials.username)) {
+				// But the username can be overridden
+				result.username = explicitCredentials.username;
 			}
 			return result;
 		}
@@ -237,13 +241,25 @@ public class ConfigClientProperties {
 		}
 	}
 
-	private String[] getUsernamePassword() {
+	private Credentials getUsernamePassword() {
+		Credentials credentials = new Credentials();
+
 		if (StringUtils.hasText(this.password)) {
-			return new String[] {
-					StringUtils.hasText(this.username) ? this.username.trim() : "user",
-					this.password.trim() };
+			credentials.password = this.password.trim();
 		}
-		return new String[2];
+
+		if (StringUtils.hasText(this.username)) {
+			credentials.username = this.username.trim();
+		} else {
+			credentials.username = "user";
+		}
+		return credentials;
+	}
+
+	private static class Credentials {
+		private String username;
+		private String password;
+		private String uri;
 	}
 
 	public static class Discovery {

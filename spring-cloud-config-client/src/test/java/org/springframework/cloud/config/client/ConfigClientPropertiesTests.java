@@ -15,12 +15,15 @@
  */
 package org.springframework.cloud.config.client;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.mock.env.MockEnvironment;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Dave Syer
@@ -66,4 +69,16 @@ public class ConfigClientPropertiesTests {
 		assertEquals("two", override.getName());
 	}
 
+	@Test
+	public void testThatExplicitUsernamePasswordTakePrecedence() {
+		ConfigClientProperties properties =
+				new ConfigClientProperties(new MockEnvironment());
+
+		properties.setUri("https://userInfoName:userInfoPW@localhost:8888/");
+		properties.setUsername("explicitName");
+		properties.setPassword("explicitPW");
+
+		assertThat(properties.getPassword(), equalTo("explicitPW"));
+		assertThat(properties.getUsername(), equalTo("explicitName"));
+	}
 }
