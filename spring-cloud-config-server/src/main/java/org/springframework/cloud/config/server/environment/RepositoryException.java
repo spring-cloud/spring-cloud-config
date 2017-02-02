@@ -27,4 +27,8 @@ public class RepositoryException extends RuntimeException {
 		super(string);
 	}
 
+	public RepositoryException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
 }

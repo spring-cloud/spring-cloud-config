@@ -125,19 +125,14 @@ public class EncryptionController {
 	public String encrypt(@PathVariable String name, @PathVariable String profiles,
 			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
 		checkEncryptorInstalled(name, profiles);
-		try {
-			String input = stripFormData(data, type, false);
-			Map<String, String> keys = this.helper.getEncryptorKeys(name, profiles,
-					input);
-			String textToEncrypt = this.helper.stripPrefix(input);
-			String encrypted = this.helper.addPrefix(keys,
-					this.encryptor.locate(keys).encrypt(textToEncrypt));
-			logger.info("Encrypted data");
-			return encrypted;
-		}
-		catch (IllegalArgumentException e) {
-			throw new InvalidCipherException();
-		}
+		String input = stripFormData(data, type, false);
+		Map<String, String> keys = this.helper.getEncryptorKeys(name, profiles,
+				input);
+		String textToEncrypt = this.helper.stripPrefix(input);
+		String encrypted = this.helper.addPrefix(keys,
+				this.encryptor.locate(keys).encrypt(textToEncrypt));
+		logger.info("Encrypted data");
+		return encrypted;
 	}
 
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
@@ -161,7 +156,8 @@ public class EncryptionController {
 			logger.info("Decrypted cipher data");
 			return decrypted;
 		}
-		catch (IllegalArgumentException e) {
+		catch (IllegalArgumentException|IllegalStateException e) {
+			logger.error("Cannot decrypt key:" + name + ", value:" + data, e);
 			throw new InvalidCipherException();
 		}
 	}
