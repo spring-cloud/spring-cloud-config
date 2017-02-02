@@ -197,7 +197,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			return git.getRepository().getRef("HEAD").getObjectId().getName();
 		}
 		catch (RefNotFoundException e) {
-			throw new NoSuchLabelException("No such label: " + label);
+			throw new NoSuchLabelException("No such label: " + label, e);
 		}
 		catch (GitAPIException e) {
 			throw new IllegalStateException("Cannot clone or checkout repository", e);
@@ -302,14 +302,15 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			setCredentialsProvider(fetch);
 			FetchResult result = fetch.call();
 			if(result.getTrackingRefUpdates() != null && result.getTrackingRefUpdates().size() > 0) {
-				this.logger.info("Fetched for remote " + label + " and found " + result.getTrackingRefUpdates().size()
+				logger.info("Fetched for remote " + label + " and found " + result.getTrackingRefUpdates().size()
 					+ " updates");
 			}
 			return result;
 		}
 		catch (Exception ex) {
-			this.logger.warn("Could not fetch remote for " + label + " remote: " + git
-					.getRepository().getConfig().getString("remote", "origin", "url"));
+			String message = "Could not fetch remote for " + label + " remote: " + git
+					.getRepository().getConfig().getString("remote", "origin", "url");
+			warn(message, ex);
 			return null;
 		}
 	}
@@ -320,13 +321,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			merge.include(git.getRepository().getRef("origin/" + label));
 			MergeResult result = merge.call();
 			if(!result.getMergeStatus().isSuccessful()) {
-				this.logger.warn("Merged from remote " + label + " with result " + result.getMergeStatus());
+				logger.warn("Merged from remote " + label + " with result " + result.getMergeStatus());
 			}
 			return result;
 		}
 		catch (Exception ex) {
-			this.logger.warn("Could not merge remote for " + label + " remote: " + git
-					.getRepository().getConfig().getString("remote", "origin", "url"));
+			String message = "Could not merge remote for " + label + " remote: " + git
+					.getRepository().getConfig().getString("remote", "origin", "url");
+			warn(message, ex);
 			return null;
 		}
 	}
@@ -343,9 +345,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			return resetRef;
 		}
 		catch (Exception ex) {
-			this.logger.warn("Could not reset to remote for " + label + " (current ref="
+			String message = "Could not reset to remote for " + label + " (current ref="
 					+ ref + "), remote: " + git.getRepository().getConfig()
-							.getString("remote", "origin", "url"));
+					.getString("remote", "origin", "url");
+			warn(message, ex);
 			return null;
 		}
 	}
@@ -447,10 +450,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			return status.call().isClean();
 		}
 		catch (Exception e) {
-			this.logger
-					.warn("Could not execute status command on local repository. Cause: ("
-							+ e.getClass().getSimpleName() + ") " + e.getMessage());
-
+			String message = "Could not execute status command on local repository. Cause: ("
+					+ e.getClass().getSimpleName() + ") " + e.getMessage();
+			warn(message, e);
 			return false;
 		}
 	}
@@ -482,6 +484,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			}
 		}
 		return false;
+	}
+
+	protected void warn(String message, Exception ex) {
+		logger.warn(message);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Stacktrace for: " + message, ex);
+		}
 	}
 
 	/**

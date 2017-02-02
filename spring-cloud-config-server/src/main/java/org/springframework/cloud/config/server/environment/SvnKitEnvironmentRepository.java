@@ -146,9 +146,9 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 			return version.toString();
 		}
 		catch (Exception e) {
-			this.logger.warn("Could not update remote for " + label + " (current local="
+			logger.warn("Could not update remote for " + label + " (current local="
 					+ getWorkingDirectory().getPath() + "), remote: " + this.getUri()
-					+ ")");
+					+ ")", e);
 		}
 
 		final SVNStatus status = SVNClientManager.newInstance().getStatusClient()
