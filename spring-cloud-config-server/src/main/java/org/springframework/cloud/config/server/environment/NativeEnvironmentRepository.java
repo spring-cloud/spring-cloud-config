@@ -198,7 +198,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 	protected Environment clean(Environment value) {
 		Environment result = new Environment(value.getName(), value.getProfiles(),
-				value.getLabel(), this.version, value.getState());
+				value.getLabel(), this.version, value.getState(), value.getDescription());
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName();
 			if (this.environment.getPropertySources().contains(name)) {

@@ -143,8 +143,13 @@ public class JGitEnvironmentRepositoryTests {
 
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
+		String description = environment.getDescription();
+
 		assertNotNull("version was null", version);
 		assertTrue("version length was wrong", version.length() >= 40 && version.length() <= 64);
+
+		assertNotNull("description was null", description);
+		assertNotNull("each commit should have message", description.length() > 0);
 	}
 
 	@Test

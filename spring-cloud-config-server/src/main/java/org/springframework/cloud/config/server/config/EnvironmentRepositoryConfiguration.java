@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
@@ -46,6 +47,14 @@ public class EnvironmentRepositoryConfiguration {
 	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
 	public ConfigServerHealthIndicator configServerHealthIndicator(EnvironmentRepository repository) {
 		return new ConfigServerHealthIndicator(repository);
+	}
+
+	@Bean
+	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
+	@ConditionalOnBean(MultipleJGitEnvironmentRepository.class)
+	public ConfigServerJgitHealthIndicator configServerJgitHealthIndicator(MultipleJGitEnvironmentRepository repository,
+																		   ConfigServerProperties configServerProperties) {
+		return new ConfigServerJgitHealthIndicator(repository, configServerProperties);
 	}
 
 	@Configuration

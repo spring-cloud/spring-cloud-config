@@ -70,7 +70,7 @@ public class CustomEnvironmentRepositoryTests {
 				public Environment findOne(String application, String profile,
 						String label) {
 					return new Environment("test", new String[0], "label", "version",
-							"state");
+							"state", "description");
 				}
 			};
 		}

@@ -105,7 +105,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 		List<String> keys = findKeys(application, scrubbedProfiles);
 
-		Environment environment = new Environment(application, profiles, label, null, newState);
+		Environment environment = new Environment(application, profiles, label, null, newState, null);
 
 		for (String key : keys) {
 			// read raw 'data' key from vault

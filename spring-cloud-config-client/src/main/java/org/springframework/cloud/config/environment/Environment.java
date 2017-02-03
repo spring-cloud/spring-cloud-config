@@ -46,8 +46,10 @@ public class Environment {
 
 	private String state;
 
+	private String description;
+
 	public Environment(String name, String... profiles) {
-		this(name, profiles, "master", null, null);
+		this(name, profiles, "master", null, null, null);
 	}
 
 	/**
@@ -55,7 +57,7 @@ public class Environment {
 	 * @param env
 	 */
 	public Environment(Environment env) {
-		this(env.getName(), env.getProfiles(), env.getLabel(), env.getVersion(), env.getState());
+		this(env.getName(), env.getProfiles(), env.getLabel(), env.getVersion(), env.getState(), env.description);
 	}
 
 	@JsonCreator
@@ -63,13 +65,15 @@ public class Environment {
 			@JsonProperty("profiles") String[] profiles,
 			@JsonProperty("label") String label,
 			@JsonProperty("version") String version,
-			@JsonProperty("state") String state) {
+			@JsonProperty("state") String state,
+			@JsonProperty("description") String description) {
 		super();
 		this.name = name;
 		this.profiles = profiles;
 		this.label = label;
 		this.version = version;
 		this.state = state;
+		this.description = description;
 	}
 
 	public void add(PropertySource propertySource) {
@@ -128,11 +132,20 @@ public class Environment {
 		this.state = state;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
 	@Override
 	public String toString() {
 		return "Environment [name=" + name + ", profiles=" + Arrays.asList(profiles)
 				+ ", label=" + label + ", propertySources=" + propertySources
 				+ ", version=" + version
+				+ ", description=" + description
 				+ ", state=" + state + "]";
 	}
 

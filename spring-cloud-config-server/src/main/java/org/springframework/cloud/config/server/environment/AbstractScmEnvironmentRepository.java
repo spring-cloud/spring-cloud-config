@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.text.DateFormat;
+import java.util.Date;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.AbstractScmAccessor;
 import org.springframework.core.Ordered;
@@ -44,8 +47,15 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 		Environment result = delegate.findOne(application, profile, "");
 		result.setVersion(locations.getVersion());
 		result.setLabel(label);
-		return this.cleaner.clean(result, getWorkingDirectory().toURI().toString(),
-				getUri());
+		StringBuilder additionalInfo = new StringBuilder();
+		if(locations.getTimestamp() > 0) {
+			Date date = new Date(locations.getTimestamp());
+			additionalInfo.append(DateFormat.getDateTimeInstance().format(date));
+			additionalInfo.append(" ");
+		}
+		additionalInfo.append(locations.getInfo());
+		result.setDescription(additionalInfo.toString());
+		return this.cleaner.clean(result, getWorkingDirectory().toURI().toString(), getUri());
 	}
 
 	@Override

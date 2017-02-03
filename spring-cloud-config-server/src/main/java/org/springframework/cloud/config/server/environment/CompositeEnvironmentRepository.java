@@ -40,7 +40,7 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-		Environment env = new Environment(application, new String[]{profile}, label, null, null);
+		Environment env = new Environment(application, new String[]{profile}, label, null, null, null);
 		for(EnvironmentRepository repo : environmentRepositories) {
 			env.addAll(repo.findOne(application, profile, label).getPropertySources());
 		}

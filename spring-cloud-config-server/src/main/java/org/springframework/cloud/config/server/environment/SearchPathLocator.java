@@ -35,13 +35,23 @@ public interface SearchPathLocator {
 		private final String label;
 		private final String[] locations;
 		private final String version;
+		private final long timestamp;
+		private final String info;
 
 		public Locations(String application, String profile, String label, String version, String[] locations) {
+			this(application, profile, label, version, locations, System.currentTimeMillis(), "");
+
+		}
+
+		public Locations(String application, String profile, String label, String version, String[] locations,
+						 long timestamp, String info) {
 			this.application = application;
 			this.profile = profile;
 			this.label = label;
 			this.locations = locations;
 			this.version = version;
+			this.timestamp = timestamp;
+			this.info = info;
 		}
 
 		public String[] getLocations() {
@@ -64,11 +74,20 @@ public interface SearchPathLocator {
 			return label;
 		}
 
+		public long getTimestamp() {
+			return timestamp;
+		}
+
+		public String getInfo() {
+			return info;
+		}
+
 		@Override
 		public String toString() {
 			return "Locations [application=" + application + ", profile=" + profile
 					+ ", label=" + label + ", locations=" + Arrays.toString(locations)
-					+ ", version=" + version + "]";
+					+ ", version=" + version + ", timestamp=" + timestamp
+					+ ", info=" + info +"]";
 		}
 
 	}

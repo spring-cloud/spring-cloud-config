@@ -40,6 +40,8 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
@@ -91,7 +93,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
 	private String defaultLabel = DEFAULT_LABEL;
-	
+
 	/**
 	 * The credentials provider to use to connect to the Git repository.
 	 */
@@ -166,9 +168,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		if (label == null) {
 			label = this.defaultLabel;
 		}
-		String version = refresh(label);
-		return new Locations(application, profile, label, version,
-				getSearchLocations(getWorkingDirectory(), application, profile, label));
+		CommitInfo version = refresh(label);
+		return new Locations(application, profile, label, version.getId(),
+				getSearchLocations(getWorkingDirectory(), application, profile, label),
+				version.getTimestamp(), version.getComment());
 	}
 
 	@Override
@@ -184,7 +187,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	/**
 	 * Get the working directory ready.
 	 */
-	public String refresh(String label) {
+	public CommitInfo refresh(String label) {
 		initialize();
 		Git git = null;
 		try {
@@ -208,7 +211,18 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				checkout(git, label);
 			}
 			//always return what is currently HEAD as the version
-			return git.getRepository().getRef("HEAD").getObjectId().getName();
+			Ref head = git.getRepository().getRef("HEAD");
+			String commitId = head.getObjectId().getName();
+			//Try to get some details about commit
+			try	{
+				RevWalk walk = new RevWalk(git.getRepository());
+				RevCommit commit = walk.parseCommit(head.getObjectId());
+				walk.dispose();
+				return new CommitInfo(commitId, commit.getFullMessage(), 1000L * commit.getCommitTime());
+			} catch (Exception e){
+				logger.warn("Could not get info about commit: " + commitId, e);
+			}
+			return new CommitInfo(commitId, "", 0);
 		}
 		catch (RefNotFoundException e) {
 			throw new NoSuchLabelException("No such label: " + label, e);
@@ -547,5 +561,30 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	public void setGitCredentialsProvider(CredentialsProvider gitCredentialsProvider) {
 		this.gitCredentialsProvider = gitCredentialsProvider;
+	}
+
+	static class CommitInfo {
+
+		private final String id;
+		private final String comment;
+		private final long timestamp;
+
+		public CommitInfo(String id, String comment, long timestamp) {
+			this.id = id;
+			this.comment = comment;
+			this.timestamp = timestamp;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public String getComment() {
+			return comment;
+		}
+
+		public long getTimestamp() {
+			return timestamp;
+		}
 	}
 }

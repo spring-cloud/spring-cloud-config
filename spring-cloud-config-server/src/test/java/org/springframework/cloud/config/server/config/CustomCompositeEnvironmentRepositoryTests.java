@@ -91,7 +91,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Override
 		public Environment findOne(String application, String profile, String label) {
 			Environment e = new Environment("test", new String[0], "label", "version",
-					"state");
+					"state", "description");
 			PropertySource p = new PropertySource("p", new HashMap<>());
 			e.add(p);
 			return e;
