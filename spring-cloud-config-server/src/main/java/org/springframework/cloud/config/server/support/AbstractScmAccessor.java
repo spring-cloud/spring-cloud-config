@@ -71,7 +71,7 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
  	/**
   	 * Reject incoming SSH host keys from remote servers not in the known host list.
   	 */
-	private boolean strictHostKeyChecking;
+	private boolean strictHostKeyChecking = true;
 	/**
 	 * Search paths to use within local working copy. By default searches only the root.
 	 */
