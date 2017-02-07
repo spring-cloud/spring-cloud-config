@@ -600,7 +600,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment);
 		envRepository.setUri(uri);
 		envRepository.setBasedir(new File("./mybasedir"));
-		envRepository.setStrictHostKeyChecking(true);
+		assertTrue(envRepository.isStrictHostKeyChecking());
 		envRepository.setCloneOnStart(true);
 		try {
 			// this will throw but we don't care about connecting.
