@@ -328,8 +328,7 @@ spring:
 If you don't use HTTPS and user credentials, SSH should also work out
 of the box when you store keys in the default directories (`~/.ssh`)
 and the uri points to an SSH location,
-e.g. "git@github.com:configuration/cloud-configuration". It is important that all
-keys in ~/.ssh/known_hosts are in "ssh-rsa" format. The new "ecdsa-sha2-nistp256" format is NOT supported.
+e.g. "git@github.com:configuration/cloud-configuration". It is important that an entry for the Git server be present in the `~/.ssh/known_hosts` file and that it is in "ssh-rsa" format. Other formats (like "ecdsa-sha2-nistp256") are not supported. To avoid surprises, you should ensure that only one entry is present in the `known_hosts` file for the Git server and that it is matching with the URL you provided to the config server. If you used a hostname in the URL, you want to have exactly that in the `known_hosts` file, not the IP.
 The repository is accessed using JGit, so any documentation you find on
 that should be applicable. HTTPS proxy settings can be set in
 `~/.git/config` or in the same way as for any other JVM process via
