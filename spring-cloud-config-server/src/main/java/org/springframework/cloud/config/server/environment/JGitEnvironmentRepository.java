@@ -170,7 +170,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	/**
 	 * Get the working directory ready.
 	 */
-	private String refresh(String label) {
+	public String refresh(String label) {
 		initialize();
 		Git git = null;
 		try {
