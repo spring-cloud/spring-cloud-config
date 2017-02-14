@@ -59,7 +59,7 @@
 		<dependency>
 			<groupId>org.tmatesoft.svnkit</groupId>
 			<artifactId>svnkit</artifactId>
-			<version>1.8.7</version>
+			<version>1.8.12</version>
 		</dependency>
 		</dependencies>
 	</dependencyManagement>
