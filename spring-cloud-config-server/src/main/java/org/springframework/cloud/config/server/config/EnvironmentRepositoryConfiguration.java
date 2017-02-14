@@ -107,7 +107,7 @@ public class EnvironmentRepositoryConfiguration {
 	@Profile("vault")
 	protected static class VaultConfiguration {
 		@Bean
-		public VaultEnvironmentRepository valutEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch) {
+		public VaultEnvironmentRepository vaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch) {
 			return new VaultEnvironmentRepository(request, watch, new RestTemplate());
 		}
 	}
