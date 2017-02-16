@@ -148,6 +148,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			Ref ref = checkout(git, label);
 			if (shouldPull(git, ref)) {
 				pull(git, label, ref);
+				ref = checkout(git, label);
 			}
 			return ref;
 		}
