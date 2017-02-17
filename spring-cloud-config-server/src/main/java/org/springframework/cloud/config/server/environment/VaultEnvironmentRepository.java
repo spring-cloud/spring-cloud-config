@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,18 @@ package org.springframework.cloud.config.server.environment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Range;
-import org.springframework.beans.factory.InitializingBean;
+
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
@@ -37,15 +37,12 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-import org.springframework.vault.client.VaultClient;
-import org.springframework.vault.client.VaultEndpoint;
-import org.springframework.vault.client.VaultException;
-import org.springframework.vault.client.VaultResponseEntity;
-import org.springframework.vault.support.VaultResponseSupport;
-import org.springframework.vault.support.VaultToken;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
@@ -56,7 +53,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
  * @author Mark Paluch
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
-public class VaultEnvironmentRepository implements EnvironmentRepository, InitializingBean, Ordered {
+public class VaultEnvironmentRepository implements EnvironmentRepository, Ordered {
 
 	public static final String VAULT_TOKEN = "X-Vault-Token";
 
@@ -90,17 +87,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Initia
 	private HttpServletRequest request;
 
 	private EnvironmentWatch watch;
-	private VaultClient client;
 
 	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch, RestTemplate rest) {
 		this.request = request;
 		this.watch = watch;
 		this.rest = rest;
-	}
-
-	@Override
-	public void afterPropertiesSet() {
-		this.client = new VaultClient(rest, getVaultEndpoint());
 	}
 
 	@Override
@@ -165,47 +156,31 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Initia
 	}
 
 	String read(String key) {
+		String url = String.format("%s://%s:%s/v1/{backend}/{key}", this.scheme, this.host, this.port);
+
+		HttpHeaders headers = new HttpHeaders();
 
 		String token = request.getHeader(TOKEN_HEADER);
 		if (!StringUtils.hasLength(token)) {
 			throw new IllegalArgumentException("Missing required header: " + TOKEN_HEADER);
 		}
+		headers.add(VAULT_TOKEN, token);
+		try {
+			ResponseEntity<VaultResponse> response = this.rest.exchange(url, HttpMethod.GET, new HttpEntity<>(headers),
+					VaultResponse.class, this.backend, key);
 
-		VaultToken vaultToken = VaultToken.of(token);
-		VaultResponseEntity<VaultResponse> response = client.exchange("{backend}/{key}", HttpMethod.GET,
-				new HttpEntity<>(VaultClient.createHeaders(vaultToken)), VaultResponse.class, getUriVariables(key));
-
-		HttpStatus status = response.getStatusCode();
-
-		if (status == HttpStatus.OK) {
-
-			JsonNode data = response.getBody().getData();
-			return data != null ? data.toString() : null;
+			HttpStatus status = response.getStatusCode();
+			if (status == HttpStatus.OK) {
+				return response.getBody().getData();
+			}
+		} catch (HttpStatusCodeException e) {
+			if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+				return null;
+			}
+			throw e;
 		}
 
-		if (status == HttpStatus.NOT_FOUND) {
-			return null;
-		}
-
-		throw new VaultException(response.getMessage());
-	}
-
-	private Map<String, String> getUriVariables(String key) {
-		Map<String, String> uriVariables = new HashMap<>(2, 1);
-		uriVariables.put("backend", backend);
-		uriVariables.put("key", key);
-		return uriVariables;
-	}
-
-	private VaultEndpoint getVaultEndpoint() {
-
-		VaultEndpoint vaultEndpoint = new VaultEndpoint();
-
-		vaultEndpoint.setScheme(scheme);
-		vaultEndpoint.setHost(host);
-		vaultEndpoint.setPort(port);
-
-		return vaultEndpoint;
+		return null;
 	}
 
 	public void setHost(String host) {
@@ -242,6 +217,62 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Initia
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	static class VaultResponse extends VaultResponseSupport<JsonNode> {
+	static class VaultResponse {
+
+		private String auth;
+
+		private Object data;
+
+		@JsonProperty("lease_duration")
+		private long leaseDuration;
+
+		@JsonProperty("lease_id")
+		private String leaseId;
+
+		private boolean renewable;
+
+		public VaultResponse() {
+		}
+
+		public String getAuth() {
+			return auth;
+		}
+
+		public void setAuth(String auth) {
+			this.auth = auth;
+		}
+
+		@JsonRawValue
+		public String getData() {
+			return data == null ? null : data.toString();
+		}
+
+		public void setData(JsonNode data) {
+			this.data = data;
+		}
+
+		public long getLeaseDuration() {
+			return leaseDuration;
+		}
+
+		public void setLeaseDuration(long leaseDuration) {
+			this.leaseDuration = leaseDuration;
+		}
+
+		public String getLeaseId() {
+			return leaseId;
+		}
+
+		public void setLeaseId(String leaseId) {
+			this.leaseId = leaseId;
+		}
+
+		public boolean isRenewable() {
+			return renewable;
+		}
+
+		public void setRenewable(boolean renewable) {
+			this.renewable = renewable;
+		}
 	}
 }
