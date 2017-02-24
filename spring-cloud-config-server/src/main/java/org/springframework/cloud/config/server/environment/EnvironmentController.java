@@ -31,17 +31,12 @@ import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,13 +57,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Rafal Zukowski
  * @author Ivan Corrales Solera
  * @author Daniel Frey
+ * @author Ian Bondoc
  *
  */
 @RestController
 @RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
-
-	private static final String MAP_PREFIX = "map";
 
 	private EnvironmentRepository repository;
 	private ObjectMapper objectMapper;
@@ -152,7 +146,7 @@ public class EnvironmentController {
 			throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
-		Map<String, Object> properties = convertToMap(environment, resolvePlaceholders);
+		Map<String, Object> properties = convertToMap(environment);
 		String json = this.objectMapper.writeValueAsString(properties);
 		if (resolvePlaceholders) {
 			json = resolvePlaceholders(prepareEnvironment(environment), json);
@@ -188,7 +182,7 @@ public class EnvironmentController {
 			throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
-		Map<String, Object> result = convertToMap(environment, resolvePlaceholders);
+		Map<String, Object> result = convertToMap(environment);
 		if (this.stripDocument && result.size() == 1
 				&& result.keySet().iterator().next().equals("document")) {
 			Object value = result.get("document");
@@ -208,26 +202,25 @@ public class EnvironmentController {
 		return getSuccess(yaml);
 	}
 
-	private Map<String, Object> convertToMap(Environment input, boolean resolvePlaceholders) throws BindException {
-		Map<String, Object> target = new LinkedHashMap<>();
-		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<>(
-				target);
-		if (!resolvePlaceholders) {
-			factory.setResolvePlaceholders(false);
+	/**
+	 * Method {@code convertToMap} converts an {@code Environment} to a nested Map which represents a yml/json structure.
+	 *
+	 * @param input the environment to be converted
+	 * @return the nested map containing the environment's properties
+	 */
+	private Map<String, Object> convertToMap(Environment input) {
+		// First use the current convertToProperties to get a flat Map from the environment
+		Map<String, Object> properties = convertToProperties(input);
+
+		// The root map which holds all the first level properties
+		Map<String, Object> rootMap = new LinkedHashMap<>();
+		for (Map.Entry<String, Object> entry : properties.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			PropertyNavigator nav = new PropertyNavigator(key);
+			nav.setMapValue(rootMap, value);
 		}
-		Map<String, Object> data = convertToProperties(input);
-		LinkedHashMap<String, Object> properties = new LinkedHashMap<>();
-		for (String key : data.keySet()) {
-			properties.put(MAP_PREFIX + "." + key, data.get(key));
-		}
-		addArrays(target, properties);
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MapPropertySource("properties", properties));
-		factory.setPropertySources(propertySources);
-		factory.bindPropertiesToTarget();
-		@SuppressWarnings("unchecked")
-		Map<String, Object> result = (Map<String, Object>) target.get(MAP_PREFIX);
-		return result == null ? new LinkedHashMap<String, Object>() : result;
+		return rootMap;
 	}
 
 	@ExceptionHandler(NoSuchLabelException.class)
@@ -260,55 +253,6 @@ public class EnvironmentController {
 
 	private ResponseEntity<String> getSuccess(String body, MediaType mediaType) {
 		return new ResponseEntity<>(body, getHttpHeaders(mediaType), HttpStatus.OK);
-	}
-
-	/**
-	 * Create Lists of the right size for any YAML arrays that are going to need to be
-	 * bound. Some of this might be do-able in RelaxedDataBinder, but we need to do it
-	 * here for now. Only supports arrays at leaf level currently (i.e. the properties
-	 * keys end in [*]).
-	 *
-	 * @param target the target Map
-	 * @param properties the properties (with key names to check)
-	 */
-	private void addArrays(Map<String, Object> target, Map<String, Object> properties) {
-		for (String key : properties.keySet()) {
-			int index = key.indexOf("[");
-			Map<String, Object> current = target;
-			if (index > 0) {
-				String stem = key.substring(0, index);
-				String[] keys = StringUtils.delimitedListToStringArray(stem, ".");
-				for (int i = 0; i < keys.length - 1; i++) {
-					if (current.get(keys[i]) == null) {
-						LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-						current.put(keys[i], map);
-						current = map;
-					}
-					else {
-						@SuppressWarnings("unchecked")
-						Map<String, Object> map = (Map<String, Object>) current
-								.get(keys[i]);
-						current = map;
-					}
-				}
-				String name = keys[keys.length - 1];
-				if (current.get(name) == null) {
-					current.put(name, new ArrayList<>());
-				}
-				@SuppressWarnings("unchecked")
-				List<Object> value = (List<Object>) current.get(name);
-				int position = Integer
-						.valueOf(key.substring(index + 1, key.indexOf("]")));
-				while (position >= value.size()) {
-					if (key.indexOf("].", index) > 0) {
-						value.add(new LinkedHashMap<String, Object>());
-					}
-					else {
-						value.add("");
-					}
-				}
-			}
-		}
 	}
 
 	private Map<String, Object> convertToProperties(Environment profiles) {
@@ -367,4 +311,144 @@ public class EnvironmentController {
 		}
 	}
 
+	/**
+	 * Class {@code PropertyNavigator} is used to navigate through the property key and create necessary Maps and Lists
+	 * making up the nested structure to finally set the property value at the leaf node.
+	 * <p>
+	 * The following rules in yml/json are implemented:
+	 * <pre>
+	 * 1. an array element can be:
+	 *    - a value (leaf)
+	 *    - a map
+	 *    - a nested array
+	 * 2. a map value can be:
+	 *    - a value (leaf)
+	 *    - a nested map
+	 *    - an array
+	 * </pre>
+	 */
+	private static class PropertyNavigator {
+
+		private enum NodeType {LEAF, MAP, ARRAY}
+
+		private final String propertyKey;
+		private int currentPos;
+		private NodeType valueType;
+
+		private PropertyNavigator(String propertyKey) {
+			this.propertyKey = propertyKey;
+			currentPos = -1;
+			valueType = NodeType.MAP;
+		}
+
+		private void setMapValue(Map<String, Object> map, Object value) {
+			String key = getKey();
+			if (NodeType.MAP.equals(valueType)) {
+				Map<String, Object> nestedMap = (Map<String, Object>) map.get(key);
+				if (nestedMap == null) {
+					nestedMap = new LinkedHashMap<>();
+					map.put(key, nestedMap);
+				}
+				setMapValue(nestedMap, value);
+			} else if (NodeType.ARRAY.equals(valueType)) {
+				List<Object> list = (List<Object>) map.get(key);
+				if (list == null) {
+					list = new ArrayList<>();
+					map.put(key, list);
+				}
+				setListValue(list, value);
+			} else {
+				map.put(key, value);
+			}
+		}
+
+		private void setListValue(List<Object> list, Object value) {
+			int index = getIndex();
+			// Fill missing elements if needed
+			while (list.size() <= index) {
+				list.add(null);
+			}
+			if (NodeType.MAP.equals(valueType)) {
+				Map<String, Object> map = (Map<String, Object>) list.get(index);
+				if (map == null) {
+					map = new LinkedHashMap<>();
+					list.set(index, map);
+				}
+				setMapValue(map, value);
+			} else if (NodeType.ARRAY.equals(valueType)) {
+				List<Object> nestedList = (List<Object>) list.get(index);
+				if (nestedList == null) {
+					nestedList = new ArrayList<>();
+					list.set(index, nestedList);
+				}
+				setListValue(nestedList, value);
+			} else {
+				list.set(index, value);
+			}
+		}
+
+		private int getIndex() {
+			// Consider [
+			int start = currentPos + 1;
+
+			for (int i = start; i < propertyKey.length(); i++) {
+				char c = propertyKey.charAt(i);
+				if (c == ']') {
+					currentPos = i;
+					break;
+				} else if (!Character.isDigit(c)) {
+					throw new IllegalArgumentException("Invalid key: " + propertyKey);
+				}
+			}
+			// If no closing ] or if '[]'
+			if (currentPos < start || currentPos == start) {
+				throw new IllegalArgumentException("Invalid key: " + propertyKey);
+			} else {
+				int index = Integer.parseInt(propertyKey.substring(start, currentPos));
+				// Skip the closing ]
+				currentPos++;
+				if (currentPos == propertyKey.length()) {
+					valueType = NodeType.LEAF;
+				} else {
+					switch (propertyKey.charAt(currentPos)) {
+						case '.':
+							valueType = NodeType.MAP;
+							break;
+						case '[':
+							valueType = NodeType.ARRAY;
+							break;
+						default:
+							throw new IllegalArgumentException("Invalid key: " + propertyKey);
+					}
+				}
+				return index;
+			}
+		}
+
+		private String getKey() {
+			// Consider initial value or previous char '.' or '['
+			int start = currentPos + 1;
+			for (int i = start; i < propertyKey.length(); i++) {
+				char currentChar = propertyKey.charAt(i);
+				if (currentChar == '.') {
+					valueType = NodeType.MAP;
+					currentPos = i;
+					break;
+				} else if (currentChar == '[') {
+					valueType = NodeType.ARRAY;
+					currentPos = i;
+					break;
+				}
+			}
+			// If there's no delimiter then it's a key of a leaf
+			if (currentPos < start) {
+				currentPos = propertyKey.length();
+				valueType = NodeType.LEAF;
+				// Else if we encounter '..' or '.[' or start of the property is . or [ then it's invalid
+			} else if (currentPos == start) {
+				throw new IllegalArgumentException("Invalid key: " + propertyKey);
+			}
+			return propertyKey.substring(start, currentPos);
+		}
+	}
 }
