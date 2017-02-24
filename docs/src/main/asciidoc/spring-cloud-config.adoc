@@ -151,7 +151,9 @@ This repository implementation maps the `{label}` parameter of the
 HTTP resource to a git label (commit id, branch name or tag). If the
 git branch or tag name contains a slash ("/") then the label in the
 HTTP URL should be specified with the special string "(_)" instead (to
-avoid ambiguity with other URL paths). Be careful with the brackets in
+avoid ambiguity with other URL paths).  For example, if the label is 
+`foo/bar, replacing the slash would result in a label that looks like 
+`foo(_)bar`.  Be careful with the brackets in
 the URL if you are using a command line client like curl (e.g. escape
 them from the shell with quotes '').
 
