@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,6 +53,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
 
 /**
  * @author Dave Syer
+ * @author Mathieu Ouellet
  *
  */
 @Order(0)
@@ -191,8 +193,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 		requestFactory.setReadTimeout((60 * 1000 * 3) + 5000); //TODO 3m5s, make configurable?
 		RestTemplate template = new RestTemplate(requestFactory);
+		String username = client.getUsername();
 		String password = client.getPassword();
 		String authorization = client.getAuthorization();
+		Map<String, String> headers = new HashMap<>(client.getHeaders());
 
 		if (password != null && authorization != null) {
 			throw new IllegalStateException(
@@ -200,53 +204,36 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 
 		if (password != null) {
-			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
-					new BasicAuthorizationInterceptor(client.getUsername(), password)));
+			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
+			headers.put("Authorization", "Basic " + new String(token));
 		}
 		else if (authorization != null) {
+			headers.put("Authorization", authorization);
+		}
+
+		if (!headers.isEmpty()) {
 			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
-					new GenericAuthorization(authorization)));
+					new GenericRequestHeaderInterceptor(headers)));
 		}
 
 		return template;
 	}
 
-	private static class BasicAuthorizationInterceptor implements
-			ClientHttpRequestInterceptor {
+	public static class GenericRequestHeaderInterceptor
+			implements ClientHttpRequestInterceptor {
 
-		private final String username;
+		private final Map<String, String> headers;
 
-		private final String password;
-
-		public BasicAuthorizationInterceptor(String username, String password) {
-			this.username = username;
-			this.password = (password == null ? "" : password);
+		public GenericRequestHeaderInterceptor(Map<String, String> headers) {
+			this.headers = headers;
 		}
 
 		@Override
 		public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 				ClientHttpRequestExecution execution) throws IOException {
-			byte[] token = Base64Utils.encode((this.username + ":" + this.password).getBytes());
-			request.getHeaders().add("Authorization", "Basic " + new String(token));
-			return execution.execute(request, body);
-		}
-
-	}
-
-
-	private static class GenericAuthorization implements
-			ClientHttpRequestInterceptor {
-
-		private final String authorizationToken;
-
-		public GenericAuthorization(String authorizationToken) {
-			this.authorizationToken = (authorizationToken == null ? "" : authorizationToken);
-		}
-
-		@Override
-		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
-				throws IOException {
-			request.getHeaders().add("Authorization", authorizationToken);
+			for (Entry<String, String> header : headers.entrySet()) {
+				request.getHeaders().add(header.getKey(), header.getValue());
+			}
 			return execution.execute(request, body);
 		}
 	}
