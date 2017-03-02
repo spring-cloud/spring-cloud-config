@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -193,6 +194,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		RestTemplate template = new RestTemplate(requestFactory);
 		String password = client.getPassword();
 		String authorization = client.getAuthorization();
+		Map<String, String> headers = client.getHeaders();
 
 		if (password != null && authorization != null) {
 			throw new IllegalStateException(
@@ -206,6 +208,11 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		else if (authorization != null) {
 			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
 					new GenericAuthorization(authorization)));
+		}
+
+		if (!headers.isEmpty()) {
+			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
+					new CustomHeadersInterceptor(headers)));
 		}
 
 		return template;
@@ -247,6 +254,25 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
 				throws IOException {
 			request.getHeaders().add("Authorization", authorizationToken);
+			return execution.execute(request, body);
+		}
+	}
+
+	private static class CustomHeadersInterceptor
+			implements ClientHttpRequestInterceptor {
+
+		private final Map<String, String> headers;
+
+		public CustomHeadersInterceptor(Map<String, String> headers) {
+			this.headers = headers;
+		}
+
+		@Override
+		public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+				ClientHttpRequestExecution execution) throws IOException {
+			for (Entry<String, String> header : headers.entrySet()) {
+				request.getHeaders().add(header.getKey(), header.getValue());
+			}
 			return execution.execute(request, body);
 		}
 	}
