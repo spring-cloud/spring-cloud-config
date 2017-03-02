@@ -31,6 +31,7 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.mock.http.client.MockClientHttpRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -159,40 +160,59 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@Test
-	public void basicAuthorizationInterceptorShouldAddAuthorizationHeader() throws Exception {
-		MockClientHttpRequest request = new MockClientHttpRequest();
-		ClientHttpRequestExecution execution = Mockito
-				.mock(ClientHttpRequestExecution.class);
-		byte[] body = new byte[] {};
-		new ConfigServicePropertySourceLocator.BasicAuthorizationInterceptor("username",
-				"password").intercept(request, body, execution);
-		Mockito.verify(execution).execute(request, body);
-		assertThat(request.getHeaders().getFirst("Authorization"))
-				.isEqualTo("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+	public void interceptorShouldAddHeaderWhenPasswordPropertySet() throws Exception {
+		ClientHttpRequestFactory requestFactory = Mockito
+				.mock(ClientHttpRequestFactory.class);
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+				Mockito.any(HttpMethod.class))).thenReturn(request);
+
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setUsername("username");
+		defaults.setPassword("password");
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+
+		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
+				"getSecureRestTemplate", defaults);
+		restTemplate.setRequestFactory(requestFactory);
+
+		this.locator.setRestTemplate(restTemplate);
+		this.locator.locate(this.environment);
+
+		assertThat(restTemplate.getInterceptors()).hasSize(1);
 	}
 
 	@Test
-	public void genericAuthorizationInterceptorShouldAddAuthorizationHeader() throws Exception {
-		MockClientHttpRequest request = new MockClientHttpRequest();
-		ClientHttpRequestExecution execution = Mockito
-				.mock(ClientHttpRequestExecution.class);
-		byte[] body = new byte[] {};
-		new ConfigServicePropertySourceLocator.GenericAuthorization(
-				"Basic dXNlcm5hbWU6cGFzc3dvcmQ=").intercept(request, body, execution);
-		Mockito.verify(execution).execute(request, body);
-		assertThat(request.getHeaders().getFirst("Authorization"))
-				.isEqualTo("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+	public void interceptorShouldAddHeaderWhenAuthorizationPropertySet() throws Exception {
+		ClientHttpRequestFactory requestFactory = Mockito
+				.mock(ClientHttpRequestFactory.class);
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+				Mockito.any(HttpMethod.class))).thenReturn(request);
+
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+
+		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
+				"getSecureRestTemplate", defaults);
+		restTemplate.setRequestFactory(requestFactory);
+
+		this.locator.setRestTemplate(restTemplate);
+		this.locator.locate(this.environment);
+
+		assertThat(restTemplate.getInterceptors()).hasSize(1);
 	}
 
 	@Test
-	public void customHeadersInterceptorShouldAddHeaders() throws Exception {
+	public void interceptorShouldAddHeadersWhenHeadersPropertySet() throws Exception {
 		MockClientHttpRequest request = new MockClientHttpRequest();
 		ClientHttpRequestExecution execution = Mockito
 				.mock(ClientHttpRequestExecution.class);
 		byte[] body = new byte[] {};
 		Map<String, String> headers = new HashMap<>();
 		headers.put("X-Example-Version", "2.1");
-		new ConfigServicePropertySourceLocator.CustomHeadersInterceptor(headers)
+		new ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor(headers)
 				.intercept(request, body, execution);
 		Mockito.verify(execution).execute(request, body);
 		assertThat(request.getHeaders().getFirst("X-Example-Version")).isEqualTo("2.1");
