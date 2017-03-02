@@ -1,10 +1,13 @@
 package org.springframework.cloud.config.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hamcrest.core.IsInstanceOf;
 import org.hamcrest.core.IsNull;
@@ -24,8 +27,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequest;
+import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -132,6 +137,65 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.expected.expectCause(IsNull.nullValue(Throwable.class));
 		this.expected.expectMessage("fail fast property is set");
 		assertNull(this.locator.locate(this.environment));
+	}
+
+	@Test
+	public void failFastWhenBothPasswordAndAuthorizationPropertiesSet() throws Exception {
+		ClientHttpRequestFactory requestFactory = Mockito
+				.mock(ClientHttpRequestFactory.class);
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+		Mockito.when(
+				requestFactory.createRequest(Mockito.any(URI.class),
+						Mockito.any(HttpMethod.class))).thenReturn(request);
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setFailFast(true);
+		defaults.setUsername("username");
+		defaults.setPassword("password");
+		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+ 		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage("You must set either 'password' or 'authorization'");
+		assertNull(this.locator.locate(this.environment));
+	}
+
+	@Test
+	public void basicAuthorizationInterceptorShouldAddAuthorizationHeader() throws Exception {
+		MockClientHttpRequest request = new MockClientHttpRequest();
+		ClientHttpRequestExecution execution = Mockito
+				.mock(ClientHttpRequestExecution.class);
+		byte[] body = new byte[] {};
+		new ConfigServicePropertySourceLocator.BasicAuthorizationInterceptor("username",
+				"password").intercept(request, body, execution);
+		Mockito.verify(execution).execute(request, body);
+		assertThat(request.getHeaders().getFirst("Authorization"))
+				.isEqualTo("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+	}
+
+	@Test
+	public void genericAuthorizationInterceptorShouldAddAuthorizationHeader() throws Exception {
+		MockClientHttpRequest request = new MockClientHttpRequest();
+		ClientHttpRequestExecution execution = Mockito
+				.mock(ClientHttpRequestExecution.class);
+		byte[] body = new byte[] {};
+		new ConfigServicePropertySourceLocator.GenericAuthorization(
+				"Basic dXNlcm5hbWU6cGFzc3dvcmQ=").intercept(request, body, execution);
+		Mockito.verify(execution).execute(request, body);
+		assertThat(request.getHeaders().getFirst("Authorization"))
+				.isEqualTo("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+	}
+
+	@Test
+	public void customHeadersInterceptorShouldAddHeaders() throws Exception {
+		MockClientHttpRequest request = new MockClientHttpRequest();
+		ClientHttpRequestExecution execution = Mockito
+				.mock(ClientHttpRequestExecution.class);
+		byte[] body = new byte[] {};
+		Map<String, String> headers = new HashMap<>();
+		headers.put("X-Example-Version", "2.1");
+		new ConfigServicePropertySourceLocator.CustomHeadersInterceptor(headers)
+				.intercept(request, body, execution);
+		Mockito.verify(execution).execute(request, body);
+		assertThat(request.getHeaders().getFirst("X-Example-Version")).isEqualTo("2.1");
 	}
 
 	@SuppressWarnings("unchecked")

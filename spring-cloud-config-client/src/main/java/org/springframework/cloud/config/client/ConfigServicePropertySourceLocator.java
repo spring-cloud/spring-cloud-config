@@ -218,7 +218,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		return template;
 	}
 
-	private static class BasicAuthorizationInterceptor implements
+	public static class BasicAuthorizationInterceptor implements
 			ClientHttpRequestInterceptor {
 
 		private final String username;
@@ -241,7 +241,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 
-	private static class GenericAuthorization implements
+	public static class GenericAuthorization implements
 			ClientHttpRequestInterceptor {
 
 		private final String authorizationToken;
@@ -258,7 +258,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 	}
 
-	private static class CustomHeadersInterceptor
+	public static class CustomHeadersInterceptor
 			implements ClientHttpRequestInterceptor {
 
 		private final Map<String, String> headers;
