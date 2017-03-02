@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.config.client;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,9 +32,13 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.Base64Utils;
@@ -48,7 +52,6 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
 
 /**
  * @author Dave Syer
- * @author Mathieu Ouellet
  *
  */
 @Order(0)
@@ -63,13 +66,15 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
 		this.defaultProperties = defaultProperties;
 	}
- 
+
 	@Override
 	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(
 			org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		CompositePropertySource composite = new CompositePropertySource("configService");
+		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(properties)
+				: this.restTemplate;
 		Exception error = null;
 		String errorBody = null;
 		logger.info("Fetching config from server at: " + properties.getRawUri());
@@ -83,8 +88,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 			// Try all the labels until one works
 			for (String label : labels) {
-				Environment result = getRemoteEnvironment(properties, label.trim(),
-						state);
+				Environment result = getRemoteEnvironment(restTemplate,
+						properties, label.trim(), state);
 				if (result != null) {
 					logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
 							result.getName(),
@@ -138,8 +143,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 	}
 
-	private Environment getRemoteEnvironment(ConfigClientProperties properties, String label,
-											 String state) {
+	private Environment getRemoteEnvironment(RestTemplate restTemplate, ConfigClientProperties properties,
+											 String label, String state) {
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
 		String profile = properties.getProfile();
@@ -154,7 +159,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		ResponseEntity<Environment> response = null;
 
 		try {
-			HttpHeaders headers = getHttpHeaders(properties);
+			HttpHeaders headers = new HttpHeaders();
 			if (StringUtils.hasText(token)) {
 				headers.add(TOKEN_HEADER, token);
 			}
@@ -162,7 +167,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				headers.add(STATE_HEADER, state);
 			}
 			final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
-			response = getRestTemplate().exchange(uri + path, HttpMethod.GET,
+			response = restTemplate.exchange(uri + path, HttpMethod.GET,
 					entity, Environment.class, args);
 		}
 		catch (HttpClientErrorException e) {
@@ -182,38 +187,67 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		this.restTemplate = restTemplate;
 	}
 
-	private RestTemplate getRestTemplate() {
-		if (this.restTemplate != null) {
-			return this.restTemplate;
-		}
+	private RestTemplate getSecureRestTemplate(ConfigClientProperties client) {
 		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 		requestFactory.setReadTimeout((60 * 1000 * 3) + 5000); //TODO 3m5s, make configurable?
 		RestTemplate template = new RestTemplate(requestFactory);
+		String password = client.getPassword();
+		String authorization = client.getAuthorization();
+
+		if (password != null && authorization != null) {
+			throw new IllegalStateException(
+					"You must set either 'password' or 'authorization'");
+		}
+
+		if (password != null) {
+			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
+					new BasicAuthorizationInterceptor(client.getUsername(), password)));
+		}
+		else if (authorization != null) {
+			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
+					new GenericAuthorization(authorization)));
+		}
+
 		return template;
 	}
 
-	private HttpHeaders getHttpHeaders(ConfigClientProperties properties) {
-		HttpHeaders headers = new HttpHeaders();
-		String password = properties.getPassword();
-		String authorization = properties.getAuthorization();
-		if (!properties.getHeaders().containsKey("Authorization")) {
-			if (password != null && authorization != null) {
-				throw new IllegalStateException(
-						"You must set either 'password' or 'authorization'");
-			}
+	private static class BasicAuthorizationInterceptor implements
+			ClientHttpRequestInterceptor {
 
-			if (password != null) {
-				headers.add("Authorization", "Basic " + new String(Base64Utils
-						.encode((properties.getUsername() + ":" + password).getBytes())));
-			}
-			else if (authorization != null) {
-				headers.add("Authorization", authorization);
-			}
+		private final String username;
+
+		private final String password;
+
+		public BasicAuthorizationInterceptor(String username, String password) {
+			this.username = username;
+			this.password = (password == null ? "" : password);
 		}
-		for (Entry<String, String> header : properties.getHeaders().entrySet()) {
-			headers.add(header.getKey(), header.getValue());
+
+		@Override
+		public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+				ClientHttpRequestExecution execution) throws IOException {
+			byte[] token = Base64Utils.encode((this.username + ":" + this.password).getBytes());
+			request.getHeaders().add("Authorization", "Basic " + new String(token));
+			return execution.execute(request, body);
 		}
-		return headers;
+
 	}
 
+
+	private static class GenericAuthorization implements
+			ClientHttpRequestInterceptor {
+
+		private final String authorizationToken;
+
+		public GenericAuthorization(String authorizationToken) {
+			this.authorizationToken = (authorizationToken == null ? "" : authorizationToken);
+		}
+
+		@Override
+		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+				throws IOException {
+			request.getHeaders().add("Authorization", authorizationToken);
+			return execution.execute(request, body);
+		}
+	}
 }
