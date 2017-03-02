@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -28,7 +25,14 @@ import java.nio.charset.Charset;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.wc2.SvnCheckout;
+import org.tmatesoft.svn.core.wc2.SvnCommit;
+import org.tmatesoft.svn.core.wc2.SvnOperationFactory;
+import org.tmatesoft.svn.core.wc2.SvnTarget;
+
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
@@ -40,12 +44,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StreamUtils;
-import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNURL;
-import org.tmatesoft.svn.core.wc2.SvnCheckout;
-import org.tmatesoft.svn.core.wc2.SvnCommit;
-import org.tmatesoft.svn.core.wc2.SvnOperationFactory;
-import org.tmatesoft.svn.core.wc2.SvnTarget;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Michael Prankl
@@ -79,7 +80,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
 				.profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		EnvironmentRepository repository = this.context
+				.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "trunk");
 		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertEquals(2, environment.getPropertySources().size());
@@ -92,19 +94,20 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
 				.profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		EnvironmentRepository repository = this.context
+				.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "trunk");
 		Environment environment = repository.findOne("bar", "staging", "trunk");
-		assertEquals("bar", environment.getPropertySources().get(0).getSource()
-				.get("foo"));
+		assertEquals("bar",
+				environment.getPropertySources().get(0).getSource().get("foo"));
 		updateRepoForUpdate(uri);
 		environment = repository.findOne("bar", "staging", "trunk");
-		assertEquals("foo", environment.getPropertySources().get(0).getSource()
-				.get("foo"));
+		assertEquals("foo",
+				environment.getPropertySources().get(0).getSource().get("foo"));
 	}
 
-	private void updateRepoForUpdate(String uri) throws SVNException,
-			FileNotFoundException, IOException {
+	private void updateRepoForUpdate(String uri)
+			throws SVNException, FileNotFoundException, IOException {
 		SvnOperationFactory svnFactory = new SvnOperationFactory();
 		final SvnCheckout checkout = svnFactory.createCheckout();
 		checkout.setSource(SvnTarget.fromURL(SVNURL.parseURIEncoded(uri)));
@@ -113,8 +116,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 
 		// update bar.properties
 		File barProps = new File(this.workingDir, "trunk/bar.properties");
-		StreamUtils.copy("foo: foo", Charset.defaultCharset(), new FileOutputStream(
-				barProps));
+		StreamUtils.copy("foo: foo", Charset.defaultCharset(),
+				new FileOutputStream(barProps));
 		// commit to repo
 		SvnCommit svnCommit = svnFactory.createCommit();
 		svnCommit.setCommitMessage("update bar.properties");
@@ -129,18 +132,20 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
 				.profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		SvnKitEnvironmentRepository repository = this.context.getBean(SvnKitEnvironmentRepository.class);
+		SvnKitEnvironmentRepository repository = this.context
+				.getBean(SvnKitEnvironmentRepository.class);
 		assertEquals("trunk", repository.getDefaultLabel());
 	}
 
-	@Test(expected=NoSuchLabelException.class)
+	@Test(expected = NoSuchLabelException.class)
 	public void invalidLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
 				"src/test/resources/svn-config-repo", "target/config");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
 				.profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		EnvironmentRepository repository = this.context
+				.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "unknownlabel");
 		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
 		assertEquals(0, environment.getPropertySources().size());
@@ -153,7 +158,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
 				.profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		EnvironmentRepository repository = this.context
+				.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "demobranch");
 		assertTrue(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties"));
@@ -162,7 +168,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 
 	@Configuration
 	@EnableConfigurationProperties(ConfigServerProperties.class)
-	@Import({ PropertyPlaceholderAutoConfiguration.class, EnvironmentRepositoryConfiguration.class })
+	@Import({ PropertyPlaceholderAutoConfiguration.class,
+			EnvironmentRepositoryConfiguration.class })
 	protected static class TestConfiguration {
 	}
 
