@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.config.client;
 
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +26,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.cloud.client.discovery.event.HeartbeatMonitor;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -52,9 +51,15 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 	private ConfigClientProperties config;
 
 	@Autowired
-	private DiscoveryClient client;
+	private ConfigServerInstanceProvider instanceProvider;
 
 	private HeartbeatMonitor monitor = new HeartbeatMonitor();
+
+	@Bean
+	public ConfigServerInstanceProvider configServerInstanceProvider(
+			DiscoveryClient discoveryClient) {
+		return new ConfigServerInstanceProvider(discoveryClient);
+	}
 
 	@EventListener(ContextRefreshedEvent.class)
 	public void startup(ContextRefreshedEvent event) {
@@ -70,14 +75,9 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
 	private void refresh() {
 		try {
-			logger.debug("Locating configserver via discovery");
 			String serviceId = this.config.getDiscovery().getServiceId();
-			List<ServiceInstance> instances = this.client.getInstances(serviceId);
-			if (instances.isEmpty()) {
-				logger.warn("No instances found of configserver (" + serviceId + ")");
-				return;
-			}
-			ServiceInstance server = instances.get(0);
+			ServiceInstance server = this.instanceProvider
+					.getConfigServerInstance(serviceId);
 			String url = getHomePage(server);
 			if (server.getMetadata().containsKey("password")) {
 				String user = server.getMetadata().get("user");
@@ -96,7 +96,12 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 			this.config.setUri(url);
 		}
 		catch (Exception ex) {
-			logger.warn("Could not locate configserver via discovery", ex);
+			if (config.isFailFast()) {
+				throw ex;
+			}
+			else {
+				logger.warn("Could not locate configserver via discovery", ex);
+			}
 		}
 	}
 

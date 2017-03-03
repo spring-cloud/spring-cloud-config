@@ -16,14 +16,10 @@
 
 package org.springframework.cloud.config.client;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
-
-import java.util.Arrays;
-
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
@@ -34,10 +30,21 @@ import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.util.Arrays;
+import java.util.Collections;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
+
 /**
  * @author Dave Syer
  */
 public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
 	private AnnotationConfigApplicationContext context;
 
@@ -68,7 +75,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 		setup("spring.cloud.config.discovery.enabled=true");
 		assertEquals(1, this.context.getBeanNamesForType(
 				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
-		Mockito.verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
+		verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
 		ConfigClientProperties locator = this.context
 				.getBean(ConfigClientProperties.class);
 		assertEquals("http://foo:8877/", locator.getRawUri());
@@ -81,7 +88,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
 				.willReturn(Arrays.asList(this.info));
-		Mockito.verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
+		verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
 		context.publishEvent(new HeartbeatEvent(context, "new"));
 		ConfigClientProperties locator = this.context
 				.getBean(ConfigClientProperties.class);
@@ -96,7 +103,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 		setup("spring.cloud.config.discovery.enabled=true");
 		assertEquals(1, this.context.getBeanNamesForType(
 				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
-		Mockito.verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
+		verify(this.client).getInstances(DEFAULT_CONFIG_SERVER);
 		ConfigClientProperties locator = this.context
 				.getBean(ConfigClientProperties.class);
 		assertEquals("https://foo:443/", locator.getRawUri());
@@ -126,6 +133,77 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 		assertEquals("http://foo:8877/bar", locator.getRawUri());
 	}
 
+	@Test
+	public void shouldFailGetConfigServerInstanceFromDiscoveryClient() throws Exception {
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
+				.willReturn(Collections.<ServiceInstance> emptyList());
+
+		setup("spring.cloud.config.discovery.enabled=true");
+
+		assertEquals(1, this.context.getBeanNamesForType(
+				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
+		verify(client).getInstances(DEFAULT_CONFIG_SERVER);
+		ConfigClientProperties locator = this.context
+				.getBean(ConfigClientProperties.class);
+		assertEquals("http://localhost:8888", locator.getRawUri());
+	}
+
+	@Test
+	public void shouldRetryAndSucceedGetConfigServerInstanceFromDiscoveryClient()
+			throws Exception {
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
+				.willReturn(Collections.<ServiceInstance> emptyList())
+				.willReturn(Collections.<ServiceInstance> emptyList())
+				.willReturn(Arrays.asList(this.info));
+
+		setup("spring.cloud.config.discovery.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3",
+				"spring.cloud.config.retry.initialInterval=10",
+				"spring.cloud.config.failFast=true");
+
+		assertEquals(1, this.context.getBeanNamesForType(
+				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
+
+		context.publishEvent(new HeartbeatEvent(context, "new"));
+		ConfigClientProperties locator = this.context
+				.getBean(ConfigClientProperties.class);
+		assertEquals("http://foo:8877/", locator.getRawUri());
+	}
+
+	@Test
+	public void shouldRetryAndFailWithExceptionGetConfigServerInstanceFromDiscoveryClient()
+			throws Exception {
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
+				.willReturn(Collections.<ServiceInstance> emptyList());
+
+		expectedException.expect(IllegalStateException.class);
+		expectedException.expectMessage(
+				"No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
+
+		setup("spring.cloud.config.discovery.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3",
+				"spring.cloud.config.retry.initialInterval=10",
+				"spring.cloud.config.failFast=true");
+	}
+
+	@Test
+	public void shouldRetryAndFailWithMessageGetConfigServerInstanceFromDiscoveryClient()
+			throws Exception {
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
+				.willReturn(Collections.<ServiceInstance> emptyList());
+
+		setup("spring.cloud.config.discovery.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3",
+				"spring.cloud.config.retry.initialInterval=10",
+				"spring.cloud.config.failFast=false");
+
+		assertEquals(1, this.context.getBeanNamesForType(
+				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
+		ConfigClientProperties locator = this.context
+				.getBean(ConfigClientProperties.class);
+		assertEquals("http://localhost:8888", locator.getRawUri());
+	}
+
 	private void setup(String... env) {
 		this.context = new AnnotationConfigApplicationContext();
 		EnvironmentTestUtils.addEnvironment(this.context, env);
@@ -135,7 +213,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests {
 		this.context.register(UtilAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class,
 				DiscoveryClientConfigServiceBootstrapConfiguration.class,
-				ConfigClientProperties.class);
+				ConfigServiceBootstrapConfiguration.class, ConfigClientProperties.class);
 		this.context.refresh();
 	}
 
