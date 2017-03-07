@@ -196,7 +196,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String username = client.getUsername();
 		String password = client.getPassword();
 		String authorization = client.getAuthorization();
-		Map<String, String> headers = client.getHeaders();
+		Map<String, String> headers = new HashMap<>(client.getHeaders());
 
 		if (password != null && authorization != null) {
 			throw new IllegalStateException(
