@@ -7,10 +7,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
-import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -43,8 +42,8 @@ public class ApplicationTests {
 				org.springframework.cloud.config.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
 				"--spring.cloud.config.server.git.uri=" + repo);
-		configPort = ((EmbeddedWebApplicationContext) server)
-				.getEmbeddedServletContainer().getPort();
+		/*FIXME configPort = ((EmbeddedWebApplicationContext) server)
+				.getEmbeddedServletContainer().getPort();*/
 		System.setProperty("config.port", "" + configPort);
 	}
 

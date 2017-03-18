@@ -8,9 +8,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
-import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -41,8 +40,8 @@ public class ServerNativeApplicationTests {
 				org.springframework.cloud.config.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
 				"--spring.cloud.config.server.git.uri=" + repo, "--spring.profiles.active=native");
-		configPort = ((EmbeddedWebApplicationContext) server)
-				.getEmbeddedServletContainer().getPort();
+		/*FIXME configPort = ((EmbeddedWebApplicationContext) server)
+				.getEmbeddedServletContainer().getPort();*/
 		System.setProperty("config.port", "" + configPort);
 	}
 
