@@ -594,7 +594,7 @@ Properties written to `secret/application` are available to
 <<_vault_server,all applications using the Config Server>>.  An
 application with the name `myApp` would have any properties
 written to `secret/myApp` and `secret/application` available to it.
-When `myApp` has the `dev` profile enabled than properties written to
+When `myApp` has the `dev` profile enabled then properties written to
 all of the above paths would be available to it, with properties in
 the first path in the list taking priority over the others.
 
@@ -680,7 +680,7 @@ using one of the environment repositories from Spring Cloud.  To do this your be
 must implement the `EnvironmentRepository` interface.  If you would like to control
 the priority of you custom `EnvironmentRepository` within the composite
 environment you should also implement the `Ordered` interface and override the
-`getOrdered` method.  If you do not implement the `Ordered` interface than your
+`getOrdered` method.  If you do not implement the `Ordered` interface then your
 `EnvironmentRepository` will be given the lowest priority.
 
 ==== Property Overrides
