@@ -65,6 +65,13 @@ public class ResourceControllerTests {
 		String resource = this.controller.resolve("foo", "bar", "dev", "template.json");
 		assertTrue("Wrong content: " + resource, resource.matches("\\{\\s*\"foo\": \"dev_bar\"\\s*\\}"));
 	}
+	
+	@Test
+	public void templateReplacementNotForResolvePlaceholdersFalse() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", false);
+		assertTrue("Wrong content: " + resource, resource.matches("\\{\\s*\"foo\": \"\\$\\{foo\\}\"\\s*\\}"));
+	}
 
 	@Test
 	public void templateReplacementNotForBinary() throws Exception {
@@ -113,6 +120,29 @@ public class ResourceControllerTests {
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
+	@Test
+	public void labelWithSlashForResolvePlaceholdersFalse() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		String resource = this.controller.retrieve("foo", "bar", "dev(_)spam", "foo.txt", false);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+
+	@Test
+	public void resourceWithSlashForResolvePlaceholdersFalse() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt", false);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+
+	@Test
+	public void resourceWithSlashForResolvePlaceholdersFalseRequest() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
+		String resource = this.controller.retrieve("foo", "bar", "dev", request, false);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
 	@Test
 	public void labelWithSlashForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
