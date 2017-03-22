@@ -68,13 +68,19 @@ public class ResourceController {
 		this.helper.setAlwaysUseFullPath(true);
 	}
 
-	@RequestMapping("/{name}/{profile}/{label}/**")
 	public String resolve(@PathVariable String name, @PathVariable String profile,
+			@PathVariable String label, HttpServletRequest request)
+			throws IOException {
+		return retrieve(name, profile, label, request, true);
+	}
+	
+	@RequestMapping("/{name}/{profile}/{label}/**")
+	public String retrieve(@PathVariable String name, @PathVariable String profile,
 			@PathVariable String label, HttpServletRequest request,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
 		String path = getFilePath(request, name, profile, label);
-		return resolve(name, profile, label, path, resolvePlaceholders);
+		return retrieve(name, profile, label, path, resolvePlaceholders);
 	}
 
 	private String getFilePath(HttpServletRequest request, String name, String profile,
@@ -85,7 +91,12 @@ public class ResourceController {
 		return path;
 	}
 
-	synchronized String resolve(String name, String profile, String label, String path,
+	synchronized String resolve(String name, String profile, String label, String path)
+			throws IOException {
+		return retrieve(name, profile, label, path, true);
+	}
+
+	synchronized String retrieve(String name, String profile, String label, String path,
 			boolean resolvePlaceholders) throws IOException {
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
