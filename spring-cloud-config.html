@@ -1450,7 +1450,7 @@ secret/application</code></pre>
 <a href="#_vault_server">all applications using the Config Server</a>.  An
 application with the name <code>myApp</code> would have any properties
 written to <code>secret/myApp</code> and <code>secret/application</code> available to it.
-When <code>myApp</code> has the <code>dev</code> profile enabled than properties written to
+When <code>myApp</code> has the <code>dev</code> profile enabled then properties written to
 all of the above paths would be available to it, with properties in
 the first path in the list taking priority over the others.</p>
 </div>
@@ -1578,7 +1578,7 @@ using one of the environment repositories from Spring Cloud.  To do this your be
 must implement the <code>EnvironmentRepository</code> interface.  If you would like to control
 the priority of you custom <code>EnvironmentRepository</code> within the composite
 environment you should also implement the <code>Ordered</code> interface and override the
-<code>getOrdered</code> method.  If you do not implement the <code>Ordered</code> interface than your
+<code>getOrdered</code> method.  If you do not implement the <code>Ordered</code> interface then your
 <code>EnvironmentRepository</code> will be given the lowest priority.</p>
 </div>
 </div>
