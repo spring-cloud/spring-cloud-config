@@ -274,6 +274,10 @@ public class ConfigClientProperties {
 		 * Service id to locate config server.
 		 */
 		private String serviceId = DEFAULT_CONFIG_SERVER;
+		/**
+		 * instead of just getting the first instance from discovery every time, get a random instance
+		 */
+		private boolean randomize = true;
 
 		public boolean isEnabled() {
 			return this.enabled;
@@ -289,6 +293,14 @@ public class ConfigClientProperties {
 
 		public void setServiceId(String serviceId) {
 			this.serviceId = serviceId;
+		}
+		
+		public boolean isRandomize() {
+		  return this.randomize;
+		}
+		
+		public void setRandomize(boolean randomize) {
+		  this.randomize = randomize;
 		}
 
 	}
