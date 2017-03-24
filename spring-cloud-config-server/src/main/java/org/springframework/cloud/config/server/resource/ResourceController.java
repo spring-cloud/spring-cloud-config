@@ -68,12 +68,6 @@ public class ResourceController {
 		this.helper.setAlwaysUseFullPath(true);
 	}
 
-	public String resolve(@PathVariable String name, @PathVariable String profile,
-			@PathVariable String label, HttpServletRequest request)
-			throws IOException {
-		return retrieve(name, profile, label, request, true);
-	}
-	
 	@RequestMapping("/{name}/{profile}/{label}/**")
 	public String retrieve(@PathVariable String name, @PathVariable String profile,
 			@PathVariable String label, HttpServletRequest request,
@@ -89,11 +83,6 @@ public class ResourceController {
 		String path = this.helper.getPathWithinApplication(request);
 		path = path.substring(path.indexOf(stem) + stem.length());
 		return path;
-	}
-
-	synchronized String resolve(String name, String profile, String label, String path)
-			throws IOException {
-		return retrieve(name, profile, label, path, true);
 	}
 
 	synchronized String retrieve(String name, String profile, String label, String path,

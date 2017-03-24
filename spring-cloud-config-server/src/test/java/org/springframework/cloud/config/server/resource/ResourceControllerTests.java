@@ -62,7 +62,7 @@ public class ResourceControllerTests {
 	@Test
 	public void templateReplacement() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.resolve("foo", "bar", "dev", "template.json");
+		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", true);
 		assertTrue("Wrong content: " + resource, resource.matches("\\{\\s*\"foo\": \"dev_bar\"\\s*\\}"));
 	}
 	
@@ -83,21 +83,21 @@ public class ResourceControllerTests {
 	@Test
 	public void escapedPlaceholder() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.resolve("foo", "bar", "dev", "placeholder.txt");
+		String resource = this.controller.retrieve("foo", "bar", "dev", "placeholder.txt", true);
 		assertEquals("foo: ${foo}", resource);
 	}
 
 	@Test
 	public void labelWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.resolve("foo", "bar", "dev(_)spam", "foo.txt");
+		String resource = this.controller.retrieve("foo", "bar", "dev(_)spam", "foo.txt", true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
 	@Test
 	public void resourceWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.resolve("foo", "bar", "dev", "spam/foo.txt");
+		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt", true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
@@ -106,7 +106,7 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
-		String resource = this.controller.resolve("foo", "bar", "dev", request);
+		String resource = this.controller.retrieve("foo", "bar", "dev", request, true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
@@ -116,7 +116,7 @@ public class ResourceControllerTests {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.setServletPath("/spring");
 		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
-		String resource = this.controller.resolve("foo", "bar", "dev", request);
+		String resource = this.controller.retrieve("foo", "bar", "dev", request, true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
