@@ -25,8 +25,8 @@ import java.nio.charset.Charset;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UrlPathHelper;
@@ -68,10 +69,12 @@ public class ResourceController {
 	}
 
 	@RequestMapping("/{name}/{profile}/{label}/**")
-	public String resolve(@PathVariable String name, @PathVariable String profile,
-			@PathVariable String label, HttpServletRequest request) throws IOException {
+	public String retrieve(@PathVariable String name, @PathVariable String profile,
+			@PathVariable String label, HttpServletRequest request,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws IOException {
 		String path = getFilePath(request, name, profile, label);
-		return resolve(name, profile, label, path);
+		return retrieve(name, profile, label, path, resolvePlaceholders);
 	}
 
 	private String getFilePath(HttpServletRequest request, String name, String profile,
@@ -82,21 +85,24 @@ public class ResourceController {
 		return path;
 	}
 
-	synchronized String resolve(String name, String profile, String label, String path)
-			throws IOException {
+	synchronized String retrieve(String name, String profile, String label, String path,
+			boolean resolvePlaceholders) throws IOException {
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
-		StandardEnvironment environment = prepareEnvironment(
-				this.environmentRepository.findOne(name, profile, label));
 
 		// ensure InputStream will be closed to prevent file locks on Windows
 		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
 				.getInputStream()) {
 			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
-			return resolvePlaceholders(environment, text);
+			if (resolvePlaceholders) {
+				Environment environment = this.environmentRepository.findOne(name,
+						profile, label);
+				text = resolvePlaceholders(prepareEnvironment(environment), text);
+			}
+			return text;
 		}
 	}
 
