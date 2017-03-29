@@ -27,4 +27,8 @@ public class NoSuchLabelException extends RepositoryException {
 		super(string);
 	}
 
+	public NoSuchLabelException(String string, Exception e) {
+		super(string, e);
+	}
+
 }

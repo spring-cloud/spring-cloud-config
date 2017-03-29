@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
@@ -72,10 +73,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Dave Syer
@@ -701,6 +700,27 @@ public class JGitEnvironmentRepositoryTests {
 			configure.setAccessible(false);
 			assertTrue("yes".equals(valueCaptor.getValue()));
 		}
+	}
+
+	@Test
+	public void shouldPrintStacktraceIfDebugEnabled() throws Exception {
+		final Log mockLogger = mock(Log.class);
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment){
+			@Override
+			public void afterPropertiesSet() throws Exception {
+				this.logger = mockLogger;
+			}
+		};
+		envRepository.afterPropertiesSet();
+		when(mockLogger.isDebugEnabled()).thenReturn(true);
+
+		envRepository.warn("", new RuntimeException());
+
+		verify(mockLogger).warn(eq(""));
+		verify(mockLogger).debug(eq("Stacktrace for: "), any(RuntimeException.class));
+
+		int numberOfInvocations = mockingDetails(mockLogger).getInvocations().size();
+		assertEquals("should call isDebugEnabled warn and debug", 3, numberOfInvocations);
 	}
 
 	class MockCloneCommand extends CloneCommand {
