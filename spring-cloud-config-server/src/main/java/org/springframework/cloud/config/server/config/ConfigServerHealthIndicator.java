@@ -19,6 +19,7 @@ import org.springframework.util.CollectionUtils;
 
 /**
  * @author Spencer Gibb
+ * @author Mark Bonnekessel
  */
 @ConfigurationProperties("spring.cloud.config.server.health")
 public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
@@ -53,6 +54,11 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 				HashMap<String, Object> detail = new HashMap<>();
 				detail.put("name", environment.getName());
 				detail.put("label", environment.getLabel());
+
+				if (environment.getCached()) {
+					builder.unknown();
+				}
+
 				if (environment.getProfiles() != null && environment.getProfiles().length > 0) {
 					detail.put("profiles", Arrays.asList(environment.getProfiles()));
 				}

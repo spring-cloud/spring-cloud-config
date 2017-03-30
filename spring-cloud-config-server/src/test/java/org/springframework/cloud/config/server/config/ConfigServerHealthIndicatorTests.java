@@ -49,6 +49,20 @@ public class ConfigServerHealthIndicatorTests {
 	}
 
 	@Test
+	public void repositoryCachedStatusIsOutOfService() {
+		when(environment.getCached()).thenReturn(true);
+		when(repository.findOne(anyString(), anyString(), anyString())).thenReturn(environment);
+		assertEquals("wrong status", Status.UNKNOWN, indicator.health().getStatus());
+	}
+
+	@Test
+	public void repositoryNotCachedLatestStatusIsUp() {
+		when(environment.getCached()).thenReturn(false);
+		when(repository.findOne(anyString(), anyString(), anyString())).thenReturn(environment);
+		assertEquals("status is not up", Status.UP, indicator.health().getStatus());
+	}
+
+	@Test
 	public void customLabelWorks() {
 		Repository repo = new Repository();
 		repo.setName("myname");

@@ -23,6 +23,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
  * @author Dave Syer
+ * @author Mark Bonnekessel
  *
  */
 public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccessor
@@ -42,6 +43,9 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 		Locations locations = getLocations(application, profile, label);
 		delegate.setSearchLocations(locations.getLocations());
 		Environment result = delegate.findOne(application, profile, "");
+		if(!locations.getLatest()){
+			result.setCached(true);
+		}
 		result.setVersion(locations.getVersion());
 		result.setLabel(label);
 		return this.cleaner.clean(result, getWorkingDirectory().toURI().toString(),

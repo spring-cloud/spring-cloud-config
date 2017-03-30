@@ -38,6 +38,7 @@ import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.FetchResult;
@@ -66,6 +67,7 @@ import static org.springframework.util.StringUtils.hasText;
  * @author Marcos Barbero
  * @author Daniel Lavoie
  * @author Ryan Lynch
+ * @author Mark Bonnekessel
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -90,7 +92,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
 	private String defaultLabel = DEFAULT_LABEL;
-	
+
 	/**
 	 * The credentials provider to use to connect to the Git repository.
 	 */
@@ -149,12 +151,21 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	@Override
 	public synchronized Locations getLocations(String application, String profile,
 			String label) {
+		Boolean latestLocations = true;
 		if (label == null) {
 			label = this.defaultLabel;
 		}
-		String version = refresh(label);
+		String version;
+		try {
+			version = refresh(label);
+		}
+		catch(ScmUpdateFailedException e){
+			latestLocations = false;
+			version = e.getExistingVersion();
+			logger.error("The repository is currently not available. Using existing version instead: " + version);
+		}
 		return new Locations(application, profile, label, version,
-				getSearchLocations(getWorkingDirectory(), application, profile, label));
+				getSearchLocations(getWorkingDirectory(), application, profile, label), latestLocations);
 	}
 
 	@Override
@@ -176,7 +187,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		try {
 			git = createGitClient();
 			if (shouldPull(git)) {
-				fetch(git, label);
+				try {
+					fetch(git, label);
+				}
+				catch (TransportException e) {
+					String existingVerison  = git.getRepository().getRef("HEAD").getObjectId().getName();
+					throw new ScmUpdateFailedException("Cannot fetch repository. Using existing version instead.", existingVerison , e);
+				}
 				//checkout after fetch so we can get any new branches, tags, ect.
 				checkout(git, label);
 				if(isBranch(git, label)) {
@@ -198,6 +215,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		}
 		catch (RefNotFoundException e) {
 			throw new NoSuchLabelException("No such label: " + label, e);
+		}
+		catch (ScmUpdateFailedException e) {
+			throw e;
 		}
 		catch (GitAPIException e) {
 			throw new IllegalStateException("Cannot clone or checkout repository", e);
@@ -292,7 +312,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		return isBranch(git, label) && !isLocalBranch(git, label);
 	}
 
-	private FetchResult fetch(Git git, String label) {
+	private FetchResult fetch(Git git, String label) throws GitAPIException{
 		FetchCommand fetch = git.fetch();
 		fetch.setRemote("origin");
 		fetch.setTagOpt(TagOpt.FETCH_TAGS);
@@ -306,6 +326,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 					+ " updates");
 			}
 			return result;
+		}
+		catch (TransportException ex){
+			this.logger.error("Could not fetch remote for " + label + " remote: " + git
+					.getRepository().getConfig().getString("remote", "origin", "url"));
+			throw ex;
 		}
 		catch (Exception ex) {
 			String message = "Could not fetch remote for " + label + " remote: " + git

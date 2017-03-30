@@ -23,6 +23,7 @@ import org.springframework.core.OrderComparator;
 /**
  * An {@link EnvironmentRepository} composed of multiple ordered {@link EnvironmentRepository}s.
  * @author Ryan Baxter
+ * @author Mark Bonnekessel
  */
 public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
@@ -40,10 +41,15 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-		Environment env = new Environment(application, new String[]{profile}, label, null, null);
+		Environment resultEnv = new Environment(application, new String[]{profile}, label, null, null);
 		for(EnvironmentRepository repo : environmentRepositories) {
-			env.addAll(repo.findOne(application, profile, label).getPropertySources());
+			Environment env = repo.findOne(application, profile, label);
+			if(env.getCached()){
+				resultEnv.setCached(true);
+			}
+
+			resultEnv.addAll(env.getPropertySources());
 		}
-		return env;
+		return resultEnv;
 	}
 }

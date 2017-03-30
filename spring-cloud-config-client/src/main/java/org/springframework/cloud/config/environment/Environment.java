@@ -46,6 +46,12 @@ public class Environment {
 
 	private String state;
 
+	/**
+	 * Marks an environment as cached means that the last request to update the property sources failed
+	 * and the last existing information is used instead.
+	 */
+	private Boolean cached = false;
+
 	public Environment(String name, String... profiles) {
 		this(name, profiles, "master", null, null);
 	}
@@ -56,6 +62,7 @@ public class Environment {
 	 */
 	public Environment(Environment env) {
 		this(env.getName(), env.getProfiles(), env.getLabel(), env.getVersion(), env.getState());
+		this.setCached(env.getCached());
 	}
 
 	@JsonCreator
@@ -128,12 +135,21 @@ public class Environment {
 		this.state = state;
 	}
 
+	public Boolean getCached() {
+		return cached;
+	}
+
+	public void setCached(Boolean cached) {
+		this.cached = cached;
+	}
+
 	@Override
 	public String toString() {
 		return "Environment [name=" + name + ", profiles=" + Arrays.asList(profiles)
 				+ ", label=" + label + ", propertySources=" + propertySources
 				+ ", version=" + version
-				+ ", state=" + state + "]";
+				+ ", state=" + state
+				+ ", cached=" + cached + "]";
 	}
 
 }

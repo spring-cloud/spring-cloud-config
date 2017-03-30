@@ -23,6 +23,7 @@ import java.util.Arrays;
  * classpath).
  *
  * @author Dave Syer
+ * @author Mark Bonnekessel
  *
  */
 public interface SearchPathLocator {
@@ -35,6 +36,7 @@ public interface SearchPathLocator {
 		private final String label;
 		private final String[] locations;
 		private final String version;
+		private boolean latest;
 
 		public Locations(String application, String profile, String label, String version, String[] locations) {
 			this.application = application;
@@ -42,7 +44,14 @@ public interface SearchPathLocator {
 			this.label = label;
 			this.locations = locations;
 			this.version = version;
+			this.latest = true;
 		}
+
+		public Locations(String application, String profile, String label, String version, String[] locations, Boolean latest) {
+			this(application, profile, label, version, locations);
+			this.latest = latest;
+		}
+
 
 		public String[] getLocations() {
 			return locations;
@@ -62,6 +71,10 @@ public interface SearchPathLocator {
 
 		public String getLabel() {
 			return label;
+		}
+
+		public boolean getLatest() {
+			return latest;
 		}
 
 		@Override
