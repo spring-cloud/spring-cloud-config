@@ -3,7 +3,8 @@ package sample;
 import org.junit.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ApplicationFailFastTests {
 
