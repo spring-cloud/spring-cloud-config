@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * @author Dave Syer
  * @author Roy Clarkson
+ * @author Venil Noronha
  */
 @ConfigurationProperties("spring.cloud.config.server")
 public class ConfigServerProperties {
@@ -71,6 +72,11 @@ public class ConfigServerProperties {
 	 * Decryption configuration for when server handles encrypted properties before sending them to clients.
 	 */
 	private Encrypt encrypt = new Encrypt();
+
+	/**
+	 * Flag to indicate whether labeled directories should be ignored while identifying locations.
+	 */
+	private boolean ignoreLabeledDirectories = false;
 
 	public Encrypt getEncrypt() {
 		return this.encrypt;
@@ -130,6 +136,14 @@ public class ConfigServerProperties {
 
 	public void setDefaultProfile(String defaultProfile) {
 		this.defaultProfile = defaultProfile;
+	}
+
+	public boolean isIgnoreLabeledDirectories() {
+		return this.ignoreLabeledDirectories;
+	}
+
+	public void setIgnoreLabeledDirectories(boolean ignoreLabeledDirectories) {
+		this.ignoreLabeledDirectories = ignoreLabeledDirectories;
 	}
 
 	public static class Encrypt {
