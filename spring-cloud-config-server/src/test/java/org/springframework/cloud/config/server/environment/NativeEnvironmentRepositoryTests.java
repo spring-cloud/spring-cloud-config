@@ -165,7 +165,7 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void locationDontIgnoreLabeledDirectories() {
+	public void locationAddLabelLocations() {
 		this.repository.setSearchLocations("classpath:/test/dev/");
 		Environment environment = this.repository.findOne("foo", "development", "ignore");
 		assertEquals(2, environment.getPropertySources().size());
@@ -173,9 +173,9 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void locationIgnoreLabeledDirectories() {
+	public void locationDontAddLabelLocations() {
 		this.repository.setSearchLocations("classpath:/test/dev/");
-		this.repository.setIgnoreLabeledDirectories(true);
+		this.repository.setAddLabelLocations(false);
 		Environment environment = this.repository.findOne("foo", "development", "ignore");
 		assertEquals(1, environment.getPropertySources().size());
 		assertEquals("dev_bar", environment.getPropertySources().get(0).getSource().get("foo"));
