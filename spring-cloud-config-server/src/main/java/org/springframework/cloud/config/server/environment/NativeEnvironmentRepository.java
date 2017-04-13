@@ -69,9 +69,9 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 	private boolean failOnError = false;
 
 	/**
-	 * Flag to determine whether labeled directories should be ignored.
+	 * Flag to determine whether label locations should be added.
 	 */
-	private boolean ignoreLabeledDirectories = false;
+	private boolean addLabelLocations = true;
 
 	/**
 	 * Version string to be reported for native repository
@@ -97,12 +97,12 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		return this.failOnError;
 	}
 
-	public void setIgnoreLabeledDirectories(boolean ignoreLabeledDirectories) {
-		this.ignoreLabeledDirectories = ignoreLabeledDirectories;
+	public void setAddLabelLocations(boolean addLabelLocations) {
+		this.addLabelLocations = addLabelLocations;
 	}
 
-	public boolean isIgnoreLabeledDirectories() {
-		return this.ignoreLabeledDirectories;
+	public boolean isAddLabelLocations() {
+		return this.addLabelLocations;
 	}
 
 	public String getDefaultLabel() {
@@ -173,7 +173,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				}
 			}
 		}
-		if (!this.ignoreLabeledDirectories) {
+		if (this.addLabelLocations) {
 			for (String location : locations) {
 				if (StringUtils.hasText(label)) {
 					String labelled = location + label.trim() + "/";

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author Dave Syer
  * @author Ryan Baxter
- * @author Venil Noronha
+ *
  */
 @Configuration
 public class EnvironmentRepositoryConfiguration {
@@ -74,14 +74,9 @@ public class EnvironmentRepositoryConfiguration {
 		@Autowired
 		private ConfigurableEnvironment environment;
 
-		@Autowired
-		private ConfigServerProperties server;
-
 		@Bean
 		public NativeEnvironmentRepository nativeEnvironmentRepository() {
-			NativeEnvironmentRepository repository = new NativeEnvironmentRepository(this.environment);
-			repository.setIgnoreLabeledDirectories(this.server.isIgnoreLabeledDirectories());
-			return repository;
+			return new NativeEnvironmentRepository(this.environment);
 		}
 	}
 
