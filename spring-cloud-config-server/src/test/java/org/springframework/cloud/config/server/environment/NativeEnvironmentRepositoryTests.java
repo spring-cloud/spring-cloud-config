@@ -181,4 +181,11 @@ public class NativeEnvironmentRepositoryTests {
 		assertEquals("dev_bar", environment.getPropertySources().get(0).getSource().get("foo"));
 	}
 
+	@Test
+	public void locationNoDuplicates() {
+		this.repository.setSearchLocations("classpath:/test/{application}", "classpath:/test/{application}");
+		Locations locations = this.repository.getLocations("foo", "dev", "ignore");
+		assertEquals(1, locations.getLocations().length);
+	}
+
 }
