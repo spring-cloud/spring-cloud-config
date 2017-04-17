@@ -109,7 +109,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.expected.expectCause(IsInstanceOf
 				.<Throwable> instanceOf(HttpServerErrorException.class));
 		this.expected.expectMessage("fail fast property is set");
-		assertNull(this.locator.locate(this.environment));
+		this.locator.locate(this.environment);
 	}
 
 	@Test
@@ -137,7 +137,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator.setRestTemplate(restTemplate);
 		this.expected.expectCause(IsNull.nullValue(Throwable.class));
 		this.expected.expectMessage("fail fast property is set");
-		assertNull(this.locator.locate(this.environment));
+		this.locator.locate(this.environment);
 	}
 
 	@Test
@@ -156,7 +156,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
  		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("You must set either 'password' or 'authorization'");
-		assertNull(this.locator.locate(this.environment));
+		this.locator.locate(this.environment);
 	}
 
 	@Test
