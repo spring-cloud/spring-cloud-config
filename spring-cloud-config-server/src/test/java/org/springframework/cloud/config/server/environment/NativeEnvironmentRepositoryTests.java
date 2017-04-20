@@ -183,8 +183,8 @@ public class NativeEnvironmentRepositoryTests {
 
 	@Test
 	public void locationNoDuplicates() {
-		this.repository.setSearchLocations("classpath:/test/{application}", "classpath:/test/{application}");
-		Locations locations = this.repository.getLocations("foo", "dev", "ignore");
+		this.repository.setSearchLocations("classpath:/test/{profile}", "classpath:/test/dev");
+		Locations locations = this.repository.getLocations("foo", "dev", null);
 		assertEquals(1, locations.getLocations().length);
 	}
 
