@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.config.server.credentials;
 
-import static org.junit.Assert.*;
-
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.junit.Before;
@@ -25,6 +23,12 @@ import org.junit.Test;
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author don laidlaw

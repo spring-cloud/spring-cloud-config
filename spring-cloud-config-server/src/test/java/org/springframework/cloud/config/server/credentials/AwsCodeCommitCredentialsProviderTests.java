@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.config.server.credentials;
 
-import static org.junit.Assert.*;
-
 import java.net.URISyntaxException;
 
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
@@ -29,6 +27,13 @@ import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialPr
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * It would be nice to do an integration test, however, this would require

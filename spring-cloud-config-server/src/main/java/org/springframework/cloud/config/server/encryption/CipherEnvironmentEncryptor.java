@@ -77,8 +77,13 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 					catch (Exception e) {
 						value = "<n/a>";
 						name = "invalid." + name;
-						logger.warn("Cannot decrypt key: " + key + " (" + e.getClass()
-								+ ": " + e.getMessage() + ")");
+						String message = "Cannot decrypt key: " + key + " (" + e.getClass()
+								+ ": " + e.getMessage() + ")";
+						if (logger.isDebugEnabled()) {
+							logger.debug(message, e);
+						} else if (logger.isWarnEnabled()) {
+							logger.warn(message);
+						}
 					}
 					map.put(name, value);
 				}

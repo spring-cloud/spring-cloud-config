@@ -128,7 +128,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	private List<String> findKeys(String application, List<String> profiles) {
 		List<String> keys = new ArrayList<>();
 
-		if (StringUtils.hasText(this.defaultKey)) {
+		if (StringUtils.hasText(this.defaultKey) && !this.defaultKey.equals(application)) {
 			keys.add(this.defaultKey);
 			addProfiles(keys, this.defaultKey, profiles);
 		}

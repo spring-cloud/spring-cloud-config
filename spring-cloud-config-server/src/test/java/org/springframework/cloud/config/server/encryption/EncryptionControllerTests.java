@@ -55,6 +55,21 @@ public class EncryptionControllerTests {
 		this.controller.decrypt("foo", MediaType.TEXT_PLAIN);
 	}
 
+	@Test(expected = InvalidCipherException.class)
+	public void shouldThrowExceptionOnDecryptInvalidData() {
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
+		controller.decrypt("foo", MediaType.TEXT_PLAIN);
+	}
+
+	@Test(expected = InvalidCipherException.class)
+	public void shouldThrowExceptionOnDecryptWrongKey() {
+		RsaSecretEncryptor encryptor = new RsaSecretEncryptor();
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
+		controller.decrypt(encryptor.encrypt("foo"), MediaType.TEXT_PLAIN);
+	}
+
 	@Test
 	public void sunnyDayRsaKey() {
 		this.controller = new EncryptionController(

@@ -18,10 +18,13 @@ package org.springframework.cloud.config.client;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -94,6 +97,11 @@ public class ConfigClientProperties {
 	 * Authorization token used by the client to connect to the server.
 	 */
 	private String authorization;
+
+	/**
+	 * Additional headers used to create the client request.
+	 */
+	private Map<String, String> headers = new HashMap<>();
 
 	private ConfigClientProperties() {
 	}
@@ -190,12 +198,22 @@ public class ConfigClientProperties {
 		this.token = token;
 	}
 
+	@DeprecatedConfigurationProperty(reason = "replaced by headers", replacement = "headers")
+	@Deprecated
 	public String getAuthorization() {
 		return this.authorization;
 	}
 
 	public void setAuthorization(String authorization) {
 		this.authorization = authorization;
+	}
+
+	public Map<String, String> getHeaders() {
+		return headers;
+	}
+
+	public void setHeaders(Map<String, String> headers) {
+		this.headers = headers;
 	}
 
 	private Credentials extractCredentials() {
