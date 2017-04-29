@@ -33,6 +33,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
+import org.springframework.security.rsa.crypto.RsaAlgorithm;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 import org.springframework.util.StringUtils;
 
@@ -90,7 +91,8 @@ public class EncryptionAutoConfiguration {
 			KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(new KeyStoreKeyFactory(
 					keyStore.getLocation(), keyStore.getPassword().toCharArray()),
 					keyStore.getSecret(), keyStore.getAlias());
-			locator.setRsaAlgorithm(this.key.getRsa().getAlgorithm());
+			String algorithm = this.key.getRsa().getAlgorithm();
+			locator.setRsaAlgorithm(RsaAlgorithm.valueOf(algorithm.toUpperCase()));
 			locator.setSalt(this.key.getRsa().getSalt());
 			locator.setStrong(this.key.getRsa().isStrong());
 			return locator;
