@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jgit.api.TransportConfigCallback;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,6 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Andy Chan (iceycake)
@@ -167,6 +169,28 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		assertEquals(getUri("*test1*") + "/test1-svc.properties",
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
+	}
+
+	@Test
+	public void shouldSetTransportConfigCallback() throws Exception {
+		TransportConfigCallback mockCallback1 = mock(TransportConfigCallback.class);
+		TransportConfigCallback mockCallback2 = mock(TransportConfigCallback.class);
+
+		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1", "*test1*", "test1Uri");
+
+		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2", "*test2*", "test2Uri");
+		repo2.setTransportConfigCallback(mockCallback2);
+
+		Map<String, PatternMatchingJGitEnvironmentRepository> repos = new HashMap<>();
+		repos.put("test1", repo1);
+		repos.put("test2", repo2);
+
+		this.repository.setRepos(repos);
+		this.repository.setTransportConfigCallback(mockCallback1);
+		this.repository.afterPropertiesSet();
+
+		assertEquals(repo1.getTransportConfigCallback(), mockCallback1);
+		assertEquals(repo2.getTransportConfigCallback(), mockCallback2);
 	}
 
 	private String getUri(String pattern) {

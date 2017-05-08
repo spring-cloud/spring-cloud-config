@@ -33,6 +33,7 @@ import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.NotMergedException;
@@ -725,6 +726,31 @@ public class JGitEnvironmentRepositoryTests {
 
 		int numberOfInvocations = mockingDetails(mockLogger).getInvocations().size();
 		assertEquals("should call isDebugEnabled warn and debug", 3, numberOfInvocations);
+	}
+
+	@Test
+	public void shouldSetTransportConfigCallbackOnCloneAndFetch() throws Exception {
+		Git mockGit = mock(Git.class);
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+		when(mockGit.fetch()).thenReturn(fetchCommand);
+		when(fetchCommand.call()).thenReturn(mock(FetchResult.class));
+
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+
+		TransportConfigCallback configCallback = mock(TransportConfigCallback.class);
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setTransportConfigCallback(configCallback);
+		envRepository.setCloneOnStart(true);
+
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, times(1)).setTransportConfigCallback(configCallback);
+
+		envRepository.fetch(mockGit, "master");
+		verify(fetchCommand, times(1)).setTransportConfigCallback(configCallback);
 	}
 
 	class MockCloneCommand extends CloneCommand {

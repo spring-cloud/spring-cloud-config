@@ -75,6 +75,9 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			if (repo.getPattern() == null || repo.getPattern().length == 0) {
 				repo.setPattern(new String[] { name });
 			}
+			if (repo.getTransportConfigCallback() == null) {
+				repo.setTransportConfigCallback(getTransportConfigCallback());
+			}
 			if (getTimeout() != 0 && repo.getTimeout() == 0) {
 				repo.setTimeout(getTimeout());
 			}
