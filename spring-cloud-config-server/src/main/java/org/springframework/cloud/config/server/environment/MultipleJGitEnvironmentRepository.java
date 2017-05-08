@@ -63,7 +63,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		GitCredentialsProviderFactory credentialFactory = new GitCredentialsProviderFactory();
-		super.setGitCredentialsProvider(credentialFactory.createFor(getUri(), 
+		super.setGitCredentialsProvider(credentialFactory.createFor(getUri(),
 				getUsername(), getPassword(), getPassphrase()));
 		super.afterPropertiesSet();
 		for (String name : this.repos.keySet()) {
@@ -88,9 +88,14 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			if (passphrase == null) {
 				passphrase = getPassphrase();
 			}
-			repo.setGitCredentialsProvider(credentialFactory.createFor(repo.getUri(), 
-					user, pass, passphrase));
+			repo.setGitCredentialsProvider(
+					credentialFactory.createFor(repo.getUri(), user, pass, passphrase));
 			repo.afterPropertiesSet();
+		}
+		if (!getBasedir().getParentFile().canWrite()) {
+			throw new IllegalStateException(
+					"Cannot write parent of basedir (please configure a writable location): "
+							+ getBasedir());
 		}
 	}
 
@@ -119,7 +124,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 						if (logger.isDebugEnabled()) {
 							this.logger.debug("Cannot retrieve resource locations from "
 									+ candidate.getUri() + ", cause: ("
-									+ e.getClass().getSimpleName() + ") " + e.getMessage(), e);
+									+ e.getClass().getSimpleName() + ") "
+									+ e.getMessage(), e);
 						}
 						continue;
 					}
@@ -141,7 +147,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 				for (JGitEnvironmentRepository candidate : getRepositories(repository,
 						application, profile, label)) {
 					try {
-						if (label==null) {
+						if (label == null) {
 							label = candidate.getDefaultLabel();
 						}
 						Environment source = candidate.findOne(application, profile,
@@ -152,9 +158,11 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 					}
 					catch (Exception e) {
 						if (logger.isDebugEnabled()) {
-							this.logger.debug("Cannot load configuration from "
-									+ candidate.getUri() + ", cause: ("
-									+ e.getClass().getSimpleName() + ") " + e.getMessage(), e);
+							this.logger.debug(
+									"Cannot load configuration from " + candidate.getUri()
+											+ ", cause: (" + e.getClass().getSimpleName()
+											+ ") " + e.getMessage(),
+									e);
 						}
 						continue;
 					}
@@ -163,7 +171,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 		JGitEnvironmentRepository candidate = getRepository(this, application, profile,
 				label);
-		if (label==null) {
+		if (label == null) {
 			label = candidate.getDefaultLabel();
 		}
 		if (candidate == this) {
@@ -191,7 +199,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 		String key = repository.getUri();
 
-		// cover the case where label is in the uri, but no label was sent with the request
+		// cover the case where label is in the uri, but no label was sent with the
+		// request
 		if (key.contains("{label}") && label == null) {
 			label = repository.getDefaultLabel();
 		}
@@ -216,7 +225,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		File basedir = repository.getBasedir();
 		BeanUtils.copyProperties(source, repository);
 		repository.setUri(uri);
-		repository.setBasedir(basedir);
+		repository.setBasedir(
+				new File(source.getBasedir().getParentFile(), basedir.getName()));
 		return repository;
 	}
 
