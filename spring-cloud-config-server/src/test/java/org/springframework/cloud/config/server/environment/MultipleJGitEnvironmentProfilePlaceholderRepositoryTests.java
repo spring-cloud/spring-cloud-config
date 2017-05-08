@@ -15,22 +15,27 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.StringUtils;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Dave Syer
@@ -46,6 +51,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	public void init() throws Exception {
 		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		this.repository.setUri(defaultUri);
+		this.repository.setBasedir(new File("target/repos/parent_repo"));
 		this.repository.setRepos(createRepositories());
 	}
 
@@ -67,6 +73,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 		repo.setName(name);
 		repo.setPattern(new String[] { pattern });
 		repo.setUri(uri);
+		repo.setBasedir(new File("target/repos/pattern_repos", name));
 		return repo;
 	}
 
@@ -84,11 +91,12 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 		Environment environment = this.repository.findOne("application",
 				"test1-config-repo", "master");
 		assertEquals(1, environment.getPropertySources().size());
-		assertEquals(
-				getUri("*").replace("{profile}", "test1-config-repo")
-						+ "/application.yml",
+		String uri = getUri("*").replace("{profile}", "test1-config-repo");
+		assertEquals(uri + "/application.yml",
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
+		assertThat(StringUtils.cleanPath(getRepository(uri).getBasedir().toString()),
+				containsString("target/repos"));
 	}
 
 	@Test
@@ -139,6 +147,13 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 		assertVersion(environment);
 		assertArrayEquals(environment.getProfiles(), new String[] { "test1-config-repo",
 				"test2-config-repo", "missing-config-repo" });
+	}
+
+	@SuppressWarnings("unchecked")
+	private JGitEnvironmentRepository getRepository(String uri) {
+		Map<String, JGitEnvironmentRepository> repos = (Map<String, JGitEnvironmentRepository>) ReflectionTestUtils
+				.getField(repository, "placeholders");
+		return repos.get(uri);
 	}
 
 	private void assertVersion(Environment environment) {
