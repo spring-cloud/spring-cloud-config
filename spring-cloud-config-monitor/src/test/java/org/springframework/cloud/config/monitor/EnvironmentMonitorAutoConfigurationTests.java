@@ -16,19 +16,20 @@
 
 package org.springframework.cloud.config.monitor;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Collection;
 import java.util.Map;
 
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.MultiValueMap;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Dave Syer
@@ -40,7 +41,8 @@ public class EnvironmentMonitorAutoConfigurationTests {
 	public void test() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				EnvironmentMonitorAutoConfiguration.class,
-				//FIXME EmbeddedServletContainerAutoConfiguration.class, ServerPropertiesAutoConfiguration.class,
+				// FIXME EmbeddedServletContainerAutoConfiguration.class,
+				// ServerPropertiesAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
 						.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
@@ -50,13 +52,14 @@ public class EnvironmentMonitorAutoConfigurationTests {
 						"extractors")).size());
 		context.close();
 	}
-        
-        @Test
+
+	@Test
 	public void testCanAddCustomPropertyPathNotificationExtractor() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-                                CustomPropertyPathNotificationExtractorConfig.class,
+				CustomPropertyPathNotificationExtractorConfig.class,
 				EnvironmentMonitorAutoConfiguration.class,
-				//FIXME EmbeddedServletContainerAutoConfiguration.class, ServerPropertiesAutoConfiguration.class,
+				// FIXME EmbeddedServletContainerAutoConfiguration.class,
+				// ServerPropertiesAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
 						.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
@@ -66,18 +69,20 @@ public class EnvironmentMonitorAutoConfigurationTests {
 						"extractors")).size());
 		context.close();
 	}
-        
-        @Configuration
-        static class CustomPropertyPathNotificationExtractorConfig {
-                @Bean
-                public PropertyPathNotificationExtractor customNotificationExtractor() {
-                        return new PropertyPathNotificationExtractor() {
-                                @Override
-                                public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> payload) {
-                                    throw new UnsupportedOperationException("doesn't do anything");
-                                }
-                        };
-                }
-        }
+
+	@Configuration
+	static class CustomPropertyPathNotificationExtractorConfig {
+		@Bean
+		public PropertyPathNotificationExtractor customNotificationExtractor() {
+			return new PropertyPathNotificationExtractor() {
+				@Override
+				public PropertyPathNotification extract(
+						MultiValueMap<String, String> headers,
+						Map<String, Object> payload) {
+					throw new UnsupportedOperationException("doesn't do anything");
+				}
+			};
+		}
+	}
 
 }

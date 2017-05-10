@@ -23,11 +23,11 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.context.encrypt.KeyFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
@@ -191,9 +191,6 @@ public class EncryptionController {
 							return candidate;
 						}
 						catch (IllegalArgumentException e) {
-							if (Base64.isBase64(data.getBytes())) {
-								return data;
-							}
 						}
 					}
 				}

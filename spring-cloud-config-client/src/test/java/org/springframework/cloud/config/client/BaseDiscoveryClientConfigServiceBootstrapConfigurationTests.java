@@ -1,19 +1,20 @@
 package org.springframework.cloud.config.client;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
-import java.util.Arrays;
-import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;

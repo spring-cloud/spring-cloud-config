@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.client;
 
 import org.junit.Test;
+
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.event.HeartbeatEvent;

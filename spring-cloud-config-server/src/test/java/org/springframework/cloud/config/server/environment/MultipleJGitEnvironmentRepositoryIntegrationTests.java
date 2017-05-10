@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -27,7 +25,8 @@ import org.eclipse.jgit.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
@@ -37,6 +36,8 @@ import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Andy Chan (iceycake)
