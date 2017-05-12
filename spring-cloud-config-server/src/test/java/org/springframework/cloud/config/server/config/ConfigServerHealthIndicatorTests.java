@@ -6,13 +6,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Answers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerHealthIndicator.Repository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -38,13 +40,13 @@ public class ConfigServerHealthIndicatorTests {
 
 	@Test
 	public void defaultStatusWorks() {
-		when(repository.findOne(anyString(), anyString(), anyString())).thenReturn(environment);
+		when(repository.findOne(anyString(), anyString(), Mockito.<String>isNull())).thenReturn(environment);
 		assertEquals("wrong default status", Status.UP, indicator.health().getStatus());
 	}
 
 	@Test
 	public void exceptionStatusIsDown() {
-		when(repository.findOne(anyString(), anyString(), anyString())).thenThrow(new RuntimeException());
+		when(repository.findOne(anyString(), anyString(), Mockito.<String>isNull())).thenThrow(new RuntimeException());
 		assertEquals("wrong exception status", Status.DOWN, indicator.health().getStatus());
 	}
 

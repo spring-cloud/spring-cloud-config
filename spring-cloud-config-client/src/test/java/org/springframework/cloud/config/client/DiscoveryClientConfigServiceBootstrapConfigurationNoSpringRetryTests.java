@@ -2,10 +2,11 @@ package org.springframework.cloud.config.client;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.cloud.ClassPathExclusions;
-import org.springframework.cloud.FilteredClassPathRunner;
 
-@RunWith(FilteredClassPathRunner.class)
+import org.springframework.cloud.test.ClassPathExclusions;
+import org.springframework.cloud.test.ModifiedClassPathRunner;
+
+@RunWith(ModifiedClassPathRunner.class)
 @ClassPathExclusions({ "spring-retry-*.jar", "spring-boot-starter-aop-*.jar" })
 public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTests
 		extends BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {

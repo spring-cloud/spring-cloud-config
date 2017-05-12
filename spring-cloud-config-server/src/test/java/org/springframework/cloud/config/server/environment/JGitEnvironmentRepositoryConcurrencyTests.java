@@ -28,6 +28,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -70,13 +71,14 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 	@Test
 	public void vanilla() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+		this.context = new SpringApplicationBuilder(TestConfiguration.class)
+				.web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + uri).run();
 		final EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
 		ExecutorService threads = Executors.newFixedThreadPool(4);
 		List<Future<Boolean>> tasks = new ArrayList<Future<Boolean>>();
-		for (int i=0; i<30; i++) {
+		for (int i = 0; i < 30; i++) {
 			tasks.add(threads.submit(new Runnable() {
 				@Override
 				public void run() {
@@ -97,7 +99,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 	@Configuration
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
-		EnvironmentRepositoryConfiguration.class })
+			EnvironmentRepositoryConfiguration.class })
 	protected static class TestConfiguration {
 	}
 

@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
+import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -147,12 +148,11 @@ public class EncryptionController {
 			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
 		checkEncryptorInstalled(name, profiles);
 		try {
-			String input = stripFormData(data, type, true);
+			String input = stripFormData(this.helper.stripPrefix(data), type, true);
 			Map<String, String> encryptorKeys = this.helper.getEncryptorKeys(name,
-					profiles, input);
+					profiles, data);
 			TextEncryptor encryptor = this.encryptor.locate(encryptorKeys);
-			String encryptedText = this.helper.stripPrefix(input);
-			String decrypted = encryptor.decrypt(encryptedText);
+			String decrypted = encryptor.decrypt(input);
 			logger.info("Decrypted cipher data");
 			return decrypted;
 		}
@@ -191,6 +191,12 @@ public class EncryptionController {
 							return candidate;
 						}
 						catch (IllegalArgumentException e) {
+							try {
+								Base64Utils.decode(candidate.getBytes());
+								return candidate;
+							}
+							catch (IllegalArgumentException ex) {
+							}
 						}
 					}
 				}

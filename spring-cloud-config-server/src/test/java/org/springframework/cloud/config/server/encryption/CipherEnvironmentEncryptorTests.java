@@ -29,7 +29,9 @@ import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 public class CipherEnvironmentEncryptorTests {
+
 	TextEncryptor textEncryptor = new EncryptorFactory().create("foo");
+
 	EnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(new TextEncryptorLocator() {
 
 		@Override

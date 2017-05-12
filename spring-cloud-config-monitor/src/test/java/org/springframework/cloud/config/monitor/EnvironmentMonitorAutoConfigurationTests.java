@@ -22,6 +22,8 @@ import java.util.Map;
 import org.junit.Test;
 
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -41,8 +43,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 	public void test() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				EnvironmentMonitorAutoConfiguration.class,
-				// FIXME EmbeddedServletContainerAutoConfiguration.class,
-				// ServerPropertiesAutoConfiguration.class,
+				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
 						.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
@@ -58,8 +59,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				CustomPropertyPathNotificationExtractorConfig.class,
 				EnvironmentMonitorAutoConfiguration.class,
-				// FIXME EmbeddedServletContainerAutoConfiguration.class,
-				// ServerPropertiesAutoConfiguration.class,
+				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
 						.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);

@@ -32,6 +32,7 @@ import org.tmatesoft.svn.core.wc2.SvnCommit;
 import org.tmatesoft.svn.core.wc2.SvnOperationFactory;
 import org.tmatesoft.svn.core.wc2.SvnTarget;
 
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -77,8 +78,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 	public void vanilla() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
 				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				.profiles("subversion")
+		this.context = new SpringApplicationBuilder(TestConfiguration.class)
+				.web(WebApplicationType.NONE).profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
@@ -91,8 +92,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 	public void update() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
 				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				.profiles("subversion")
+		this.context = new SpringApplicationBuilder(TestConfiguration.class)
+				.web(WebApplicationType.NONE).profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
@@ -129,8 +130,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 	public void defaultLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
 				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				.profiles("subversion")
+		this.context = new SpringApplicationBuilder(TestConfiguration.class)
+				.web(WebApplicationType.NONE).profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		SvnKitEnvironmentRepository repository = this.context
 				.getBean(SvnKitEnvironmentRepository.class);
@@ -141,8 +142,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 	public void invalidLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
 				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				.profiles("subversion")
+		this.context = new SpringApplicationBuilder(TestConfiguration.class)
+				.web(WebApplicationType.NONE).profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
@@ -155,8 +156,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 	public void branchLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
 				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
-				.profiles("subversion")
+		this.context = new SpringApplicationBuilder(TestConfiguration.class)
+				.web(WebApplicationType.NONE).profiles("subversion")
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);

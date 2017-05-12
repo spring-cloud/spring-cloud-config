@@ -47,9 +47,6 @@ public class CompositeConfigServerIntegrationTests {
 	@LocalServerPort
 	private int port;
 
-
-
-
 	@BeforeClass
 	public static void init() throws Exception {
 		ConfigServerTestUtils.prepareLocalRepo();

@@ -13,6 +13,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.SocketUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -25,7 +26,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 			"management.security.enabled=false" }, webEnvironment = RANDOM_PORT)
 public class ApplicationTests {
 
-	private static int configPort = 0;
+	private static int configPort = SocketUtils.findAvailableTcpPort();
 
 	@LocalServerPort
 	private int port;
@@ -58,7 +59,7 @@ public class ApplicationTests {
 	@Test
 	public void contextLoads() {
 		String foo = new TestRestTemplate()
-				.getForObject("http://localhost:" + port + "/env/info.foo", String.class);
+				.getForObject("http://localhost:" + port + "/application/env/info.foo", String.class);
 		assertEquals("{\"info.foo\":\"bar\"}", foo);
 	}
 

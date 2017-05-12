@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,8 +41,7 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 
 	private static final String DEFAULT_LABEL = "master";
 
-	private Set<String> standardSources = new HashSet<String>(Arrays.asList(
-			"vcap",
+	private Set<String> standardSources = new HashSet<String>(Arrays.asList("vcap",
 			StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
 			StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
 			StandardServletEnvironment.JNDI_PROPERTY_SOURCE_NAME,
@@ -60,15 +60,29 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 
 	@Override
 	public Environment findOne(String application, String env, String label) {
-		Environment result = new Environment(application, StringUtils.commaDelimitedListToStringArray(env), label, null, null);
-		for (org.springframework.core.env.PropertySource<?> source : this.environment.getPropertySources()) {
+		Environment result = new Environment(application,
+				StringUtils.commaDelimitedListToStringArray(env), label, null, null);
+		for (org.springframework.core.env.PropertySource<?> source : this.environment
+				.getPropertySources()) {
 			String name = source.getName();
-			if (!this.standardSources.contains(name) && source instanceof MapPropertySource) {
-				result.add(new PropertySource(name, (Map<?, ?>) source.getSource()));
+			if (!this.standardSources.contains(name)
+					&& source instanceof MapPropertySource) {
+				result.add(new PropertySource(name, getMap(source)));
 			}
 		}
 		return result;
 
+	}
+
+	private Map<?, ?> getMap(org.springframework.core.env.PropertySource<?> source) {
+		Map<Object, Object> map = new LinkedHashMap<>();
+		Map<?, ?> input = (Map<?, ?>) source.getSource();
+		for (Object key : input.keySet()) {
+			// Spring Boot wraps the property values in an "origin" detector, so we need
+			// to extract the string values
+			map.put(key, source.getProperty(key.toString()));
+		}
+		return map;
 	}
 
 }

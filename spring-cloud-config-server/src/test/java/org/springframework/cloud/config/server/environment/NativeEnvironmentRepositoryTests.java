@@ -15,14 +15,16 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 import org.springframework.context.ConfigurableApplicationContext;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Dave Syer
@@ -36,7 +38,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Before
 	public void init() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				NativeEnvironmentRepositoryTests.class).web(false).run();
+				NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE).run();
 		this.repository = new NativeEnvironmentRepository(context.getEnvironment());
 		this.repository.setVersion("myversion");
 		context.close();

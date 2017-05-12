@@ -17,6 +17,8 @@ package org.springframework.cloud.config.server.environment;
 
 
 import org.eclipse.jgit.api.Git;
+
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -100,7 +102,7 @@ public class JGitConfigServerTestData {
                 .call();
 
         //setup our test spring application pointing to the local repo
-        ConfigurableApplicationContext context = new SpringApplicationBuilder(sources).web(false)
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(sources).web(WebApplicationType.NONE)
                 .properties("spring.cloud.config.server.git.uri:" + "file://" + clonedRepoDir.getAbsolutePath()).run();
         JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
 

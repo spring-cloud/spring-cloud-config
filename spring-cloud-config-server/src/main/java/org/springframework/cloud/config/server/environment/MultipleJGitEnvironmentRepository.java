@@ -236,11 +236,6 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			super(null);
 		}
 
-		public PatternMatchingJGitEnvironmentRepository(String uri) {
-			this();
-			setUri(uri);
-		}
-
 		public boolean matches(String application, String profile, String label) {
 			if (this.pattern == null || this.pattern.length == 0) {
 				return false;
