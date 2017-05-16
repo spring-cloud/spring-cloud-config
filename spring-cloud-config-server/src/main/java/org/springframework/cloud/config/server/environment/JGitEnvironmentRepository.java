@@ -444,8 +444,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private void configureCommand(TransportCommand<?, ?> command) {
 		command.setTimeout(this.timeout);
-		command.setTransportConfigCallback(this.transportConfigCallback);
-		command.setCredentialsProvider(getCredentialsProvider());
+		if (this.transportConfigCallback != null) {
+			command.setTransportConfigCallback(this.transportConfigCallback);
+		}
+		CredentialsProvider credentialsProvider = getCredentialsProvider();
+		if (credentialsProvider != null) {
+			command.setCredentialsProvider(credentialsProvider);
+		}
 	}
 
 	private CredentialsProvider getCredentialsProvider() {
