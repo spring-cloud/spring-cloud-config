@@ -92,6 +92,11 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 					credentialFactory.createFor(repo.getUri(), user, pass, passphrase));
 			repo.afterPropertiesSet();
 		}
+		if (!getBasedir().exists() &&
+			!getBasedir().mkdirs()) {
+				throw new IllegalStateException(
+					"Basedir does not exist and can not be created: "	+ getBasedir());
+		}
 		if (!getBasedir().getParentFile().canWrite()) {
 			throw new IllegalStateException(
 					"Cannot write parent of basedir (please configure a writable location): "

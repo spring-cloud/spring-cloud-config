@@ -17,22 +17,31 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
+import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Andy Chan (iceycake)
@@ -42,13 +51,17 @@ import static org.junit.Assert.assertTrue;
  */
 public class MultipleJGitEnvironmentRepositoryTests {
 
+	@Rule
+	public ExpectedException exception = ExpectedException.none();
+
 	private StandardEnvironment environment = new StandardEnvironment();
-	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(
-			this.environment);
+	private MultipleJGitEnvironmentRepository repository;
+
 
 	@Before
 	public void init() throws Exception {
 		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		this.repository = new MultipleJGitEnvironmentRepository(this.environment);
 		this.repository.setUri(defaultUri);
 		this.repository.setRepos(createRepositories());
 	}
@@ -135,7 +148,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		repository.setBasedir(new File("target/testBase"));
 		assertThat(repository.getBasedir().toString(), containsString("target/testBase"));
 		assertThat(repository.getRepos().get("test1").getBasedir().toString(),
-				containsString("tmp/test1"));
+				containsString("/test1"));
 	}
 
 	@Test
@@ -167,6 +180,39 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		assertEquals(getUri("*test1*") + "/test1-svc.properties",
 				environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
+	}
+
+	@Test
+	// test for gh-700
+	public void basedirCreatedIfNotExists() throws Exception {
+		Path tempDir = Files.createTempDirectory("basedirCreatedTest");
+		File parent = new File(tempDir.toFile(), "parent");
+		File basedir = new File(parent, "basedir");
+		this.repository.setBasedir(basedir);
+
+		assertThat(basedir).doesNotExist();
+
+		this.repository.afterPropertiesSet();
+
+		assertThat(basedir).exists();
+	}
+
+	@Test
+	// test for gh-700
+	public void exceptionThrownIfBasedirDoesnotExistAndCannotBeCreated() throws Exception {
+		File basedir = mock(File.class);
+		File absoluteBasedir = mock(File.class);
+		when(basedir.getAbsoluteFile()).thenReturn(absoluteBasedir);
+
+		when(absoluteBasedir.exists()).thenReturn(false);
+		when(absoluteBasedir.mkdir()).thenReturn(false);
+
+		this.repository.setBasedir(basedir);
+
+		this.exception.expect(IllegalStateException.class);
+		this.exception.expectMessage("Basedir does not exist and can not be created:");
+
+		this.repository.afterPropertiesSet();
 	}
 
 	private String getUri(String pattern) {
