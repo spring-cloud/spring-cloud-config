@@ -1304,8 +1304,9 @@ on the search path, so properties files are loaded from each search
 location <strong>and</strong> a subdirectory with the same name as the label (the
 labelled properties take precedence in the Spring Environment). Thus
 the default behaviour with no placeholders is the same as adding a
-search location ending with <code>/{label}/. For example `file:/tmp/config</code>
-is the same as <code>file:/tmp/config,file:/tmp/config/{label}</code></p>
+search location ending with <code>/{label}/</code>. For example <code>file:/tmp/config</code>
+is the same as <code>file:/tmp/config,file:/tmp/config/{label}</code>. This behavior can be
+disabled by setting <code>spring.cloud.config.server.native.addLabelLocations=false</code>.</p>
 </div>
 </div>
 <div class="sect3">
