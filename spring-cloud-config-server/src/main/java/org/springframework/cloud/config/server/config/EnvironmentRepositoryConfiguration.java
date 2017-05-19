@@ -17,6 +17,7 @@ package org.springframework.cloud.config.server.config;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.eclipse.jgit.api.TransportConfigCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -57,9 +58,13 @@ public class EnvironmentRepositoryConfiguration {
 		@Autowired
 		private ConfigServerProperties server;
 
+		@Autowired(required = false)
+		private TransportConfigCallback transportConfigCallback;
+
 		@Bean
 		public MultipleJGitEnvironmentRepository defaultEnvironmentRepository() {
 			MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment);
+			repository.setTransportConfigCallback(this.transportConfigCallback);
 			if (this.server.getDefaultLabel()!=null) {
 				repository.setDefaultLabel(this.server.getDefaultLabel());
 			}
