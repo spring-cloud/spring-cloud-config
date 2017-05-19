@@ -30,6 +30,7 @@ import java.util.Arrays;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -39,6 +40,7 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -47,6 +49,7 @@ import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.ResourceUtils;
@@ -56,6 +59,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -504,11 +508,35 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertEquals(repository.isStrictHostKeyChecking(), strictHostKeyChecking);
 	}
 
+	@Test
+	public void shouldSetTransportConfigCallback() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo();
+		this.context = new SpringApplicationBuilder(TestConfigurationWithTransportConfigCallback.class)
+				.web(false)
+				.properties("spring.cloud.config.server.git.uri:" + uri)
+				.run();
+
+		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
+		assertNotNull(repository.getTransportConfigCallback());
+	}
+
 	@Configuration
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })
 	protected static class TestConfiguration {
+	}
+
+	@Configuration
+	@EnableConfigurationProperties(ConfigServerProperties.class)
+	@Import({ PropertyPlaceholderAutoConfiguration.class,
+			EnvironmentRepositoryConfiguration.class })
+	protected static class TestConfigurationWithTransportConfigCallback {
+
+		@Bean
+		public TransportConfigCallback transportConfigCallback() {
+			return Mockito.mock(TransportConfigCallback.class);
+		}
 	}
 
 }
