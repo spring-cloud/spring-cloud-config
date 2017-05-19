@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.cloud.config.server.environment;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +28,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 /**
  * @author Dave Syer
  * @author Spencer Gibb
- *
+ * @author Venil Noronha
  */
 public class NativeEnvironmentRepositoryTests {
 
@@ -161,6 +162,30 @@ public class NativeEnvironmentRepositoryTests {
 		assertEquals(1, environment.getPropertySources().size());
 		assertEquals("dev_bar",
 				environment.getPropertySources().get(0).getSource().get("foo"));
+	}
+
+	@Test
+	public void locationAddLabelLocations() {
+		this.repository.setSearchLocations("classpath:/test/dev/");
+		Environment environment = this.repository.findOne("foo", "development", "ignore");
+		assertEquals(2, environment.getPropertySources().size());
+		assertNotEquals("dev_bar", environment.getPropertySources().get(0).getSource().get("foo"));
+	}
+
+	@Test
+	public void locationDontAddLabelLocations() {
+		this.repository.setSearchLocations("classpath:/test/dev/");
+		this.repository.setAddLabelLocations(false);
+		Environment environment = this.repository.findOne("foo", "development", "ignore");
+		assertEquals(1, environment.getPropertySources().size());
+		assertEquals("dev_bar", environment.getPropertySources().get(0).getSource().get("foo"));
+	}
+
+	@Test
+	public void locationNoDuplicates() {
+		this.repository.setSearchLocations("classpath:/test/{profile}", "classpath:/test/dev");
+		Locations locations = this.repository.getLocations("foo", "dev", null);
+		assertEquals(1, locations.getLocations().length);
 	}
 
 }
