@@ -1309,23 +1309,13 @@ the client.  Typically this involves passing special `Authorization` headers to
 authenticate requests to the server.  To provide a custom `RestTemplate` follow the
 steps below.
 
-1.  Set `spring.cloud.config.enabled=false` to disable the existing config server
-property source.
-
-2.  Create a new configuration bean with an implementation of `PropertySourceLocator`.
+1.  Create a new configuration bean with an implementation of `PropertySourceLocator`.
 
 .CustomConfigServiceBootstrapConfiguration.java
 [source,java]
 ----
 @Configuration
 public class CustomConfigServiceBootstrapConfiguration {
-    @Bean
-    public ConfigClientProperties configClientProperties() {
-        ConfigClientProperties client = new ConfigClientProperties(this.environment);
-        client.setEnabled(false);
-        return client;
-    }
-
     @Bean
     public ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
         ConfigClientProperties clientProperties = configClientProperties();
@@ -1336,10 +1326,10 @@ public class CustomConfigServiceBootstrapConfiguration {
 }
 ----
 
-3.  In `resources/META-INF` create a file called
+2.  In `resources/META-INF` create a file called
 `spring.factories` and specify your custom configuration.
 
-.spring.factorties
+.spring.factories
 [source,properties]
 ----
 org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration
