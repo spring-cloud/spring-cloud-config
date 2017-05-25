@@ -70,7 +70,7 @@ public class PropertyPathEndpointTests {
 
 	@Test
 	public void testNotifyAllWithProfile() throws Exception {
-		assertEquals("[*:local]",
+		assertEquals("[*:local:*]",
 				this.endpoint
 						.notifyByPath(new HttpHeaders(), Collections
 								.<String, Object> singletonMap("path", "application-local.yml"))
@@ -97,7 +97,7 @@ public class PropertyPathEndpointTests {
 
 	@Test
 	public void testNotifyOneWithProfile() throws Exception {
-		assertEquals("[foo:local, foo-local]",
+		assertEquals("[foo:local:*, foo-local]",
 				this.endpoint
 						.notifyByPath(new HttpHeaders(), Collections
 								.<String, Object> singletonMap("path", "foo-local.yml"))
@@ -106,7 +106,7 @@ public class PropertyPathEndpointTests {
 
 	@Test
 	public void testNotifyMultiDash() throws Exception {
-		assertEquals("[foo:local-dev, foo-local:dev, foo-local-dev]",
+		assertEquals("[foo:local-dev:*, foo-local:dev:*, foo-local-dev]",
 				this.endpoint
 						.notifyByPath(new HttpHeaders(), Collections
 								.<String, Object> singletonMap("path", "foo-local-dev.yml"))

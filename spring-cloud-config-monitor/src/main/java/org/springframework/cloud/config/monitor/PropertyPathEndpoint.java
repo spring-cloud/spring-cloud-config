@@ -118,10 +118,10 @@ public class PropertyPathEndpoint
 				String name = stem.substring(0, index);
 				String profile = stem.substring(index + 1);
 				if ("application".equals(name)) {
-					services.add("*:" + profile);
+					services.add(String.format("*:%s:*", profile));
 				}
 				else if (!name.startsWith("application")) {
-					services.add(name + ":" + profile);
+					services.add(String.format("%s:%s:*", name,  profile));
 				}
 				index = stem.indexOf("-", index + 1);
 			}
