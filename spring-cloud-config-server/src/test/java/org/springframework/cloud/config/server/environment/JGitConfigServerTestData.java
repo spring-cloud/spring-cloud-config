@@ -80,7 +80,7 @@ public class JGitConfigServerTestData {
         return this.context;
     }
 
-    public static JGitConfigServerTestData prepareClonedGitRepository(Object... sources) throws Exception {
+    public static JGitConfigServerTestData prepareClonedGitRepository(Class... sources) throws Exception {
         //setup remote repository
         String remoteUri = ConfigServerTestUtils.prepareLocalRepo();
         File remoteRepoDir = ResourceUtils.getFile(remoteUri);
