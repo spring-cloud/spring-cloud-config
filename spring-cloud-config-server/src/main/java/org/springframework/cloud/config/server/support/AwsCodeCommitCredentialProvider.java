@@ -327,8 +327,8 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		}
 		
 		try {
-		  URL url = new URL(uri);
-      URI u = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+		  	URL url = new URL(uri);
+      			URI u = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
 			if (u.getScheme().equals("https")) {
 				String host = u.getHost();
 				if (host.endsWith(".amazonaws.com") && host.startsWith("git-codecommit.")) {
