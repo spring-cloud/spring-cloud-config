@@ -48,6 +48,7 @@ public class AwsCodeCommitCredentialsProviderTests {
 	private static final String USER = "test";
 	private static final String AWS_REPO = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test";
 	private static final String BAD_REPO = "https://amazonaws.com/v1/repos/test";
+  	private static final String CURLY_BRACES_REPO = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/{application}";
 
 	private AwsCodeCommitCredentialProvider provider;
 	
@@ -111,6 +112,15 @@ public class AwsCodeCommitCredentialsProviderTests {
 		assertFalse(provider.get(new URIish(BAD_REPO), credentialItems));
 	}
 	
+	@Test
+	public void testUriWithCurlyBracesReturnsTrue() throws UnsupportedCredentialItem, URISyntaxException {
+		GitCredentialsProviderFactory factory = new GitCredentialsProviderFactory();
+		provider = (AwsCodeCommitCredentialProvider) 
+		factory.createFor(CURLY_BRACES_REPO, USER, PASSWORD, null);
+		CredentialItem[] credentialItems = makeCredentialItems();
+		assertTrue(provider.get(new URIish(CURLY_BRACES_REPO), credentialItems));
+	}
+  
 	@Test
 	public void testThrowsUnsupportedCredentialException() throws URISyntaxException {
 		CredentialItem[] goodCredentialItems = makeCredentialItems();
