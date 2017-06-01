@@ -2443,10 +2443,6 @@ steps below.</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Set <code>spring.cloud.config.enabled=false</code> to disable the existing config server
-property source.</p>
-</li>
-<li>
 <p>Create a new configuration bean with an implementation of <code>PropertySourceLocator</code>.</p>
 </li>
 </ol>
@@ -2456,13 +2452,6 @@ property source.</p>
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 public class CustomConfigServiceBootstrapConfiguration {
-    @Bean
-    public ConfigClientProperties configClientProperties() {
-        ConfigClientProperties client = new ConfigClientProperties(this.environment);
-        client.setEnabled(false);
-        return client;
-    }
-
     @Bean
     public ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
         ConfigClientProperties clientProperties = configClientProperties();
@@ -2482,7 +2471,7 @@ public class CustomConfigServiceBootstrapConfiguration {
 </ol>
 </div>
 <div class="listingblock">
-<div class="title">spring.factorties</div>
+<div class="title">spring.factories</div>
 <div class="content">
 <pre class="highlight"><code class="language-properties" data-lang="properties">org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration</code></pre>
 </div>
