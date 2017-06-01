@@ -218,6 +218,84 @@ public class ConfigServicePropertySourceLocatorTests {
 		assertThat(request.getHeaders().getFirst("X-Example-Version")).isEqualTo("2.1");
 	}
 
+	@Test
+	public void failFastWhenBothPasswordAndAuthorizationPropertiesSet() throws Exception {
+		ClientHttpRequestFactory requestFactory = Mockito
+				.mock(ClientHttpRequestFactory.class);
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+		Mockito.when(
+				requestFactory.createRequest(Mockito.any(URI.class),
+						Mockito.any(HttpMethod.class))).thenReturn(request);
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setFailFast(true);
+		defaults.setUsername("username");
+		defaults.setPassword("password");
+		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+ 		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage("You must set either 'password' or 'authorization'");
+		assertNull(this.locator.locate(this.environment));
+	}
+
+	@Test
+	public void interceptorShouldAddHeaderWhenPasswordPropertySet() throws Exception {
+		ClientHttpRequestFactory requestFactory = Mockito
+				.mock(ClientHttpRequestFactory.class);
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+				Mockito.any(HttpMethod.class))).thenReturn(request);
+
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setUsername("username");
+		defaults.setPassword("password");
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+
+		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
+				"getSecureRestTemplate", defaults);
+		restTemplate.setRequestFactory(requestFactory);
+
+		this.locator.setRestTemplate(restTemplate);
+		this.locator.locate(this.environment);
+
+		assertThat(restTemplate.getInterceptors()).hasSize(1);
+	}
+
+	@Test
+	public void interceptorShouldAddHeaderWhenAuthorizationPropertySet() throws Exception {
+		ClientHttpRequestFactory requestFactory = Mockito
+				.mock(ClientHttpRequestFactory.class);
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+				Mockito.any(HttpMethod.class))).thenReturn(request);
+
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+
+		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
+				"getSecureRestTemplate", defaults);
+		restTemplate.setRequestFactory(requestFactory);
+
+		this.locator.setRestTemplate(restTemplate);
+		this.locator.locate(this.environment);
+
+		assertThat(restTemplate.getInterceptors()).hasSize(1);
+	}
+
+	@Test
+	public void interceptorShouldAddHeadersWhenHeadersPropertySet() throws Exception {
+		MockClientHttpRequest request = new MockClientHttpRequest();
+		ClientHttpRequestExecution execution = Mockito
+				.mock(ClientHttpRequestExecution.class);
+		byte[] body = new byte[] {};
+		Map<String, String> headers = new HashMap<>();
+		headers.put("X-Example-Version", "2.1");
+		new ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor(headers)
+				.intercept(request, body, execution);
+		Mockito.verify(execution).execute(request, body);
+		assertThat(request.getHeaders().getFirst("X-Example-Version")).isEqualTo("2.1");
+	}
+
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		Mockito.when(
