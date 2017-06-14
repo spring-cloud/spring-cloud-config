@@ -110,4 +110,38 @@ public class CompositeEnvironmentRepositoryTests {
 		assertEquals(sLoc4, locationStrings[3]);
 		assertEquals(sLoc1, locationStrings[4]);
 	}
+
+	@Test
+	public void testVersion() {
+		PropertySource p1 = mock(PropertySource.class);
+		doReturn("p1").when(p1).getName();
+		PropertySource p2 = mock(PropertySource.class);
+		doReturn("p2").when(p2).getName();
+		String sLoc1 = "loc1";
+		String sLoc2 = "loc2";
+		Environment e1 = new Environment("app", "dev");
+		e1.add(p1);
+		e1.setVersion("1");
+		e1.setState("state");
+		Environment e2 = new Environment("app", "dev");
+		e2.add(p2);
+		e2.setVersion("2");
+		e2.setState("state2");
+		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc1});
+		SearchPathLocator.Locations loc2 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc1, sLoc2});
+		List<EnvironmentRepository> repos = new ArrayList<EnvironmentRepository>();
+		repos.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
+		List<EnvironmentRepository> repos2 = new ArrayList<EnvironmentRepository>();
+		repos2.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
+		repos2.add(new TestOrderedEnvironmentRepository(3, e2, loc2));
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos);
+		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(repos2);
+		Environment env = compositeRepo.findOne("app", "dev", "label");
+		assertEquals("1", env.getVersion());
+		assertEquals("state", env.getState());
+		Environment multiEnv = multiCompositeRepo.findOne("app", "dev", "label");
+		assertEquals(null, multiEnv.getVersion());
+		assertEquals(null, multiEnv.getState());
+
+	}
 }

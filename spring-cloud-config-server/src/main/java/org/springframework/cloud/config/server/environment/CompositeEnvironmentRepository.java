@@ -41,8 +41,15 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 		Environment env = new Environment(application, new String[]{profile}, label, null, null);
-		for(EnvironmentRepository repo : environmentRepositories) {
-			env.addAll(repo.findOne(application, profile, label).getPropertySources());
+		if(environmentRepositories.size() == 1) {
+			Environment envRepo = environmentRepositories.get(0).findOne(application, profile, label);
+			env.addAll(envRepo.getPropertySources());
+			env.setVersion(envRepo.getVersion());
+			env.setState(envRepo.getState());
+		} else {
+			for (EnvironmentRepository repo : environmentRepositories) {
+				env.addAll(repo.findOne(application, profile, label).getPropertySources());
+			}
 		}
 		return env;
 	}
