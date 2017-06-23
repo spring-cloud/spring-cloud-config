@@ -234,13 +234,13 @@ spring:
           repos:
             development:
               pattern:
-                - */development
-                - */staging
+                - '*/development'
+                - '*/staging'
               uri: https://github.com/development/config-repo
             staging:
               pattern:
-                - */qa
-                - */production
+                - '*/qa'
+                - '*/production'
               uri: https://github.com/staging/config-repo
 ----
 
