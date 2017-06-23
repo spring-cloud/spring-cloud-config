@@ -197,10 +197,10 @@ spring:
           repos:
             simple: https://github.com/simple/config-repo
             special:
-              pattern: 'special*/dev*,*special*/dev*'
+              pattern: special*/dev*,*special*/dev*
               uri: https://github.com/special/config-repo
             local:
-              pattern: 'local*'
+              pattern: local*
               uri: file:/home/configsvc/config-repo
 ----
 
