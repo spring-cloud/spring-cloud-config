@@ -3,5 +3,11 @@ spring:
     config:
       server:
         git:
-          uri: file:./target/repos/config-repo
+          uri: file:./target/repos/encrypt-repo
         bootstrap: true
+encrypt:
+  key-store:
+    location: classpath:server.jks
+    password: letmein
+    secret: changeme
+  

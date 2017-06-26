@@ -1,6 +1,8 @@
 # Bootstrap components
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
-org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapConfiguration
+org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapConfiguration,\
+org.springframework.cloud.config.server.config.EncryptionAutoConfiguration,\
+org.springframework.cloud.config.server.config.SingleEncryptorAutoConfiguration
 
 # Application listeners
 org.springframework.context.ApplicationListener=\

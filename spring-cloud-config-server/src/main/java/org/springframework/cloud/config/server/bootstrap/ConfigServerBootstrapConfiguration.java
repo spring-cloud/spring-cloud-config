@@ -15,17 +15,22 @@
  */
 package org.springframework.cloud.config.server.bootstrap;
 
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.client.ConfigClientProperties;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
+import org.springframework.cloud.config.server.encryption.LocatorTextEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryPropertySourceLocator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.util.StringUtils;
 
 /**
@@ -39,9 +44,27 @@ import org.springframework.util.StringUtils;
  * @author Roy Clarkson
  */
 @Configuration
-public class ConfigServerBootstrapConfiguration {
+@ConditionalOnProperty("spring.cloud.config.server.bootstrap")
+public class ConfigServerBootstrapConfiguration implements BeanPostProcessor {
+	
+	@Autowired
+	private BeanFactory beanFactory;
 
-	@ConditionalOnProperty("spring.cloud.config.server.bootstrap")
+	@Override
+	public Object postProcessBeforeInitialization(Object bean, String beanName)
+			throws BeansException {
+		return bean;
+	}
+
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName)
+			throws BeansException {
+		if (bean instanceof TextEncryptor && !(bean instanceof LocatorTextEncryptor)) {
+			return new LocatorTextEncryptor(beanFactory);
+		}
+		return bean;
+	}
+
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import(EnvironmentRepositoryConfiguration.class)
 	protected static class LocalPropertySourceLocatorConfiguration {
