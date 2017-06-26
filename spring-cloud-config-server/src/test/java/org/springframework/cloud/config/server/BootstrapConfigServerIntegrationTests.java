@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ConfigServerApplication.class, properties = "spring.cloud.bootstrap.name:enable-bootstrap",
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "encrypt"})
 public class BootstrapConfigServerIntegrationTests {
 
 	@LocalServerPort
@@ -29,9 +29,12 @@ public class BootstrapConfigServerIntegrationTests {
 	@Value("${info.foo}")
 	private String foo;
 
+	@Value("${config.foo}")
+	private String config;
+
 	@BeforeClass
 	public static void init() throws IOException {
-		ConfigServerTestUtils.prepareLocalRepo();
+		ConfigServerTestUtils.prepareLocalRepo("encrypt-repo");
 	}
 
 	@Test
@@ -46,6 +49,7 @@ public class BootstrapConfigServerIntegrationTests {
 	@Test
 	public void environmentBootstraps() throws Exception {
 		assertEquals("bar", foo);
+		assertEquals("foo", config);
 	}
 
 }
