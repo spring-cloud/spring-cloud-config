@@ -527,7 +527,7 @@ from a git repository (which must be provided):</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -550,7 +550,7 @@ users. Example Maven configuration:</p>
 <div class="listingblock">
 <div class="title">pom.xml</div>
 <div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">   &lt;parent&gt;
+<pre class="prettyprint highlight"><code class="language-xml" data-lang="xml">   &lt;parent&gt;
        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
        &lt;version&gt;1.3.5.RELEASE&lt;/version&gt;
@@ -675,7 +675,7 @@ server is easily embeddable in a Spring Boot application using the
 <div class="listingblock">
 <div class="title">ConfigServer.java</div>
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@SpringBootApplication
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@SpringBootApplication
 @EnableConfigServer
 public class ConfigServer {
   public static void main(String[] args) {
@@ -695,7 +695,7 @@ to use your own <code>application.properties</code>, e.g.</p>
 <div class="listingblock">
 <div class="title">application.properties</div>
 <div class="content">
-<pre class="highlight"><code class="language-properties" data-lang="properties">server.port: 8888
+<pre class="prettyprint highlight"><code class="language-properties" data-lang="properties">server.port: 8888
 spring.cloud.config.server.git.uri: file://${user.home}/config-repo</code></pre>
 </div>
 </div>
@@ -810,7 +810,7 @@ one wins (like adding entries to a <code>Map</code>).</p>
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   application:
     name: foo
   profiles:
@@ -875,7 +875,7 @@ using (for example):</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -899,7 +899,7 @@ quoted). Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -948,7 +948,7 @@ to run apps with multiple profiles. Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -991,7 +991,7 @@ specified as <code>searchPaths</code>. For example at the top level:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -1012,7 +1012,7 @@ at startup. For example at the top level:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -1065,7 +1065,7 @@ e.g.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -1136,7 +1136,7 @@ you need it). Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -1167,7 +1167,7 @@ Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -1182,7 +1182,7 @@ Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -1391,7 +1391,7 @@ values from the Vault backend.  To do this you will need a token for your Vault 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">$ vault write secret/application foo=bar baz=bam
+<pre class="prettyprint highlight"><code class="language-sh" data-lang="sh">$ vault write secret/application foo=bar baz=bam
 $ vault write secret/myapp foo=myappsbar</code></pre>
 </div>
 </div>
@@ -1406,7 +1406,7 @@ $ vault write secret/myapp foo=myappsbar</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-json" data-lang="json">{
+<pre class="prettyprint highlight"><code class="language-json" data-lang="json">{
    "name":"myapp",
    "profiles":[
       "default"
@@ -1440,7 +1440,7 @@ For example, assume you have written data to the following paths in Vault.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">secret/myApp,dev
+<pre class="prettyprint highlight"><code class="language-sh" data-lang="sh">secret/myApp,dev
 secret/myApp
 secret/application,dev
 secret/application</code></pre>
@@ -1500,7 +1500,7 @@ all applications by placing configuration in
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">$ vault write secret/application foo=bar baz=bam</code></pre>
+<pre class="prettyprint highlight"><code class="language-sh" data-lang="sh">$ vault write secret/application foo=bar baz=bam</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1521,7 +1521,7 @@ configuration server.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   profiles:
     active: git, svn
   cloud:
@@ -1595,7 +1595,7 @@ hooks. To declare overrides just add a map of name-value pairs to
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -1650,7 +1650,7 @@ along with custom profiles and custom labels, e.g.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       server:
@@ -1722,7 +1722,7 @@ instance:</p>
 <div class="listingblock">
 <div class="title">application.yml</div>
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   datasource:
     username: dbuser
     password: '{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'</code></pre>
@@ -1907,7 +1907,7 @@ your <code>application.yml</code> for the Config Server:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">encrypt:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">encrypt:
   keyStore:
     location: classpath:/server.jks
     password: letmein
@@ -1930,7 +1930,7 @@ i.e. with a cipher text like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">foo:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">foo:
   bar: `{cipher}{key:testkey}...`</code></pre>
 </div>
 </div>
@@ -2073,7 +2073,7 @@ nginx.conf</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">nginx:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">nginx:
   server:
     name: example.com
 ---
@@ -2294,7 +2294,7 @@ for a Config Server that is a Eureka client:</p>
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">eureka:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">eureka:
   instance:
     ...
     metadataMap:
@@ -2381,7 +2381,7 @@ properties, e.g.</p>
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
      uri: https://user:secret@myconfig.mycompany.com</code></pre>
@@ -2393,7 +2393,7 @@ properties, e.g.</p>
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
      uri: https://myconfig.mycompany.com
@@ -2415,7 +2415,7 @@ works locally and for a user-provided service on Cloud Foundry named
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
      uri: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:8888}</code></pre>
@@ -2450,7 +2450,7 @@ steps below.</p>
 <div class="listingblock">
 <div class="title">CustomConfigServiceBootstrapConfiguration.java</div>
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Configuration
 public class CustomConfigServiceBootstrapConfiguration {
     @Bean
     public ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
@@ -2473,7 +2473,7 @@ public class CustomConfigServiceBootstrapConfiguration {
 <div class="listingblock">
 <div class="title">spring.factories</div>
 <div class="content">
-<pre class="highlight"><code class="language-properties" data-lang="properties">org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration</code></pre>
+<pre class="prettyprint highlight"><code class="language-properties" data-lang="properties">org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration</code></pre>
 </div>
 </div>
 </div>
@@ -2488,7 +2488,7 @@ in <code>bootstrap.yml</code>.</p>
 <div class="listingblock">
 <div class="title">bootstrap.yml</div>
 <div class="content">
-<pre class="highlight"><code class="language-yaml" data-lang="yaml">spring:
+<pre class="prettyprint highlight"><code class="language-yaml" data-lang="yaml">spring:
   cloud:
     config:
       token: YourVaultToken</code></pre>
@@ -2512,7 +2512,7 @@ you would use the traditional dot(.) annotation.  For example</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Value("${appA.secret}")
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">@Value("${appA.secret}")
 String name = "World";</code></pre>
 </div>
 </div>
@@ -2524,5 +2524,8 @@ String name = "World";</code></pre>
 </div>
 </div>
 </div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.js"></script>
+<script>prettyPrint()</script>
 </body>
 </html>
