@@ -15,29 +15,25 @@
  */
 package org.springframework.cloud.config.server.bootstrap;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.client.ConfigClientProperties;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
-import org.springframework.cloud.config.server.encryption.LocatorTextEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryPropertySourceLocator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.util.StringUtils;
 
 /**
- * Bootstrap configuration to fetch external configuration from a (possibly remote)
- * {@link EnvironmentRepository}. Off by default because it can delay startup, but can be
- * enabled with <code>spring.cloud.config.server.bootstrap=true</code>. This would be
- * useful, for example, if the config server were embedded in another app that wanted to
+ * Bootstrap configuration to fetch external configuration from a (possibly
+ * remote) {@link EnvironmentRepository}. Off by default because it can delay
+ * startup, but can be enabled with
+ * <code>spring.cloud.config.server.bootstrap=true</code>. This would be useful,
+ * for example, if the config server were embedded in another app that wanted to
  * be configured from the same repository as all the other clients.
  *
  * @author Dave Syer
@@ -45,25 +41,7 @@ import org.springframework.util.StringUtils;
  */
 @Configuration
 @ConditionalOnProperty("spring.cloud.config.server.bootstrap")
-public class ConfigServerBootstrapConfiguration implements BeanPostProcessor {
-	
-	@Autowired
-	private BeanFactory beanFactory;
-
-	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName)
-			throws BeansException {
-		return bean;
-	}
-
-	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
-		if (bean instanceof TextEncryptor && !(bean instanceof LocatorTextEncryptor)) {
-			return new LocatorTextEncryptor(beanFactory);
-		}
-		return bean;
-	}
+public class ConfigServerBootstrapConfiguration {
 
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import(EnvironmentRepositoryConfiguration.class)
@@ -80,15 +58,14 @@ public class ConfigServerBootstrapConfiguration implements BeanPostProcessor {
 
 		@Bean
 		public EnvironmentRepositoryPropertySourceLocator environmentRepositoryPropertySourceLocator() {
-			return new EnvironmentRepositoryPropertySourceLocator(this.repository,
-					this.client.getName(), this.client.getProfile(), getDefaultLabel());
+			return new EnvironmentRepositoryPropertySourceLocator(this.repository, this.client.getName(),
+					this.client.getProfile(), getDefaultLabel());
 		}
 
 		private String getDefaultLabel() {
 			if (StringUtils.hasText(this.client.getLabel())) {
 				return this.client.getLabel();
-			}
-			else if (StringUtils.hasText(this.server.getDefaultLabel())) {
+			} else if (StringUtils.hasText(this.server.getDefaultLabel())) {
 				return this.server.getDefaultLabel();
 			}
 			return null;

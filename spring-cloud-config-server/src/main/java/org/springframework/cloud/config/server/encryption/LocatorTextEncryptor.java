@@ -18,7 +18,6 @@ package org.springframework.cloud.config.server.encryption;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 /**
@@ -31,10 +30,8 @@ public class LocatorTextEncryptor implements TextEncryptor {
 
 	private TextEncryptorLocator locator;
 
-	private BeanFactory beanFactory;
-
-	public LocatorTextEncryptor(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
+	public LocatorTextEncryptor(TextEncryptorLocator locator) {
+		this.locator = locator;
 	}
 
 	@Override
@@ -45,9 +42,6 @@ public class LocatorTextEncryptor implements TextEncryptor {
 	}
 
 	private TextEncryptorLocator getLocator() {
-		if (locator == null) {
-			locator = beanFactory.getBean(TextEncryptorLocator.class);
-		}
 		return locator;
 	}
 
