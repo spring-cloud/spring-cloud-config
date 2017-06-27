@@ -39,6 +39,7 @@ import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.eclipse.jgit.errors.NoRemoteRepositoryException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.FetchResult;
@@ -208,8 +209,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			return git.getRepository().findRef("HEAD").getObjectId().getName();
 		} catch (RefNotFoundException e) {
 			throw new NoSuchLabelException("No such label: " + label, e);
+		} catch (NoRemoteRepositoryException e) {
+			throw new NoSuchRepositoryException("No such repository: " + getUri(), e);
 		} catch (GitAPIException e) {
-			throw new IllegalStateException("Cannot clone or checkout repository", e);
+			throw new NoSuchRepositoryException("Cannot clone or checkout repository: " + getUri(), e);
 		} catch (Exception e) {
 			throw new IllegalStateException("Cannot load environment", e);
 		} finally {
