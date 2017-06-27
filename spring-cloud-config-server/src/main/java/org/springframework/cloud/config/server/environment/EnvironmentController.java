@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
@@ -223,7 +224,7 @@ public class EnvironmentController {
 		return rootMap;
 	}
 
-	@ExceptionHandler(NoSuchLabelException.class)
+	@ExceptionHandler(RepositoryException.class)
 	public void noSuchLabel(HttpServletResponse response) throws IOException {
 		response.sendError(HttpStatus.NOT_FOUND.value());
 	}
