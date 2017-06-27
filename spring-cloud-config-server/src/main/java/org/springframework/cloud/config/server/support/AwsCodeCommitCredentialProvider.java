@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.support;
 import static org.springframework.util.StringUtils.hasText;
 
 import java.net.URI;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -326,7 +327,8 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		}
 		
 		try {
-			URI u = new URI(uri.toLowerCase());
+		  	URL url = new URL(uri);
+      			URI u = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
 			if (u.getScheme().equals("https")) {
 				String host = u.getHost();
 				if (host.endsWith(".amazonaws.com") && host.startsWith("git-codecommit.")) {

@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -24,8 +27,10 @@ import java.util.Map;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-
+import org.junit.internal.matchers.ThrowableMessageMatcher;
+import org.junit.rules.ExpectedException;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -38,8 +43,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import static org.junit.Assert.assertEquals;
-
 /**
  * @author Andy Chan (iceycake)
  * @author Dave Syer
@@ -50,6 +53,9 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 	private ConfigurableApplicationContext context;
 
 	private File basedir = new File("target/config");
+
+	@Rule
+	public ExpectedException expected = ExpectedException.none();
 
 	@Before
 	public void init() throws Exception {
@@ -182,6 +188,17 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
 		assertEquals(2, environment.getPropertySources().size());
+	}
+
+	@Test
+	public void nonWritableBasedir() throws IOException {
+		String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		expected.expectCause(ThrowableMessageMatcher
+				.hasMessage(containsString("Cannot write parent")));
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri,
+						"spring.cloud.config.server.git.basedir:/tmp")
+				.run();
 	}
 
 	@Configuration

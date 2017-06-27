@@ -479,8 +479,9 @@ on the search path, so properties files are loaded from each search
 location *and* a subdirectory with the same name as the label (the
 labelled properties take precedence in the Spring Environment). Thus
 the default behaviour with no placeholders is the same as adding a
-search location ending with `/{label}/. For example `file:/tmp/config`
-is the same as `file:/tmp/config,file:/tmp/config/{label}`
+search location ending with `/{label}/`. For example `file:/tmp/config`
+is the same as `file:/tmp/config,file:/tmp/config/{label}`. This behavior can be
+disabled by setting `spring.cloud.config.server.native.addLabelLocations=false`.
 
 ==== Vault Backend
 
@@ -1308,23 +1309,13 @@ the client.  Typically this involves passing special `Authorization` headers to
 authenticate requests to the server.  To provide a custom `RestTemplate` follow the
 steps below.
 
-1.  Set `spring.cloud.config.enabled=false` to disable the existing config server
-property source.
-
-2.  Create a new configuration bean with an implementation of `PropertySourceLocator`.
+1.  Create a new configuration bean with an implementation of `PropertySourceLocator`.
 
 .CustomConfigServiceBootstrapConfiguration.java
 [source,java]
 ----
 @Configuration
 public class CustomConfigServiceBootstrapConfiguration {
-    @Bean
-    public ConfigClientProperties configClientProperties() {
-        ConfigClientProperties client = new ConfigClientProperties(this.environment);
-        client.setEnabled(false);
-        return client;
-    }
-
     @Bean
     public ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
         ConfigClientProperties clientProperties = configClientProperties();
@@ -1335,10 +1326,10 @@ public class CustomConfigServiceBootstrapConfiguration {
 }
 ----
 
-3.  In `resources/META-INF` create a file called
+2.  In `resources/META-INF` create a file called
 `spring.factories` and specify your custom configuration.
 
-.spring.factorties
+.spring.factories
 [source,properties]
 ----
 org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration

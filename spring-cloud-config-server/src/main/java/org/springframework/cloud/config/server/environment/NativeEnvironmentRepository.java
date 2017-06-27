@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@ package org.springframework.cloud.config.server.environment;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -48,6 +49,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Dave Syer
  * @author Roy Clarkson
+ * @author Venil Noronha
  */
 @ConfigurationProperties("spring.cloud.config.server.native")
 public class NativeEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
@@ -66,6 +68,11 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 	 * Flag to determine how to handle exceptions during decryption (default false).
 	 */
 	private boolean failOnError = false;
+
+	/**
+	 * Flag to determine whether label locations should be added.
+	 */
+	private boolean addLabelLocations = true;
 
 	/**
 	 * Version string to be reported for native repository
@@ -89,6 +96,14 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 	public boolean isFailOnError() {
 		return this.failOnError;
+	}
+
+	public void setAddLabelLocations(boolean addLabelLocations) {
+		this.addLabelLocations = addLabelLocations;
+	}
+
+	public boolean isAddLabelLocations() {
+		return this.addLabelLocations;
 	}
 
 	public String getDefaultLabel() {
@@ -128,7 +143,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		if (this.searchLocations == null || this.searchLocations.length == 0) {
 			locations = DEFAULT_LOCATIONS;
 		}
-		List<String> output = new ArrayList<String>();
+		Collection<String> output = new LinkedHashSet<String>();
 		for (String location : locations) {
 			String[] profiles = new String[] { profile };
 			if (profile != null) {
@@ -159,11 +174,13 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				}
 			}
 		}
-		for (String location : locations) {
-			if (StringUtils.hasText(label)) {
-				String labelled = location + label.trim() + "/";
-				if (isDirectory(labelled)) {
-					output.add(labelled);
+		if (this.addLabelLocations) {
+			for (String location : locations) {
+				if (StringUtils.hasText(label)) {
+					String labelled = location + label.trim() + "/";
+					if (isDirectory(labelled)) {
+						output.add(labelled);
+					}
 				}
 			}
 		}
