@@ -16,12 +16,10 @@
 package org.springframework.cloud.config.server.bootstrap;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.client.ConfigClientProperties;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
-import org.springframework.cloud.config.server.config.EncryptionAutoConfiguration;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryPropertySourceLocator;
