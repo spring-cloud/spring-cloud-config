@@ -538,7 +538,7 @@ public class JGitEnvironmentRepositoryTests {
 			// expected - ignore
 		}
 
-		assertFalse("baseDir should be deleted when clone fails", this.basedir.exists());
+		assertFalse("baseDir should be deleted when clone fails", this.basedir.listFiles().length>0);
 	}
 
 	@Test
