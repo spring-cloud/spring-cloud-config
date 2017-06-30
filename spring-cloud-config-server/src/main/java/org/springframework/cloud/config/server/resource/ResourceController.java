@@ -19,15 +19,28 @@ package org.springframework.cloud.config.server.resource;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.CompressorOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
+import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.context.ResourceLoaderAware;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
@@ -76,7 +89,7 @@ public class ResourceController {
 		String path = getFilePath(request, name, profile, label);
 		return retrieve(name, profile, label, path, resolvePlaceholders);
 	}
-
+    
 	private String getFilePath(HttpServletRequest request, String name, String profile,
 			String label) {
 		String stem = String.format("/%s/%s/%s/", name, profile, label);
@@ -106,6 +119,14 @@ public class ResourceController {
 		}
 	}
 
+	@RequestMapping(value = "/binary/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	public synchronized byte[] binaryFile(@PathVariable String name,
+			@PathVariable String profile, @PathVariable String label,
+			HttpServletRequest request) throws IOException {
+		String path = getFilePath(request, name, profile, label);
+		return binary(name, profile, label, path);
+	}
+	
 	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public synchronized byte[] binary(@PathVariable String name,
 			@PathVariable String profile, @PathVariable String label,
@@ -128,6 +149,102 @@ public class ResourceController {
 			return StreamUtils.copyToByteArray(is);
 		}
 	}
+
+	@RequestMapping(value = "/targz/{name}/{profile}/{label}/**", produces = "application/tar+gzip")
+	public synchronized byte[] TarGzipDir(@PathVariable String name,
+			@PathVariable String profile, @PathVariable String label,
+			HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String path = getFilePath(request, name, profile, label);
+		String filename = path.substring(path.lastIndexOf("/")+1) + ".tar.gz";
+		response.setHeader("Content-Disposition", "attachment; filename=" + filename); 
+		return retrieveTargz(name, profile, label, path, true);
+	}
+    
+	@RequestMapping(value = "/binarytargz/{name}/{profile}/{label}/**", produces = "application/tar+gzip")
+	public synchronized byte[] binaryTarGzipDir(@PathVariable String name,
+			@PathVariable String profile, @PathVariable String label,
+			HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String path = getFilePath(request, name, profile, label);
+		String filename = path.substring(path.lastIndexOf("/")+1) + ".tar.gz";
+		response.setHeader("Content-Disposition", "attachment; filename=" + filename); 
+		return retrieveTargz(name, profile, label, path, false);
+	}
+	
+	
+	synchronized byte[] retrieveTargz(String name, String profile, String label, String path, boolean resolvePlaceholders)
+			throws IOException {
+
+        Environment environment = null;
+        
+        if(resolvePlaceholders) {
+    		environment = this.environmentRepository.findOne(name, profile, label);
+        }
+
+        try {
+				Resource file = this.resourceRepository.findOne(name, profile, label, path, false);
+				if (file.exists() && file.getFile().isDirectory()) {
+					ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+					CompressorOutputStream gzOut = new GzipCompressorOutputStream(bOut);
+					TarArchiveOutputStream tOut = new TarArchiveOutputStream(gzOut);
+					try{
+            	        File[] children = file.getFile().listFiles();
+						for (File child : children) {
+			                addFileToTarGz(tOut, child.getAbsolutePath(), "", resolvePlaceholders, environment);
+			            }
+					}finally {
+						if(tOut != null) {
+							tOut.finish();
+					        tOut.close();
+						}
+				        if(gzOut != null) gzOut.close();
+				        if(bOut != null) bOut.close();
+					}
+			        return bOut.toByteArray();
+				}
+			}
+			catch (IOException e) {
+				throw new NoSuchResourceException(
+						"Error : " + path + ". (" + e.getMessage() + ")");
+			}
+			throw new NoSuchResourceException("Not found to tar.gz: " + path);
+	}
+
+	private void addFileToTarGz(TarArchiveOutputStream tOut, String path, String base, boolean resolvePlaceholders, Environment environment)
+		    throws IOException
+		{
+		    File f = new File(path);
+		    String entryName = base + f.getName();
+		    TarArchiveEntry tarEntry = new TarArchiveEntry(f, entryName);
+	        
+		    if (f.isFile()) {
+	            InputStream in = null; 
+	            try {
+	                in = new FileInputStream(f);
+    		    	if (resolvePlaceholders) {
+    		    		String text = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
+    					text = resolvePlaceholders(prepareEnvironment(environment), text);
+    					in = new ByteArrayInputStream(text.getBytes(Charset.forName("UTF-8")));
+                        tarEntry.setSize(text.getBytes().length);
+    				}
+        		    tOut.putArchiveEntry(tarEntry);
+			        IOUtils.copy(in, tOut);
+	            } catch(Exception ex) {
+	            	ex.printStackTrace();
+	            } finally{
+			        if(in != null) in.close();
+	            }
+		        tOut.closeArchiveEntry();
+		    } else {
+    		    tOut.putArchiveEntry(tarEntry);
+	        	tOut.closeArchiveEntry();
+		        File[] children = f.listFiles();
+		        if (children != null) {
+		            for (File child : children) {
+		                addFileToTarGz(tOut, child.getAbsolutePath(), entryName + "/", resolvePlaceholders, environment);
+		            }
+		        }
+		    }
+		}
 
 	@ExceptionHandler(NoSuchResourceException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)

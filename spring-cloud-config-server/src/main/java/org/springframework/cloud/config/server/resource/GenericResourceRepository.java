@@ -51,6 +51,11 @@ public class GenericResourceRepository
 	@Override
 	public synchronized Resource findOne(String application, String profile, String label,
 			String path) {
+		return findOne(application, profile, label, path, true);
+	}
+	@Override
+	public synchronized Resource findOne(String application, String profile, String label,
+			String path, boolean fileOnly) {
 		String[] locations = this.service.getLocations(application, profile, label).getLocations();
 		try {
 			for (int i = locations.length; i-- > 0;) {
@@ -59,6 +64,9 @@ public class GenericResourceRepository
 					Resource file = this.resourceLoader.getResource(location)
 							.createRelative(local);
 					if (file.exists() && file.isReadable()) {
+						return file;
+					}
+					if( !fileOnly  && file.exists() && file.getFile().isDirectory()) {
 						return file;
 					}
 				}
