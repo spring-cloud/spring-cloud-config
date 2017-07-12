@@ -15,10 +15,12 @@
  */
 package org.springframework.cloud.config.server.ssh;
 
-import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.eclipse.jgit.transport.URIish;
 
 import static org.springframework.cloud.config.server.ssh.SshPropertyValidator.isSshUri;
 
@@ -57,20 +59,12 @@ public class SshUriPropertyProcessor {
 		return sshUriPropertyMap;
 	}
 
-	private String getHostname(String uri) {
-		if (uri == null) {
+	protected static String getHostname(String uri) {
+		try {
+			URIish urIish = new URIish(uri);
+			return urIish.getHost();
+		} catch (URISyntaxException e) {
 			return null;
 		}
-		else if (uri.matches("^[a-z]+://.*")) {
-			return UriComponentsBuilder.fromUriString(uri).build().getHost();
-		}
-		else if (uri.indexOf('@') < uri.indexOf(':')) {
-			return uri.substring(uri.indexOf('@') + 1, uri.indexOf(':'));
-		}
-		else if (uri.startsWith("ssh:") && uri.indexOf('@') > 0) {
-			String postAt = uri.substring(uri.indexOf('@') + 1);
-			return postAt.substring(0, postAt.indexOf(":"));
-		}
-		else return null;
 	}
 }

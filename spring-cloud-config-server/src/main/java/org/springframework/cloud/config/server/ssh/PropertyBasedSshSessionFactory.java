@@ -15,6 +15,8 @@
  */
 package org.springframework.cloud.config.server.ssh;
 
+import java.util.Map;
+
 import com.jcraft.jsch.HostKey;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -23,9 +25,6 @@ import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.util.Base64;
 import org.eclipse.jgit.util.FS;
-
-import java.util.Map;
-
 
 /**
  * In a cloud environment local SSH config files such as `.known_hosts` may not be suitable for providing
@@ -36,6 +35,10 @@ import java.util.Map;
  */
 public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 
+	private static final String STRICT_HOST_KEY_CHECKING = "StrictHostKeyChecking";
+	private static final String YES_OPTION = "yes";
+	private static final String NO_OPTION = "no";
+	private static final String SERVER_HOST_KEY = "server_host_key";
 	private final Map<String, SshUriProperties> sshKeysByHostname;
 	private final JSch jSch;
 
@@ -49,12 +52,12 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 		SshUriProperties sshProperties = sshKeysByHostname.get(hc.getHostName());
 		String hostKeyAlgorithm = sshProperties.getHostKeyAlgorithm();
 		if (hostKeyAlgorithm != null) {
-			session.setConfig("server_host_key", hostKeyAlgorithm);
+			session.setConfig(SERVER_HOST_KEY, hostKeyAlgorithm);
 		}
 		if (sshProperties.getHostKey() == null || !sshProperties.isStrictHostKeyChecking()) {
-			session.setConfig("StrictHostKeyChecking", "no");
+			session.setConfig(STRICT_HOST_KEY_CHECKING, NO_OPTION);
 		} else {
-			session.setConfig("StrictHostKeyChecking", "yes");
+			session.setConfig(STRICT_HOST_KEY_CHECKING, YES_OPTION);
 		}
 	}
 

@@ -151,8 +151,8 @@ This repository implementation maps the `{label}` parameter of the
 HTTP resource to a git label (commit id, branch name or tag). If the
 git branch or tag name contains a slash ("/") then the label in the
 HTTP URL should be specified with the special string "(\_)" instead (to
-avoid ambiguity with other URL paths).  For example, if the label is 
-`foo/bar`, replacing the slash would result in a label that looks like 
+avoid ambiguity with other URL paths).  For example, if the label is
+`foo/bar`, replacing the slash would result in a label that looks like
 `foo(_)bar`.  Be careful with the brackets in
 the URL if you are using a command line client like curl (e.g. escape
 them from the shell with quotes '').
@@ -351,7 +351,7 @@ https://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}.
 If you provide a username and password with an AWS CodeCommit URI, then these must be
 the http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html[AWS accessKeyId and secretAccessKey]
 to be used to access the repository. If you do not specify a username and password,
-then the accessKeyId and secretAccessKey will be retrieved using the 
+then the accessKeyId and secretAccessKey will be retrieved using the
 http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[AWS Default Credential Provider Chain].
 
 If your Git URI matches the CodeCommit URI pattern (above) then you must provide
@@ -364,7 +364,7 @@ classpath, then the AWS Code Commit credential provider will not be created rega
 
 ===== Git SSH configuration using properties
 
-By default, Spring Cloud Config Server uses SSH configuration files such as `~/.ssh/known_hosts` and `/etc/ssh/ssh_config` when connecting to Git repositories using an SSH URI.
+By default, the JGit library used by Spring Cloud Config Server uses SSH configuration files such as `~/.ssh/known_hosts` and `/etc/ssh/ssh_config` when connecting to Git repositories using an SSH URI.
 In cloud environments such as Cloud Foundry, the local filesystem may be ephemeral or not easily accessible. For cases such as these, SSH configuration can be set using
 Java properties. In order to activate property based SSH configuration, the property `spring.cloud.config.server.git.ignoreLocalSshSettings` must be set to `true`.
 Example:
@@ -416,7 +416,7 @@ Example:
 |Property Name |Remarks
 
 |*ignoreLocalSshSettings*
-|If true, use property based SSH config instead of file based
+|If true, use property based SSH config instead of file based. Must be set at as `spring.cloud.config.server.git.ignoreLocalSshSettings`, *not* inside a repository definition.
 
 |*privateKey*
 |Valid SSH private key. Must be set if `ignoreLocalSshSettings` is true and Git URI is SSH format

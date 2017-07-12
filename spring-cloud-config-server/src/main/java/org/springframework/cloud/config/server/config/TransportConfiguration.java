@@ -64,10 +64,12 @@ public class TransportConfiguration {
 
 		@Override
 		public void configure(Transport transport) {
-			SshTransport sshTransport = (SshTransport) transport;
-			sshTransport.setSshSessionFactory(
-					new PropertyBasedSshSessionFactory(
-							new SshUriPropertyProcessor(sshUriProperties).getSshKeysByHostname(), new JSch()));
+			if (transport instanceof SshTransport) {
+				SshTransport sshTransport = (SshTransport) transport;
+				sshTransport.setSshSessionFactory(
+						new PropertyBasedSshSessionFactory(
+								new SshUriPropertyProcessor(sshUriProperties).getSshKeysByHostname(), new JSch()));
+			}
 		}
 	}
 

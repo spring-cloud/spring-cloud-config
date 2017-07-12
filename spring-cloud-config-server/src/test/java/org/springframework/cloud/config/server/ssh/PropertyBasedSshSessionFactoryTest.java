@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -113,7 +112,7 @@ public class PropertyBasedSshSessionFactoryTest {
 				.build();
 		setupSessionFactory(sshKey);
 
-		factory.createSession(hc, null, sshKey.getHostname(), 22, null);
+		factory.createSession(hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
 		verify(jSch).addIdentity("gitlab.example.local", PRIVATE_KEY.getBytes(), null, null);
 	}
 
@@ -126,7 +125,7 @@ public class PropertyBasedSshSessionFactoryTest {
 				.build();
 		setupSessionFactory(sshKey);
 
-		factory.createSession(hc, null, sshKey.getHostname(), 22, null);
+		factory.createSession(hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
 		ArgumentCaptor<HostKey> captor = ArgumentCaptor.forClass(HostKey.class);
 		verify(hostKeyRepository).add(captor.capture(), any(UserInfo.class));
 		HostKey hostKey = captor.getValue();
@@ -136,9 +135,9 @@ public class PropertyBasedSshSessionFactoryTest {
 
 	private void setupSessionFactory(SshUriProperties sshKey) {
 		Map<String, SshUriProperties> sshKeysByHostname = new HashMap<>();
-		sshKeysByHostname.put(sshKey.getHostname(), sshKey);
+		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()), sshKey);
 		factory = new PropertyBasedSshSessionFactory(sshKeysByHostname, jSch) ;
-		when(hc.getHostName()).thenReturn(sshKey.getHostname());
+		when(hc.getHostName()).thenReturn(SshUriPropertyProcessor.getHostname(sshKey.getUri()));
 		when(jSch.getHostKeyRepository()).thenReturn(hostKeyRepository);
 	}
 

@@ -16,9 +16,17 @@
 
 package org.springframework.cloud.config.server.ssh;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.mockito.Mockito.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import java.util.Set;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 
 /**
  * Unit tests for property based SSH config validators
@@ -58,6 +66,13 @@ public class SshPropertyValidatorTest {
 			"-----END RSA PRIVATE KEY-----";
 
 	private static final String VALID_HOST_KEY = "AAAAB3NzaC1yc2EAAAADAQABAAABAQDg6/W/5cbk/npvzpae7ZEa54F4rkwh2V3NiuqVZ5hWr+8O4/6SmrS7yBvRHAFeAJNb0LOCjE/7tjd1fqUx+QU1ATCtwkOhuwG8Ubzkx23mMZlrwEvx7XEfBoLN7Lw9fXjWDtTTgFB1AxCQ2pGGiNG0QCwyA4HViDHVU+ibwkRlzuDJG0tnp5Qpo3DXkHwFNdqWNfVrIZ6q2xbyeoJjKjnR215T0ehmuWFmKqG+uMNe/LQ6IOiK0F5+gr7rgPxNLAYYqyhraAnBeHn5gapsSzYJmFpoAHWvN7OUwHcJ88D9qUkKi4VKxYiuK69u3z825Xj2cLTfj9JiHCfV8cTo9GL";
+	private static Validator validator;
+
+	@BeforeClass
+	public static void setUpValidator() {
+		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+		validator = factory.getValidator();
+	}
 
 	@Test
 	public void supportedParametersSuccesful() throws Exception {
@@ -69,16 +84,12 @@ public class SshPropertyValidatorTest {
 				.hostKeyAlgorithm("ssh-rsa")
 				.build();
 
-		SshPropertyValidator sshPropertyValidator = spy(new SshPropertyValidator(validSettings));
-		sshPropertyValidator.validateSshConfigurationProperties();
-		verify(sshPropertyValidator, times(1)).validatePrivateKeyFormat();
-		verify(sshPropertyValidator, times(1)).validateAlgorithmSpecifiedWhenHostKeySet();
-		verify(sshPropertyValidator, times(1)).validatePrivateKeyPresent();
-		verify(sshPropertyValidator, times(1)).validateHostKeyAlgorithmSupported();
-		verify(sshPropertyValidator, times(1)).validateHostKeySpecifiedWhenAlgorithmSet();
+		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(validSettings);
+		assertThat(constraintViolations, hasSize(0));
+
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void invalidPrivateKeyFails() throws Exception {
 
 		SshUriProperties invalidKey = SshUriProperties.builder()
@@ -87,12 +98,12 @@ public class SshPropertyValidatorTest {
 				.privateKey("invalid_key")
 				.build();
 
-		SshPropertyValidator sshPropertyValidator = new SshPropertyValidator(invalidKey);
-		sshPropertyValidator.validateSshConfigurationProperties();
+		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(invalidKey);
+		assertThat(constraintViolations, hasSize(1));
 
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void missingPrivateKeyFails() throws Exception {
 
 		SshUriProperties missingKey = SshUriProperties.builder()
@@ -100,51 +111,51 @@ public class SshPropertyValidatorTest {
 				.ignoreLocalSshSettings(true)
 				.build();
 
-		SshPropertyValidator sshPropertyValidator = new SshPropertyValidator(missingKey);
-		sshPropertyValidator.validateSshConfigurationProperties();
+		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(missingKey);
+		assertThat(constraintViolations, hasSize(1));
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void hostKeyWithMissingAlgoFails() throws Exception {
 
 		SshUriProperties missingAlgo = SshUriProperties.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(true)
-				.privateKey("invalid_key")
+				.privateKey(VALID_PRIVATE_KEY)
 				.hostKey("some_host")
 				.build();
 
-		SshPropertyValidator sshPropertyValidator = new SshPropertyValidator(missingAlgo);
-		sshPropertyValidator.validateSshConfigurationProperties();
+		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(missingAlgo);
+		assertThat(constraintViolations, hasSize(1));
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void algoWithMissingHostKeyFails() throws Exception {
 
 		SshUriProperties missingHostKey = SshUriProperties.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(true)
-				.privateKey("invalid_key")
-				.hostKeyAlgorithm("some_host_algo")
+				.privateKey(VALID_PRIVATE_KEY)
+				.hostKeyAlgorithm("ssh-rsa")
 				.build();
 
-		SshPropertyValidator sshPropertyValidator = new SshPropertyValidator(missingHostKey);
-		sshPropertyValidator.validateSshConfigurationProperties();
+		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(missingHostKey);
+		assertThat(constraintViolations, hasSize(1));
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void unsupportedAlgoFails() throws Exception {
 
 		SshUriProperties unsupportedAlgo = SshUriProperties.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(true)
-				.privateKey("invalid_key")
+				.privateKey(VALID_PRIVATE_KEY)
 				.hostKey("some_host_key")
 				.hostKeyAlgorithm("unsupported")
 				.build();
 
-		SshPropertyValidator sshPropertyValidator = new SshPropertyValidator(unsupportedAlgo);
-		sshPropertyValidator.validateSshConfigurationProperties();
+		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(unsupportedAlgo);
+		assertThat(constraintViolations, hasSize(1));
 	}
 
 	@Test
@@ -156,13 +167,9 @@ public class SshPropertyValidatorTest {
 				.privateKey("invalid_key")
 				.build());
 
-		SshPropertyValidator sshPropertyValidator = spy(new SshPropertyValidator(useLocal));
-		sshPropertyValidator.validateSshConfigurationProperties();
-		verify(sshPropertyValidator, times(0)).validatePrivateKeyFormat();
-		verify(sshPropertyValidator, times(0)).validateAlgorithmSpecifiedWhenHostKeySet();
-		verify(sshPropertyValidator, times(0)).validatePrivateKeyPresent();
-		verify(sshPropertyValidator, times(0)).validateHostKeyAlgorithmSupported();
-		verify(sshPropertyValidator, times(0)).validateHostKeySpecifiedWhenAlgorithmSet();
+		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(useLocal);
+		assertThat(constraintViolations, hasSize(0));
+
 	}
 
 	@Test
@@ -174,12 +181,8 @@ public class SshPropertyValidatorTest {
 				.privateKey("invalid_key")
 				.build());
 
-		SshPropertyValidator sshPropertyValidator = spy(new SshPropertyValidator(httpsUri));
-		sshPropertyValidator.validateSshConfigurationProperties();
-		verify(sshPropertyValidator, times(0)).validatePrivateKeyFormat();
-		verify(sshPropertyValidator, times(0)).validateAlgorithmSpecifiedWhenHostKeySet();
-		verify(sshPropertyValidator, times(0)).validatePrivateKeyPresent();
-		verify(sshPropertyValidator, times(0)).validateHostKeyAlgorithmSupported();
-		verify(sshPropertyValidator, times(0)).validateHostKeySpecifiedWhenAlgorithmSet();
+		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(httpsUri);
+		assertThat(constraintViolations, hasSize(0));
+
 	}
 }
