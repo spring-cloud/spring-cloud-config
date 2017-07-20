@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import static org.springframework.util.StringUtils.hasText;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -58,8 +60,6 @@ import org.springframework.util.StringUtils;
 
 import com.jcraft.jsch.Session;
 
-import static org.springframework.util.StringUtils.hasText;
-
 /**
  * An {@link EnvironmentRepository} backed by a single git repository.
  *
@@ -80,8 +80,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 * 5 seconds.
 	 */
 	private int timeout = 5;
-
-	private boolean initialized;
 
 	/**
 	 * Flag to indicate that the repository should be cloned on startup (not on demand).
@@ -108,6 +106,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 * changes and take from remote repository.
 	 */
 	private boolean forcePull;
+	private boolean initialized;
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
@@ -187,7 +186,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 * Get the working directory ready.
 	 */
 	public String refresh(String label) {
-		initialize();
 		Git git = null;
 		try {
 			git = createGitClient();

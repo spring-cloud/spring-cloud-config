@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnBean(ConfigServerConfiguration.Marker.class)
 @EnableConfigurationProperties(ConfigServerProperties.class)
 @Import({ EnvironmentRepositoryConfiguration.class, CompositeConfiguration.class, ResourceRepositoryConfiguration.class,
-		ConfigServerEncryptionConfiguration.class, ConfigServerMvcConfiguration.class })
+		ConfigServerEncryptionConfiguration.class, ConfigServerMvcConfiguration.class, TransportConfiguration.class })
 public class ConfigServerAutoConfiguration {
 
 }
