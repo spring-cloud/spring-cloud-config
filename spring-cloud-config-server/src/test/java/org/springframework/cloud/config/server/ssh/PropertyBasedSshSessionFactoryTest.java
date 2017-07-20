@@ -16,7 +16,17 @@
 
 package org.springframework.cloud.config.server.ssh;
 
-import com.jcraft.jsch.*;
+import static org.mockito.Matchers.isNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,16 +37,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import com.jcraft.jsch.HostKey;
+import com.jcraft.jsch.HostKeyRepository;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.UserInfo;
 
 /**
  * Unit tests for property based SSH config processor
@@ -127,7 +132,7 @@ public class PropertyBasedSshSessionFactoryTest {
 
 		factory.createSession(hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
 		ArgumentCaptor<HostKey> captor = ArgumentCaptor.forClass(HostKey.class);
-		verify(hostKeyRepository).add(captor.capture(), any(UserInfo.class));
+		verify(hostKeyRepository).add(captor.capture(), isNull(UserInfo.class));
 		HostKey hostKey = captor.getValue();
 		Assert.assertEquals("gitlab.example.local", hostKey.getHost());
 		Assert.assertEquals(HOST_KEY, hostKey.getKey());
