@@ -52,9 +52,9 @@ public class HostKeyAlgoSupportedValidator implements ConstraintValidator<HostKe
 	public boolean isValid(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
 		context.disableDefaultConstraintViolation();
 		Set<Boolean> validationResults = new HashSet<>();
-		List<SshUriProperties> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
+		List<SshUri> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
 
-		for (SshUriProperties extractedProperty : extractedProperties) {
+		for (SshUri extractedProperty : extractedProperties) {
 			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
 				validationResults.add(isHostKeySpecifiedWhenAlgorithmSet(extractedProperty, context));
 			}
@@ -62,7 +62,7 @@ public class HostKeyAlgoSupportedValidator implements ConstraintValidator<HostKe
 		return !validationResults.contains(false);
 	}
 
-	private boolean isHostKeySpecifiedWhenAlgorithmSet(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
+	private boolean isHostKeySpecifiedWhenAlgorithmSet(SshUri sshUriProperties, ConstraintValidatorContext context) {
 		if (hasText(sshUriProperties.getHostKeyAlgorithm())
 				&& !VALID_HOST_KEY_ALGORITHMS.contains(sshUriProperties.getHostKeyAlgorithm())) {
 

@@ -16,12 +16,13 @@
 
 package org.springframework.cloud.config.server.ssh;
 
+
+import java.util.Map;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.junit.After;
 import org.junit.Test;
+import org.springframework.cloud.config.server.ssh.SshUriProperties.SshUriNestedRepoProperties;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -53,43 +54,43 @@ public class SshUriPropertyProcessorTest {
 	@Test
 	public void testSingleSshUriProperties() {
 		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(mainRepoPropertiesFixture());
-		Map<String, SshUriProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 
 		assertThat(sshKeysByHostname.values(), hasSize(1));
 
-		SshUriProperties sshKey = sshKeysByHostname.get(HOST1);
+		SshUri sshKey = sshKeysByHostname.get(HOST1);
 		assertMainRepo(sshKey);
 	}
 
 	@Test
 	public void testMultipleSshUriPropertiess() {
 		SshUriProperties sshUriProperties = mainRepoPropertiesFixture();
-		addRepoProperties(sshUriProperties, SshUriProperties.builder()
+		addRepoProperties(sshUriProperties, SshUri.builder()
 				.uri(URI2)
 				.privateKey(PRIVATE_KEY2)
-				.build(), "repo2");
-		addRepoProperties(sshUriProperties, SshUriProperties.builder()
+				.buildAsNestedRepo(), "repo2");
+		addRepoProperties(sshUriProperties, SshUri.builder()
 				.uri(URI3)
 				.privateKey(PRIVATE_KEY3)
-				.build(), "repo3");
+				.buildAsNestedRepo(), "repo3");
 
 		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(sshUriProperties);
 
-		Map<String, SshUriProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 
 		assertThat(sshKeysByHostname.values(), hasSize(3));
 
-		SshUriProperties sshKey1 = sshKeysByHostname.get(HOST1);
+		SshUri sshKey1 = sshKeysByHostname.get(HOST1);
 		assertMainRepo(sshKey1);
 
-		SshUriProperties sshKey2 = sshKeysByHostname.get(HOST2);
+		SshUri sshKey2 = sshKeysByHostname.get(HOST2);
 
 		assertThat(SshUriPropertyProcessor.getHostname(sshKey2.getUri()), is(equalTo(HOST2)));
 		assertThat(sshKey2.getHostKeyAlgorithm(), is(nullValue()));
 		assertThat(sshKey2.getHostKey(), is(nullValue()));
 		assertThat(sshKey2.getPrivateKey(), is(equalTo(PRIVATE_KEY2)));
 
-		SshUriProperties sshKey3 = sshKeysByHostname.get(HOST3);
+		SshUri sshKey3 = sshKeysByHostname.get(HOST3);
 
 		assertThat(SshUriPropertyProcessor.getHostname(sshKey3.getUri()), is(equalTo(HOST3)));
 		assertThat(sshKey3.getHostKeyAlgorithm(), is(nullValue()));
@@ -100,45 +101,45 @@ public class SshUriPropertyProcessorTest {
 	@Test
 	public void testSameHostnameDifferentKeysFirstOneWins() {
 		SshUriProperties sshUriProperties = mainRepoPropertiesFixture();
-		addRepoProperties(sshUriProperties, SshUriProperties.builder().uri(URI1)
+		addRepoProperties(sshUriProperties, SshUri.builder().uri(URI1)
 				.privateKey(PRIVATE_KEY1)
 				.hostKey(HOST_KEY1)
 				.hostKeyAlgorithm(ALGO1)
-				.build(), "repo2");
+				.buildAsNestedRepo(), "repo2");
 
 		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(sshUriProperties);
-		Map<String, SshUriProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 
 		assertThat(sshKeysByHostname.values(), hasSize(1));
 
-		SshUriProperties sshKey = sshKeysByHostname.get(HOST1);
+		SshUri sshKey = sshKeysByHostname.get(HOST1);
 		assertMainRepo(sshKey);
 	}
 
 	@Test
 	public void testNoSshUriProperties() {
 		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(new SshUriProperties());
-		Map<String, SshUriProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 		assertThat(sshKeysByHostname.values(), hasSize(0));
 	}
 
 	@Test
 	public void testInvalidUriDoesNotAddEntry() {
-		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(SshUriProperties.builder().uri("invalid_uri").build());
-		Map<String, SshUriProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(SshUri.builder().uri("invalid_uri").build());
+		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 		assertThat(sshKeysByHostname.values(), hasSize(0));
 	}
 
 	@Test
 	public void testHttpsUriDoesNotAddEntry() {
-		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(SshUriProperties.builder().uri("https://user@github.com/proj/repo.git").build());
-		Map<String, SshUriProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(SshUri.builder().uri("https://user@github.com/proj/repo.git").build());
+		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 		assertThat(sshKeysByHostname.values(), hasSize(0));
 	}
 
 	private SshUriProperties mainRepoPropertiesFixture() {
 
-		return SshUriProperties.builder()
+		return SshUri.builder()
 				.uri(URI1)
 				.hostKeyAlgorithm(ALGO1)
 				.hostKey(HOST_KEY1)
@@ -146,18 +147,11 @@ public class SshUriPropertyProcessorTest {
 				.build();
 	}
 
-	private void addRepoProperties(SshUriProperties mainRepoProperties, SshUriProperties repoProperties, String repoName) {
-		if (mainRepoProperties.getRepos() == null) {
-			Map<String, SshUriProperties> repos = new HashMap<>();
-			repos.put(repoName, repoProperties);
-			mainRepoProperties.setRepos(repos);
-		}
-		else {
-			mainRepoProperties.addRepo(repoName, repoProperties);
-		}
+	private void addRepoProperties(SshUriProperties mainRepoProperties, SshUriNestedRepoProperties repoProperties, String repoName) {
+		mainRepoProperties.addRepo(repoName, repoProperties);
 	}
 
-	private void assertMainRepo(SshUriProperties sshKey) {
+	private void assertMainRepo(SshUri sshKey) {
 		assertThat(sshKey, is(notNullValue()));
 		assertThat(SshUriPropertyProcessor.getHostname(sshKey.getUri()), is(equalTo(HOST1)));
 		assertThat(sshKey.getHostKeyAlgorithm(), is(equalTo(ALGO1)));

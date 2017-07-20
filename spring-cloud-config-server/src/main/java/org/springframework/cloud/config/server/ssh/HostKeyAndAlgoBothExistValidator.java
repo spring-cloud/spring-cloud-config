@@ -48,9 +48,9 @@ public class HostKeyAndAlgoBothExistValidator implements ConstraintValidator<Hos
 	@Override
 	public boolean isValid(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
 		Set<Boolean> validationResults = new HashSet<>();
-		List<SshUriProperties> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
+		List<SshUri> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
 
-		for (SshUriProperties extractedProperty : extractedProperties) {
+		for (SshUri extractedProperty : extractedProperties) {
 			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
 				validationResults.add(
 						isAlgorithmSpecifiedWhenHostKeySet(extractedProperty, context)
@@ -60,7 +60,7 @@ public class HostKeyAndAlgoBothExistValidator implements ConstraintValidator<Hos
 		return !validationResults.contains(false);
 	}
 
-	private boolean isHostKeySpecifiedWhenAlgorithmSet(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
+	private boolean isHostKeySpecifiedWhenAlgorithmSet(SshUri sshUriProperties, ConstraintValidatorContext context) {
 		if (hasText(sshUriProperties.getHostKeyAlgorithm()) && !hasText(sshUriProperties.getHostKey())) {
 				context.disableDefaultConstraintViolation();
 				context.buildConstraintViolationWithTemplate(
@@ -71,7 +71,7 @@ public class HostKeyAndAlgoBothExistValidator implements ConstraintValidator<Hos
 		return true;
 	}
 
-	private boolean isAlgorithmSpecifiedWhenHostKeySet(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
+	private boolean isAlgorithmSpecifiedWhenHostKeySet(SshUri sshUriProperties, ConstraintValidatorContext context) {
 		if (hasText(sshUriProperties.getHostKey()) && !hasText(sshUriProperties.getHostKeyAlgorithm())) {
 			context.disableDefaultConstraintViolation();
 			context.buildConstraintViolationWithTemplate(

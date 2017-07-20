@@ -39,17 +39,17 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 	private static final String YES_OPTION = "yes";
 	private static final String NO_OPTION = "no";
 	private static final String SERVER_HOST_KEY = "server_host_key";
-	private final Map<String, SshUriProperties> sshKeysByHostname;
+	private final Map<String, SshUri> sshKeysByHostname;
 	private final JSch jSch;
 
-	public PropertyBasedSshSessionFactory(Map<String, SshUriProperties> sshKeysByHostname, JSch jSch) {
+	public PropertyBasedSshSessionFactory(Map<String, SshUri> sshKeysByHostname, JSch jSch) {
 		this.sshKeysByHostname = sshKeysByHostname;
 		this.jSch = jSch;
 	}
 
 	@Override
 	protected void configure(Host hc, Session session) {
-		SshUriProperties sshProperties = sshKeysByHostname.get(hc.getHostName());
+		SshUri sshProperties = sshKeysByHostname.get(hc.getHostName());
 		String hostKeyAlgorithm = sshProperties.getHostKeyAlgorithm();
 		if (hostKeyAlgorithm != null) {
 			session.setConfig(SERVER_HOST_KEY, hostKeyAlgorithm);
@@ -64,7 +64,7 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 	@Override
 	protected Session createSession(Host hc, String user, String host, int port, FS fs) throws JSchException {
 		if (sshKeysByHostname.containsKey(host)) {
-			SshUriProperties sshUriProperties = sshKeysByHostname.get(host);
+			SshUri sshUriProperties = sshKeysByHostname.get(host);
 			jSch.addIdentity(host, sshUriProperties.getPrivateKey().getBytes(), null, null);
 			if (sshUriProperties.getHostKey() != null) {
 				HostKey hostkey = new HostKey(host, Base64.decode(sshUriProperties.getHostKey()));

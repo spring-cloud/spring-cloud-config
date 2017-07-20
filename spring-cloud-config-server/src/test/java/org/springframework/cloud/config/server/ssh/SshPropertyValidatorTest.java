@@ -76,7 +76,7 @@ public class SshPropertyValidatorTest {
 
 	@Test
 	public void supportedParametersSuccesful() throws Exception {
-		SshUriProperties validSettings = SshUriProperties.builder()
+		SshUriProperties validSettings = SshUri.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(true)
 				.privateKey(VALID_PRIVATE_KEY)
@@ -92,7 +92,7 @@ public class SshPropertyValidatorTest {
 	@Test
 	public void invalidPrivateKeyFails() throws Exception {
 
-		SshUriProperties invalidKey = SshUriProperties.builder()
+		SshUriProperties invalidKey = SshUri.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(true)
 				.privateKey("invalid_key")
@@ -106,7 +106,7 @@ public class SshPropertyValidatorTest {
 	@Test
 	public void missingPrivateKeyFails() throws Exception {
 
-		SshUriProperties missingKey = SshUriProperties.builder()
+		SshUriProperties missingKey = SshUri.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(true)
 				.build();
@@ -118,7 +118,7 @@ public class SshPropertyValidatorTest {
 	@Test
 	public void hostKeyWithMissingAlgoFails() throws Exception {
 
-		SshUriProperties missingAlgo = SshUriProperties.builder()
+		SshUriProperties missingAlgo = SshUri.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(true)
 				.privateKey(VALID_PRIVATE_KEY)
@@ -132,7 +132,7 @@ public class SshPropertyValidatorTest {
 	@Test
 	public void algoWithMissingHostKeyFails() throws Exception {
 
-		SshUriProperties missingHostKey = SshUriProperties.builder()
+		SshUriProperties missingHostKey = SshUri.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(true)
 				.privateKey(VALID_PRIVATE_KEY)
@@ -146,7 +146,7 @@ public class SshPropertyValidatorTest {
 	@Test
 	public void unsupportedAlgoFails() throws Exception {
 
-		SshUriProperties unsupportedAlgo = SshUriProperties.builder()
+		SshUriProperties unsupportedAlgo = SshUri.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(true)
 				.privateKey(VALID_PRIVATE_KEY)
@@ -161,7 +161,7 @@ public class SshPropertyValidatorTest {
 	@Test
 	public void validatorNotRunIfIgnoreLocalSettingsFalse() throws Exception {
 
-		SshUriProperties useLocal = (SshUriProperties.builder()
+		SshUriProperties useLocal = (SshUri.builder()
 				.uri(SSH_URI)
 				.ignoreLocalSshSettings(false)
 				.privateKey("invalid_key")
@@ -175,7 +175,7 @@ public class SshPropertyValidatorTest {
 	@Test
 	public void validatorNotRunIfHttpsUri() throws Exception {
 
-		SshUriProperties httpsUri = (SshUriProperties.builder()
+		SshUriProperties httpsUri = (SshUri.builder()
 				.uri("https://somerepo.com/team/project.git")
 				.ignoreLocalSshSettings(true)
 				.privateKey("invalid_key")

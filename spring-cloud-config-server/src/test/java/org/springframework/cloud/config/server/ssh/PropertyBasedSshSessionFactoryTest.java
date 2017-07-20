@@ -61,7 +61,7 @@ public class PropertyBasedSshSessionFactoryTest {
 	
 	@Test
 	public void strictHostKeyCheckingIsOptional() {
-		SshUriProperties sshKey = new SshUriProperties.SshUriPropertiesBuilder()
+		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
 				.uri("ssh://gitlab.example.local:3322/somerepo.git")
 				.privateKey(PRIVATE_KEY)
 				.build();
@@ -75,7 +75,7 @@ public class PropertyBasedSshSessionFactoryTest {
 	
 	@Test
 	public void strictHostKeyCheckingIsUsed() {
-		SshUriProperties sshKey = new SshUriProperties.SshUriPropertiesBuilder()
+		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
 				.uri("ssh://gitlab.example.local:3322/somerepo.git")
 				.hostKey(HOST_KEY)
 				.privateKey(PRIVATE_KEY)
@@ -90,7 +90,7 @@ public class PropertyBasedSshSessionFactoryTest {
 	
 	@Test
 	public void hostKeyAlgorithmIsSpecified() {
-		SshUriProperties sshKey = new SshUriProperties.SshUriPropertiesBuilder()
+		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
 				.uri("ssh://gitlab.example.local:3322/somerepo.git")
 				.hostKeyAlgorithm(HOST_KEY_ALGORITHM)
 				.hostKey(HOST_KEY)
@@ -106,7 +106,7 @@ public class PropertyBasedSshSessionFactoryTest {
 	
 	@Test
 	public void privateKeyIsUsed() throws Exception {
-		SshUriProperties sshKey = new SshUriProperties.SshUriPropertiesBuilder()
+		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
 				.uri("git@gitlab.example.local:someorg/somerepo.git")
 				.privateKey(PRIVATE_KEY)
 				.build();
@@ -118,7 +118,7 @@ public class PropertyBasedSshSessionFactoryTest {
 
 	@Test
 	public void hostKeyIsUsed() throws Exception {
-		SshUriProperties sshKey = new SshUriProperties.SshUriPropertiesBuilder()
+		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
 				.uri("git@gitlab.example.local:someorg/somerepo.git")
 				.hostKey(HOST_KEY)
 				.privateKey(PRIVATE_KEY)
@@ -133,8 +133,8 @@ public class PropertyBasedSshSessionFactoryTest {
 		Assert.assertEquals(HOST_KEY, hostKey.getKey());
 	}
 
-	private void setupSessionFactory(SshUriProperties sshKey) {
-		Map<String, SshUriProperties> sshKeysByHostname = new HashMap<>();
+	private void setupSessionFactory(SshUri sshKey) {
+		Map<String, SshUri> sshKeysByHostname = new HashMap<>();
 		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()), sshKey);
 		factory = new PropertyBasedSshSessionFactory(sshKeysByHostname, jSch) ;
 		when(hc.getHostName()).thenReturn(SshUriPropertyProcessor.getHostname(sshKey.getUri()));

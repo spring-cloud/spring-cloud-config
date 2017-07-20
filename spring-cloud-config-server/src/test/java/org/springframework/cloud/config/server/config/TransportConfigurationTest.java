@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.config;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.junit.Test;
+import org.springframework.cloud.config.server.ssh.SshUri;
 import org.springframework.cloud.config.server.ssh.SshUriProperties;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -29,7 +30,7 @@ import static org.hamcrest.Matchers.instanceOf;
 public class TransportConfigurationTest {
 	@Test
 	public void propertiesBasedSshTransportCallbackCreated() throws Exception {
-		SshUriProperties ignoreLocalSettings = SshUriProperties.builder()
+		SshUriProperties ignoreLocalSettings = SshUri.builder()
 				.uri("user@gitrepo.com:proj/repo")
 				.ignoreLocalSshSettings(true)
 				.build();
@@ -40,7 +41,7 @@ public class TransportConfigurationTest {
 
 	@Test
 	public void fileBasedSshTransportCallbackCreated() throws Exception {
-		SshUriProperties dontIgnoreLocalSettings = SshUriProperties.builder()
+		SshUriProperties dontIgnoreLocalSettings = SshUri.builder()
 				.uri("user@gitrepo.com:proj/repo")
 				.ignoreLocalSshSettings(false)
 				.build();

@@ -52,9 +52,9 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 	public boolean isValid(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
 		context.disableDefaultConstraintViolation();
 		Set<Boolean> validationResults = new HashSet<>();
-		List<SshUriProperties> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
+		List<SshUri> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
 
-		for (SshUriProperties extractedProperty : extractedProperties) {
+		for (SshUri extractedProperty : extractedProperties) {
 			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
 				validationResults.add(
 						 isPrivateKeyPresent(extractedProperty, context)
@@ -65,7 +65,7 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 
 	}
 
-	private boolean isPrivateKeyPresent(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
+	private boolean isPrivateKeyPresent(SshUri sshUriProperties, ConstraintValidatorContext context) {
 		if (!hasText(sshUriProperties.getPrivateKey())) {
 				context.buildConstraintViolationWithTemplate(
 						format("Property '%shostKey' must be set when '%shostKeyAlgorithm' is specified", GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
@@ -75,7 +75,7 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 		return true;
 	}
 
-	private boolean isPrivateKeyFormatCorrect(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
+	private boolean isPrivateKeyFormatCorrect(SshUri sshUriProperties, ConstraintValidatorContext context) {
 		try {
 			KeyPair.load(new JSch(), sshUriProperties.getPrivateKey().getBytes(), null);
 			return true;

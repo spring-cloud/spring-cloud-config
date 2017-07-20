@@ -55,10 +55,10 @@ public class SshPropertyValidator {
 		return false;
 	}
 
-	protected List<SshUriProperties> extractRepoProperties(SshUriProperties sshUriProperties) {
-		List<SshUriProperties> allRepoProperties = new ArrayList<>();
+	protected List<SshUri> extractRepoProperties(SshUriProperties sshUriProperties) {
+		List<SshUri> allRepoProperties = new ArrayList<>();
 		allRepoProperties.add(sshUriProperties);
-		Map<String, SshUriProperties> repos = sshUriProperties.getRepos();
+		Map<String, SshUriProperties.SshUriNestedRepoProperties> repos = sshUriProperties.getRepos();
 		if (repos != null) {
 			allRepoProperties.addAll(repos.values());
 		}

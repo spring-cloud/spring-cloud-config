@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jgit.transport.URIish;
+import org.springframework.cloud.config.server.ssh.SshUriProperties.SshUriNestedRepoProperties;
 
 import static org.springframework.cloud.config.server.ssh.SshPropertyValidator.isSshUri;
 
@@ -37,19 +38,19 @@ public class SshUriPropertyProcessor {
 		this.sshUriProperties = sshUriProperties;
 	}
 
-	public Map<String, SshUriProperties> getSshKeysByHostname() {
+	public Map<String, SshUri> getSshKeysByHostname() {
 		return extractNestedProperties(sshUriProperties);
 	}
 
-	private Map<String, SshUriProperties> extractNestedProperties(SshUriProperties uriProperties) {
-		Map<String, SshUriProperties> sshUriPropertyMap = new HashMap<>();
+	private Map<String, SshUri> extractNestedProperties(SshUriProperties uriProperties) {
+		Map<String, SshUri> sshUriPropertyMap = new HashMap<>();
 		String parentUri = uriProperties.getUri();
 		if (isSshUri(parentUri) && getHostname(parentUri) != null) {
 			sshUriPropertyMap.put(getHostname(parentUri), uriProperties);
 		}
-		Map<String, SshUriProperties> repos = uriProperties.getRepos();
+		Map<String, SshUriNestedRepoProperties> repos = uriProperties.getRepos();
 		if(repos != null) {
-			for (SshUriProperties repoProperties : repos.values()) {
+			for (SshUriNestedRepoProperties repoProperties : repos.values()) {
 				String repoUri = repoProperties.getUri();
 				if (isSshUri(repoUri) && getHostname(repoUri) != null) {
 					sshUriPropertyMap.put(getHostname(repoUri), repoProperties);
