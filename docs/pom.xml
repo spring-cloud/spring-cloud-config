@@ -7,7 +7,9 @@
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-config</artifactId>
 		<version>1.3.2.BUILD-SNAPSHOT</version>
+		<relativePath>..</relativePath>
 	</parent>
+
 	<packaging>pom</packaging>
 	<name>Spring Cloud Config Docs</name>
 	<description>Spring Cloud Docs</description>
