@@ -333,6 +333,67 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void shouldNotRefresh() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment);
+
+		repo.setLastRefresh(System.currentTimeMillis() - 5000);
+		repo.setRefreshRate(2);
+
+		boolean shouldPull = repo.shouldPull(git);
+
+		assertThat("shouldPull was false", shouldPull, is(true));
+
+		repo.setRefreshRate(30);
+
+		shouldPull = repo.shouldPull(git);
+
+		assertThat("shouldPull was true", shouldPull, is(false));
+	}
+
+	@Test
+	public void shouldUpdateLastRefresh() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+		FetchResult fetchResult = mock(FetchResult.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(fetchCommand.call()).thenReturn(fetchResult);
+		when(git.fetch()).thenReturn(fetchCommand);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment);
+
+		repo.setRefreshRate(1000);
+		repo.setLastRefresh(0);
+		repo.fetch(git, "master");
+
+		long timeDiff = System.currentTimeMillis() - repo.getLastRefresh();
+
+		assertThat("time difference ("+timeDiff+") was longer than 1 second", timeDiff < 1000L, is(true));
+	}
+
+	@Test
 	public void testFetchException() throws Exception {
 
 		Git git = mock(Git.class);
