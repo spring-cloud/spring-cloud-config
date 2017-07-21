@@ -103,6 +103,26 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 	}
 
 	@Test
+	public void mappingRepoWithRefreshRate() throws IOException {
+		String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		String test1RepoUri = ConfigServerTestUtils.prepareLocalRepo("test1-config-repo");
+
+		Map<String, Object> repoMapping = new LinkedHashMap<String, Object>();
+		repoMapping.put("spring.cloud.config.server.git.repos[test1].pattern", "*test1*");
+		repoMapping.put("spring.cloud.config.server.git.repos[test1].uri", test1RepoUri);
+		repoMapping.put("spring.cloud.config.server.git.refreshRate", "30");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri)
+				.properties(repoMapping).run();
+		EnvironmentRepository repository = this.context
+				.getBean(EnvironmentRepository.class);
+		repository.findOne("test1-svc", "staging", "master");
+		Environment environment = repository.findOne("test1-svc", "staging", "master");
+		assertEquals(2, environment.getPropertySources().size());
+		assertEquals(((MultipleJGitEnvironmentRepository) repository).getRepos().get("test1").getRefreshRate(), 30);
+	}
+
+	@Test
 	public void mappingRepoWithProfile() throws IOException {
 		String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		String test1RepoUri = ConfigServerTestUtils.prepareLocalRepo("test1-config-repo");
