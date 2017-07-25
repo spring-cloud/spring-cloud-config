@@ -68,7 +68,7 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 	private boolean isPrivateKeyPresent(SshUri sshUriProperties, ConstraintValidatorContext context) {
 		if (!hasText(sshUriProperties.getPrivateKey())) {
 				context.buildConstraintViolationWithTemplate(
-						format("Property '%shostKey' must be set when '%shostKeyAlgorithm' is specified", GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
+						format("Property '%sprivateKey' must be set when '%signoreLocalSettings' is specified", GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
 						.addConstraintViolation();
 			return false;
 		}
