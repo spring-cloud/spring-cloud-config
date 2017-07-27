@@ -1,8 +1,10 @@
-package org.springframework.cloud.config.server.encryption;
+package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
+import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
@@ -15,9 +17,9 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 */
 @Configuration
 @ConditionalOnProperty(value = "encrypt.key", matchIfMissing = false)
-public class SymmetricKeyEncryptor {
+public class SymmetricKeyEncryptorLocatorConfiguration {
 
-	@Autowired
+	@Autowired(required = false)
 	private TextEncryptor encryptor;
 
 	@Bean
