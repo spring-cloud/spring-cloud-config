@@ -17,6 +17,8 @@
 package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -32,6 +34,7 @@ import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
@@ -51,29 +54,8 @@ import org.springframework.util.StringUtils;
  */
 @Configuration
 @EnableConfigurationProperties(KeyProperties.class)
+@Import({SingleTextEncryptorConfiguration.class, DefaultTextEncryptorConfiguration.class})
 public class EncryptionAutoConfiguration {
-
-	@ConditionalOnMissingBean(TextEncryptor.class)
-	protected static class DefaultTextEncryptorConfiguration {
-
-		@Autowired
-		private KeyProperties key;
-
-		@Autowired(required = false)
-		private TextEncryptorLocator locator;
-
-		@Bean
-		public TextEncryptor defaultTextEncryptor() {
-			if (locator != null) {
-				return new LocatorTextEncryptor(locator);
-			}
-			if (StringUtils.hasText(this.key.getKey())) {
-				return new EncryptorFactory().create(this.key.getKey());
-			}
-			return Encryptors.noOpText();
-		}
-
-	}
 
 	@Configuration
 	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled", matchIfMissing = true)
@@ -119,6 +101,45 @@ public class EncryptionAutoConfiguration {
 			return locator;
 		}
 
+	}
+
+}
+
+
+@ConditionalOnBean(TextEncryptor.class)
+@ConditionalOnMissingBean(TextEncryptorLocator.class)
+@Configuration
+class SingleTextEncryptorConfiguration {
+
+	@Autowired
+	private TextEncryptor encryptor;
+
+	@Bean
+	public SingleTextEncryptorLocator textEncryptorLocator() {
+		return new SingleTextEncryptorLocator(encryptor);
+	}
+
+}
+
+@ConditionalOnMissingBean(TextEncryptor.class)
+@Configuration
+class DefaultTextEncryptorConfiguration {
+
+	@Autowired
+	private KeyProperties key;
+
+	@Autowired(required = false)
+	private TextEncryptorLocator locator;
+
+	@Bean
+	public TextEncryptor defaultTextEncryptor() {
+		if (locator != null) {
+			return new LocatorTextEncryptor(locator);
+		}
+		if (StringUtils.hasText(this.key.getKey())) {
+			return new EncryptorFactory().create(this.key.getKey());
+		}
+		return Encryptors.noOpText();
 	}
 
 }
