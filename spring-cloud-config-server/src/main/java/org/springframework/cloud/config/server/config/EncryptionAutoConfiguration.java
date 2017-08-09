@@ -17,7 +17,6 @@
 package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -80,7 +79,7 @@ public class EncryptionAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(RsaSecretEncryptor.class)
-	@ConditionalOnProperty(value = "encrypt.key-store.location", matchIfMissing = false)
+	@ConditionalOnProperty(prefix = "encrypt.keyStore", value = "location", matchIfMissing = false)
 	protected static class KeyStoreConfiguration {
 
 		@Autowired
