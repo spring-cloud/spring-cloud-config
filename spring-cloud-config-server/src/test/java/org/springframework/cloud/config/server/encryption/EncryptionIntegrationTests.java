@@ -31,7 +31,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SymmetricEncryptionIntegrationTests {
+public class EncryptionIntegrationTests {
 
 	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = {
@@ -63,6 +63,25 @@ public class SymmetricEncryptionIntegrationTests {
 
 		@Test
 		public void symmetricEncryptionBootstrapConfig() throws Exception {
+			ResponseEntity<String> entity = testRestTemplate
+					.getForEntity("/encrypt/status", String.class);
+			assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		}
+	}
+
+	@RunWith(SpringRunner.class)
+	@SpringBootTest(classes = { ConfigServerApplication.class},
+			properties = "spring.cloud.bootstrap.name:keystore-bootstrap",
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+	@ActiveProfiles({ "test", "native" })
+	@DirtiesContext
+	public static class KeystoreConfigurationIntegrationTests {
+
+		@Autowired
+		private TestRestTemplate testRestTemplate;
+
+		@Test
+		public void keystoreBootstrapConfig() throws Exception {
 			ResponseEntity<String> entity = testRestTemplate
 					.getForEntity("/encrypt/status", String.class);
 			assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
