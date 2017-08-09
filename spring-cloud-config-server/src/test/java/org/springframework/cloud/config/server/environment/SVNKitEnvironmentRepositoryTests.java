@@ -30,6 +30,7 @@ import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.StandardEnvironment;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -133,7 +134,8 @@ public class SVNKitEnvironmentRepositoryTests {
 	@Test
 	public void vanilla_with_update_after_repo_delete() throws IOException {
 		this.vanilla_with_update();
-		assertTrue(ConfigServerTestUtils.deleteLocalRepo(REPOSITORY_NAME));
+		ConfigServerTestUtils.deleteLocalRepo(REPOSITORY_NAME);
+		assertThat(new File(basedir, REPOSITORY_NAME)).doesNotExist();
 		this.vanilla();
 	}
 
