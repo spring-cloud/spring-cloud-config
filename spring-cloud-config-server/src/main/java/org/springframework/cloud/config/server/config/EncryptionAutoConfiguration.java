@@ -80,7 +80,7 @@ public class EncryptionAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(RsaSecretEncryptor.class)
-	@ConditionalOnProperty(prefix = "encrypt.keyStore", value = "location", matchIfMissing = false)
+	@ConditionalOnProperty(prefix = "encrypt.key-store", value = "location", matchIfMissing = false)
 	protected static class KeyStoreConfiguration {
 
 		@Autowired
