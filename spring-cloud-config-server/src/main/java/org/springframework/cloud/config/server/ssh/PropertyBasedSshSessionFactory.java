@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015 - 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import org.eclipse.jgit.util.FS;
 public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 
 	private static final String STRICT_HOST_KEY_CHECKING = "StrictHostKeyChecking";
+	private static final String PREFERRED_AUTHENTICATIONS = "PreferredAuthentications";
 	private static final String YES_OPTION = "yes";
 	private static final String NO_OPTION = "no";
 	private static final String SERVER_HOST_KEY = "server_host_key";
@@ -59,6 +60,10 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 		} else {
 			session.setConfig(STRICT_HOST_KEY_CHECKING, YES_OPTION);
 		}
+		String preferredAuthentications = sshProperties.getPreferredAuthentications();
+		if (preferredAuthentications != null) {
+			session.setConfig(PREFERRED_AUTHENTICATIONS, preferredAuthentications);
+		}
 	}
 
 	@Override
@@ -66,6 +71,9 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 		if (sshKeysByHostname.containsKey(host)) {
 			SshUri sshUriProperties = sshKeysByHostname.get(host);
 			jSch.addIdentity(host, sshUriProperties.getPrivateKey().getBytes(), null, null);
+			if (sshUriProperties.getKnownHostsFile() != null) {
+				jSch.setKnownHosts(sshUriProperties.getKnownHostsFile());
+			}
 			if (sshUriProperties.getHostKey() != null) {
 				HostKey hostkey = new HostKey(host, Base64.decode(sshUriProperties.getHostKey()));
 				jSch.getHostKeyRepository().add(hostkey, null);

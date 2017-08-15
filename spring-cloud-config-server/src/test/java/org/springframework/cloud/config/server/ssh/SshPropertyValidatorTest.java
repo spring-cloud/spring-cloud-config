@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015 - 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -184,5 +184,26 @@ public class SshPropertyValidatorTest {
 		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(httpsUri);
 		assertThat(constraintViolations, hasSize(0));
 
+	}
+
+	@Test
+	public void preferredAuthenticationsIsValidated() throws Exception {
+		SshUriProperties sshUriProperties = new SshUriProperties();
+		assertThat(validator.validate(sshUriProperties), hasSize(0));
+
+		sshUriProperties.setPreferredAuthentications("keyboard-interactive, public-key ,kerberos");
+		assertThat(validator.validate(sshUriProperties), hasSize(0));
+
+		sshUriProperties.setPreferredAuthentications(",,");
+		assertThat(validator.validate(sshUriProperties), hasSize(1));
+	}
+
+	@Test
+	public void knowHostsFileIsValidated() throws Exception {
+		SshUriProperties sshUriProperties = new SshUriProperties();
+		assertThat(validator.validate(sshUriProperties), hasSize(0));
+
+		sshUriProperties.setKnownHostsFile("non-existing.file");
+		assertThat(validator.validate(sshUriProperties), hasSize(1));
 	}
 }
