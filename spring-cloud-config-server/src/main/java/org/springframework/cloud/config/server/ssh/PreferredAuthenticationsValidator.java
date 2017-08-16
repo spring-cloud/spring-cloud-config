@@ -37,6 +37,7 @@ public class PreferredAuthenticationsValidator implements ConstraintValidator<Pr
 
     @Override
     public void initialize(PreferredAuthenticationsIsValid preferredAuthenticationsIsValid) {
+        // No initialization required
     }
 
     @Override

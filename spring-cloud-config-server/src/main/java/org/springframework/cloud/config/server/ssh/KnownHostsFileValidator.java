@@ -36,6 +36,7 @@ public class KnownHostsFileValidator implements ConstraintValidator<KnownHostsFi
 
     @Override
     public void initialize(KnownHostsFileIsValid knownHostsFileIsValid) {
+        // No initialization required
     }
 
     @Override
