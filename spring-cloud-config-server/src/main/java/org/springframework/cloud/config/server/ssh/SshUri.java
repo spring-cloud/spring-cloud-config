@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.ssh;
 
 import org.springframework.cloud.config.server.ssh.SshUriProperties.SshUriNestedRepoProperties;
 
+import javax.validation.constraints.Pattern;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -32,6 +33,7 @@ public abstract class SshUri {
 	private String hostKeyAlgorithm;
 	private String hostKey;
 	private String knownHostsFile;
+	@Pattern(regexp = "([\\w -]+,)*([\\w -]+)")
 	private String preferredAuthentications;
 	private boolean ignoreLocalSshSettings;
 	private boolean strictHostKeyChecking = true;
