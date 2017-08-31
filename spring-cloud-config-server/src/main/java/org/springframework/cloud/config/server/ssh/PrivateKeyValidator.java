@@ -32,7 +32,7 @@ import static org.springframework.cloud.config.server.ssh.SshPropertyValidator.i
 import static org.springframework.util.StringUtils.hasText;
 
 /**
- * JSR-303 Cross Field validator that ensures that a {@link SshUriProperties} bean for the constraints:
+ * JSR-303 Cross Field validator that ensures that an {@link SshUriProperties} bean for the constraints:
  * - Private key is present and can be correctly parsed using {@link com.jcraft.jsch.KeyPair}
  *
  * Beans annotated with {@link PrivateKeyValidator} and {@link Validated} will have the constraints applied.
@@ -67,9 +67,9 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 
 	private boolean isPrivateKeyPresent(SshUri sshUriProperties, ConstraintValidatorContext context) {
 		if (!hasText(sshUriProperties.getPrivateKey())) {
-				context.buildConstraintViolationWithTemplate(
-						format("Property '%sprivateKey' must be set when '%signoreLocalSettings' is specified", GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
-						.addConstraintViolation();
+			context.buildConstraintViolationWithTemplate(
+					format("Property '%sprivateKey' must be set when '%signoreLocalSshSettings' is specified", GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
+					.addConstraintViolation();
 			return false;
 		}
 		return true;
@@ -81,7 +81,7 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 			return true;
 		} catch (JSchException e) {
 			context.buildConstraintViolationWithTemplate(
-					format("Property '%sprivateKey' contains is not a valid private key", GIT_PROPERTY_PREFIX))
+					format("Property '%sprivateKey' is not a valid private key", GIT_PROPERTY_PREFIX))
 					.addConstraintViolation();
 			return false;
 		}
