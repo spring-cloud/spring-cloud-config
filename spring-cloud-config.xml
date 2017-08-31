@@ -528,6 +528,14 @@ Example:</simpara>
 <entry align="left" valign="top"><simpara><emphasis role="strong">strictHostKeyChecking</emphasis></simpara></entry>
 <entry align="left" valign="top"><simpara><literal>true</literal> or <literal>false</literal>. If false, ignore errors with host key</simpara></entry>
 </row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">knownHostsFile</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Location of custom .known_hosts file</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">preferredAuthentications</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Override server authentication method order. This should allow evade login prompts if server has keyboard-interactive authentication before <literal>publickey</literal> method.</simpara></entry>
+</row>
 </tbody>
 </tgroup>
 </table>
