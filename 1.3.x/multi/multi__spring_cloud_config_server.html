@@ -1,0 +1,562 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>2.&nbsp;Spring Cloud Config Server</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="multi_spring-cloud-config.html" title="Spring Cloud Config"><link rel="up" href="multi_spring-cloud-config.html" title="Spring Cloud Config"><link rel="prev" href="multi__quick_start.html" title="1.&nbsp;Quick Start"><link rel="next" href="multi__serving_alternative_formats.html" title="3.&nbsp;Serving Alternative Formats"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.&nbsp;Spring Cloud Config Server</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="multi__quick_start.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="multi__serving_alternative_formats.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_spring_cloud_config_server" href="#_spring_cloud_config_server"></a>2.&nbsp;Spring Cloud Config Server</h1></div></div></div><p>The Server provides an HTTP, resource-based API for external
+configuration (name-value pairs, or equivalent YAML content).  The
+server is easily embeddable in a Spring Boot application using the
+<code class="literal">@EnableConfigServer</code> annotation. So this app is a config server:</p><p><b>ConfigServer.java.&nbsp;</b>
+</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@SpringBootApplication</span></em>
+<em><span class="hl-annotation" style="color: gray">@EnableConfigServer</span></em>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> ConfigServer {
+  <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">static</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> main(String[] args) {
+    SpringApplication.run(ConfigServer.<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span>, args);
+  }
+}</pre><p>
+</p><p>Like all Spring Boot apps it runs on port 8080 by default, but you
+can switch it to the conventional port 8888 in various ways. The
+easiest, which also sets a default configuration repository,
+is by launching it with <code class="literal">spring.config.name=configserver</code> (there
+is a <code class="literal">configserver.yml</code> in the Config Server jar). Another is
+to use your own <code class="literal">application.properties</code>, e.g.</p><p><b>application.properties.&nbsp;</b>
+</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">server.port</span>: 8888
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.cloud.config.server.git.uri</span>: file://${user.home}/config-repo</pre><p>
+</p><p>where <code class="literal">${user.home}/config-repo</code> is a git repository containing
+YAML and properties files.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>in Windows you need an extra "/" in the file URL if it is
+absolute with a drive prefix, e.g. <code class="literal"><a class="link" href="file:///${user.home}/config-repo" target="_top">file:///${user.home}/config-repo</a></code>.</p></td></tr></table></div><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>Here&#8217;s a recipe for creating the git repository in the example
+above:</p><pre class="screen">$ cd $HOME
+$ mkdir config-repo
+$ cd config-repo
+$ git init .
+$ echo info.foo: bar &gt; application.properties
+$ git add -A .
+$ git commit -m "Add application.properties"</pre></td></tr></table></div><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Warning"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Warning]" src="images/warning.png"></td><th align="left">Warning</th></tr><tr><td align="left" valign="top"><p>using the local filesystem for your git repository is
+intended for testing only. Use a server to host your
+configuration repositories in production.</p></td></tr></table></div><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Warning"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Warning]" src="images/warning.png"></td><th align="left">Warning</th></tr><tr><td align="left" valign="top"><p>the initial clone of your configuration repository will
+be quick and efficient if you only keep text files in it. If you start
+to store binary files, especially large ones, you may experience
+delays on the first request for configuration and/or out of memory
+errors in the server.</p></td></tr></table></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_environment_repository" href="#_environment_repository"></a>2.1&nbsp;Environment Repository</h2></div></div></div><p>Where do you want to store the configuration data for the Config
+Server? The strategy that governs this behaviour is the
+<code class="literal">EnvironmentRepository</code>, serving <code class="literal">Environment</code> objects. This
+<code class="literal">Environment</code> is a shallow copy of the domain from the Spring
+<code class="literal">Environment</code> (including <code class="literal">propertySources</code> as the main feature). The
+<code class="literal">Environment</code> resources are parametrized by three variables:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><code class="literal">{application}</code> maps to "spring.application.name" on the client side;</li><li class="listitem"><code class="literal">{profile}</code> maps to "spring.profiles.active" on the client (comma separated list); and</li><li class="listitem"><code class="literal">{label}</code> which is a server side feature labelling a "versioned" set of config files.</li></ul></div><p>Repository implementations generally behave just like a Spring Boot
+application loading configuration files from a "spring.config.name"
+equal to the <code class="literal">{application}</code> parameter, and "spring.profiles.active"
+equal to the <code class="literal">{profiles}</code> parameter. Precedence rules for profiles are
+also the same as in a regular Boot application: active profiles take
+precedence over defaults, and if there are multiple profiles the last
+one wins (like adding entries to a <code class="literal">Map</code>).</p><p>Example: a client application has this bootstrap configuration:</p><p><b>bootstrap.yml.&nbsp;</b>
+</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  application</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    name</span>: foo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  profiles</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    active</span>: dev,mysql</pre><p>
+</p><p>(as usual with a Spring Boot application, these properties could also
+be set as environment variables or command line arguments).</p><p>If the repository is file-based, the server will create an
+<code class="literal">Environment</code> from <code class="literal">application.yml</code> (shared between all clients), and
+<code class="literal">foo.yml</code> (with <code class="literal">foo.yml</code> taking precedence). If the YAML files have
+documents inside them that point to Spring profiles, those are applied
+with higher precedence (in order of the profiles listed), and if
+there are profile-specific YAML (or properties) files these are also
+applied with higher precedence than the defaults. Higher precedence
+translates to a <code class="literal">PropertySource</code> listed earlier in the
+<code class="literal">Environment</code>. (These are the same rules as apply in a standalone
+Spring Boot application.)</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_git_backend" href="#_git_backend"></a>2.1.1&nbsp;Git Backend</h3></div></div></div><p>The default implementation of <code class="literal">EnvironmentRepository</code> uses a Git
+backend, which is very convenient for managing upgrades and physical
+environments, and also for auditing changes. To change the location of
+the repository you can set the "spring.cloud.config.server.git.uri"
+configuration property in the Config Server (e.g. in
+<code class="literal">application.yml</code>). If you set it with a <code class="literal">file:</code> prefix it should work
+from a local repository so you can get started quickly and easily
+without a server, but in that case the server operates directly on the
+local repository without cloning it (it doesn&#8217;t matter if it&#8217;s not
+bare because the Config Server never makes changes to the "remote"
+repository). To scale the Config Server up and make it highly
+available, you would need to have all instances of the server pointing
+to the same repository, so only a shared file system would work. Even
+in that case it is better to use the <code class="literal">ssh:</code> protocol for a shared
+filesystem repository, so that the server can clone it and use a local
+working copy as a cache.</p><p>This repository implementation maps the <code class="literal">{label}</code> parameter of the
+HTTP resource to a git label (commit id, branch name or tag). If the
+git branch or tag name contains a slash ("/") then the label in the
+HTTP URL should be specified with the special string "(_)" instead (to
+avoid ambiguity with other URL paths).  For example, if the label is
+<code class="literal">foo/bar</code>, replacing the slash would result in a label that looks like
+<code class="literal">foo(_)bar</code>.  Be careful with the brackets in
+the URL if you are using a command line client like curl (e.g. escape
+them from the shell with quotes '').</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_placeholders_in_git_uri" href="#_placeholders_in_git_uri"></a>Placeholders in Git URI</h4></div></div></div><p>Spring Cloud Config Server supports a git repository URL with
+placeholders for the <code class="literal">{application}</code> and <code class="literal">{profile}</code> (and <code class="literal">{label}</code> if
+you need it, but remember that the label is applied as a git label
+anyway). So you can easily support a "one repo per application" policy
+using (for example):</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/myorg/{application<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">}</span></pre><p>or a "one repo per profile" policy using a similar pattern but with
+<code class="literal">{profile}</code>.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_pattern_matching_and_multiple_repositories" href="#_pattern_matching_and_multiple_repositories"></a>Pattern Matching and Multiple Repositories</h4></div></div></div><p>There is also support for more complex requirements with pattern
+matching on the application and profile name. The pattern format is a
+comma-separated list of <code class="literal">{application}/{profile}</code> names with wildcards
+(where a pattern beginning with a wildcard may need to be
+quoted). Example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/spring-cloud-samples/config-repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          repos</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            simple</span>: https://github.com/simple/config-repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            special</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              pattern</span>: special*/dev*,*special*/dev*
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              uri</span>: https://github.com/special/config-repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            local</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              pattern</span>: local*
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              uri</span>: file:/home/configsvc/config-repo</pre><p>If <code class="literal">{application}/{profile}</code> does not match any of the patterns, it
+will use the default uri defined under
+"spring.cloud.config.server.git.uri". In the above example, for the
+"simple" repository, the pattern is <code class="literal">simple/*</code> (i.e. it only matches
+one application named "simple" in all profiles). The "local"
+repository matches all application names beginning with "local" in all
+profiles (the <code class="literal">/*</code> suffix is added automatically to any pattern that
+doesn&#8217;t have a profile matcher).</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>the "one-liner" short cut used in the "simple" example above can
+only be used if the only property to be set is the URI. If you need to
+set anything else (credentials, pattern, etc.) you need to use the full
+form.</p></td></tr></table></div><p>The <code class="literal">pattern</code> property in the repo is actually an array, so you can
+use a YAML array (or <code class="literal">[0]</code>, <code class="literal">[1]</code>, etc. suffixes in properties files)
+to bind to multiple patterns. You may need to do this if you are going
+to run apps with multiple profiles. Example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/spring-cloud-samples/config-repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          repos</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            development</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              pattern</span>:
+                - <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">'*/development'</span>
+                - <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">'*/staging'</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              uri</span>: https://github.com/development/config-repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            staging</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              pattern</span>:
+                - <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">'*/qa'</span>
+                - <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">'*/production'</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              uri</span>: https://github.com/staging/config-repo</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Spring Cloud will guess that a pattern containing a profile that
+doesn&#8217;t end in <code class="literal">*</code> implies that you actually want to match a list of
+profiles starting with this pattern (so <code class="literal">*/staging</code> is a shortcut for
+<code class="literal">["*/staging", "*/staging,*"]</code>). This is common where you need to run
+apps in the "development" profile locally but also the "cloud" profile
+remotely, for instance.</p></td></tr></table></div><p>Every repository can also optionally store config files in
+sub-directories, and patterns to search for those directories can be
+specified as <code class="literal">searchPaths</code>. For example at the top level:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/spring-cloud-samples/config-repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          searchPaths</span>: foo,bar*</pre><p>In this example the server searches for config files in the top level
+and in the "foo/" sub-directory and also any sub-directory whose name
+begins with "bar".</p><p>By default the server clones remote repositories when configuration
+is first requested. The server can be configured to clone the repositories
+at startup. For example at the top level:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://git/common/config-repo.git
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          repos</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            team-a</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                pattern</span>: team-a-*
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                cloneOnStart</span>: <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">true</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                uri</span>: http://git/team-a/config-repo.git
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            team-b</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                pattern</span>: team-b-*
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                cloneOnStart</span>: <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">false</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                uri</span>: http://git/team-b/config-repo.git
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            team-c</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                pattern</span>: team-c-*
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                uri</span>: http://git/team-a/config-repo.git</pre><p>In this example the server clones team-a&#8217;s config-repo on startup before it
+accepts any requests. All other repositories will not be cloned until
+configuration from the repository is requested.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Setting a repository to be cloned when the Config Server starts up can
+help to identify a misconfigured configuration source (e.g., an invalid
+repository URI) quickly, while the Config Server is starting up. With
+<code class="literal">cloneOnStart</code> not enabled for a configuration source, the Config Server may
+start successfully with a misconfigured or invalid configuration source and
+not detect an error until an application requests configuration from that
+configuration source.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_authentication" href="#_authentication"></a>Authentication</h4></div></div></div><p>To use HTTP basic authentication on the remote repository add the
+"username" and "password" properties separately (not in the URL),
+e.g.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/spring-cloud-samples/config-repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          username</span>: trolley
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          password</span>: strongpassword</pre><p>If you don&#8217;t use HTTPS and user credentials, SSH should also work out
+of the box when you store keys in the default directories (<code class="literal">~/.ssh</code>)
+and the uri points to an SSH location,
+e.g. "<a class="link" href="mailto:git@github.com" target="_top">git@github.com</a>:configuration/cloud-configuration". It is important that an entry for the Git server be present in the <code class="literal">~/.ssh/known_hosts</code> file and that it is in <code class="literal">ssh-rsa</code> format. Other formats (like <code class="literal">ecdsa-sha2-nistp256</code>) are not supported. To avoid surprises, you should ensure that only one entry is present in the <code class="literal">known_hosts</code> file for the Git server and that it is matching with the URL you provided to the config server. If you used a hostname in the URL, you want to have exactly that in the <code class="literal">known_hosts</code> file, not the IP.
+The repository is accessed using JGit, so any documentation you find on
+that should be applicable. HTTPS proxy settings can be set in
+<code class="literal">~/.git/config</code> or in the same way as for any other JVM process via
+system properties (<code class="literal">-Dhttps.proxyHost</code> and <code class="literal">-Dhttps.proxyPort</code>).</p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>If you don&#8217;t know where your <code class="literal">~/.git</code> directory is use <code class="literal">git config
+--global</code> to manipulate the settings (e.g. <code class="literal">git config --global
+http.sslVerify false</code>).</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_authentication_with_aws_codecommit" href="#_authentication_with_aws_codecommit"></a>Authentication with AWS CodeCommit</h4></div></div></div><p><a class="link" href="http://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html" target="_top">AWS CodeCommit</a> authentication can also be
+done. AWS CodeCommit uses an authentication helper when using Git from the command line. This helper is not
+used with the JGit library, so a JGit CredentialProvider for AWS CodeCommit will be created if the Git
+URI matches the AWS CodeCommit pattern. AWS CodeCommit URIs always look like
+<a class="link" href="https://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}" target="_top">https://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}</a>.</p><p>If you provide a username and password with an AWS CodeCommit URI, then these must be
+the <a class="link" href="http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html" target="_top">AWS accessKeyId and secretAccessKey</a>
+to be used to access the repository. If you do not specify a username and password,
+then the accessKeyId and secretAccessKey will be retrieved using the
+<a class="link" href="http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html" target="_top">AWS Default Credential Provider Chain</a>.</p><p>If your Git URI matches the CodeCommit URI pattern (above) then you must provide
+valid AWS credentials in the username and password, or in one of the locations supported
+by the default credential provider chain. AWS EC2 instances may use
+<a class="link" href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html" target="_top">IAM Roles for EC2 Instances</a>.</p><p>Note: The aws-java-sdk-core jar is an optional dependency. If the aws-java-sdk-core jar is not on your
+classpath, then the AWS Code Commit credential provider will not be created regardless of the git server URI.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_git_ssh_configuration_using_properties" href="#_git_ssh_configuration_using_properties"></a>Git SSH configuration using properties</h4></div></div></div><p>By default, the JGit library used by Spring Cloud Config Server uses SSH configuration files such as <code class="literal">~/.ssh/known_hosts</code> and <code class="literal">/etc/ssh/ssh_config</code> when connecting to Git repositories using an SSH URI.
+In cloud environments such as Cloud Foundry, the local filesystem may be ephemeral or not easily accessible. For cases such as these, SSH configuration can be set using
+Java properties. In order to activate property based SSH configuration, the property <code class="literal">spring.cloud.config.server.git.ignoreLocalSshSettings</code> must be set to <code class="literal">true</code>.
+Example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            uri</span>: git<em><span class="hl-annotation" style="color: gray">@gitserver.com:team/repo1.git</span></em>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            ignoreLocalSshSettings</span>: <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">true</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            hostKey</span>: someHostKey
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            hostKeyAlgorithm</span>: ssh-rsa
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            privateKey</span>: |
+                         -----BEGIN RSA PRIVATE KEY-----
+                         MIIEpgIBAAKCAQEAx4UbaDzY5xjW6hc9jwN0mX33XpTDVW9WqHp5AKaRbtAC3DqX
+                         IXFMPgw3K45jxRb93f8tv9vL3rD9CUG1Gv4FM+o7ds7FRES5RTjv2RT/JVNJCoqF
+                         ol8+ngLqRZCyBtQN7zYByWMRirPGoDUqdPYrj2yq+ObBBNhg5N+hOwKjjpzdj2Ud
+                         <span class="hl-number">1l</span>7R+wxIqmJo1IYyy16xS8WsjyQuyC0lL456qkd5BDZ0Ag8j2X9H9D5220Ln7s9i
+                         oezTipXipS7p7Jekf3Ywx6abJwOmB0rX79dV4qiNcGgzATnG1PkXxqt76VhcGa0W
+                         DDVHEEYGbSQ6hIGSh0I7BQun0aLRZojfE3gqHQIDAQABAoIBAQCZmGrk8BK6tXCd
+                         fY6yTiKxFzwb38IQP0ojIUWNrq0+<span class="hl-number">9</span>Xt+NsypviLHkXfXXCKKU4zUHeIGVRq5MN9b
+                         BO56/RrcQHHOoJdUWuOV2qMqJvPUtC0CpGkD+valhfD75MxoXU7s3FK7yjxy3rsG
+                         EmfA6tHV8/<span class="hl-number">4</span>a5umo5TqSd2YTm5B19AhRqiuUVI1wTB41DjULUGiMYrnYrhzQlVvj
+                         <span class="hl-number">5</span>MjnKTlYu3V8PoYDfv1GmxPPh6vlpafXEeEYN8VB97e5x3DGHjZ5UrurAmTLTdO8
+                         +AahyoKsIY612TkkQthJlt7FJAwnCGMgY6podzzvzICLFmmTXYiZ/<span class="hl-number">28</span>I4BX/mOSe
+                         pZVnfRixAoGBAO6Uiwt40/PKs53mCEWngslSCsh9oGAaLTf/XdvMns5VmuyyAyKG
+                         ti8Ol5wqBMi4GIUzjbgUvSUt+IowIrG3f5tN85wpjQ1UGVcpTnl5Qo9xaS1PFScQ
+                         xrtWZ9eNj2TsIAMp/svJsyGG3OibxfnuAIpSXNQiJPwRlW3irzpGgVx/AoGBANYW
+                         dnhshUcEHMJi3aXwR12OTDnaLoanVGLwLnkqLSYUZA7ZegpKq90UAuBdcEfgdpyi
+                         PhKpeaeIiAaNnFo8m9aoTKr+<span class="hl-number">7</span>I6/uMTlwrVnfrsVTZv3orxjwQV20YIBCVRKD1uX
+                         VhE0ozPZxwwKSPAFocpyWpGHGreGF1AIYBE9UBtjAoGBAI8bfPgJpyFyMiGBjO6z
+                         FwlJc/xlFqDusrcHL7abW5qq0L4v3R+FrJw3ZYufzLTVcKfdj6GelwJJO+<span class="hl-number">8</span>wBm+R
+                         gTKYJItEhT48duLIfTDyIpHGVm9+I1MGhh5zKuCqIhxIYr9jHloBB7kRm0rPvYY4
+                         VAykcNgyDvtAVODP+<span class="hl-number">4</span>m6JvhjAoGBALbtTqErKN47V0+JJpapLnF0KxGrqeGIjIRV
+                         cYA6V4WYGr7NeIfesecfOC356PyhgPfpcVyEztwlvwTKb3RzIT1TZN8fH4YBr6Ee
+                         KTbTjefRFhVUjQqnucAvfGi29f+<span class="hl-number">9</span>oE3Ei9f7wA+H35ocF6JvTYUsHNMIO/<span class="hl-number">3</span>gZ38N
+                         CPjyCMa9AoGBAMhsITNe3QcbsXAbdUR00dDsIFVROzyFJ2m40i4KCRM35bC/BIBs
+                         q0TY3we+ERB40U8Z2BvU61QuwaunJ2+uGadHo58VSVdggqAo0BSkH58innKKt96J
+                         <span class="hl-number">69</span>pcVH/<span class="hl-number">4</span>rmLbXdcmNYGm6iu+MlPQk4BUZknHSmVHIFdJ0EPupVaQ8RHT
+                         -----END RSA PRIVATE KEY-----</pre><div class="table"><a name="d0e462" href="#d0e462"></a><p class="title"><b>Table&nbsp;2.1.&nbsp;SSH Configuration properties</b></p><div class="table-contents"><table summary="SSH Configuration properties" style="border-collapse: collapse;border-top: 0.5pt solid ; border-bottom: 0.5pt solid ; border-left: 0.5pt solid ; border-right: 0.5pt solid ; "><colgroup><col class="col_1"><col class="col_2"></colgroup><thead><tr><th style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top">Property Name</th><th style="border-bottom: 0.5pt solid ; " align="left" valign="top">Remarks</th></tr></thead><tbody><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top"><p><span class="strong"><strong>ignoreLocalSshSettings</strong></span></p></td><td style="border-bottom: 0.5pt solid ; " align="left" valign="top"><p>If true, use property based SSH config instead of file based. Must be set at as <code class="literal">spring.cloud.config.server.git.ignoreLocalSshSettings</code>, <span class="strong"><strong>not</strong></span> inside a repository definition.</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top"><p><span class="strong"><strong>privateKey</strong></span></p></td><td style="border-bottom: 0.5pt solid ; " align="left" valign="top"><p>Valid SSH private key. Must be set if <code class="literal">ignoreLocalSshSettings</code> is true and Git URI is SSH format</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top"><p><span class="strong"><strong>hostKey</strong></span></p></td><td style="border-bottom: 0.5pt solid ; " align="left" valign="top"><p>Valid SSH host key. Must be set if <code class="literal">hostKeyAlgorithm</code> is also set</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top"><p><span class="strong"><strong>hostKeyAlgorithm</strong></span></p></td><td style="border-bottom: 0.5pt solid ; " align="left" valign="top"><p>One of <code class="literal">ssh-dss, ssh-rsa, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384 ,ecdsa-sha2-nistp521</code>. Must be set if <code class="literal">hostKey</code> is also set</p></td></tr><tr><td style="border-right: 0.5pt solid ; " align="left" valign="top"><p><span class="strong"><strong>strictHostKeyChecking</strong></span></p></td><td style="" align="left" valign="top"><p><code class="literal">true</code> or <code class="literal">false</code>. If false, ignore errors with host key</p></td></tr></tbody></table></div></div><br class="table-break"></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_placeholders_in_git_search_paths" href="#_placeholders_in_git_search_paths"></a>Placeholders in Git Search Paths</h4></div></div></div><p>Spring Cloud Config Server also supports a search path with
+placeholders for the <code class="literal">{application}</code> and <code class="literal">{profile}</code> (and <code class="literal">{label}</code> if
+you need it). Example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/spring-cloud-samples/config-repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          searchPaths</span>: <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">'{application}'</span></pre><p>searches the repository for files in the same name as the directory
+(as well as the top level). Wildcards are also valid in a search
+path with placeholders (any matching directory is included in the
+search).</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_force_pull_in_git_repositories" href="#_force_pull_in_git_repositories"></a>Force pull in Git Repositories</h4></div></div></div><p>As mentioned before Spring Cloud Config Server makes a clone of the
+remote git repository and if somehow the local copy gets dirty (e.g.
+folder content changes by OS process) so Spring Cloud Config Server
+cannot update the local copy from remote repository.</p><p>To solve this there is a <code class="literal">force-pull</code> property that will make Spring Cloud
+Config Server force pull from remote repository if the local copy is dirty.
+Example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/spring-cloud-samples/config-repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          force-pull</span>: <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">true</span></pre><p>If you have a multiple repositories configuration you can configure the
+<code class="literal">force-pull</code> property per repository. Example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://git/common/config-repo.git
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          force-pull</span>: <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">true</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          repos</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            team-a</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                pattern</span>: team-a-*
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                uri</span>: http://git/team-a/config-repo.git
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                force-pull</span>: <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">true</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            team-b</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                pattern</span>: team-b-*
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                uri</span>: http://git/team-b/config-repo.git
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                force-pull</span>: <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">true</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            team-c</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                pattern</span>: team-c-*
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">                uri</span>: http://git/team-a/config-repo.git</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>The default value for <code class="literal">force-pull</code> property is <code class="literal">false</code>.</p></td></tr></table></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_version_control_backend_filesystem_use" href="#_version_control_backend_filesystem_use"></a>2.1.2&nbsp;Version Control Backend Filesystem Use</h3></div></div></div><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Warning"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Warning]" src="images/warning.png"></td><th align="left">Warning</th></tr><tr><td align="left" valign="top"><p>With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of <code class="literal">config-repo-</code>. On linux, for example it could be <code class="literal">/tmp/config-repo-&lt;randomid&gt;</code>. Some operating systems <a class="link" href="http://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349" target="_top">routinely clean out</a> temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting <code class="literal">spring.cloud.config.server.git.basedir</code> or <code class="literal">spring.cloud.config.server.svn.basedir</code> to a directory that does not reside in the system temp structure.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_file_system_backend" href="#_file_system_backend"></a>2.1.3&nbsp;File System Backend</h3></div></div></div><p>There is also a "native" profile in the Config Server that doesn&#8217;t use
+Git, but just loads the config files from the local classpath or file
+system (any static URL you want to point to with
+"spring.cloud.config.server.native.searchLocations"). To use the
+native profile just launch the Config Server with
+"spring.profiles.active=native".</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Remember to use the <code class="literal">file:</code> prefix for file resources (the
+default without a prefix is usually the classpath). Just as with any
+Spring Boot configuration you can embed <code class="literal">${}</code>-style environment
+placeholders, but remember that absolute paths in Windows require an
+extra "/", e.g. <code class="literal"><a class="link" href="file:///${user.home}/config-repo" target="_top">file:///${user.home}/config-repo</a></code></p></td></tr></table></div><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Warning"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Warning]" src="images/warning.png"></td><th align="left">Warning</th></tr><tr><td align="left" valign="top"><p>The default value of the <code class="literal">searchLocations</code> is identical to a
+local Spring Boot application (so <code class="literal">[classpath:/, classpath:/config,
+file:./, file:./config]</code>). This does not expose the
+<code class="literal">application.properties</code> from the server to all clients because any
+property sources present in the server are removed before being sent
+to the client.</p></td></tr></table></div><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>A filesystem backend is great for getting started quickly and
+for testing. To use it in production you need to be sure that the
+file system is reliable, and shared across all instances of the
+Config Server.</p></td></tr></table></div><p>The search locations can contain placeholders for <code class="literal">{application}</code>,
+<code class="literal">{profile}</code> and <code class="literal">{label}</code>. In this way you can segregate the
+directories in the path, and choose a strategy that makes sense for
+you (e.g. sub-directory per application, or sub-directory per
+profile).</p><p>If you don&#8217;t use placeholders in the search locations, this repository
+also appends the <code class="literal">{label}</code> parameter of the HTTP resource to a suffix
+on the search path, so properties files are loaded from each search
+location <span class="strong"><strong>and</strong></span> a subdirectory with the same name as the label (the
+labelled properties take precedence in the Spring Environment). Thus
+the default behaviour with no placeholders is the same as adding a
+search location ending with <code class="literal">/{label}/</code>. For example <code class="literal">file:/tmp/config</code>
+is the same as <code class="literal">file:/tmp/config,file:/tmp/config/{label}</code>. This behavior can be
+disabled by setting <code class="literal">spring.cloud.config.server.native.addLabelLocations=false</code>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_vault_backend" href="#_vault_backend"></a>2.1.4&nbsp;Vault Backend</h3></div></div></div><p>Spring Cloud Config Server also supports <a class="link" href="https://www.vaultproject.io" target="_top">Vault</a> as a backend.</p><div class="sidebar"><div class="titlepage"></div><p>Vault is a tool for securely accessing secrets. A secret is anything
+that you want to tightly control access to, such as API keys, passwords,
+certificates, and more. Vault provides a unified interface to any secret,
+while providing tight access control and recording a detailed audit log.</p></div><p>For more information on Vault see the <a class="link" href="https://www.vaultproject.io/intro/index.html" target="_top">Vault quickstart guide</a>.</p><p>To enable the config server to use a Vault backend you must run your config server
+with the <code class="literal">vault</code> profile.  For example in your config server&#8217;s <code class="literal">application.properties</code>
+you can add <code class="literal">spring.profiles.active=vault</code>.</p><p>By default the config server will assume your Vault server is running at
+<code class="literal"><a class="link" href="http://127.0.0.1:8200" target="_top">http://127.0.0.1:8200</a></code>.  It also will assume that the name of backend
+is <code class="literal">secret</code> and the key is <code class="literal">application</code>.  All of these defaults can be
+configured in your config server&#8217;s <code class="literal">application.properties</code>.  Below is a
+table of configurable Vault properties.  All properties are prefixed with
+<code class="literal">spring.cloud.config.server.vault</code>.</p><div class="informaltable"><table style="border-collapse: collapse;border-top: 0.5pt solid ; border-bottom: 0.5pt solid ; border-left: 0.5pt solid ; border-right: 0.5pt solid ; "><colgroup><col class="col_1"><col class="col_2"></colgroup><thead><tr><th style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top">Name</th><th style="border-bottom: 0.5pt solid ; " align="left" valign="top">Default Value</th></tr></thead><tbody><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top"><p>host</p></td><td style="border-bottom: 0.5pt solid ; " align="left" valign="top"><p>127.0.0.1</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top"><p>port</p></td><td style="border-bottom: 0.5pt solid ; " align="left" valign="top"><p>8200</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top"><p>scheme</p></td><td style="border-bottom: 0.5pt solid ; " align="left" valign="top"><p>http</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top"><p>backend</p></td><td style="border-bottom: 0.5pt solid ; " align="left" valign="top"><p>secret</p></td></tr><tr><td style="border-right: 0.5pt solid ; border-bottom: 0.5pt solid ; " align="left" valign="top"><p>defaultKey</p></td><td style="border-bottom: 0.5pt solid ; " align="left" valign="top"><p>application</p></td></tr><tr><td style="border-right: 0.5pt solid ; " align="left" valign="top"><p>profileSeparator</p></td><td style="" align="left" valign="top"><p>,</p></td></tr></tbody></table></div><p>All configurable properties can be found in
+<code class="literal">org.springframework.cloud.config.server.environment.VaultEnvironmentRepository</code>.</p><p>With your config server running you can make HTTP requests to the server to retrieve
+values from the Vault backend.  To do this you will need a token for your Vault server.</p><p>First place some data in you Vault.  For example</p><pre class="programlisting">$ vault write secret/application foo=bar baz=bam
+$ vault write secret/myapp foo=myappsbar</pre><p>Now make the HTTP request to your config server to retrieve the values.</p><p><code class="literal">$ curl -X "GET" "http://localhost:8888/myapp/default" -H "X-Config-Token: yourtoken"</code></p><p>You should see a response similar to this after making the above request.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">{</span>
+   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"name"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"myapp"</span><span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">,</span>
+   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"profiles"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">[</span>
+      <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"default"</span>
+   ]<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">,</span>
+   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"label"</span>:null<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">,</span>
+   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"version"</span>:null<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">,</span>
+   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"state"</span>:null<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">,</span>
+   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"propertySources"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">[</span>
+      <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">{</span>
+         <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"name"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"vault:myapp"</span><span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">,</span>
+         <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"source"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">{</span>
+            <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"foo"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"myappsbar"</span>
+         <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">}</span>
+      <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">},</span>
+      <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">{</span>
+         <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"name"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"vault:application"</span><span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">,</span>
+         <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"source"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">{</span>
+            <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"baz"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"bam"</span><span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">,</span>
+            <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"foo"</span>:<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"bar"</span>
+         <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">}</span>
+      <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">}</span>
+   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">]</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">}</span></pre><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_multiple_properties_sources" href="#_multiple_properties_sources"></a>Multiple Properties Sources</h4></div></div></div><p>When using Vault you can provide your applications with multiple properties sources.
+For example, assume you have written data to the following paths in Vault.</p><pre class="programlisting">secret/myApp,dev
+secret/myApp
+secret/application,dev
+secret/application</pre><p>Properties written to <code class="literal">secret/application</code> are available to
+<a class="link" href="multi__spring_cloud_config_server.html#_vault_server" title="Vault Server">all applications using the Config Server</a>.  An
+application with the name <code class="literal">myApp</code> would have any properties
+written to <code class="literal">secret/myApp</code> and <code class="literal">secret/application</code> available to it.
+When <code class="literal">myApp</code> has the <code class="literal">dev</code> profile enabled then properties written to
+all of the above paths would be available to it, with properties in
+the first path in the list taking priority over the others.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_sharing_configuration_with_all_applications" href="#_sharing_configuration_with_all_applications"></a>2.1.5&nbsp;Sharing Configuration With All Applications</h3></div></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_file_based_repositories" href="#_file_based_repositories"></a>File Based Repositories</h4></div></div></div><p>With file-based (i.e. git, svn and native) repositories, resources
+with file names in <code class="literal">application*</code> are shared between all client
+applications (so <code class="literal">application.properties</code>, <code class="literal">application.yml</code>,
+<code class="literal">application-*.properties</code> etc.). You can use resources with these
+file names to configure global defaults and have them overridden by
+application-specific files as necessary.</p><p>The #_property_overrides[property overrides] feature can also be used
+for setting global defaults, and with placeholders applications are
+allowed to override them locally.</p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>With the "native" profile (local file system backend) it is
+recommended that you use an explicit search location that isn&#8217;t part
+of the server&#8217;s own configuration. Otherwise the <code class="literal">application*</code>
+resources in the default search locations are removed because they are
+part of the server.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_vault_server" href="#_vault_server"></a>Vault Server</h4></div></div></div><p>When using Vault as a backend you can share configuration with
+all applications by placing configuration in
+<code class="literal">secret/application</code>.  For example, if you run this Vault command</p><pre class="programlisting">$ vault write secret/application foo=bar baz=bam</pre><p>All applications using the config server will have the properties
+<code class="literal">foo</code> and <code class="literal">baz</code> available to them.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_composite_environment_repositories" href="#_composite_environment_repositories"></a>2.1.6&nbsp;Composite Environment Repositories</h3></div></div></div><p>In some scenarios you may wish to pull configuration data from multiple
+environment repositories.  To do this just enable
+multiple profiles in your config server&#8217;s application properties or YAML file.
+If, for example, you want to pull configuration data from a Git repository
+as well as a SVN repository you would set the following properties for your
+configuration server.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  profiles</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    active</span>: git<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">,</span> svn
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        svn</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: file:///path/to/svn/repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          order</span>: <span class="hl-number">2</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: file:///path/to/git/repo
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          order</span>: <span class="hl-number">1</span></pre><p>In addition to each repo specifying a URI, you can also specify an <code class="literal">order</code> property.
+The <code class="literal">order</code> property allows you to specify the priority order for all your repositories.
+The lower the numerical value of the <code class="literal">order</code> property the higher priority it will have.
+The priority order of a repository will help resolve any potential conflicts between
+repositories that contain values for the same properties.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>Any type of failure when retrieving values from an environment repositoy
+will result in a failure for the entire composite environment.</p></td></tr></table></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>When using a composite environment it is important that all repos contain
+the same label(s).  If you have an environment similar to the one above and you request
+configuration data with the label <code class="literal">master</code> but the SVN
+repo does not contain a branch called <code class="literal">master</code> the entire request will fail.</p></td></tr></table></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_custom_composite_environment_repositories" href="#_custom_composite_environment_repositories"></a>Custom Composite Environment Repositories</h4></div></div></div><p>It is also possible to provide your own <code class="literal">EnvironmentRepository</code> bean
+to be included as part of a composite environment in addition to
+using one of the environment repositories from Spring Cloud.  To do this your bean
+must implement the <code class="literal">EnvironmentRepository</code> interface.  If you would like to control
+the priority of you custom <code class="literal">EnvironmentRepository</code> within the composite
+environment you should also implement the <code class="literal">Ordered</code> interface and override the
+<code class="literal">getOrdered</code> method.  If you do not implement the <code class="literal">Ordered</code> interface then your
+<code class="literal">EnvironmentRepository</code> will be given the lowest priority.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_property_overrides" href="#_property_overrides"></a>2.1.7&nbsp;Property Overrides</h3></div></div></div><p>The Config Server has an "overrides" feature that allows the operator
+to provide configuration properties to all applications that cannot be
+accidentally changed by the application using the normal Spring Boot
+hooks. To declare overrides just add a map of name-value pairs to
+<code class="literal">spring.cloud.config.server.overrides</code>. For example</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        overrides</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          foo</span>: bar</pre><p>will cause all applications that are config clients to read <code class="literal">foo=bar</code>
+independent of their own configuration. (Of course an application can
+use the data in the Config Server in any way it likes, so overrides
+are not enforceable, but they do provide useful default behaviour if
+they are Spring Cloud Config clients.)</p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>Normal, Spring environment placeholders with "${}" can be escaped
+(and resolved on the client) by using backslash ("\") to escape the
+"$" or the "{", e.g. <code class="literal">\${app.foo:bar}</code> resolves to "bar" unless the
+app provides its own "app.foo". Note that in YAML you don&#8217;t need to
+escape the backslash itself, but in properties files you do, when you
+configure the overrides on the server.</p></td></tr></table></div><p>You can change the priority of all overrides in the client to be more
+like default values, allowing applications to supply their own values
+in environment variables or System properties, by setting the flag
+<code class="literal">spring.cloud.config.overrideNone=true</code> (default is false) in the
+remote repository.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_health_indicator" href="#_health_indicator"></a>2.2&nbsp;Health Indicator</h2></div></div></div><p>Config Server comes with a Health Indicator that checks if the configured
+<code class="literal">EnvironmentRepository</code> is working.  By default it asks the <code class="literal">EnvironmentRepository</code>
+for an application named <code class="literal">app</code>, the <code class="literal">default</code> profile and the default
+label provided by the <code class="literal">EnvironmentRepository</code> implementation.</p><p>You can configure the Health Indicator to check more applications
+along with custom profiles and custom labels, e.g.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        health</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          repositories</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            myservice</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              label</span>: mylabel
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">            myservice-dev</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              name</span>: myservice
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">              profiles</span>: development</pre><p>You can disable the Health Indicator by setting <code class="literal">spring.cloud.config.server.health.enabled=false</code>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_security" href="#_security"></a>2.3&nbsp;Security</h2></div></div></div><p>You are free to secure your Config Server in any way that makes sense
+to you (from physical network security to OAuth2 bearer
+tokens), and Spring Security and Spring Boot make it easy to do pretty
+much anything.</p><p>To use the default Spring Boot configured HTTP Basic security, just
+include Spring Security on the classpath (e.g. through
+<code class="literal">spring-boot-starter-security</code>). The default is a username of "user"
+and a randomly generated password, which isn&#8217;t going to be very useful
+in practice, so we recommend you configure the password (via
+<code class="literal">security.user.password</code>) and encrypt it (see below for instructions
+on how to do that).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_encryption_and_decryption" href="#_encryption_and_decryption"></a>2.4&nbsp;Encryption and Decryption</h2></div></div></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p><span class="strong"><strong>Prerequisites:</strong></span> to use the encryption and decryption features
+you need the full-strength JCE installed in your JVM (it&#8217;s not there by default).
+You can download the "Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files"
+from Oracle, and follow instructions for installation (essentially replace the 2 policy files
+in the JRE lib/security directory with the ones that you downloaded).</p></td></tr></table></div><p>If the remote property sources contain encrypted content (values
+starting with <code class="literal">{cipher}</code>) they will be decrypted before sending to
+clients over HTTP. The main advantage of this set up is that the
+property values don&#8217;t have to be in plain text when they are "at rest"
+(e.g. in a git repository). If a value cannot be decrypted it is
+removed from the property source and an additional property is added
+with the same key, but prefixed with "invalid." and a value that means
+"not applicable" (usually "&lt;n/a&gt;"). This is largely to prevent cipher
+text being used as a password and accidentally leaking.</p><p>If you are setting up a remote config repository for config client
+applications it might contain an <code class="literal">application.yml</code> like this, for
+instance:</p><p><b>application.yml.&nbsp;</b>
+</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  datasource</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    username</span>: dbuser
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    password</span>: <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">'{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'</span></pre><p>
+</p><p>Encrypted values in a .properties file must not be wrapped in quotes, otherwise the value will not be decrypted:</p><p><b>application.properties.&nbsp;</b>
+</p><pre class="screen">spring.datasource.username: dbuser
+spring.datasource.password: {cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ</pre><p>
+</p><p>You can safely push this plain text to a shared git repository and the
+secret password is protected.</p><p>The server also exposes <code class="literal">/encrypt</code> and <code class="literal">/decrypt</code> endpoints (on the
+assumption that these will be secured and only accessed by authorized
+agents). If you are editing a remote config file you can use the Config Server
+to encrypt values by POSTing to the <code class="literal">/encrypt</code> endpoint, e.g.</p><pre class="screen">$ curl localhost:8888/encrypt -d mysecret
+682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>If the value you are encrypting has characters in it that need to be URL encoded you should use
+the <code class="literal">--data-urlencode</code> option to <code class="literal">curl</code> to make sure they are encoded properly.</p></td></tr></table></div><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>Be sure not to include any of the curl command statistics in the encrypted value.
+Outputting the value to a file can help avoid this problem.</p></td></tr></table></div><p>The inverse operation is also available via <code class="literal">/decrypt</code> (provided the server is
+configured with a symmetric key or a full key pair):</p><pre class="screen">$ curl localhost:8888/decrypt -d 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+mysecret</pre><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>If you are testing like this with curl, then use
+<code class="literal">--data-urlencode</code> (instead of <code class="literal">-d</code>) or set an explicit <code class="literal">Content-Type:
+text/plain</code> to make sure curl encodes the data correctly when there
+are special characters ('+' is particularly tricky).</p></td></tr></table></div><p>Take the encrypted value and add the <code class="literal">{cipher}</code> prefix before you put
+it in the YAML or properties file, and before you commit and push it
+to a remote, potentially insecure store.</p><p>The <code class="literal">/encrypt</code> and <code class="literal">/decrypt</code> endpoints also both accept paths of the
+form <code class="literal">/*/{name}/{profiles}</code> which can be used to control cryptography
+per application (name) and profile when clients call into the main
+Environment resource.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>to control the cryptography in this granular way you must also
+provide a <code class="literal">@Bean</code> of type <code class="literal">TextEncryptorLocator</code> that creates a
+different encryptor per name and profiles. The one that is provided
+by default does not do this (so all encryptions use the same key).</p></td></tr></table></div><p>The <code class="literal">spring</code> command line client (with Spring Cloud CLI extensions
+installed) can also be used to encrypt and decrypt, e.g.</p><pre class="screen">$ spring encrypt mysecret --key foo
+682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+$ spring decrypt --key foo 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+mysecret</pre><p>To use a key in a file (e.g. an RSA public key for encryption) prepend
+the key value with "@" and provide the file path, e.g.</p><pre class="screen">$ spring encrypt mysecret --key @${HOME}/.ssh/id_rsa.pub
+AQAjPgt3eFZQXwt8tsHAVv/QHiY5sI2dRcR+...</pre><p>The key argument is mandatory (despite having a <code class="literal">--</code> prefix).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_key_management" href="#_key_management"></a>2.5&nbsp;Key Management</h2></div></div></div><p>The Config Server can use a symmetric (shared) key or an asymmetric
+one (RSA key pair). The asymmetric choice is superior in terms of
+security, but it is often more convenient to use a symmetric key since
+it is just a single property value to configure.</p><p>To configure a symmetric key you just need to set <code class="literal">encrypt.key</code> to a
+secret String (or use an enviroment variable <code class="literal">ENCRYPT_KEY</code> to keep it
+out of plain text configuration files).</p><p>To configure an asymmetric key you can either set the key as a
+PEM-encoded text value (in <code class="literal">encrypt.key</code>), or via a keystore (e.g. as
+created by the <code class="literal">keytool</code> utility that comes with the JDK). The
+keystore properties are <code class="literal">encrypt.keyStore.*</code> with <code class="literal">*</code> equal to</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><code class="literal">location</code> (a <code class="literal">Resource</code> location),</li><li class="listitem"><code class="literal">password</code> (to unlock the keystore) and</li><li class="listitem"><code class="literal">alias</code> (to identify which key in the store is to be
+used).</li></ul></div><p>The encryption is done with the public key, and a private key is
+needed for decryption. Thus in principle you can configure only the
+public key in the server if you only want to do encryption (and are
+prepared to decrypt the values yourself locally with the private
+key). In practice you might not want to do that because it spreads the
+key management process around all the clients, instead of
+concentrating it in the server. On the other hand it&#8217;s a useful option
+if your config server really is relatively insecure and only a
+handful of clients need the encrypted properties.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_creating_a_key_store_for_testing" href="#_creating_a_key_store_for_testing"></a>2.6&nbsp;Creating a Key Store for Testing</h2></div></div></div><p>To create a keystore for testing you can do something like this:</p><pre class="screen">$ keytool -genkeypair -alias mytestkey -keyalg RSA \
+  -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" \
+  -keypass changeme -keystore server.jks -storepass letmein</pre><p>Put the <code class="literal">server.jks</code> file in the classpath (for instance) and then in
+your <code class="literal">application.yml</code> for the Config Server:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">encrypt</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  keyStore</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    location</span>: classpath:/server.jks
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    password</span>: letmein
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    alias</span>: mytestkey
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    secret</span>: changeme</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_using_multiple_keys_and_key_rotation" href="#_using_multiple_keys_and_key_rotation"></a>2.7&nbsp;Using Multiple Keys and Key Rotation</h2></div></div></div><p>In addition to the <code class="literal">{cipher}</code> prefix in encrypted property values, the
+Config Server looks for <code class="literal">{name:value}</code> prefixes (zero or many) before
+the start of the (Base64 encoded) cipher text. The keys are passed to
+a <code class="literal">TextEncryptorLocator</code> which can do whatever logic it needs to
+locate a <code class="literal">TextEncryptor</code> for the cipher. If you have configured a
+keystore (<code class="literal">encrypt.keystore.location</code>) the default locator will look
+for keys in the store with aliases as supplied by the "key" prefix,
+i.e. with a cipher text like this:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">foo</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  bar</span>: `{cipher}{key:testkey}...`</pre><p>the locator will look for a key named "testkey". A secret can also be
+supplied via a <code class="literal">{secret:&#8230;&#8203;}</code> value in the prefix, but if it is not
+the default is to use the keystore password (which is what you get
+when you build a keytore and don&#8217;t specify a secret). If you <span class="strong"><strong>do</strong></span>
+supply a secret it is recommended that you also encrypt the secrets
+using a custom <code class="literal">SecretLocator</code>.</p><p>Key rotation is hardly ever necessary on cryptographic grounds if the
+keys are only being used to encrypt a few bytes of configuration data
+(i.e. they are not being used elsewhere), but occasionally you might
+need to change the keys if there is a security breach for instance. In
+that case all the clients would need to change their source config
+files (e.g. in git) and use a new <code class="literal">{key:&#8230;&#8203;}</code> prefix in all the
+ciphers, checking beforehand of course that the key alias is available
+in the Config Server keystore.</p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>the <code class="literal">{name:value}</code> prefixes can also be added to plaintext posted
+to the <code class="literal">/encrypt</code> endpoint, if you want to let the Config Server
+handle all encryption as well as decryption.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_serving_encrypted_properties" href="#_serving_encrypted_properties"></a>2.8&nbsp;Serving Encrypted Properties</h2></div></div></div><p>Sometimes you want the clients to decrypt the configuration locally,
+instead of doing it in the server. In that case you can still have
+/encrypt and /decrypt endpoints (if you provide the <code class="literal">encrypt.*</code>
+configuration to locate a key), but you need to explicitly switch off
+the decryption of outgoing properties using
+<code class="literal">spring.cloud.config.server.encrypt.enabled=false</code>. If you don&#8217;t care
+about the endpoints, then it should work if you configure neither the
+key nor the enabled flag.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi__quick_start.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__serving_alternative_formats.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">1.&nbsp;Quick Start&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-config.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;3.&nbsp;Serving Alternative Formats</td></tr></table></div></body></html>

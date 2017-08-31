@@ -1,0 +1,117 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>7.&nbsp;Spring Cloud Config Client</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="multi_spring-cloud-config.html" title="Spring Cloud Config"><link rel="up" href="multi_spring-cloud-config.html" title="Spring Cloud Config"><link rel="prev" href="multi__push_notifications_and_spring_cloud_bus.html" title="6.&nbsp;Push Notifications and Spring Cloud Bus"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.&nbsp;Spring Cloud Config Client</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="multi__push_notifications_and_spring_cloud_bus.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;</td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_spring_cloud_config_client" href="#_spring_cloud_config_client"></a>7.&nbsp;Spring Cloud Config Client</h1></div></div></div><p>A Spring Boot application can take immediate advantage of the Spring
+Config Server (or other external property sources provided by the
+application developer), and it will also pick up some additional
+useful features related to <code class="literal">Environment</code> change events.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="config-first-bootstrap" href="#config-first-bootstrap"></a>7.1&nbsp;Config First Bootstrap</h2></div></div></div><p>This is the default behaviour for any application which has the Spring
+Cloud Config Client on the classpath. When a config client starts up
+it binds to the Config Server (via the bootstrap configuration
+property <code class="literal">spring.cloud.config.uri</code>) and initializes Spring
+<code class="literal">Environment</code> with remote property sources.</p><p>The net result of this is that all client apps that want to consume
+the Config Server need a <code class="literal">bootstrap.yml</code> (or an environment variable)
+with the server address in <code class="literal">spring.cloud.config.uri</code> (defaults to
+"http://localhost:8888").</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="discovery-first-bootstrap" href="#discovery-first-bootstrap"></a>7.2&nbsp;Discovery First Bootstrap</h2></div></div></div><p>If you are using a `DiscoveryClient implementation, such as Spring Cloud Netflix
+and Eureka Service Discovery or Spring Cloud Consul (Spring Cloud Zookeeper does
+not support this yet), then you can have the Config Server register with the
+Discovery Service if you want to, but in the default "Config First" mode,
+clients won&#8217;t be able to take advantage of the registration.</p><p>If you prefer to use <code class="literal">DiscoveryClient</code> to locate the Config Server, you can do
+that by setting <code class="literal">spring.cloud.config.discovery.enabled=true</code> (default
+"false"). The net result of that is that client apps all need a
+<code class="literal">bootstrap.yml</code> (or an environment variable) with the appropriate discovery
+configuration. For example, with Spring Cloud Netflix, you need to define the
+Eureka server address, e.g. in <code class="literal">eureka.client.serviceUrl.defaultZone</code>.  The
+price for using this option is an extra network round trip on start up to
+locate the service registration. The benefit is that the Config Server
+can change its co-ordinates, as long as the Discovery Service is a fixed point. The
+default service id is "configserver" but you can change that on the
+client with <code class="literal">spring.cloud.config.discovery.serviceId</code> (and on the server
+in the usual way for a service, e.g. by setting <code class="literal">spring.application.name</code>).</p><p>The discovery client implementations all support some kind of metadata
+map (e.g. for Eureka we have <code class="literal">eureka.instance.metadataMap</code>). Some
+additional properties of the Config Server may need to be configured
+in its service registration metadata so that clients can connect
+correctly. If the Config Server is secured with HTTP Basic you can
+configure the credentials as "username" and "password". And if the
+Config Server has a context path you can set "configPath". Example,
+for a Config Server that is a Eureka client:</p><p><b>bootstrap.yml.&nbsp;</b>
+</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">eureka</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  instance</span>:
+    ...
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    metadataMap</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      user</span>: osufhalskjrtl
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      password</span>: lviuhlszvaorhvlo5847
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      configPath</span>: /config</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="config-client-fail-fast" href="#config-client-fail-fast"></a>7.3&nbsp;Config Client Fail Fast</h2></div></div></div><p>In some cases, it may be desirable to fail startup of a service if
+it cannot connect to the Config Server.  If this is the desired
+behavior, set the bootstrap configuration property
+<code class="literal">spring.cloud.config.failFast=true</code> and the client will halt with
+an Exception.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="config-client-retry" href="#config-client-retry"></a>7.4&nbsp;Config Client Retry</h2></div></div></div><p>If you expect that the config server may occasionally be unavailable when
+your app starts, you can ask it to keep trying after a failure. First you need
+to set <code class="literal">spring.cloud.config.failFast=true</code>, and then you need to add
+<code class="literal">spring-retry</code> and <code class="literal">spring-boot-starter-aop</code> to your classpath. The default
+behaviour is to retry 6 times with an initial backoff interval of 1000ms and an
+exponential multiplier of 1.1 for subsequent backoffs. You can configure these
+properties (and others) using <code class="literal">spring.cloud.config.retry.*</code> configuration properties.</p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>To take full control of the retry add a <code class="literal">@Bean</code> of type
+<code class="literal">RetryOperationsInterceptor</code> with id "configServerRetryInterceptor". Spring
+Retry has a <code class="literal">RetryInterceptorBuilder</code> that makes it easy to create one.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_locating_remote_configuration_resources" href="#_locating_remote_configuration_resources"></a>7.5&nbsp;Locating Remote Configuration Resources</h2></div></div></div><p>The Config Service serves property sources from <code class="literal">/{name}/{profile}/{label}</code>, where the default bindings in the client app are</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">"name" = <code class="literal">${spring.application.name}</code></li><li class="listitem">"profile" = <code class="literal">${spring.profiles.active}</code> (actually <code class="literal">Environment.getActiveProfiles()</code>)</li><li class="listitem">"label" = "master"</li></ul></div><p>All of them can be overridden by setting <code class="literal">spring.cloud.config.*</code>
+(where <code class="literal">*</code> is "name", "profile" or "label"). The "label" is useful for
+rolling back to previous versions of configuration; with the default
+Config Server implementation it can be a git label, branch name or
+commit id. Label can also be provided as a comma-separated list, in
+which case the items in the list are tried on-by-one until one succeeds.
+This can be useful when working on a feature branch, for instance,
+when you might want to align the config label with your branch, but
+make it optional (e.g. <code class="literal">spring.cloud.config.label=myfeature,develop</code>).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_security_2" href="#_security_2"></a>7.6&nbsp;Security</h2></div></div></div><p>If you use HTTP Basic security on the server then clients just need to
+know the password (and username if it isn&#8217;t the default). You can do
+that via the config server URI, or via separate username and password
+properties, e.g.</p><p><b>bootstrap.yml.&nbsp;</b>
+</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">     uri</span>: https://user:secret@myconfig.mycompany.com</pre><p>
+</p><p>or</p><p><b>bootstrap.yml.&nbsp;</b>
+</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">     uri</span>: https://myconfig.mycompany.com
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">     username</span>: user
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">     password</span>: secret</pre><p>
+</p><p>The <code class="literal">spring.cloud.config.password</code> and <code class="literal">spring.cloud.config.username</code>
+values override anything that is provided in the URI.</p><p>If you deploy your apps on Cloud Foundry then the best way to provide
+the password is through service credentials, e.g. in the URI, since
+then it doesn&#8217;t even need to be in a config file. An example which
+works locally and for a user-provided service on Cloud Foundry named
+"configserver":</p><p><b>bootstrap.yml.&nbsp;</b>
+</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">     uri</span>: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:<span class="hl-number">8888</span><span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">}</span></pre><p>
+</p><p>If you use another form of security you might need to <a class="link" href="multi__spring_cloud_config_client.html#custom-rest-template" title="7.6.2&nbsp;Providing A Custom RestTemplate">provide a
+<code class="literal">RestTemplate</code></a> to the <code class="literal">ConfigServicePropertySourceLocator</code> (e.g. by
+grabbing it in the bootstrap context and injecting one).</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_health_indicator_2" href="#_health_indicator_2"></a>7.6.1&nbsp;Health Indicator</h3></div></div></div><p>The Config Client supplies a Spring Boot Health Indicator that attempts to load configuration from Config Server. The health indicator can be disabled by setting <code class="literal">health.config.enabled=false</code>. The response is also cached for performance reasons. The default cache time to live is 5 minutes. To change that value set the <code class="literal">health.config.time-to-live</code> property (in milliseconds).</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="custom-rest-template" href="#custom-rest-template"></a>7.6.2&nbsp;Providing A Custom RestTemplate</h3></div></div></div><p>In some cases you might need to customize the requests made to the config server from
+the client.  Typically this involves passing special <code class="literal">Authorization</code> headers to
+authenticate requests to the server.  To provide a custom <code class="literal">RestTemplate</code> follow the
+steps below.</p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem">Create a new configuration bean with an implementation of <code class="literal">PropertySourceLocator</code>.</li></ol></div><p><b>CustomConfigServiceBootstrapConfiguration.java.&nbsp;</b>
+</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Configuration</span></em>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> CustomConfigServiceBootstrapConfiguration {
+    <em><span class="hl-annotation" style="color: gray">@Bean</span></em>
+    <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
+        ConfigClientProperties clientProperties = configClientProperties();
+       ConfigServicePropertySourceLocator configServicePropertySourceLocator =  <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> ConfigServicePropertySourceLocator(clientProperties);
+        configServicePropertySourceLocator.setRestTemplate(customRestTemplate(clientProperties));
+        <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> configServicePropertySourceLocator;
+    }
+}</pre><p>
+</p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem">In <code class="literal">resources/META-INF</code> create a file called
+<code class="literal">spring.factories</code> and specify your custom configuration.</li></ol></div><p><b>spring.factories.&nbsp;</b>
+</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">org.springframework.cloud.bootstrap.BootstrapConfiguration </span>= com.my.config.client.CustomConfigServiceBootstrapConfiguration</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_vault" href="#_vault"></a>7.6.3&nbsp;Vault</h3></div></div></div><p>When using Vault as a backend to your config server the client will need to
+supply a token for the server to retrieve values from Vault.  This token
+can be provided within the client by setting <code class="literal">spring.cloud.config.token</code>
+in <code class="literal">bootstrap.yml</code>.</p><p><b>bootstrap.yml.&nbsp;</b>
+</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      token</span>: YourVaultToken</pre><p>
+</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_vault_2" href="#_vault_2"></a>7.7&nbsp;Vault</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_nested_keys_in_vault" href="#_nested_keys_in_vault"></a>7.7.1&nbsp;Nested Keys In Vault</h3></div></div></div><p>Vault supports the ability to nest keys in a value stored in Vault.  For example</p><p><code class="literal">echo -n '{"appA": {"secret": "appAsecret"}, "bar": "baz"}' | vault write secret/myapp -</code></p><p>This command will write a JSON object to your Vault.  To access these values in Spring
+you would use the traditional dot(.) annotation.  For example</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Value("${appA.secret}")</span></em>
+String name = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"World"</span>;</pre><p>The above code would set the <code class="literal">name</code> variable to <code class="literal">appAsecret</code>.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi__push_notifications_and_spring_cloud_bus.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;</td></tr><tr><td width="40%" align="left" valign="top">6.&nbsp;Push Notifications and Spring Cloud Bus&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-config.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;</td></tr></table></div></body></html>

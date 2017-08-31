@@ -1,0 +1,40 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>4.&nbsp;Serving Plain Text</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="multi_spring-cloud-config.html" title="Spring Cloud Config"><link rel="up" href="multi_spring-cloud-config.html" title="Spring Cloud Config"><link rel="prev" href="multi__serving_alternative_formats.html" title="3.&nbsp;Serving Alternative Formats"><link rel="next" href="multi__embedding_the_config_server.html" title="5.&nbsp;Embedding the Config Server"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4.&nbsp;Serving Plain Text</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="multi__serving_alternative_formats.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="multi__embedding_the_config_server.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_serving_plain_text" href="#_serving_plain_text"></a>4.&nbsp;Serving Plain Text</h1></div></div></div><p>Instead of using the <code class="literal">Environment</code> abstraction (or one of the
+alternative representations of it in YAML or properties format) your
+applications might need generic plain text configuration files,
+tailored to their environment. The Config Server provides these
+through an additional endpoint at <code class="literal">/{name}/{profile}/{label}/{path}</code>
+where "name", "profile" and "label" have the same meaning as the
+regular environment endpoint, but "path" is a file name
+(e.g. <code class="literal">log.xml</code>). The source files for this endpoint are located in
+the same way as for the environment endpoints: the same search path is
+used as for properties or YAML files, but instead of aggregating all
+matching resources, only the first one to match is returned.</p><p>After a resource is located, placeholders in the normal format
+(<code class="literal">${&#8230;&#8203;}</code>) are resolved using the effective <code class="literal">Environment</code> for the
+application name, profile and label supplied. In this way the resource
+endpoint is tightly integrated with the environment
+endpoints. Example, if you have this layout for a GIT (or SVN)
+repository:</p><pre class="screen">application.yml
+nginx.conf</pre><p>where <code class="literal">nginx.conf</code> looks like this:</p><pre class="screen">server {
+    listen              80;
+    server_name         ${nginx.server.name};
+}</pre><p>and <code class="literal">application.yml</code> like this:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">nginx</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    name</span>: example.com
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">---</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  profiles</span>: development
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">nginx</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    name</span>: develop.com</pre><p>then the <code class="literal">/foo/default/master/nginx.conf</code> resource looks like this:</p><pre class="screen">server {
+    listen              80;
+    server_name         example.com;
+}</pre><p>and <code class="literal">/foo/development/master/nginx.conf</code> like this:</p><pre class="screen">server {
+    listen              80;
+    server_name         develop.com;
+}</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>just like the source files for environment configuration, the
+"profile" is used to resolve the file name, so if you want a
+profile-specific file then <code class="literal">/*/development/*/logback.xml</code> will be
+resolved by a file called <code class="literal">logback-development.xml</code> (in preference
+to <code class="literal">logback.xml</code>).</p></td></tr></table></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi__serving_alternative_formats.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__embedding_the_config_server.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">3.&nbsp;Serving Alternative Formats&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-config.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;5.&nbsp;Embedding the Config Server</td></tr></table></div></body></html>
