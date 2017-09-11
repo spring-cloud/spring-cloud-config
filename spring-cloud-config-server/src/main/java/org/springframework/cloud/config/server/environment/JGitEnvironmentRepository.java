@@ -197,7 +197,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				checkout(git, label);
 			}
 			// always return what is currently HEAD as the version
-			return git.getRepository().findRef("HEAD").getObjectId().getName();
+			return git.getRepository().getRef("HEAD").getObjectId().getName();
 		} catch (RefNotFoundException e) {
 			throw new NoSuchLabelException("No such label: " + label, e);
 		} catch (NoRemoteRepositoryException e) {
@@ -311,7 +311,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private MergeResult merge(Git git, String label) {
 		try {
 			MergeCommand merge = git.merge();
-			merge.include(git.getRepository().findRef("origin/" + label));
+			merge.include(git.getRepository().getRef("origin/" + label));
 			MergeResult result = merge.call();
 			if (!result.getMergeStatus().isSuccessful()) {
 				this.logger.warn("Merged from remote " + label + " with result " + result.getMergeStatus());

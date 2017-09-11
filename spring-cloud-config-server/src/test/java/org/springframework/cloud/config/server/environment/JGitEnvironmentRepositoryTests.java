@@ -379,7 +379,7 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().getRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(repository.findRef(anyString())).thenReturn(headRef);
+		when(repository.getRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
@@ -435,7 +435,7 @@ public class JGitEnvironmentRepositoryTests {
 
 		//refresh()->return git.getRepository().getRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(repository.findRef(anyString())).thenReturn(headRef);
+		when(repository.getRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[]{1,2,3,4,5});
 		when(headRef.getObjectId()).thenReturn(newObjectId);
@@ -503,7 +503,7 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().getRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(repository.findRef(anyString())).thenReturn(headRef);
+		when(repository.getRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
