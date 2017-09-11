@@ -1,7 +1,24 @@
+/*
+ * Copyright 2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.config.server.ssh;
 
 import org.springframework.cloud.config.server.ssh.SshUriProperties.SshUriNestedRepoProperties;
 
+import javax.validation.constraints.Pattern;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -15,6 +32,9 @@ public abstract class SshUri {
 	private String uri;
 	private String hostKeyAlgorithm;
 	private String hostKey;
+	private String knownHostsFile;
+	@Pattern(regexp = "([\\w -]+,)*([\\w -]+)")
+	private String preferredAuthentications;
 	private boolean ignoreLocalSshSettings;
 	private boolean strictHostKeyChecking = true;
 
@@ -32,6 +52,14 @@ public abstract class SshUri {
 
 	public String getHostKey() {
 		return this.hostKey;
+	}
+
+	public String getKnownHostsFile() {
+		return this.knownHostsFile;
+	}
+
+	public String getPreferredAuthentications() {
+		return this.preferredAuthentications;
 	}
 
 	public String getPrivateKey() {
@@ -58,6 +86,14 @@ public abstract class SshUri {
 		this.hostKey = hostKey;
 	}
 
+	public void setKnownHostsFile(String knownHostsFile) {
+		this.knownHostsFile = knownHostsFile;
+	}
+
+	public void setPreferredAuthentications(String preferredAuthentications) {
+		this.preferredAuthentications = preferredAuthentications;
+	}
+
 	public void setPrivateKey(String privateKey) {
 		this.privateKey = privateKey;
 	}
@@ -71,7 +107,14 @@ public abstract class SshUri {
 	}
 
 	public String toString() {
-		return "org.springframework.cloud.config.server.ssh.SshUriProperties(uri=" + this.getUri() + " hostKeyAlgorithm=" + this.getHostKeyAlgorithm() + ", hostKey=" + this.getHostKey() + ", privateKey=" + this.getPrivateKey() + ", ignoreLocalSshSettings=" + this.isIgnoreLocalSshSettings() + ", strictHostKeyChecking=" + this.isStrictHostKeyChecking() + ",)";
+		return "org.springframework.cloud.config.server.ssh.SshUriProperties(uri=" + this.getUri()
+				+ " hostKeyAlgorithm=" + this.getHostKeyAlgorithm()
+				+ ", hostKey=" + this.getHostKey()
+				+ ", privateKey=" + this.getPrivateKey()
+				+ ", ignoreLocalSshSettings=" + this.isIgnoreLocalSshSettings()
+				+ ", knownHostsFile=" + this.getKnownHostsFile()
+				+ ", preferredAuthentications=" + this.getPreferredAuthentications()
+				+ ", strictHostKeyChecking=" + this.isStrictHostKeyChecking() + ",)";
 	}
 
 	public static class SshUriPropertiesBuilder {
@@ -79,6 +122,8 @@ public abstract class SshUri {
 		private String hostKeyAlgorithm;
 		private String hostKey;
 		private String privateKey;
+		private String knownHostsFile;
+		private String preferredAuthentications;
 		private boolean ignoreLocalSshSettings;
 		private boolean strictHostKeyChecking = true;
 		private Map<String, SshUriNestedRepoProperties> repos = new LinkedHashMap<>();
@@ -103,6 +148,16 @@ public abstract class SshUri {
 
 		public SshUri.SshUriPropertiesBuilder privateKey(String privateKey) {
 			this.privateKey = privateKey;
+			return this;
+		}
+
+		public SshUri.SshUriPropertiesBuilder knownHostsFile(String knownHostsFile) {
+			this.knownHostsFile = knownHostsFile;
+			return this;
+		}
+
+		public SshUri.SshUriPropertiesBuilder preferredAuthentications(String preferredAuthentications) {
+			this.preferredAuthentications = preferredAuthentications;
 			return this;
 		}
 
@@ -139,12 +194,22 @@ public abstract class SshUri {
 			sshUriNestedRepoProperties.setHostKeyAlgorithm(hostKeyAlgorithm);
 			sshUriNestedRepoProperties.setHostKey(hostKey);
 			sshUriNestedRepoProperties.setPrivateKey(privateKey);
+			sshUriNestedRepoProperties.setKnownHostsFile(knownHostsFile);
+			sshUriNestedRepoProperties.setPreferredAuthentications(preferredAuthentications);
 			sshUriNestedRepoProperties.setIgnoreLocalSshSettings(ignoreLocalSshSettings);
 			sshUriNestedRepoProperties.setStrictHostKeyChecking(strictHostKeyChecking);
 		}
 
 		public String toString() {
-			return "org.springframework.cloud.config.server.ssh.SshUriProperties.SshUriPropertiesBuilder(uri=" + this.uri + "hostKeyAlgorithm=" + this.hostKeyAlgorithm + ", hostKey=" + this.hostKey + ", privateKey=" + this.privateKey + ", ignoreLocalSshSettings=" + this.ignoreLocalSshSettings + ", strictHostKeyChecking=" + this.strictHostKeyChecking + ", repos=" + this.repos + ")";
+			return "org.springframework.cloud.config.server.ssh.SshUriProperties.SshUriPropertiesBuilder(uri=" + this.uri
+					+ "hostKeyAlgorithm=" + this.hostKeyAlgorithm
+					+ ", hostKey=" + this.hostKey
+					+ ", privateKey=" + this.privateKey
+					+ ", knownHostsFile=" + this.knownHostsFile
+					+ ", preferredAuthentications=" + this.preferredAuthentications
+					+ ", ignoreLocalSshSettings=" + this.ignoreLocalSshSettings
+					+ ", strictHostKeyChecking=" + this.strictHostKeyChecking
+					+ ", repos=" + this.repos + ")";
 		}
 	}
 }

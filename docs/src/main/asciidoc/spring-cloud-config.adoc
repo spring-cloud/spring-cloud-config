@@ -429,6 +429,12 @@ Example:
 
 |*strictHostKeyChecking*
 |`true` or `false`. If false, ignore errors with host key
+
+|*knownHostsFile*
+|Location of custom .known_hosts file
+
+|*preferredAuthentications*
+|Override server authentication method order. This should allow evade login prompts if server has keyboard-interactive authentication before `publickey` method.
 |===
 
 
