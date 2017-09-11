@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
