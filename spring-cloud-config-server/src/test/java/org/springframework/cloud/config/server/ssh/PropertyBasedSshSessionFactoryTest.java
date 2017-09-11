@@ -118,7 +118,6 @@ public class PropertyBasedSshSessionFactoryTest {
 	}
 
 	@Test
-	@Ignore
 	public void hostKeyIsUsed() throws Exception {
 		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
 				.uri("git@gitlab.example.local:someorg/somerepo.git")
