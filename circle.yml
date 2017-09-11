@@ -4,7 +4,7 @@ general:
       - gh-pages # list of branches to ignore
 machine:
   java:
-    version: openjdk8 #Open JDK has the JCE extentions installed by default
+    version: openjdk7 #Open JDK has the JCE extentions installed by default
   environment:
     _JAVA_OPTIONS: "-Xms1024m -Xmx2048m"
 dependencies:
