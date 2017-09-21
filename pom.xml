@@ -25,37 +25,42 @@
 		<spring-cloud-commons.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-commons.version>
     </properties>
 	<modules>
-	  <module>spring-cloud-config-dependencies</module>
-	  <module>spring-cloud-config-client</module>
-	  <module>spring-cloud-config-server</module>
-	  <module>spring-cloud-config-monitor</module>
-	  <module>spring-cloud-config-sample</module>
-	  <module>spring-cloud-starter-config</module>
-	  <module>docs</module>
+		<module>spring-cloud-config-dependencies</module>
+		<module>spring-cloud-config-client</module>
+		<module>spring-cloud-config-server</module>
+		<module>spring-cloud-config-monitor</module>
+		<module>spring-cloud-config-sample</module>
+		<module>spring-cloud-starter-config</module>
+		<module>docs</module>
 	</modules>
     <dependencyManagement>
-      <dependencies>
-		<dependency>
-		  <groupId>org.springframework.cloud</groupId>
-		  <artifactId>spring-cloud-config-dependencies</artifactId>
-		  <version>${project.version}</version>
-		  <type>pom</type>
-		  <scope>import</scope>
-		</dependency>
-		<dependency>
-		  <groupId>org.springframework.cloud</groupId>
-		  <artifactId>spring-cloud-commons-dependencies</artifactId>
-		  <version>${spring-cloud-commons.version}</version>
-		  <type>pom</type>
-		  <scope>import</scope>
-		</dependency>
-		<dependency>
-		  <groupId>org.springframework.cloud</groupId>
-		  <artifactId>spring-cloud-test-support</artifactId>
-		  <scope>test</scope>
-		  <version>${spring-cloud-commons.version}</version>
-		</dependency>
-     </dependencies>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-config-dependencies</artifactId>
+				<version>${project.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-commons-dependencies</artifactId>
+				<version>${spring-cloud-commons.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-test-support</artifactId>
+				<scope>test</scope>
+				<version>${spring-cloud-commons.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.amazonaws</groupId>
+				<artifactId>aws-java-sdk-core</artifactId>
+				<version>1.11.52</version>
+			</dependency>
+		</dependencies>
     </dependencyManagement>
 	<profiles>
 		<profile>
