@@ -15,9 +15,6 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +28,12 @@ import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.yaml.snakeyaml.DumperOptions.FlowStyle;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.Tag;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.http.HttpHeaders;
@@ -42,13 +45,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.nodes.Tag;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 
 /**
  * @author Dave Syer
@@ -345,6 +345,7 @@ public class EnvironmentController {
 		private void setMapValue(Map<String, Object> map, Object value) {
 			String key = getKey();
 			if (NodeType.MAP.equals(valueType)) {
+				@SuppressWarnings("unchecked")
 				Map<String, Object> nestedMap = (Map<String, Object>) map.get(key);
 				if (nestedMap == null) {
 					nestedMap = new LinkedHashMap<>();
@@ -352,6 +353,7 @@ public class EnvironmentController {
 				}
 				setMapValue(nestedMap, value);
 			} else if (NodeType.ARRAY.equals(valueType)) {
+				@SuppressWarnings("unchecked")
 				List<Object> list = (List<Object>) map.get(key);
 				if (list == null) {
 					list = new ArrayList<>();
@@ -370,6 +372,7 @@ public class EnvironmentController {
 				list.add(null);
 			}
 			if (NodeType.MAP.equals(valueType)) {
+				@SuppressWarnings("unchecked")
 				Map<String, Object> map = (Map<String, Object>) list.get(index);
 				if (map == null) {
 					map = new LinkedHashMap<>();
@@ -377,6 +380,7 @@ public class EnvironmentController {
 				}
 				setMapValue(map, value);
 			} else if (NodeType.ARRAY.equals(valueType)) {
+				@SuppressWarnings("unchecked")
 				List<Object> nestedList = (List<Object>) list.get(index);
 				if (nestedList == null) {
 					nestedList = new ArrayList<>();
