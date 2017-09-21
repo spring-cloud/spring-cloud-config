@@ -42,10 +42,10 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Roy Clarkson
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class,
-	properties = { "spring.config.name:configserver",
-		"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo" },
-	webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class, properties = {
+		"spring.config.name:configserver",
+		"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
+		"logging.level.org.springframework.cloud=DEBUG" }, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("subversion")
 public class SubversionConfigServerIntegrationTests {
 
@@ -63,12 +63,12 @@ public class SubversionConfigServerIntegrationTests {
 
 	@Test
 	public void contextLoads() {
-		Environment environment = new TestRestTemplate().getForObject("http://localhost:"
-				+ this.port + "/foo/development/", Environment.class);
+		Environment environment = new TestRestTemplate().getForObject(
+				"http://localhost:" + this.port + "/foo/development/", Environment.class);
 		assertFalse(environment.getPropertySources().isEmpty());
 		assertEquals("overrides", environment.getPropertySources().get(0).getName());
-		assertEquals("{spring.cloud.config.enabled=true}", environment
-				.getPropertySources().get(0).getSource().toString());
+		assertEquals("{spring.cloud.config.enabled=true}",
+				environment.getPropertySources().get(0).getSource().toString());
 	}
 
 	@Test
