@@ -659,7 +659,7 @@ certificates, and more. Vault provides a unified interface to any secret,
 while providing tight access control and recording a detailed audit log.</simpara>
 </sidebar>
 <simpara>For more information on Vault see the <link xl:href="https://www.vaultproject.io/intro/index.html">Vault quickstart guide</link>.</simpara>
-<simpara>To enable the config server to use a Vault backend you must run your config server
+<simpara>To enable the config server to use a Vault backend you can run your config server
 with the <literal>vault</literal> profile.  For example in your config server&#8217;s <literal>application.properties</literal>
 you can add <literal>spring.profiles.active=vault</literal>.</simpara>
 <simpara>By default the config server will assume your Vault server is running at
@@ -788,10 +788,29 @@ all applications by placing configuration in
 <literal>foo</literal> and <literal>baz</literal> available to them.</simpara>
 </section>
 </section>
+<section xml:id="_jdbc_backend">
+<title>JDBC Backend</title>
+<simpara>Spring Cloud Config Server supports JDBC (relation database) as a
+backend for configuration properties. You can enable this feature by
+adding <literal>spring-jdbc</literal> to the classpath, and using the "jdbc" profile,
+or by adding a bean of type <literal>JdbcEnvironmentRepository</literal>. Spring Boot
+will configure a data source if you include the right dependencies on
+the classpath (see the user guide for more details on that).</simpara>
+<simpara>The database needs to have a table called "PROPERTIES" with columns
+"APPLICATION", "PROFILE", "LABEL" (with the usual <literal>Environment</literal>
+meaning), plus "KEY" and "VALUE" for the key and value pairs in
+<literal>Properties</literal> style. All fields are of type String in Java, so you can
+make them <literal>VARCHAR</literal> of whatever length you need. Property values
+behave in the same way as they would if they came from Spring Boot
+properties files named <literal>{application}-{profile}.properties</literal>, including
+all the encryption and decryption, which will be applied as
+post-processing steps (i.e. not in the repository implementation
+directly).</simpara>
+</section>
 <section xml:id="_composite_environment_repositories">
 <title>Composite Environment Repositories</title>
 <simpara>In some scenarios you may wish to pull configuration data from multiple
-environment repositories.  To do this just enable
+environment repositories.  To do this you can just enable
 multiple profiles in your config server&#8217;s application properties or YAML file.
 If, for example, you want to pull configuration data from a Git repository
 as well as a SVN repository you would set the following properties for your
