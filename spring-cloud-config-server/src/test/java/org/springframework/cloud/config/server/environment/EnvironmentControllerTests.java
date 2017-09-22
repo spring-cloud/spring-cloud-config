@@ -321,7 +321,6 @@ public class EnvironmentControllerTests {
 		Mockito.when(this.repository.findOne("foo", "bar", null))
 				.thenReturn(this.environment);
 		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
-		System.err.println(json);
 		assertThat("Wrong output: " + json, json, is(
 				"{\"a\":{\"b\":[{\"c\":\"x\",\"d\":[\"xx\",\"yy\"]},{\"c\":\"y\",\"e\":[{\"d\":\"z\"}]}]}}"));
 	}

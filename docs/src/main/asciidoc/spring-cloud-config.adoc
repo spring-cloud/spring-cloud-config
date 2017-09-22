@@ -571,7 +571,7 @@ while providing tight access control and recording a detailed audit log.
 
 For more information on Vault see the https://www.vaultproject.io/intro/index.html[Vault quickstart guide].
 
-To enable the config server to use a Vault backend you must run your config server
+To enable the config server to use a Vault backend you can run your config server
 with the `vault` profile.  For example in your config server's `application.properties`
 you can add `spring.profiles.active=vault`.
 
@@ -710,10 +710,30 @@ $ vault write secret/application foo=bar baz=bam
 All applications using the config server will have the properties
 `foo` and `baz` available to them.
 
+==== JDBC Backend
+
+Spring Cloud Config Server supports JDBC (relation database) as a
+backend for configuration properties. You can enable this feature by
+adding `spring-jdbc` to the classpath, and using the "jdbc" profile,
+or by adding a bean of type `JdbcEnvironmentRepository`. Spring Boot
+will configure a data source if you include the right dependencies on
+the classpath (see the user guide for more details on that).
+
+The database needs to have a table called "PROPERTIES" with columns
+"APPLICATION", "PROFILE", "LABEL" (with the usual `Environment`
+meaning), plus "KEY" and "VALUE" for the key and value pairs in
+`Properties` style. All fields are of type String in Java, so you can
+make them `VARCHAR` of whatever length you need. Property values
+behave in the same way as they would if they came from Spring Boot
+properties files named `{application}-{profile}.properties`, including
+all the encryption and decryption, which will be applied as
+post-processing steps (i.e. not in the repository implementation
+directly).
+
 ==== Composite Environment Repositories
 
 In some scenarios you may wish to pull configuration data from multiple
-environment repositories.  To do this just enable
+environment repositories.  To do this you can just enable
 multiple profiles in your config server's application properties or YAML file.
 If, for example, you want to pull configuration data from a Git repository
 as well as a SVN repository you would set the following properties for your

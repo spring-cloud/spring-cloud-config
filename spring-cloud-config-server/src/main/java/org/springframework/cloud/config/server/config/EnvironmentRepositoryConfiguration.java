@@ -18,12 +18,14 @@ package org.springframework.cloud.config.server.config;
 import javax.servlet.http.HttpServletRequest;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
+import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
@@ -33,6 +35,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -41,7 +44,7 @@ import org.springframework.web.client.RestTemplate;
  *
  */
 @Configuration
-@Import({ VaultRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
+@Import({ JdbcRepositoryConfiguration.class, VaultRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
 		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
@@ -145,5 +148,14 @@ class VaultRepositoryConfiguration {
 	public VaultEnvironmentRepository vaultEnvironmentRepository(
 			HttpServletRequest request, EnvironmentWatch watch) {
 		return new VaultEnvironmentRepository(request, watch, new RestTemplate());
+	}
+}
+
+@Configuration
+@Profile("jdbc")
+class JdbcRepositoryConfiguration {
+	@Bean
+	public JdbcEnvironmentRepository jdbcEnvironmentRepository(JdbcTemplate jdbc) {
+		return new JdbcEnvironmentRepository(jdbc);
 	}
 }
