@@ -19,8 +19,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
@@ -29,6 +30,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -43,6 +45,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ControllerConfiguration.class)
+@DirtiesContext
 public class ResourceControllerIntegrationTests {
 
 	@Autowired
