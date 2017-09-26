@@ -107,7 +107,7 @@ public class ConfigServicePropertySourceLocatorTests {
 				new ByteArrayInputStream("{}".getBytes()));
 		this.locator.setRestTemplate(restTemplate);
 		this.expected.expectCause(IsInstanceOf
-				.<Throwable> instanceOf(HttpServerErrorException.class));
+				.instanceOf(IllegalArgumentException.class));
 		this.expected.expectMessage("fail fast property is set");
 		this.locator.locate(this.environment);
 	}
@@ -135,7 +135,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.when(response.getBody()).thenReturn(
 				new ByteArrayInputStream("".getBytes()));
 		this.locator.setRestTemplate(restTemplate);
-		this.expected.expectCause(IsNull.nullValue(Throwable.class));
+		this.expected.expectCause(IsInstanceOf.instanceOf(IllegalArgumentException.class));
 		this.expected.expectMessage("fail fast property is set");
 		this.locator.locate(this.environment);
 	}

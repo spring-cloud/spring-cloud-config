@@ -1,7 +1,5 @@
 package sample;
 
-import java.io.IOException;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,7 +13,12 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.SocketUtils;
 
-import static org.junit.Assert.assertEquals;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
@@ -23,7 +26,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 // Normally spring.cloud.config.enabled:true is the default but since we have the config
 // server on the classpath we need to set it explicitly
 	properties = { "spring.cloud.config.enabled:true",
-			"management.security.enabled=false" }, webEnvironment = RANDOM_PORT)
+			"management.security.enabled=false", "endpoints.default.web.enabled=true" }, webEnvironment = RANDOM_PORT)
 public class ApplicationTests {
 
 	private static int configPort = SocketUtils.findAvailableTcpPort();
@@ -57,10 +60,18 @@ public class ApplicationTests {
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void contextLoads() {
-		String foo = new TestRestTemplate()
-				.getForObject("http://localhost:" + port + "/application/env/info.foo", String.class);
-		assertEquals("{\"info.foo\":\"bar\"}", foo);
+		Map res = new TestRestTemplate()
+				.getForObject("http://localhost:" + port + "/application/env/info.foo", Map.class);
+		assertThat(res).containsKey("propertySources");
+		List<Map<String, Object>> sources = (List<Map<String,Object>>) res.get("propertySources");
+		Optional<Map<String, Object>> properties = sources.stream()
+				.map(map -> (Map<String, Object>) map.get("properties"))
+				.filter(map -> map.containsKey("info.foo"))
+				.map(map -> (Map<String, Object>) map.get("info.foo"))
+				.findFirst();
+		assertThat(properties.get()).containsEntry("value", "bar");
 	}
 
 	public static void main(String[] args) throws IOException {
