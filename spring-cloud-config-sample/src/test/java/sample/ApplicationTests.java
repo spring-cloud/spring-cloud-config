@@ -65,13 +65,8 @@ public class ApplicationTests {
 		Map res = new TestRestTemplate()
 				.getForObject("http://localhost:" + port + "/application/env/info.foo", Map.class);
 		assertThat(res).containsKey("propertySources");
-		List<Map<String, Object>> sources = (List<Map<String,Object>>) res.get("propertySources");
-		Optional<Map<String, Object>> properties = sources.stream()
-				.map(map -> (Map<String, Object>) map.get("properties"))
-				.filter(map -> map.containsKey("info.foo"))
-				.map(map -> (Map<String, Object>) map.get("info.foo"))
-				.findFirst();
-		assertThat(properties.get()).containsEntry("value", "bar");
+		Map<String, Object> property = (Map<String,Object>) res.get("property");
+		assertThat(property).containsEntry("value", "bar");
 	}
 
 	public static void main(String[] args) throws IOException {
