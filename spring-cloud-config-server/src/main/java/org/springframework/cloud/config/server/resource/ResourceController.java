@@ -87,7 +87,12 @@ public class ResourceController {
 
 	synchronized String retrieve(String name, String profile, String label, String path,
 			boolean resolvePlaceholders) throws IOException {
-		if (label != null && label.contains("(_)")) {
+	  if (name != null && name.contains("(_)")) {
+      // "(_)" is uncommon in a git repo name, but "/" cannot be matched
+      // by Spring MVC
+      name = name.replace("(_)", "/");
+    }
+    if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
 			label = label.replace("(_)", "/");
@@ -116,7 +121,12 @@ public class ResourceController {
 
 	synchronized byte[] binary(String name, String profile, String label, String path)
 			throws IOException {
-		if (label != null && label.contains("(_)")) {
+		if (name != null && name.contains("(_)")) {
+      // "(_)" is uncommon in a git repo name, but "/" cannot be matched
+      // by Spring MVC
+      name = name.replace("(_)", "/");
+    }
+    if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
 			label = label.replace("(_)", "/");
