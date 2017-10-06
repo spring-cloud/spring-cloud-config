@@ -89,7 +89,7 @@ public class ResourceControllerTests {
 
 	@Test
 	public void applicationPlaceholderWithoutSlash() throws Exception {
-		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}/{label}");
 		String resource = this.controller.retrieve("dev", "bar", "spam", "foo.txt", true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}	
@@ -159,7 +159,7 @@ public class ResourceControllerTests {
 	
 	@Test
 	public void applicationPlaceholderWithoutSlashForBinary() throws Exception {
-		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}/{label}");
 		byte[] resource = this.controller.binary("dev", "bar", "spam", "foo.txt");
 		assertEquals("foo: dev_bar/spam", new String(resource));
 	}
