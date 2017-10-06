@@ -88,7 +88,7 @@ public class ResourceControllerTests {
 	}
 
 	@Test
-	public void applicationPlaceholderWithoutSlash() throws Exception {
+	public void applicationAndLabelPlaceholdersWithoutSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}/{label}");
 		String resource = this.controller.retrieve("dev", "bar", "spam", "foo.txt", true);
 		assertEquals("foo: dev_bar/spam", resource);
@@ -98,6 +98,13 @@ public class ResourceControllerTests {
 	public void applicationPlaceholderWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
 		String resource = this.controller.retrieve("dev(_)spam", "bar", "", "foo.txt", true);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
+	@Test
+	public void labelPlaceholderWithSlash() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		String resource = this.controller.retrieve("dev", "bar", "dev(_)spam", "foo.txt", true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
@@ -158,7 +165,7 @@ public class ResourceControllerTests {
 	}
 	
 	@Test
-	public void applicationPlaceholderWithoutSlashForBinary() throws Exception {
+	public void applicationAndLabelPlaceholdersWithoutSlashForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}/{label}");
 		byte[] resource = this.controller.binary("dev", "bar", "spam", "foo.txt");
 		assertEquals("foo: dev_bar/spam", new String(resource));
@@ -171,6 +178,13 @@ public class ResourceControllerTests {
 		assertEquals("foo: dev_bar/spam", new String(resource));
 	}
 
+	@Test
+	public void labelPlaceholderWithSlashForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		byte[] resource = this.controller.binary("dev", "bar", "dev(_)spam", "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+	
 	@Test
 	public void labelWithSlashForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
