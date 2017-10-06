@@ -88,6 +88,13 @@ public class ResourceControllerTests {
 	}
 
 	@Test
+	public void applicationPlaceholderWithoutSlash() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		String resource = this.controller.retrieve("dev", "bar", "spam", "foo.txt", true);
+		assertEquals("foo: dev_bar/spam", resource);
+	}	
+	
+	@Test
 	public void applicationPlaceholderWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
 		String resource = this.controller.retrieve("dev(_)spam", "bar", "", "foo.txt", true);
@@ -148,6 +155,13 @@ public class ResourceControllerTests {
 		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
 		String resource = this.controller.retrieve("foo", "bar", "dev", request, false);
 		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
+	@Test
+	public void applicationPlaceholderWithoutSlashForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		byte[] resource = this.controller.binary("dev", "bar", "spam", "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
 	}
 	
 	@Test
