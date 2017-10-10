@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.resource;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
@@ -121,6 +122,17 @@ public class ResourceControllerTests {
 		String resource = this.controller.retrieve("bar", "dev", null, "spam/foo.txt", true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
+	
+	@Test
+	public void nullNameAndLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		try {
+			this.controller.retrieve(null, "foo", "bar", "spam/foo.txt", true);
+		}
+		catch (Exception e) {
+			assertNotNull(e);
+		}
+	}
 
 	@Test
 	public void labelWithSlash() throws Exception {
@@ -211,6 +223,17 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test/{profile}");
 		byte[] resource = this.controller.binary("bar", "dev", null, "spam/foo.txt");
 		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+	
+	@Test
+	public void forBinaryNullName() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		try {
+			this.controller.binary(null, "foo", "bar", "spam/foo.txt");
+		}
+		catch (Exception e) {
+			assertNotNull(e);
+		}
 	}
 	
 	@Test
