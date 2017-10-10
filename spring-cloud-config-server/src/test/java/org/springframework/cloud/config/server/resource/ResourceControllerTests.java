@@ -102,9 +102,23 @@ public class ResourceControllerTests {
 	}
 	
 	@Test
+	public void applicationPlaceholderWithSlashNullLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		String resource = this.controller.retrieve("dev(_)spam", "bar", null, "foo.txt", true);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
+	@Test
 	public void labelPlaceholderWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
 		String resource = this.controller.retrieve("dev", "bar", "dev(_)spam", "foo.txt", true);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
+	@Test
+	public void profilePlaceholderNullLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{profile}");
+		String resource = this.controller.retrieve("bar", "dev", null, "spam/foo.txt", true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
@@ -177,11 +191,25 @@ public class ResourceControllerTests {
 		byte[] resource = this.controller.binary("dev(_)spam", "bar", "", "foo.txt");
 		assertEquals("foo: dev_bar/spam", new String(resource));
 	}
+	
+	@Test
+	public void applicationPlaceholderWithSlashForBinaryNullLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		byte[] resource = this.controller.binary("dev(_)spam", "bar", null, "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
 
 	@Test
 	public void labelPlaceholderWithSlashForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
 		byte[] resource = this.controller.binary("dev", "bar", "dev(_)spam", "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+	
+	@Test
+	public void profilePlaceholderForBinaryNullLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{profile}");
+		byte[] resource = this.controller.binary("bar", "dev", null, "spam/foo.txt");
 		assertEquals("foo: dev_bar/spam", new String(resource));
 	}
 	
