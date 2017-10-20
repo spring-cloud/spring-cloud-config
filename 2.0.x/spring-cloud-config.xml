@@ -1182,11 +1182,14 @@ nginx:
     server_name         develop.com;
 }</screen>
 <note>
-<simpara>just like the source files for environment configuration, the
+<simpara>Just like the source files for environment configuration, the
 "profile" is used to resolve the file name, so if you want a
 profile-specific file then <literal>/*/development/*/logback.xml</literal> will be
 resolved by a file called <literal>logback-development.xml</literal> (in preference
 to <literal>logback.xml</literal>).</simpara>
+</note>
+<note>
+<simpara>If you do not want to supply the <literal>label</literal> and let the server use the default label, you can supply a <literal>useDefaultLabel</literal> request parameter. So, the above example for the <literal>default</literal> profile could look like <literal>/foo/default/nginx.conf?useDefaultLabel</literal>.</simpara>
 </note>
 </chapter>
 <chapter xml:id="_embedding_the_config_server">
