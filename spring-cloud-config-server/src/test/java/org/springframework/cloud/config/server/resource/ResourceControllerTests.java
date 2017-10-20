@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.resource;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
@@ -88,6 +89,52 @@ public class ResourceControllerTests {
 	}
 
 	@Test
+	public void applicationAndLabelPlaceholdersWithoutSlash() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}/{label}");
+		String resource = this.controller.retrieve("dev", "bar", "spam", "foo.txt", true);
+		assertEquals("foo: dev_bar/spam", resource);
+	}	
+	
+	@Test
+	public void applicationPlaceholderWithSlash() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		String resource = this.controller.retrieve("dev(_)spam", "bar", "", "foo.txt", true);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
+	@Test
+	public void applicationPlaceholderWithSlashNullLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		String resource = this.controller.retrieve("dev(_)spam", "bar", null, "foo.txt", true);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
+	@Test
+	public void labelPlaceholderWithSlash() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		String resource = this.controller.retrieve("dev", "bar", "dev(_)spam", "foo.txt", true);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
+	@Test
+	public void profilePlaceholderNullLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{profile}");
+		String resource = this.controller.retrieve("bar", "dev", null, "spam/foo.txt", true);
+		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
+	@Test
+	public void nullNameAndLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		try {
+			this.controller.retrieve(null, "foo", "bar", "spam/foo.txt", true);
+		}
+		catch (Exception e) {
+			assertNotNull(e);
+		}
+	}
+
+	@Test
 	public void labelWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = this.controller.retrieve("foo", "bar", "dev(_)spam", "foo.txt", true);
@@ -141,6 +188,52 @@ public class ResourceControllerTests {
 		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
 		String resource = this.controller.retrieve("foo", "bar", "dev", request, false);
 		assertEquals("foo: dev_bar/spam", resource);
+	}
+	
+	@Test
+	public void applicationAndLabelPlaceholdersWithoutSlashForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}/{label}");
+		byte[] resource = this.controller.binary("dev", "bar", "spam", "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+	
+	@Test
+	public void applicationPlaceholderWithSlashForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		byte[] resource = this.controller.binary("dev(_)spam", "bar", "", "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+	
+	@Test
+	public void applicationPlaceholderWithSlashForBinaryNullLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		byte[] resource = this.controller.binary("dev(_)spam", "bar", null, "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+
+	@Test
+	public void labelPlaceholderWithSlashForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		byte[] resource = this.controller.binary("dev", "bar", "dev(_)spam", "foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+	
+	@Test
+	public void profilePlaceholderForBinaryNullLabel() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{profile}");
+		byte[] resource = this.controller.binary("bar", "dev", null, "spam/foo.txt");
+		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+	
+	@Test
+	public void forBinaryNullName() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		try {
+			this.controller.binary(null, "foo", "bar", "spam/foo.txt");
+		}
+		catch (Exception e) {
+			assertNotNull(e);
+		}
 	}
 	
 	@Test
