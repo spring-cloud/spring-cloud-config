@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.environment.EnvironmentController;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.resource.ResourceControllerIntegrationTests.ControllerConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -41,10 +42,11 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 /**
  * @author Dave Syer
+ * @author Daniel Lavoie
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ControllerConfiguration.class)
+@SpringBootTest(classes = ControllerConfiguration.class, properties = "trace")
 @DirtiesContext
 public class ResourceControllerIntegrationTests {
 
@@ -74,6 +76,19 @@ public class ResourceControllerIntegrationTests {
 		Mockito.verify(this.resources).findOne("foo", "default", "master", "foo.txt");
 	}
 
+	@Test
+	public void resourceNoLabel() throws Exception {
+		Mockito.when(this.repository.findOne("foo", "default", null))
+				.thenReturn(new Environment("foo", "default", "master"));
+		Mockito.when(this.resources.findOne("foo", "default", null, "foo.txt"))
+				.thenReturn(new ByteArrayResource("hello".getBytes()));
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
+				.param("useDefaultLabel", ""))
+				.andExpect(MockMvcResultMatchers.status().isOk());
+		Mockito.verify(this.repository).findOne("foo", "default", null);
+		Mockito.verify(this.resources).findOne("foo", "default", null, "foo.txt");
+	}
+
 	@Configuration
 	@EnableWebMvc
 	@Import(PropertyPlaceholderAutoConfiguration.class)
@@ -92,7 +107,12 @@ public class ResourceControllerIntegrationTests {
 		}
 
 		@Bean
-		public ResourceController controller() {
+		public EnvironmentController environmentController() {
+			return new EnvironmentController(environmentRepository());
+		}
+
+		@Bean
+		public ResourceController resourceController() {
 			return new ResourceController(resourceRepository(), environmentRepository());
 		}
 

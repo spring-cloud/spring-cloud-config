@@ -1164,11 +1164,13 @@ server {
 }
 ----
 
-NOTE: just like the source files for environment configuration, the
+NOTE: Just like the source files for environment configuration, the
 "profile" is used to resolve the file name, so if you want a
 profile-specific file then `/\*/development/*/logback.xml` will be
 resolved by a file called `logback-development.xml` (in preference
 to `logback.xml`).
+
+NOTE: If you do not want to supply the `label` and let the server use the default label, you can supply a `useDefaultLabel` request parameter. So, the above example for the `default` profile could look like `/foo/default/nginx.conf?useDefaultLabel`.
 
 == Embedding the Config Server
 

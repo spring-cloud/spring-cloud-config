@@ -49,6 +49,7 @@ import org.springframework.web.util.UrlPathHelper;
  * to replace placeholders in the resource text.
  *
  * @author Dave Syer
+ * @author Daniel Lavoie
  *
  */
 @RestController
@@ -77,9 +78,23 @@ public class ResourceController {
 		return retrieve(name, profile, label, path, resolvePlaceholders);
 	}
 
+	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel")
+	public String retrieve(@PathVariable String name, @PathVariable String profile,
+			HttpServletRequest request,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws IOException {
+		String path = getFilePath(request, name, profile, null);
+		return retrieve(name, profile, null, path, resolvePlaceholders);
+	}
+
 	private String getFilePath(HttpServletRequest request, String name, String profile,
 			String label) {
-		String stem = String.format("/%s/%s/%s/", name, profile, label);
+		String stem;
+		if(label != null ) {
+			stem = String.format("/%s/%s/%s/", name, profile, label);
+		}else {
+			stem = String.format("/%s/%s/", name, profile);
+		}
 		String path = this.helper.getPathWithinApplication(request);
 		path = path.substring(path.indexOf(stem) + stem.length());
 		return path;
@@ -87,6 +102,11 @@ public class ResourceController {
 
 	synchronized String retrieve(String name, String profile, String label, String path,
 			boolean resolvePlaceholders) throws IOException {
+		if (name != null && name.contains("(_)")) {
+			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
+			// by Spring MVC
+			name = name.replace("(_)", "/");
+		}
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
@@ -116,6 +136,11 @@ public class ResourceController {
 
 	synchronized byte[] binary(String name, String profile, String label, String path)
 			throws IOException {
+		if (name != null && name.contains("(_)")) {
+			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
+			// by Spring MVC
+			name = name.replace("(_)", "/");
+		}
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
