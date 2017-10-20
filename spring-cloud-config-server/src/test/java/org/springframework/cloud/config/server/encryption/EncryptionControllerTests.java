@@ -136,6 +136,20 @@ public class EncryptionControllerTests {
 	}
 
 	@Test
+	public void encryptDecyptTextWithCurlyBrace() {
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
+
+		String plain = "textwith}brace";
+
+		String cipher = this.controller.encrypt(plain,
+				MediaType.APPLICATION_FORM_URLENCODED);
+		String decrypt = this.controller.decrypt(cipher,
+				MediaType.APPLICATION_FORM_URLENCODED);
+		assertEquals(plain, decrypt);
+	}
+
+	@Test
 	public void addEnvironment() {
 		TextEncryptorLocator locator = new TextEncryptorLocator() {
 

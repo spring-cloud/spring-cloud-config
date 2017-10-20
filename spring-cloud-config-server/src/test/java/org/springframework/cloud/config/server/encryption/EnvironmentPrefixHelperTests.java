@@ -81,4 +81,14 @@ public class EnvironmentPrefixHelperTests {
 		assertEquals("mykey", keys.get("key"));
 	}
 
+	@Test
+	public void testTextWithCurlyBracesNoPrefix() {
+		assertEquals("textwith}brac{es", this.helper.stripPrefix("textwith}brac{es"));
+	}
+
+	@Test
+	public void testTextWithCurlyBracesPrefix() {
+		assertEquals("textwith}brac{es{and}prefix", this.helper
+				.stripPrefix("{key:foo}{name:bar}textwith}brac{es{and}prefix"));
+	}
 }
