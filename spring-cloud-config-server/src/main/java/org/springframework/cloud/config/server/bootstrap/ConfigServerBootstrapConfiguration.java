@@ -21,6 +21,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.client.ConfigClientProperties;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
+import org.springframework.cloud.config.server.config.TransportConfiguration;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryPropertySourceLocator;
 import org.springframework.context.annotation.Bean;
@@ -44,7 +45,7 @@ import org.springframework.util.StringUtils;
 public class ConfigServerBootstrapConfiguration {
 
 	@EnableConfigurationProperties(ConfigServerProperties.class)
-	@Import(EnvironmentRepositoryConfiguration.class)
+	@Import({ EnvironmentRepositoryConfiguration.class, TransportConfiguration.class })
 	protected static class LocalPropertySourceLocatorConfiguration {
 
 		@Autowired
