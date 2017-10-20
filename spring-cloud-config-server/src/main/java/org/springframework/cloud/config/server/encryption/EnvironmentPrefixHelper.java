@@ -117,7 +117,7 @@ class EnvironmentPrefixHelper {
 		if (value.contains(ESCAPE)) {
 			return value.substring(value.indexOf(ESCAPE) + ESCAPE.length());
 		}
-		return value.substring(value.lastIndexOf("}") + 1);
+		return value.replaceFirst("^(\\{.*?:.*?\\})+", "");
 	}
 
 	private String removeEnvironmentPrefix(String input) {
