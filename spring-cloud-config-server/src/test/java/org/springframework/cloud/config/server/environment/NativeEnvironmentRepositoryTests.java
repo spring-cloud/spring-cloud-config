@@ -29,6 +29,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * @author Dave Syer
  * @author Spencer Gibb
  * @author Venil Noronha
+ * @author Daniel Lavoie
  */
 public class NativeEnvironmentRepositoryTests {
 
@@ -40,6 +41,7 @@ public class NativeEnvironmentRepositoryTests {
 				NativeEnvironmentRepositoryTests.class).web(false).run();
 		this.repository = new NativeEnvironmentRepository(context.getEnvironment());
 		this.repository.setVersion("myversion");
+		this.repository.setDefaultLabel(null);
 		context.close();
 	}
 
@@ -186,6 +188,13 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("classpath:/test/{profile}", "classpath:/test/dev");
 		Locations locations = this.repository.getLocations("foo", "dev", null);
 		assertEquals(1, locations.getLocations().length);
+	}
+	
+	@Test
+	public void testDefaultLabel() {
+		this.repository.setDefaultLabel("test");
+		assertEquals("test_bar", this.repository.findOne("foo", "default", null)
+				.getPropertySources().get(0).getSource().get("foo"));
 	}
 
 }
