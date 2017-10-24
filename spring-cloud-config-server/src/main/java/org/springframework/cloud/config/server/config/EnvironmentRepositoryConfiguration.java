@@ -41,6 +41,7 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author Dave Syer
  * @author Ryan Baxter
+ * @author Daniel Lavoie
  *
  */
 @Configuration
@@ -109,10 +110,18 @@ class NativeRepositoryConfiguration {
 
 	@Autowired
 	private ConfigurableEnvironment environment;
+	
+	@Autowired
+	private ConfigServerProperties configServerProperties;
 
 	@Bean
 	public NativeEnvironmentRepository nativeEnvironmentRepository() {
-		return new NativeEnvironmentRepository(this.environment);
+		NativeEnvironmentRepository repository = new NativeEnvironmentRepository(
+				this.environment);
+
+		repository.setDefaultLabel(configServerProperties.getDefaultLabel());
+
+		return repository;
 	}
 }
 

@@ -50,13 +50,15 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @author Roy Clarkson
  * @author Venil Noronha
+ * @author Daniel Lavoie
  */
 @ConfigurationProperties("spring.cloud.config.server.native")
-public class NativeEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
+public class NativeEnvironmentRepository
+		implements EnvironmentRepository, SearchPathLocator, Ordered {
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
-
-	private static final String DEFAULT_LABEL = "master";
+	
+	private String defaultLabel = "master";
 
 	/**
 	 * Locations to search for configuration files. Defaults to the same as a Spring Boot
@@ -107,7 +109,11 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 	}
 
 	public String getDefaultLabel() {
-		return DEFAULT_LABEL;
+		return defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 	@Override
@@ -144,6 +150,10 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			locations = DEFAULT_LOCATIONS;
 		}
 		Collection<String> output = new LinkedHashSet<String>();
+
+		if (label == null) {
+			label = defaultLabel;
+		}
 		for (String location : locations) {
 			String[] profiles = new String[] { profile };
 			if (profile != null) {
