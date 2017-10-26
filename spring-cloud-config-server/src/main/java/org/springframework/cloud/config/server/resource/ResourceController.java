@@ -78,7 +78,8 @@ public class ResourceController {
 		return retrieve(name, profile, label, path, resolvePlaceholders);
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel")
+	@RequestMapping(value = { "/{name}/{profile}/*",
+			"/{name}/{profile}/**" }, params = "useDefaultLabel")
 	public String retrieve(@PathVariable String name, @PathVariable String profile,
 			HttpServletRequest request,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)

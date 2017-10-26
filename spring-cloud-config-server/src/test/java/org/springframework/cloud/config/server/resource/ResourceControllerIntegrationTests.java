@@ -78,15 +78,34 @@ public class ResourceControllerIntegrationTests {
 
 	@Test
 	public void resourceNoLabel() throws Exception {
+		resourceNoLabel("foo.txt");
+	}
+
+	@Test
+	public void resourceWithoutExtensioneAndNoLabel() throws Exception {
+		resourceNoLabel("foo");
+	}
+
+	@Test
+	public void resourceInSubDirectoryNoLabel() throws Exception {
+		resourceNoLabel("subdir/foo.txt");
+	}
+
+	@Test
+	public void resourceInSubDirectoryWithoutExtensioneAndNoLabel() throws Exception {
+		resourceNoLabel("subdir/foo");
+	}
+	
+	private void resourceNoLabel(String resource) throws Exception {
 		Mockito.when(this.repository.findOne("foo", "default", null))
 				.thenReturn(new Environment("foo", "default", "master"));
-		Mockito.when(this.resources.findOne("foo", "default", null, "foo.txt"))
+		Mockito.when(this.resources.findOne("foo", "default", null, resource))
 				.thenReturn(new ByteArrayResource("hello".getBytes()));
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/" + resource)
 				.param("useDefaultLabel", ""))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 		Mockito.verify(this.repository).findOne("foo", "default", null);
-		Mockito.verify(this.resources).findOne("foo", "default", null, "foo.txt");
+		Mockito.verify(this.resources).findOne("foo", "default", null, resource);
 	}
 
 	@Configuration
