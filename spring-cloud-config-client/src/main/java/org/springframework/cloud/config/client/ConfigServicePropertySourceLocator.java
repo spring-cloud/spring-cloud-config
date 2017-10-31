@@ -16,12 +16,6 @@
 
 package org.springframework.cloud.config.client;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
@@ -47,6 +41,12 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
@@ -191,11 +191,11 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private RestTemplate getSecureRestTemplate(ConfigClientProperties client) {
 		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-		requestFactory.setReadTimeout((60 * 1000 * 3) + 5000); //TODO 3m5s, make configurable?
+		requestFactory.setReadTimeout(this.defaultProperties.getRequestTimeout());
 		RestTemplate template = new RestTemplate(requestFactory);
 		String username = client.getUsername();
 		String password = client.getPassword();
-		String authorization = client.getAuthorization();
+		String authorization = client.getHeaders().get(HttpHeaders.AUTHORIZATION);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
 
 		if (password != null && authorization != null) {
@@ -205,10 +205,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		if (password != null) {
 			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
-			headers.put("Authorization", "Basic " + new String(token));
+			headers.put(HttpHeaders.AUTHORIZATION, "Basic " + new String(token));
 		}
 		else if (authorization != null) {
-			headers.put("Authorization", authorization);
+			headers.put(HttpHeaders.AUTHORIZATION, authorization);
 		}
 
 		if (!headers.isEmpty()) {
