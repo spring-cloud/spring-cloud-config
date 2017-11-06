@@ -624,7 +624,7 @@ the key value with "@" and provide the file path, e.g.</p><pre class="screen">$ 
 AQAjPgt3eFZQXwt8tsHAVv/QHiY5sI2dRcR+...</pre><p>The key argument is mandatory (despite having a <code class="literal">--</code> prefix).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_key_management" href="#_key_management"></a>2.5&nbsp;Key Management</h2></div></div></div><p>The Config Server can use a symmetric (shared) key or an asymmetric
 one (RSA key pair). The asymmetric choice is superior in terms of
 security, but it is often more convenient to use a symmetric key since
-it is just a single property value to configure.</p><p>To configure a symmetric key you just need to set <code class="literal">encrypt.key</code> to a
+it is just a single property value to configure in the <code class="literal">bootstrap.properties</code>.</p><p>To configure a symmetric key you just need to set <code class="literal">encrypt.key</code> to a
 secret String (or use an enviroment variable <code class="literal">ENCRYPT_KEY</code> to keep it
 out of plain text configuration files).</p><p>To configure an asymmetric key you can either set the key as a
 PEM-encoded text value (in <code class="literal">encrypt.key</code>), or via a keystore (e.g. as
@@ -641,7 +641,7 @@ if your config server really is relatively insecure and only a
 handful of clients need the encrypted properties.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_creating_a_key_store_for_testing" href="#_creating_a_key_store_for_testing"></a>2.6&nbsp;Creating a Key Store for Testing</h2></div></div></div><p>To create a keystore for testing you can do something like this:</p><pre class="screen">$ keytool -genkeypair -alias mytestkey -keyalg RSA \
   -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" \
   -keypass changeme -keystore server.jks -storepass letmein</pre><p>Put the <code class="literal">server.jks</code> file in the classpath (for instance) and then in
-your <code class="literal">application.yml</code> for the Config Server:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">encrypt</span>:
+your <code class="literal">bootstrap.yml</code> for the Config Server:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">encrypt</span>:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  keyStore</span>:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    location</span>: classpath:/server.jks
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    password</span>: letmein

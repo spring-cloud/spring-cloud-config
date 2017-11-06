@@ -1016,7 +1016,7 @@ AQAjPgt3eFZQXwt8tsHAVv/QHiY5sI2dRcR+...</screen>
 <simpara>The Config Server can use a symmetric (shared) key or an asymmetric
 one (RSA key pair). The asymmetric choice is superior in terms of
 security, but it is often more convenient to use a symmetric key since
-it is just a single property value to configure.</simpara>
+it is just a single property value to configure in the <literal>bootstrap.properties</literal>.</simpara>
 <simpara>To configure a symmetric key you just need to set <literal>encrypt.key</literal> to a
 secret String (or use an enviroment variable <literal>ENCRYPT_KEY</literal> to keep it
 out of plain text configuration files).</simpara>
@@ -1053,7 +1053,7 @@ handful of clients need the encrypted properties.</simpara>
   -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" \
   -keypass changeme -keystore server.jks -storepass letmein</screen>
 <simpara>Put the <literal>server.jks</literal> file in the classpath (for instance) and then in
-your <literal>application.yml</literal> for the Config Server:</simpara>
+your <literal>bootstrap.yml</literal> for the Config Server:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">encrypt:
   keyStore:
     location: classpath:/server.jks
