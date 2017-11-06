@@ -277,9 +277,10 @@ git branch or tag name contains a slash ("/") then the label in the
 HTTP URL should be specified with the special string "(_)" instead (to
 avoid ambiguity with other URL paths).  For example, if the label is
 <literal>foo/bar</literal>, replacing the slash would result in a label that looks like
-<literal>foo(_)bar</literal>.  Be careful with the brackets in
-the URL if you are using a command line client like curl (e.g. escape
-them from the shell with quotes '').</simpara>
+<literal>foo(_)bar</literal>.  The inclusion of the special string "(\_)" can also be
+applied to the <literal>{application}</literal> parameter. Be careful with the brackets
+in the URL if you are using a command line client like curl (e.g.
+escape them from the shell with quotes '').</simpara>
 <section xml:id="_placeholders_in_git_uri">
 <title>Placeholders in Git URI</title>
 <simpara>Spring Cloud Config Server supports a git repository URL with
@@ -295,6 +296,17 @@ using (for example):</simpara>
           uri: https://github.com/myorg/{application}</programlisting>
 <simpara>or a "one repo per profile" policy using a similar pattern but with
 <literal>{profile}</literal>.</simpara>
+<simpara>Additionally, using the special string "(\_)" within your
+<literal>{application}</literal> parameters can enable support for multiple
+organizations (for example):</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/{application}</programlisting>
+<simpara>where <literal>{application}</literal> is provided at request time in the format
+"organization(\_)application".</simpara>
 </section>
 <section xml:id="_pattern_matching_and_multiple_repositories">
 <title>Pattern Matching and Multiple Repositories</title>
