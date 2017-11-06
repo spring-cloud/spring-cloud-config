@@ -153,9 +153,10 @@ git branch or tag name contains a slash ("/") then the label in the
 HTTP URL should be specified with the special string "(\_)" instead (to
 avoid ambiguity with other URL paths).  For example, if the label is
 `foo/bar`, replacing the slash would result in a label that looks like
-`foo(_)bar`.  Be careful with the brackets in
-the URL if you are using a command line client like curl (e.g. escape
-them from the shell with quotes '').
+`foo(_)bar`.  The inclusion of the special string "(\_)" can also be 
+applied to the `{application}` parameter. Be careful with the brackets 
+in the URL if you are using a command line client like curl (e.g.
+escape them from the shell with quotes '').
 
 ===== Placeholders in Git URI
 
@@ -177,6 +178,23 @@ spring:
 
 or a "one repo per profile" policy using a similar pattern but with
 `{profile}`.
+
+Additionally, using the special string "(\_)" within your 
+`{application}` parameters can enable support for multiple 
+organizations (for example):
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/{application}
+----
+
+where `{application}` is provided at request time in the format 
+"organization(\_)application".
 
 ===== Pattern Matching and Multiple Repositories
 
