@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Primary;
  * @author Ryan Baxter
  */
 @Configuration
+@ConditionalOnMissingBean(CompositeEnvironmentRepository.class)
 public class CompositeConfiguration {
 
 	private List<EnvironmentRepository> environmentRepos = new ArrayList<>();
