@@ -969,7 +969,7 @@ The key argument is mandatory (despite having a `--` prefix).
 The Config Server can use a symmetric (shared) key or an asymmetric
 one (RSA key pair). The asymmetric choice is superior in terms of
 security, but it is often more convenient to use a symmetric key since
-it is just a single property value to configure.
+it is just a single property value to configure in the `bootstrap.properties`.
 
 To configure a symmetric key you just need to set `encrypt.key` to a
 secret String (or use an enviroment variable `ENCRYPT_KEY` to keep it
@@ -1006,7 +1006,7 @@ $ keytool -genkeypair -alias mytestkey -keyalg RSA \
 ----
 
 Put the `server.jks` file in the classpath (for instance) and then in
-your `application.yml` for the Config Server:
+your `bootstrap.yml` for the Config Server:
 
 [source,yaml]
 ----
