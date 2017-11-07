@@ -16,10 +16,17 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.config.CompositeConfiguration;
+import org.springframework.cloud.config.server.config.ConfigServerHealthIndicator;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 
 import static org.junit.Assert.assertEquals;
@@ -31,7 +38,7 @@ import static org.mockito.Mockito.mock;
  */
 public class CompositeEnvironmentRepositoryTests {
 
-	private class TestOrderedEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
+	private static class TestOrderedEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
 
 		private Environment env;
 		private Locations locations;
@@ -143,5 +150,22 @@ public class CompositeEnvironmentRepositoryTests {
 		assertEquals(null, multiEnv.getVersion());
 		assertEquals(null, multiEnv.getState());
 
+	}
+
+	@Test
+	public void overridingCompositeEnvRepo_contextLoads() {
+		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+			context.register(OverrideCompositeConfig.class, CompositeConfiguration.class, ConfigServerHealthIndicator.class);
+			context.refresh();
+		}
+	}
+
+	@Configuration
+	static class OverrideCompositeConfig {
+		@Bean
+		@Primary
+		CompositeEnvironmentRepository customCompositeEnvironmentRepository() {
+			return new CompositeEnvironmentRepository(Arrays.<EnvironmentRepository>asList(new TestOrderedEnvironmentRepository(1, new Environment("app", "dev"), null)));
+		}
 	}
 }
