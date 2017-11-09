@@ -61,6 +61,14 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 	public JdbcEnvironmentRepository(JdbcTemplate jdbc) {
 		this.jdbc = jdbc;
 	}
+	
+	public void setSql(String sql) {
+		this.sql = sql;
+	}
+
+	public String getSql() {
+		return this.sql;
+	}
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
