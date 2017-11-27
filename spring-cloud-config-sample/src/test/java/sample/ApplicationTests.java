@@ -5,6 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
@@ -14,9 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.SocketUtils;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -28,6 +27,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 	properties = { "spring.cloud.config.enabled:true",
 			"management.security.enabled=false", "management.endpoints.web.expose=*" }, webEnvironment = RANDOM_PORT)
 public class ApplicationTests {
+	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
 	private static int configPort = SocketUtils.findAvailableTcpPort();
 
@@ -63,7 +63,7 @@ public class ApplicationTests {
 	@SuppressWarnings("unchecked")
 	public void contextLoads() {
 		Map res = new TestRestTemplate()
-				.getForObject("http://localhost:" + port + "/application/env/info.foo", Map.class);
+				.getForObject("http://localhost:" + port + BASE_PATH + "/env/info.foo", Map.class);
 		assertThat(res).containsKey("propertySources");
 		Map<String, Object> property = (Map<String,Object>) res.get("property");
 		assertThat(property).containsEntry("value", "bar");
