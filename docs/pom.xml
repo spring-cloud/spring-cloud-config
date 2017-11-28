@@ -14,26 +14,26 @@
 	<name>Spring Cloud Config Docs</name>
 	<description>Spring Cloud Docs</description>
 	<properties>
-        <docs.main>spring-cloud-config</docs.main>
+		<docs.main>spring-cloud-config</docs.main>
 		<main.basedir>${basedir}/..</main.basedir>
 		<docs.whitelisted.branches>1.3.x,1.4.x</docs.whitelisted.branches>
 	</properties>
  	<build>
 		<plugins>
-	        <plugin>
-		      <!--skip deploy (this is just a test module) -->
-		      <artifactId>maven-deploy-plugin</artifactId>
-		      <configuration>
-		        <skip>true</skip>
-		      </configuration>
-	        </plugin>
+			<plugin>
+			  <!--skip deploy (this is just a test module) -->
+			  <artifactId>maven-deploy-plugin</artifactId>
+			  <configuration>
+				<skip>true</skip>
+			  </configuration>
+			</plugin>
 		</plugins>
 	</build>
-    <profiles>
+	<profiles>
 		<profile>
 			<id>docs</id>
-            <build>
-               <plugins>
+			<build>
+			   <plugins>
 								<plugin>
 									<groupId>org.apache.maven.plugins</groupId>
 									<artifactId>maven-dependency-plugin</artifactId>
@@ -58,7 +58,7 @@
 								   <inherited>false</inherited>
 							   </plugin>
 						   </plugins>
-            </build>
+			</build>
 		</profile>
-    </profiles>
+	</profiles>
 </project>
