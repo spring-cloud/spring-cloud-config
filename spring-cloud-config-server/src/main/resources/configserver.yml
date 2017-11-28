@@ -3,6 +3,7 @@ info:
 spring:
   application:
     name: configserver
+  autoconfigure.exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
   jmx:
     default_domain: cloud.config.server
   cloud:
