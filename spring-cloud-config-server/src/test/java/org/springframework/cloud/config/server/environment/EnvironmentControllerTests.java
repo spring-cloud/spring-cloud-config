@@ -203,6 +203,20 @@ public class EnvironmentControllerTests {
 		assertThat(environment.getPropertySources().get(1).getSource().entrySet(),
 				hasSize(3));
 	}
+	
+	@Test
+	public void testNameWithSlash() {
+		this.controller.labelled("foo(_)spam", "bar", "two");
+		
+		Mockito.verify(this.repository).findOne("foo/spam", "bar", "two");
+	}
+
+	@Test
+	public void testLabelWithSlash() {
+		this.controller.labelled("foo", "bar", "two(_)spam");
+		
+		Mockito.verify(this.repository).findOne("foo", "bar", "two/spam");
+	}
 
 	@Test
 	public void arrayOverridenInYaml() throws Exception {
