@@ -28,13 +28,8 @@ import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.nodes.Tag;
-
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -46,6 +41,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.yaml.snakeyaml.DumperOptions.FlowStyle;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.Tag;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
@@ -90,21 +90,37 @@ public class EnvironmentController {
 		this.stripDocument = stripDocument;
 	}
 
-	@RequestMapping("/{name}/{profiles:.*[^-].*}")
+	@RequestMapping(path = "/{name}/{profiles:.*[^-].*}")
 	public Environment defaultLabel(@PathVariable String name,
 			@PathVariable String profiles) {
-		return labelled(name, profiles, null);
+		return getEnvironment(name, profiles, null, false);
+	}
+
+	@RequestMapping(path = "/{name}/{profiles:.*[^-].*}", produces = EnvironmentMediaType.V2_JSON)
+	public Environment defaultLabelIncludeOrigin(@PathVariable String name,
+			@PathVariable String profiles) {
+		return getEnvironment(name, profiles, null, true);
 	}
 
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
+								@PathVariable String label) {
+	   	return getEnvironment(name, profiles, label, false);
+    }
+
+	@RequestMapping(path = "/{name}/{profiles}/{label:.*}", produces = EnvironmentMediaType.V2_JSON)
+	public Environment labelledIncludeOrigin(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
+		return getEnvironment(name, profiles, label, true);
+    }
+
+    public Environment getEnvironment(String name, String profiles, String label, boolean includeOrigin) {
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
-		Environment environment = this.repository.findOne(name, profiles, label);
+		Environment environment = this.repository.findOne(name, profiles, label, includeOrigin);
 		return environment;
 	}
 

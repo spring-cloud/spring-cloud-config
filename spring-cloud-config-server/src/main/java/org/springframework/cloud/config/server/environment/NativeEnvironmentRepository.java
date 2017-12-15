@@ -118,6 +118,11 @@ public class NativeEnvironmentRepository
 
 	@Override
 	public Environment findOne(String config, String profile, String label) {
+	   	return findOne(config, profile, label, false);
+    }
+
+	@Override
+	public Environment findOne(String config, String profile, String label, boolean includeOrigin) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(
 				PropertyPlaceholderAutoConfiguration.class);
 		ConfigurableEnvironment environment = getEnvironment(profile);
@@ -136,7 +141,7 @@ public class NativeEnvironmentRepository
 		environment.getPropertySources().remove("profiles");
 		try {
 			return clean(new PassthruEnvironmentRepository(environment).findOne(config,
-					profile, label));
+					profile, label, includeOrigin));
 		}
 		finally {
 			context.close();
@@ -202,8 +207,7 @@ public class NativeEnvironmentRepository
 		ConfigurableEnvironment environment = new StandardEnvironment();
 		environment.getPropertySources()
 				.addFirst(new MapPropertySource("profiles",
-						Collections.<String, Object>singletonMap("spring.profiles.active",
-								profile)));
+						Collections.<String, Object>singletonMap("spring.profiles.active", profile)));
 		return environment;
 	}
 
@@ -221,8 +225,7 @@ public class NativeEnvironmentRepository
 				boolean matches = false;
 				String normal = name;
 				if (normal.startsWith("file:")) {
-					normal = StringUtils
-							.cleanPath(new File(normal.substring("file:".length()))
+					normal = StringUtils.cleanPath(new File(normal.substring("file:".length()))
 									.getAbsolutePath());
 				}
 				String profile = result.getProfiles() == null ? null

@@ -86,7 +86,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
@@ -105,8 +105,8 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub" });
-		this.repository.findOne("bar", "staging", "master");
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/sub/application.yml",
 				environment.getPropertySources().get(0).getName());
@@ -115,7 +115,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepoBranch() {
-		Environment environment = this.repository.findOne("bar", "staging", "raw");
+		Environment environment = this.repository.findOne("bar", "staging", "raw", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
@@ -124,7 +124,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepoTag() {
-		Environment environment = this.repository.findOne("bar", "staging", "foo");
+		Environment environment = this.repository.findOne("bar", "staging", "foo", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
@@ -133,8 +133,8 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepoTwice() {
-		this.repository.findOne("bar", "staging", "master");
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
@@ -152,7 +152,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("test1-svc", "staging",
-				"master");
+				"master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(getUri("*test1*") + "/test1-svc.properties",
 				environment.getPropertySources().get(0).getName());
@@ -162,7 +162,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	public void defaultLabel() {
 		this.repository.setDefaultLabel("raw");
-		Environment environment = this.repository.findOne("bar", "staging", null);
+		Environment environment = this.repository.findOne("bar", "staging", null, false);
 		assertEquals("raw", environment.getLabel());
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties",
@@ -172,7 +172,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void mappingRepoWithDefaultLabel() {
-		Environment environment = this.repository.findOne("test1-svc", "staging", null);
+		Environment environment = this.repository.findOne("test1-svc", "staging", null, false);
 		assertEquals("master", environment.getLabel());
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(getUri("*test1*") + "/test1-svc.properties",

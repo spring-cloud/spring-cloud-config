@@ -27,6 +27,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.anyString;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -67,7 +68,7 @@ public class ConfigClientOffIntegrationTests {
 		@Bean
 		public EnvironmentRepository environmentRepository() {
 			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
-			given(repository.findOne(anyString(), anyString(), anyString())).willReturn(new Environment("", ""));
+			given(repository.findOne(anyString(), anyString(), anyString(), anyBoolean())).willReturn(new Environment("", ""));
 			return repository;
 		}
 

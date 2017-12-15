@@ -14,6 +14,7 @@ import org.springframework.cloud.config.server.config.ConfigServerHealthIndicato
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -40,13 +41,13 @@ public class ConfigServerHealthIndicatorTests {
 
 	@Test
 	public void defaultStatusWorks() {
-		when(repository.findOne(anyString(), anyString(), Mockito.<String>isNull())).thenReturn(environment);
+		when(repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean())).thenReturn(environment);
 		assertEquals("wrong default status", Status.UP, indicator.health().getStatus());
 	}
 
 	@Test
 	public void exceptionStatusIsDown() {
-		when(repository.findOne(anyString(), anyString(), Mockito.<String>isNull())).thenThrow(new RuntimeException());
+		when(repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean())).thenThrow(new RuntimeException());
 		assertEquals("wrong exception status", Status.DOWN, indicator.health().getStatus());
 	}
 
@@ -57,7 +58,7 @@ public class ConfigServerHealthIndicatorTests {
 		repo.setProfiles("myprofile");
 		repo.setLabel("mylabel");
 		this.indicator.setRepositories(Collections.singletonMap("myname", repo));
-		when(repository.findOne("myname", "myprofile", "mylabel")).thenReturn(environment);
+		when(repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(environment);
 		assertEquals("wrong default status", Status.UP, indicator.health().getStatus());
 	}
 }

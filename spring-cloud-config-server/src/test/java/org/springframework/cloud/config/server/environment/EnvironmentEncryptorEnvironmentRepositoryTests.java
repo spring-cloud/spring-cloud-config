@@ -55,8 +55,8 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master")).thenReturn(this.environment);
-		assertEquals("{foo=bar}", this.controller.findOne("foo", "bar", "master")
+		Mockito.when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
+		assertEquals("{foo=bar}", this.controller.findOne("foo", "bar", "master", false)
 				.getPropertySources().get(0).getSource().toString());
 	}
 
@@ -66,8 +66,8 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("bar", "foo");
 		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master")).thenReturn(this.environment);
-		assertEquals("{foo=${bar}}", this.controller.findOne("foo", "bar", "master")
+		Mockito.when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
+		assertEquals("{foo=${bar}}", this.controller.findOne("foo", "bar", "master", false)
 				.getPropertySources().get(0).getSource().toString());
 	}
 

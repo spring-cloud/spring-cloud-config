@@ -47,7 +47,7 @@ public class EnvironmentRepositoryPropertySourceLocator implements PropertySourc
 	@Override
 	public org.springframework.core.env.PropertySource<?> locate(Environment environment) {
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		for (PropertySource source : repository.findOne(name, profiles, label)
+		for (PropertySource source : repository.findOne(name, profiles, label, false)
 				.getPropertySources()) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) source.getSource();

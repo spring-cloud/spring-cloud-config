@@ -51,7 +51,7 @@ public class VaultEnvironmentRepositoryTests {
 
 		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest);
 
-		Environment e = repo.findOne("myapp", null, null);
+		Environment e = repo.findOne("myapp", null, null, false);
 		assertEquals("Name should be the same as the application argument", "myapp", e.getName());
 		assertEquals("Properties for specified application and default application with key 'application' should be returned", 2, e.getPropertySources().size());
 		Map<String, String> firstResult = new HashMap<String, String>();
@@ -90,7 +90,7 @@ public class VaultEnvironmentRepositoryTests {
 		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest);
 		repo.setDefaultKey("mydefaultkey");
 
-		Environment e = repo.findOne("myapp", null, null);
+		Environment e = repo.findOne("myapp", null, null, false);
 		assertEquals("Name should be the same as the application argument", "myapp", e.getName());
 		assertEquals("Properties for specified application and default application with key 'mydefaultkey' should be returned", 2, e.getPropertySources().size());
 
@@ -130,7 +130,7 @@ public class VaultEnvironmentRepositoryTests {
 		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest);
 		repo.setDefaultKey("myapp");
 
-		Environment e = repo.findOne("myapp", null, null);
+		Environment e = repo.findOne("myapp", null, null, false);
 		assertEquals("Name should be the same as the application argument", "myapp", e.getName());
 		assertEquals("Only properties for specified application should be returned", 1, e.getPropertySources().size());
 
@@ -152,6 +152,6 @@ public class VaultEnvironmentRepositoryTests {
 				Mockito.eq(HttpMethod.GET), Mockito.any(HttpEntity.class), Mockito.eq(VaultEnvironmentRepository.VaultResponse.class),
 				Mockito.eq("secret"), Mockito.eq("myapp"))).thenReturn(myAppResp);
 		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest);
-		repo.findOne("myapp", null, null);
+		repo.findOne("myapp", null, null, false);
 	}
 }

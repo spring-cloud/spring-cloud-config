@@ -52,6 +52,11 @@ public class CompositeEnvironmentRepositoryTests {
 
 		@Override
 		public Environment findOne(String application, String profile, String label) {
+		   	return findOne(application, profile, label, false);
+        }
+
+		@Override
+		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
 			return env;
 		}
 
@@ -99,7 +104,7 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestOrderedEnvironmentRepository(2, e3, loc2));
 		repos.add(new TestOrderedEnvironmentRepository(1, e2, loc3));
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos);
-		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world");
+		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world", false);
 		List<PropertySource> propertySources = compositeEnv.getPropertySources();
 		assertEquals(5, propertySources.size());
 		assertEquals("p2", propertySources.get(0).getName());
@@ -143,10 +148,10 @@ public class CompositeEnvironmentRepositoryTests {
 		repos2.add(new TestOrderedEnvironmentRepository(3, e2, loc2));
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos);
 		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(repos2);
-		Environment env = compositeRepo.findOne("app", "dev", "label");
+		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		assertEquals("1", env.getVersion());
 		assertEquals("state", env.getState());
-		Environment multiEnv = multiCompositeRepo.findOne("app", "dev", "label");
+		Environment multiEnv = multiCompositeRepo.findOne("app", "dev", "label", false);
 		assertEquals(null, multiEnv.getVersion());
 		assertEquals(null, multiEnv.getState());
 

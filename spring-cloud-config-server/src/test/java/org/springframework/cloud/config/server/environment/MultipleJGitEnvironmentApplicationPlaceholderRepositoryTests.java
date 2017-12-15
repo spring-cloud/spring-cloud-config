@@ -71,7 +71,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 
 	@Test
 	public void defaultRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
@@ -81,7 +81,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	@Test
 	public void missingRepo() {
 		Environment environment = this.repository.findOne("missing-config-repo",
-				"staging", "master");
+				"staging", "master", false);
 		assertEquals("Wrong property sources: " + environment, 1,
 				environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/application.yml",
@@ -92,7 +92,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	@Test
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("test1-config-repo", "staging",
-				"master");
+				"master", false);
 		assertEquals(1, environment.getPropertySources().size());
 		assertEquals(
 				getUri("*").replace("{application}", "test1-config-repo")
@@ -104,7 +104,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	@Test
 	public void otherMappingRepo() {
 		Environment environment = this.repository.findOne("test2-config-repo", "staging",
-				"master");
+				"master", false);
 		assertEquals(1, environment.getPropertySources().size());
 		assertEquals(
 				getUri("*").replace("{application}", "test2-config-repo")

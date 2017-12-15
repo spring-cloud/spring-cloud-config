@@ -100,8 +100,8 @@ public class JGitEnvironmentRepositoryTests {
 
 	@Test
 	public void vanilla() {
-		this.repository.findOne("bar", "staging", "master");
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
@@ -112,8 +112,8 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub" });
-		this.repository.findOne("bar", "staging", "master");
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/sub/application.yml",
 				environment.getPropertySources().get(0).getName());
@@ -125,8 +125,8 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "{application}" });
-		this.repository.findOne("sub", "staging", "master");
-		Environment environment = this.repository.findOne("sub", "staging", "master");
+		this.repository.findOne("sub", "staging", "master", false);
+		Environment environment = this.repository.findOne("sub", "staging", "master", false);
 		assertEquals(1, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/sub/application.yml",
 				environment.getPropertySources().get(0).getName());
@@ -144,8 +144,8 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub*" });
-		this.repository.findOne("bar", "staging", "master");
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/sub/application.yml",
 				environment.getPropertySources().get(0).getName());
@@ -155,7 +155,7 @@ public class JGitEnvironmentRepositoryTests {
 	@Test
 	public void branch() {
 		this.repository.setBasedir(this.basedir);
-		Environment environment = this.repository.findOne("bar", "staging", "raw");
+		Environment environment = this.repository.findOne("bar", "staging", "raw", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
@@ -164,7 +164,7 @@ public class JGitEnvironmentRepositoryTests {
 	@Test
 	public void tag() {
 		this.repository.setBasedir(this.basedir);
-		Environment environment = this.repository.findOne("bar", "staging", "foo");
+		Environment environment = this.repository.findOne("bar", "staging", "foo", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
@@ -173,8 +173,8 @@ public class JGitEnvironmentRepositoryTests {
 	@Test
 	public void basedir() {
 		this.repository.setBasedir(this.basedir);
-		this.repository.findOne("bar", "staging", "master");
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
@@ -185,8 +185,8 @@ public class JGitEnvironmentRepositoryTests {
 		assertTrue(this.basedir.mkdirs());
 		assertTrue(new File(this.basedir, ".nothing").createNewFile());
 		this.repository.setBasedir(this.basedir);
-		this.repository.findOne("bar", "staging", "master");
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
 		assertVersion(environment);
@@ -526,7 +526,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setBasedir(this.basedir);
 
 		try {
-			envRepository.findOne("bar", "staging", "master");
+			envRepository.findOne("bar", "staging", "master", false);
 		} catch (Exception ex) {
 			// expected - ignore
 		}

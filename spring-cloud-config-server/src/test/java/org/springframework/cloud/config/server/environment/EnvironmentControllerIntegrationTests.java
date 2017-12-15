@@ -61,48 +61,48 @@ public class EnvironmentControllerIntegrationTests {
 
 	@Test
 	public void environmentNoLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", null)).thenReturn(new Environment("foo", "default"));
+		Mockito.when(this.repository.findOne("foo", "default", null, false)).thenReturn(new Environment("foo", "default"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default")).andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", null);
+		Mockito.verify(this.repository).findOne("foo", "default", null, false);
 	}
 
 	@Test
 	public void propertiesNoLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", null)).thenReturn(new Environment("foo", "default"));
+		Mockito.when(this.repository.findOne("foo", "default", null, false)).thenReturn(new Environment("foo", "default"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo-default.properties"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", null);
+		Mockito.verify(this.repository).findOne("foo", "default", null, false);
 	}
 
 	@Test
 	public void propertiesLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "label")).thenReturn(new Environment("foo", "default"));
+		Mockito.when(this.repository.findOne("foo", "default", "label", false)).thenReturn(new Environment("foo", "default"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-default.properties"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", "label");
+		Mockito.verify(this.repository).findOne("foo", "default", "label", false);
 	}
 
 	@Test
 	public void propertiesLabelWhenApplicationNameContainsHyphen() throws Exception {
-		Mockito.when(this.repository.findOne("foo-bar", "default", "label"))
+		Mockito.when(this.repository.findOne("foo-bar", "default", "label", false))
 				.thenReturn(new Environment("foo-bar", "default"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-bar-default.properties"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo-bar", "default", "label");
+		Mockito.verify(this.repository).findOne("foo-bar", "default", "label", false);
 	}
 
 	@Test
 	public void propertiesLabelWithSlash() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "label/spam"))
+		Mockito.when(this.repository.findOne("foo", "default", "label/spam", false))
 				.thenReturn(new Environment("foo", "default"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/label(_)spam/foo-default.properties"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", "label/spam");
+		Mockito.verify(this.repository).findOne("foo", "default", "label/spam", false);
 	}
 
 	@Test
 	public void environmentWithLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "awesome"))
+		Mockito.when(this.repository.findOne("foo", "default", "awesome", false))
 				.thenReturn(new Environment("foo", "default"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/awesome"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
@@ -110,7 +110,7 @@ public class EnvironmentControllerIntegrationTests {
 
 	@Test
 	public void environmentWithMissingLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "missing"))
+		Mockito.when(this.repository.findOne("foo", "default", "missing", false))
 				.thenThrow(new NoSuchLabelException("Planned"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/missing"))
 				.andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -118,7 +118,7 @@ public class EnvironmentControllerIntegrationTests {
 
 	@Test
 	public void environmentWithMissingRepo() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "missing"))
+		Mockito.when(this.repository.findOne("foo", "default", "missing", false))
 				.thenThrow(new NoSuchRepositoryException("Planned"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/missing"))
 				.andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -126,14 +126,14 @@ public class EnvironmentControllerIntegrationTests {
 
 	@Test
 	public void environmentWithLabelContainingPeriod() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "1.0.0")).thenReturn(new Environment("foo", "default"));
+		Mockito.when(this.repository.findOne("foo", "default", "1.0.0", false)).thenReturn(new Environment("foo", "default"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/1.0.0"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 	}
 
 	@Test
 	public void environmentWithLabelContainingSlash() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "feature/puff"))
+		Mockito.when(this.repository.findOne("foo", "default", "feature/puff", false))
 				.thenReturn(new Environment("foo", "default"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/feature(_)puff"))
 				.andExpect(MockMvcResultMatchers.status().isOk())

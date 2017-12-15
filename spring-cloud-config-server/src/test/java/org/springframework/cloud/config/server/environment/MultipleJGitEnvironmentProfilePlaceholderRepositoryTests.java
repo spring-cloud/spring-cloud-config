@@ -79,7 +79,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 
 	@Test
 	public void defaultRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals(this.repository.getUri() + "/bar.properties",
 				environment.getPropertySources().get(0).getName());
@@ -89,7 +89,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	@Test
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("application",
-				"test1-config-repo", "master");
+				"test1-config-repo", "master", false);
 		assertEquals(1, environment.getPropertySources().size());
 		String uri = getUri("*").replace("{profile}", "test1-config-repo");
 		assertEquals(uri + "/application.yml",
@@ -102,7 +102,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	@Test
 	public void otherMappingRepo() {
 		Environment environment = this.repository.findOne("application",
-				"test2-config-repo", "master");
+				"test2-config-repo", "master", false);
 		assertEquals(1, environment.getPropertySources().size());
 		assertEquals(
 				getUri("*").replace("{profile}", "test2-config-repo")
@@ -138,7 +138,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	@Test
 	public void twoMappingRepos() {
 		Environment environment = this.repository.findOne("application",
-				"test1-config-repo,test2-config-repo,missing-config-repo", "master");
+				"test1-config-repo,test2-config-repo,missing-config-repo", "master", false);
 		assertEquals(1, environment.getPropertySources().size());
 		assertEquals(
 				getUri("*").replace("{profile}", "test2-config-repo")

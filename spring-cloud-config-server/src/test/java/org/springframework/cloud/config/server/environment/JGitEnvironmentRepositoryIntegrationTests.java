@@ -98,8 +98,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + uri).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		repository.findOne("bar", "staging", "master", false);
+		Environment environment = repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals("bar", environment.getName());
 		assertArrayEquals(new String[] { "staging" }, environment.getProfiles());
@@ -113,8 +113,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.run("--spring.cloud.config.server.git.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		repository.findOne("bar", "staging", "master", false);
+		Environment environment = repository.findOne("bar", "staging", "master", false);
 		assertEquals("bar", environment.getPropertySources().get(0).getSource().get("foo"));
 		Git git = Git.open(ResourceUtils.getFile(uri).getAbsoluteFile());
 		git.checkout().setName("master").call();
@@ -122,7 +122,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				new FileOutputStream(ResourceUtils.getFile(uri + "/bar.properties")));
 		git.add().addFilepattern("bar.properties").call();
 		git.commit().setMessage("Updated for pull").call();
-		environment = repository.findOne("bar", "staging", "master");
+		environment = repository.findOne("bar", "staging", "master", false);
 		assertEquals("foo", environment.getPropertySources().get(0).getSource().get("foo"));
 	}
 
@@ -188,8 +188,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		pull();
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		new File(repository.getUri().replaceAll("file:", ""), ".git/index.lock").createNewFile();
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		repository.findOne("bar", "staging", "master", false);
+		Environment environment = repository.findOne("bar", "staging", "master", false);
 		assertEquals("foo", environment.getPropertySources().get(0).getSource().get("foo"));
 	}
 
@@ -200,8 +200,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				// TODO: why didn't .properties() work for me?
 				.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=sub");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		repository.findOne("bar", "staging", "master", false);
+		Environment environment = repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 	}
 
@@ -213,8 +213,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.git.uri=" + uri,
 						"--spring.cloud.config.server.git.searchPaths={application}");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("foo,bar", "staging", "master");
-		Environment environment = repository.findOne("foo,bar", "staging", "master");
+		repository.findOne("foo,bar", "staging", "master", false);
+		Environment environment = repository.findOne("foo,bar", "staging", "master", false);
 		assertEquals(3, environment.getPropertySources().size());
 	}
 
@@ -226,8 +226,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.git.uri=" + uri,
 						"--spring.cloud.config.server.git.searchPaths={profile}");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("foo,bar", "staging", "master");
-		Environment environment = repository.findOne("staging", "foo,bar", "master");
+		repository.findOne("foo,bar", "staging", "master", false);
+		Environment environment = repository.findOne("staging", "foo,bar", "master", false);
 		assertEquals(3, environment.getPropertySources().size());
 	}
 
@@ -259,7 +259,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + uri).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "unknownlabel");
+		repository.findOne("bar", "staging", "unknownlabel", false);
 	}
 
 	@Test
@@ -272,7 +272,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepository repository = this.context
 				.getBean(JGitEnvironmentRepository.class);
 		assertTrue(((JGitEnvironmentRepository) repository).isCloneOnStart());
-		Environment environment = repository.findOne("bar", "staging", "master");
+		Environment environment = repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 		assertEquals("bar", environment.getName());
 		assertArrayEquals(new String[] { "staging" }, environment.getProfiles());
@@ -288,8 +288,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.cloneOnStart=true");
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		repository.findOne("bar", "staging", "master", false);
+		Environment environment = repository.findOne("bar", "staging", "master", false);
 		assertEquals("bar", environment.getPropertySources().get(0).getSource().get("foo"));
 		Git git = Git.open(ResourceUtils.getFile(uri).getAbsoluteFile());
 		git.checkout().setName("master").call();
@@ -297,7 +297,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				new FileOutputStream(ResourceUtils.getFile(uri + "/bar.properties")));
 		git.add().addFilepattern("bar.properties").call();
 		git.commit().setMessage("Updated for pull").call();
-		environment = repository.findOne("bar", "staging", "master");
+		environment = repository.findOne("bar", "staging", "master", false);
 		assertEquals("foo", environment.getPropertySources().get(0).getSource().get("foo"));
 	}
 
@@ -309,8 +309,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=sub",
 						"--spring.cloud.config.server.git.cloneOnStart=true");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
-		Environment environment = repository.findOne("bar", "staging", "master");
+		repository.findOne("bar", "staging", "master", false);
+		Environment environment = repository.findOne("bar", "staging", "master", false);
 		assertEquals(2, environment.getPropertySources().size());
 	}
 
@@ -322,7 +322,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.cloneOnStart=true")
 				.run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "unknownlabel");
+		repository.findOne("bar", "staging", "unknownlabel", false);
 	}
 
 	@Test
@@ -335,7 +335,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
 
 		// make sure we get the right version out of the gate
-		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master", false);
 
 		// make sure the environments version is the same as the remote repo
 		// version
@@ -350,7 +350,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 		// pull the environment again which should update the local repo from
 		// the just updated remote repo
-		environment = testData.getRepository().findOne("bar", "staging", "master");
+		environment = testData.getRepository().findOne("bar", "staging", "master", false);
 
 		// do some more check outs to get updated version numbers
 		String updatedLocalVersion = getCommitID(testData.getClonedGit().getGit(), "master");
@@ -371,7 +371,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		JGitConfigServerTestData testData = JGitConfigServerTestData
 				.prepareClonedGitRepository(TestConfiguration.class);
 
-		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master", false);
 		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "bar");
 
@@ -386,7 +386,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
 		testData.getServerGit().getGit().commit().setMessage("Updated for branch test").call();
 
-		environment = testData.getRepository().findOne("bar", "staging", "testNewRemoteBranch");
+		environment = testData.getRepository().findOne("bar", "staging", "testNewRemoteBranch", false);
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "branchBar");
 	}
@@ -398,7 +398,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 		Git serverGit = testData.getServerGit().getGit();
 
-		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master", false);
 		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "bar");
 
@@ -414,18 +414,18 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
 		testData.getServerGit().getGit().commit().setMessage("Updated for branch test").call();
 
-		environment = testData.getRepository().findOne("bar", "staging", "master");
+		environment = testData.getRepository().findOne("bar", "staging", "master", false);
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "testAfterTag");
 
-		environment = testData.getRepository().findOne("bar", "staging", "testTag");
+		environment = testData.getRepository().findOne("bar", "staging", "testTag", false);
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "bar");
 
 		// now move the tag and test again
 		serverGit.tag().setName("testTag").setForceUpdate(true).setMessage("Testing a moved tag").call();
 
-		environment = testData.getRepository().findOne("bar", "staging", "testTag");
+		environment = testData.getRepository().findOne("bar", "staging", "testTag", false);
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "testAfterTag");
 
@@ -440,7 +440,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
 
 		// make sure we get the right version out of the gate
-		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master", false);
 		assertEquals(environment.getVersion(), startingRemoteVersion);
 
 		// update the remote repo
@@ -452,13 +452,13 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		String updatedRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
 
 		// do a normal request and verify we get the new version
-		environment = testData.getRepository().findOne("bar", "staging", "master");
+		environment = testData.getRepository().findOne("bar", "staging", "master", false);
 		assertEquals(environment.getVersion(), updatedRemoteVersion);
 		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "barNewCommit");
 
 		// request the prior commit ID and make sure we get it
-		environment = testData.getRepository().findOne("bar", "staging", startingRemoteVersion);
+		environment = testData.getRepository().findOne("bar", "staging", startingRemoteVersion, false);
 		assertEquals(environment.getVersion(), startingRemoteVersion);
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "bar");
@@ -468,7 +468,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void testUnknownLabelWithRemote() throws Exception {
 		JGitConfigServerTestData testData = JGitConfigServerTestData
 				.prepareClonedGitRepository(TestConfiguration.class);
-		testData.getRepository().findOne("bar", "staging", "BADLabel");
+		testData.getRepository().findOne("bar", "staging", "BADLabel", false);
 	}
 
 	private String getCommitID(Git git, String label) throws GitAPIException {
