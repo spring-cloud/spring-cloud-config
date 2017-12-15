@@ -123,7 +123,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 						application, profile, label)) {
 					try {
 						Environment source = candidate.findOne(application, profile,
-								label);
+								label, false);
 						if (source != null) {
 							return candidate.getLocations(application, profile, label);
 						}
@@ -149,7 +149,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
+	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
 			if (repository.matches(application, profile, label)) {
 				for (JGitEnvironmentRepository candidate : getRepositories(repository,
@@ -159,7 +159,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 							label = candidate.getDefaultLabel();
 						}
 						Environment source = candidate.findOne(application, profile,
-								label);
+								label, includeOrigin);
 						if (source != null) {
 							return source;
 						}
@@ -183,9 +183,9 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			label = candidate.getDefaultLabel();
 		}
 		if (candidate == this) {
-			return super.findOne(application, profile, label);
+			return super.findOne(application, profile, label, includeOrigin);
 		}
-		return candidate.findOne(application, profile, label);
+		return candidate.findOne(application, profile, label, includeOrigin);
 	}
 
 	private List<JGitEnvironmentRepository> getRepositories(
@@ -286,7 +286,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label) {
+		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
 
 			if (this.pattern == null || this.pattern.length == 0) {
 				return null;
@@ -294,7 +294,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 			if (PatternMatchUtils.simpleMatch(this.pattern,
 					application + "/" + profile)) {
-				return super.findOne(application, profile, label);
+				return super.findOne(application, profile, label, includeOrigin);
 			}
 
 			return null;

@@ -27,6 +27,9 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.boot.origin.Origin;
+import org.springframework.boot.origin.OriginLookup;
+import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.environment.Environment;
@@ -46,6 +49,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.util.Assert;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
@@ -56,6 +60,7 @@ import org.springframework.web.client.RestTemplate;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
+import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
 
 /**
  * @author Dave Syer
@@ -105,10 +110,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 																// xml
 						for (PropertySource source : result.getPropertySources()) {
 							@SuppressWarnings("unchecked")
-							Map<String, Object> map = (Map<String, Object>) source
-									.getSource();
-							composite.addPropertySource(
-									new MapPropertySource(source.getName(), map));
+							Map<String, Object> map = translateOrigins((Map<String, Object>) source.getSource());
+							composite.addPropertySource(new OriginTrackedMapPropertySource(source
+									.getName(), map));
 						}
 					}
 
@@ -171,6 +175,29 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 	}
 
+	private Map<String, Object> translateOrigins(Map<String, Object> source) {
+		Map<String, Object> withOrigins = new HashMap<>();
+		for (Map.Entry<String, Object> entry : source.entrySet()) {
+			boolean hasOrigin = false;
+
+			if (entry.getValue() instanceof Map) {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> value = (Map<String, Object>) entry.getValue();
+				if (value.size() == 2 && value.containsKey("origin") && value.containsKey("value")) {
+					Origin origin = new ConfigServiceOrigin(value.get("origin"));
+					OriginTrackedValue trackedValue = OriginTrackedValue.of(value.get("value"), origin);
+					withOrigins.put(entry.getKey(), trackedValue);
+					hasOrigin = true;
+				}
+			}
+
+			if (!hasOrigin) {
+				withOrigins.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return withOrigins;
+	}
+
 	private void putValue(HashMap<String, Object> map, String key, String value) {
 		if (StringUtils.hasText(value)) {
 			map.put(key, value);
@@ -208,6 +235,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 			try {
 				HttpHeaders headers = new HttpHeaders();
+				headers.setAccept(Collections.singletonList(MediaType.parseMediaType(V2_JSON)));
 				addAuthorizationToken(properties, headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
@@ -317,6 +345,49 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		protected Map<String, String> getHeaders() {
 			return this.headers;
+		}
+
+	}
+
+	static class ConfigServiceOrigin implements Origin {
+
+		private Object origin;
+
+		public ConfigServiceOrigin(Object origin) {
+			Assert.notNull(origin, "origin may not be null");
+			this.origin = origin;
+		}
+
+		@Override
+		public String toString() {
+			return "Remote file "+this.origin.toString();
+		}
+	}
+
+	static class OriginTrackedMapPropertySource extends MapPropertySource
+			implements OriginLookup<String> {
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		OriginTrackedMapPropertySource(String name, Map source) {
+			super(name, source);
+		}
+
+		@Override
+		public Object getProperty(String name) {
+			Object value = super.getProperty(name);
+			if (value instanceof OriginTrackedValue) {
+				return ((OriginTrackedValue) value).getValue();
+			}
+			return value;
+		}
+
+		@Override
+		public Origin getOrigin(String name) {
+			Object value = super.getProperty(name);
+			if (value instanceof OriginTrackedValue) {
+				return ((OriginTrackedValue) value).getOrigin();
+			}
+			return null;
 		}
 
 	}

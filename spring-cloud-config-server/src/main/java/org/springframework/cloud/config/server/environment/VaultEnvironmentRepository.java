@@ -134,6 +134,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
+		return findOne(application, profile, label, false);
+	}
+
+	@Override
+	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		List<String> scrubbedProfiles = scrubProfiles(profiles);
 

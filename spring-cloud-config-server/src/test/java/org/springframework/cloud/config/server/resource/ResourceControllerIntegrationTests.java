@@ -72,26 +72,26 @@ public class ResourceControllerIntegrationTests {
 
 	@Test
 	public void environmentNoLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "master"))
+		Mockito.when(this.repository.findOne("foo", "default", "master", false))
 				.thenReturn(new Environment("foo", "default"));
 		Mockito.when(this.resources.findOne("foo", "default", "master", "foo.txt"))
 				.thenReturn(new ByteArrayResource("hello".getBytes()));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", "master");
+		Mockito.verify(this.repository).findOne("foo", "default", "master", false);
 		Mockito.verify(this.resources).findOne("foo", "default", "master", "foo.txt");
 	}
 
 	@Test
 	public void resourceNoLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", null))
+		Mockito.when(this.repository.findOne("foo", "default", null, false))
 				.thenReturn(new Environment("foo", "default", "master"));
 		Mockito.when(this.resources.findOne("foo", "default", null, "foo.txt"))
 				.thenReturn(new ByteArrayResource("hello".getBytes()));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
 				.param("useDefaultLabel", ""))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", null);
+		Mockito.verify(this.repository).findOne("foo", "default", null, false);
 		Mockito.verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 

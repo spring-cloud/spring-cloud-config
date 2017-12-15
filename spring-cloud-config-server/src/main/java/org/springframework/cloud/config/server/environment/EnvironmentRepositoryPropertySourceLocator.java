@@ -52,7 +52,7 @@ public class EnvironmentRepositoryPropertySourceLocator implements PropertySourc
 			Environment environment) {
 		CompositePropertySource composite = new CompositePropertySource("configService");
 		for (PropertySource source : this.repository
-				.findOne(this.name, this.profiles, this.label).getPropertySources()) {
+				.findOne(this.name, this.profiles, this.label, false).getPropertySources()) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) source.getSource();
 			composite.addPropertySource(new MapPropertySource(source.getName(), map));

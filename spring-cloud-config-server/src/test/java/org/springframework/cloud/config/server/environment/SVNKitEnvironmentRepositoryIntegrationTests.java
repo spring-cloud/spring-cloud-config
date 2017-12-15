@@ -82,7 +82,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "trunk");
+		repository.findOne("bar", "staging", "trunk", false);
 		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
@@ -96,12 +96,12 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "trunk");
-		Environment environment = repository.findOne("bar", "staging", "trunk");
+		repository.findOne("bar", "staging", "trunk", false);
+		Environment environment = repository.findOne("bar", "staging", "trunk", false);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("bar");
 		updateRepoForUpdate(uri);
-		environment = repository.findOne("bar", "staging", "trunk");
+		environment = repository.findOne("bar", "staging", "trunk", false);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("foo");
 	}
@@ -146,8 +146,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "unknownlabel");
-		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
+		repository.findOne("bar", "staging", "unknownlabel", false);
+		Environment environment = repository.findOne("bar", "staging", "unknownlabel", false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(0);
 	}
 
@@ -160,7 +160,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("bar", "staging", "demobranch");
+		Environment environment = repository.findOne("bar", "staging", "demobranch", false);
 		assertThat(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties")).isTrue();
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);

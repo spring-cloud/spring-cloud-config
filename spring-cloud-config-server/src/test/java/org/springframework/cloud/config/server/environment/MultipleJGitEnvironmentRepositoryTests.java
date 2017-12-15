@@ -94,7 +94,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -124,8 +124,8 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub" });
-		this.repository.findOne("bar", "staging", "master");
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
@@ -134,7 +134,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepoBranch() {
-		Environment environment = this.repository.findOne("bar", "staging", "raw");
+		Environment environment = this.repository.findOne("bar", "staging", "raw", false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -143,7 +143,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepoTag() {
-		Environment environment = this.repository.findOne("bar", "staging", "foo");
+		Environment environment = this.repository.findOne("bar", "staging", "foo", false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -152,8 +152,8 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepoTwice() {
-		this.repository.findOne("bar", "staging", "master");
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master", false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -171,7 +171,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("test1-svc", "staging",
-				"master");
+				"master", false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
@@ -181,7 +181,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	public void defaultLabel() {
 		this.repository.setDefaultLabel("raw");
-		Environment environment = this.repository.findOne("bar", "staging", null);
+		Environment environment = this.repository.findOne("bar", "staging", null, false);
 		assertThat(environment.getLabel()).isEqualTo("raw");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -191,7 +191,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void mappingRepoWithDefaultLabel() {
-		Environment environment = this.repository.findOne("test1-svc", "staging", null);
+		Environment environment = this.repository.findOne("test1-svc", "staging", null, false);
 		assertThat(environment.getLabel()).isEqualTo("master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
