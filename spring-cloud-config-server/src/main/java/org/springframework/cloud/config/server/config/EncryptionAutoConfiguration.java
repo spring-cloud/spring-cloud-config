@@ -93,8 +93,8 @@ public class EncryptionAutoConfiguration {
 			KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(
 					new KeyStoreKeyFactory(keyStore.getLocation(), keyStore.getPassword().toCharArray()),
 					keyStore.getSecret(), keyStore.getAlias());
-			String algorithm = this.key.getRsa().getAlgorithm();
-			locator.setRsaAlgorithm(RsaAlgorithm.valueOf(algorithm.toUpperCase()));
+			RsaAlgorithm algorithm = this.key.getRsa().getAlgorithm();
+			locator.setRsaAlgorithm(algorithm);
 			locator.setSalt(this.key.getRsa().getSalt());
 			locator.setStrong(this.key.getRsa().isStrong());
 			return locator;
