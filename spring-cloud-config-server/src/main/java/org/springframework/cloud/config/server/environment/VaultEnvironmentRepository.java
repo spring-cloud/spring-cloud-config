@@ -42,6 +42,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,6 +54,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
  * @author Mark Paluch
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
+@Validated
 public class VaultEnvironmentRepository implements EnvironmentRepository, Ordered {
 
 	public static final String VAULT_TOKEN = "X-Vault-Token";
