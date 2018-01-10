@@ -15,16 +15,17 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 import org.springframework.context.ConfigurableApplicationContext;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * @author Dave Syer
@@ -39,7 +40,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Before
 	public void init() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE).run();
+				NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
+						.run();
 		this.repository = new NativeEnvironmentRepository(context.getEnvironment());
 		this.repository.setVersion("myversion");
 		this.repository.setDefaultLabel(null);
@@ -172,7 +174,19 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("classpath:/test/dev/");
 		Environment environment = this.repository.findOne("foo", "development", "ignore");
 		assertEquals(2, environment.getPropertySources().size());
-		assertNotEquals("dev_bar", environment.getPropertySources().get(0).getSource().get("foo"));
+		assertNotEquals("dev_bar",
+				environment.getPropertySources().get(0).getSource().get("foo"));
+	}
+
+	@Test
+	public void tryToStartReactive() {
+		this.repository.setSearchLocations("classpath:/test/reactive/");
+		Environment environment = this.repository.findOne("foo", "master", "default");
+		assertEquals(1, environment.getPropertySources().size());
+		assertEquals("reactive",
+				environment.getPropertySources().get(0).getSource().get("foo"));
+		assertEquals("reactive",
+				environment.getPropertySources().get(0).getSource().get("foo"));
 	}
 
 	@Test
@@ -181,16 +195,18 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setAddLabelLocations(false);
 		Environment environment = this.repository.findOne("foo", "development", "ignore");
 		assertEquals(1, environment.getPropertySources().size());
-		assertEquals("dev_bar", environment.getPropertySources().get(0).getSource().get("foo"));
+		assertEquals("dev_bar",
+				environment.getPropertySources().get(0).getSource().get("foo"));
 	}
 
 	@Test
 	public void locationNoDuplicates() {
-		this.repository.setSearchLocations("classpath:/test/{profile}", "classpath:/test/dev");
+		this.repository.setSearchLocations("classpath:/test/{profile}",
+				"classpath:/test/dev");
 		Locations locations = this.repository.getLocations("foo", "dev", null);
 		assertEquals(1, locations.getLocations().length);
 	}
-	
+
 	@Test
 	public void testDefaultLabel() {
 		this.repository.setDefaultLabel("test");

@@ -20,12 +20,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -57,7 +59,7 @@ public class NativeEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, Ordered {
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
-	
+
 	private String defaultLabel = "master";
 
 	/**
@@ -200,10 +202,10 @@ public class NativeEnvironmentRepository
 
 	private ConfigurableEnvironment getEnvironment(String profile) {
 		ConfigurableEnvironment environment = new StandardEnvironment();
-		environment.getPropertySources()
-				.addFirst(new MapPropertySource("profiles",
-						Collections.<String, Object>singletonMap("spring.profiles.active",
-								profile)));
+		Map<String, Object> map = new HashMap<>();
+		map.put("spring.profiles.active", profile);
+		map.put("spring.main.web-application-type", "none");
+		environment.getPropertySources().addFirst(new MapPropertySource("profiles", map));
 		return environment;
 	}
 
