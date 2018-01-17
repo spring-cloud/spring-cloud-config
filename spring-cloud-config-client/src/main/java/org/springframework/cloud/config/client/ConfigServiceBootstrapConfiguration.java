@@ -59,7 +59,7 @@ public class ConfigServiceBootstrapConfiguration {
 		return locator;
 	}
 
-	@ConditionalOnProperty(value = "spring.cloud.config.failFast", matchIfMissing=false)
+	@ConditionalOnProperty(value = "spring.cloud.config.fail-fast")
 	@ConditionalOnClass({ Retryable.class, Aspect.class, AopAutoConfiguration.class })
 	@Configuration
 	@EnableRetry(proxyTargetClass = true)
