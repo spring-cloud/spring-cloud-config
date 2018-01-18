@@ -1333,14 +1333,14 @@ for a Config Server that is a Eureka client:</simpara>
 <simpara>In some cases, it may be desirable to fail startup of a service if
 it cannot connect to the Config Server.  If this is the desired
 behavior, set the bootstrap configuration property
-<literal>spring.cloud.config.failFast=true</literal> and the client will halt with
+<literal>spring.cloud.config.fail-fast=true</literal> and the client will halt with
 an Exception.</simpara>
 </section>
 <section xml:id="config-client-retry">
 <title>Config Client Retry</title>
 <simpara>If you expect that the config server may occasionally be unavailable when
 your app starts, you can ask it to keep trying after a failure. First you need
-to set <literal>spring.cloud.config.failFast=true</literal>, and then you need to add
+to set <literal>spring.cloud.config.fail-fast=true</literal>, and then you need to add
 <literal>spring-retry</literal> and <literal>spring-boot-starter-aop</literal> to your classpath. The default
 behaviour is to retry 6 times with an initial backoff interval of 1000ms and an
 exponential multiplier of 1.1 for subsequent backoffs. You can configure these
