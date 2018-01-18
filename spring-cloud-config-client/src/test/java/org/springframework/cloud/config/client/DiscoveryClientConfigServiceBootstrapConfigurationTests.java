@@ -121,7 +121,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends Bas
 		setup("spring.cloud.config.discovery.enabled=true",
 				"spring.cloud.config.retry.maxAttempts=3",
 				"spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.failFast=true");
+				"spring.cloud.config.fail-fast=true");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		verifyDiscoveryClientCalledThreeTimes();
@@ -154,7 +154,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends Bas
 		setup("spring.cloud.config.discovery.enabled=true",
 				"spring.cloud.config.retry.maxAttempts=3",
 				"spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.failFast=true");
+				"spring.cloud.config.fail-fast=true");
 	}
 
 	@Test
@@ -165,7 +165,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends Bas
 		setup("spring.cloud.config.discovery.enabled=true",
 				"spring.cloud.config.retry.maxAttempts=3",
 				"spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.failFast=false");
+				"spring.cloud.config.fail-fast=false");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasDefaultConfiguration();

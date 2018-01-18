@@ -19,7 +19,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTest
 		expectNoInstancesOfConfigServerException();
 
 		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.failFast=true");
+				"spring.cloud.config.fail-fast=true");
 	}
 
 	@Test
@@ -28,7 +28,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTest
 		givenDiscoveryClientReturnsNoInfo();
 
 		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.failFast=false");
+				"spring.cloud.config.fail-fast=false");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasDefaultConfiguration();
@@ -41,7 +41,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTest
 		givenDiscoveryClientReturnsInfo();
 
 		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.failFast=true");
+				"spring.cloud.config.fail-fast=true");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasConfigurationFromEureka();
