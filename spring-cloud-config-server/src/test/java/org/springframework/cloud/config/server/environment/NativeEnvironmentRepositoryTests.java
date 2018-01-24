@@ -185,8 +185,6 @@ public class NativeEnvironmentRepositoryTests {
 		assertEquals(1, environment.getPropertySources().size());
 		assertEquals("reactive",
 				environment.getPropertySources().get(0).getSource().get("foo"));
-		assertEquals("reactive",
-				environment.getPropertySources().get(0).getSource().get("foo"));
 	}
 
 	@Test
