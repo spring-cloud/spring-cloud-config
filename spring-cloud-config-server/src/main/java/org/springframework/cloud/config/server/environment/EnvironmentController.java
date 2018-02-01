@@ -99,6 +99,11 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
+		if (name != null && name.contains("(_)")) {
+			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
+			// by Spring MVC
+			name = name.replace("(_)", "/");
+		}
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC

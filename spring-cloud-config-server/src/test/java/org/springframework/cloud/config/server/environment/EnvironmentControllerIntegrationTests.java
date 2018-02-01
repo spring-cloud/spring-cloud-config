@@ -139,6 +139,15 @@ public class EnvironmentControllerIntegrationTests {
 				.andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("\"propertySources\":")));
 	}
 
+	@Test
+	public void environmentWithApplicationContainingSlash() throws Exception {
+		Mockito.when(this.repository.findOne("foo/app", "default", null))
+				.thenReturn(new Environment("foo/app", "default"));
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo(_)app/default"))
+				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("\"propertySources\":")));
+	}
+
 	@Configuration
 	@EnableWebMvc
 	@Import(PropertyPlaceholderAutoConfiguration.class)
