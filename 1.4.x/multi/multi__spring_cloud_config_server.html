@@ -82,7 +82,7 @@ git branch or tag name contains a slash ("/") then the label in the
 HTTP URL should be specified with the special string "(_)" instead (to
 avoid ambiguity with other URL paths).  For example, if the label is
 <code class="literal">foo/bar</code>, replacing the slash would result in a label that looks like
-<code class="literal">foo(_)bar</code>.  The inclusion of the special string "(\_)" can also be
+<code class="literal">foo(_)bar</code>.  The inclusion of the special string "(_)" can also be
 applied to the <code class="literal">{application}</code> parameter. Be careful with the brackets
 in the URL if you are using a command line client like curl (e.g.
 escape them from the shell with quotes '').</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_placeholders_in_git_uri" href="#_placeholders_in_git_uri"></a>Placeholders in Git URI</h4></div></div></div><p>Spring Cloud Config Server supports a git repository URL with
@@ -95,7 +95,7 @@ using (for example):</p><pre class="programlisting"><span xmlns:d="http://docboo
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/myorg/{application<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">}</span></pre><p>or a "one repo per profile" policy using a similar pattern but with
-<code class="literal">{profile}</code>.</p><p>Additionally, using the special string "(\_)" within your
+<code class="literal">{profile}</code>.</p><p>Additionally, using the special string "(_)" within your
 <code class="literal">{application}</code> parameters can enable support for multiple
 organizations (for example):</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
@@ -103,7 +103,7 @@ organizations (for example):</p><pre class="programlisting"><span xmlns:d="http:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/{application<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">}</span></pre><p>where <code class="literal">{application}</code> is provided at request time in the format
-"organization(\_)application".</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_pattern_matching_and_multiple_repositories" href="#_pattern_matching_and_multiple_repositories"></a>Pattern Matching and Multiple Repositories</h4></div></div></div><p>There is also support for more complex requirements with pattern
+"organization(_)application".</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_pattern_matching_and_multiple_repositories" href="#_pattern_matching_and_multiple_repositories"></a>Pattern Matching and Multiple Repositories</h4></div></div></div><p>There is also support for more complex requirements with pattern
 matching on the application and profile name. The pattern format is a
 comma-separated list of <code class="literal">{application}/{profile}</code> names with wildcards
 (where a pattern beginning with a wildcard may need to be
