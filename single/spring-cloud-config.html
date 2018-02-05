@@ -581,7 +581,7 @@ include Spring Security on the classpath (e.g. through
 <code class="literal">spring-boot-starter-security</code>). The default is a username of "user"
 and a randomly generated password, which isn&#8217;t going to be very useful
 in practice, so we recommend you configure the password (via
-<code class="literal">security.user.password</code>) and encrypt it (see below for instructions
+<code class="literal">spring.security.user.password</code>) and encrypt it (see below for instructions
 on how to do that).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_encryption_and_decryption" href="#_encryption_and_decryption"></a>2.4&nbsp;Encryption and Decryption</h2></div></div></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p><span class="strong"><strong>Prerequisites:</strong></span> to use the encryption and decryption features
 you need the full-strength JCE installed in your JVM (it&#8217;s not there by default).
 You can download the "Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files"
