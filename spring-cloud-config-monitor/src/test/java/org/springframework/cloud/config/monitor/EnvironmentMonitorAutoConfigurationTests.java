@@ -16,11 +16,7 @@
 
 package org.springframework.cloud.config.monitor;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.junit.Test;
-
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
@@ -30,6 +26,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.MultiValueMap;
+
+import java.util.Collection;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -47,7 +46,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
 						.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
-		assertEquals(4,
+		assertEquals(5,
 				((Collection<?>) ReflectionTestUtils.getField(
 						ReflectionTestUtils.getField(endpoint, "extractor"),
 						"extractors")).size());
@@ -63,7 +62,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
 						.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
-		assertEquals(5,
+		assertEquals(6,
 				((Collection<?>) ReflectionTestUtils.getField(
 						ReflectionTestUtils.getField(endpoint, "extractor"),
 						"extractors")).size());
