@@ -1220,7 +1220,7 @@ annotation (just set `spring.cloud.config.server.bootstrap=true`).
 
 == Push Notifications and Spring Cloud Bus
 
-Many source code repository providers (like Github, Gitlab or Bitbucket
+Many source code repository providers (like Github, Gitlab, Gitee or Bitbucket
 for instance) will notify you of changes in a repository through a
 webhook. You can configure the webhook via the provider's user
 interface as a URL and a set of events in which you are
@@ -1242,8 +1242,8 @@ if you want to override the behaviour is `PropertyPathNotificationExtractor`
 which accepts the request headers and body as parameters and returns a list
 of file paths that changed.
 
-The default configuration works out of the box with Github, Gitlab or
-Bitbucket. In addition to the JSON notifications from Github, Gitlab
+The default configuration works out of the box with Github, Gitlab, Gitee or
+Bitbucket. In addition to the JSON notifications from Github, Gitlab, Gitee
 or Bitbucket you can trigger a change notification by POSTing to
 "/monitor" with a form-encoded body parameters `path={name}`. This will
 broadcast to applications matching the "{name}" pattern (can contain
