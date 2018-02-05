@@ -874,7 +874,7 @@ include Spring Security on the classpath (e.g. through
 `spring-boot-starter-security`). The default is a username of "user"
 and a randomly generated password, which isn't going to be very useful
 in practice, so we recommend you configure the password (via
-`security.user.password`) and encrypt it (see below for instructions
+`spring.security.user.password`) and encrypt it (see below for instructions
 on how to do that).
 
 === Encryption and Decryption
