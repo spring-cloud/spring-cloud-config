@@ -42,6 +42,7 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
+import org.eclipse.jgit.lib.BranchTrackingStatus;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.FetchResult;
@@ -197,10 +198,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				if (isBranch(git, label)) {
 					// merge results from fetch
 					merge(git, label);
-					if (!isClean(git)) {
-						logger.warn(
-								"The local repository is dirty. Resetting it to origin/"
-										+ label + ".");
+					if (!isClean(git, label)) {
+						logger.warn("The local repository is dirty or ahead of origin. Resetting"
+								+ " it to origin/" + label + ".");
 						resetHard(git, label, "refs/remotes/origin/" + label);
 					}
 				}
@@ -492,10 +492,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		return null;
 	}
 
-	private boolean isClean(Git git) {
+	private boolean isClean(Git git, String label) {
 		StatusCommand status = git.status();
 		try {
-			return status.call().isClean();
+			boolean isBranchAhead = false;
+			BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(git.getRepository(), label);
+			isBranchAhead = trackingStatus != null && trackingStatus.getAheadCount() > 0;
+			return status.call().isClean() && !isBranchAhead;
 		}
 		catch (Exception e) {
 			String message = "Could not execute status command on local repository. Cause: ("
