@@ -25,7 +25,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 // Normally spring.cloud.config.enabled:true is the default but since we have the config
 // server on the classpath we need to set it explicitly
 	properties = { "spring.cloud.config.enabled:true",
-			"management.security.enabled=false", "management.endpoints.web.expose=*" }, webEnvironment = RANDOM_PORT)
+			"management.security.enabled=false", "management.endpoints.web.exposure.include=*" }, webEnvironment = RANDOM_PORT)
 public class ApplicationTests {
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
