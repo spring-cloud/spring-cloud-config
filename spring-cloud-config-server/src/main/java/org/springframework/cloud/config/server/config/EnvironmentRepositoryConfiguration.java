@@ -22,14 +22,8 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
-import org.springframework.cloud.config.server.environment.EnvironmentRepository;
-import org.springframework.cloud.config.server.environment.EnvironmentWatch;
-import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
-import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
-import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
-import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.config.server.environment.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -45,11 +39,13 @@ import org.springframework.web.client.RestTemplate;
  *
  */
 @Configuration
-@Import({ JdbcRepositoryConfiguration.class, VaultRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
-		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
-		DefaultRepositoryConfiguration.class })
+@EnableConfigurationProperties({ MultipleJGitEnvironmentProperties.class,
+		SvnKitEnvironmentProperties.class, JdbcEnvironmentProperties.class,
+		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class })
+@Import({ JdbcRepositoryConfiguration.class, VaultRepositoryConfiguration.class,
+		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
+		GitRepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
-
 	@Bean
 	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
 	public ConfigServerHealthIndicator configServerHealthIndicator(
@@ -81,7 +77,6 @@ public class EnvironmentRepositoryConfiguration {
 @Configuration
 @ConditionalOnMissingBean(EnvironmentRepository.class)
 class DefaultRepositoryConfiguration {
-
 	@Autowired
 	private ConfigurableEnvironment environment;
 
@@ -91,10 +86,13 @@ class DefaultRepositoryConfiguration {
 	@Autowired(required = false)
 	private TransportConfigCallback transportConfigCallback;
 
+	@Autowired(required = false)
+	private MultipleJGitEnvironmentProperties environmentProperties;
+
 	@Bean
 	public MultipleJGitEnvironmentRepository defaultEnvironmentRepository() {
 		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(
-				this.environment);
+				this.environment, environmentProperties);
 		repository.setTransportConfigCallback(this.transportConfigCallback);
 		if (this.server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.server.getDefaultLabel());
@@ -107,17 +105,19 @@ class DefaultRepositoryConfiguration {
 @ConditionalOnMissingBean(EnvironmentRepository.class)
 @Profile("native")
 class NativeRepositoryConfiguration {
-
 	@Autowired
 	private ConfigurableEnvironment environment;
-	
+
 	@Autowired
 	private ConfigServerProperties configServerProperties;
+
+	@Autowired(required = false)
+	private NativeEnvironmentProperties environmentProperties;
 
 	@Bean
 	public NativeEnvironmentRepository nativeEnvironmentRepository() {
 		NativeEnvironmentRepository repository = new NativeEnvironmentRepository(
-				this.environment);
+				this.environment, environmentProperties);
 
 		repository.setDefaultLabel(configServerProperties.getDefaultLabel());
 
@@ -139,10 +139,13 @@ class SvnRepositoryConfiguration {
 	@Autowired
 	private ConfigServerProperties server;
 
+	@Autowired(required = false)
+	private SvnKitEnvironmentProperties environmentProperties;
+
 	@Bean
 	public SvnKitEnvironmentRepository svnKitEnvironmentRepository() {
 		SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(
-				this.environment);
+				this.environment, environmentProperties);
 		if (this.server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.server.getDefaultLabel());
 		}
@@ -153,18 +156,24 @@ class SvnRepositoryConfiguration {
 @Configuration
 @Profile("vault")
 class VaultRepositoryConfiguration {
+	@Autowired(required = false)
+	private VaultEnvironmentProperties environmentProperties;
+
 	@Bean
 	public VaultEnvironmentRepository vaultEnvironmentRepository(
 			HttpServletRequest request, EnvironmentWatch watch) {
-		return new VaultEnvironmentRepository(request, watch, new RestTemplate());
+		return new VaultEnvironmentRepository(request, watch, new RestTemplate(), environmentProperties);
 	}
 }
 
 @Configuration
 @Profile("jdbc")
 class JdbcRepositoryConfiguration {
+	@Autowired(required = false)
+	private JdbcEnvironmentProperties environmentProperties;
+
 	@Bean
 	public JdbcEnvironmentRepository jdbcEnvironmentRepository(JdbcTemplate jdbc) {
-		return new JdbcEnvironmentRepository(jdbc);
+		return new JdbcEnvironmentRepository(jdbc, environmentProperties);
 	}
 }

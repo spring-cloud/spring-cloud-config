@@ -53,7 +53,6 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
  * @author Spencer Gibb
  * @author Mark Paluch
  */
-@ConfigurationProperties("spring.cloud.config.server.vault")
 @Validated
 public class VaultEnvironmentRepository implements EnvironmentRepository, Ordered {
 
@@ -85,15 +84,30 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private RestTemplate rest;
 
-	//TODO: move to watchState:String on findOne?
+	// TODO: move to watchState:String on findOne?
 	private HttpServletRequest request;
 
 	private EnvironmentWatch watch;
 
 	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch, RestTemplate rest) {
+		this(request, watch, rest, null);
+	}
+
+	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch,
+			RestTemplate rest, VaultEnvironmentProperties properties) {
 		this.request = request;
 		this.watch = watch;
 		this.rest = rest;
+		if (properties != null) {
+			this.backend = properties.getBackend() == null ? this.backend : properties.getBackend();
+			this.defaultKey = properties.getDefaultKey() == null ? this.defaultKey : properties.getDefaultKey();
+			this.host = properties.getHost() == null ? this.host : properties.getHost();
+			this.order = properties.getOrder() == null ? this.order : properties.getOrder();
+			this.port = properties.getPort() == null ? this.port : properties.getPort();
+			this.profileSeparator = properties.getProfileSeparator() == null ? this.profileSeparator
+					: properties.getProfileSeparator();
+			this.scheme = properties.getScheme() == null ? this.scheme : properties.getScheme();
+		}
 	}
 
 	@Override
@@ -151,7 +165,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private void addProfiles(List<String> contexts, String baseContext,
-							 List<String> profiles) {
+			List<String> profiles) {
 		for (String profile : profiles) {
 			contexts.add(baseContext + this.profileSeparator + profile);
 		}

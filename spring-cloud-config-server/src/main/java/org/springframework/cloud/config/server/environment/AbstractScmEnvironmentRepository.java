@@ -35,6 +35,13 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 		super(environment);
 	}
 
+	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment, AbstractScmEnvironmentProperties properties) {
+		super(environment, properties);
+		if (properties != null) {
+			this.order = properties.getOrder() == null ? this.order : properties.getOrder();
+		}
+	}
+
 	@Override
 	public synchronized Environment findOne(String application, String profile, String label) {
 		NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(

@@ -68,7 +68,7 @@ public class CompositeConfigServerIntegrationTests {
 	}
 
 	@Test
-	public void resourseEndpointsWork() {
+	public void resourceEndpointsWork() {
 		//This request will get the file from the Git Repo
 		String text = new TestRestTemplate().getForObject("http://localhost:"
 				+ port + "/foo/development/composite/bar.properties", String.class);

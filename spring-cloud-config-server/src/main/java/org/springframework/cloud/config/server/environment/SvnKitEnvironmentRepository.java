@@ -21,7 +21,6 @@ import java.net.URI;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -43,7 +42,6 @@ import static org.springframework.util.StringUtils.hasText;
  * @author Michael Prankl
  * @author Roy Clarkson
  */
-@ConfigurationProperties("spring.cloud.config.server.svn")
 public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, InitializingBean {
 
@@ -66,6 +64,13 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 
 	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
+	}
+
+	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment, SvnKitEnvironmentProperties properties) {
+		super(environment, properties);
+		if (properties != null) {
+			this.defaultLabel = properties.getDefaultLabel() == null ? this.defaultLabel : properties.getDefaultLabel();
+		}
 	}
 
 	@Override

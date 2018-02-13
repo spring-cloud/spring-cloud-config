@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
@@ -49,7 +48,6 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  *
  */
-@ConfigurationProperties("spring.cloud.config.server.jdbc")
 public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered {
 
 	private static final String DEFAULT_SQL = "SELECT KEY, VALUE from PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=?";
@@ -61,7 +59,15 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 	public JdbcEnvironmentRepository(JdbcTemplate jdbc) {
 		this.jdbc = jdbc;
 	}
-	
+
+	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
+		this.jdbc = jdbc;
+		if (properties != null) {
+			this.order = properties.getOrder() == null ? this.order : properties.getOrder();
+			this.sql = properties.getSql() == null ? this.sql : properties.getSql();
+		}
+	}
+
 	public void setSql(String sql) {
 		this.sql = sql;
 	}

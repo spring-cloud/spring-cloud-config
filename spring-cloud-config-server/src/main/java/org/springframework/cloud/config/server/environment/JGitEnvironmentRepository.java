@@ -113,6 +113,16 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		super(environment);
 	}
 
+	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties) {
+		super(environment, properties);
+		if (properties != null) {
+			this.cloneOnStart = properties.getCloneOnStart() == null ? this.cloneOnStart : properties.getCloneOnStart();
+			this.defaultLabel = properties.getDefaultLabel() == null ? this.defaultLabel: properties.getDefaultLabel();
+			this.forcePull = properties.getForcePull() == null ? this.forcePull : properties.getForcePull();
+			this.timeout = properties.getTimeout() == null ? this.timeout : properties.getTimeout();
+		}
+	}
+
 	public boolean isCloneOnStart() {
 		return this.cloneOnStart;
 	}

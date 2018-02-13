@@ -46,7 +46,6 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  *
  */
-@ConfigurationProperties("spring.cloud.config.server.git")
 public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository {
 
 	/**
@@ -58,6 +57,13 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
+	}
+
+	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment, MultipleJGitEnvironmentProperties properties) {
+		super(environment, properties);
+		if (properties != null) {
+			this.repos = properties.getRepos() == null ? this.repos : properties.getRepos();
+		}
 	}
 
 	@Override

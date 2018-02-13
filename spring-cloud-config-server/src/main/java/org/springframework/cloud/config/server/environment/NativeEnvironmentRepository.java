@@ -54,7 +54,6 @@ import org.springframework.util.StringUtils;
  * @author Venil Noronha
  * @author Daniel Lavoie
  */
-@ConfigurationProperties("spring.cloud.config.server.native")
 public class NativeEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, Ordered {
 
@@ -92,6 +91,18 @@ public class NativeEnvironmentRepository
 
 	public NativeEnvironmentRepository(ConfigurableEnvironment environment) {
 		this.environment = environment;
+	}
+
+	public NativeEnvironmentRepository(ConfigurableEnvironment environment, NativeEnvironmentProperties properties) {
+		this.environment = environment;
+		if (properties != null) {
+			this.addLabelLocations = properties.getAddLabelLocations() == null ? this.addLabelLocations : properties.getAddLabelLocations();
+			this.defaultLabel = properties.getDefaultLabel() == null ? this.defaultLabel : properties.getDefaultLabel();
+			this.failOnError = properties.getFailOnError() == null ? this.failOnError : properties.getFailOnError();
+			this.order = properties.getOrder() == null ? this.order : properties.getOrder();
+			this.searchLocations = properties.getSearchLocations() == null ? this.searchLocations : properties.getSearchLocations();
+			this.version = properties.getVersion();
+		}
 	}
 
 	public void setFailOnError(boolean failOnError) {

@@ -42,7 +42,7 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  *
  */
-public class AbstractScmAccessor implements ResourceLoaderAware {
+public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 
 	private static final String[] DEFAULT_LOCATIONS = new String[] { "/" };
 
@@ -68,9 +68,9 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 	 * Passphrase for unlocking your ssh private key.
 	 */
 	private String passphrase;
- 	/**
-  	 * Reject incoming SSH host keys from remote servers not in the known host list.
-  	 */
+	/**
+	 * Reject incoming SSH host keys from remote servers not in the known host list.
+	 */
 	private boolean strictHostKeyChecking = true;
 	/**
 	 * Search paths to use within local working copy. By default searches only the root.
@@ -82,6 +82,23 @@ public class AbstractScmAccessor implements ResourceLoaderAware {
 	public AbstractScmAccessor(ConfigurableEnvironment environment) {
 		this.environment = environment;
 		this.basedir = createBaseDir();
+	}
+
+	public AbstractScmAccessor(ConfigurableEnvironment environment,
+			AbstractScmAccessorProperties properties) {
+		this.environment = environment;
+		if (properties != null) {
+			this.basedir = properties.getBasedir() == null ? createBaseDir()
+					: properties.getBasedir();
+			this.passphrase = properties.getPassphrase();
+			this.password = properties.getPassword();
+			this.searchPaths = properties.getSearchPaths();
+			this.strictHostKeyChecking = properties.getStrictHostKeyChecking() == null
+					? this.strictHostKeyChecking
+					: properties.getStrictHostKeyChecking();
+			this.uri = properties.getUri();
+			this.username = properties.getUsername();
+		}
 	}
 
 	@Override
