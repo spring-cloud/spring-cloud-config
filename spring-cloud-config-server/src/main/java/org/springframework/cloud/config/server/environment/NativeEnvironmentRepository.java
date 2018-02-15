@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
@@ -33,7 +32,6 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.config.ConfigFileApplicationListener;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -59,23 +57,23 @@ public class NativeEnvironmentRepository
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
-	private String defaultLabel = "master";
+	private String defaultLabel;
 
 	/**
 	 * Locations to search for configuration files. Defaults to the same as a Spring Boot
 	 * app so [classpath:/,classpath:/config/,file:./,file:./config/].
 	 */
-	private String[] searchLocations = new String[0];
+	private String[] searchLocations;
 
 	/**
 	 * Flag to determine how to handle exceptions during decryption (default false).
 	 */
-	private boolean failOnError = false;
+	private boolean failOnError;
 
 	/**
 	 * Flag to determine whether label locations should be added.
 	 */
-	private boolean addLabelLocations = true;
+	private boolean addLabelLocations;
 
 	/**
 	 * Version string to be reported for native repository
@@ -87,22 +85,16 @@ public class NativeEnvironmentRepository
 
 	private ConfigurableEnvironment environment;
 
-	private int order = Ordered.LOWEST_PRECEDENCE;
-
-	public NativeEnvironmentRepository(ConfigurableEnvironment environment) {
-		this.environment = environment;
-	}
+	private int order;
 
 	public NativeEnvironmentRepository(ConfigurableEnvironment environment, NativeEnvironmentProperties properties) {
 		this.environment = environment;
-		if (properties != null) {
-			this.addLabelLocations = properties.getAddLabelLocations() == null ? this.addLabelLocations : properties.getAddLabelLocations();
-			this.defaultLabel = properties.getDefaultLabel() == null ? this.defaultLabel : properties.getDefaultLabel();
-			this.failOnError = properties.getFailOnError() == null ? this.failOnError : properties.getFailOnError();
-			this.order = properties.getOrder() == null ? this.order : properties.getOrder();
-			this.searchLocations = properties.getSearchLocations() == null ? this.searchLocations : properties.getSearchLocations();
-			this.version = properties.getVersion();
-		}
+		this.addLabelLocations = properties.getAddLabelLocations();
+		this.defaultLabel = properties.getDefaultLabel();
+		this.failOnError = properties.getFailOnError();
+		this.order = properties.getOrder();
+		this.searchLocations = properties.getSearchLocations();
+		this.version = properties.getVersion();
 	}
 
 	public void setFailOnError(boolean failOnError) {

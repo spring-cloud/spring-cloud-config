@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.cloud.config.server.environment;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.AbstractScmAccessor;
+import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 
@@ -35,17 +35,15 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 		super(environment);
 	}
 
-	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment, AbstractScmEnvironmentProperties properties) {
+	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment, AbstractScmAccessorProperties properties) {
 		super(environment, properties);
-		if (properties != null) {
-			this.order = properties.getOrder() == null ? this.order : properties.getOrder();
-		}
+		this.order = properties.getOrder();
 	}
 
 	@Override
 	public synchronized Environment findOne(String application, String profile, String label) {
-		NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(
-				getEnvironment());
+		NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(getEnvironment(),
+				new NativeEnvironmentProperties());
 		Locations locations = getLocations(application, profile, label);
 		delegate.setSearchLocations(locations.getLocations());
 		Environment result = delegate.findOne(application, profile, "");

@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.util.FileUtils;
+
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -43,8 +44,6 @@ import org.springframework.util.StringUtils;
  *
  */
 public abstract class AbstractScmAccessor implements ResourceLoaderAware {
-
-	private static final String[] DEFAULT_LOCATIONS = new String[] { "/" };
 
 	protected Log logger = LogFactory.getLog(getClass());
 	/**
@@ -71,11 +70,11 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 	/**
 	 * Reject incoming SSH host keys from remote servers not in the known host list.
 	 */
-	private boolean strictHostKeyChecking = true;
+	private boolean strictHostKeyChecking;
 	/**
 	 * Search paths to use within local working copy. By default searches only the root.
 	 */
-	private String[] searchPaths = DEFAULT_LOCATIONS.clone();
+	private String[] searchPaths;
 
 	private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
@@ -87,18 +86,14 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 	public AbstractScmAccessor(ConfigurableEnvironment environment,
 			AbstractScmAccessorProperties properties) {
 		this.environment = environment;
-		if (properties != null) {
-			this.basedir = properties.getBasedir() == null ? createBaseDir()
-					: properties.getBasedir();
-			this.passphrase = properties.getPassphrase();
-			this.password = properties.getPassword();
-			this.searchPaths = properties.getSearchPaths();
-			this.strictHostKeyChecking = properties.getStrictHostKeyChecking() == null
-					? this.strictHostKeyChecking
-					: properties.getStrictHostKeyChecking();
-			this.uri = properties.getUri();
-			this.username = properties.getUsername();
-		}
+		this.basedir = properties.getBasedir() == null ? createBaseDir()
+				: properties.getBasedir();
+		this.passphrase = properties.getPassphrase();
+		this.password = properties.getPassword();
+		this.searchPaths = properties.getSearchPaths();
+		this.strictHostKeyChecking = properties.getStrictHostKeyChecking();
+		this.uri = properties.getUri();
+		this.username = properties.getUsername();
 	}
 
 	@Override
@@ -217,10 +212,10 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 			String label) {
 		String[] locations = this.searchPaths;
 		if (locations == null || locations.length == 0) {
-			locations = DEFAULT_LOCATIONS;
+			locations = AbstractScmAccessorProperties.DEFAULT_LOCATIONS;
 		}
-		else if (locations != DEFAULT_LOCATIONS) {
-			locations = StringUtils.concatenateStringArrays(DEFAULT_LOCATIONS, locations);
+		else if (locations != AbstractScmAccessorProperties.DEFAULT_LOCATIONS) {
+			locations = StringUtils.concatenateStringArrays(AbstractScmAccessorProperties.DEFAULT_LOCATIONS, locations);
 		}
 		Collection<String> output = new LinkedHashSet<String>();
 		for (String location : locations) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,6 @@ import java.net.URI;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
@@ -33,6 +29,11 @@ import org.tmatesoft.svn.core.wc2.SvnCheckout;
 import org.tmatesoft.svn.core.wc2.SvnOperationFactory;
 import org.tmatesoft.svn.core.wc2.SvnTarget;
 import org.tmatesoft.svn.core.wc2.SvnUpdate;
+
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -47,12 +48,10 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 
 	private static Log logger = LogFactory.getLog(SvnKitEnvironmentRepository.class);
 
-	private static final String DEFAULT_LABEL = "trunk";
-
 	/**
 	 * The default label for environment properties requests.
 	 */
-	private String defaultLabel = DEFAULT_LABEL;
+	private String defaultLabel;
 
 	public String getDefaultLabel() {
 		return this.defaultLabel;
@@ -62,15 +61,9 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		this.defaultLabel = defaultLabel;
 	}
 
-	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment) {
-		super(environment);
-	}
-
 	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment, SvnKitEnvironmentProperties properties) {
 		super(environment, properties);
-		if (properties != null) {
-			this.defaultLabel = properties.getDefaultLabel() == null ? this.defaultLabel : properties.getDefaultLabel();
-		}
+		this.defaultLabel = properties.getDefaultLabel();
 	}
 
 	@Override

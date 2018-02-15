@@ -15,18 +15,21 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
+import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
  * @author Dylan Roberts
  */
-@ConfigurationProperties("spring.cloud.config.server.svn")
-public class SvnKitEnvironmentProperties extends AbstractScmAccessorProperties {
-    private static final String DEFAULT_LABEL = "trunk";
+public class NativeEnvironmentRepositoryFactory implements EnvironmentRepositoryFactory<NativeEnvironmentRepository,
+		NativeEnvironmentProperties> {
+	private ConfigurableEnvironment environment;
 
-    public SvnKitEnvironmentProperties() {
-        super();
-        setDefaultLabel(DEFAULT_LABEL);
-    }
+	public NativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment) {
+		this.environment = environment;
+	}
+
+	@Override
+	public NativeEnvironmentRepository build(NativeEnvironmentProperties environmentProperties) {
+		return new NativeEnvironmentRepository(environment, environmentProperties);
+	}
 }

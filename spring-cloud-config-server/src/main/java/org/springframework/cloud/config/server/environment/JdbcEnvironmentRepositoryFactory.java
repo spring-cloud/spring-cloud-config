@@ -15,18 +15,21 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * @author Dylan Roberts
  */
-@ConfigurationProperties("spring.cloud.config.server.svn")
-public class SvnKitEnvironmentProperties extends AbstractScmAccessorProperties {
-    private static final String DEFAULT_LABEL = "trunk";
+public class JdbcEnvironmentRepositoryFactory implements EnvironmentRepositoryFactory<JdbcEnvironmentRepository,
+		JdbcEnvironmentProperties> {
+	private JdbcTemplate jdbc;
 
-    public SvnKitEnvironmentProperties() {
-        super();
-        setDefaultLabel(DEFAULT_LABEL);
-    }
+	public JdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
+		this.jdbc = jdbc;
+	}
+
+	@Override
+	public JdbcEnvironmentRepository build(JdbcEnvironmentProperties environmentProperties) {
+		return new JdbcEnvironmentRepository(jdbc, environmentProperties);
+	}
 }

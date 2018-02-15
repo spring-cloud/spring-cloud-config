@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-
 import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -31,7 +30,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Range;
 
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
@@ -60,27 +58,27 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	/** Vault host. Defaults to 127.0.0.1. */
 	@NotEmpty
-	private String host = "127.0.0.1";
+	private String host;
 
 	/** Vault port. Defaults to 8200. */
 	@Range(min = 1, max = 65535)
-	private int port = 8200;
+	private int port;
 
 	/** Vault scheme. Defaults to http. */
-	private String scheme = "http";
+	private String scheme;
 
 	/** Vault backend. Defaults to secret. */
 	@NotEmpty
-	private String backend = "secret";
+	private String backend;
 
 	/** The key in vault shared by all applications. Defaults to application. Set to empty to disable. */
-	private String defaultKey = "application";
+	private String defaultKey;
 
 	/** Vault profile separator. Defaults to comma. */
 	@NotEmpty
-	private String profileSeparator = ",";
+	private String profileSeparator;
 
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private int order;
 
 	private RestTemplate rest;
 
@@ -89,25 +87,18 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private EnvironmentWatch watch;
 
-	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch, RestTemplate rest) {
-		this(request, watch, rest, null);
-	}
-
-	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch,
-			RestTemplate rest, VaultEnvironmentProperties properties) {
+	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch, RestTemplate rest,
+									  VaultEnvironmentProperties properties) {
 		this.request = request;
 		this.watch = watch;
 		this.rest = rest;
-		if (properties != null) {
-			this.backend = properties.getBackend() == null ? this.backend : properties.getBackend();
-			this.defaultKey = properties.getDefaultKey() == null ? this.defaultKey : properties.getDefaultKey();
-			this.host = properties.getHost() == null ? this.host : properties.getHost();
-			this.order = properties.getOrder() == null ? this.order : properties.getOrder();
-			this.port = properties.getPort() == null ? this.port : properties.getPort();
-			this.profileSeparator = properties.getProfileSeparator() == null ? this.profileSeparator
-					: properties.getProfileSeparator();
-			this.scheme = properties.getScheme() == null ? this.scheme : properties.getScheme();
-		}
+		this.backend = properties.getBackend();
+		this.defaultKey = properties.getDefaultKey();
+		this.host = properties.getHost();
+		this.order = properties.getOrder();
+		this.port = properties.getPort();
+		this.profileSeparator = properties.getProfileSeparator();
+		this.scheme = properties.getScheme();
 	}
 
 	@Override

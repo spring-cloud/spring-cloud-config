@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server.environment;
+package org.springframework.cloud.config.server.composite;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.springframework.context.annotation.Conditional;
 
 /**
  * @author Dylan Roberts
  */
-@ConfigurationProperties("spring.cloud.config.server.svn")
-public class SvnKitEnvironmentProperties extends AbstractScmAccessorProperties {
-    private static final String DEFAULT_LABEL = "trunk";
-
-    public SvnKitEnvironmentProperties() {
-        super();
-        setDefaultLabel(DEFAULT_LABEL);
-    }
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Conditional(OnSearchPathLocatorPresent.class)
+public @interface ConditionalOnMissingSearchPathLocator {
 }

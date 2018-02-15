@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
@@ -42,8 +43,8 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	private static final String REPOSITORY_NAME = "svn-config-repo";
 	private StandardEnvironment environment = new StandardEnvironment();
-	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(
-			this.environment);
+	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment,
+			new SvnKitEnvironmentProperties());
 
 	private File basedir = new File("target/config");
 

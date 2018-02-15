@@ -13,20 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server.environment;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
+package org.springframework.cloud.config.server.support;
 
 /**
  * @author Dylan Roberts
  */
-@ConfigurationProperties("spring.cloud.config.server.svn")
-public class SvnKitEnvironmentProperties extends AbstractScmAccessorProperties {
-    private static final String DEFAULT_LABEL = "trunk";
-
-    public SvnKitEnvironmentProperties() {
-        super();
-        setDefaultLabel(DEFAULT_LABEL);
-    }
+public interface EnvironmentRepositoryProperties {
+    void setOrder(int order);
 }

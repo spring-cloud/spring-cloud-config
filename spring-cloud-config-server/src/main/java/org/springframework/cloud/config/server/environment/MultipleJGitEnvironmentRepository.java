@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -51,19 +51,17 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	/**
 	 * Map of repository identifier to location and other properties.
 	 */
-	private Map<String, PatternMatchingJGitEnvironmentRepository> repos = new LinkedHashMap<String, PatternMatchingJGitEnvironmentRepository>();
+	private Map<String, PatternMatchingJGitEnvironmentRepository> repos;
 
-	private Map<String, JGitEnvironmentRepository> placeholders = new LinkedHashMap<String, JGitEnvironmentRepository>();
+	private Map<String, JGitEnvironmentRepository> placeholders = new LinkedHashMap<>();
 
-	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment) {
-		super(environment);
-	}
-
-	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment, MultipleJGitEnvironmentProperties properties) {
+	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment,
+											 MultipleJGitEnvironmentProperties properties) {
 		super(environment, properties);
-		if (properties != null) {
-			this.repos = properties.getRepos() == null ? this.repos : properties.getRepos();
-		}
+		this.repos = properties.getRepos().entrySet().stream()
+				.map(e -> new AbstractMap.SimpleEntry<>(e.getKey(),
+						new PatternMatchingJGitEnvironmentRepository(environment, e.getValue())))
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 	@Override
@@ -235,7 +233,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository source,
 			String uri) {
-		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(null);
+		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(null,
+				new JGitEnvironmentProperties());
 		File basedir = repository.getBasedir();
 		BeanUtils.copyProperties(source, repository);
 		repository.setUri(uri);
@@ -257,7 +256,15 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		private String name;
 
 		public PatternMatchingJGitEnvironmentRepository() {
-			super(null);
+			super(null, new JGitEnvironmentProperties());
+		}
+
+		public PatternMatchingJGitEnvironmentRepository(
+				ConfigurableEnvironment environment,
+				MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties properties) {
+			super(environment, properties);
+			this.setPattern(properties.getPattern());
+			this.name = properties.getName();
 		}
 
 		public boolean matches(String application, String profile, String label) {
