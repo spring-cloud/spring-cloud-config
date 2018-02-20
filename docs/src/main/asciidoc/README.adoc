@@ -8,23 +8,25 @@ include::intro.adoc[]
 
 === Spring Cloud Config Server
 
-* HTTP, resource-based API for external configuration (name-value pairs, or equivalent YAML content)
+Spring Cloud Config Server offers the following benefits:
+
+* HTTP resource-based API for external configuration (name-value pairs or equivalent YAML content)
 * Encrypt and decrypt property values (symmetric or asymmetric)
 * Embeddable easily in a Spring Boot application using `@EnableConfigServer`
 
 === Spring Cloud Config Client
 
-Specifically for Spring applications:
+Specifically for Spring applications, Spring Cloud Config lets you:
 
-* Bind to the Config Server and initialize Spring `Environment` with remote property sources
-* Encrypt and decrypt property values (symmetric or asymmetric)
-* `@RefreshScope` for Spring `@Beans` that want to be re-initialized when configuration changes
-* Management endpoints:
-** `/env` for updating `Environment` and rebinding `@ConfigurationProperties` and log levels
-** `/refresh` for refreshing the `@RefreshScope` beans
-** `/restart` for restarting the Spring context (disabled by default)
-** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`)
-* Bootstrap application context: a parent context for the main application that can be trained to do anything (by default it binds to the Config Server, and decrypts property values)
+* Bind to the Config Server and initialize Spring `Environment` with remote property sources.
+* Encrypt and decrypt property values (symmetric or asymmetric).
+* `@RefreshScope` for Spring `@Beans` that want to be re-initialized when configuration changes.
+* Use management endpoints:
+** `/env` for updating `Environment` and rebinding `@ConfigurationProperties` and log levels.
+** `/refresh` for refreshing the `@RefreshScope` beans.
+** `/restart` for restarting the Spring context (disabled by default).
+** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`).
+* Bootstrap application context: a parent context for the main application that can be trained to do anything (by default, it binds to the Config Server and decrypts property values).
 
 == Quick Start
 
@@ -32,48 +34,38 @@ include::quickstart.adoc[]
 
 === Sample Application
 
-There is a sample application
-https://github.com/spring-cloud/spring-cloud-config/tree/master/spring-cloud-config-sample[here]. It
-is a Spring Boot application so you can run it using the usual
-mechanisms (for instance "mvn spring-boot:run"). When it runs it will
-look for the config server on "http://localhost:8888" by default, so
-you could run the server as well to see it all working together.
+You can find a sample application https://github.com/spring-cloud/spring-cloud-config/tree/master/spring-cloud-config-sample[here].
+It is a Spring Boot application, so you can run it by using the usual mechanisms (for instance, `mvn spring-boot:run`).
+When it runs, it looks for the config server on `http://localhost:8888` (a configurable default), so you can run the server as well to see it all working together.
 
-The sample has a test case where the config server is also started in
-the same JVM (with a different port), and the test asserts that an
-environment property from the git configuration repo is present. To
-change the location of the config server just set
-"spring.cloud.config.uri" in "bootstrap.yml" (or via System
-properties etc.).
+The sample has a test case where the config server is also started in the same JVM (with a different port), and the test asserts that an
+environment property from the git configuration repo is present.
+To change the location of the config server, you can set `spring.cloud.config.uri` in `bootstrap.yml` (or in system properties and other places).
 
-The test case has a `main()` method that runs the server in the same
-way (watch the logs for its port), so you can run the whole system in
-one process and play with it (e.g. right click on the main in your IDE
-and run it). The `main()` method uses `target/config` for the working
-directory of the git repository, so you can make local changes there
-and see them reflected in the running app.
+The test case has a `main()` method that runs the server in the same way (watch the logs for its port), so you can run the whole system in one process and play with it (for example, you can run the `main()` method in your IDE).
+The `main()` method uses `target/config` for the working directory of the git repository, so you can make local changes there and see them reflected in the running app. The following example shows a session of tinkering with the test case:
 
 ----
-$ curl localhost:8080/env/foo
-bar
-$ vi target/config/bar.properties
-.. change value of "foo", optionally commit
+$ curl localhost:8080/env/sample
+mytest
+$ vi target/config/mytest.properties
+.. change value of "sample", optionally commit
 $ curl localhost:8080/refresh
-["foo"]
-$ curl localhost:8080/env/foo
-baz
+["sample"]
+$ curl localhost:8080/env/sample
+sampleValue
 ----
 
-The refresh endpoint reports that the "foo" property changed.
+The refresh endpoint reports that the "sample" property changed.
 
 == Building
 
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/building.adoc[]
+
 === JCE
 
-If you are getting an exception due to "Illegal key size" and you
-are using Sun’s JDK, you need to install the Java Cryptography
-Extension (JCE) Unlimited Strength Jurisdiction Policy Files. See
-the following links for more information:
+If you get an exception due to "Illegal key size" and you are using Sun’s JDK, you need to install the Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files.
+See the following links for more information:
 
 http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html[Java 6 JCE]
 
@@ -81,9 +73,7 @@ http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.ht
 
 http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html[Java 8 JCE]
 
-Extract files into JDK/jre/lib/security folder (whichever version of JRE/JDK x64/x86 you are using).
-
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/building.adoc[]
+Extract the JCE files into the `JDK/jre/lib/security` folder for whichever version of JRE/JDK x64/x86 you use.
 
 == Contributing
 
