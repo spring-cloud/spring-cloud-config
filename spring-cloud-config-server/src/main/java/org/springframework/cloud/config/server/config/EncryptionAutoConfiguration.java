@@ -42,9 +42,9 @@ import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 import org.springframework.util.StringUtils;
 
 /**
- * Auto configuration for text encryptors and environment encryptors (non-web
- * stuff). Users can provide beans of the same type as any or all of the beans
- * defined here in application code to override the default behaviour.
+ * Auto configuration for text encryptors and environment encryptors (non-web stuff).
+ * Users can provide beans of the same type as any or all of the beans defined here in
+ * application code to override the default behaviour.
  *
  * @author Bartosz Wojtkiewicz
  * @author Rafal Zukowski
@@ -53,7 +53,8 @@ import org.springframework.util.StringUtils;
  */
 @Configuration
 @EnableConfigurationProperties(KeyProperties.class)
-@Import({SingleTextEncryptorConfiguration.class, DefaultTextEncryptorConfiguration.class})
+@Import({ SingleTextEncryptorConfiguration.class,
+		DefaultTextEncryptorConfiguration.class })
 public class EncryptionAutoConfiguration {
 
 	@Configuration
@@ -91,7 +92,8 @@ public class EncryptionAutoConfiguration {
 		public TextEncryptorLocator textEncryptorLocator() {
 			KeyStore keyStore = this.key.getKeyStore();
 			KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(
-					new KeyStoreKeyFactory(keyStore.getLocation(), keyStore.getPassword().toCharArray()),
+					new KeyStoreKeyFactory(keyStore.getLocation(),
+							keyStore.getPassword().toCharArray()),
 					keyStore.getSecret(), keyStore.getAlias());
 			RsaAlgorithm algorithm = this.key.getRsa().getAlgorithm();
 			locator.setRsaAlgorithm(algorithm);
@@ -103,7 +105,6 @@ public class EncryptionAutoConfiguration {
 	}
 
 }
-
 
 @ConditionalOnBean(TextEncryptor.class)
 @ConditionalOnMissingBean(TextEncryptorLocator.class)
@@ -136,7 +137,7 @@ class DefaultTextEncryptorConfiguration {
 			return new LocatorTextEncryptor(locator);
 		}
 		if (StringUtils.hasText(this.key.getKey())) {
-			return new EncryptorFactory().create(this.key.getKey());
+			return new EncryptorFactory(this.key.getSalt()).create(this.key.getKey());
 		}
 		return Encryptors.noOpText();
 	}

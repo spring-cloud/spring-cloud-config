@@ -16,29 +16,49 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import static java.util.UUID.randomUUID;
-import static org.junit.Assert.assertEquals;
-
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
+import static java.util.UUID.randomUUID;
+import static org.junit.Assert.assertEquals;
+
+@RunWith(Parameterized.class)
 public class CipherEnvironmentEncryptorTests {
 
 	TextEncryptor textEncryptor = new EncryptorFactory().create("foo");
 
-	EnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(new TextEncryptorLocator() {
+	EnvironmentEncryptor encryptor;
 
-		@Override
-		public TextEncryptor locate(Map<String, String> keys) {
-			return CipherEnvironmentEncryptorTests.this.textEncryptor;
-		}
-	});
+	@Parameters
+	public static List<Object[]> params() {
+		List<Object[]> list = new ArrayList<>();
+		list.add(new Object[] { "deadbeef", "foo" });
+		list.add(new Object[] { "4567890a12345678", "bar" });
+		return list;
+	}
+
+	public CipherEnvironmentEncryptorTests(String salt, String key) {
+		textEncryptor = new EncryptorFactory(salt).create(key);
+		encryptor = new CipherEnvironmentEncryptor(new TextEncryptorLocator() {
+
+			@Override
+			public TextEncryptor locate(Map<String, String> keys) {
+				return CipherEnvironmentEncryptorTests.this.textEncryptor;
+			}
+		});
+	}
 
 	@Test
 	public void shouldDecryptEnvironment() {
@@ -47,11 +67,12 @@ public class CipherEnvironmentEncryptorTests {
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(), "{cipher}" + this.textEncryptor.encrypt(secret))));
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(
+				environment.getName(), "{cipher}" + this.textEncryptor.encrypt(secret))));
 
 		// then
-		assertEquals(secret, this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()));
+		assertEquals(secret, this.encryptor.decrypt(environment).getPropertySources()
+				.get(0).getSource().get(environment.getName()));
 	}
 
 	@Test
@@ -62,10 +83,12 @@ public class CipherEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(), "{cipher}{key:test}" + this.textEncryptor.encrypt(secret))));
+				Collections.<Object, Object>singletonMap(environment.getName(),
+						"{cipher}{key:test}" + this.textEncryptor.encrypt(secret))));
 
 		// then
-		assertEquals(secret, this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()));
+		assertEquals(secret, this.encryptor.decrypt(environment).getPropertySources()
+				.get(0).getSource().get(environment.getName()));
 	}
 
 }

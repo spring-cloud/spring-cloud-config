@@ -10,6 +10,8 @@ _site/
 .classpath
 .project
 .settings
+.sts4-cache/
+.attach_pid*
 .springBeans
 .DS_Store
 *.sw*
