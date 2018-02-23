@@ -1026,7 +1026,7 @@ If you use a `DiscoveryClient implementation, such as Spring Cloud Netflix and E
 However, in the default "`Config First`" mode, clients cannot take advantage of the registration.
 
 If you prefer to use `DiscoveryClient` to locate the Config Server, you can do so by setting `spring.cloud.config.discovery.enabled=true` (the default is `false`).
-The net result of doing so is that client applicationss all need a `bootstrap.yml` (or an environment variable) with the appropriate discovery configuration.
+The net result of doing so is that client applications all need a `bootstrap.yml` (or an environment variable) with the appropriate discovery configuration.
 For example, with Spring Cloud Netflix, you need to define the Eureka server address (for example, in `eureka.client.serviceUrl.defaultZone`).
 The price for using this option is an extra network round trip on startup, to locate the service registration.
 The benefit is that, as long as the Discovery Service is a fixed point, the Config Server can change its coordinates.
