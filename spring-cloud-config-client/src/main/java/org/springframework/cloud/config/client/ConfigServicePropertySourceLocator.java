@@ -16,6 +16,13 @@
 
 package org.springframework.cloud.config.client;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
@@ -24,7 +31,13 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
@@ -35,13 +48,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
@@ -88,24 +94,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				Environment result = getRemoteEnvironment(restTemplate,
 						properties, label.trim(), state);
 				if (result != null) {
-					logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
-							result.getName(),
-							result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
-							result.getLabel(), result.getVersion(), result.getState()));
-					if (logger.isDebugEnabled()) {
-						List<PropertySource> propertySourceList = result.getPropertySources();
-						if (propertySourceList != null) {
-							int propertyCount = 0;
-							for (PropertySource propertySource: propertySourceList) {
-								propertyCount += propertySource.getSource().size();
-							}
-							logger.debug(String.format("Environment %s has %d property sources with %d properties.",
-									result.getName(),
-									result.getPropertySources().size(),
-									propertyCount));
-						}
-
-					}
+					log(result);
 
 					if (result.getPropertySources() != null) { // result.getPropertySources() can be null if using xml
 						for (PropertySource source : result.getPropertySources()) {
@@ -146,6 +135,27 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				+ (errorBody == null ? error==null ? "label not found" : error.getMessage() : errorBody));
 		return null;
 
+	}
+
+	private void log(Environment result) {
+		logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
+                result.getName(),
+                result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
+                result.getLabel(), result.getVersion(), result.getState()));
+		if (logger.isDebugEnabled()) {
+            List<PropertySource> propertySourceList = result.getPropertySources();
+            if (propertySourceList != null) {
+                int propertyCount = 0;
+                for (PropertySource propertySource: propertySourceList) {
+                    propertyCount += propertySource.getSource().size();
+                }
+                logger.debug(String.format("Environment %s has %d property sources with %d properties.",
+                        result.getName(),
+                        result.getPropertySources().size(),
+                        propertyCount));
+            }
+
+        }
 	}
 
 	private void putValue(HashMap<String, Object> map, String key, String value) {
