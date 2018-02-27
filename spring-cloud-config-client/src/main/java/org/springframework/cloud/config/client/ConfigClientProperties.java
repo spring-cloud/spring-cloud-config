@@ -16,11 +16,6 @@
 
 package org.springframework.cloud.config.client;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -28,6 +23,11 @@ import org.springframework.boot.context.properties.DeprecatedConfigurationProper
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Dave Syer
@@ -77,6 +77,12 @@ public class ConfigClientProperties {
 	 * The URI of the remote server (default http://localhost:8888).
 	 */
 	private String uri = "http://localhost:8888";
+
+    /**
+     * Timeout (in seconds) for obtaining HTTP response. Default
+     * 3m5s seconds.
+     */
+    private int requestTimeout = (60 * 1000 * 3) + 5000;
 
 	/**
 	 * Discovery properties.
@@ -133,6 +139,14 @@ public class ConfigClientProperties {
 	public void setUri(String url) {
 		this.uri = url;
 	}
+
+	public int getRequestTimeout() {
+	    return this.requestTimeout;
+    }
+
+    public void setRequestTimeout(int requestTimeout) {
+	    this.requestTimeout = requestTimeout;
+    }
 
 	public String getName() {
 		return this.name;

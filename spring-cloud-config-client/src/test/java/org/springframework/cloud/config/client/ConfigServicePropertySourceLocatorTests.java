@@ -1,14 +1,5 @@
 package org.springframework.cloud.config.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-import java.io.ByteArrayInputStream;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hamcrest.core.IsInstanceOf;
 import org.hamcrest.core.IsNull;
 import org.junit.Rule;
@@ -34,6 +25,15 @@ import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ConfigServicePropertySourceLocatorTests {
 
@@ -153,6 +153,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		defaults.setUsername("username");
 		defaults.setPassword("password");
 		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
+		defaults.getHeaders().put(HttpHeaders.AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
  		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("You must set either 'password' or 'authorization'");
@@ -192,6 +193,7 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+		defaults.getHeaders().put(HttpHeaders.AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
 
 		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
