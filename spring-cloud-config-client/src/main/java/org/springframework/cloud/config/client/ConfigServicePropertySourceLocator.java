@@ -138,24 +138,26 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 	private void log(Environment result) {
-		logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
-                result.getName(),
-                result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
-                result.getLabel(), result.getVersion(), result.getState()));
+		if (logger.isInfoEnabled()) {
+			logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
+					result.getName(),
+					result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
+					result.getLabel(), result.getVersion(), result.getState()));
+		}
 		if (logger.isDebugEnabled()) {
-            List<PropertySource> propertySourceList = result.getPropertySources();
-            if (propertySourceList != null) {
-                int propertyCount = 0;
-                for (PropertySource propertySource: propertySourceList) {
-                    propertyCount += propertySource.getSource().size();
-                }
-                logger.debug(String.format("Environment %s has %d property sources with %d properties.",
-                        result.getName(),
-                        result.getPropertySources().size(),
-                        propertyCount));
-            }
+			List<PropertySource> propertySourceList = result.getPropertySources();
+			if (propertySourceList != null) {
+				int propertyCount = 0;
+				for (PropertySource propertySource: propertySourceList) {
+					propertyCount += propertySource.getSource().size();
+				}
+				logger.debug(String.format("Environment %s has %d property sources with %d properties.",
+						result.getName(),
+						result.getPropertySources().size(),
+						propertyCount));
+			}
 
-        }
+		}
 	}
 
 	private void putValue(HashMap<String, Object> map, String key, String value) {
