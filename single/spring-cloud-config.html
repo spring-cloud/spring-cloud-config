@@ -761,7 +761,7 @@ resources under a prefix. The prefix should start but not end with a
 the backend repository (instead of from the config server) that&#8217;s
 basically an embedded config server with no endpoints. You can switch
 off the endpoints entirely if you don&#8217;t use the <code class="literal">@EnableConfigServer</code>
-annotation (just set <code class="literal">spring.cloud.config.server.bootstrap=true</code>).</p></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_push_notifications_and_spring_cloud_bus" href="#_push_notifications_and_spring_cloud_bus"></a>6.&nbsp;Push Notifications and Spring Cloud Bus</h1></div></div></div><p>Many source code repository providers (like Github, Gitlab or Bitbucket
+annotation (just set <code class="literal">spring.cloud.config.server.bootstrap=true</code>).</p></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_push_notifications_and_spring_cloud_bus" href="#_push_notifications_and_spring_cloud_bus"></a>6.&nbsp;Push Notifications and Spring Cloud Bus</h1></div></div></div><p>Many source code repository providers (like Github, Gitlab, Gitee or Bitbucket
 for instance) will notify you of changes in a repository through a
 webhook. You can configure the webhook via the provider&#8217;s user
 interface as a URL and a set of events in which you are
@@ -779,8 +779,8 @@ name (e.g. "foo.properties" is targeted at the "foo" application, and
 "application.properties" is targeted at all applications). The strategy
 if you want to override the behaviour is <code class="literal">PropertyPathNotificationExtractor</code>
 which accepts the request headers and body as parameters and returns a list
-of file paths that changed.</p><p>The default configuration works out of the box with Github, Gitlab or
-Bitbucket. In addition to the JSON notifications from Github, Gitlab
+of file paths that changed.</p><p>The default configuration works out of the box with Github, Gitlab, Gitee or
+Bitbucket. In addition to the JSON notifications from Github, Gitlab, Gitee
 or Bitbucket you can trigger a change notification by POSTing to
 "/monitor" with a form-encoded body parameters <code class="literal">path={name}</code>. This will
 broadcast to applications matching the "{name}" pattern (can contain
