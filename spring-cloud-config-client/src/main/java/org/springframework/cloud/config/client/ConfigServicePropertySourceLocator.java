@@ -19,6 +19,7 @@ package org.springframework.cloud.config.client;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -93,10 +94,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				Environment result = getRemoteEnvironment(restTemplate,
 						properties, label.trim(), state);
 				if (result != null) {
-					logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
-							result.getName(),
-							result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
-							result.getLabel(), result.getVersion(), result.getState()));
+					log(result);
 
 					if (result.getPropertySources() != null) { // result.getPropertySources() can be null if using xml
 						for (PropertySource source : result.getPropertySources()) {
@@ -137,6 +135,29 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				+ (errorBody == null ? error==null ? "label not found" : error.getMessage() : errorBody));
 		return null;
 
+	}
+
+	private void log(Environment result) {
+		if (logger.isInfoEnabled()) {
+			logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
+					result.getName(),
+					result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
+					result.getLabel(), result.getVersion(), result.getState()));
+		}
+		if (logger.isDebugEnabled()) {
+			List<PropertySource> propertySourceList = result.getPropertySources();
+			if (propertySourceList != null) {
+				int propertyCount = 0;
+				for (PropertySource propertySource: propertySourceList) {
+					propertyCount += propertySource.getSource().size();
+				}
+				logger.debug(String.format("Environment %s has %d property sources with %d properties.",
+						result.getName(),
+						result.getPropertySources().size(),
+						propertyCount));
+			}
+
+		}
 	}
 
 	private void putValue(HashMap<String, Object> map, String key, String value) {
