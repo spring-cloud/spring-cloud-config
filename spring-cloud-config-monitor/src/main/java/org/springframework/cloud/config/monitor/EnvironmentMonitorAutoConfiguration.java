@@ -64,6 +64,11 @@ public class EnvironmentMonitorAutoConfiguration {
 			return new BitbucketPropertyPathNotificationExtractor();
 		}
 
+		@Bean
+		@ConditionalOnProperty(value="spring.cloud.config.server.monitor.gitee.enabled", havingValue="true", matchIfMissing=true)
+		public GiteePropertyPathNotificationExtractor giteePropertyPathNotificationExtractor() {
+			return new GiteePropertyPathNotificationExtractor();
+		}
 	}
 
 }
