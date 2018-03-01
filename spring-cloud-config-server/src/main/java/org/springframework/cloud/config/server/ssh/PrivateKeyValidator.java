@@ -55,7 +55,7 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 		List<SshUri> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
 
 		for (SshUri extractedProperty : extractedProperties) {
-			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
+			if (extractedProperty.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
 				validationResults.add(
 						 isPrivateKeyPresent(extractedProperty, context)
 						&& isPrivateKeyFormatCorrect(extractedProperty, context));
