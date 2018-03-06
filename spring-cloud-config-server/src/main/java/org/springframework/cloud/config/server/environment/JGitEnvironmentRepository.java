@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.cloud.config.server.environment;
-
-import static org.springframework.util.StringUtils.hasText;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
@@ -52,6 +50,7 @@ import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
+
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -59,7 +58,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.jcraft.jsch.Session;
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * An {@link EnvironmentRepository} backed by a single git repository.
@@ -73,24 +72,23 @@ import com.jcraft.jsch.Session;
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
 
-	private static final String DEFAULT_LABEL = "master";
 	private static final String FILE_URI_PREFIX = "file:";
 
 	/**
 	 * Timeout (in seconds) for obtaining HTTP or SSH connection (if applicable). Default
 	 * 5 seconds.
 	 */
-	private int timeout = 5;
+	private int timeout;
 
 	/**
 	 * Flag to indicate that the repository should be cloned on startup (not on demand).
 	 * Generally leads to slower startup but faster first query.
 	 */
-	private boolean cloneOnStart = false;
+	private boolean cloneOnStart;
 
 	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
 
-	private String defaultLabel = DEFAULT_LABEL;
+	private String defaultLabel;
 
 	/**
 	 * The credentials provider to use to connect to the Git repository.
@@ -109,8 +107,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private boolean forcePull;
 	private boolean initialized;
 
-	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
-		super(environment);
+	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties) {
+		super(environment, properties);
+		this.cloneOnStart = properties.getCloneOnStart();
+		this.defaultLabel = properties.getDefaultLabel();
+		this.forcePull = properties.getForcePull();
+		this.timeout = properties.getTimeout();
 	}
 
 	public boolean isCloneOnStart() {

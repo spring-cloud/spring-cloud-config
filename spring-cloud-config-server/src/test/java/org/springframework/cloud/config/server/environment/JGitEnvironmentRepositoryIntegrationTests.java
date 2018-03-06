@@ -41,8 +41,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.boot.WebApplicationType;
 
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -241,7 +241,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.getBean(JGitEnvironmentRepository.class);
 		assertThat(repository.getSearchPaths(), Matchers.arrayContaining("{application}"));
 		assertFalse(Arrays.equals(repository.getSearchPaths(),
-				new JGitEnvironmentRepository(repository.getEnvironment()).getSearchPaths()));
+				new JGitEnvironmentRepository(repository.getEnvironment(), new JGitEnvironmentProperties())
+						.getSearchPaths()));
 	}
 
 	@Test

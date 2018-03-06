@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.cloud.config.server.environment;
 
 import java.sql.ResultSet;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
@@ -49,19 +47,18 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  *
  */
-@ConfigurationProperties("spring.cloud.config.server.jdbc")
 public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered {
-
-	private static final String DEFAULT_SQL = "SELECT KEY, VALUE from PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=?";
-	private int order = Ordered.LOWEST_PRECEDENCE - 10;
+	private int order;
 	private final JdbcTemplate jdbc;
-	private String sql = DEFAULT_SQL;
+	private String sql;
 	private final PropertiesResultSetExtractor extractor = new PropertiesResultSetExtractor();
 
-	public JdbcEnvironmentRepository(JdbcTemplate jdbc) {
+	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
 		this.jdbc = jdbc;
+		this.order = properties.getOrder();
+		this.sql = properties.getSql();
 	}
-	
+
 	public void setSql(String sql) {
 		this.sql = sql;
 	}
