@@ -54,8 +54,10 @@ Config Client features (for Spring applications):
 
 As long as Spring Boot Actuator and Spring Config Client are on the
 classpath any Spring Boot application will try to contact a config
-server on `http://localhost:8888` (the default value of
-`spring.cloud.config.uri`):
+server on `http://localhost:8888`, the default value of
+`spring.cloud.config.uri`.  If you would like to change this default,
+you can set `spring.cloud.config.uri` in `bootstrap.[yml | properties]`
+or via system properties or environment variables.
 
 ```java
 @Configuration
