@@ -26,6 +26,9 @@ import org.springframework.util.FileSystemUtils;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Class that holds objects that can be used for testing
@@ -80,7 +83,13 @@ public class JGitConfigServerTestData {
         return this.context;
     }
 
-    public static JGitConfigServerTestData prepareClonedGitRepository(Class... sources) throws Exception {
+    public static JGitConfigServerTestData prepareClonedGitRepository(Class... sources)
+            throws Exception {
+        return prepareClonedGitRepository(Collections.emptySet(), sources);
+    }
+
+    public static JGitConfigServerTestData prepareClonedGitRepository(Collection<String> additionalProperties, Class... sources)
+            throws Exception {
         //setup remote repository
         String remoteUri = ConfigServerTestUtils.prepareLocalRepo();
         File remoteRepoDir = ResourceUtils.getFile(remoteUri);
@@ -91,7 +100,7 @@ public class JGitConfigServerTestData {
         File clonedRepoDir = new File("target/repos/cloned");
         if(clonedRepoDir.exists()) {
             FileSystemUtils.deleteRecursively(clonedRepoDir);
-        }else{
+        } else {
             clonedRepoDir.mkdirs();
         }
         Git clonedGit = Git.cloneRepository()
@@ -102,8 +111,11 @@ public class JGitConfigServerTestData {
                 .call();
 
         //setup our test spring application pointing to the local repo
+        Collection<String> properties = new ArrayList<>(additionalProperties);
+        properties.add("spring.cloud.config.server.git.uri:" + "file://" + clonedRepoDir.getAbsolutePath());
         ConfigurableApplicationContext context = new SpringApplicationBuilder(sources).web(WebApplicationType.NONE)
-                .properties("spring.cloud.config.server.git.uri:" + "file://" + clonedRepoDir.getAbsolutePath()).run();
+                .properties(properties.toArray(new String[0]))
+                .run();
         JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
 
         return new JGitConfigServerTestData(
