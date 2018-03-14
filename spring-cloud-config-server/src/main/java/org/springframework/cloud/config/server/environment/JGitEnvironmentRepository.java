@@ -20,6 +20,9 @@ import static org.springframework.util.StringUtils.hasText;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +30,7 @@ import java.util.Set;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.DeleteBranchCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
@@ -47,8 +51,10 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
+import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.TagOpt;
+import org.eclipse.jgit.transport.TrackingRefUpdate;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.beans.factory.InitializingBean;
@@ -56,7 +62,10 @@ import org.springframework.cloud.config.server.support.PassphraseCredentialsProv
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import static java.lang.String.format;
+import static org.eclipse.jgit.transport.ReceiveCommand.Type.DELETE;
 
 import com.jcraft.jsch.Session;
 
@@ -74,6 +83,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private static final String DEFAULT_LABEL = "master";
 	private static final String FILE_URI_PREFIX = "file:";
+
+	private static final String LOCAL_BRANCH_REF_PREFIX = "refs/remotes/origin/";
 
 	/**
 	 * Timeout (in seconds) for obtaining HTTP or SSH connection (if applicable). Default
@@ -107,6 +118,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private boolean forcePull;
 	private boolean initialized;
+
+	/**
+	 * Flag to indicate that the branch should be deleted locally if it's origin tracked branch was removed.
+	 */
+	private boolean deleteUntrackedBranches;
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
@@ -161,6 +177,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.forcePull = forcePull;
 	}
 
+	public boolean isDeleteUntrackedBranches() {
+		return deleteUntrackedBranches;
+	}
+
+	public void setDeleteUntrackedBranches(boolean deleteUntrackedBranches) {
+		this.deleteUntrackedBranches = deleteUntrackedBranches;
+	}
+
 	@Override
 	public synchronized Locations getLocations(String application, String profile,
 			String label) {
@@ -190,9 +214,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		try {
 			git = createGitClient();
 			if (shouldPull(git)) {
-				fetch(git, label);
-				// checkout after fetch so we can get any new branches, tags,
-				// ect.
+				FetchResult fetchStatus = fetch(git, label);
+				if(deleteUntrackedBranches) {
+					deleteUntrackedLocalBranches(fetchStatus.getTrackingRefUpdates(), git);
+				}
+				// checkout after fetch so we can get any new branches, tags, ect.
 				checkout(git, label);
 				if (isBranch(git, label)) {
 					// merge results from fetch
@@ -201,7 +227,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 						logger.warn(
 								"The local repository is dirty. Resetting it to origin/"
 										+ label + ".");
-						resetHard(git, label, "refs/remotes/origin/" + label);
+						resetHard(git, label, LOCAL_BRANCH_REF_PREFIX + label);
 					}
 				}
 			}
@@ -258,6 +284,55 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	}
 
+	/**
+	 * Deletes local branches if corresponding remote branch was removed.
+	 *
+	 * @param trackingRefUpdates list of tracking ref updates
+	 * @param git                git instance
+	 * @return list of deleted branches
+	 */
+	private Collection<String> deleteUntrackedLocalBranches(Collection<TrackingRefUpdate> trackingRefUpdates, Git git) {
+		if (CollectionUtils.isEmpty(trackingRefUpdates)) {
+			return Collections.emptyList();
+		}
+
+		Collection<String> branchesToDelete = new ArrayList<>();
+		for (TrackingRefUpdate trackingRefUpdate : trackingRefUpdates) {
+			ReceiveCommand receiveCommand = trackingRefUpdate.asReceiveCommand();
+			if (receiveCommand.getType() == DELETE) {
+				String localRefName = trackingRefUpdate.getLocalName();
+				if (StringUtils.startsWithIgnoreCase(localRefName, LOCAL_BRANCH_REF_PREFIX)) {
+					String localBranchName = localRefName.substring(LOCAL_BRANCH_REF_PREFIX.length(), localRefName.length());
+					branchesToDelete.add(localBranchName);
+				}
+			}
+		}
+
+		if (CollectionUtils.isEmpty(branchesToDelete)) {
+			return Collections.emptyList();
+		}
+
+		try {
+			//make sure that deleted branch not a current one
+			checkout(git, defaultLabel);
+			return deleteBranches(git, branchesToDelete);
+		} catch (Exception ex) {
+			String message = format("Failed to delete %s branches.", branchesToDelete);
+			warn(message, ex);
+			return Collections.emptyList();
+		}
+	}
+
+	private List<String> deleteBranches(Git git, Collection<String> branchesToDelete) throws GitAPIException {
+		DeleteBranchCommand deleteBranchCommand = git.branchDelete()
+				.setBranchNames(branchesToDelete.toArray(new String[0]))
+				//local branch can contain data which is not merged to HEAD - force delete it anyway, since local copy should be R/O
+				.setForce(true);
+		List<String> resultList = deleteBranchCommand.call();
+		logger.info(format("Deleted %s branches from %s branches to delete.", resultList, branchesToDelete));
+		return resultList;
+	}
+
 	private Ref checkout(Git git, String label) throws GitAPIException {
 		CheckoutCommand checkout = git.checkout();
 		if (shouldTrack(git, label)) {
@@ -296,7 +371,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		Set<String> dirties = dirties(status.getAdded(), status.getChanged(),
 				status.getRemoved(), status.getMissing(), status.getModified(),
 				status.getConflicting(), status.getUntracked());
-		this.logger.warn(String.format("Dirty files found: %s", dirties));
+		this.logger.warn(format("Dirty files found: %s", dirties));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -316,6 +391,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		FetchCommand fetch = git.fetch();
 		fetch.setRemote("origin");
 		fetch.setTagOpt(TagOpt.FETCH_TAGS);
+		fetch.setRemoveDeletedRefs(deleteUntrackedBranches);
 
 		configureCommand(fetch);
 		try {
