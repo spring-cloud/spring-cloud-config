@@ -29,12 +29,14 @@ jobs:
           name: "Aggregate test results"
           when: always
           command: |
-            mkdir -p $HOME/$CIRCLE_TEST_REPORTS/junit/
-            find . -type f -regex ".*/target/.*-reports/.*" -exec cp {} $HOME/$CIRCLE_TEST_REPORTS/junit/ \;
+            echo HOME $HOME && \
+            echo testdir $CIRCLE_TEST_REPORTS && \
+            mkdir -p $CIRCLE_TEST_REPORTS/junit/
+            find . -type f -regex ".*/target/.*-reports/.*" -exec cp {} ~/junit/ \;
             bash <(curl -s https://codecov.io/bash)
       - store_artifacts:
-          path:  $HOME/$CIRCLE_TEST_REPORTS/junit/
+          path: ~/junit/
           destination: artifacts
       - store_test_results:
-          path:  $HOME/$CIRCLE_TEST_REPORTS/junit/
+          path: ~/junit/
           destination: testartifacts
