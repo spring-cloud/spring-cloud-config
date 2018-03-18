@@ -3,6 +3,7 @@ jobs:
   build:
     docker:
       - image: ryanjbaxter/pipeline-base
+      - user: appuser
     environment:
       _JAVA_OPTIONS: "-Xms1024m -Xmx2048m"
       TERM: dumb
@@ -22,14 +23,8 @@ jobs:
           paths:
             - ~/.m2
       - run:
-          name: "Creating user"
-          command: |
-            groupadd -g 888 configuser && \
-            useradd -r -u 888 -m -g configuser configuser && \
-            passwd -d configuser
-      - run:
           name: "Running build"
-          command: su configuser -c './mvnw -s .settings.xml clean org.jacoco:jacoco-maven-plugin:prepare-agent install -U -P sonar -nsu --batch-mode -Dmaven.test.redirectTestOutputToFile=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'
+          command: ./mvnw -s .settings.xml clean org.jacoco:jacoco-maven-plugin:prepare-agent install -U -P sonar -nsu --batch-mode -Dmaven.test.redirectTestOutputToFile=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
       - run:
           name: "Aggregate test results"
           when: always
