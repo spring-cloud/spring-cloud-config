@@ -24,7 +24,6 @@ jobs:
       - run:
           name: "Creating user"
           command: |
-            su root && \
             groupadd -g 888 configuser && \
             useradd -r -u 888 -m -g configuser configuser
       - run:
