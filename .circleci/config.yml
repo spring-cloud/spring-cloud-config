@@ -19,7 +19,7 @@ jobs:
           name: "Download dependencies"
           command: ./mvnw -s .settings.xml -U --fail-never dependency:go-offline || true
       - save_cache:
-          key: sc-oconfig-{{ .Branch }}
+          key: sc-config-{{ .Branch }}
           paths:
             - ~/.m2
       - run:
