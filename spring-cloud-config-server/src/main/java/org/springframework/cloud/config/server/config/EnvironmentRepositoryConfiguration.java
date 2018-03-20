@@ -17,11 +17,15 @@ package org.springframework.cloud.config.server.config;
 
 import java.util.List;
 import java.util.Optional;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
+import org.tmatesoft.svn.core.SVNException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -173,8 +177,11 @@ class VaultRepositoryConfiguration {
 
 @Configuration
 @Profile("jdbc")
+@ConditionalOnClass(JdbcTemplate.class)
 class JdbcRepositoryConfiguration {
+
 	@Bean
+	@ConditionalOnBean(JdbcTemplate.class)
 	public JdbcEnvironmentRepository jdbcEnvironmentRepository(JdbcTemplate jdbc,
 															   JdbcEnvironmentProperties environmentProperties) {
 		return new JdbcEnvironmentRepositoryFactory(jdbc).build(environmentProperties);
@@ -185,17 +192,25 @@ class JdbcRepositoryConfiguration {
 @Profile("composite")
 class CompositeRepositoryConfiguration {
 
-	@Bean
-	public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
-	        ConfigurableEnvironment environment, ConfigServerProperties server,
-            Optional<TransportConfigCallback> transportConfigCallback) {
-		return new MultipleJGitEnvironmentRepositoryFactory(environment, server, transportConfigCallback);
+	@Configuration
+	@ConditionalOnClass(TransportConfigCallback.class)
+	static class JGitCompositeConfig {
+		@Bean
+		public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
+				ConfigurableEnvironment environment, ConfigServerProperties server,
+				Optional<TransportConfigCallback> transportConfigCallback) {
+			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, transportConfigCallback);
+		}
 	}
 
-	@Bean
-	public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-                                                                           ConfigServerProperties server) {
-		return new SvnEnvironmentRepositoryFactory(environment, server);
+	@Configuration
+	@ConditionalOnClass(SVNException.class)
+	static class SvnCompositeConfig {
+		@Bean
+		public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
+																			   ConfigServerProperties server) {
+			return new SvnEnvironmentRepositoryFactory(environment, server);
+		}
 	}
 
 	@Bean
@@ -204,9 +219,13 @@ class CompositeRepositoryConfiguration {
 		return new VaultEnvironmentRepositoryFactory(request, watch);
 	}
 
-	@Bean
-	public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
-		return new JdbcEnvironmentRepositoryFactory(jdbc);
+	@Configuration
+	@ConditionalOnClass(JdbcTemplate.class)
+	static class JdbcCompositeConfig {
+		@Bean
+		public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
+			return new JdbcEnvironmentRepositoryFactory(jdbc);
+		}
 	}
 
 	@Bean

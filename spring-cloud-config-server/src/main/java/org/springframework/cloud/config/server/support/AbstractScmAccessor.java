@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.support;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -26,7 +27,6 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.jgit.util.FileUtils;
 
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -35,6 +35,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -103,12 +104,12 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 
 	protected File createBaseDir() {
 		try {
-			final File basedir = Files.createTempDirectory("config-repo-").toFile();
+			final Path basedir = Files.createTempDirectory("config-repo-");
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				@Override
 				public void run() {
 					try {
-						FileUtils.delete(basedir, FileUtils.RECURSIVE);
+						FileSystemUtils.deleteRecursively(basedir);
 					}
 					catch (IOException e) {
 						AbstractScmAccessor.this.logger.warn(
@@ -116,7 +117,7 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 					}
 				}
 			});
-			return basedir;
+			return basedir.toFile();
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Cannot create temp dir", e);
