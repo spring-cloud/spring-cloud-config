@@ -52,13 +52,13 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests
-			.StaticConfigCustomCompositeEnvironmentRepositoryTests.TestApplication.class, properties = {
+			.StaticTests.Config.class, properties = {
 			"spring.config.name:compositeconfigserver",
 			"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
 			"spring.cloud.config.server.git.order:1" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({"test", "git"})
 	@DirtiesContext
-	public static class StaticConfigCustomCompositeEnvironmentRepositoryTests {
+	public static class StaticTests {
 
 		@LocalServerPort
 		private int port;
@@ -82,7 +82,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Configuration
 		@EnableAutoConfiguration
 		@EnableConfigServer
-		protected static class TestApplication {
+		protected static class Config {
 
 			@Bean
 			public EnvironmentRepository environmentRepository() {
@@ -98,7 +98,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests
-			.ListConfigCustomCompositeEnvironmentRepositoryTests.TestApplication.class, properties = {
+			.ListTests.Config.class, properties = {
 			"spring.config.name:compositeconfigserver",
 			"spring.cloud.config.server.composite[0].type:git",
 			"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -107,7 +107,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 			}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({"test", "composite"})
 	@DirtiesContext
-	public static class ListConfigCustomCompositeEnvironmentRepositoryTests {
+	public static class ListTests {
 		@LocalServerPort
 		private int port;
 
@@ -130,7 +130,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Configuration
 		@EnableAutoConfiguration
 		@EnableConfigServer
-		protected static class TestApplication {
+		protected static class Config {
 
 			@Bean
 			public CustomEnvironmentRepositoryFactory customEnvironmentRepositoryFactory(ConfigurableEnvironment environment)

@@ -18,13 +18,15 @@ package org.springframework.cloud.config.server.composite;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.MethodMetadata;
@@ -34,26 +36,42 @@ import org.springframework.core.type.MethodMetadata;
  */
 public class CompositeUtils {
 
+    /**
+     * Returns list of values of the `type` field from the `spring.cloud.config.server.composite` collection.
+     */
     public static List<String> getCompositeTypeList(Environment environment) {
-        List<String> repoTypes = new ArrayList<>();
-        for (int i = 0; i < Integer.MAX_VALUE; i++) {
-            String property = String.format("spring.cloud.config.server.composite[%d].type", i);
-            String type = environment.getProperty(property);
-            if (type != null) {
-                repoTypes.add(type);
-                continue;
-            }
-            break;
-        }
-        return repoTypes;
+        return Binder.get(environment)
+                .bind("spring.cloud.config.server", CompositeConfig.class)
+                .get().getComposite().stream()
+                .map(map -> (String)map.get("type"))
+                .collect(Collectors.toList());
     }
 
+    static class CompositeConfig {
+        List<Map<String, Object>> composite;
+
+        public List<Map<String, Object>> getComposite() {
+            return composite;
+        }
+
+        public void setComposite(List<Map<String, Object>> composite) {
+            this.composite = composite;
+        }
+    }
+
+    /**
+     * Given a type of EnvironmentRepository (git, svn, native, etc...) returns the name of the factory bean.
+     * See {@link #getCompositeTypeList(Environment)}
+     */
     public static String getFactoryName(String type, ConfigurableListableBeanFactory beanFactory) {
         String[] factoryNames = BeanFactoryUtils
                 .beanNamesForTypeIncludingAncestors(beanFactory, EnvironmentRepositoryFactory.class, true, false);
         return Arrays.stream(factoryNames).filter(n -> n.startsWith(type)).findFirst().orElse(null);
     }
 
+    /**
+     * Given a Factory Name return the generic type parameters of the factory (The actual repository class, and its properties class)o
+     */
     public static Type[] getEnvironmentRepositoryFactoryTypeParams(ConfigurableListableBeanFactory beanFactory, String factoryName) {
         MethodMetadata methodMetadata = (MethodMetadata) beanFactory.getBeanDefinition(factoryName).getSource();
         Class<?> factoryClass = null;

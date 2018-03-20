@@ -34,7 +34,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Ryan Baxter
  * @author Dylan Roberts
  */
-public class CompositeConfigServerIntegrationTests {
+public class CompositeIntegrationTests {
 	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = ConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
@@ -44,7 +44,7 @@ public class CompositeConfigServerIntegrationTests {
 					"spring.cloud.config.server.git.order:1"},
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "git", "subversion" })
-	public static class StaticConfigCompositeConfigServerIntegrationTests {
+	public static class StaticTests {
 		@LocalServerPort
 		private int port;
 
@@ -94,7 +94,7 @@ public class CompositeConfigServerIntegrationTests {
 			},
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "composite"})
-	public static class ListConfigCompositeConfigServerIntegrationTests {
+	public static class ListTests {
 		@LocalServerPort
 		private int port;
 
