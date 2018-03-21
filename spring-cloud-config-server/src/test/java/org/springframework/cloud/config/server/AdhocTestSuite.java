@@ -103,7 +103,7 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
 		SshUriPropertyProcessorTest.class,
 		PropertyBasedSshSessionFactoryTest.class,
 		SshPropertyValidatorTest.class,
-		CompositeConfigServerIntegrationTests.class,
+		CompositeIntegrationTests.class,
 		SubversionConfigServerIntegrationTests.class,
 		ConfigServerHealthIndicatorTests.class,
 		CustomCompositeEnvironmentRepositoryTests.class,

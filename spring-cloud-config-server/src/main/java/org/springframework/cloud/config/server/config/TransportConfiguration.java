@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.server.ssh.PropertyBasedSshSessionFactory;
@@ -34,6 +35,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Ollie Hughes
  */
 @Configuration
+@ConditionalOnClass(TransportConfigCallback.class)
 @EnableConfigurationProperties(SshUriProperties.class)
 public class TransportConfiguration {
 

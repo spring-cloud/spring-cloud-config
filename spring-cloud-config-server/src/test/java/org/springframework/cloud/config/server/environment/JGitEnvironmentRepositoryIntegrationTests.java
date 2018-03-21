@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
@@ -41,8 +42,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.boot.WebApplicationType;
 
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -241,7 +242,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.getBean(JGitEnvironmentRepository.class);
 		assertThat(repository.getSearchPaths(), Matchers.arrayContaining("{application}"));
 		assertFalse(Arrays.equals(repository.getSearchPaths(),
-				new JGitEnvironmentRepository(repository.getEnvironment()).getSearchPaths()));
+				new JGitEnvironmentRepository(repository.getEnvironment(), new JGitEnvironmentProperties())
+						.getSearchPaths()));
 	}
 
 	@Test
@@ -507,6 +509,42 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertNotNull(repository.getTransportConfigCallback());
+	}
+
+	@Test
+	public void testShouldReturnEnvironmentFromLocalBranchInCaseRemoteDeleted() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData
+				.prepareClonedGitRepository(TestConfiguration.class);
+
+		String branchToDelete = "branchToDelete";
+		testData.getServerGit().getGit().branchCreate().setName(branchToDelete).call();
+
+		Environment environment = testData.getRepository().findOne("bar", "staging", "branchToDelete");
+		assertNotNull(environment);
+
+		testData.getServerGit().getGit().branchDelete().setBranchNames(branchToDelete).call();
+		testData.getRepository().findOne("bar", "staging", "branchToDelete");
+		assertNotNull(environment);
+	}
+
+	@Test(expected = NoSuchLabelException.class)
+	public void testShouldFailIfRemoteBranchWasDeleted() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData
+				.prepareClonedGitRepository(Collections.singleton("spring.cloud.config.server.git.deleteUntrackedBranches=true"),
+						TestConfiguration.class);
+
+		String branchToDelete = "branchToDelete";
+		testData.getServerGit().getGit().branchCreate().setName(branchToDelete).call();
+
+		//checkout and simulate regular flow
+		Environment environment = testData.getRepository().findOne("bar", "staging", "branchToDelete");
+		assertNotNull(environment);
+
+		//remove branch
+		testData.getServerGit().getGit().branchDelete().setBranchNames(branchToDelete).call();
+
+		//test
+		testData.getRepository().findOne("bar", "staging", "branchToDelete");
 	}
 
 	@Configuration

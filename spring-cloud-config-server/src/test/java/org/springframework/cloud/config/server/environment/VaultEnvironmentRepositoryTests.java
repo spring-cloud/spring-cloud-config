@@ -3,9 +3,11 @@ package org.springframework.cloud.config.server.environment;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -49,7 +51,7 @@ public class VaultEnvironmentRepositoryTests {
 				Mockito.eq(HttpMethod.GET), Mockito.any(HttpEntity.class), Mockito.eq(VaultEnvironmentRepository.VaultResponse.class),
 				Mockito.eq("secret"), Mockito.eq("application"))).thenReturn(appResp);
 
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest);
+		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties());
 
 		Environment e = repo.findOne("myapp", null, null);
 		assertEquals("Name should be the same as the application argument", "myapp", e.getName());
@@ -87,7 +89,7 @@ public class VaultEnvironmentRepositoryTests {
 				Mockito.eq(HttpMethod.GET), Mockito.any(HttpEntity.class), Mockito.eq(VaultEnvironmentRepository.VaultResponse.class),
 				Mockito.eq("secret"), Mockito.eq("mydefaultkey"))).thenReturn(myDefaultKeyResp);
 
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest);
+		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties());
 		repo.setDefaultKey("mydefaultkey");
 
 		Environment e = repo.findOne("myapp", null, null);
@@ -127,7 +129,7 @@ public class VaultEnvironmentRepositoryTests {
 				Mockito.eq(HttpMethod.GET), Mockito.any(HttpEntity.class), Mockito.eq(VaultEnvironmentRepository.VaultResponse.class),
 				Mockito.eq("secret"), Mockito.eq("application"))).thenReturn(appResp);
 
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest);
+		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties());
 		repo.setDefaultKey("myapp");
 
 		Environment e = repo.findOne("myapp", null, null);
@@ -151,7 +153,7 @@ public class VaultEnvironmentRepositoryTests {
 		Mockito.when(rest.exchange(Mockito.eq("http://127.0.0.1:8200/v1/{backend}/{key}"),
 				Mockito.eq(HttpMethod.GET), Mockito.any(HttpEntity.class), Mockito.eq(VaultEnvironmentRepository.VaultResponse.class),
 				Mockito.eq("secret"), Mockito.eq("myapp"))).thenReturn(myAppResp);
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest);
+		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(configRequest, new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties());
 		repo.findOne("myapp", null, null);
 	}
 }
