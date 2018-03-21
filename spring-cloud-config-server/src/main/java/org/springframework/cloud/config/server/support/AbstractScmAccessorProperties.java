@@ -83,7 +83,7 @@ public class AbstractScmAccessorProperties implements EnvironmentRepositoryPrope
         this.passphrase = passphrase;
     }
 
-    public boolean getStrictHostKeyChecking() {
+    public boolean isStrictHostKeyChecking() {
         return strictHostKeyChecking;
     }
 

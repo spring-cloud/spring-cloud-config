@@ -92,7 +92,7 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 		this.passphrase = properties.getPassphrase();
 		this.password = properties.getPassword();
 		this.searchPaths = properties.getSearchPaths();
-		this.strictHostKeyChecking = properties.getStrictHostKeyChecking();
+		this.strictHostKeyChecking = properties.isStrictHostKeyChecking();
 		this.uri = properties.getUri();
 		this.username = properties.getUsername();
 	}

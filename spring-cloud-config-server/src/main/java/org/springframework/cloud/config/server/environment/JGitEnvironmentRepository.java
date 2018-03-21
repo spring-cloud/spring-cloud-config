@@ -124,9 +124,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties) {
 		super(environment, properties);
-		this.cloneOnStart = properties.getCloneOnStart();
+		this.cloneOnStart = properties.isCloneOnStart();
 		this.defaultLabel = properties.getDefaultLabel();
-		this.forcePull = properties.getForcePull();
+		this.forcePull = properties.isForcePull();
 		this.timeout = properties.getTimeout();
 		this.deleteUntrackedBranches = properties.isDeleteUntrackedBranches();
 	}

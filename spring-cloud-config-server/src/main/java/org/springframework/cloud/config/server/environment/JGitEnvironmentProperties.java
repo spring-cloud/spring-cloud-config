@@ -33,7 +33,7 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
         setDefaultLabel(DEFAULT_LABEL);
     }
 
-    public boolean getCloneOnStart() {
+    public boolean isCloneOnStart() {
         return cloneOnStart;
     }
 
@@ -41,7 +41,7 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
         this.cloneOnStart = cloneOnStart;
     }
 
-    public boolean getForcePull() {
+    public boolean isForcePull() {
         return forcePull;
     }
 
