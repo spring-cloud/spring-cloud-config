@@ -1,13 +1,15 @@
-Start the server:
+This quick start walks through using both the server and the client of Spring Cloud Config Server.
+
+First, start the server, as follows:
 
 ----
 $ cd spring-cloud-config-server
 $ ../mvnw spring-boot:run
 ----
 
-The server is a Spring Boot application so you can run it from your
-IDE instead if you prefer (the main class is
-`ConfigServerApplication`). Then try out a client:
+The server is a Spring Boot application, so you can run it from your IDE if you prefer to do so (the main class is `ConfigServerApplication`).
+
+Next try out a client, as follows:
 
 ----
 $ curl localhost:8888/foo/development
@@ -17,13 +19,10 @@ $ curl localhost:8888/foo/development
 ]}
 ----
 
-The default strategy for locating property sources is to clone a git
-repository (at `spring.cloud.config.server.git.uri`) and use it to
-initialize a mini `SpringApplication`. The mini-application's
-`Environment` is used to enumerate property sources and publish them
-via a JSON endpoint.
+The default strategy for locating property sources is to clone a git repository (at `spring.cloud.config.server.git.uri`) and use it to initialize a mini `SpringApplication`.
+The mini-application's `Environment` is used to enumerate property sources and publish them at a JSON endpoint.
 
-The HTTP service has resources in the form:
+The HTTP service has resources in the following form:
 
 ----
 /{application}/{profile}[/{label}]
@@ -33,14 +32,9 @@ The HTTP service has resources in the form:
 /{label}/{application}-{profile}.properties
 ----
 
-where the "application" is injected as the `spring.config.name` in the
-`SpringApplication` (i.e. what is normally "application" in a regular
-Spring Boot app), "profile" is an active profile (or comma-separated
-list of properties), and "label" is an optional git label (defaults to
-"master".)
+where `application` is injected as the `spring.config.name` in the `SpringApplication` (what is normally `application` in a regular Spring Boot app), `profile` is an active profile (or comma-separated list of properties), and `label` is an optional git label (defaults to `master`.)
 
-Spring Cloud Config Server pulls configuration for remote clients
-from a git repository (which must be provided):
+Spring Cloud Config Server pulls configuration for remote clients from a git repository (which must be provided), as shown in the following example:
 
 [source,yaml]
 ----
@@ -54,14 +48,9 @@ spring:
 
 === Client Side Usage
 
-To use these features in an application, just build it as a Spring
-Boot application that depends on spring-cloud-config-client (e.g. see
-the test cases for the config-client, or the sample app). The most
-convenient way to add the dependency is via a Spring Boot starter
-`org.springframework.cloud:spring-cloud-starter-config`. There is also a
-parent pom and BOM (`spring-cloud-starter-parent`) for Maven users and a
-Spring IO version management properties file for Gradle and Spring CLI
-users. Example Maven configuration:
+To use these features in an application, you can build it as a Spring Boot application that depends on spring-cloud-config-client (for an example, see the test cases for the config-client or the sample application).
+The most convenient way to add the dependency is with a Spring Boot starter `org.springframework.cloud:spring-cloud-starter-config`.
+There is also a parent pom and BOM (`spring-cloud-starter-parent`) for Maven users and a Spring IO version management properties file for Gradle and Spring CLI users. The following example shows a typical Maven configuration:
 
 [source,xml,indent=0]
 .pom.xml
@@ -109,7 +98,7 @@ users. Example Maven configuration:
     <!-- repositories also needed for snapshots and milestones -->
 ----
 
-Then you can create a standard Spring Boot application, like this simple HTTP server:
+Now you can create a standard Spring Boot application, such as the following HTTP server:
 
 ----
 @SpringBootApplication
@@ -128,18 +117,14 @@ public class Application {
 }
 ----
 
-When it runs it will pick up the external configuration from the
-default local config server on port 8888 if it is running. To modify
-the startup behaviour you can change the location of the config server
-using `bootstrap.properties` (like `application.properties` but for
-the bootstrap phase of an application context), e.g.
+When this HTTP server runs, it picks up the external configuration from the default local config server (if it is running) on port 8888.
+To modify the startup behavior, you can change the location of the config server by using `bootstrap.properties` (similar to `application.properties` but for the bootstrap phase of an application context), as shown in the following example:
 
 ----
 spring.cloud.config.uri: http://myconfigserver.com
 ----
 
-The bootstrap properties will show up in the `/env` endpoint as a
-high-priority property source, e.g.
+The bootstrap properties show up in the `/env` endpoint as a high-priority property source, as shown in the following example.
 
 ----
 $ curl localhost:8080/env
@@ -152,9 +137,6 @@ $ curl localhost:8080/env
 }
 ----
 
-(a property source called "configService:<URL of remote
-repository>/<file name>" contains the property "foo" with value
-"bar" and is highest priority).
+A property source called ```configService:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar` and is highest priority.
 
-NOTE: the URL in the property source name is the git repository not
-the config server URL.
+NOTE: The URL in the property source name is the git repository, not the config server URL.
