@@ -5,43 +5,50 @@ image::https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/master/grap
 image::https://api.codacy.com/project/badge/Grade/f064024a072c477e97dca6ed5a70fccd?branch=master["Codacy code quality", link="https://www.codacy.com/app/Spring-Cloud/spring-cloud-config?branch=master&utm_source=github.com&utm_medium=referral&utm_content=spring-cloud/spring-cloud-config&utm_campaign=Badge_Grade"]
 
 
-Spring Cloud Config provides server and client-side support for externalized configuration in a distributed system. With the Config Server you have a central place to manage external properties for applications across all environments. The concepts on both client and server map identically to the Spring `Environment` and `PropertySource` abstractions, so they fit very well with Spring applications, but can be used with any application running in any language. As an application moves through the deployment pipeline from dev to test and into production you can manage the configuration between those environments and be certain that applications have everything they need to run when they migrate. The default implementation of the server storage backend uses git so it easily supports labelled versions of configuration environments, as well as being accessible to a wide range of tooling for managing the content.  It is easy to add alternative implementations and plug them in with Spring configuration.
-
+Spring Cloud Config provides server-side and client-side support for externalized configuration in a distributed system. With the Config Server, you have a central place to manage external properties for applications across all environments.
+The concepts on both client and server map identically to the Spring `Environment` and `PropertySource` abstractions, so they fit very well with Spring applications but can be used with any application running in any language.
+As an application moves through the deployment pipeline from dev to test and into production, you can manage the configuration between those environments and be certain that applications have everything they need to run when they migrate.
+The default implementation of the server storage backend uses git, so it easily supports labelled versions of configuration environments as well as being accessible to a wide range of tooling for managing the content.
+It is easy to add alternative implementations and plug them in with Spring configuration.
 
 == Features
 
 === Spring Cloud Config Server
 
-* HTTP, resource-based API for external configuration (name-value pairs, or equivalent YAML content)
+Spring Cloud Config Server offers the following benefits:
+
+* HTTP resource-based API for external configuration (name-value pairs or equivalent YAML content)
 * Encrypt and decrypt property values (symmetric or asymmetric)
 * Embeddable easily in a Spring Boot application using `@EnableConfigServer`
 
 === Spring Cloud Config Client
 
-Specifically for Spring applications:
+Specifically for Spring applications, Spring Cloud Config Client lets you:
 
-* Bind to the Config Server and initialize Spring `Environment` with remote property sources
-* Encrypt and decrypt property values (symmetric or asymmetric)
-* `@RefreshScope` for Spring `@Beans` that want to be re-initialized when configuration changes
-* Management endpoints:
-** `/env` for updating `Environment` and rebinding `@ConfigurationProperties` and log levels
-** `/refresh` for refreshing the `@RefreshScope` beans
-** `/restart` for restarting the Spring context (disabled by default)
-** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`)
-* Bootstrap application context: a parent context for the main application that can be trained to do anything (by default it binds to the Config Server, and decrypts property values)
+* Bind to the Config Server and initialize Spring `Environment` with remote property sources.
+* Encrypt and decrypt property values (symmetric or asymmetric).
+* `@RefreshScope` for Spring `@Beans` that want to be re-initialized when configuration changes.
+* Use management endpoints:
+** `/env` for updating `Environment` and rebinding `@ConfigurationProperties` and log levels.
+** `/refresh` for refreshing the `@RefreshScope` beans.
+** `/restart` for restarting the Spring context (disabled by default).
+** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`).
+* Bootstrap application context: a parent context for the main application that can be trained to do anything (by default, it binds to the Config Server and decrypts property values).
 
 == Quick Start
 
-Start the server:
+This quick start walks through using both the server and the client of Spring Cloud Config Server.
+
+First, start the server, as follows:
 
 ----
 $ cd spring-cloud-config-server
 $ ../mvnw spring-boot:run
 ----
 
-The server is a Spring Boot application so you can run it from your
-IDE instead if you prefer (the main class is
-`ConfigServerApplication`). Then try out a client:
+The server is a Spring Boot application, so you can run it from your IDE if you prefer to do so (the main class is `ConfigServerApplication`).
+
+Next try out a client, as follows:
 
 ----
 $ curl localhost:8888/foo/development
@@ -51,13 +58,10 @@ $ curl localhost:8888/foo/development
 ]}
 ----
 
-The default strategy for locating property sources is to clone a git
-repository (at `spring.cloud.config.server.git.uri`) and use it to
-initialize a mini `SpringApplication`. The mini-application's
-`Environment` is used to enumerate property sources and publish them
-via a JSON endpoint.
+The default strategy for locating property sources is to clone a git repository (at `spring.cloud.config.server.git.uri`) and use it to initialize a mini `SpringApplication`.
+The mini-application's `Environment` is used to enumerate property sources and publish them at a JSON endpoint.
 
-The HTTP service has resources in the form:
+The HTTP service has resources in the following form:
 
 ----
 /{application}/{profile}[/{label}]
@@ -67,14 +71,9 @@ The HTTP service has resources in the form:
 /{label}/{application}-{profile}.properties
 ----
 
-where the "application" is injected as the `spring.config.name` in the
-`SpringApplication` (i.e. what is normally "application" in a regular
-Spring Boot app), "profile" is an active profile (or comma-separated
-list of properties), and "label" is an optional git label (defaults to
-"master".)
+where `application` is injected as the `spring.config.name` in the `SpringApplication` (what is normally `application` in a regular Spring Boot app), `profile` is an active profile (or comma-separated list of properties), and `label` is an optional git label (defaults to `master`.)
 
-Spring Cloud Config Server pulls configuration for remote clients
-from a git repository (which must be provided):
+Spring Cloud Config Server pulls configuration for remote clients from a git repository (which must be provided), as shown in the following example:
 
 [source,yaml]
 ----
@@ -88,14 +87,9 @@ spring:
 
 === Client Side Usage
 
-To use these features in an application, just build it as a Spring
-Boot application that depends on spring-cloud-config-client (e.g. see
-the test cases for the config-client, or the sample app). The most
-convenient way to add the dependency is via a Spring Boot starter
-`org.springframework.cloud:spring-cloud-starter-config`. There is also a
-parent pom and BOM (`spring-cloud-starter-parent`) for Maven users and a
-Spring IO version management properties file for Gradle and Spring CLI
-users. Example Maven configuration:
+To use these features in an application, you can build it as a Spring Boot application that depends on spring-cloud-config-client (for an example, see the test cases for the config-client or the sample application).
+The most convenient way to add the dependency is with a Spring Boot starter `org.springframework.cloud:spring-cloud-starter-config`.
+There is also a parent pom and BOM (`spring-cloud-starter-parent`) for Maven users and a Spring IO version management properties file for Gradle and Spring CLI users. The following example shows a typical Maven configuration:
 
 [source,xml,indent=0]
 .pom.xml
@@ -103,7 +97,7 @@ users. Example Maven configuration:
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.0.0.RC1</version>
+        <version>{spring-boot-docs-version}</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
 
@@ -112,7 +106,7 @@ users. Example Maven configuration:
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>Finchley.M6</version>
+				<version>{spring-cloud-version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -143,7 +137,7 @@ users. Example Maven configuration:
     <!-- repositories also needed for snapshots and milestones -->
 ----
 
-Then you can create a standard Spring Boot application, like this simple HTTP server:
+Now you can create a standard Spring Boot application, such as the following HTTP server:
 
 ----
 @SpringBootApplication
@@ -162,18 +156,14 @@ public class Application {
 }
 ----
 
-When it runs it will pick up the external configuration from the
-default local config server on port 8888 if it is running. To modify
-the startup behaviour you can change the location of the config server
-using `bootstrap.properties` (like `application.properties` but for
-the bootstrap phase of an application context), e.g.
+When this HTTP server runs, it picks up the external configuration from the default local config server (if it is running) on port 8888.
+To modify the startup behavior, you can change the location of the config server by using `bootstrap.properties` (similar to `application.properties` but for the bootstrap phase of an application context), as shown in the following example:
 
 ----
 spring.cloud.config.uri: http://myconfigserver.com
 ----
 
-The bootstrap properties will show up in the `/env` endpoint as a
-high-priority property source, e.g.
+The bootstrap properties show up in the `/env` endpoint as a high-priority property source, as shown in the following example.
 
 ----
 $ curl localhost:8080/env
@@ -186,65 +176,37 @@ $ curl localhost:8080/env
 }
 ----
 
-(a property source called "configService:<URL of remote
-repository>/<file name>" contains the property "foo" with value
-"bar" and is highest priority).
+A property source called ```configService:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar` and is highest priority.
 
-NOTE: the URL in the property source name is the git repository not
-the config server URL.
+NOTE: The URL in the property source name is the git repository, not the config server URL.
 
 === Sample Application
 
-There is a sample application
-https://github.com/spring-cloud/spring-cloud-config/tree/master/spring-cloud-config-sample[here]. It
-is a Spring Boot application so you can run it using the usual
-mechanisms (for instance "mvn spring-boot:run"). When it runs it will
-look for the config server on "http://localhost:8888" by default, so
-you could run the server as well to see it all working together.
+You can find a sample application https://github.com/spring-cloud/spring-cloud-config/tree/master/spring-cloud-config-sample[here].
+It is a Spring Boot application, so you can run it by using the usual mechanisms (for instance, `mvn spring-boot:run`).
+When it runs, it looks for the config server on `http://localhost:8888` (a configurable default), so you can run the server as well to see it all working together.
 
-The sample has a test case where the config server is also started in
-the same JVM (with a different port), and the test asserts that an
-environment property from the git configuration repo is present. To
-change the location of the config server just set
-"spring.cloud.config.uri" in "bootstrap.yml" (or via System
-properties etc.).
+The sample has a test case where the config server is also started in the same JVM (with a different port), and the test asserts that an
+environment property from the git configuration repo is present.
+To change the location of the config server, you can set `spring.cloud.config.uri` in `bootstrap.yml` (or in system properties and other places).
 
-The test case has a `main()` method that runs the server in the same
-way (watch the logs for its port), so you can run the whole system in
-one process and play with it (e.g. right click on the main in your IDE
-and run it). The `main()` method uses `target/config` for the working
-directory of the git repository, so you can make local changes there
-and see them reflected in the running app.
+The test case has a `main()` method that runs the server in the same way (watch the logs for its port), so you can run the whole system in one process and play with it (for example, you can run the `main()` method in your IDE).
+The `main()` method uses `target/config` for the working directory of the git repository, so you can make local changes there and see them reflected in the running app. The following example shows a session of tinkering with the test case:
 
 ----
-$ curl localhost:8080/env/foo
-bar
-$ vi target/config/bar.properties
-.. change value of "foo", optionally commit
+$ curl localhost:8080/env/sample
+mytest
+$ vi target/config/mytest.properties
+.. change value of "sample", optionally commit
 $ curl localhost:8080/refresh
-["foo"]
-$ curl localhost:8080/env/foo
-baz
+["sample"]
+$ curl localhost:8080/env/sample
+sampleValue
 ----
 
-The refresh endpoint reports that the "foo" property changed.
+The refresh endpoint reports that the "sample" property changed.
 
 == Building
-
-=== JCE
-
-If you are getting an exception due to "Illegal key size" and you
-are using Sun’s JDK, you need to install the Java Cryptography
-Extension (JCE) Unlimited Strength Jurisdiction Policy Files. See
-the following links for more information:
-
-http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html[Java 6 JCE]
-
-http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html[Java 7 JCE]
-
-http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html[Java 8 JCE]
-
-Extract files into JDK/jre/lib/security folder (whichever version of JRE/JDK x64/x86 you are using).
 
 :jdkversion: 1.7
 
@@ -334,6 +296,19 @@ following command:
 The generated eclipse projects can be imported by selecting `import existing projects`
 from the `file` menu.
 
+
+=== JCE
+
+If you get an exception due to "Illegal key size" and you are using Sun’s JDK, you need to install the Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files.
+See the following links for more information:
+
+http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html[Java 6 JCE]
+
+http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html[Java 7 JCE]
+
+http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html[Java 8 JCE]
+
+Extract the JCE files into the `JDK/jre/lib/security` folder for whichever version of JRE/JDK x64/x86 you use.
 
 == Contributing
 

@@ -16,7 +16,7 @@ Spring Cloud Config Server offers the following benefits:
 
 === Spring Cloud Config Client
 
-Specifically for Spring applications, Spring Cloud Config lets you:
+Specifically for Spring applications, Spring Cloud Config Client lets you:
 
 * Bind to the Config Server and initialize Spring `Environment` with remote property sources.
 * Encrypt and decrypt property values (symmetric or asymmetric).

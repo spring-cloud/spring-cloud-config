@@ -758,7 +758,7 @@ The default is a username of `user` and a randomly generated password. A random 
 === Encryption and Decryption
 
 IMPORTANT: To use the encryption and decryption features you need the full-strength JCE installed in your JVM (it is not included by default).
-You can download the "J`ava Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files`" from Oracle and follow the installation instructions (essentially, you need to replace the two policy files in the JRE lib/security directory with the ones that you downloaded).
+You can download the "`Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files`" from Oracle and follow the installation instructions (essentially, you need to replace the two policy files in the JRE lib/security directory with the ones that you downloaded).
 
 If the remote property sources contain encrypted content (values starting with `{cipher}`), they are decrypted before sending to clients over HTTP.
 The main advantage of this setup is that the property values need not be in plain text when they are "`at rest`" (for example, in a git repository).
