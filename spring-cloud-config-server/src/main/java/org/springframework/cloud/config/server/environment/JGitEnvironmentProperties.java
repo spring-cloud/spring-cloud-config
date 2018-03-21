@@ -26,6 +26,7 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
     private boolean cloneOnStart = false;
     private boolean forcePull;
     private int timeout = 5;
+    private boolean deleteUntrackedBranches = false;
 
     public JGitEnvironmentProperties() {
         super();
@@ -54,5 +55,13 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
+    }
+
+    public boolean isDeleteUntrackedBranches() {
+        return deleteUntrackedBranches;
+    }
+
+    public void setDeleteUntrackedBranches(boolean deleteUntrackedBranches) {
+        this.deleteUntrackedBranches = deleteUntrackedBranches;
     }
 }
