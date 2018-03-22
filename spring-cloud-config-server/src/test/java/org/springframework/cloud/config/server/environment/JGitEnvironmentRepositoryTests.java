@@ -19,16 +19,19 @@ package org.springframework.cloud.config.server.environment;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.DeleteBranchCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
@@ -44,6 +47,7 @@ import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.TrackingRefUpdate;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -82,7 +86,7 @@ import static org.mockito.Mockito.when;
 public class JGitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
-	private JGitEnvironmentRepository repository = new JGitEnvironmentRepository(this.environment);
+	private JGitEnvironmentRepository repository;
 
 	private File basedir = new File("target/config");
 
@@ -92,6 +96,7 @@ public class JGitEnvironmentRepositoryTests {
 	@Before
 	public void init() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
+		this.repository = new JGitEnvironmentRepository(this.environment);
 		this.repository.setUri(uri);
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
@@ -385,6 +390,8 @@ public class JGitEnvironmentRepositoryTests {
 
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", null);
 		assertEquals(locations.getVersion(), newObjectId.getName());
+
+		verify(git, times(0)).branchDelete();
 	}
 
 	@Test
@@ -441,6 +448,8 @@ public class JGitEnvironmentRepositoryTests {
 
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertEquals(locations.getVersion(),newObjectId.getName());
+
+		verify(git, times(0)).branchDelete();
     }
 
 	@Test
@@ -509,6 +518,8 @@ public class JGitEnvironmentRepositoryTests {
 
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertEquals(locations.getVersion(), newObjectId.getName());
+
+		verify(git, times(0)).branchDelete();
 	}
 
 	@Test
@@ -714,6 +725,110 @@ public class JGitEnvironmentRepositoryTests {
 
 		envRepository.fetch(mockGit, "master");
 		verify(fetchCommand, times(1)).setTransportConfigCallback(configCallback);
+	}
+
+	@Test
+	public void shouldSetRemoveBranchesFlagToFetchCommand() throws Exception {
+		Git mockGit = mock(Git.class);
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+
+		when(mockGit.fetch()).thenReturn(fetchCommand);
+		when(fetchCommand.call()).thenReturn(mock(FetchResult.class));
+
+		repository.setGitFactory(new MockGitFactory(mockGit, mock(CloneCommand.class)));
+		repository.setUri("http://somegitserver/somegitrepo");
+		repository.setDeleteUntrackedBranches(true);
+
+		repository.fetch(mockGit, "master");
+
+		verify(fetchCommand, times(1)).setRemoveDeletedRefs(true);
+		verify(fetchCommand, times(1)).call();
+	}
+
+	@Test
+	public void shouldHandleExceptionWhileRemovingBranches() throws Exception {
+		Git git = mock(Git.class);
+		CloneCommand cloneCommand = mock(CloneCommand.class);
+		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
+		this.repository.setGitFactory(factory);
+		this.repository.setDeleteUntrackedBranches(true);
+
+		// refresh()->shouldPull
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		when(git.status()).thenReturn(statusCommand);
+		Repository repository = mock(Repository.class);
+		when(git.getRepository()).thenReturn(repository);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		// refresh()->fetch
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+		FetchResult fetchResult = mock(FetchResult.class);
+
+		TrackingRefUpdate trackingRefUpdate = mock(TrackingRefUpdate.class);
+		Collection<TrackingRefUpdate> trackingRefUpdates = Collections.singletonList(trackingRefUpdate);
+
+		when(git.fetch()).thenReturn(fetchCommand);
+		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
+		when(fetchCommand.call()).thenReturn(fetchResult);
+		when(fetchResult.getTrackingRefUpdates()).thenReturn(trackingRefUpdates);
+
+		// refresh()->deleteBranch
+		ReceiveCommand receiveCommand = mock(ReceiveCommand.class);
+		when(trackingRefUpdate.asReceiveCommand()).thenReturn(receiveCommand);
+		when(receiveCommand.getType()).thenReturn(ReceiveCommand.Type.DELETE);
+		when(trackingRefUpdate.getLocalName()).thenReturn("refs/remotes/origin/feature/deletedBranchFromOrigin");
+
+		DeleteBranchCommand deleteBranchCommand = mock(DeleteBranchCommand.class);
+		when(git.branchDelete()).thenReturn(deleteBranchCommand);
+		when(deleteBranchCommand.setBranchNames(eq("feature/deletedBranchFromOrigin"))).thenReturn(deleteBranchCommand);
+		when(deleteBranchCommand.setForce(true)).thenReturn(deleteBranchCommand);
+		when(deleteBranchCommand.call()).thenThrow(new NotMergedException());// here
+																			// is
+																			// our
+																			// exception
+																			// we
+																			// are
+																			// testing
+
+		// refresh()->checkout
+		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
+		// refresh()->checkout->containsBranch
+		ListBranchCommand listBranchCommand = mock(ListBranchCommand.class);
+		when(git.checkout()).thenReturn(checkoutCommand);
+		when(git.branchList()).thenReturn(listBranchCommand);
+		List<Ref> refs = new ArrayList<>();
+		Ref ref = mock(Ref.class);
+		refs.add(ref);
+		when(ref.getName()).thenReturn("/master");
+		when(listBranchCommand.call()).thenReturn(refs);
+
+		// refresh()->merge
+		MergeResult mergeResult = mock(MergeResult.class);
+		MergeResult.MergeStatus mergeStatus = mock(MergeResult.MergeStatus.class);
+		MergeCommand mergeCommand = mock(MergeCommand.class);
+		when(git.merge()).thenReturn(mergeCommand);
+		when(mergeCommand.call()).thenReturn(mergeResult);
+		when(mergeResult.getMergeStatus()).thenReturn(mergeStatus);
+		when(mergeStatus.isSuccessful()).thenReturn(true);
+
+		// refresh()->return
+		Ref headRef = mock(Ref.class);
+		when(repository.getRef(anyString())).thenReturn(headRef);
+
+		ObjectId newObjectId = ObjectId.fromRaw(new int[]{1, 2, 3, 4, 5});
+		when(headRef.getObjectId()).thenReturn(newObjectId);
+
+		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
+		assertEquals(locations.getVersion(), newObjectId.getName());
+
+		verify(deleteBranchCommand).setBranchNames(eq("feature/deletedBranchFromOrigin"));
+		verify(deleteBranchCommand).setForce(true);
+		verify(deleteBranchCommand).call();
 	}
 
 	class MockCloneCommand extends CloneCommand {

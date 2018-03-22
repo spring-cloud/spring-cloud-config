@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
@@ -501,6 +502,42 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertNotNull(repository.getTransportConfigCallback());
+	}
+
+	@Test
+	public void testShouldReturnEnvironmentFromLocalBranchInCaseRemoteDeleted() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData
+				.prepareClonedGitRepository(TestConfiguration.class);
+
+		String branchToDelete = "branchToDelete";
+		testData.getServerGit().getGit().branchCreate().setName(branchToDelete).call();
+
+		Environment environment = testData.getRepository().findOne("bar", "staging", "branchToDelete");
+		assertNotNull(environment);
+
+		testData.getServerGit().getGit().branchDelete().setBranchNames(branchToDelete).call();
+		environment = testData.getRepository().findOne("bar", "staging", "branchToDelete");
+		assertNotNull(environment);
+	}
+
+	@Test(expected = NoSuchLabelException.class)
+	public void testShouldFailIfRemoteBranchWasDeleted() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData
+				.prepareClonedGitRepositoryWithProps(Collections.singleton("spring.cloud.config.server.git.deleteUntrackedBranches=true"),
+						TestConfiguration.class);
+
+		String branchToDelete = "branchToDelete";
+		testData.getServerGit().getGit().branchCreate().setName(branchToDelete).call();
+
+		//checkout and simulate regular flow
+		Environment environment = testData.getRepository().findOne("bar", "staging", "branchToDelete");
+		assertNotNull(environment);
+
+		//remove branch
+		testData.getServerGit().getGit().branchDelete().setBranchNames(branchToDelete).call();
+
+		//test
+		testData.getRepository().findOne("bar", "staging", "branchToDelete");
 	}
 
 	@Configuration

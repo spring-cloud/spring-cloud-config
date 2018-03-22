@@ -529,6 +529,32 @@ spring:
 
 NOTE: The default value for `force-pull` property is `false`.
 
+===== Deleting untracked branches in Git Repositories
+
+As Spring Cloud Config Server has a clone of the remote git repository
+after check-outing branch to local repo (e.g fetching properties by label) it will keep this branch
+forever or till the next server restart (which creates new local repo).
+So there could be a case when remote branch is deleted but local copy of it is still available for fetching.
+And if Spring Cloud Config Server client service starts with `--spring.cloud.config.label=deletedRemoteBranch,master`
+it will fetch properties from `deletedRemoteBranch` local branch, but not from `master`.
+
+In order to keep local repository branches clean and up to remote - `deleteUntrackedBranches` property could be set.
+It will make Spring Cloud Config Server *force* delete untracked branches from local repository.
+Example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          deleteUntrackedBranches: true
+
+----
+
+NOTE: The default value for `deleteUntrackedBranches` property is `false`.
 
 ==== Version Control Backend Filesystem Use
 
