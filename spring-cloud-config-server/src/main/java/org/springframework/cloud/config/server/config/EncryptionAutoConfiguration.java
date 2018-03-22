@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
 import org.springframework.cloud.bootstrap.encrypt.KeyProperties.KeyStore;
+import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
 import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.cloud.config.server.encryption.KeyStoreTextEncryptorLocator;
@@ -37,6 +38,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
+import org.springframework.security.rsa.crypto.RsaAlgorithm;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 import org.springframework.util.StringUtils;
 
@@ -85,6 +87,9 @@ public class EncryptionAutoConfiguration {
 		@Autowired
 		private KeyProperties key;
 
+		@Autowired
+		private RsaProperties rsaProperties;
+
 		@Bean
 		@ConditionalOnMissingBean
 		public TextEncryptorLocator textEncryptorLocator() {
@@ -92,9 +97,10 @@ public class EncryptionAutoConfiguration {
 			KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(
 					new KeyStoreKeyFactory(keyStore.getLocation(), keyStore.getPassword().toCharArray()),
 					keyStore.getSecret(), keyStore.getAlias());
-			locator.setRsaAlgorithm(this.key.getRsa().getAlgorithm());
-			locator.setSalt(this.key.getRsa().getSalt());
-			locator.setStrong(this.key.getRsa().isStrong());
+			RsaAlgorithm algorithm = this.rsaProperties.getAlgorithm();
+			locator.setRsaAlgorithm(algorithm);
+			locator.setSalt(this.rsaProperties.getSalt());
+			locator.setStrong(this.rsaProperties.isStrong());
 			return locator;
 		}
 
