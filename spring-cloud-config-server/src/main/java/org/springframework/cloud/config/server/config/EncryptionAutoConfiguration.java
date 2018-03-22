@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
 import org.springframework.cloud.bootstrap.encrypt.KeyProperties.KeyStore;
+import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
 import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.cloud.config.server.encryption.KeyStoreTextEncryptorLocator;
@@ -87,6 +88,9 @@ public class EncryptionAutoConfiguration {
 		@Autowired
 		private KeyProperties key;
 
+		@Autowired
+		private RsaProperties rsaProperties;
+
 		@Bean
 		@ConditionalOnMissingBean
 		public TextEncryptorLocator textEncryptorLocator() {
@@ -95,10 +99,10 @@ public class EncryptionAutoConfiguration {
 					new KeyStoreKeyFactory(keyStore.getLocation(),
 							keyStore.getPassword().toCharArray()),
 					keyStore.getSecret(), keyStore.getAlias());
-			RsaAlgorithm algorithm = this.key.getRsa().getAlgorithm();
+			RsaAlgorithm algorithm = this.rsaProperties.getAlgorithm();
 			locator.setRsaAlgorithm(algorithm);
-			locator.setSalt(this.key.getRsa().getSalt());
-			locator.setStrong(this.key.getRsa().isStrong());
+			locator.setSalt(this.rsaProperties.getSalt());
+			locator.setStrong(this.rsaProperties.isStrong());
 			return locator;
 		}
 
