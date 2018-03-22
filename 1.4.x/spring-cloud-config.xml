@@ -610,6 +610,28 @@ Example:</simpara>
 <simpara>The default value for <literal>force-pull</literal> property is <literal>false</literal>.</simpara>
 </note>
 </section>
+<section xml:id="_deleting_untracked_branches_in_git_repositories">
+<title>Deleting untracked branches in Git Repositories</title>
+<simpara>As Spring Cloud Config Server has a clone of the remote git repository
+after check-outing branch to local repo (e.g fetching properties by label) it will keep this branch
+forever or till the next server restart (which creates new local repo).
+So there could be a case when remote branch is deleted but local copy of it is still available for fetching.
+And if Spring Cloud Config Server client service starts with <literal>--spring.cloud.config.label=deletedRemoteBranch,master</literal>
+it will fetch properties from <literal>deletedRemoteBranch</literal> local branch, but not from <literal>master</literal>.</simpara>
+<simpara>In order to keep local repository branches clean and up to remote - <literal>deleteUntrackedBranches</literal> property could be set.
+It will make Spring Cloud Config Server <emphasis role="strong">force</emphasis> delete untracked branches from local repository.
+Example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          deleteUntrackedBranches: true</programlisting>
+<note>
+<simpara>The default value for <literal>deleteUntrackedBranches</literal> property is <literal>false</literal>.</simpara>
+</note>
+</section>
 </section>
 <section xml:id="_version_control_backend_filesystem_use">
 <title>Version Control Backend Filesystem Use</title>
