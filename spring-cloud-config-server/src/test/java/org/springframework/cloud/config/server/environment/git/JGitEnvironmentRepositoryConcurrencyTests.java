@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.server.environment;
+package org.springframework.cloud.config.server.environment.git;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -35,6 +35,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
+import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;

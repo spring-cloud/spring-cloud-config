@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server.environment;
+package org.springframework.cloud.config.server.environment.git;
 
 import java.io.File;
 import java.util.HashMap;
@@ -23,7 +23,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.git.JGitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.git.MultipleJGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.git.MultipleJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.git.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
@@ -53,6 +56,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 		this.repository.setUri(defaultUri);
 		this.repository.setBasedir(new File("target/repos/parent_repo"));
 		this.repository.setRepos(createRepositories());
+		this.repository.afterPropertiesSet();
 	}
 
 	private Map<String, PatternMatchingJGitEnvironmentRepository> createRepositories()

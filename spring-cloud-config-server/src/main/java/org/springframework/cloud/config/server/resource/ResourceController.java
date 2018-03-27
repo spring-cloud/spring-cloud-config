@@ -102,17 +102,8 @@ public class ResourceController {
 
 	synchronized String retrieve(String name, String profile, String label, String path,
 			boolean resolvePlaceholders) throws IOException {
-		if (name != null && name.contains("(_)")) {
-			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
-			// by Spring MVC
-			name = name.replace("(_)", "/");
-		}
-		if (label != null && label.contains("(_)")) {
-			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
-			// by Spring MVC
-			label = label.replace("(_)", "/");
-		}
-
+		name = normalizePart(name);
+		label = normalizePart(label);
 		// ensure InputStream will be closed to prevent file locks on Windows
 		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
 				.getInputStream()) {
@@ -136,22 +127,27 @@ public class ResourceController {
 
 	synchronized byte[] binary(String name, String profile, String label, String path)
 			throws IOException {
-		if (name != null && name.contains("(_)")) {
-			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
-			// by Spring MVC
-			name = name.replace("(_)", "/");
-		}
-		if (label != null && label.contains("(_)")) {
-			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
-			// by Spring MVC
-			label = label.replace("(_)", "/");
-		}
+		name = normalizePart(name);
+		label = normalizePart(label);
 		// TODO: is this line needed for side effects?
 		prepareEnvironment(this.environmentRepository.findOne(name, profile, label));
 		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
 				.getInputStream()) {
 			return StreamUtils.copyToByteArray(is);
 		}
+	}
+
+	/**
+	 * "(_)" is uncommon in a git branch name, but "/" cannot be matched by Spring MVC
+	 * @param part part to be normalized
+	 * @return normalized part
+	 */
+	private String normalizePart(String part) {
+		if (part != null && part.contains("(_)")) {
+
+			part = part.replace("(_)", "/");
+		}
+		return part;
 	}
 
 	@ExceptionHandler(NoSuchResourceException.class)

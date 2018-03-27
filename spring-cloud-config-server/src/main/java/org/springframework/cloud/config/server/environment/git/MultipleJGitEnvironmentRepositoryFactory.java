@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server.environment;
+package org.springframework.cloud.config.server.environment.git;
 
 import java.util.Optional;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.environment.EnvironmentRepositoryFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 /**

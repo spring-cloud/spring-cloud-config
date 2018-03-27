@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server.environment;
+package org.springframework.cloud.config.server.environment.git;
 
 import java.io.File;
 import java.util.AbstractMap;
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.PatternMatchUtils;
@@ -240,6 +241,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		repository.setUri(uri);
 		repository.setBasedir(
 				new File(source.getBasedir().getParentFile(), basedir.getName()));
+		repository.initHelpers();
 		return repository;
 	}
 

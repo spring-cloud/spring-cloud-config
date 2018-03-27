@@ -14,12 +14,14 @@
  * limitations under the License.
  *
  */
-package org.springframework.cloud.config.server.environment;
+package org.springframework.cloud.config.server.environment.git;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.environment.git.MultipleJGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.git.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 

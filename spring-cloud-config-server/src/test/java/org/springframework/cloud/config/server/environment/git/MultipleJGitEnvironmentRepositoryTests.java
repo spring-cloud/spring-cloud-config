@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server.environment;
+package org.springframework.cloud.config.server.environment.git;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.git.MultipleJGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.git.MultipleJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.git.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -64,6 +66,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 				new MultipleJGitEnvironmentProperties());
 		this.repository.setUri(defaultUri);
 		this.repository.setRepos(createRepositories());
+		this.repository.afterPropertiesSet();
 	}
 
 	private Map<String, PatternMatchingJGitEnvironmentRepository> createRepositories()

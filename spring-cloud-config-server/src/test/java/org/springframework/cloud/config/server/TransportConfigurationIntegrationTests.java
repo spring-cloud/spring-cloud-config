@@ -28,7 +28,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.server.config.TransportConfiguration;
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.git.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.ssh.SshPropertyValidator;
 import org.springframework.cloud.config.server.ssh.SshUriProperties;
 import org.springframework.test.context.ActiveProfiles;
