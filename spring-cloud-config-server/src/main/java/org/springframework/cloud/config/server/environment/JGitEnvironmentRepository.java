@@ -218,7 +218,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			git = createGitClient();
 			if (shouldPull(git)) {
 				FetchResult fetchStatus = fetch(git, label);
-				if(deleteUntrackedBranches) {
+				if (deleteUntrackedBranches && fetchStatus != null) {
 					deleteUntrackedLocalBranches(fetchStatus.getTrackingRefUpdates(), git);
 				}
 				// checkout after fetch so we can get any new branches, tags, ect.
@@ -267,7 +267,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	/**
 	 * Clones the remote repository and then opens a connection to it.
-	 * 
+	 *
 	 * @throws GitAPIException
 	 * @throws IOException
 	 */
