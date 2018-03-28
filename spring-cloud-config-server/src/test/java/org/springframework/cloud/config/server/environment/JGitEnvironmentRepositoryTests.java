@@ -332,6 +332,7 @@ public class JGitEnvironmentRepositoryTests {
 		CloneCommand cloneCommand = mock(CloneCommand.class);
 		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
 		this.repository.setGitFactory(factory);
+		this.repository.setDeleteUntrackedBranches(true);
 
 		// refresh()->shouldPull
 		StatusCommand statusCommand = mock(StatusCommand.class);
