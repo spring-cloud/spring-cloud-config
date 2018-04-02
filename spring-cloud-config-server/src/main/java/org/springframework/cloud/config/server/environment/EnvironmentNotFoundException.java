@@ -30,7 +30,4 @@ public class EnvironmentNotFoundException extends RuntimeException {
 		super(string);
 	}
 
-	public EnvironmentNotFoundException(String message, Throwable cause) {
-		super(message, cause);
-	}
 }
