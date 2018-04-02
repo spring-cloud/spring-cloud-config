@@ -508,6 +508,14 @@ public class EnvironmentControllerTests {
 		mvc.perform(MockMvcRequestBuilders.get("/foo1/notfound"))
 				.andExpect(MockMvcResultMatchers.status().isNotFound());
 	}
+	@Test
+	public void environmentMissing() throws Exception {
+		Mockito.when(this.repository.findOne("foo1", "notfound", null))
+				.thenThrow(new EnvironmentNotFoundException("Missing Environment"));
+		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
+		mvc.perform(MockMvcRequestBuilders.get("/foo1/notfound"))
+				.andExpect(MockMvcResultMatchers.status().isNotFound());
+	}
 
 	@Test
 	public void mappingForYaml() throws Exception {
