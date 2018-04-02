@@ -110,6 +110,9 @@ public class EnvironmentController {
 			label = label.replace("(_)", "/");
 		}
 		Environment environment = this.repository.findOne(name, profiles, label);
+		if(environment == null || environment.getPropertySources().isEmpty()){
+			 throw new EnvironmentNotFoundException("Profile Not found");
+		}
 		return environment;
 	}
 
