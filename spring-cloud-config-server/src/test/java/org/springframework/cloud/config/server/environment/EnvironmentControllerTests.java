@@ -215,7 +215,19 @@ public class EnvironmentControllerTests {
 		assertEquals(this.environment.getName(), returnedEnvironment.getName());
 
 	}
+	@Test(expected=EnvironmentNotFoundException.class)
+	public void testEnvironmentNotFound() {
+		this.controller.setAcceptEmpty(false);
+		this.controller.labelled("foo", "bar", null);
+	}
+	@Test
+	public void testwithValidEnvironment() {
+		Mockito.when(this.repository.findOne("foo", "bar",null))
+				.thenReturn(this.environment);
+		Environment environment = this.controller.labelled("foo", "bar", null);
+		assertThat(environment, not(nullValue()));
 
+	}
 	@Test
 	public void testLabelWithSlash() {
 		
@@ -500,14 +512,7 @@ public class EnvironmentControllerTests {
 		mvc.perform(MockMvcRequestBuilders.get("/foo/bar/other"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 	}
-	@Test
-	public void mappingForEnvironment_404_not_found() throws Exception {
-		Mockito.when(this.repository.findOne("foo1", "notfound", null))
-				.thenReturn(new Environment("foo", "master"));
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/foo1/notfound"))
-				.andExpect(MockMvcResultMatchers.status().isNotFound());
-	}
+	
 	@Test
 	public void environmentMissing() throws Exception {
 		Mockito.when(this.repository.findOne("foo1", "notfound", null))
