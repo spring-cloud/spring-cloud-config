@@ -59,7 +59,7 @@ public class ConfigServerProperties {
 	/**
 	 * Flag to indicate that If HTTP 404 needs to be sent if Application is not Found
 	 */
-	private boolean acceptEmtpy = true;
+	private boolean acceptEmpty = true;
 
 	/**
 	 * Default application name when incoming requests do not have a specific one.
@@ -121,11 +121,11 @@ public class ConfigServerProperties {
 	}
 	
 	public boolean isAcceptEmpty() {
-		return this.acceptEmtpy;
+		return this.acceptEmpty;
 	}
 
-	public void setAcceptEmtpy(boolean acceptEmpty) {
-		this.acceptEmtpy = acceptEmpty;
+	public void setAcceptEmpty(boolean acceptEmpty) {
+		this.acceptEmpty = acceptEmpty;
 	}
 	public String getDefaultApplicationName() {
 		return this.defaultApplicationName;
