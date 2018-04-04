@@ -17,7 +17,6 @@
 package org.springframework.cloud.config.monitor;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.junit.Test;
 
@@ -25,11 +24,11 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.bus.BusProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.util.MultiValueMap;
 
 import static org.junit.Assert.assertEquals;
 
@@ -40,8 +39,9 @@ import static org.junit.Assert.assertEquals;
 public class EnvironmentMonitorAutoConfigurationTests {
 
 	@Test
-	public void test() {
+	public void testExtractorsCount() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
+				BusConfig.class,
 				EnvironmentMonitorAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
@@ -57,6 +57,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 	@Test
 	public void testCanAddCustomPropertyPathNotificationExtractor() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
+				BusConfig.class,
 				CustomPropertyPathNotificationExtractorConfig.class,
 				EnvironmentMonitorAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
@@ -71,17 +72,21 @@ public class EnvironmentMonitorAutoConfigurationTests {
 	}
 
 	@Configuration
+	static class BusConfig {
+
+		@Bean
+		public BusProperties busProperties() {
+			return new BusProperties();
+		}
+    }
+
+	@Configuration
 	static class CustomPropertyPathNotificationExtractorConfig {
 		@Bean
 		public PropertyPathNotificationExtractor customNotificationExtractor() {
-			return new PropertyPathNotificationExtractor() {
-				@Override
-				public PropertyPathNotification extract(
-						MultiValueMap<String, String> headers,
-						Map<String, Object> payload) {
-					throw new UnsupportedOperationException("doesn't do anything");
-				}
-			};
+			return (headers, payload) -> {
+                throw new UnsupportedOperationException("doesn't do anything");
+            };
 		}
 	}
 

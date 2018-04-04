@@ -21,6 +21,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.cloud.bus.BusProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -39,8 +40,8 @@ public class EnvironmentMonitorAutoConfiguration {
 	private List<PropertyPathNotificationExtractor> extractors;
 
 	@Bean
-	public PropertyPathEndpoint propertyPathEndpoint() {
-		return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors));
+	public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties) {
+		return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), busProperties.getId());
 	}
 
 	@Configuration

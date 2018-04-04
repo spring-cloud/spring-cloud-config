@@ -35,7 +35,7 @@ public class PropertyPathEndpointTests {
 
 	private PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
 			new CompositePropertyPathNotificationExtractor(
-					Collections.<PropertyPathNotificationExtractor> emptyList()));
+					Collections.emptyList()), "abc1");
 
 	@Before
 	public void init() {
@@ -44,15 +44,20 @@ public class PropertyPathEndpointTests {
 		publisher.refresh();
 	}
 
+    @Test
+    public void testBusId() {
+        assertEquals("abc1", this.endpoint.getBusId());
+    }
+
 	@Test
-	public void testNotifyByForm() throws Exception {
+	public void testNotifyByForm() {
 		assertEquals(0, this.endpoint
-				.notifyByForm(new HttpHeaders(), new ArrayList<String>()).size());
+				.notifyByForm(new HttpHeaders(), new ArrayList<>()).size());
 	}
 
 	@Test
-	public void testNotifySeveral() throws Exception {
-		List<String> request = new ArrayList<String>();
+	public void testNotifySeveral() {
+		List<String> request = new ArrayList<>();
 		request.add("/foo/bar.properties");
 		request.add("/application.properties");
 		assertEquals("[bar, *]",
@@ -60,56 +65,56 @@ public class PropertyPathEndpointTests {
 	}
 
 	@Test
-	public void testNotifyAll() throws Exception {
+	public void testNotifyAll() {
 		assertEquals("[*]",
 				this.endpoint
 						.notifyByPath(new HttpHeaders(), Collections
-								.<String, Object> singletonMap("path", "application.yml"))
+								.singletonMap("path", "application.yml"))
 				.toString());
 	}
 
 	@Test
-	public void testNotifyAllWithProfile() throws Exception {
+	public void testNotifyAllWithProfile() {
 		assertEquals("[*:local]",
 				this.endpoint
 						.notifyByPath(new HttpHeaders(), Collections
-								.<String, Object> singletonMap("path", "application-local.yml"))
+								.singletonMap("path", "application-local.yml"))
 				.toString());
 	}
 
 	@Test
-	public void testNotifyOne() throws Exception {
+	public void testNotifyOne() {
 		assertEquals("[foo]",
 				this.endpoint
 						.notifyByPath(new HttpHeaders(), Collections
-								.<String, Object> singletonMap("path", "foo.yml"))
+								.singletonMap("path", "foo.yml"))
 				.toString());
 	}
 
 	@Test
-	public void testNotifyOneWithWindowsPath() throws Exception {
+	public void testNotifyOneWithWindowsPath() {
 		assertEquals("[foo]",
 				this.endpoint
 						.notifyByPath(new HttpHeaders(), Collections
-								.<String, Object> singletonMap("path", "C:\\config\\foo.yml"))
+								.singletonMap("path", "C:\\config\\foo.yml"))
 				.toString());
 	}
 
 	@Test
-	public void testNotifyOneWithProfile() throws Exception {
+	public void testNotifyOneWithProfile() {
 		assertEquals("[foo:local, foo-local]",
 				this.endpoint
 						.notifyByPath(new HttpHeaders(), Collections
-								.<String, Object> singletonMap("path", "foo-local.yml"))
+								.singletonMap("path", "foo-local.yml"))
 				.toString());
 	}
 
 	@Test
-	public void testNotifyMultiDash() throws Exception {
+	public void testNotifyMultiDash() {
 		assertEquals("[foo:local-dev, foo-local:dev, foo-local-dev]",
 				this.endpoint
 						.notifyByPath(new HttpHeaders(), Collections
-								.<String, Object> singletonMap("path", "foo-local-dev.yml"))
+								.singletonMap("path", "foo-local-dev.yml"))
 				.toString());
 	}
 
