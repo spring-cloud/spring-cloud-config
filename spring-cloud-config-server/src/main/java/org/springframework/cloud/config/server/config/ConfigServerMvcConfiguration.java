@@ -57,6 +57,7 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 	public EnvironmentController environmentController(EnvironmentRepository envRepository, ConfigServerProperties server) {
 		EnvironmentController controller = new EnvironmentController(encrypted(envRepository, server), this.objectMapper);
 		controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
+		controller.setAcceptEmpty(server.isAcceptEmpty());
 		return controller;
 	}
 
