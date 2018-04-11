@@ -215,8 +215,8 @@ If the YAML files have documents inside them that point to Spring profiles, thos
 If there are profile-specific YAML (or properties) files, these are also applied with higher precedence than the defaults.
 Higher precedence translates to a <literal>PropertySource</literal> listed earlier in the <literal>Environment</literal>.
 (These same rules apply in a standalone Spring Boot application.)</simpara>
-<section xml:id="_git_backend">
-<title>Git Backend</title>
+<simpara>You can set spring.cloud.config.server.accept-empty to false so that Server would return a HTTP 404 status, if the application is not found.By default, this flag is set to true.
+==== Git Backend</simpara>
 <simpara>The default implementation of <literal>EnvironmentRepository</literal> uses a Git backend, which is very convenient for managing upgrades and physical
 environments and for auditing changes.
 To change the location of the repository, you can set the <literal>spring.cloud.config.server.git.uri</literal> configuration property in the Config Server (for example in <literal>application.yml</literal>).
@@ -535,7 +535,6 @@ Example:</simpara>
 <note>
 <simpara>The default value for <literal>deleteUntrackedBranches</literal> property is <literal>false</literal>.</simpara>
 </note>
-</section>
 </section>
 <section xml:id="_version_control_backend_filesystem_use">
 <title>Version Control Backend Filesystem Use</title>
