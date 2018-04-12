@@ -91,6 +91,16 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private int timeout;
 
 	/**
+	 * Time (in seconds) between refresh of the git repository
+	 */
+	private int refreshRate = 0;
+
+	/**
+	 * Time of the last refresh of the git repository
+	 */
+	private long lastRefresh;
+
+	/**
 	 * Flag to indicate that the repository should be cloned on startup (not on demand).
 	 * Generally leads to slower startup but faster first query.
 	 */
@@ -129,6 +139,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.forcePull = properties.isForcePull();
 		this.timeout = properties.getTimeout();
 		this.deleteUntrackedBranches = properties.isDeleteUntrackedBranches();
+		this.refreshRate = properties.getRefreshRate();
 	}
 
 	public boolean isCloneOnStart() {
@@ -146,6 +157,15 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	public void setTimeout(int timeout) {
 		this.timeout = timeout;
 	}
+
+	public int getRefreshRate() {
+		return refreshRate;
+	}
+
+	public void setRefreshRate(int refreshRate) {
+		this.refreshRate = refreshRate;
+	}
+
 
 	public TransportConfigCallback getTransportConfigCallback() {
 		return transportConfigCallback;
@@ -349,6 +369,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	protected boolean shouldPull(Git git) throws GitAPIException {
 		boolean shouldPull;
+
+		if (this.refreshRate > 0 && System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000)) {
+			return false;
+		}
+
 		Status gitStatus = git.status().call();
 		boolean isWorkingTreeClean = gitStatus.isClean();
 		String originUrl = git.getRepository().getConfig().getString("remote", "origin",
@@ -394,6 +419,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		fetch.setRemote("origin");
 		fetch.setTagOpt(TagOpt.FETCH_TAGS);
 		fetch.setRemoveDeletedRefs(deleteUntrackedBranches);
+		if (this.refreshRate > 0) {
+			this.setLastRefresh(System.currentTimeMillis());
+		}
 
 		configureCommand(fetch);
 		try {
@@ -619,6 +647,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		if (logger.isDebugEnabled()) {
 			logger.debug("Stacktrace for: " + message, ex);
 		}
+	}
+
+	public void setLastRefresh(long lastRefresh) {
+		this.lastRefresh = lastRefresh;
+	}
+
+	public long getLastRefresh() {
+		return lastRefresh;
 	}
 
 	/**

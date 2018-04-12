@@ -85,6 +85,9 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			if (getTimeout() != 0 && repo.getTimeout() == 0) {
 				repo.setTimeout(getTimeout());
 			}
+			if (getRefreshRate() != 0 && repo.getRefreshRate() == 0) {
+				repo.setRefreshRate(getRefreshRate());
+			}
 			String user = repo.getUsername();
 			String pass = repo.getPassword();
 			String passphrase = repo.getPassphrase();
