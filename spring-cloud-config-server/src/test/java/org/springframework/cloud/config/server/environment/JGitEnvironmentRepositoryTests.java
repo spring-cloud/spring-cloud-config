@@ -347,10 +347,12 @@ public class JGitEnvironmentRepositoryTests {
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
-		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment);
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(2);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties);
 
 		repo.setLastRefresh(System.currentTimeMillis() - 5000);
-		repo.setRefreshRate(2);
 
 		boolean shouldPull = repo.shouldPull(git);
 
@@ -382,9 +384,10 @@ public class JGitEnvironmentRepositoryTests {
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
-		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment);
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(1000);
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties);
 
-		repo.setRefreshRate(1000);
 		repo.setLastRefresh(0);
 		repo.fetch(git, "master");
 

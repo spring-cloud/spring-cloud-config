@@ -113,8 +113,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		Map<String, Object> repoMapping = new LinkedHashMap<String, Object>();
 		repoMapping.put("spring.cloud.config.server.git.repos[test1].pattern", "*test1*");
 		repoMapping.put("spring.cloud.config.server.git.repos[test1].uri", test1RepoUri);
-		repoMapping.put("spring.cloud.config.server.git.refreshRate", "30");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+		repoMapping.put("spring.cloud.config.server.git.refresh-rate", "30");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri)
 				.properties(repoMapping).run();
 		EnvironmentRepository repository = this.context

@@ -28,6 +28,11 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
     private int timeout = 5;
     private boolean deleteUntrackedBranches = false;
 
+    /**
+     * Time (in seconds) between refresh of the git repository
+     */
+    private int refreshRate = 0;
+
     public JGitEnvironmentProperties() {
         super();
         setDefaultLabel(DEFAULT_LABEL);
@@ -63,5 +68,13 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
 
     public void setDeleteUntrackedBranches(boolean deleteUntrackedBranches) {
         this.deleteUntrackedBranches = deleteUntrackedBranches;
+    }
+
+    public int getRefreshRate() {
+        return refreshRate;
+    }
+
+    public void setRefreshRate(int refreshRate) {
+        this.refreshRate = refreshRate;
     }
 }

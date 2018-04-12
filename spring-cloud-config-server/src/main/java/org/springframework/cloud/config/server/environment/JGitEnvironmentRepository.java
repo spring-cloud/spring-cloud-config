@@ -139,6 +139,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.forcePull = properties.isForcePull();
 		this.timeout = properties.getTimeout();
 		this.deleteUntrackedBranches = properties.isDeleteUntrackedBranches();
+		this.refreshRate = properties.getRefreshRate();
 	}
 
 	public boolean isCloneOnStart() {
