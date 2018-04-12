@@ -25,6 +25,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties("spring.cloud.config.server.git")
 public class MultipleJGitEnvironmentProperties extends JGitEnvironmentProperties {
+    /**
+     * Map of repository identifier to location and other properties.
+     */
     private Map<String, PatternMatchingJGitEnvironmentProperties> repos = new LinkedHashMap<>();
 
     public Map<String, PatternMatchingJGitEnvironmentProperties> getRepos() {
@@ -36,7 +39,13 @@ public class MultipleJGitEnvironmentProperties extends JGitEnvironmentProperties
     }
 
     public static class PatternMatchingJGitEnvironmentProperties extends JGitEnvironmentProperties {
+        /**
+         * Pattern to match on application name and profiles.
+         */
         private String[] pattern = new String[0];
+        /**
+         * Name of repository (same as map key by default).
+         */
         private String name;
 
         public String[] getPattern() {

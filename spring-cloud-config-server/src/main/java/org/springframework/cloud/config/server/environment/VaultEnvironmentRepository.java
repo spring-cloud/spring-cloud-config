@@ -20,14 +20,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.hibernate.validator.constraints.Range;
 
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
@@ -61,7 +63,8 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	private String host;
 
 	/** Vault port. Defaults to 8200. */
-	@Range(min = 1, max = 65535)
+	@Min(1)
+	@Max(65535)
 	private int port;
 
 	/** Vault scheme. Defaults to http. */

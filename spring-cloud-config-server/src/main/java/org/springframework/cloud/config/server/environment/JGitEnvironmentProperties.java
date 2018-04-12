@@ -23,9 +23,16 @@ import org.springframework.cloud.config.server.support.AbstractScmAccessorProper
 public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
     private static final String DEFAULT_LABEL = "master";
 
+    /** Flag to indicate that the repository should be cloned on startup (not on demand). Generally leads to slower startup but faster first query. */
     private boolean cloneOnStart = false;
+
+    /** Flag to indicate that the repository should force pull. If true discard any local changes and take from remote repository. */
     private boolean forcePull;
+
+    /** Timeout (in seconds) for obtaining HTTP or SSH connection (if applicable), defaults to 5 seconds. */
     private int timeout = 5;
+
+    /** Flag to indicate that the branch should be deleted locally if it's origin tracked branch was removed. */
     private boolean deleteUntrackedBranches = false;
 
     /**

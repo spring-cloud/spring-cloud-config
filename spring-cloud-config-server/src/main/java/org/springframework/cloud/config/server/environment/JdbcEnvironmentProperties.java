@@ -27,6 +27,7 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	private static final String DEFAULT_SQL = "SELECT KEY, VALUE from PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=?";
 
 	private int order = Ordered.LOWEST_PRECEDENCE - 10;
+	/** SQL used to query database for keys and values */
 	private String sql = DEFAULT_SQL;
 
 	public int getOrder() {
