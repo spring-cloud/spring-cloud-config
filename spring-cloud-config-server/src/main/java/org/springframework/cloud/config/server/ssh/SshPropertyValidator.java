@@ -24,6 +24,8 @@ import java.util.Map;
 import org.eclipse.jgit.transport.URIish;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.stereotype.Component;
 
 import static org.springframework.util.StringUtils.hasText;
@@ -34,7 +36,7 @@ import static org.springframework.util.StringUtils.hasText;
  * @author Ollie Hughes
  */
 @Component
-@EnableConfigurationProperties(SshUriProperties.class)
+@EnableConfigurationProperties(MultipleJGitEnvironmentProperties.class)
 public class SshPropertyValidator {
 
 	protected static boolean isSshUri(Object uri) {
@@ -55,10 +57,10 @@ public class SshPropertyValidator {
 		return false;
 	}
 
-	protected List<SshUri> extractRepoProperties(SshUriProperties sshUriProperties) {
-		List<SshUri> allRepoProperties = new ArrayList<>();
+	protected List<JGitEnvironmentProperties> extractRepoProperties(MultipleJGitEnvironmentProperties sshUriProperties) {
+		List<JGitEnvironmentProperties> allRepoProperties = new ArrayList<>();
 		allRepoProperties.add(sshUriProperties);
-		Map<String, SshUriProperties.SshUriNestedRepoProperties> repos = sshUriProperties.getRepos();
+		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = sshUriProperties.getRepos();
 		if (repos != null) {
 			allRepoProperties.addAll(repos.values());
 		}

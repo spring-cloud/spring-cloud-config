@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jgit.transport.URIish;
-import org.springframework.cloud.config.server.ssh.SshUriProperties.SshUriNestedRepoProperties;
+
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 
 import static org.springframework.cloud.config.server.ssh.SshPropertyValidator.isSshUri;
 
@@ -32,25 +34,25 @@ import static org.springframework.cloud.config.server.ssh.SshPropertyValidator.i
  */
 public class SshUriPropertyProcessor {
 
-	private final SshUriProperties sshUriProperties;
+	private final MultipleJGitEnvironmentProperties sshUriProperties;
 
-	public SshUriPropertyProcessor(SshUriProperties sshUriProperties) {
+	public SshUriPropertyProcessor(MultipleJGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
 	}
 
-	public Map<String, SshUri> getSshKeysByHostname() {
+	public Map<String, JGitEnvironmentProperties> getSshKeysByHostname() {
 		return extractNestedProperties(sshUriProperties);
 	}
 
-	private Map<String, SshUri> extractNestedProperties(SshUriProperties uriProperties) {
-		Map<String, SshUri> sshUriPropertyMap = new HashMap<>();
+	private Map<String, JGitEnvironmentProperties> extractNestedProperties(MultipleJGitEnvironmentProperties uriProperties) {
+		Map<String, JGitEnvironmentProperties> sshUriPropertyMap = new HashMap<>();
 		String parentUri = uriProperties.getUri();
 		if (isSshUri(parentUri) && getHostname(parentUri) != null) {
 			sshUriPropertyMap.put(getHostname(parentUri), uriProperties);
 		}
-		Map<String, SshUriNestedRepoProperties> repos = uriProperties.getRepos();
+		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = uriProperties.getRepos();
 		if(repos != null) {
-			for (SshUriNestedRepoProperties repoProperties : repos.values()) {
+			for (MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties repoProperties : repos.values()) {
 				String repoUri = repoProperties.getUri();
 				if (isSshUri(repoUri) && getHostname(repoUri) != null) {
 					sshUriPropertyMap.put(getHostname(repoUri), repoProperties);

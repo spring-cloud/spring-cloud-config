@@ -19,11 +19,21 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.config.server.ssh.HostKeyAlgoSupported;
+import org.springframework.cloud.config.server.ssh.HostKeyAndAlgoBothExist;
+import org.springframework.cloud.config.server.ssh.KnownHostsFileIsValid;
+import org.springframework.cloud.config.server.ssh.PrivateKeyIsValid;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * @author Dylan Roberts
  */
 @ConfigurationProperties("spring.cloud.config.server.git")
+@Validated
+@PrivateKeyIsValid
+@HostKeyAndAlgoBothExist
+@HostKeyAlgoSupported
+@KnownHostsFileIsValid
 public class MultipleJGitEnvironmentProperties extends JGitEnvironmentProperties {
     /**
      * Map of repository identifier to location and other properties.

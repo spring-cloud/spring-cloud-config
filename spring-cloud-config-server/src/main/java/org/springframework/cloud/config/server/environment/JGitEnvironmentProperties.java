@@ -15,6 +15,8 @@
  */
 package org.springframework.cloud.config.server.environment;
 
+import javax.validation.constraints.Pattern;
+
 import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
 
 /**
@@ -39,6 +41,42 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
      * Time (in seconds) between refresh of the git repository
      */
     private int refreshRate = 0;
+
+    /**
+     * Valid SSH private key. Must be set if ignoreLocalSshSettings is true and Git URI is SSH format.
+     */
+    private String privateKey;
+
+    /**
+     * One of ssh-dss, ssh-rsa, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384, or ecdsa-sha2-nistp521. Must be set if hostKey is also set.
+     */
+    private String hostKeyAlgorithm;
+
+    /**
+     * Valid SSH host key. Must be set if hostKeyAlgorithm is also set.
+     */
+    private String hostKey;
+
+    /**
+     * Location of custom .known_hosts file.
+     */
+    private String knownHostsFile;
+
+    /**
+     * Override server authentication method order. This should allow for evading login prompts if server has keyboard-interactive authentication before the publickey method.
+     */
+    @Pattern(regexp = "([\\w -]+,)*([\\w -]+)")
+    private String preferredAuthentications;
+
+    /**
+     * If true, use property-based instead of file-based SSH config.
+     */
+    private boolean ignoreLocalSshSettings;
+
+    /**
+     * If false, ignore errors with host key
+     */
+    private boolean strictHostKeyChecking = true;
 
     public JGitEnvironmentProperties() {
         super();
@@ -83,5 +121,63 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
 
     public void setRefreshRate(int refreshRate) {
         this.refreshRate = refreshRate;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public String getHostKeyAlgorithm() {
+        return hostKeyAlgorithm;
+    }
+
+    public void setHostKeyAlgorithm(String hostKeyAlgorithm) {
+        this.hostKeyAlgorithm = hostKeyAlgorithm;
+    }
+
+    public String getHostKey() {
+        return hostKey;
+    }
+
+    public void setHostKey(String hostKey) {
+        this.hostKey = hostKey;
+    }
+
+    public String getKnownHostsFile() {
+        return knownHostsFile;
+    }
+
+    public void setKnownHostsFile(String knownHostsFile) {
+        this.knownHostsFile = knownHostsFile;
+    }
+
+    public String getPreferredAuthentications() {
+        return preferredAuthentications;
+    }
+
+    public void setPreferredAuthentications(String preferredAuthentications) {
+        this.preferredAuthentications = preferredAuthentications;
+    }
+
+    public boolean isIgnoreLocalSshSettings() {
+        return ignoreLocalSshSettings;
+    }
+
+    public void setIgnoreLocalSshSettings(boolean ignoreLocalSshSettings) {
+        this.ignoreLocalSshSettings = ignoreLocalSshSettings;
+    }
+
+    @Override
+    public boolean isStrictHostKeyChecking() {
+        return strictHostKeyChecking;
+    }
+
+    @Override
+    public void setStrictHostKeyChecking(boolean strictHostKeyChecking) {
+        this.strictHostKeyChecking = strictHostKeyChecking;
     }
 }

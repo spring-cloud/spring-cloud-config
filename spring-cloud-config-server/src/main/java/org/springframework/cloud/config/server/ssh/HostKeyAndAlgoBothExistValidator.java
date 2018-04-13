@@ -21,6 +21,8 @@ import java.util.Set;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.validation.annotation.Validated;
 
 import static java.lang.String.format;
@@ -28,7 +30,7 @@ import static org.springframework.cloud.config.server.ssh.SshPropertyValidator.i
 import static org.springframework.util.StringUtils.hasText;
 
 /**
- * JSR-303 Cross Field validator that ensures that a {@link SshUriProperties} bean for the constraints:
+ * JSR-303 Cross Field validator that ensures that a {@link MultipleJGitEnvironmentProperties} bean for the constraints:
  * - If host key is set then host key algo must also be set
  * - If host key algo is set then host key must also be set
  *
@@ -36,7 +38,7 @@ import static org.springframework.util.StringUtils.hasText;
  *
  * @author Ollie Hughes
  */
-public class HostKeyAndAlgoBothExistValidator implements ConstraintValidator<HostKeyAndAlgoBothExist, SshUriProperties> {
+public class HostKeyAndAlgoBothExistValidator implements ConstraintValidator<HostKeyAndAlgoBothExist, MultipleJGitEnvironmentProperties> {
 	private static final String GIT_PROPERTY_PREFIX = "spring.cloud.config.server.git.";
 	private final SshPropertyValidator sshPropertyValidator = new SshPropertyValidator();
 
@@ -46,11 +48,11 @@ public class HostKeyAndAlgoBothExistValidator implements ConstraintValidator<Hos
 	}
 
 	@Override
-	public boolean isValid(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
+	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
 		Set<Boolean> validationResults = new HashSet<>();
-		List<SshUri> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
+		List<JGitEnvironmentProperties> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
 
-		for (SshUri extractedProperty : extractedProperties) {
+		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
 			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
 				validationResults.add(
 						isAlgorithmSpecifiedWhenHostKeySet(extractedProperty, context)
@@ -60,7 +62,7 @@ public class HostKeyAndAlgoBothExistValidator implements ConstraintValidator<Hos
 		return !validationResults.contains(false);
 	}
 
-	private boolean isHostKeySpecifiedWhenAlgorithmSet(SshUri sshUriProperties, ConstraintValidatorContext context) {
+	private boolean isHostKeySpecifiedWhenAlgorithmSet(JGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
 		if (hasText(sshUriProperties.getHostKeyAlgorithm()) && !hasText(sshUriProperties.getHostKey())) {
 				context.disableDefaultConstraintViolation();
 				context.buildConstraintViolationWithTemplate(
@@ -71,7 +73,7 @@ public class HostKeyAndAlgoBothExistValidator implements ConstraintValidator<Hos
 		return true;
 	}
 
-	private boolean isAlgorithmSpecifiedWhenHostKeySet(SshUri sshUriProperties, ConstraintValidatorContext context) {
+	private boolean isAlgorithmSpecifiedWhenHostKeySet(JGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
 		if (hasText(sshUriProperties.getHostKey()) && !hasText(sshUriProperties.getHostKeyAlgorithm())) {
 			context.disableDefaultConstraintViolation();
 			context.buildConstraintViolationWithTemplate(

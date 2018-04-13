@@ -20,6 +20,8 @@ import java.util.Optional;
 import org.eclipse.jgit.api.TransportConfigCallback;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.ssh.FileBasedSshTransportConfigCallback;
+import org.springframework.cloud.config.server.ssh.PropertiesBasedSshTransportConfigCallback;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
@@ -29,23 +31,31 @@ public class MultipleJGitEnvironmentRepositoryFactory implements EnvironmentRepo
 		MultipleJGitEnvironmentProperties> {
 	private ConfigurableEnvironment environment;
 	private ConfigServerProperties server;
-	private Optional<TransportConfigCallback> transportConfigCallback;
+	private Optional<TransportConfigCallback> customTransportConfigCallback;
 
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
-													Optional<TransportConfigCallback> transportConfigCallback) {
+													Optional<TransportConfigCallback> customTransportConfigCallback) {
 		this.environment = environment;
 		this.server = server;
-		this.transportConfigCallback = transportConfigCallback;
+		this.customTransportConfigCallback = customTransportConfigCallback;
 	}
 
 	@Override
 	public MultipleJGitEnvironmentRepository build(MultipleJGitEnvironmentProperties environmentProperties) {
 		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(environment,
 				environmentProperties);
-		repository.setTransportConfigCallback(transportConfigCallback.orElse(null));
+		repository.setTransportConfigCallback(customTransportConfigCallback
+				.orElse(buildTransportConfigCallback(environmentProperties)));
 		if (server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(server.getDefaultLabel());
 		}
 		return repository;
 	}
+
+    private TransportConfigCallback buildTransportConfigCallback(final MultipleJGitEnvironmentProperties gitEnvironmentProperties) {
+        if (gitEnvironmentProperties.isIgnoreLocalSshSettings()) {
+            return new PropertiesBasedSshTransportConfigCallback(gitEnvironmentProperties);
+        }
+        return new FileBasedSshTransportConfigCallback(gitEnvironmentProperties);
+    }
 }

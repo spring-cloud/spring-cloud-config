@@ -17,7 +17,6 @@ package org.springframework.cloud.config.server.config;
 
 import java.util.List;
 import java.util.Optional;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
@@ -114,14 +113,14 @@ class DefaultRepositoryConfiguration {
 	private ConfigServerProperties server;
 
 	@Autowired(required = false)
-	private TransportConfigCallback transportConfigCallback;
+	private TransportConfigCallback customTransportConfigCallback;
 
 	@Bean
 	public MultipleJGitEnvironmentRepository defaultEnvironmentRepository(
 			MultipleJGitEnvironmentProperties environmentProperties) {
 		MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory =
 				new MultipleJGitEnvironmentRepositoryFactory(environment, server,
-						Optional.ofNullable(transportConfigCallback));
+                        Optional.ofNullable(customTransportConfigCallback));
 		return gitEnvironmentRepositoryFactory.build(environmentProperties);
 	}
 }
@@ -199,8 +198,8 @@ class CompositeRepositoryConfiguration {
 		@Bean
 		public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
 				ConfigurableEnvironment environment, ConfigServerProperties server,
-				Optional<TransportConfigCallback> transportConfigCallback) {
-			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, transportConfigCallback);
+				Optional<TransportConfigCallback> customTransportConfigCallback) {
+			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, customTransportConfigCallback);
 		}
 	}
 

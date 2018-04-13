@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015 - 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,19 @@ package org.springframework.cloud.config.server.ssh;
 
 
 import java.util.Map;
+
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.junit.After;
 import org.junit.Test;
-import org.springframework.cloud.config.server.ssh.SshUriProperties.SshUriNestedRepoProperties;
 
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -54,43 +60,45 @@ public class SshUriPropertyProcessorTest {
 	@Test
 	public void testSingleSshUriProperties() {
 		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(mainRepoPropertiesFixture());
-		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		Map<String, JGitEnvironmentProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 
 		assertThat(sshKeysByHostname.values(), hasSize(1));
 
-		SshUri sshKey = sshKeysByHostname.get(HOST1);
+		JGitEnvironmentProperties sshKey = sshKeysByHostname.get(HOST1);
 		assertMainRepo(sshKey);
 	}
 
 	@Test
 	public void testMultipleSshUriPropertiess() {
-		SshUriProperties sshUriProperties = mainRepoPropertiesFixture();
-		addRepoProperties(sshUriProperties, SshUri.builder()
-				.uri(URI2)
-				.privateKey(PRIVATE_KEY2)
-				.buildAsNestedRepo(), "repo2");
-		addRepoProperties(sshUriProperties, SshUri.builder()
-				.uri(URI3)
-				.privateKey(PRIVATE_KEY3)
-				.buildAsNestedRepo(), "repo3");
+		MultipleJGitEnvironmentProperties sshUriProperties = mainRepoPropertiesFixture();
+		MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties nestedSshUriProperties1 =
+				new MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties();
+		nestedSshUriProperties1.setUri(URI2);
+		nestedSshUriProperties1.setPrivateKey(PRIVATE_KEY2);
+		MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties nestedSshUriProperties2 =
+				new MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties();
+		nestedSshUriProperties2.setUri(URI3);
+		nestedSshUriProperties2.setPrivateKey(PRIVATE_KEY3);
+		addRepoProperties(sshUriProperties, nestedSshUriProperties1, "repo2");
+		addRepoProperties(sshUriProperties, nestedSshUriProperties2, "repo3");
 
 		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(sshUriProperties);
 
-		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		Map<String, JGitEnvironmentProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 
 		assertThat(sshKeysByHostname.values(), hasSize(3));
 
-		SshUri sshKey1 = sshKeysByHostname.get(HOST1);
+		JGitEnvironmentProperties sshKey1 = sshKeysByHostname.get(HOST1);
 		assertMainRepo(sshKey1);
 
-		SshUri sshKey2 = sshKeysByHostname.get(HOST2);
+		JGitEnvironmentProperties sshKey2 = sshKeysByHostname.get(HOST2);
 
 		assertThat(SshUriPropertyProcessor.getHostname(sshKey2.getUri()), is(equalTo(HOST2)));
 		assertThat(sshKey2.getHostKeyAlgorithm(), is(nullValue()));
 		assertThat(sshKey2.getHostKey(), is(nullValue()));
 		assertThat(sshKey2.getPrivateKey(), is(equalTo(PRIVATE_KEY2)));
 
-		SshUri sshKey3 = sshKeysByHostname.get(HOST3);
+		JGitEnvironmentProperties sshKey3 = sshKeysByHostname.get(HOST3);
 
 		assertThat(SshUriPropertyProcessor.getHostname(sshKey3.getUri()), is(equalTo(HOST3)));
 		assertThat(sshKey3.getHostKeyAlgorithm(), is(nullValue()));
@@ -100,58 +108,62 @@ public class SshUriPropertyProcessorTest {
 
 	@Test
 	public void testSameHostnameDifferentKeysFirstOneWins() {
-		SshUriProperties sshUriProperties = mainRepoPropertiesFixture();
-		addRepoProperties(sshUriProperties, SshUri.builder().uri(URI1)
-				.privateKey(PRIVATE_KEY1)
-				.hostKey(HOST_KEY1)
-				.hostKeyAlgorithm(ALGO1)
-				.buildAsNestedRepo(), "repo2");
+		MultipleJGitEnvironmentProperties sshUriProperties = mainRepoPropertiesFixture();
+		MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties nestedSshUriProperties = new MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties();
+		nestedSshUriProperties.setUri(URI1);
+		nestedSshUriProperties.setPrivateKey(PRIVATE_KEY1);
+		nestedSshUriProperties.setHostKey(HOST_KEY1);
+		nestedSshUriProperties.setHostKeyAlgorithm(ALGO1);
+		addRepoProperties(sshUriProperties, nestedSshUriProperties, "repo2");
 
 		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(sshUriProperties);
-		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		Map<String, JGitEnvironmentProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 
 		assertThat(sshKeysByHostname.values(), hasSize(1));
 
-		SshUri sshKey = sshKeysByHostname.get(HOST1);
+		JGitEnvironmentProperties sshKey = sshKeysByHostname.get(HOST1);
 		assertMainRepo(sshKey);
 	}
 
 	@Test
 	public void testNoSshUriProperties() {
-		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(new SshUriProperties());
-		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(new MultipleJGitEnvironmentProperties());
+		Map<String, JGitEnvironmentProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 		assertThat(sshKeysByHostname.values(), hasSize(0));
 	}
 
 	@Test
 	public void testInvalidUriDoesNotAddEntry() {
-		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(SshUri.builder().uri("invalid_uri").build());
-		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		MultipleJGitEnvironmentProperties sshUriProperties = new MultipleJGitEnvironmentProperties();
+		sshUriProperties.setUri("invalid_uri");
+		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(sshUriProperties);
+		Map<String, JGitEnvironmentProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 		assertThat(sshKeysByHostname.values(), hasSize(0));
 	}
 
 	@Test
 	public void testHttpsUriDoesNotAddEntry() {
-		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(SshUri.builder().uri("https://user@github.com/proj/repo.git").build());
-		Map<String, SshUri> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
+		MultipleJGitEnvironmentProperties sshUriProperties = new MultipleJGitEnvironmentProperties();
+		sshUriProperties.setUri("https://user@github.com/proj/repo.git");
+		SshUriPropertyProcessor sshUriPropertyProcessor = new SshUriPropertyProcessor(sshUriProperties);
+		Map<String, JGitEnvironmentProperties> sshKeysByHostname = sshUriPropertyProcessor.getSshKeysByHostname();
 		assertThat(sshKeysByHostname.values(), hasSize(0));
 	}
 
-	private SshUriProperties mainRepoPropertiesFixture() {
-
-		return SshUri.builder()
-				.uri(URI1)
-				.hostKeyAlgorithm(ALGO1)
-				.hostKey(HOST_KEY1)
-				.privateKey(PRIVATE_KEY1)
-				.build();
+	private MultipleJGitEnvironmentProperties mainRepoPropertiesFixture() {
+		MultipleJGitEnvironmentProperties result = new MultipleJGitEnvironmentProperties();
+		result.setUri(URI1);
+		result.setHostKeyAlgorithm(ALGO1);
+		result.setHostKey(HOST_KEY1);
+		result.setPrivateKey(PRIVATE_KEY1);
+		return result;
 	}
 
-	private void addRepoProperties(SshUriProperties mainRepoProperties, SshUriNestedRepoProperties repoProperties, String repoName) {
-		mainRepoProperties.addRepo(repoName, repoProperties);
+	private void addRepoProperties(MultipleJGitEnvironmentProperties mainRepoProperties, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties repoProperties, String repoName) {
+		mainRepoProperties.getRepos().put(repoName, repoProperties);
 	}
 
-	private void assertMainRepo(SshUri sshKey) {
+	private void assertMainRepo(JGitEnvironmentProperties sshKey) {
 		assertThat(sshKey, is(notNullValue()));
 		assertThat(SshUriPropertyProcessor.getHostname(sshKey.getUri()), is(equalTo(HOST1)));
 		assertThat(sshKey.getHostKeyAlgorithm(), is(equalTo(ALGO1)));

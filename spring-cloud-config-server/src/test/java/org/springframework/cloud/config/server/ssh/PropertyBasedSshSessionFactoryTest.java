@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2017 the original author or authors.
+ * Copyright 2015 - 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,10 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.jcraft.jsch.HostKey;
+import com.jcraft.jsch.HostKeyRepository;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,18 +33,10 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-
-import com.jcraft.jsch.HostKey;
-import com.jcraft.jsch.HostKeyRepository;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.Session;
-
-import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.verify;
@@ -70,10 +66,9 @@ public class PropertyBasedSshSessionFactoryTest {
 	
 	@Test
 	public void strictHostKeyCheckingIsOptional() {
-		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
-				.uri("ssh://gitlab.example.local:3322/somerepo.git")
-				.privateKey(PRIVATE_KEY)
-				.build();
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
 		factory.configure(hc, session);
@@ -84,11 +79,10 @@ public class PropertyBasedSshSessionFactoryTest {
 	
 	@Test
 	public void strictHostKeyCheckingIsUsed() {
-		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
-				.uri("ssh://gitlab.example.local:3322/somerepo.git")
-				.hostKey(HOST_KEY)
-				.privateKey(PRIVATE_KEY)
-				.build();
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		sshKey.setHostKey(HOST_KEY);
+		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
 		factory.configure(hc, session);
@@ -99,12 +93,11 @@ public class PropertyBasedSshSessionFactoryTest {
 	
 	@Test
 	public void hostKeyAlgorithmIsSpecified() {
-		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
-				.uri("ssh://gitlab.example.local:3322/somerepo.git")
-				.hostKeyAlgorithm(HOST_KEY_ALGORITHM)
-				.hostKey(HOST_KEY)
-				.privateKey(PRIVATE_KEY)
-				.build();
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		sshKey.setHostKeyAlgorithm(HOST_KEY_ALGORITHM);
+		sshKey.setHostKey(HOST_KEY);
+		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
 		factory.configure(hc, session);
@@ -115,10 +108,9 @@ public class PropertyBasedSshSessionFactoryTest {
 	
 	@Test
 	public void privateKeyIsUsed() throws Exception {
-		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
-				.uri("git@gitlab.example.local:someorg/somerepo.git")
-				.privateKey(PRIVATE_KEY)
-				.build();
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("git@gitlab.example.local:someorg/somerepo.git");
+		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
 		factory.createSession(hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
@@ -127,11 +119,10 @@ public class PropertyBasedSshSessionFactoryTest {
 
 	@Test
 	public void hostKeyIsUsed() throws Exception {
-		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
-				.uri("git@gitlab.example.local:someorg/somerepo.git")
-				.hostKey(HOST_KEY)
-				.privateKey(PRIVATE_KEY)
-				.build();
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("git@gitlab.example.local:someorg/somerepo.git");
+		sshKey.setHostKey(HOST_KEY);
+		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
 		factory.createSession(hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
@@ -144,11 +135,10 @@ public class PropertyBasedSshSessionFactoryTest {
 
 	@Test
 	public void preferredAuthenticationsIsSpecified() {
-		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
-				.uri("ssh://gitlab.example.local:3322/somerepo.git")
-				.privateKey(PRIVATE_KEY)
-				.preferredAuthentications("password,keyboard-interactive")
-				.build();
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		sshKey.setPrivateKey(PRIVATE_KEY);
+		sshKey.setPreferredAuthentications("password,keyboard-interactive");
 		setupSessionFactory(sshKey);
 
 		factory.configure(hc, session);
@@ -159,11 +149,10 @@ public class PropertyBasedSshSessionFactoryTest {
 
 	@Test
 	public void customKnownHostsFileIsUsed() throws Exception {
-		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
-				.uri("git@gitlab.example.local:someorg/somerepo.git")
-				.privateKey(PRIVATE_KEY)
-				.knownHostsFile("/ssh/known_hosts")
-				.build();
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("git@gitlab.example.local:someorg/somerepo.git");
+		sshKey.setPrivateKey(PRIVATE_KEY);
+		sshKey.setKnownHostsFile("/ssh/known_hosts");
 		setupSessionFactory(sshKey);
 
 		factory.createSession(hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
@@ -173,8 +162,8 @@ public class PropertyBasedSshSessionFactoryTest {
 		Assert.assertEquals("/ssh/known_hosts", captor.getValue());
 	}
 
-	private void setupSessionFactory(SshUri sshKey) {
-		Map<String, SshUri> sshKeysByHostname = new HashMap<>();
+	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {
+		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new HashMap<>();
 		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()), sshKey);
 		factory = new PropertyBasedSshSessionFactory(sshKeysByHostname, jSch) ;
 		when(hc.getHostName()).thenReturn(SshUriPropertyProcessor.getHostname(sshKey.getUri()));

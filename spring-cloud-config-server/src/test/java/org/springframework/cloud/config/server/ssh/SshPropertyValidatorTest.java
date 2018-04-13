@@ -16,14 +16,16 @@
 
 package org.springframework.cloud.config.server.ssh;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-
+import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-import java.util.Set;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -76,119 +78,102 @@ public class SshPropertyValidatorTest {
 
 	@Test
 	public void supportedParametersSuccesful() throws Exception {
-		SshUriProperties validSettings = SshUri.builder()
-				.uri(SSH_URI)
-				.ignoreLocalSshSettings(true)
-				.privateKey(VALID_PRIVATE_KEY)
-				.hostKey(VALID_HOST_KEY)
-				.hostKeyAlgorithm("ssh-rsa")
-				.build();
+		MultipleJGitEnvironmentProperties validSettings = new MultipleJGitEnvironmentProperties();
+		validSettings.setUri(SSH_URI);
+		validSettings.setIgnoreLocalSshSettings(true);
+		validSettings.setPrivateKey(VALID_PRIVATE_KEY);
+		validSettings.setHostKey(VALID_HOST_KEY);
+		validSettings.setHostKeyAlgorithm("ssh-rsa");
 
-		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(validSettings);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(validSettings);
 		assertThat(constraintViolations, hasSize(0));
-
 	}
 
 	@Test
 	public void invalidPrivateKeyFails() throws Exception {
+		MultipleJGitEnvironmentProperties invalidKey = new MultipleJGitEnvironmentProperties();
+		invalidKey.setUri(SSH_URI);
+		invalidKey.setIgnoreLocalSshSettings(true);
+		invalidKey.setPrivateKey("invalid_key");
 
-		SshUriProperties invalidKey = SshUri.builder()
-				.uri(SSH_URI)
-				.ignoreLocalSshSettings(true)
-				.privateKey("invalid_key")
-				.build();
-
-		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(invalidKey);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(invalidKey);
 		assertThat(constraintViolations, hasSize(1));
-
 	}
 
 	@Test
 	public void missingPrivateKeyFails() throws Exception {
+		MultipleJGitEnvironmentProperties missingKey = new MultipleJGitEnvironmentProperties();
+		missingKey.setUri(SSH_URI);
+		missingKey.setIgnoreLocalSshSettings(true);
 
-		SshUriProperties missingKey = SshUri.builder()
-				.uri(SSH_URI)
-				.ignoreLocalSshSettings(true)
-				.build();
-
-		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(missingKey);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(missingKey);
 		assertThat(constraintViolations, hasSize(1));
 	}
 
 	@Test
 	public void hostKeyWithMissingAlgoFails() throws Exception {
+		MultipleJGitEnvironmentProperties missingAlgo = new MultipleJGitEnvironmentProperties();
+		missingAlgo.setUri(SSH_URI);
+		missingAlgo.setIgnoreLocalSshSettings(true);
+		missingAlgo.setPrivateKey(VALID_PRIVATE_KEY);
+		missingAlgo.setHostKey("some_host");
 
-		SshUriProperties missingAlgo = SshUri.builder()
-				.uri(SSH_URI)
-				.ignoreLocalSshSettings(true)
-				.privateKey(VALID_PRIVATE_KEY)
-				.hostKey("some_host")
-				.build();
-
-		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(missingAlgo);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(missingAlgo);
 		assertThat(constraintViolations, hasSize(1));
 	}
 
 	@Test
 	public void algoWithMissingHostKeyFails() throws Exception {
+		MultipleJGitEnvironmentProperties missingHostKey = new MultipleJGitEnvironmentProperties();
+		missingHostKey.setUri(SSH_URI);
+		missingHostKey.setIgnoreLocalSshSettings(true);
+		missingHostKey.setPrivateKey(VALID_PRIVATE_KEY);
+		missingHostKey.setHostKeyAlgorithm("ssh-rsa");
 
-		SshUriProperties missingHostKey = SshUri.builder()
-				.uri(SSH_URI)
-				.ignoreLocalSshSettings(true)
-				.privateKey(VALID_PRIVATE_KEY)
-				.hostKeyAlgorithm("ssh-rsa")
-				.build();
-
-		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(missingHostKey);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(missingHostKey);
 		assertThat(constraintViolations, hasSize(1));
 	}
 
 	@Test
 	public void unsupportedAlgoFails() throws Exception {
+		MultipleJGitEnvironmentProperties unsupportedAlgo = new MultipleJGitEnvironmentProperties();
+		unsupportedAlgo.setUri(SSH_URI);
+		unsupportedAlgo.setIgnoreLocalSshSettings(true);
+		unsupportedAlgo.setPrivateKey(VALID_PRIVATE_KEY);
+		unsupportedAlgo.setHostKey("some_host_key");
+		unsupportedAlgo.setHostKeyAlgorithm("unsupported");
 
-		SshUriProperties unsupportedAlgo = SshUri.builder()
-				.uri(SSH_URI)
-				.ignoreLocalSshSettings(true)
-				.privateKey(VALID_PRIVATE_KEY)
-				.hostKey("some_host_key")
-				.hostKeyAlgorithm("unsupported")
-				.build();
-
-		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(unsupportedAlgo);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(unsupportedAlgo);
 		assertThat(constraintViolations, hasSize(1));
 	}
 
 	@Test
 	public void validatorNotRunIfIgnoreLocalSettingsFalse() throws Exception {
+		MultipleJGitEnvironmentProperties useLocal = new MultipleJGitEnvironmentProperties();
+		useLocal.setUri(SSH_URI);
+		useLocal.setIgnoreLocalSshSettings(false);
+		useLocal.setPrivateKey("invalid_key");
 
-		SshUriProperties useLocal = (SshUri.builder()
-				.uri(SSH_URI)
-				.ignoreLocalSshSettings(false)
-				.privateKey("invalid_key")
-				.build());
-
-		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(useLocal);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(useLocal);
 		assertThat(constraintViolations, hasSize(0));
 
 	}
 
 	@Test
 	public void validatorNotRunIfHttpsUri() throws Exception {
+		MultipleJGitEnvironmentProperties httpsUri = new MultipleJGitEnvironmentProperties();
+		httpsUri.setUri("https://somerepo.com/team/project.git");
+		httpsUri.setIgnoreLocalSshSettings(true);
+		httpsUri.setPrivateKey("invalid_key");
 
-		SshUriProperties httpsUri = (SshUri.builder()
-				.uri("https://somerepo.com/team/project.git")
-				.ignoreLocalSshSettings(true)
-				.privateKey("invalid_key")
-				.build());
-
-		Set<ConstraintViolation<SshUriProperties>> constraintViolations = validator.validate(httpsUri);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(httpsUri);
 		assertThat(constraintViolations, hasSize(0));
 
 	}
 
 	@Test
 	public void preferredAuthenticationsIsValidated() throws Exception {
-		SshUriProperties sshUriProperties = new SshUriProperties();
+		MultipleJGitEnvironmentProperties sshUriProperties = new MultipleJGitEnvironmentProperties();
 		assertThat(validator.validate(sshUriProperties), hasSize(0));
 
 		sshUriProperties.setPreferredAuthentications("keyboard-interactive, public-key ,kerberos");
@@ -200,7 +185,7 @@ public class SshPropertyValidatorTest {
 
 	@Test
 	public void knowHostsFileIsValidated() throws Exception {
-		SshUriProperties sshUriProperties = new SshUriProperties();
+		MultipleJGitEnvironmentProperties sshUriProperties = new MultipleJGitEnvironmentProperties();
 		assertThat(validator.validate(sshUriProperties), hasSize(0));
 
 		sshUriProperties.setKnownHostsFile("non-existing.file");
