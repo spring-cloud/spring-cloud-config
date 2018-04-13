@@ -17,6 +17,7 @@ package org.springframework.cloud.config.server.environment;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -24,10 +25,10 @@ import org.springframework.web.client.RestTemplate;
  */
 public class VaultEnvironmentRepositoryFactory implements EnvironmentRepositoryFactory<VaultEnvironmentRepository,
 		VaultEnvironmentProperties> {
-	private HttpServletRequest request;
+	private ObjectProvider<HttpServletRequest> request;
 	private EnvironmentWatch watch;
 
-	public VaultEnvironmentRepositoryFactory(HttpServletRequest request, EnvironmentWatch watch) {
+	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch) {
 		this.request = request;
 		this.watch = watch;
 	}

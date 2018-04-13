@@ -1,0 +1,12 @@
+spring:
+  cloud:
+    config:
+      server:
+        composite:
+          - type: git
+            uri: ${repo1}
+          - type: git
+            uri: ${repo1}
+        bootstrap: true
+  profiles:
+    active: composite
