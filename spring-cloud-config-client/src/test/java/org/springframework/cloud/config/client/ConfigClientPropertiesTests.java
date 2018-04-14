@@ -59,7 +59,42 @@ public class ConfigClientPropertiesTests {
 		assertEquals("foo", locator.getUsername());
 		assertEquals("secret", locator.getPassword());
 	}
+	
+	@Test
+	public void testIfNoColonPresentInUriCreds() {
+		locator.setUri("http://foobar@localhost:9999");
+		locator.setPassword("secret");
+		assertEquals("http://localhost:9999", locator.getRawUri());
+		assertEquals("foobar", locator.getUsername());
+		assertEquals("secret", locator.getPassword());
+	}
 
+	@Test
+	public void testIfColonPresentAtTheEndInUriCreds() {
+		locator.setUri("http://foobar:@localhost:9999");
+		locator.setPassword("secret");
+		assertEquals("http://localhost:9999", locator.getRawUri());
+		assertEquals("foobar", locator.getUsername());
+		assertEquals("secret", locator.getPassword());
+	}
+	
+	@Test
+	public void testIfColonPresentAtTheStartInUriCreds() {
+		locator.setUri("http://:foobar@localhost:9999");
+		assertEquals("http://localhost:9999", locator.getRawUri());
+		assertEquals("user", locator.getUsername());
+		assertEquals("foobar", locator.getPassword());
+	}
+	
+	@Test
+	public void testIfColonPresentAtTheStartAndEndInUriCreds() {
+		locator.setUri("http://:foobar:@localhost:9999");
+		locator.setPassword("secret");
+		assertEquals("http://localhost:9999", locator.getRawUri());
+		assertEquals(":foobar", locator.getUsername());
+		assertEquals("secret", locator.getPassword());
+	}
+	
 	@Test
 	public void changeNameInOverride() {
 		locator.setName("one");
@@ -81,4 +116,10 @@ public class ConfigClientPropertiesTests {
 		assertThat(properties.getPassword(), equalTo("explicitPW"));
 		assertThat(properties.getUsername(), equalTo("explicitName"));
 	}
+	
+	
+	
+	
+	
+	
 }
