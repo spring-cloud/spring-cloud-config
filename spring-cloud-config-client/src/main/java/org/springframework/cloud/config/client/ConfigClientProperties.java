@@ -218,6 +218,7 @@ public class ConfigClientProperties {
 
 	private Credentials extractCredentials() {
 		Credentials result = new Credentials();
+		boolean isUsernameOnlyEmbeddedAsUri=false;
 		String uri = this.uri;
 		result.uri = uri;
 		Credentials explicitCredentials = getUsernamePassword();
@@ -233,14 +234,30 @@ public class ConfigClientProperties {
 			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build()
 					.toUriString();
 			result.uri = bare;
-			// handle the password only case
+			// if userInfo does not contain a :, then set username as userInfo and return result.
 			if (!userInfo.contains(":")) {
-				userInfo = userInfo + ":";
+				result.username=userInfo;
+				isUsernameOnlyEmbeddedAsUri=true;
 			}
+			//if userInfo does contain a :, and it is at the very end, then take substring from 0 to string length minus one and set it as username
+			else {
+				int length=userInfo.length();
+				if(userInfo.charAt(length-1)==':') {
+					result.username=userInfo.substring(0,length-1);
+					isUsernameOnlyEmbeddedAsUri=true;
+				}
+			}
+			//To avoid IndexOutOfBoundsException
+			if(!isUsernameOnlyEmbeddedAsUri) {
+				
 			String[] split = userInfo.split(":");
 			// set username and password from uri
-			result.username = split[0];
+			if(split[0].length()>0) {	
+			  result.username = split[0];
+			}
 			result.password = split[1];
+			
+			}
 
 			// override password if explicitly set
 			if (explicitCredentials.password != null) {
