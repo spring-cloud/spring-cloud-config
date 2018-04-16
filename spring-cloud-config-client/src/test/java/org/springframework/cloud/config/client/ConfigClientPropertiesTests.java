@@ -82,16 +82,25 @@ public class ConfigClientPropertiesTests {
 	public void testIfColonPresentAtTheStartInUriCreds() {
 		locator.setUri("http://:foobar@localhost:9999");
 		assertEquals("http://localhost:9999", locator.getRawUri());
-		assertEquals("user", locator.getUsername());
+		assertEquals("", locator.getUsername());
 		assertEquals("foobar", locator.getPassword());
 	}
 	
 	@Test
 	public void testIfColonPresentAtTheStartAndEndInUriCreds() {
 		locator.setUri("http://:foobar:@localhost:9999");
+		assertEquals("http://localhost:9999", locator.getRawUri());
+		assertEquals("", locator.getUsername());
+		assertEquals("foobar:", locator.getPassword());
+	}
+	
+	
+	@Test
+	public void testIfsolonPresentAtTheStartAndEndInUriCreds() {
+		locator.setUri("http://  @localhost:9999");
 		locator.setPassword("secret");
 		assertEquals("http://localhost:9999", locator.getRawUri());
-		assertEquals(":foobar", locator.getUsername());
+		assertEquals("  ", locator.getUsername());
 		assertEquals("secret", locator.getPassword());
 	}
 	
