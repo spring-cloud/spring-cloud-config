@@ -1,6 +1,7 @@
 package org.springframework.cloud.config.server.support;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.PropertySource;
@@ -22,11 +23,14 @@ public class EnvironmentPropertySource extends PropertySource<Environment> {
 		return standardEnvironment;
 	}
 
+	// "\${" (from text) or "\\${" from JSON to signal escaped placeholder
+	private static final Pattern ESCAPED_PLACEHOLDERS = Pattern.compile("[\\\\]{1,2}\\$\\{");
+
 	public static String resolvePlaceholders(StandardEnvironment preparedEnvironment,
 			String text) {
-		// Mask out escaped placeholders
-		text = text.replace("\\${", "$_{");
-		return preparedEnvironment.resolvePlaceholders(text).replace("$_{", "${");
+	    // Mask out escaped placeholders
+	    text = ESCAPED_PLACEHOLDERS.matcher(text).replaceAll("\\$_{");
+	    return preparedEnvironment.resolvePlaceholders(text).replace("$_{", "${");
 	}
 
 	public EnvironmentPropertySource(Environment sources) {
