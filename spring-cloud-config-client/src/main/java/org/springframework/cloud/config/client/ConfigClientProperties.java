@@ -236,14 +236,14 @@ public class ConfigClientProperties {
 			
 			// if userInfo does not contain a :, then append a : to it
 			if (!userInfo.contains(":")) {
-				userInfo=userInfo+":";
+				userInfo = userInfo + ":";
 			}
-				
-			int sepIndex=userInfo.indexOf(":");
+		    
+            int sepIndex=userInfo.indexOf(":");
 			// set username and password from uri
-			result.username = userInfo.substring(0, sepIndex); 
-			result.password = userInfo.substring(sepIndex+1);
-			
+            result.username = userInfo.substring(0, sepIndex); 
+            result.password = userInfo.substring(sepIndex+1);
+            
 			// override password if explicitly set
 			if (explicitCredentials.password != null) {
 				// Explicit username / password takes precedence
