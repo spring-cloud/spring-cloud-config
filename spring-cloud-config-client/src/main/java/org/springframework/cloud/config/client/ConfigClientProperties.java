@@ -242,7 +242,7 @@ public class ConfigClientProperties {
 			int sepIndex=userInfo.indexOf(":");
 			// set username and password from uri
 			result.username = userInfo.substring(0, sepIndex); 
-			result.password = userInfo.substring(sepIndex+1);
+			result.password = userInfo.substring(sepIndex +1);
 
 			// override password if explicitly set
 			if (explicitCredentials.password != null) {

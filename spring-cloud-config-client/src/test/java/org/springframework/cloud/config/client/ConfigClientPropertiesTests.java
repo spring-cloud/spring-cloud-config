@@ -124,11 +124,5 @@ public class ConfigClientPropertiesTests {
 
 		assertThat(properties.getPassword(), equalTo("explicitPW"));
 		assertThat(properties.getUsername(), equalTo("explicitName"));
-	}
-	
-	
-	
-	
-	
-	
+	}	
 }
