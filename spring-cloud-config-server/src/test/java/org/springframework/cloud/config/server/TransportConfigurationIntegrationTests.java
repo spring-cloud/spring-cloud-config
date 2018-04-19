@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.server;
 
+import java.io.File;
+import java.lang.reflect.Method;
+
 import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
@@ -25,20 +28,22 @@ import org.eclipse.jgit.util.FS;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.config.server.config.TransportConfiguration;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.ssh.FileBasedSshTransportConfigCallback;
+import org.springframework.cloud.config.server.ssh.PropertiesBasedSshTransportConfigCallback;
 import org.springframework.cloud.config.server.ssh.SshPropertyValidator;
-import org.springframework.cloud.config.server.ssh.SshUriProperties;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.File;
-import java.lang.reflect.Method;
-
 import static junit.framework.TestCase.assertTrue;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -49,124 +54,251 @@ import static org.mockito.Mockito.verify;
  */
 public class TransportConfigurationIntegrationTests {
 
-	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = {ConfigServerApplication.class, TransportConfiguration.class, SshPropertyValidator.class},
-			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-			properties = {
-					"spring.config.name:ssh/ssh-private-key-block",})
-	@ActiveProfiles({"test", "git"})
 	public static class PropertyBasedCallbackTest {
 
-		@Autowired
-		private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+		@RunWith(SpringRunner.class)
+		@SpringBootTest(classes = {ConfigServerApplication.class, SshPropertyValidator.class},
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = {"spring.config.name:ssh/ssh-private-key-block"})
+		@ActiveProfiles({"test", "git"})
+		public static class StaticTest {
 
-		@Test
-		public void propertyBasedTransportCallbackIsConfigured() throws Exception {
-			TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
-			assertThat(transportConfigCallback, is(instanceOf(TransportConfiguration.PropertiesBasedSshTransportConfigCallback.class)));
-		}
-	}
+			@Autowired
+			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
 
-	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = {ConfigServerApplication.class, TransportConfiguration.class, SshPropertyValidator.class},
-			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-			properties = {
-					"spring.config.name:ssh/ssh-private-key-newline"
-	})
-	@ActiveProfiles({"test", "git"})
-	public static class PrivateKeyPropertyWithLineBreaks {
-
-		@Autowired
-		private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
-
-		@Test
-		public void privateKeyPropertyWithLineBreaks() throws Exception {
-			TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
-			assertThat(transportConfigCallback, is(instanceOf(TransportConfiguration.PropertiesBasedSshTransportConfigCallback.class)));
-
-			TransportConfiguration.PropertiesBasedSshTransportConfigCallback configCallback =
-					(TransportConfiguration.PropertiesBasedSshTransportConfigCallback) transportConfigCallback;
-			assertThat(configCallback.getSshUriProperties().getPrivateKey(), is(equalTo(TestProperties.TEST_PRIVATE_KEY_1)));
-		}
-	}
-
-
-	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = {ConfigServerApplication.class, TransportConfiguration.class, SshPropertyValidator.class},
-			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-			properties = {
-					"spring.config.name:ssh/ssh-nested-settings"
-	})
-	@ActiveProfiles({"test", "git"})
-	public static class SshPropertiesWithinNestedRepo {
-
-		@Autowired
-		private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
-
-		@Test
-		public void sshPropertiesWithinNestedRepo() throws Exception {
-			TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
-			assertThat(transportConfigCallback, is(instanceOf(TransportConfiguration.PropertiesBasedSshTransportConfigCallback.class)));
-
-			TransportConfiguration.PropertiesBasedSshTransportConfigCallback configCallback =
-					(TransportConfiguration.PropertiesBasedSshTransportConfigCallback) transportConfigCallback;
-			SshUriProperties sshUriProperties = configCallback.getSshUriProperties();
-			assertThat(sshUriProperties.getPrivateKey(), is(equalTo(TestProperties.TEST_PRIVATE_KEY_1)));
-
-			assertThat(sshUriProperties.getRepos().get("repo1"), is(notNullValue()));
-			assertThat(sshUriProperties.getRepos().get("repo1").getPrivateKey(), is(equalTo(TestProperties.TEST_PRIVATE_KEY_2)));
-		}
-	}
-
-	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = {ConfigServerApplication.class, TransportConfiguration.class, SshPropertyValidator.class},
-			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-			properties = {
-					"spring.cloud.config.server.git.uri=git@gitserver.com:team/repo.git",
-					"spring.cloud.config.server.git.ignoreLocalSshSettings=false",})
-	@ActiveProfiles({"test", "git"})
-	public static class FileBasedCallbackTest {
-
-		@Autowired
-		private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
-
-		@Test
-		public void fileBasedTransportCallbackIsConfigured() throws Exception {
-			TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
-			assertThat(transportConfigCallback, is(instanceOf(TransportConfiguration.FileBasedSshTransportConfigCallback.class)));
-		}
-
-
-		@Test
-		public void strictHostKeyCheckShouldCheck() throws Exception {
-			String uri = "git+ssh://git@somegitserver/somegitrepo";
-			SshSessionFactory.setInstance(null);
-			jGitEnvironmentRepository.setUri(uri);
-			jGitEnvironmentRepository.setBasedir(new File("./mybasedir"));
-			assertTrue(jGitEnvironmentRepository.isStrictHostKeyChecking());
-			jGitEnvironmentRepository.setCloneOnStart(true);
-			try {
-				// this will throw but we don't care about connecting.
-				jGitEnvironmentRepository.afterPropertiesSet();
-			} catch (Exception e) {
-				final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect()).lookup("github.com");
-				JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory.getInstance();
-				// There's no public method that can be used to inspect the ssh
-				// configuration, so we'll reflect
-				// the configure method to allow us to check that the config
-				// property is set as expected.
-				Method configure = factory.getClass().getDeclaredMethod("configure", OpenSshConfig.Host.class,
-						Session.class);
-				configure.setAccessible(true);
-				Session session = mock(Session.class);
-				ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-				ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
-				configure.invoke(factory, hc, session);
-				verify(session).setConfig(keyCaptor.capture(), valueCaptor.capture());
-				configure.setAccessible(false);
-				assertTrue("yes".equals(valueCaptor.getValue()));
+			@Test
+			public void propertyBasedTransportCallbackIsConfigured() throws Exception {
+				TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
+				assertThat(transportConfigCallback, is(instanceOf(PropertiesBasedSshTransportConfigCallback.class)));
 			}
 		}
+
+		@RunWith(SpringRunner.class)
+		@SpringBootTest(classes = {ConfigServerApplication.class, SshPropertyValidator.class},
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = {"spring.config.name:ssh/ssh-private-key-block-list"})
+		@ActiveProfiles({"test", "composite"})
+		public static class ListTest {
+
+			@Autowired
+			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+
+			@Test
+			public void propertyBasedTransportCallbackIsConfigured() throws Exception {
+				TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
+				assertThat(transportConfigCallback, is(instanceOf(PropertiesBasedSshTransportConfigCallback.class)));
+			}
+		}
+
+	}
+
+	public static class PrivateKeyPropertyWithLineBreaks {
+
+        @RunWith(SpringRunner.class)
+        @SpringBootTest(classes = {ConfigServerApplication.class, SshPropertyValidator.class},
+                webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+                properties = {
+                        "spring.config.name:ssh/ssh-private-key-newline"
+        })
+        @ActiveProfiles({"test", "git"})
+        public static class StaticTest {
+
+            @Autowired
+            private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+
+            @Test
+            public void privateKeyPropertyWithLineBreaks() throws Exception {
+                TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
+                assertThat(transportConfigCallback, is(instanceOf(PropertiesBasedSshTransportConfigCallback.class)));
+
+                PropertiesBasedSshTransportConfigCallback configCallback =
+                        (PropertiesBasedSshTransportConfigCallback) transportConfigCallback;
+                assertThat(configCallback.getSshUriProperties().getPrivateKey(), is(equalTo(TestProperties.TEST_PRIVATE_KEY_1)));
+            }
+        }
+
+        @RunWith(SpringRunner.class)
+        @SpringBootTest(classes = {ConfigServerApplication.class, SshPropertyValidator.class},
+                webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+                properties = {
+                        "spring.config.name:ssh/ssh-private-key-newline-list"
+        })
+        @ActiveProfiles({"test", "composite"})
+        public static class ListTest {
+
+            @Autowired
+            private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+
+            @Test
+            public void privateKeyPropertyWithLineBreaks() throws Exception {
+                TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
+                assertThat(transportConfigCallback, is(instanceOf(PropertiesBasedSshTransportConfigCallback.class)));
+
+                PropertiesBasedSshTransportConfigCallback configCallback =
+                        (PropertiesBasedSshTransportConfigCallback) transportConfigCallback;
+                assertThat(configCallback.getSshUriProperties().getPrivateKey(), is(equalTo(TestProperties.TEST_PRIVATE_KEY_1)));
+            }
+        }
+
+	}
+
+	public static class SshPropertiesWithinNestedRepo {
+
+        @RunWith(SpringRunner.class)
+        @SpringBootTest(classes = {ConfigServerApplication.class, SshPropertyValidator.class},
+                webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+                properties = {
+                        "spring.config.name:ssh/ssh-nested-settings"
+        })
+        @ActiveProfiles({"test", "git"})
+	    public static class StaticTest {
+            @Autowired
+            private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+
+            @Test
+            public void sshPropertiesWithinNestedRepo() throws Exception {
+                TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
+                assertThat(transportConfigCallback, is(instanceOf(PropertiesBasedSshTransportConfigCallback.class)));
+
+                PropertiesBasedSshTransportConfigCallback configCallback =
+                        (PropertiesBasedSshTransportConfigCallback) transportConfigCallback;
+                MultipleJGitEnvironmentProperties sshUriProperties = configCallback.getSshUriProperties();
+                assertThat(sshUriProperties.getPrivateKey(), is(equalTo(TestProperties.TEST_PRIVATE_KEY_1)));
+
+                assertThat(sshUriProperties.getRepos().get("repo1"), is(notNullValue()));
+                assertThat(sshUriProperties.getRepos().get("repo1").getPrivateKey(), is(equalTo(TestProperties.TEST_PRIVATE_KEY_2)));
+            }
+        }
+
+        @RunWith(SpringRunner.class)
+        @SpringBootTest(classes = {ConfigServerApplication.class, SshPropertyValidator.class},
+                webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+                properties = {
+                        "spring.config.name:ssh/ssh-nested-settings-list"
+        })
+        @ActiveProfiles({"test", "composite"})
+	    public static class ListTest {
+            @Autowired
+            private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+
+            @Test
+            public void sshPropertiesWithinNestedRepo() throws Exception {
+                TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
+                assertThat(transportConfigCallback, is(instanceOf(PropertiesBasedSshTransportConfigCallback.class)));
+
+                PropertiesBasedSshTransportConfigCallback configCallback =
+                        (PropertiesBasedSshTransportConfigCallback) transportConfigCallback;
+                MultipleJGitEnvironmentProperties sshUriProperties = configCallback.getSshUriProperties();
+                assertThat(sshUriProperties.getPrivateKey(), is(equalTo(TestProperties.TEST_PRIVATE_KEY_1)));
+
+                assertThat(sshUriProperties.getRepos().get("repo1"), is(notNullValue()));
+                assertThat(sshUriProperties.getRepos().get("repo1").getPrivateKey(), is(equalTo(TestProperties.TEST_PRIVATE_KEY_2)));
+            }
+        }
+
+	}
+
+	public static class FileBasedCallbackTest {
+
+        @RunWith(SpringRunner.class)
+        @SpringBootTest(classes = {ConfigServerApplication.class, SshPropertyValidator.class},
+                webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+                properties = {
+                        "spring.cloud.config.server.git.uri=git@gitserver.com:team/repo.git",
+                        "spring.cloud.config.server.git.ignoreLocalSshSettings=false",})
+        @ActiveProfiles({"test", "git"})
+	    public static class StaticTest {
+            @Autowired
+            private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+
+            @Test
+            public void fileBasedTransportCallbackIsConfigured() throws Exception {
+                TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
+                assertThat(transportConfigCallback, is(instanceOf(FileBasedSshTransportConfigCallback.class)));
+            }
+
+            @Test
+            public void strictHostKeyCheckShouldCheck() throws Exception {
+                String uri = "git+ssh://git@somegitserver/somegitrepo";
+                SshSessionFactory.setInstance(null);
+                jGitEnvironmentRepository.setUri(uri);
+                jGitEnvironmentRepository.setBasedir(new File("./mybasedir"));
+                assertTrue(jGitEnvironmentRepository.isStrictHostKeyChecking());
+                jGitEnvironmentRepository.setCloneOnStart(true);
+                try {
+                    // this will throw but we don't care about connecting.
+                    jGitEnvironmentRepository.afterPropertiesSet();
+                } catch (Exception e) {
+                    final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect()).lookup("github.com");
+                    JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory.getInstance();
+                    // There's no public method that can be used to inspect the ssh
+                    // configuration, so we'll reflect
+                    // the configure method to allow us to check that the config
+                    // property is set as expected.
+                    Method configure = factory.getClass().getDeclaredMethod("configure", OpenSshConfig.Host.class,
+                            Session.class);
+                    configure.setAccessible(true);
+                    Session session = mock(Session.class);
+                    ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+                    ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+                    configure.invoke(factory, hc, session);
+                    verify(session).setConfig(keyCaptor.capture(), valueCaptor.capture());
+                    configure.setAccessible(false);
+                    assertTrue("yes".equals(valueCaptor.getValue()));
+                }
+            }
+        }
+
+        @RunWith(SpringRunner.class)
+        @SpringBootTest(classes = {ConfigServerApplication.class, SshPropertyValidator.class},
+                webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+                properties = {
+                        "spring.cloud.config.server.composite[0].type=git",
+                        "spring.cloud.config.server.composite[0].uri=git@gitserver.com:team/repo.git",
+                        "spring.cloud.config.server.composite[0].ignoreLocalSshSettings=false",})
+        @ActiveProfiles({"test", "composite"})
+	    public static class ListTest {
+            @Autowired
+            private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+
+            @Test
+            public void fileBasedTransportCallbackIsConfigured() throws Exception {
+                TransportConfigCallback transportConfigCallback = jGitEnvironmentRepository.getTransportConfigCallback();
+                assertThat(transportConfigCallback, is(instanceOf(FileBasedSshTransportConfigCallback.class)));
+            }
+
+            @Test
+            public void strictHostKeyCheckShouldCheck() throws Exception {
+                String uri = "git+ssh://git@somegitserver/somegitrepo";
+                SshSessionFactory.setInstance(null);
+                jGitEnvironmentRepository.setUri(uri);
+                jGitEnvironmentRepository.setBasedir(new File("./mybasedir"));
+                assertTrue(jGitEnvironmentRepository.isStrictHostKeyChecking());
+                jGitEnvironmentRepository.setCloneOnStart(true);
+                try {
+                    // this will throw but we don't care about connecting.
+                    jGitEnvironmentRepository.afterPropertiesSet();
+                } catch (Exception e) {
+                    final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect()).lookup("github.com");
+                    JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory.getInstance();
+                    // There's no public method that can be used to inspect the ssh
+                    // configuration, so we'll reflect
+                    // the configure method to allow us to check that the config
+                    // property is set as expected.
+                    Method configure = factory.getClass().getDeclaredMethod("configure", OpenSshConfig.Host.class,
+                            Session.class);
+                    configure.setAccessible(true);
+                    Session session = mock(Session.class);
+                    ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+                    ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+                    configure.invoke(factory, hc, session);
+                    verify(session).setConfig(keyCaptor.capture(), valueCaptor.capture());
+                    configure.setAccessible(false);
+                    assertTrue("yes".equals(valueCaptor.getValue()));
+                }
+            }
+        }
+
 	}
 
 	private static class TestProperties {

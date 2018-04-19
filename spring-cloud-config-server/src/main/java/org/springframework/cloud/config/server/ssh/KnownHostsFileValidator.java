@@ -16,23 +16,24 @@
 
 package org.springframework.cloud.config.server.ssh;
 
-import org.springframework.validation.annotation.Validated;
-
+import java.io.File;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import java.io.File;
 
-import static java.lang.String.*;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
+import org.springframework.validation.annotation.Validated;
+
+import static java.lang.String.format;
 
 /**
- * JSR-303 Cross Field validator that ensures that a {@link SshUriProperties} bean for the constraints:
+ * JSR-303 Cross Field validator that ensures that a {@link MultipleJGitEnvironmentProperties} bean for the constraints:
  * - Verifies that known hosts file exists
  * <p>
  * Beans annotated with {@link KnownHostsFileIsValid} and {@link Validated} will have the constraints applied.
  *
  * @author Edgars Jasmans
  */
-public class KnownHostsFileValidator implements ConstraintValidator<KnownHostsFileIsValid, SshUriProperties> {
+public class KnownHostsFileValidator implements ConstraintValidator<KnownHostsFileIsValid, MultipleJGitEnvironmentProperties> {
 
     @Override
     public void initialize(KnownHostsFileIsValid knownHostsFileIsValid) {
@@ -40,7 +41,7 @@ public class KnownHostsFileValidator implements ConstraintValidator<KnownHostsFi
     }
 
     @Override
-    public boolean isValid(SshUriProperties sshUriProperties, ConstraintValidatorContext context) {
+    public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
         String knownHostsFile = sshUriProperties.getKnownHostsFile();
         if (knownHostsFile != null && !new File(knownHostsFile).exists()) {
             context.disableDefaultConstraintViolation();
