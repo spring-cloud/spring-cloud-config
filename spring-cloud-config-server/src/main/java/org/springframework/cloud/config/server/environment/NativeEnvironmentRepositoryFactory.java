@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.config.server.environment;
 
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
@@ -23,13 +24,17 @@ import org.springframework.core.env.ConfigurableEnvironment;
 public class NativeEnvironmentRepositoryFactory implements EnvironmentRepositoryFactory<NativeEnvironmentRepository,
 		NativeEnvironmentProperties> {
 	private ConfigurableEnvironment environment;
+	private ConfigServerProperties properties;
 
-	public NativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment) {
+	public NativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties properties) {
 		this.environment = environment;
+		this.properties = properties;
 	}
 
 	@Override
 	public NativeEnvironmentRepository build(NativeEnvironmentProperties environmentProperties) {
-		return new NativeEnvironmentRepository(environment, environmentProperties);
+		NativeEnvironmentRepository repository = new NativeEnvironmentRepository(environment, environmentProperties);
+		repository.setDefaultLabel(properties.getDefaultLabel());
+		return repository;
 	}
 }

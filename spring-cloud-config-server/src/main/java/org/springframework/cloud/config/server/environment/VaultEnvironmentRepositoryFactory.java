@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.config.server.environment;
 
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -27,16 +28,21 @@ public class VaultEnvironmentRepositoryFactory implements EnvironmentRepositoryF
 		VaultEnvironmentProperties> {
 	private ObjectProvider<HttpServletRequest> request;
 	private EnvironmentWatch watch;
+	private Optional<RestTemplate> skipSslValidationRestTemplate;
 
-	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch) {
+	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+                                                Optional<RestTemplate> skipSslValidationRestTemplate) {
 		this.request = request;
 		this.watch = watch;
+		this.skipSslValidationRestTemplate = skipSslValidationRestTemplate;
 	}
 
 	@Override
 	public VaultEnvironmentRepository build(VaultEnvironmentProperties environmentProperties) {
-		VaultEnvironmentRepository repository = new VaultEnvironmentRepository(request, watch, new RestTemplate(),
-				environmentProperties);
-		return repository;
+		if (environmentProperties.isSkipSslValidation() && skipSslValidationRestTemplate.isPresent()) {
+			return new VaultEnvironmentRepository(request, watch, skipSslValidationRestTemplate.get(),
+					environmentProperties);
+		}
+		return new VaultEnvironmentRepository(request, watch, new RestTemplate(), environmentProperties);
 	}
 }

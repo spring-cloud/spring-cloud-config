@@ -36,6 +36,11 @@ public class VaultEnvironmentProperties implements EnvironmentRepositoryProperti
     private String defaultKey = "application";
     /** Vault profile separator. Defaults to comma. */
     private String profileSeparator = ",";
+    /**
+     * Flag to indicate that SSL certificate validation should be bypassed when communicating with a repository served
+     * over an HTTPS connection.
+     */
+    private boolean skipSslValidation = false;
     private int order = Ordered.LOWEST_PRECEDENCE;
 
     public String getHost() {
@@ -84,6 +89,14 @@ public class VaultEnvironmentProperties implements EnvironmentRepositoryProperti
 
     public void setProfileSeparator(String profileSeparator) {
         this.profileSeparator = profileSeparator;
+    }
+
+    public boolean isSkipSslValidation() {
+        return skipSslValidation;
+    }
+
+    public void setSkipSslValidation(boolean skipSslValidation) {
+        this.skipSslValidation = skipSslValidation;
     }
 
     public int getOrder() {

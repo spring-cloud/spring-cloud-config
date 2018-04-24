@@ -15,10 +15,19 @@
  */
 package org.springframework.cloud.config.server.config;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Optional;
+import javax.net.ssl.SSLContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
 
@@ -59,7 +68,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Dave Syer
@@ -101,6 +112,75 @@ public class EnvironmentRepositoryConfiguration {
 			return new EnvironmentWatch.Default();
 		}
 	}
+
+    @Configuration
+    @ConditionalOnClass(TransportConfigCallback.class)
+    static class JGitFactoryConfig {
+        @Bean
+        public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
+                ConfigurableEnvironment environment, ConfigServerProperties server,
+                Optional<TransportConfigCallback> customTransportConfigCallback) {
+            return new MultipleJGitEnvironmentRepositoryFactory(environment, server, customTransportConfigCallback);
+        }
+    }
+
+    @Configuration
+    @ConditionalOnClass(SVNException.class)
+    static class SvnFactoryConfig {
+        @Bean
+        public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
+                                                                               ConfigServerProperties server) {
+            return new SvnEnvironmentRepositoryFactory(environment, server);
+        }
+    }
+
+    @Configuration
+    static class VaultFactoryConfig {
+        @Bean
+        public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
+                ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+                Optional<RestTemplate> skipSslValidationRestTemplate) {
+            return new VaultEnvironmentRepositoryFactory(request, watch, skipSslValidationRestTemplate);
+        }
+    }
+
+    @Configuration
+    @ConditionalOnClass(JdbcTemplate.class)
+    static class JdbcCompositeConfig {
+	    @Bean
+        @ConditionalOnBean(JdbcTemplate.class)
+        public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
+            return new JdbcEnvironmentRepositoryFactory(jdbc);
+        }
+    }
+
+    @Configuration
+    static class NativeFactoryConfig {
+        @Bean
+        public NativeEnvironmentRepositoryFactory nativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
+                                                                                     ConfigServerProperties properties) {
+            return new NativeEnvironmentRepositoryFactory(environment, properties);
+        }
+    }
+
+	@Bean
+	@ConditionalOnClass(HttpClient.class)
+	public RestTemplate skipSslValidationRestTemplate() {
+		try {
+			SSLContext sslContext = new SSLContextBuilder()
+					.loadTrustMaterial(null, (certificate, authType) -> true)
+					.build();
+			CloseableHttpClient httpClient = HttpClients.custom()
+					.setSSLContext(sslContext)
+					.setSSLHostnameVerifier(new NoopHostnameVerifier())
+					.build();
+			HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+			requestFactory.setHttpClient(httpClient);
+			return new RestTemplate(requestFactory);
+		} catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }
 
 @Configuration
@@ -117,10 +197,8 @@ class DefaultRepositoryConfiguration {
 
 	@Bean
 	public MultipleJGitEnvironmentRepository defaultEnvironmentRepository(
+	        MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory,
 			MultipleJGitEnvironmentProperties environmentProperties) {
-		MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory =
-				new MultipleJGitEnvironmentRepositoryFactory(environment, server,
-                        Optional.ofNullable(customTransportConfigCallback));
 		return gitEnvironmentRepositoryFactory.build(environmentProperties);
 	}
 }
@@ -129,19 +207,11 @@ class DefaultRepositoryConfiguration {
 @ConditionalOnMissingBean(EnvironmentRepository.class)
 @Profile("native")
 class NativeRepositoryConfiguration {
-	@Autowired
-	private ConfigurableEnvironment environment;
-
-	@Autowired
-	private ConfigServerProperties configServerProperties;
 
 	@Bean
-	public NativeEnvironmentRepository nativeEnvironmentRepository(
+	public NativeEnvironmentRepository nativeEnvironmentRepository(NativeEnvironmentRepositoryFactory factory,
 			NativeEnvironmentProperties environmentProperties) {
-		NativeEnvironmentRepository repository = new NativeEnvironmentRepository(this.environment,
-				environmentProperties);
-		repository.setDefaultLabel(configServerProperties.getDefaultLabel());
-		return repository;
+        return factory.build(environmentProperties);
 	}
 }
 
@@ -153,25 +223,22 @@ class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {
 @Configuration
 @Profile("subversion")
 class SvnRepositoryConfiguration {
-	@Autowired
-	private ConfigurableEnvironment environment;
-
-	@Autowired
-	private ConfigServerProperties server;
 
 	@Bean
-	public SvnKitEnvironmentRepository svnKitEnvironmentRepository(SvnKitEnvironmentProperties environmentProperties) {
-		return new SvnEnvironmentRepositoryFactory(environment, server).build(environmentProperties);
+	public SvnKitEnvironmentRepository svnKitEnvironmentRepository(SvnKitEnvironmentProperties environmentProperties,
+                                                                   SvnEnvironmentRepositoryFactory factory) {
+		return factory.build(environmentProperties);
 	}
 }
 
 @Configuration
 @Profile("vault")
 class VaultRepositoryConfiguration {
+
 	@Bean
-	public VaultEnvironmentRepository vaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-																 VaultEnvironmentProperties environmentProperties) {
-		return new VaultEnvironmentRepositoryFactory(request, watch).build(environmentProperties);
+	public VaultEnvironmentRepository vaultEnvironmentRepository(VaultEnvironmentRepositoryFactory factory,
+                                                                VaultEnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
 	}
 }
 
@@ -182,56 +249,15 @@ class JdbcRepositoryConfiguration {
 
 	@Bean
 	@ConditionalOnBean(JdbcTemplate.class)
-	public JdbcEnvironmentRepository jdbcEnvironmentRepository(JdbcTemplate jdbc,
+	public JdbcEnvironmentRepository jdbcEnvironmentRepository(JdbcEnvironmentRepositoryFactory factory,
 															   JdbcEnvironmentProperties environmentProperties) {
-		return new JdbcEnvironmentRepositoryFactory(jdbc).build(environmentProperties);
+		return factory.build(environmentProperties);
 	}
 }
 
 @Configuration
 @Profile("composite")
 class CompositeRepositoryConfiguration {
-
-	@Configuration
-	@ConditionalOnClass(TransportConfigCallback.class)
-	static class JGitCompositeConfig {
-		@Bean
-		public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
-				ConfigurableEnvironment environment, ConfigServerProperties server,
-				Optional<TransportConfigCallback> customTransportConfigCallback) {
-			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, customTransportConfigCallback);
-		}
-	}
-
-	@Configuration
-	@ConditionalOnClass(SVNException.class)
-	static class SvnCompositeConfig {
-		@Bean
-		public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-																			   ConfigServerProperties server) {
-			return new SvnEnvironmentRepositoryFactory(environment, server);
-		}
-	}
-
-	@Bean
-	public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request,
-																						EnvironmentWatch watch) {
-		return new VaultEnvironmentRepositoryFactory(request, watch);
-	}
-
-	@Configuration
-	@ConditionalOnClass(JdbcTemplate.class)
-	static class JdbcCompositeConfig {
-		@Bean
-		public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
-			return new JdbcEnvironmentRepositoryFactory(jdbc);
-		}
-	}
-
-	@Bean
-	public NativeEnvironmentRepositoryFactory nativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment) {
-		return new NativeEnvironmentRepositoryFactory(environment);
-	}
 
 	@Bean
 	public static CompositeEnvironmentBeanFactoryPostProcessor compositeEnvironmentRepositoryBeanFactoryPostProcessor(
