@@ -21,6 +21,7 @@ import org.springframework.cloud.config.server.support.AbstractScmAccessorProper
 
 /**
  * @author Dylan Roberts
+ * @author Gareth Clay
  */
 public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
     private static final String DEFAULT_LABEL = "master";
@@ -36,6 +37,12 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
 
     /** Flag to indicate that the branch should be deleted locally if it's origin tracked branch was removed. */
     private boolean deleteUntrackedBranches = false;
+
+	/**
+	 * Flag to indicate that SSL certificate validation should be bypassed when
+	 * communicating with a repository served over an HTTPS connection.
+	 */
+	private boolean skipSslValidation = false;
 
     /**
      * Time (in seconds) between refresh of the git repository
@@ -179,5 +186,13 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
     @Override
     public void setStrictHostKeyChecking(boolean strictHostKeyChecking) {
         this.strictHostKeyChecking = strictHostKeyChecking;
+    }
+
+    public boolean isSkipSslValidation() {
+        return skipSslValidation;
+    }
+
+    public void setSkipSslValidation(boolean skipSslValidation) {
+        this.skipSslValidation = skipSslValidation;
     }
 }

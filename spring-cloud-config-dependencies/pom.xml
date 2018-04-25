@@ -13,6 +13,9 @@
 	<packaging>pom</packaging>
 	<name>spring-cloud-config-dependencies</name>
 	<description>Spring Cloud Config Dependencies</description>
+	<properties>
+		<jgit.version>4.11.0.201803080745-r</jgit.version>
+	</properties>
 	<dependencyManagement>
 		<dependencies>
 		<dependency>
@@ -38,7 +41,12 @@
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit</artifactId>
-			<version>4.8.0.201706111038-r</version>
+			<version>${jgit.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jgit</groupId>
+			<artifactId>org.eclipse.jgit.junit.http</artifactId>
+			<version>${jgit.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.jcraft</groupId>
