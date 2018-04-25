@@ -18,15 +18,15 @@ package org.springframework.cloud.config.server.credentials;
 
 import java.net.URISyntaxException;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.URIish;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
-
-import com.amazonaws.auth.AWSCredentialsProvider;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,7 +56,7 @@ public class AwsCodeCommitCredentialsProviderTests {
 	public void init() {
 		GitCredentialsProviderFactory factory = new GitCredentialsProviderFactory();
 		provider = (AwsCodeCommitCredentialProvider) 
-				factory.createFor(AWS_REPO, USER, PASSWORD, null);
+		factory.createFor(AWS_REPO, USER, PASSWORD, null, false);
 	}
 	
 	@Test
@@ -116,7 +116,7 @@ public class AwsCodeCommitCredentialsProviderTests {
 	public void testUriWithCurlyBracesReturnsTrue() throws UnsupportedCredentialItem, URISyntaxException {
 		GitCredentialsProviderFactory factory = new GitCredentialsProviderFactory();
 		provider = (AwsCodeCommitCredentialProvider) 
-		factory.createFor(CURLY_BRACES_REPO, USER, PASSWORD, null);
+		factory.createFor(CURLY_BRACES_REPO, USER, PASSWORD, null, false);
 		CredentialItem[] credentialItems = makeCredentialItems();
 		assertTrue(provider.get(new URIish(CURLY_BRACES_REPO), credentialItems));
 	}

@@ -36,6 +36,7 @@ import org.springframework.core.env.StandardEnvironment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -46,6 +47,7 @@ import static org.mockito.Mockito.when;
  * @author Andy Chan (iceycake)
  * @author Dave Syer
  * @author Spencer Gibb
+ * @author Gareth Clay
  *
  */
 public class MultipleJGitEnvironmentRepositoryTests {
@@ -202,6 +204,85 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 		assertEquals(repo1.getTransportConfigCallback(), mockCallback1);
 		assertEquals(repo2.getTransportConfigCallback(), mockCallback2);
+	}
+
+	@Test
+	public void setCorrectCredentials() throws Exception {
+		final String repo1Username = "repo1-username";
+		final String repo1Password = "repo1-password";
+		final String repo2Passphrase = "repo2-passphrase";
+		final String multiRepoUsername = "multi-repo-username";
+		final String multiRepoPassword = "multi-repo-password";
+		final String multiRepoPassphrase = "multi-repo-passphrase";
+		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1",
+				"*test1*", "test1Uri");
+		repo1.setUsername(repo1Username);
+		repo1.setPassword(repo1Password);
+		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2",
+				"*test2*", "test2Uri");
+		repo2.setPassphrase(repo2Passphrase);
+
+		Map<String, PatternMatchingJGitEnvironmentRepository> repos = new HashMap<>();
+		repos.put("test1", repo1);
+		repos.put("test2", repo2);
+
+		this.repository.setRepos(repos);
+		this.repository.setUsername(multiRepoUsername);
+		this.repository.setPassword(multiRepoPassword);
+		this.repository.setPassphrase(multiRepoPassphrase);
+		this.repository.afterPropertiesSet();
+
+		assertEquals("Repo1 has its own username which should not be overwritten",
+				repo1.getUsername(), repo1Username);
+		assertEquals("Repo1 has its own password which should not be overwritten",
+				repo1.getPassword(), repo1Password);
+		assertEquals(
+				"Repo1 did not specify a passphrase so this should have been copied from the multi repo",
+				repo1.getPassphrase(), multiRepoPassphrase);
+		assertEquals(
+				"Repo2 did not specify a username so this should have been copied from the multi repo",
+				repo2.getUsername(), multiRepoUsername);
+		assertEquals(
+				"Repo2 did not specify a username so this should have been copied from the multi repo",
+				repo2.getPassword(), multiRepoPassword);
+		assertEquals(
+				"Repo2 has its own passphrase which should not have been overwritten",
+				repo2.getPassphrase(), repo2Passphrase);
+	}
+
+	@Test
+	public void setSkipSslValidation() throws Exception {
+		final boolean repo1SkipSslValidation = false;
+		final boolean repo2SkipSslValidation = true;
+		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1",
+				"*test1*", "test1Uri");
+		repo1.setSkipSslValidation(repo1SkipSslValidation);
+		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2",
+				"*test2*", "test2Uri");
+		repo2.setSkipSslValidation(repo2SkipSslValidation);
+
+		Map<String, PatternMatchingJGitEnvironmentRepository> repos = new HashMap<>();
+		repos.put("test1", repo1);
+		repos.put("test2", repo2);
+
+		this.repository.setRepos(repos);
+		this.repository.setSkipSslValidation(false);
+		this.repository.afterPropertiesSet();
+		assertFalse(
+				"If skip SSL validation is false at multi-repo level, then per-repo settings take priority",
+				repo1.isSkipSslValidation());
+		assertTrue(
+				"If skip SSL validation is false at multi-repo level, then per-repo settings take priority",
+				repo2.isSkipSslValidation());
+
+		this.repository.setSkipSslValidation(true);
+		this.repository.afterPropertiesSet();
+		assertTrue(
+				"If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos",
+				repo1.isSkipSslValidation());
+		assertTrue(
+				"If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos",
+				repo2.isSkipSslValidation());
 	}
 
 	@Test

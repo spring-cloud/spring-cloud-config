@@ -38,7 +38,6 @@ import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
-import org.eclipse.jgit.api.errors.NoMessageException;
 import org.eclipse.jgit.api.errors.NotMergedException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -60,17 +59,17 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
-import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
+import org.springframework.cloud.config.server.support.GitSkipSslValidationCredentialsProvider;
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
+
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -82,7 +81,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * @author Dave Syer
- *
+ * @author Gareth Clay
  */
 public class JGitEnvironmentRepositoryTests {
 
@@ -681,7 +680,6 @@ public class JGitEnvironmentRepositoryTests {
 	public void gitCredentialsProviderFactoryCreatesPassphraseProvider() throws Exception {
 		final String passphrase = "mypassphrase";
 		final String gitUri = "git+ssh://git@somegitserver/somegitrepo";
-		GitCredentialsProviderFactory credentialsFactory = new GitCredentialsProviderFactory();
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 
@@ -690,7 +688,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri(gitUri);
 		envRepository.setBasedir(new File("./mybasedir"));
-		envRepository.setGitCredentialsProvider(credentialsFactory.createFor(gitUri, null, null, passphrase));
+		envRepository.setPassphrase(passphrase);
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
@@ -710,7 +708,6 @@ public class JGitEnvironmentRepositoryTests {
 
 	@Test
 	public void gitCredentialsProviderFactoryCreatesUsernamePasswordProvider() throws Exception {
-		GitCredentialsProviderFactory credentialsFactory = new GitCredentialsProviderFactory();
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 		final String username = "someuser";
@@ -721,8 +718,8 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("git+ssh://git@somegitserver/somegitrepo");
 		envRepository.setBasedir(new File("./mybasedir"));
-		envRepository.setGitCredentialsProvider(
-				credentialsFactory.createFor(envRepository.getUri(), username, password, null));
+		envRepository.setUsername(username);
+		envRepository.setPassword(password);
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
@@ -742,7 +739,6 @@ public class JGitEnvironmentRepositoryTests {
 
 	@Test
 	public void gitCredentialsProviderFactoryCreatesAwsCodeCommitProvider() throws Exception {
-		GitCredentialsProviderFactory credentialsFactory = new GitCredentialsProviderFactory();
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 		final String awsUri = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test";
@@ -751,12 +747,44 @@ public class JGitEnvironmentRepositoryTests {
 				new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri(awsUri);
-		envRepository.setGitCredentialsProvider(credentialsFactory.createFor(envRepository.getUri(), null, null, null));
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
 		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof AwsCodeCommitCredentialProvider);
+	}
 
+	@Test
+	public void gitCredentialsProviderFactoryCreatesSkipSslValidationProvider()
+			throws Exception {
+		Git mockGit = mock(Git.class);
+		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
+		final String username = "someuser";
+		final String password = "mypassword";
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("https://somegitserver/somegitrepo");
+		envRepository.setBasedir(new File("./mybasedir"));
+		envRepository.setUsername(username);
+		envRepository.setPassword(password);
+		envRepository.setSkipSslValidation(true);
+		envRepository.setCloneOnStart(true);
+		envRepository.afterPropertiesSet();
+
+		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
+
+		assertTrue(provider instanceof GitSkipSslValidationCredentialsProvider);
+
+		CredentialItem.Username usernameCredential = new CredentialItem.Username();
+		CredentialItem.Password passwordCredential = new CredentialItem.Password();
+		assertTrue(provider.supports(usernameCredential));
+		assertTrue(provider.supports(passwordCredential));
+
+		provider.get(new URIish(), usernameCredential);
+		assertEquals(usernameCredential.getValue(), username);
+		provider.get(new URIish(), passwordCredential);
+		assertEquals(String.valueOf(passwordCredential.getValue()), password);
 	}
 
 	@Test

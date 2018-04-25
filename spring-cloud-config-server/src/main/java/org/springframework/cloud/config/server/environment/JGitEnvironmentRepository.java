@@ -54,19 +54,18 @@ import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.TrackingRefUpdate;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
+import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+
 import static java.lang.String.format;
 import static org.eclipse.jgit.transport.ReceiveCommand.Type.DELETE;
-import static org.springframework.util.StringUtils.hasText;
 
 /**
  * An {@link EnvironmentRepository} backed by a single git repository.
@@ -76,6 +75,7 @@ import static org.springframework.util.StringUtils.hasText;
  * @author Marcos Barbero
  * @author Daniel Lavoie
  * @author Ryan Lynch
+ * @author Gareth Clay
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -111,9 +111,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private String defaultLabel;
 
 	/**
-	 * The credentials provider to use to connect to the Git repository.
+	 * Factory used to create the credentials provider to use to connect to the Git
+	 * repository.
 	 */
-	private CredentialsProvider gitCredentialsProvider;
+	private GitCredentialsProviderFactory gitCredentialsProviderFactory = new GitCredentialsProviderFactory();
 
 	/**
 	 * Transport configuration callback for JGit commands.
@@ -132,6 +133,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private boolean deleteUntrackedBranches;
 
+	/**
+	 * Flag to indicate that SSL certificate validation should be bypassed when
+	 * communicating with a repository served over an HTTPS connection.
+	 */
+	private boolean skipSslValidation;
+
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties) {
 		super(environment, properties);
 		this.cloneOnStart = properties.isCloneOnStart();
@@ -140,6 +147,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.timeout = properties.getTimeout();
 		this.deleteUntrackedBranches = properties.isDeleteUntrackedBranches();
 		this.refreshRate = properties.getRefreshRate();
+		this.skipSslValidation = properties.isSkipSslValidation();
 	}
 
 	public boolean isCloneOnStart() {
@@ -184,6 +192,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.gitFactory = gitFactory;
 	}
 
+	public void setGitCredentialsProviderFactory(
+			GitCredentialsProviderFactory gitCredentialsProviderFactory) {
+		this.gitCredentialsProviderFactory = gitCredentialsProviderFactory;
+	}
+
 	public String getDefaultLabel() {
 		return this.defaultLabel;
 	}
@@ -206,6 +219,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	public void setDeleteUntrackedBranches(boolean deleteUntrackedBranches) {
 		this.deleteUntrackedBranches = deleteUntrackedBranches;
+	}
+
+	public boolean isSkipSslValidation() {
+		return skipSslValidation;
+	}
+
+	public void setSkipSslValidation(boolean skipSslValidation) {
+		this.skipSslValidation = skipSslValidation;
 	}
 
 	@Override
@@ -583,19 +604,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private CredentialsProvider getCredentialsProvider() {
-		if (this.gitCredentialsProvider != null) {
-			return this.gitCredentialsProvider;
-		}
-
-		if (hasText(getUsername()) && hasText(getPassword())) {
-			return new UsernamePasswordCredentialsProvider(getUsername(), getPassword());
-		}
-
-		if (hasText(getPassphrase())) {
-			return new PassphraseCredentialsProvider(getPassphrase());
-		}
-
-		return null;
+		return this.gitCredentialsProviderFactory.createFor(this.getUri(), getUsername(),
+				getPassword(), getPassphrase(), isSkipSslValidation());
 	}
 
 	private boolean isClean(Git git, String label) {
@@ -672,19 +682,5 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			CloneCommand command = Git.cloneRepository();
 			return command;
 		}
-	}
-
-	/**
-	 * @return the gitCredentialsProvider
-	 */
-	public CredentialsProvider getGitCredentialsProvider() {
-		return gitCredentialsProvider;
-	}
-
-	/**
-	 * @param gitCredentialsProvider the gitCredentialsProvider to set
-	 */
-	public void setGitCredentialsProvider(CredentialsProvider gitCredentialsProvider) {
-		this.gitCredentialsProvider = gitCredentialsProvider;
 	}
 }

@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
@@ -44,6 +43,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Andy Chan (iceycake)
  * @author Dave Syer
+ * @author Gareth Clay
  *
  */
 public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository {
@@ -66,9 +66,6 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		GitCredentialsProviderFactory credentialFactory = new GitCredentialsProviderFactory();
-		super.setGitCredentialsProvider(credentialFactory.createFor(getUri(),
-				getUsername(), getPassword(), getPassphrase()));
 		super.afterPropertiesSet();
 		for (String name : this.repos.keySet()) {
 			PatternMatchingJGitEnvironmentRepository repo = this.repos.get(name);
@@ -89,17 +86,17 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 				repo.setRefreshRate(getRefreshRate());
 			}
 			String user = repo.getUsername();
-			String pass = repo.getPassword();
 			String passphrase = repo.getPassphrase();
 			if (user == null) {
-				user = getUsername();
-				pass = getPassword();
+				repo.setUsername(getUsername());
+				repo.setPassword(getPassword());
 			}
 			if (passphrase == null) {
-				passphrase = getPassphrase();
+				repo.setPassphrase(getPassphrase());
 			}
-			repo.setGitCredentialsProvider(
-					credentialFactory.createFor(repo.getUri(), user, pass, passphrase));
+			if (isSkipSslValidation()) {
+				repo.setSkipSslValidation(true);
+			}
 			repo.afterPropertiesSet();
 		}
 		if (!getBasedir().exists() &&
