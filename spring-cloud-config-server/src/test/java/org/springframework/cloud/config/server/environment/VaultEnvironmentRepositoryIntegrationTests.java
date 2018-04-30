@@ -15,18 +15,10 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLHandshakeException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -39,9 +31,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -55,10 +45,10 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = VaultEnvironmentRepositoryIntegrationTests.TestApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
-            "server.ssl.key-store=classpath:ssl-test.jks",
-            "server.ssl.key-store-password=password",
-            "server.ssl.key-password=password",
-            "server.key-alias=ssl-test"})
+                "server.ssl.key-store=classpath:ssl-test.jks",
+                "server.ssl.key-store-password=password",
+                "server.ssl.key-password=password",
+                "server.key-alias=ssl-test"})
 public class VaultEnvironmentRepositoryIntegrationTests {
 
     @LocalServerPort
@@ -68,10 +58,10 @@ public class VaultEnvironmentRepositoryIntegrationTests {
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void withSslValidation() {
+    public void withSslValidation() throws Exception {
         VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory =
                 new VaultEnvironmentRepositoryFactory(withRequest(), new EnvironmentWatch.Default(),
-                        Optional.of(skipSslValidationRestTemplate()));
+                        Optional.of(new HttpClientVaultRestTemplateFactory()));
         VaultEnvironmentRepository vaultEnvironmentRepository =
                 vaultEnvironmentRepositoryFactory.build(withEnvironmentProperties(false));
         expectedException.expectCause(instanceOf(SSLHandshakeException.class));
@@ -80,33 +70,16 @@ public class VaultEnvironmentRepositoryIntegrationTests {
     }
 
     @Test
-    public void skipSslValidation() {
+    public void skipSslValidation() throws Exception {
         VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory =
                 new VaultEnvironmentRepositoryFactory(withRequest(), new EnvironmentWatch.Default(),
-                        Optional.of(skipSslValidationRestTemplate()));
+                        Optional.of(new HttpClientVaultRestTemplateFactory()));
         VaultEnvironmentRepository vaultEnvironmentRepository =
                 vaultEnvironmentRepositoryFactory.build(withEnvironmentProperties(true));
 
         Environment actual = vaultEnvironmentRepository.findOne("application", "profile", "label");
 
         assertThat(actual).isNotNull();
-    }
-
-    private RestTemplate skipSslValidationRestTemplate() {
-        try {
-            SSLContext sslContext = new SSLContextBuilder()
-                    .loadTrustMaterial(null, (certificate, authType) -> true)
-                    .build();
-            CloseableHttpClient httpClient = HttpClients.custom()
-                    .setSSLContext(sslContext)
-                    .setSSLHostnameVerifier(new NoopHostnameVerifier())
-                    .build();
-            HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-            requestFactory.setHttpClient(httpClient);
-            return new RestTemplate(requestFactory);
-        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private VaultEnvironmentProperties withEnvironmentProperties(boolean skipSslValidation) {

@@ -28,21 +28,26 @@ public class VaultEnvironmentRepositoryFactory implements EnvironmentRepositoryF
 		VaultEnvironmentProperties> {
 	private ObjectProvider<HttpServletRequest> request;
 	private EnvironmentWatch watch;
-	private Optional<RestTemplate> skipSslValidationRestTemplate;
+	private Optional<VaultRestTemplateFactory> vaultRestTemplateFactory;
 
 	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-                                                Optional<RestTemplate> skipSslValidationRestTemplate) {
+                                             Optional<VaultRestTemplateFactory> vaultRestTemplateFactory) {
 		this.request = request;
 		this.watch = watch;
-		this.skipSslValidationRestTemplate = skipSslValidationRestTemplate;
+		this.vaultRestTemplateFactory = vaultRestTemplateFactory;
 	}
 
 	@Override
-	public VaultEnvironmentRepository build(VaultEnvironmentProperties environmentProperties) {
-		if (environmentProperties.isSkipSslValidation() && skipSslValidationRestTemplate.isPresent()) {
-			return new VaultEnvironmentRepository(request, watch, skipSslValidationRestTemplate.get(),
-					environmentProperties);
+	public VaultEnvironmentRepository build(VaultEnvironmentProperties environmentProperties) throws Exception {
+		if (vaultRestTemplateFactory.isPresent()) {
+			RestTemplate restTemplate = vaultRestTemplateFactory.get().build(environmentProperties);
+			return new VaultEnvironmentRepository(request, watch, restTemplate, environmentProperties);
 		}
 		return new VaultEnvironmentRepository(request, watch, new RestTemplate(), environmentProperties);
+	}
+
+	public interface VaultRestTemplateFactory {
+
+		RestTemplate build(VaultEnvironmentProperties environmentProperties) throws Exception;
 	}
 }

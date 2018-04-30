@@ -46,6 +46,26 @@ public class CompositeClasspathTests {
     }
 
     @RunWith(ModifiedClassPathRunner.class)
+    @ClassPathExclusions("httpclient-*.jar")
+    public static class HttpClientTests {
+
+        @Test
+        public void contextLoads() {
+            new WebApplicationContextRunner()
+                    .withUserConfiguration(ConfigServerApplication.class)
+                    .withPropertyValues("spring.profiles.active:test,composite",
+                            "spring.config.name:compositeconfigserver",
+                            "spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+                            "spring.cloud.config.server.composite[0].type:git",
+                            "spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
+                            "spring.cloud.config.server.composite[1].type:svn")
+                    .run(context -> {
+                        CompositeUtils.getCompositeTypeList(context.getEnvironment());
+                    });
+        }
+    }
+
+    @RunWith(ModifiedClassPathRunner.class)
     @ClassPathExclusions("svnkit-*.jar")
     public static class SvnTests {
 

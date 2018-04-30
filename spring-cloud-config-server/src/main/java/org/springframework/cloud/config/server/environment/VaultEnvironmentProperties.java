@@ -15,15 +15,19 @@
  */
 package org.springframework.cloud.config.server.environment;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
+import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
+import org.springframework.cloud.config.server.support.HttpEnvironmentRepositoryProperties;
 import org.springframework.core.Ordered;
 
 /**
  * @author Dylan Roberts
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
-public class VaultEnvironmentProperties implements EnvironmentRepositoryProperties {
+public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProperties {
     /** Vault host. Defaults to 127.0.0.1. */
     private String host = "127.0.0.1";
     /** Vault port. Defaults to 8200. */
@@ -41,6 +45,12 @@ public class VaultEnvironmentProperties implements EnvironmentRepositoryProperti
      * over an HTTPS connection.
      */
     private boolean skipSslValidation = false;
+
+    /**
+     * HTTP proxy configuration.
+     */
+    private Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
+
     private int order = Ordered.LOWEST_PRECEDENCE;
 
     public String getHost() {
@@ -91,12 +101,22 @@ public class VaultEnvironmentProperties implements EnvironmentRepositoryProperti
         this.profileSeparator = profileSeparator;
     }
 
+    @Override
     public boolean isSkipSslValidation() {
         return skipSslValidation;
     }
 
     public void setSkipSslValidation(boolean skipSslValidation) {
         this.skipSslValidation = skipSslValidation;
+    }
+
+    @Override
+    public Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy) {
+        this.proxy = proxy;
     }
 
     public int getOrder() {
