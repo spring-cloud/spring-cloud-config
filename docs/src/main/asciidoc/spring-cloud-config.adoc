@@ -4,7 +4,7 @@
 :docslink: {githubmaster}/docs/src/main/asciidoc
 :toc:
 :nofooter:
-:special-string: $$_$$
+:special-string: _
 
 *{spring-cloud-version}*
 
@@ -115,7 +115,7 @@ To scale the Config Server up and make it highly available, you need to have all
 Even in that case, it is better to use the `ssh:` protocol for a shared filesystem repository, so that the server can clone it and use a local working copy as a cache.
 
 This repository implementation maps the `{label}` parameter of the HTTP resource to a git label (commit id, branch name, or tag).
-If the git branch or tag name contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `{special-string}` (to avoid ambiguity with other URL paths).
+If the git branch or tag name contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `({special-string})` (to avoid ambiguity with other URL paths).
 For example, if the label is `foo/bar`, replacing the slash would result in the following label: `foo({special-string})bar`.
 The inclusion of the special string `({special-string})` can also be applied to the `{application}` parameter.
 If you use a command-line client such as curl, be careful with the brackets in the URL -- you should
