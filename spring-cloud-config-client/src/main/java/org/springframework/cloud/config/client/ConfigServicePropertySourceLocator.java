@@ -176,6 +176,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		Object[] args = new String[] { name, profile };
 		if (StringUtils.hasText(label)) {
+			if (label.contains("/")) {
+				label = label.replace("/", "(_)");
+			}
 			args = new String[] { name, profile, label };
 			path = path + "/{label}";
 		}
