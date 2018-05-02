@@ -24,10 +24,23 @@ import org.springframework.core.Ordered;
  */
 @ConfigurationProperties("spring.cloud.config.server.native")
 public class NativeEnvironmentProperties implements EnvironmentRepositoryProperties {
+    /**
+     * Flag to determine how to handle exceptions during decryption (default false).
+     */
     private Boolean failOnError = false;
+    /**
+     * Flag to determine whether label locations should be added.
+     */
     private Boolean addLabelLocations = true;
     private String defaultLabel = "master";
+    /**
+     * Locations to search for configuration files. Defaults to the same as a Spring Boot
+     * app so [classpath:/,classpath:/config/,file:./,file:./config/].
+     */
     private String[] searchLocations = new String[0];
+    /**
+     * Version string to be reported for native repository
+     */
     private String version;
     private int order = Ordered.LOWEST_PRECEDENCE;
 

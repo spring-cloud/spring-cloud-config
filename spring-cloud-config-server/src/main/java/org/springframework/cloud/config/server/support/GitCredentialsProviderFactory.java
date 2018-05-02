@@ -16,19 +16,21 @@
 
 package org.springframework.cloud.config.server.support;
 
-import static org.springframework.util.StringUtils.hasText;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+
 import org.springframework.util.ClassUtils;
 
+import static org.springframework.util.StringUtils.hasText;
+
 /**
- * A CredentialsProvider factory for Git repositories. Can handle AWS CodeCommit 
+ * A CredentialsProvider factory for Git repositories. Can handle AWS CodeCommit
  * repositories and other repositories with username/password.
  * 
  * @author Don Laidlaw
+ * @author Gareth Clay
  *
  */
 public class GitCredentialsProviderFactory {
@@ -41,20 +43,43 @@ public class GitCredentialsProviderFactory {
 	 * Enabled by default.
 	 */
 	protected boolean awsCodeCommitEnabled = true;
-	
+
 	/**
-	 * Search for a credential provider that will handle the specified URI. If
-	 * not found, and the username has text, then create a default using the
-	 * provided username and password. Otherwise null.
+	 * Search for a credential provider that will handle the specified URI. If not found,
+	 * and the username or passphrase has text, then create a default using the provided
+	 * username and password or passphrase. Otherwise null.
 	 * @param uri the URI of the repository (cannot be null)
 	 * @param username the username provided for the repository (may be null)
 	 * @param password the password provided for the repository (may be null)
 	 * @param passphrase the passphrase to unlock the ssh private key (may be null)
 	 * @return the first matched credentials provider or the default or null.
+	 * @deprecated in favour of {@link #createFor(String, String, String, String, boolean)}
 	 */
-	public CredentialsProvider createFor(String uri, 
-			String username, String password, String passphrase) {
+	@Deprecated
+	public CredentialsProvider createFor(String uri, String username, String password,
+										 String passphrase) {
+		return createFor(uri, username, password, passphrase, false);
+	}
 
+	/**
+	 * Search for a credential provider that will handle the specified URI. If not found,
+	 * and the username or passphrase has text, then create a default using the provided
+	 * username and password or passphrase.
+	 *
+	 * If skipSslValidation is true and the URI has an https scheme, the default credential
+	 * provider's behaviour is modified to suppress any SSL validation errors that occur
+	 * when communicating via the URI.
+	 *
+	 * Otherwise null.
+	 * @param uri the URI of the repository (cannot be null)
+	 * @param username the username provided for the repository (may be null)
+	 * @param password the password provided for the repository (may be null)
+	 * @param passphrase the passphrase to unlock the ssh private key (may be null)
+	 * @param skipSslValidation whether to skip SSL validation when connecting via HTTPS
+	 * @return the first matched credentials provider or the default or null.
+	 */
+	public CredentialsProvider createFor(String uri, String username, String password,
+			String passphrase, boolean skipSslValidation) {
 		CredentialsProvider provider = null;
 		if (awsAvailable() && AwsCodeCommitCredentialProvider.canHandle(uri)) {
 			logger.debug("Constructing AwsCodeCommitCredentialProvider for URI " + uri);
@@ -72,10 +97,15 @@ public class GitCredentialsProviderFactory {
 			provider = new PassphraseCredentialsProvider(passphrase);
 		}
 
+		if (skipSslValidation && GitSkipSslValidationCredentialsProvider.canHandle(uri)) {
+			logger.debug("Constructing GitSkipSslValidationCredentialsProvider for URI "
+					+ uri);
+			provider = new GitSkipSslValidationCredentialsProvider(provider);
+		}
 		else {
 			logger.debug("No credentials provider required for URI " + uri);
 		}
-		
+
 		return provider;
 	}
 	

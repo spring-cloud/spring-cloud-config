@@ -56,6 +56,10 @@ public class ConfigServerProperties {
 	 * should be returned in "native" form.
 	 */
 	private boolean stripDocumentFromYaml = true;
+	/**
+	 * Flag to indicate that If HTTP 404 needs to be sent if Application is not Found
+	 */
+	private boolean acceptEmpty = true;
 
 	/**
 	 * Default application name when incoming requests do not have a specific one.
@@ -115,7 +119,14 @@ public class ConfigServerProperties {
 	public void setStripDocumentFromYaml(boolean stripDocumentFromYaml) {
 		this.stripDocumentFromYaml = stripDocumentFromYaml;
 	}
+	
+	public boolean isAcceptEmpty() {
+		return this.acceptEmpty;
+	}
 
+	public void setAcceptEmpty(boolean acceptEmpty) {
+		this.acceptEmpty = acceptEmpty;
+	}
 	public String getDefaultApplicationName() {
 		return this.defaultApplicationName;
 	}

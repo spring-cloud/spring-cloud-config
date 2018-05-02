@@ -25,14 +25,39 @@ import org.springframework.core.Ordered;
 public class AbstractScmAccessorProperties implements EnvironmentRepositoryProperties {
     static final String[] DEFAULT_LOCATIONS = new String[] { "/" };
 
+    /**
+     * URI of remote repository.
+     */
     private String uri;
+    /**
+     * Base directory for local working copy of repository.
+     */
     private File basedir;
+    /**
+     * Search paths to use within local working copy. By default searches only the root.
+     */
     private String[] searchPaths = DEFAULT_LOCATIONS.clone();;
+    /**
+     * Username for authentication with remote repository.
+     */
     private String username;
+    /**
+     * Password for authentication with remote repository.
+     */
     private String password;
+    /**
+     * Passphrase for unlocking your ssh private key.
+     */
     private String passphrase;
+    /**
+     * Reject incoming SSH host keys from remote servers not in the known host list.
+     */
     private boolean strictHostKeyChecking = true;
+
+    /** The order of the environment repository. */
     private int order = Ordered.LOWEST_PRECEDENCE;
+
+    /** The default label to be used with the remore repository */
     private String defaultLabel;
 
     public String getUri() {

@@ -69,6 +69,7 @@ public class EnvironmentController {
 	private ObjectMapper objectMapper;
 
 	private boolean stripDocument = true;
+	private boolean acceptEmpty = true;
 
 	public EnvironmentController(EnvironmentRepository repository) {
 		this(repository, new ObjectMapper());
@@ -90,6 +91,15 @@ public class EnvironmentController {
 		this.stripDocument = stripDocument;
 	}
 
+	/**
+	 * Flag to indicate that If HTTP 404 needs to be sent if Application is not Found
+	 *
+	 * @param acceptEmpty the flag to set
+	 */
+	public void setAcceptEmpty(boolean acceptEmpty) {
+		this.acceptEmpty = acceptEmpty;
+	}
+	
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
 	public Environment defaultLabel(@PathVariable String name,
 			@PathVariable String profiles) {
@@ -110,6 +120,9 @@ public class EnvironmentController {
 			label = label.replace("(_)", "/");
 		}
 		Environment environment = this.repository.findOne(name, profiles, label);
+		if(!acceptEmpty && (environment == null || environment.getPropertySources().isEmpty())){
+			 throw new EnvironmentNotFoundException("Profile Not found");
+		}
 		return environment;
 	}
 

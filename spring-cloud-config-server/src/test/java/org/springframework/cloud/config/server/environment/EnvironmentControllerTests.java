@@ -65,6 +65,7 @@ public class EnvironmentControllerTests {
 	@Before
 	public void init() {
 		this.controller = new EnvironmentController(this.repository);
+		environment.add(new PropertySource("foo", new HashMap<>()));
 	}
 
 	@After
@@ -195,27 +196,47 @@ public class EnvironmentControllerTests {
 		assertThat(environment.getProfiles(), equalTo(new String[] { "master" }));
 		assertThat(environment.getLabel(), equalTo("master"));
 		assertThat(environment.getVersion(), nullValue());
-		assertThat(environment.getPropertySources(), hasSize(2));
+		assertThat(environment.getPropertySources(), hasSize(3));
 		assertThat(environment.getPropertySources().get(0).getName(), equalTo("two"));
 		assertThat(environment.getPropertySources().get(0).getSource().entrySet(),
 				hasSize(2));
-		assertThat(environment.getPropertySources().get(1).getName(), equalTo("one"));
-		assertThat(environment.getPropertySources().get(1).getSource().entrySet(),
+		assertThat(environment.getPropertySources().get(2).getName(), equalTo("one"));
+		assertThat(environment.getPropertySources().get(2).getSource().entrySet(),
 				hasSize(3));
 	}
 	
 	@Test
 	public void testNameWithSlash() {
-		this.controller.labelled("foo(_)spam", "bar", "two");
-		
-		Mockito.verify(this.repository).findOne("foo/spam", "bar", "two");
-	}
+		Mockito.when(this.repository.findOne("foo/spam", "bar", "two")).thenReturn(this.environment);
 
+		Environment returnedEnvironment = this.controller.labelled("foo(_)spam", "bar", "two");
+
+		assertEquals(this.environment.getLabel(), returnedEnvironment.getLabel());
+		assertEquals(this.environment.getName(), returnedEnvironment.getName());
+
+	}
+	@Test(expected=EnvironmentNotFoundException.class)
+	public void testEnvironmentNotFound() {
+		this.controller.setAcceptEmpty(false);
+		this.controller.labelled("foo", "bar", null);
+	}
+	@Test
+	public void testwithValidEnvironment() {
+		Mockito.when(this.repository.findOne("foo", "bar",null))
+				.thenReturn(this.environment);
+		Environment environment = this.controller.labelled("foo", "bar", null);
+		assertThat(environment, not(nullValue()));
+
+	}
 	@Test
 	public void testLabelWithSlash() {
-		this.controller.labelled("foo", "bar", "two(_)spam");
 		
-		Mockito.verify(this.repository).findOne("foo", "bar", "two/spam");
+		Mockito.when(this.repository.findOne("foo", "bar", "two/spam")).thenReturn(this.environment);
+
+		Environment returnedEnvironment = this.controller.labelled("foo", "bar", "two(_)spam");
+
+		assertEquals(this.environment.getLabel(), returnedEnvironment.getLabel());
+		assertEquals(this.environment.getName(), returnedEnvironment.getName());
 	}
 
 	@Test
@@ -490,6 +511,15 @@ public class EnvironmentControllerTests {
 		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
 		mvc.perform(MockMvcRequestBuilders.get("/foo/bar/other"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
+	}
+	
+	@Test
+	public void environmentMissing() throws Exception {
+		Mockito.when(this.repository.findOne("foo1", "notfound", null))
+				.thenThrow(new EnvironmentNotFoundException("Missing Environment"));
+		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
+		mvc.perform(MockMvcRequestBuilders.get("/foo1/notfound"))
+				.andExpect(MockMvcResultMatchers.status().isNotFound());
 	}
 
 	@Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2017 the original author or authors.
+ * Copyright 2015 - 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.util.Base64;
 import org.eclipse.jgit.util.FS;
 
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+
 /**
  * In a cloud environment local SSH config files such as `.known_hosts` may not be suitable for providing
  * configuration settings due to ephemeral filesystems. This flag enables SSH config to be provided as application
@@ -40,17 +42,17 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 	private static final String YES_OPTION = "yes";
 	private static final String NO_OPTION = "no";
 	private static final String SERVER_HOST_KEY = "server_host_key";
-	private final Map<String, SshUri> sshKeysByHostname;
+	private final Map<String, JGitEnvironmentProperties> sshKeysByHostname;
 	private final JSch jSch;
 
-	public PropertyBasedSshSessionFactory(Map<String, SshUri> sshKeysByHostname, JSch jSch) {
+	public PropertyBasedSshSessionFactory(Map<String, JGitEnvironmentProperties> sshKeysByHostname, JSch jSch) {
 		this.sshKeysByHostname = sshKeysByHostname;
 		this.jSch = jSch;
 	}
 
 	@Override
 	protected void configure(Host hc, Session session) {
-		SshUri sshProperties = sshKeysByHostname.get(hc.getHostName());
+		JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(hc.getHostName());
 		String hostKeyAlgorithm = sshProperties.getHostKeyAlgorithm();
 		if (hostKeyAlgorithm != null) {
 			session.setConfig(SERVER_HOST_KEY, hostKeyAlgorithm);
@@ -69,7 +71,7 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 	@Override
 	protected Session createSession(Host hc, String user, String host, int port, FS fs) throws JSchException {
 		if (sshKeysByHostname.containsKey(host)) {
-			SshUri sshUriProperties = sshKeysByHostname.get(host);
+			JGitEnvironmentProperties sshUriProperties = sshKeysByHostname.get(host);
 			jSch.addIdentity(host, sshUriProperties.getPrivateKey().getBytes(), null, null);
 			if (sshUriProperties.getKnownHostsFile() != null) {
 				jSch.setKnownHosts(sshUriProperties.getKnownHostsFile());

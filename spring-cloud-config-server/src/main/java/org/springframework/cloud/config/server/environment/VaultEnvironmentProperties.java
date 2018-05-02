@@ -24,11 +24,17 @@ import org.springframework.core.Ordered;
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
 public class VaultEnvironmentProperties implements EnvironmentRepositoryProperties {
+    /** Vault host. Defaults to 127.0.0.1. */
     private String host = "127.0.0.1";
+    /** Vault port. Defaults to 8200. */
     private Integer port = 8200;
+    /** Vault scheme. Defaults to http. */
     private String scheme = "http";
+    /** Vault backend. Defaults to secret. */
     private String backend = "secret";
+    /** The key in vault shared by all applications. Defaults to application. Set to empty to disable. */
     private String defaultKey = "application";
+    /** Vault profile separator. Defaults to comma. */
     private String profileSeparator = ",";
     private int order = Ordered.LOWEST_PRECEDENCE;
 

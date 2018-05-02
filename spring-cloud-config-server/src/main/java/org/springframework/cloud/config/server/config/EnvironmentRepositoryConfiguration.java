@@ -17,12 +17,12 @@ package org.springframework.cloud.config.server.config;
 
 import java.util.List;
 import java.util.Optional;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -113,14 +113,14 @@ class DefaultRepositoryConfiguration {
 	private ConfigServerProperties server;
 
 	@Autowired(required = false)
-	private TransportConfigCallback transportConfigCallback;
+	private TransportConfigCallback customTransportConfigCallback;
 
 	@Bean
 	public MultipleJGitEnvironmentRepository defaultEnvironmentRepository(
 			MultipleJGitEnvironmentProperties environmentProperties) {
 		MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory =
 				new MultipleJGitEnvironmentRepositoryFactory(environment, server,
-						Optional.ofNullable(transportConfigCallback));
+                        Optional.ofNullable(customTransportConfigCallback));
 		return gitEnvironmentRepositoryFactory.build(environmentProperties);
 	}
 }
@@ -169,7 +169,7 @@ class SvnRepositoryConfiguration {
 @Profile("vault")
 class VaultRepositoryConfiguration {
 	@Bean
-	public VaultEnvironmentRepository vaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch,
+	public VaultEnvironmentRepository vaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
 																 VaultEnvironmentProperties environmentProperties) {
 		return new VaultEnvironmentRepositoryFactory(request, watch).build(environmentProperties);
 	}
@@ -198,8 +198,8 @@ class CompositeRepositoryConfiguration {
 		@Bean
 		public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
 				ConfigurableEnvironment environment, ConfigServerProperties server,
-				Optional<TransportConfigCallback> transportConfigCallback) {
-			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, transportConfigCallback);
+				Optional<TransportConfigCallback> customTransportConfigCallback) {
+			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, customTransportConfigCallback);
 		}
 	}
 
@@ -214,7 +214,7 @@ class CompositeRepositoryConfiguration {
 	}
 
 	@Bean
-	public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(HttpServletRequest request,
+	public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request,
 																						EnvironmentWatch watch) {
 		return new VaultEnvironmentRepositoryFactory(request, watch);
 	}

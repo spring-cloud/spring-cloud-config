@@ -22,12 +22,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
-import org.springframework.beans.BeansException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.bus.event.RefreshRemoteApplicationEvent;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.http.HttpHeaders;
@@ -40,31 +38,30 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.apachecommons.CommonsLog;
-
 /**
  * HTTP endpoint for webhooks coming from repository providers.
  *
  * @author Dave Syer
  *
  */
-@RequiredArgsConstructor
 @RestController
 @RequestMapping(path = "${spring.cloud.config.monitor.endpoint.path:}/monitor")
-@CommonsLog
 public class PropertyPathEndpoint
-		implements ApplicationEventPublisherAware, ApplicationContextAware {
+		implements ApplicationEventPublisherAware {
+
+	private static Log log = LogFactory.getLog(PropertyPathEndpoint.class);
 
 	private final PropertyPathNotificationExtractor extractor;
 	private ApplicationEventPublisher applicationEventPublisher;
+	private String busId;
 
-	private String contextId = UUID.randomUUID().toString();
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId) {
+		this.extractor = extractor;
+		this.busId = busId;
+	}
 
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
-		this.contextId = applicationContext.getId();
+	/* for testing */ String getBusId() {
+		return busId;
 	}
 
 	@Override
@@ -89,7 +86,7 @@ public class PropertyPathEndpoint
 					log.info("Refresh for: " + service);
 					this.applicationEventPublisher
 							.publishEvent(new RefreshRemoteApplicationEvent(this,
-									this.contextId, service));
+									this.busId, service));
 				}
 				return services;
 			}

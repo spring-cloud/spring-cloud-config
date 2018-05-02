@@ -233,14 +233,16 @@ public class ConfigClientProperties {
 			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build()
 					.toUriString();
 			result.uri = bare;
-			// handle the password only case
+			
+			// if userInfo does not contain a :, then append a : to it
 			if (!userInfo.contains(":")) {
 				userInfo = userInfo + ":";
 			}
-			String[] split = userInfo.split(":");
+		    
+			int sepIndex=userInfo.indexOf(":");
 			// set username and password from uri
-			result.username = split[0];
-			result.password = split[1];
+			result.username = userInfo.substring(0, sepIndex); 
+			result.password = userInfo.substring(sepIndex +1);
 
 			// override password if explicitly set
 			if (explicitCredentials.password != null) {
