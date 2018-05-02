@@ -224,9 +224,9 @@ If you set it with a <literal>file:</literal> prefix, it should work from a loca
 To scale the Config Server up and make it highly available, you need to have all instances of the server pointing to the same repository, so only a shared file system would work.
 Even in that case, it is better to use the <literal>ssh:</literal> protocol for a shared filesystem repository, so that the server can clone it and use a local working copy as a cache.</simpara>
 <simpara>This repository implementation maps the <literal>{label}</literal> parameter of the HTTP resource to a git label (commit id, branch name, or tag).
-If the git branch or tag name contains a slash (<literal>/</literal>), then the label in the HTTP URL should instead be specified with the special string <literal>$$_$$</literal> (to avoid ambiguity with other URL paths).
-For example, if the label is <literal>foo/bar</literal>, replacing the slash would result in the following label: <literal>foo($$_$$)bar</literal>.
-The inclusion of the special string <literal>($$_$$)</literal> can also be applied to the <literal>{application}</literal> parameter.
+If the git branch or tag name contains a slash (<literal>/</literal>), then the label in the HTTP URL should instead be specified with the special string <literal>(_)</literal> (to avoid ambiguity with other URL paths).
+For example, if the label is <literal>foo/bar</literal>, replacing the slash would result in the following label: <literal>foo(_)bar</literal>.
+The inclusion of the special string <literal>(_)</literal> can also be applied to the <literal>{application}</literal> parameter.
 If you use a command-line client such as curl, be careful with the brackets in the URL&#8201;&#8212;&#8201;you should
 escape them from the shell with single quotes ('').</simpara>
 <section xml:id="_placeholders_in_git_uri">
@@ -241,7 +241,7 @@ So you can support a &#8220;one repository per application&#8221; policy by usin
           uri: https://github.com/myorg/{application}</programlisting>
 <simpara>You can also support a &#8220;one repository per profile&#8221; policy by using a similar pattern but with
 <literal>{profile}</literal>.</simpara>
-<simpara>Additionally, using the special string "($$_$$)" within your <literal>{application}</literal> parameters can enable support for multiple
+<simpara>Additionally, using the special string "(_)" within your <literal>{application}</literal> parameters can enable support for multiple
 organizations, as shown in the following example:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring:
   cloud:
@@ -249,7 +249,7 @@ organizations, as shown in the following example:</simpara>
       server:
         git:
           uri: https://github.com/{application}</programlisting>
-<simpara>where <literal>{application}</literal> is provided at request time in the following format: <literal>organization($$_$$)application</literal>.</simpara>
+<simpara>where <literal>{application}</literal> is provided at request time in the following format: <literal>organization(_)application</literal>.</simpara>
 </section>
 <section xml:id="_pattern_matching_and_multiple_repositories">
 <title>Pattern Matching and Multiple Repositories</title>
