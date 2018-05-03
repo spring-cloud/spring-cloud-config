@@ -73,6 +73,11 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 		}
 	}
 
+    @EventListener(RefreshConfigClientPropertiesEvent.class)
+    public void locate(RefreshConfigClientPropertiesEvent event) {
+	    refresh();
+    }
+
 	private void refresh() {
 		try {
 			String serviceId = this.config.getDiscovery().getServiceId();
