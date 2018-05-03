@@ -19,12 +19,16 @@ package org.springframework.cloud.config.client;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.annotation.Order;
@@ -65,6 +69,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	private RestTemplate restTemplate;
 	private ConfigClientProperties defaultProperties;
 
+	@Autowired(required = false)
+	private DiscoveryClient discoveryClient;
+
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
 		this.defaultProperties = defaultProperties;
 	}
@@ -79,8 +86,37 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				: this.restTemplate;
 		Exception error = null;
 		String errorBody = null;
-		logger.info("Fetching config from server at: " + properties.getRawUri());
+
 		try {
+			if (properties.getDiscovery().isEnabled() && discoveryClient != null) {
+				List<ServiceInstance> instances = discoveryClient.getInstances(properties.getDiscovery().getServiceId());
+				if (instances.size() == 0) {
+					String message = "No instances find : " + properties.getDiscovery().getServiceId();
+					logger.warn("No instances find : " + properties.getDiscovery().getServiceId());
+					throw new Exception(message);
+				} else {
+					ServiceInstance instance = discoveryClient.getInstances(properties.getDiscovery().getServiceId()).get(0);
+					String url = instance.getUri().toString() + "/";
+					if (instance.getMetadata().containsKey("password")) {
+						String user = instance.getMetadata().get("user");
+						user = user == null ? "user" : user;
+						properties.setUsername(user);
+						String password = instance.getMetadata().get("password");
+						properties.setPassword(password);
+					}
+					if (instance.getMetadata().containsKey("configPath")) {
+						String path = instance.getMetadata().get("configPath");
+						if (url.endsWith("/") && path.startsWith("/")) {
+							url = url.substring(0, url.length() - 1);
+						}
+						url = url + path;
+					}
+					properties.setUri(url);
+				}
+			}
+
+			logger.info("Fetching config from server at: " + properties.getRawUri());
+
 			String[] labels = new String[] { "" };
 			if (StringUtils.hasText(properties.getLabel())) {
 				labels = StringUtils.commaDelimitedListToStringArray(properties.getLabel());
