@@ -75,11 +75,7 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
     @EventListener(RefreshConfigClientPropertiesEvent.class)
     public void locate(RefreshConfigClientPropertiesEvent event) {
-		try {
-			refresh();
-		} catch (Exception e) {
-			logger.warn(e.getMessage());
-		}
+	    refresh();
     }
 
 	private void refresh() {
