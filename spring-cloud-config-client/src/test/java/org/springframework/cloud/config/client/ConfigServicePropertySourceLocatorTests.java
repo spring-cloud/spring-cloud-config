@@ -68,6 +68,17 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@Test
+	public void sunnyDayWithLabelThatContainsASlash() {
+		Environment body = new Environment("app", "master");
+		mockRequestResponseWithLabel(
+			new ResponseEntity<>(body, HttpStatus.OK), "release(_)v1.0.0");
+		this.locator.setRestTemplate(this.restTemplate);
+		EnvironmentTestUtils.addEnvironment(this.environment,
+			"spring.cloud.config.label:release/v1.0.0");
+		assertNotNull(this.locator.locate(this.environment));
+	}
+
+	@Test
 	public void sunnyDayWithNoSuchLabel() {
 		mockRequestResponseWithLabel(new ResponseEntity<Void>((Void) null,
 				HttpStatus.NOT_FOUND), "nosuchlabel");
@@ -234,5 +245,14 @@ public class ConfigServicePropertySourceLocatorTests {
 						Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
 						Mockito.any(Class.class), Matchers.anyString(),
 						Matchers.anyString())).thenReturn(response);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void mockRequestResponseWithoutLabelWithExpectedName(ResponseEntity<?> response, String expectedName) {
+		Mockito.when(
+			this.restTemplate.exchange(Mockito.any(String.class),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), Matchers.eq(expectedName),
+				Matchers.anyString())).thenReturn(response);
 	}
 }
