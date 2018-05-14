@@ -95,7 +95,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					logger.warn("No instances find : " + properties.getDiscovery().getServiceId());
 					throw new Exception(message);
 				} else {
-					ServiceInstance instance = discoveryClient.getInstances(properties.getDiscovery().getServiceId()).get(0);
+                    // choose a random instance
+                    int index = (int) (Math.random() * instances.size());
+                    ServiceInstance instance = discoveryClient.getInstances(properties.getDiscovery().getServiceId()).get(index);
+                    // produce url
 					String url = instance.getUri().toString() + "/";
 					if (instance.getMetadata().containsKey("password")) {
 						String user = instance.getMetadata().get("user");
