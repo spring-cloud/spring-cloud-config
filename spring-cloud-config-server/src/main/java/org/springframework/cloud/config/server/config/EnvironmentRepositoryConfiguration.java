@@ -20,6 +20,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Optional;
+
 import javax.net.ssl.SSLContext;
 import javax.servlet.http.HttpServletRequest;
 
@@ -37,6 +38,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.server.composite.CompositeEnvironmentBeanFactoryPostProcessor;
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
@@ -80,7 +82,7 @@ import org.springframework.web.client.RestTemplate;
  *
  */
 @Configuration
-@EnableConfigurationProperties({ MultipleJGitEnvironmentProperties.class, SvnKitEnvironmentProperties.class,
+@EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
 		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultRepositoryConfiguration.class,
 		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
@@ -91,6 +93,12 @@ public class EnvironmentRepositoryConfiguration {
 	public ConfigServerHealthIndicator configServerHealthIndicator(
 			EnvironmentRepository repository) {
 		return new ConfigServerHealthIndicator(repository);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(search = SearchStrategy.CURRENT)
+	public MultipleJGitEnvironmentProperties multipleJGitEnvironmentProperties() {
+		return new MultipleJGitEnvironmentProperties();
 	}
 
 	@Configuration
@@ -184,7 +192,7 @@ public class EnvironmentRepositoryConfiguration {
 }
 
 @Configuration
-@ConditionalOnMissingBean(EnvironmentRepository.class)
+@ConditionalOnMissingBean(value = EnvironmentRepository.class, search = SearchStrategy.CURRENT)
 class DefaultRepositoryConfiguration {
 	@Autowired
 	private ConfigurableEnvironment environment;
