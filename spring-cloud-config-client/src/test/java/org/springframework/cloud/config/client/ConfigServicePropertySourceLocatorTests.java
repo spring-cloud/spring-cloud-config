@@ -160,60 +160,61 @@ public class ConfigServicePropertySourceLocatorTests {
 				requestFactory.createRequest(Mockito.any(URI.class),
 						Mockito.any(HttpMethod.class))).thenReturn(request);
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		//defaults.setUri(new String[] {"http://localhost");
 		defaults.setFailFast(true);
 		defaults.setUsername("username");
 		defaults.setPassword("password");
 		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
  		this.expected.expect(IllegalStateException.class);
-		this.expected.expectMessage("You must set either 'password' or 'authorization'");
+		this.expected.expectMessage("Could not locate PropertySource and the fail fast property is set, failing");
 		this.locator.locate(this.environment);
 	}
 
-	@Test
-	public void interceptorShouldAddHeaderWhenPasswordPropertySet() throws Exception {
-		ClientHttpRequestFactory requestFactory = Mockito
-				.mock(ClientHttpRequestFactory.class);
-		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
-				Mockito.any(HttpMethod.class))).thenReturn(request);
+//	@Test
+//	public void interceptorShouldAddHeaderWhenPasswordPropertySet() throws Exception {
+//		ClientHttpRequestFactory requestFactory = Mockito
+//				.mock(ClientHttpRequestFactory.class);
+//		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+//		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+//				Mockito.any(HttpMethod.class))).thenReturn(request);
+//
+//		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+//		defaults.setUsername("username");
+//		defaults.setPassword("password");
+//		this.locator = new ConfigServicePropertySourceLocator(defaults);
+//
+//		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
+//				"getSecureRestTemplate", defaults);
+//		restTemplate.setRequestFactory(requestFactory);
+//
+//		this.locator.setRestTemplate(restTemplate);
+//		this.locator.locate(this.environment);
+//
+//		assertThat(restTemplate.getInterceptors()).hasSize(1);
+//	}
 
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setUsername("username");
-		defaults.setPassword("password");
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
-
-		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
-				"getSecureRestTemplate", defaults);
-		restTemplate.setRequestFactory(requestFactory);
-
-		this.locator.setRestTemplate(restTemplate);
-		this.locator.locate(this.environment);
-
-		assertThat(restTemplate.getInterceptors()).hasSize(1);
-	}
-
-	@Test
-	public void interceptorShouldAddHeaderWhenAuthorizationPropertySet() throws Exception {
-		ClientHttpRequestFactory requestFactory = Mockito
-				.mock(ClientHttpRequestFactory.class);
-		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
-				Mockito.any(HttpMethod.class))).thenReturn(request);
-
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
-
-		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
-				"getSecureRestTemplate", defaults);
-		restTemplate.setRequestFactory(requestFactory);
-
-		this.locator.setRestTemplate(restTemplate);
-		this.locator.locate(this.environment);
-
-		assertThat(restTemplate.getInterceptors()).hasSize(1);
-	}
+//	@Test
+//	public void interceptorShouldAddHeaderWhenAuthorizationPropertySet() throws Exception {
+//		ClientHttpRequestFactory requestFactory = Mockito
+//				.mock(ClientHttpRequestFactory.class);
+//		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+//		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+//				Mockito.any(HttpMethod.class))).thenReturn(request);
+//
+//		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+//		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+//		this.locator = new ConfigServicePropertySourceLocator(defaults);
+//
+//		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
+//				"getSecureRestTemplate", defaults);
+//		restTemplate.setRequestFactory(requestFactory);
+//
+//		this.locator.setRestTemplate(restTemplate);
+//		this.locator.locate(this.environment);
+//
+//		assertThat(restTemplate.getInterceptors()).hasSize(1);
+//	}
 
 	@Test
 	public void interceptorShouldAddHeadersWhenHeadersPropertySet() throws Exception {
@@ -228,7 +229,43 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.verify(execution).execute(request, body);
 		assertThat(request.getHeaders().getFirst("X-Example-Version")).isEqualTo("2.1");
 	}
-
+	
+	@Test
+	public void shouldAddAuthorizationHeaderWhenPasswordSet() {
+		HttpHeaders headers=new HttpHeaders();
+		ConfigClientProperties defaults=new ConfigClientProperties(this.environment);
+		this.locator=new ConfigServicePropertySourceLocator(defaults);
+		String username="user";
+		String password="pass";
+		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,headers,username,password);
+		assertThat(headers).hasSize(1);
+	}
+	
+	@Test
+	public void shouldAddAuthorizationHeaderWhenAuthorizationSet() {
+		HttpHeaders headers=new HttpHeaders();
+		ConfigClientProperties defaults=new ConfigClientProperties(this.environment);
+		defaults.setAuthorization("1234abcd");
+		this.locator=new ConfigServicePropertySourceLocator(defaults);
+		String username="user";
+		String password=null;
+		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,headers,username,password);
+		assertThat(headers).hasSize(1);
+	}
+	
+	@Test
+	public void shouldThrowExceptionWhenPasswordAndAuthorizationBothSet() {
+		HttpHeaders headers=new HttpHeaders();
+		ConfigClientProperties defaults=new ConfigClientProperties(this.environment);
+		defaults.setAuthorization("1234abcd");
+		this.locator=new ConfigServicePropertySourceLocator(defaults);
+		String username="user";
+		String password="pass";
+		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage("You must set either 'password' or 'authorization'");
+		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,headers,username,password);
+	}
+	
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		Mockito.when(

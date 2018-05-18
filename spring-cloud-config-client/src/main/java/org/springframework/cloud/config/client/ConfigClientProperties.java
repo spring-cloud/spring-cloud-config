@@ -76,7 +76,7 @@ public class ConfigClientProperties {
 	/**
 	 * The URI of the remote server (default http://localhost:8888).
 	 */
-	private String uri = "http://localhost:8888";
+	private String[] uri = {"http://localhost:8888"};
 
 	/**
 	 * Discovery properties.
@@ -122,15 +122,11 @@ public class ConfigClientProperties {
 		this.enabled = enabled;
 	}
 
-	public String getRawUri() {
-		return extractCredentials().uri;
-	}
-
-	public String getUri() {
+	public String[] getUri() {
 		return this.uri;
 	}
 
-	public void setUri(String url) {
+	public void setUri(String[] url) {
 		this.uri = url;
 	}
 
@@ -159,19 +155,23 @@ public class ConfigClientProperties {
 	}
 
 	public String getUsername() {
-		return extractCredentials().username;
+		return username;
 	}
 
 	public void setUsername(String username) {
 		this.username = username;
 	}
-
+	
 	public String getPassword() {
-		return extractCredentials().password;
+		return password;
 	}
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+	
+	public Credentials getCredentials(int index) {
+		return extractCredentials(index);
 	}
 
 	public Discovery getDiscovery() {
@@ -216,9 +216,9 @@ public class ConfigClientProperties {
 		this.headers = headers;
 	}
 
-	private Credentials extractCredentials() {
+	private Credentials extractCredentials(int index) {
 		Credentials result = new Credentials();
-		String uri = this.uri;
+		String uri = this.uri[index];
 		result.uri = uri;
 		Credentials explicitCredentials = getUsernamePassword();
 		result.username = explicitCredentials.username;
@@ -276,10 +276,21 @@ public class ConfigClientProperties {
 		return credentials;
 	}
 
-	private static class Credentials {
+	public static class Credentials {
+		
 		private String username;
 		private String password;
 		private String uri;
+		
+		public String getUsername() {
+			return username;
+		}
+		public String getPassword() {
+			return password;
+		}
+		public String getUri() {
+			return uri;
+		}
 	}
 
 	public static class Discovery {

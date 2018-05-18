@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,8 +79,11 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 	private void refresh() {
 		try {
 			String serviceId = this.config.getDiscovery().getServiceId();
-			ServiceInstance server = this.instanceProvider
+			List<String> listOfUrls=new ArrayList<>();
+			List<ServiceInstance> serviceInstances = this.instanceProvider
 					.getConfigServerInstance(serviceId);
+			for(int i=0;i<serviceInstances.size();i++) {
+			ServiceInstance server=serviceInstances.get(i);	
 			String url = getHomePage(server);
 			if (server.getMetadata().containsKey("password")) {
 				String user = server.getMetadata().get("user");
@@ -93,7 +99,11 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 				}
 				url = url + path;
 			}
-			this.config.setUri(url);
+			listOfUrls.add(url);
+			}
+			String[] uri=new String[listOfUrls.size()];
+			uri=listOfUrls.toArray(uri);
+			this.config.setUri(uri);
 		}
 		catch (Exception ex) {
 			if (config.isFailFast()) {

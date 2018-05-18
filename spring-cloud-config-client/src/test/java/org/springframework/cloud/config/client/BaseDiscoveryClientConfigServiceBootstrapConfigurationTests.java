@@ -14,6 +14,7 @@ import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
+import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.junit.Assert.assertEquals;
@@ -33,7 +34,7 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 
 	protected ServiceInstance info = new DefaultServiceInstance("app", "foo", 8877,
 			false);
-
+	
 	@After
 	public void close() {
 		if (this.context != null) {
@@ -49,6 +50,10 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 	void givenDiscoveryClientReturnsInfo() {
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
 				.willReturn(Arrays.asList(this.info));
+	}
+	
+	void givenDiscoveryClientReturnsInfoForMultipleInstances(ServiceInstance info1,ServiceInstance info2) {
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Arrays.asList(info1,info2));
 	}
 
 	void givenDiscoveryClientReturnsInfoOnThirdTry() {
@@ -80,7 +85,18 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 	void expectConfigClientPropertiesHasConfiguration(final String expectedUri) {
 		ConfigClientProperties properties = this.context
 				.getBean(ConfigClientProperties.class);
-		assertEquals(expectedUri, properties.getRawUri());
+		Credentials credentials=properties.getCredentials(0);
+		assertEquals(expectedUri, credentials.getUri());
+	}
+	
+	void expectConfigClientPropertiesHasMultipleUris(final String expectedUri1,final String expectedUri2) {
+		ConfigClientProperties properties = this.context
+				.getBean(ConfigClientProperties.class);
+		assertEquals(2, properties.getUri().length);
+		Credentials credentials1=properties.getCredentials(0);
+		Credentials credentials2=properties.getCredentials(1);
+		assertEquals(expectedUri1,credentials1.getUri());
+		assertEquals(expectedUri2,credentials2.getUri());
 	}
 
 	void verifyDiscoveryClientCalledThreeTimes() {

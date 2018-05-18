@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.client;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
+import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.annotation.Order;
@@ -47,6 +49,7 @@ import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
@@ -80,15 +83,12 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				: this.restTemplate;
 		Exception error = null;
 		String errorBody = null;
-		logger.info("Fetching config from server at: " + properties.getRawUri());
 		try {
 			String[] labels = new String[] { "" };
 			if (StringUtils.hasText(properties.getLabel())) {
 				labels = StringUtils.commaDelimitedListToStringArray(properties.getLabel());
 			}
-
 			String state = ConfigClientStateHolder.getState();
-
 			// Try all the labels until one works
 			for (String label : labels) {
 				Environment result = getRemoteEnvironment(restTemplate,
@@ -172,7 +172,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String name = properties.getName();
 		String profile = properties.getProfile();
 		String token = properties.getToken();
-		String uri = properties.getRawUri();
+		int noOfUrls=properties.getUri().length;
+		if(noOfUrls>1) {
+			logger.info("Multiple Config Server Urls found listed");
+		}
 
 		Object[] args = new String[] { name, profile };
 		if (StringUtils.hasText(label)) {
@@ -183,15 +186,23 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			path = path + "/{label}";
 		}
 		ResponseEntity<Environment> response = null;
-
+        //Iterate through the urls(if multiple) and try the next url if ResourceAccessException occurs.
+		for(int i=0;i<noOfUrls;i++) {
+		Credentials credentials=properties.getCredentials(i);	
+		String uri=credentials.getUri();
+		String username=credentials.getUsername();
+		String password=credentials.getPassword();
+		logger.info("Fetching config from server at: " + uri);
 		try {
 			HttpHeaders headers = new HttpHeaders();
+			addAuthorizationToken(properties, headers, username, password); //add Authorization Token if present
 			if (StringUtils.hasText(token)) {
 				headers.add(TOKEN_HEADER, token);
 			}
 			if (StringUtils.hasText(state)) { //TODO: opt in to sending state?
 				headers.add(STATE_HEADER, state);
 			}
+			
 			final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
 			response = restTemplate.exchange(uri + path, HttpMethod.GET,
 					entity, Environment.class, args);
@@ -201,12 +212,20 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				throw e;
 			}
 		}
-
+		catch(ResourceAccessException e) {
+			logger.info("Connect Timeout Exception on Url-"+uri+".Will be trying the next url if available");
+			if(i==noOfUrls-1)
+				throw e;
+			else
+				continue;
+		}
 		if (response == null || response.getStatusCode() != HttpStatus.OK) {
 			return null;
 		}
 		Environment result = response.getBody();
 		return result;
+		}
+		return null;
 	}
 
 	public void setRestTemplate(RestTemplate restTemplate) {
@@ -217,23 +236,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 		requestFactory.setReadTimeout((60 * 1000 * 3) + 5000); //TODO 3m5s, make configurable?
 		RestTemplate template = new RestTemplate(requestFactory);
-		String username = client.getUsername();
-		String password = client.getPassword();
-		String authorization = client.getAuthorization();
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
-
-		if (password != null && authorization != null) {
-			throw new IllegalStateException(
-					"You must set either 'password' or 'authorization'");
-		}
-
-		if (password != null) {
-			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
-			headers.put("Authorization", "Basic " + new String(token));
-		}
-		else if (authorization != null) {
-			headers.put("Authorization", authorization);
-		}
 
 		if (!headers.isEmpty()) {
 			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
@@ -242,6 +245,24 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		return template;
 	}
+	
+	
+	private void addAuthorizationToken(ConfigClientProperties configClientProperties,HttpHeaders httpHeaders,String username,String password) {
+		String authorization = configClientProperties.getAuthorization();
+		if (password != null && authorization != null) {
+			throw new IllegalStateException(
+					"You must set either 'password' or 'authorization'");
+		}
+		if (password != null) {
+			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
+			httpHeaders.add("Authorization", "Basic " + new String(token));
+		}
+		else if (authorization != null) {
+			httpHeaders.add("Authorization", authorization);
+		}
+	}
+	
+	
 
 	public static class GenericRequestHeaderInterceptor
 			implements ClientHttpRequestInterceptor {
