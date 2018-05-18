@@ -21,6 +21,7 @@ import org.springframework.core.Ordered;
 
 /**
  * @author Dylan Roberts
+ * @author Haroun Pacquee
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
 public class VaultEnvironmentProperties implements EnvironmentRepositoryProperties {
@@ -42,6 +43,10 @@ public class VaultEnvironmentProperties implements EnvironmentRepositoryProperti
      */
     private boolean skipSslValidation = false;
     private int order = Ordered.LOWEST_PRECEDENCE;
+    /**
+     * Flag to indicate that the used version of Vault is using the versioning-enabled kv enginge. Defaults to false.
+     */
+    private Boolean versioningEnabled = false;
 
     public String getHost() {
         return host;
@@ -106,5 +111,13 @@ public class VaultEnvironmentProperties implements EnvironmentRepositoryProperti
     @Override
     public void setOrder(int order) {
         this.order = order;
+    }
+
+    public Boolean getVersioningEnabled() {
+        return versioningEnabled;
+    }
+
+    public void setVersioningEnabled(Boolean versioningEnabled) {
+        this.versioningEnabled = versioningEnabled;
     }
 }

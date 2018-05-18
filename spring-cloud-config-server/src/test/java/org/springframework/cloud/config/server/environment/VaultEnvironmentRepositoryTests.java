@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository.VaultResponse;
+import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository.VersionedVaultResponse;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author Spencer Gibb
  * @author Ryan Baxter
+ * @author Haroun Pacquee
  */
 public class VaultEnvironmentRepositoryTests {
 
@@ -199,4 +201,45 @@ public class VaultEnvironmentRepositoryTests {
 				new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties());
 		repo.findOne("myapp", null, null);
 	}
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testVaultVersioning() {
+        MockHttpServletRequest configRequest = new MockHttpServletRequest();
+        configRequest.addHeader("X-CONFIG-TOKEN", "mytoken");
+
+        RestTemplate rest = mock(RestTemplate.class);
+
+        ResponseEntity<VersionedVaultResponse> myAppResp = mock(ResponseEntity.class);
+        when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
+        VersionedVaultResponse myAppVaultResp = mock(VersionedVaultResponse.class);
+        when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
+        when(myAppResp.getBody()).thenReturn(myAppVaultResp);
+        when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/data/{key}"),
+                eq(HttpMethod.GET), any(HttpEntity.class), eq(VersionedVaultResponse.class),
+                eq("secret"), eq("myapp"))).thenReturn(myAppResp);
+
+        ResponseEntity<VersionedVaultResponse> appResp = mock(ResponseEntity.class);
+        when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
+        VersionedVaultResponse appVaultResp = mock(VersionedVaultResponse.class);
+        when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
+        when(appResp.getBody()).thenReturn(appVaultResp);
+        when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/data/{key}"),
+                eq(HttpMethod.GET), any(HttpEntity.class), eq(VersionedVaultResponse.class),
+                eq("secret"), eq("application"))).thenReturn(appResp);
+
+        final VaultEnvironmentProperties vaultEnvironmentProperties = new VaultEnvironmentProperties();
+        vaultEnvironmentProperties.setVersioningEnabled(true);
+        VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockProvide(configRequest),
+                new EnvironmentWatch.Default(), rest, vaultEnvironmentProperties);
+
+        Environment e = repo.findOne("myapp", null, null);
+        assertEquals("Name should be the same as the application argument", "myapp", e.getName());
+        assertEquals("Properties for specified application and default application with key 'application' should be returned",
+                2, e.getPropertySources().size());
+        Map<String, String> firstResult = new HashMap<String, String>();
+        firstResult.put("foo", "bar");
+        assertEquals("Properties for specified application should be returned in priority position",
+                firstResult, e.getPropertySources().get(0).getSource());
+    }
 }
