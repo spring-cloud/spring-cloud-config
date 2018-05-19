@@ -1,17 +1,11 @@
 package org.springframework.cloud.config.server.environment;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository.VaultResponse;
-import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository.VersionedVaultResponse;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -19,7 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.client.RestTemplate;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -32,8 +31,12 @@ import static org.mockito.Mockito.when;
  */
 public class VaultEnvironmentRepositoryTests {
 
-	@Before
-	public void init() {}
+    private ObjectMapper objectMapper;
+
+    @Before
+	public void init() {
+        objectMapper = new ObjectMapper();
+    }
 
 	@SuppressWarnings("unchecked")
 	private ObjectProvider<HttpServletRequest> mockProvide(HttpServletRequest request) {
@@ -210,26 +213,24 @@ public class VaultEnvironmentRepositoryTests {
 
         RestTemplate rest = mock(RestTemplate.class);
 
-        ResponseEntity<VersionedVaultResponse> myAppResp = mock(ResponseEntity.class);
+        ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
         when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-        VersionedVaultResponse myAppVaultResp = mock(VersionedVaultResponse.class);
-        when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
+        VaultResponse myAppVaultResp = getVaultResponse("{\"data\": {\"data\": {\"foo\": \"bar\"}}}");
         when(myAppResp.getBody()).thenReturn(myAppVaultResp);
         when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/data/{key}"),
-                eq(HttpMethod.GET), any(HttpEntity.class), eq(VersionedVaultResponse.class),
+                eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
                 eq("secret"), eq("myapp"))).thenReturn(myAppResp);
 
-        ResponseEntity<VersionedVaultResponse> appResp = mock(ResponseEntity.class);
+        ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
         when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
-        VersionedVaultResponse appVaultResp = mock(VersionedVaultResponse.class);
-        when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
+        VaultResponse appVaultResp = getVaultResponse("{\"data\": {\"data\": {\"def-foo\":\"def-bar\"}}}");
         when(appResp.getBody()).thenReturn(appVaultResp);
         when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/data/{key}"),
-                eq(HttpMethod.GET), any(HttpEntity.class), eq(VersionedVaultResponse.class),
+                eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
                 eq("secret"), eq("application"))).thenReturn(appResp);
 
         final VaultEnvironmentProperties vaultEnvironmentProperties = new VaultEnvironmentProperties();
-        vaultEnvironmentProperties.setVersioningEnabled(true);
+        vaultEnvironmentProperties.setKvVersion(2);
         VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockProvide(configRequest),
                 new EnvironmentWatch.Default(), rest, vaultEnvironmentProperties);
 
@@ -241,5 +242,14 @@ public class VaultEnvironmentRepositoryTests {
         firstResult.put("foo", "bar");
         assertEquals("Properties for specified application should be returned in priority position",
                 firstResult, e.getPropertySources().get(0).getSource());
+    }
+
+    private VaultEnvironmentRepository.VaultResponse getVaultResponse(String json) {
+        try {
+            return objectMapper.readValue(json, VaultEnvironmentRepository.VaultResponse.class);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+        return null;
     }
 }

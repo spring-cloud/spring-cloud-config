@@ -44,9 +44,9 @@ public class VaultEnvironmentProperties implements EnvironmentRepositoryProperti
     private boolean skipSslValidation = false;
     private int order = Ordered.LOWEST_PRECEDENCE;
     /**
-     * Flag to indicate that the used version of Vault is using the versioning-enabled kv enginge. Defaults to false.
+     * Value to indicate which version of Vault kv backend is used. Defaults to 1.
      */
-    private Boolean versioningEnabled = false;
+    private int kvVersion = 1;
 
     public String getHost() {
         return host;
@@ -113,11 +113,11 @@ public class VaultEnvironmentProperties implements EnvironmentRepositoryProperti
         this.order = order;
     }
 
-    public Boolean getVersioningEnabled() {
-        return versioningEnabled;
+    public int getKvVersion() {
+        return kvVersion;
     }
 
-    public void setVersioningEnabled(Boolean versioningEnabled) {
-        this.versioningEnabled = versioningEnabled;
+    public void setKvVersion(int kvVersion) {
+        this.kvVersion = kvVersion;
     }
 }

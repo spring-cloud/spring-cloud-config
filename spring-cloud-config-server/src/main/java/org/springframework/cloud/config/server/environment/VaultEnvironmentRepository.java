@@ -31,21 +31,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
@@ -86,7 +80,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private int order;
 
-	private VaultVersioning version;
+	private int version;
 
 	private RestTemplate rest;
 
@@ -107,7 +101,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		this.port = properties.getPort();
 		this.profileSeparator = properties.getProfileSeparator();
 		this.scheme = properties.getScheme();
-		this.version = VaultVersioning.fromProperties(properties.getVersioningEnabled());
+		this.version = properties.getKvVersion();
 	}
 
 	@Override
@@ -177,7 +171,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	String read(HttpServletRequest servletRequest, String key) {
-		String url = String.format(version.getUrlFormat(), this.scheme, this.host, this.port);
+		String baseUrl = String.format("%s://%s:%s", this.scheme, this.host, this.port);
 
 		HttpHeaders headers = new HttpHeaders();
 
@@ -186,21 +180,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 			throw new IllegalArgumentException("Missing required header: " + TOKEN_HEADER);
 		}
 		headers.add(VAULT_TOKEN, token);
-		try {
-			ResponseEntity<VaultResponse> response = rest.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), version.getResponseClass(), backend, key);
-
-			HttpStatus status = response.getStatusCode();
-			if (status == HttpStatus.OK) {
-				return response.getBody().getData();
-			}
-		} catch (HttpStatusCodeException e) {
-			if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-				return null;
-			}
-			throw e;
-		}
-
-		return null;
+		return VaultKvAccessStrategyFactory.forVersion(version).getData(rest, baseUrl, headers, backend, key);
 	}
 
 	public void setHost(String host) {
@@ -241,7 +221,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 		private String auth;
 
-		protected Object data;
+		private Object data;
 
 		@JsonProperty("lease_duration")
 		private long leaseDuration;
@@ -262,9 +242,8 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 			this.auth = auth;
 		}
 
-		@JsonRawValue
-		public String getData() {
-			return data == null ? null : data.toString();
+		public Object getData() {
+			return data;
 		}
 
 		public void setData(JsonNode data) {
@@ -293,47 +272,6 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 		public void setRenewable(boolean renewable) {
 			this.renewable = renewable;
-		}
-	}
-
-	static class VersionedVaultResponse extends VaultResponse {
-
-		public VersionedVaultResponse() {
-		}
-
-		@Override
-		public void setData(JsonNode data) {
-			this.data = data.get("data");
-		}
-	}
-
-	static enum VaultVersioning {
-
-		DISABLED("%s://%s:%s/v1/{backend}/{key}", VaultResponse.class),
-		ENABLED("%s://%s:%s/v1/{backend}/data/{key}", VersionedVaultResponse.class);
-
-		private String urlFormat;
-
-		private Class responseClass;
-
-		VaultVersioning(String urlFormat, Class responseClass) {
-			this.urlFormat = urlFormat;
-			this.responseClass = responseClass;
-		}
-
-		public String getUrlFormat() {
-			return urlFormat;
-		}
-
-		public Class getResponseClass() {
-			return responseClass;
-		}
-
-		public static VaultVersioning fromProperties(Boolean versioningEnabled) {
-			if(versioningEnabled) {
-				return ENABLED;
-			}
-			return DISABLED;
 		}
 	}
 }
