@@ -88,7 +88,7 @@ public class ConfigClientPropertiesTests {
 	public void testIfColonPresentAtTheStartInUriCreds() {
 		locator.setUri(new String[] {"http://:foobar@localhost:9999"});
 		Credentials credentials= locator.getCredentials(0);
-		assertEquals("http://localhost:9999",credentials.getUri());
+		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("", credentials.getUsername());
 		assertEquals("foobar", credentials.getPassword());
 	}
@@ -97,7 +97,7 @@ public class ConfigClientPropertiesTests {
 	public void testIfColonPresentAtTheStartAndEndInUriCreds() {
 		locator.setUri(new String[] {"http://:foobar:@localhost:9999"});
 		Credentials credentials= locator.getCredentials(0);
-		assertEquals("http://localhost:9999",credentials.getUri());
+		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("", credentials.getUsername());
 		assertEquals("foobar:", credentials.getPassword());
 	}
@@ -130,7 +130,7 @@ public class ConfigClientPropertiesTests {
 		properties.setUri(new String[] {"https://userInfoName:userInfoPW@localhost:8888/"});
 		properties.setUsername("explicitName");
 		properties.setPassword("explicitPW");
-        Credentials credentials=properties.getCredentials(0);
+		Credentials credentials= properties.getCredentials(0);
 		assertThat(credentials.getPassword(), equalTo("explicitPW"));
 		assertThat(credentials.getUsername(), equalTo("explicitName"));
 	}

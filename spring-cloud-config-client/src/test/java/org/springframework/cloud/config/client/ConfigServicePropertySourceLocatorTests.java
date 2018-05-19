@@ -232,35 +232,35 @@ public class ConfigServicePropertySourceLocatorTests {
 	
 	@Test
 	public void shouldAddAuthorizationHeaderWhenPasswordSet() {
-		HttpHeaders headers=new HttpHeaders();
-		ConfigClientProperties defaults=new ConfigClientProperties(this.environment);
-		this.locator=new ConfigServicePropertySourceLocator(defaults);
-		String username="user";
-		String password="pass";
+		HttpHeaders headers= new HttpHeaders();
+		ConfigClientProperties defaults= new ConfigClientProperties(this.environment);
+		this.locator= new ConfigServicePropertySourceLocator(defaults);
+		String username= "user";
+		String password= "pass";
 		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
 	
 	@Test
 	public void shouldAddAuthorizationHeaderWhenAuthorizationSet() {
-		HttpHeaders headers=new HttpHeaders();
-		ConfigClientProperties defaults=new ConfigClientProperties(this.environment);
+		HttpHeaders headers= new HttpHeaders();
+		ConfigClientProperties defaults= new ConfigClientProperties(this.environment);
 		defaults.setAuthorization("1234abcd");
-		this.locator=new ConfigServicePropertySourceLocator(defaults);
-		String username="user";
-		String password=null;
+		this.locator= new ConfigServicePropertySourceLocator(defaults);
+		String username= "user";
+		String password= null;
 		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
 	
 	@Test
 	public void shouldThrowExceptionWhenPasswordAndAuthorizationBothSet() {
-		HttpHeaders headers=new HttpHeaders();
-		ConfigClientProperties defaults=new ConfigClientProperties(this.environment);
+		HttpHeaders headers= new HttpHeaders();
+		ConfigClientProperties defaults= new ConfigClientProperties(this.environment);
 		defaults.setAuthorization("1234abcd");
-		this.locator=new ConfigServicePropertySourceLocator(defaults);
-		String username="user";
-		String password="pass";
+		this.locator= new ConfigServicePropertySourceLocator(defaults);
+		String username= "user";
+		String password= "pass";
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("You must set either 'password' or 'authorization'");
 		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);

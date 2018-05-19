@@ -93,8 +93,8 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 		ConfigClientProperties properties = this.context
 				.getBean(ConfigClientProperties.class);
 		assertEquals(2, properties.getUri().length);
-		Credentials credentials1=properties.getCredentials(0);
-		Credentials credentials2=properties.getCredentials(1);
+		Credentials credentials1= properties.getCredentials(0);
+		Credentials credentials2= properties.getCredentials(1);
 		assertEquals(expectedUri1, credentials1.getUri());
 		assertEquals(expectedUri2, credentials2.getUri());
 	}
