@@ -79,13 +79,13 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 	private void refresh() {
 		try {
 			String serviceId = this.config.getDiscovery().getServiceId();
-			List<String> listOfUrls= new ArrayList<>();
+			List<String> listOfUrls = new ArrayList<>();
 			List<ServiceInstance> serviceInstances = this.instanceProvider
 					.getConfigServerInstance(serviceId);
 			
 			for(int i=0;i< serviceInstances.size();i++) {
 			
-			ServiceInstance server= serviceInstances.get(i);	
+			ServiceInstance server = serviceInstances.get(i);	
 			String url = getHomePage(server);
 			
 			if (server.getMetadata().containsKey("password")) {
@@ -107,8 +107,8 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 			listOfUrls.add(url);
 			}
 			
-			String[] uri= new String[listOfUrls.size()];
-			uri= listOfUrls.toArray(uri);
+			String[] uri = new String[listOfUrls.size()];
+			uri = listOfUrls.toArray(uri);
 			this.config.setUri(uri);
 			
 		}

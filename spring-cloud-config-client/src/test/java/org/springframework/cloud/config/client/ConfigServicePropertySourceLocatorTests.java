@@ -232,8 +232,8 @@ public class ConfigServicePropertySourceLocatorTests {
 	
 	@Test
 	public void shouldAddAuthorizationHeaderWhenPasswordSet() {
-		HttpHeaders headers= new HttpHeaders();
-		ConfigClientProperties defaults= new ConfigClientProperties(this.environment);
+		HttpHeaders headers = new HttpHeaders();
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
 		String password = "pass";
@@ -243,8 +243,8 @@ public class ConfigServicePropertySourceLocatorTests {
 	
 	@Test
 	public void shouldAddAuthorizationHeaderWhenAuthorizationSet() {
-		HttpHeaders headers= new HttpHeaders();
-		ConfigClientProperties defaults= new ConfigClientProperties(this.environment);
+		HttpHeaders headers = new HttpHeaders();
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setAuthorization("1234abcd");
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
@@ -255,8 +255,8 @@ public class ConfigServicePropertySourceLocatorTests {
 	
 	@Test
 	public void shouldThrowExceptionWhenPasswordAndAuthorizationBothSet() {
-		HttpHeaders headers= new HttpHeaders();
-		ConfigClientProperties defaults= new ConfigClientProperties(this.environment);
+		HttpHeaders headers = new HttpHeaders();
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setAuthorization("1234abcd");
 		this.locator= new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
