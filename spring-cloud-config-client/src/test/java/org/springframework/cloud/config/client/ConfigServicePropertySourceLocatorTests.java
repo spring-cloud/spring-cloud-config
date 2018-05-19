@@ -237,7 +237,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator=new ConfigServicePropertySourceLocator(defaults);
 		String username="user";
 		String password="pass";
-		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,headers,username,password);
+		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
 	
@@ -249,7 +249,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator=new ConfigServicePropertySourceLocator(defaults);
 		String username="user";
 		String password=null;
-		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,headers,username,password);
+		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
 	
@@ -263,7 +263,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		String password="pass";
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("You must set either 'password' or 'authorization'");
-		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,headers,username,password);
+		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
 	}
 	
 	@SuppressWarnings("unchecked")

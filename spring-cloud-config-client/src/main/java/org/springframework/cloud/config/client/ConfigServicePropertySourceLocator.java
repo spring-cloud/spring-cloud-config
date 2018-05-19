@@ -173,7 +173,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String profile = properties.getProfile();
 		String token = properties.getToken();
 		int noOfUrls=properties.getUri().length;
-		if(noOfUrls>1) {
+		if(noOfUrls > 1) {
 			logger.info("Multiple Config Server Urls found listed");
 		}
 
@@ -187,12 +187,15 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		ResponseEntity<Environment> response = null;
         //Iterate through the urls(if multiple) and try the next url if ResourceAccessException occurs.
-		for(int i=0;i<noOfUrls;i++) {
+		for(int i=0;i< noOfUrls;i++) {
+			
 		Credentials credentials=properties.getCredentials(i);	
 		String uri=credentials.getUri();
 		String username=credentials.getUsername();
 		String password=credentials.getPassword();
+		
 		logger.info("Fetching config from server at: " + uri);
+		
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			addAuthorizationToken(properties, headers, username, password); //add Authorization Token if present
@@ -212,19 +215,23 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				throw e;
 			}
 		}
-		catch(ResourceAccessException e) {
-			logger.info("Connect Timeout Exception on Url-"+uri+".Will be trying the next url if available");
-			if(i==noOfUrls-1)
+		catch(ResourceAccessException e) {	
+			logger.info("Connect Timeout Exception on Url-"+uri+". Will be trying the next url if available");			
+			if(i == noOfUrls-1)
 				throw e;
 			else
 				continue;
 		}
+		
 		if (response == null || response.getStatusCode() != HttpStatus.OK) {
 			return null;
 		}
+		
 		Environment result = response.getBody();
 		return result;
+		
 		}
+		
 		return null;
 	}
 
@@ -249,17 +256,20 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	
 	private void addAuthorizationToken(ConfigClientProperties configClientProperties,HttpHeaders httpHeaders,String username,String password) {
 		String authorization = configClientProperties.getAuthorization();
+		
 		if (password != null && authorization != null) {
 			throw new IllegalStateException(
 					"You must set either 'password' or 'authorization'");
 		}
-		if (password != null) {
+		
+		if (password != null) {	
 			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
 			httpHeaders.add("Authorization", "Basic " + new String(token));
 		}
 		else if (authorization != null) {
 			httpHeaders.add("Authorization", authorization);
 		}
+		
 	}
 	
 	
