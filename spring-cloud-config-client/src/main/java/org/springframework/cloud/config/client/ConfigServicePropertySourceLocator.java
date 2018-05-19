@@ -17,7 +17,6 @@
 package org.springframework.cloud.config.client;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -172,9 +171,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String name = properties.getName();
 		String profile = properties.getProfile();
 		String token = properties.getToken();
-		int noOfUrls=properties.getUri().length;
+		int noOfUrls= properties.getUri().length;
 		if(noOfUrls > 1) {
-			logger.info("Multiple Config Server Urls found listed");
+			logger.info("Multiple Config Server Urls found listed.");
 		}
 
 		Object[] args = new String[] { name, profile };
@@ -189,12 +188,12 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
         //Iterate through the urls(if multiple) and try the next url if ResourceAccessException occurs.
 		for(int i=0;i< noOfUrls;i++) {
 			
-		Credentials credentials=properties.getCredentials(i);	
-		String uri=credentials.getUri();
-		String username=credentials.getUsername();
-		String password=credentials.getPassword();
+		Credentials credentials = properties.getCredentials(i);	
+		String uri = credentials.getUri();
+		String username = credentials.getUsername();
+		String password = credentials.getPassword();
 		
-		logger.info("Fetching config from server at: " + uri);
+		logger.info("Fetching config from server at : " + uri);
 		
 		try {
 			HttpHeaders headers = new HttpHeaders();
@@ -216,7 +215,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			}
 		}
 		catch(ResourceAccessException e) {	
-			logger.info("Connect Timeout Exception on Url-"+uri+". Will be trying the next url if available");			
+			logger.info("Connect Timeout Exception on Url - "+uri+". Will be trying the next url if available");			
 			if(i == noOfUrls-1)
 				throw e;
 			else
@@ -229,7 +228,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		
 		Environment result = response.getBody();
 		return result;
-		
 		}
 		
 		return null;

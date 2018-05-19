@@ -79,7 +79,7 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 	private void refresh() {
 		try {
 			String serviceId = this.config.getDiscovery().getServiceId();
-			List<String> listOfUrls=new ArrayList<>();
+			List<String> listOfUrls= new ArrayList<>();
 			List<ServiceInstance> serviceInstances = this.instanceProvider
 					.getConfigServerInstance(serviceId);
 			
@@ -107,7 +107,7 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 			listOfUrls.add(url);
 			}
 			
-			String[] uri=new String[listOfUrls.size()];
+			String[] uri= new String[listOfUrls.size()];
 			uri= listOfUrls.toArray(uri);
 			this.config.setUri(uri);
 			

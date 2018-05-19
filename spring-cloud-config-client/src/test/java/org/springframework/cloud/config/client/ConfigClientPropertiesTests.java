@@ -39,7 +39,7 @@ public class ConfigClientPropertiesTests {
 	public void vanilla() {
 		locator.setUri(new String[] {"http://localhost:9999"});
 		locator.setPassword("secret");
-		Credentials credentials= locator.getCredentials(0);
+		Credentials credentials = locator.getCredentials(0);
 		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("user", credentials.getUsername());
 		assertEquals("secret", credentials.getPassword());
@@ -48,7 +48,7 @@ public class ConfigClientPropertiesTests {
 	@Test
 	public void uriCreds() {
 		locator.setUri(new String[] {"http://foo:bar@localhost:9999"});
-		Credentials credentials= locator.getCredentials(0);
+		Credentials credentials = locator.getCredentials(0);
 		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("foo", credentials.getUsername());
 		assertEquals("bar", credentials.getPassword());
@@ -58,7 +58,7 @@ public class ConfigClientPropertiesTests {
 	public void explicitPassword() {
 		locator.setUri(new String[] {"http://foo:bar@localhost:9999"});
 		locator.setPassword("secret");
-		Credentials credentials= locator.getCredentials(0);
+		Credentials credentials = locator.getCredentials(0);
 		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("foo", credentials.getUsername());
 		assertEquals("secret", credentials.getPassword());
@@ -68,7 +68,7 @@ public class ConfigClientPropertiesTests {
 	public void testIfNoColonPresentInUriCreds() {
 		locator.setUri(new String[] {"http://foobar@localhost:9999"});
 		locator.setPassword("secret");
-		Credentials credentials= locator.getCredentials(0);
+		Credentials credentials = locator.getCredentials(0);
 		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("foobar", credentials.getUsername());
 		assertEquals("secret", credentials.getPassword());
@@ -78,7 +78,7 @@ public class ConfigClientPropertiesTests {
 	public void testIfColonPresentAtTheEndInUriCreds() {
 		locator.setUri(new String[] {"http://foobar:@localhost:9999"});
 		locator.setPassword("secret");
-		Credentials credentials= locator.getCredentials(0);
+		Credentials credentials = locator.getCredentials(0);
 		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("foobar", credentials.getUsername());
 		assertEquals("secret", credentials.getPassword());
@@ -87,7 +87,7 @@ public class ConfigClientPropertiesTests {
 	@Test
 	public void testIfColonPresentAtTheStartInUriCreds() {
 		locator.setUri(new String[] {"http://:foobar@localhost:9999"});
-		Credentials credentials= locator.getCredentials(0);
+		Credentials credentials = locator.getCredentials(0);
 		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("", credentials.getUsername());
 		assertEquals("foobar", credentials.getPassword());
@@ -96,7 +96,7 @@ public class ConfigClientPropertiesTests {
 	@Test
 	public void testIfColonPresentAtTheStartAndEndInUriCreds() {
 		locator.setUri(new String[] {"http://:foobar:@localhost:9999"});
-		Credentials credentials= locator.getCredentials(0);
+		Credentials credentials = locator.getCredentials(0);
 		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("", credentials.getUsername());
 		assertEquals("foobar:", credentials.getPassword());
@@ -104,10 +104,10 @@ public class ConfigClientPropertiesTests {
 	
 	
 	@Test
-	public void testIfsolonPresentAtTheStartAndEndInUriCreds() {
+	public void testIfSpacePresentAsUriCreds() {
 		locator.setUri(new String[] {"http://  @localhost:9999"});
 		locator.setPassword("secret");
-		Credentials credentials= locator.getCredentials(0);
+		Credentials credentials = locator.getCredentials(0);
 		assertEquals("http://localhost:9999", credentials.getUri());
 		assertEquals("  ", credentials.getUsername());
 		assertEquals("secret", credentials.getPassword());
@@ -130,7 +130,7 @@ public class ConfigClientPropertiesTests {
 		properties.setUri(new String[] {"https://userInfoName:userInfoPW@localhost:8888/"});
 		properties.setUsername("explicitName");
 		properties.setPassword("explicitPW");
-		Credentials credentials= properties.getCredentials(0);
+		Credentials credentials = properties.getCredentials(0);
 		assertThat(credentials.getPassword(), equalTo("explicitPW"));
 		assertThat(credentials.getUsername(), equalTo("explicitName"));
 	}

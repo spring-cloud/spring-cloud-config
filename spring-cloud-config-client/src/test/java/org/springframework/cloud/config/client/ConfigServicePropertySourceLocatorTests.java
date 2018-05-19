@@ -234,9 +234,9 @@ public class ConfigServicePropertySourceLocatorTests {
 	public void shouldAddAuthorizationHeaderWhenPasswordSet() {
 		HttpHeaders headers= new HttpHeaders();
 		ConfigClientProperties defaults= new ConfigClientProperties(this.environment);
-		this.locator= new ConfigServicePropertySourceLocator(defaults);
-		String username= "user";
-		String password= "pass";
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		String username = "user";
+		String password = "pass";
 		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
@@ -246,9 +246,9 @@ public class ConfigServicePropertySourceLocatorTests {
 		HttpHeaders headers= new HttpHeaders();
 		ConfigClientProperties defaults= new ConfigClientProperties(this.environment);
 		defaults.setAuthorization("1234abcd");
-		this.locator= new ConfigServicePropertySourceLocator(defaults);
-		String username= "user";
-		String password= null;
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		String username = "user";
+		String password = null;
 		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
@@ -259,8 +259,8 @@ public class ConfigServicePropertySourceLocatorTests {
 		ConfigClientProperties defaults= new ConfigClientProperties(this.environment);
 		defaults.setAuthorization("1234abcd");
 		this.locator= new ConfigServicePropertySourceLocator(defaults);
-		String username= "user";
-		String password= "pass";
+		String username = "user";
+		String password = "pass";
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("You must set either 'password' or 'authorization'");
 		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);

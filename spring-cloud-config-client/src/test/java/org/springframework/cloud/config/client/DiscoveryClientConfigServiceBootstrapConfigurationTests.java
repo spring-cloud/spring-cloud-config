@@ -82,8 +82,8 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends Bas
 
 	@Test
 	public void multipleInstancesReturnedFromDiscovery() {
-		ServiceInstance info1= new DefaultServiceInstance("app", "localhost", 8888, true);
-		ServiceInstance info2= new DefaultServiceInstance("app", "localhost1", 8888, false);
+		ServiceInstance info1 = new DefaultServiceInstance("app", "localhost", 8888, true);
+		ServiceInstance info2 = new DefaultServiceInstance("app", "localhost1", 8888, false);
 		givenDiscoveryClientReturnsInfoForMultipleInstances(info1, info2);
 		
 		setup("spring.cloud.config.discovery.enabled=true");
@@ -103,7 +103,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends Bas
 
 		ConfigClientProperties locator = this.context
 				.getBean(ConfigClientProperties.class);
-		Credentials credentials= locator.getCredentials(0);
+		Credentials credentials = locator.getCredentials(0);
 		assertEquals("http://foo:8877/", credentials.getUri());
 		assertEquals("bar", credentials.getPassword());
 		assertEquals("user", credentials.getUsername());
