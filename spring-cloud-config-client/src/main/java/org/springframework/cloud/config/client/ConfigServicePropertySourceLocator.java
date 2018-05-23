@@ -78,38 +78,44 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(properties)
+		RestTemplate restTemplate = this.restTemplate == null
+				? getSecureRestTemplate(properties)
 				: this.restTemplate;
 		Exception error = null;
 		String errorBody = null;
 		try {
 			String[] labels = new String[] { "" };
 			if (StringUtils.hasText(properties.getLabel())) {
-				labels = StringUtils.commaDelimitedListToStringArray(properties.getLabel());
+				labels = StringUtils
+						.commaDelimitedListToStringArray(properties.getLabel());
 			}
 			String state = ConfigClientStateHolder.getState();
 			// Try all the labels until one works
 			for (String label : labels) {
-				Environment result = getRemoteEnvironment(restTemplate,
-						properties, label.trim(), state);
+				Environment result = getRemoteEnvironment(restTemplate, properties,
+						label.trim(), state);
 				if (result != null) {
 					log(result);
 
-					if (result.getPropertySources() != null) { // result.getPropertySources() can be null if using xml
+					if (result.getPropertySources() != null) { // result.getPropertySources()
+																// can be null if using
+																// xml
 						for (PropertySource source : result.getPropertySources()) {
 							@SuppressWarnings("unchecked")
 							Map<String, Object> map = (Map<String, Object>) source
 									.getSource();
-							composite.addPropertySource(new MapPropertySource(source
-									.getName(), map));
+							composite.addPropertySource(
+									new MapPropertySource(source.getName(), map));
 						}
 					}
 
-					if (StringUtils.hasText(result.getState()) || StringUtils.hasText(result.getVersion())) {
+					if (StringUtils.hasText(result.getState())
+							|| StringUtils.hasText(result.getVersion())) {
 						HashMap<String, Object> map = new HashMap<>();
 						putValue(map, "config.client.state", result.getState());
 						putValue(map, "config.client.version", result.getVersion());
-						composite.addFirstPropertySource(new MapPropertySource("configClient", map));
+						composite.addFirstPropertySource(
+								new MapPropertySource("configClient", map));
 					}
 					return composite;
 				}
@@ -117,8 +123,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		catch (HttpServerErrorException e) {
 			error = e;
-			if (MediaType.APPLICATION_JSON.includes(e.getResponseHeaders()
-					.getContentType())) {
+			if (MediaType.APPLICATION_JSON
+					.includes(e.getResponseHeaders().getContentType())) {
 				errorBody = e.getResponseBodyAsString();
 			}
 		}
@@ -130,29 +136,32 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					"Could not locate PropertySource and the fail fast property is set, failing",
 					error);
 		}
-		logger.warn("Could not locate PropertySource: "
-				+ (errorBody == null ? error==null ? "label not found" : error.getMessage() : errorBody));
+		logger.warn("Could not locate PropertySource: " + (errorBody == null
+				? error == null ? "label not found" : error.getMessage()
+				: errorBody));
 		return null;
 
 	}
 
 	private void log(Environment result) {
 		if (logger.isInfoEnabled()) {
-			logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
+			logger.info(String.format(
+					"Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
 					result.getName(),
-					result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
+					result.getProfiles() == null ? ""
+							: Arrays.asList(result.getProfiles()),
 					result.getLabel(), result.getVersion(), result.getState()));
 		}
 		if (logger.isDebugEnabled()) {
 			List<PropertySource> propertySourceList = result.getPropertySources();
 			if (propertySourceList != null) {
 				int propertyCount = 0;
-				for (PropertySource propertySource: propertySourceList) {
+				for (PropertySource propertySource : propertySourceList) {
 					propertyCount += propertySource.getSource().size();
 				}
-				logger.debug(String.format("Environment %s has %d property sources with %d properties.",
-						result.getName(),
-						result.getPropertySources().size(),
+				logger.debug(String.format(
+						"Environment %s has %d property sources with %d properties.",
+						result.getName(), result.getPropertySources().size(),
 						propertyCount));
 			}
 
@@ -165,14 +174,14 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 	}
 
-	private Environment getRemoteEnvironment(RestTemplate restTemplate, ConfigClientProperties properties,
-											 String label, String state) {
+	private Environment getRemoteEnvironment(RestTemplate restTemplate,
+			ConfigClientProperties properties, String label, String state) {
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
 		String profile = properties.getProfile();
 		String token = properties.getToken();
 		int noOfUrls = properties.getUri().length;
-		if(noOfUrls > 1) {
+		if (noOfUrls > 1) {
 			logger.info("Multiple Config Server Urls found listed.");
 		}
 
@@ -185,51 +194,51 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			path = path + "/{label}";
 		}
 		ResponseEntity<Environment> response = null;
-		
-		//Iterate through the urls ( if multiple ) and try the next url if ResourceAccessException occurs.
-		for (int i = 0; i < noOfUrls; i++) {			
-		Credentials credentials = properties.getCredentials(i);	
-		String uri = credentials.getUri();
-		String username = credentials.getUsername();
-		String password = credentials.getPassword();
-		
-		logger.info("Fetching config from server at : " + uri);
-		
-		try {
-			HttpHeaders headers = new HttpHeaders();
-			addAuthorizationToken(properties, headers, username, password); //add Authorization Token if present
-			if (StringUtils.hasText(token)) {
-				headers.add(TOKEN_HEADER, token);
+
+		for (int i = 0; i < noOfUrls; i++) {
+			Credentials credentials = properties.getCredentials(i);
+			String uri = credentials.getUri();
+			String username = credentials.getUsername();
+			String password = credentials.getPassword();
+
+			logger.info("Fetching config from server at : " + uri);
+
+			try {
+				HttpHeaders headers = new HttpHeaders();
+				addAuthorizationToken(properties, headers, username, password);
+				if (StringUtils.hasText(token)) {
+					headers.add(TOKEN_HEADER, token);
+				}
+				if (StringUtils.hasText(state)) { // TODO: opt in to sending state?
+					headers.add(STATE_HEADER, state);
+				}
+
+				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
+				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity,
+						Environment.class, args);
 			}
-			if (StringUtils.hasText(state)) { //TODO: opt in to sending state?
-				headers.add(STATE_HEADER, state);
+			catch (HttpClientErrorException e) {
+				if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+					throw e;
+				}
 			}
-			
-			final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
-			response = restTemplate.exchange(uri + path, HttpMethod.GET,
-					entity, Environment.class, args);
-		}
-		catch (HttpClientErrorException e) {
-			if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
-				throw e;
+			catch (ResourceAccessException e) {
+				logger.info("Connect Timeout Exception on Url - " + uri
+						+ ". Will be trying the next url if available");
+				if (i == noOfUrls - 1)
+					throw e;
+				else
+					continue;
 			}
+
+			if (response == null || response.getStatusCode() != HttpStatus.OK) {
+				return null;
+			}
+
+			Environment result = response.getBody();
+			return result;
 		}
-		catch(ResourceAccessException e) {	
-			logger.info("Connect Timeout Exception on Url - "+uri+". Will be trying the next url if available");			
-			if(i == noOfUrls-1)
-				throw e;
-			else
-				continue;
-		}
-		
-		if (response == null || response.getStatusCode() != HttpStatus.OK) {
-			return null;
-		}
-		
-		Environment result = response.getBody();
-		return result;
-		}
-		
+
 		return null;
 	}
 
@@ -239,7 +248,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private RestTemplate getSecureRestTemplate(ConfigClientProperties client) {
 		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-		requestFactory.setReadTimeout((60 * 1000 * 3) + 5000); //TODO 3m5s, make configurable?
+		requestFactory.setReadTimeout((60 * 1000 * 3) + 5000); // TODO 3m5s, make
+																// configurable?
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
 
@@ -250,27 +260,25 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		return template;
 	}
-	
-	
-	private void addAuthorizationToken(ConfigClientProperties configClientProperties,HttpHeaders httpHeaders,String username,String password) {
+
+	private void addAuthorizationToken(ConfigClientProperties configClientProperties,
+			HttpHeaders httpHeaders, String username, String password) {
 		String authorization = configClientProperties.getAuthorization();
-		
+
 		if (password != null && authorization != null) {
 			throw new IllegalStateException(
 					"You must set either 'password' or 'authorization'");
 		}
-		
-		if (password != null) {	
+
+		if (password != null) {
 			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
 			httpHeaders.add("Authorization", "Basic " + new String(token));
 		}
 		else if (authorization != null) {
 			httpHeaders.add("Authorization", authorization);
 		}
-		
+
 	}
-	
-	
 
 	public static class GenericRequestHeaderInterceptor
 			implements ClientHttpRequestInterceptor {

@@ -30,7 +30,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Dave Syer
  */
-public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {
+public class DiscoveryClientConfigServiceBootstrapConfigurationTests
+		extends BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {
 
 	@Test
 	public void offByDefault() throws Exception {
@@ -82,18 +83,22 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends Bas
 
 	@Test
 	public void multipleInstancesReturnedFromDiscovery() {
-		ServiceInstance info1 = new DefaultServiceInstance("app", "localhost", 8888, true);
-		ServiceInstance info2 = new DefaultServiceInstance("app", "localhost1", 8888, false);
+		ServiceInstance info1 = new DefaultServiceInstance("app", "localhost", 8888,
+				true);
+		ServiceInstance info2 = new DefaultServiceInstance("app", "localhost1", 8888,
+				false);
 		givenDiscoveryClientReturnsInfoForMultipleInstances(info1, info2);
-		
+
 		setup("spring.cloud.config.discovery.enabled=true");
-		
+
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 
 		verifyDiscoveryClientCalledOnce();
-		expectConfigClientPropertiesHasMultipleUris("https://localhost:8888/", "http://localhost1:8888/");
-		
+		expectConfigClientPropertiesHasMultipleUris("https://localhost:8888/",
+				"http://localhost1:8888/");
+
 	}
+
 	@Test
 	public void setsPasssword() throws Exception {
 		this.info.getMetadata().put("password", "bar");

@@ -76,7 +76,7 @@ public class ConfigClientProperties {
 	/**
 	 * The URI of the remote server (default http://localhost:8888).
 	 */
-	private String[] uri = {"http://localhost:8888"};
+	private String[] uri = { "http://localhost:8888" };
 
 	/**
 	 * Discovery properties.
@@ -161,7 +161,7 @@ public class ConfigClientProperties {
 	public void setUsername(String username) {
 		this.username = username;
 	}
-	
+
 	public String getPassword() {
 		return password;
 	}
@@ -169,7 +169,7 @@ public class ConfigClientProperties {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
+
 	public Credentials getCredentials(int index) {
 		return extractCredentials(index);
 	}
@@ -237,16 +237,16 @@ public class ConfigClientProperties {
 			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build()
 					.toUriString();
 			result.uri = bare;
-			
+
 			// if userInfo does not contain a :, then append a : to it
 			if (!userInfo.contains(":")) {
 				userInfo = userInfo + ":";
 			}
-		    
-			int sepIndex=userInfo.indexOf(":");
+
+			int sepIndex = userInfo.indexOf(":");
 			// set username and password from uri
-			result.username = userInfo.substring(0, sepIndex); 
-			result.password = userInfo.substring(sepIndex +1);
+			result.username = userInfo.substring(0, sepIndex);
+			result.password = userInfo.substring(sepIndex + 1);
 
 			// override password if explicitly set
 			if (explicitCredentials.password != null) {
@@ -274,24 +274,27 @@ public class ConfigClientProperties {
 
 		if (StringUtils.hasText(this.username)) {
 			credentials.username = this.username.trim();
-		} else {
+		}
+		else {
 			credentials.username = "user";
 		}
 		return credentials;
 	}
 
 	public static class Credentials {
-		
+
 		private String username;
 		private String password;
 		private String uri;
-		
+
 		public String getUsername() {
 			return username;
 		}
+
 		public String getPassword() {
 			return password;
 		}
+
 		public String getUri() {
 			return uri;
 		}
@@ -301,8 +304,8 @@ public class ConfigClientProperties {
 		public static final String DEFAULT_CONFIG_SERVER = "configserver";
 
 		/**
-		 * Flag to indicate that config server discovery is enabled (config server URL will be
-		 * looked up via discovery).
+		 * Flag to indicate that config server discovery is enabled (config server URL
+		 * will be looked up via discovery).
 		 */
 		private boolean enabled;
 		/**
@@ -351,10 +354,9 @@ public class ConfigClientProperties {
 		return "ConfigClientProperties [enabled=" + this.enabled + ", profile="
 				+ this.profile + ", name=" + this.name + ", label="
 				+ (this.label == null ? "" : this.label) + ", username=" + this.username
-				+ ", password=" + this.password + ", uri=" + this.uri
-				+ ", authorization=" + this.authorization
-				+ ", discovery.enabled=" + this.discovery.enabled + ", failFast="
-				+ this.failFast + ", token=" + this.token + "]";
+				+ ", password=" + this.password + ", uri=" + this.uri + ", authorization="
+				+ this.authorization + ", discovery.enabled=" + this.discovery.enabled
+				+ ", failFast=" + this.failFast + ", token=" + this.token + "]";
 	}
 
 }

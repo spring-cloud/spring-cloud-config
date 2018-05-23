@@ -50,8 +50,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void sunnyDay() {
 		Environment body = new Environment("app", "master");
-		mockRequestResponseWithoutLabel(new ResponseEntity<>(body,
-				HttpStatus.OK));
+		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
 		this.locator.setRestTemplate(this.restTemplate);
 		assertNotNull(this.locator.locate(this.environment));
 	}
@@ -59,8 +58,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void sunnyDayWithLabel() {
 		Environment body = new Environment("app", "master");
-		mockRequestResponseWithLabel(
-				new ResponseEntity<>(body, HttpStatus.OK), "v1.0.0");
+		mockRequestResponseWithLabel(new ResponseEntity<>(body, HttpStatus.OK), "v1.0.0");
 		this.locator.setRestTemplate(this.restTemplate);
 		EnvironmentTestUtils.addEnvironment(this.environment,
 				"spring.cloud.config.label:v1.0.0");
@@ -70,26 +68,27 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void sunnyDayWithLabelThatContainsASlash() {
 		Environment body = new Environment("app", "master");
-		mockRequestResponseWithLabel(
-			new ResponseEntity<>(body, HttpStatus.OK), "release(_)v1.0.0");
+		mockRequestResponseWithLabel(new ResponseEntity<>(body, HttpStatus.OK),
+				"release(_)v1.0.0");
 		this.locator.setRestTemplate(this.restTemplate);
 		EnvironmentTestUtils.addEnvironment(this.environment,
-			"spring.cloud.config.label:release/v1.0.0");
+				"spring.cloud.config.label:release/v1.0.0");
 		assertNotNull(this.locator.locate(this.environment));
 	}
 
 	@Test
 	public void sunnyDayWithNoSuchLabel() {
-		mockRequestResponseWithLabel(new ResponseEntity<Void>((Void) null,
-				HttpStatus.NOT_FOUND), "nosuchlabel");
+		mockRequestResponseWithLabel(
+				new ResponseEntity<Void>((Void) null, HttpStatus.NOT_FOUND),
+				"nosuchlabel");
 		this.locator.setRestTemplate(this.restTemplate);
 		assertNull(this.locator.locate(this.environment));
 	}
 
 	@Test
 	public void failsQuietly() {
-		mockRequestResponseWithoutLabel(new ResponseEntity<>("Wah!",
-				HttpStatus.INTERNAL_SERVER_ERROR));
+		mockRequestResponseWithoutLabel(
+				new ResponseEntity<>("Wah!", HttpStatus.INTERNAL_SERVER_ERROR));
 		this.locator.setRestTemplate(this.restTemplate);
 		assertNull(this.locator.locate(this.environment));
 	}
@@ -100,9 +99,8 @@ public class ConfigServicePropertySourceLocatorTests {
 				.mock(ClientHttpRequestFactory.class);
 		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
 		ClientHttpResponse response = Mockito.mock(ClientHttpResponse.class);
-		Mockito.when(
-				requestFactory.createRequest(Mockito.any(URI.class),
-						Mockito.any(HttpMethod.class))).thenReturn(request);
+		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+				Mockito.any(HttpMethod.class))).thenReturn(request);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setFailFast(true);
@@ -112,13 +110,13 @@ public class ConfigServicePropertySourceLocatorTests {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		Mockito.when(response.getHeaders()).thenReturn(headers);
-		Mockito.when(response.getStatusCode()).thenReturn(
-				HttpStatus.INTERNAL_SERVER_ERROR);
-		Mockito.when(response.getBody()).thenReturn(
-				new ByteArrayInputStream("{}".getBytes()));
+		Mockito.when(response.getStatusCode())
+				.thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
+		Mockito.when(response.getBody())
+				.thenReturn(new ByteArrayInputStream("{}".getBytes()));
 		this.locator.setRestTemplate(restTemplate);
-		this.expected.expectCause(IsInstanceOf
-				.instanceOf(IllegalArgumentException.class));
+		this.expected
+				.expectCause(IsInstanceOf.instanceOf(IllegalArgumentException.class));
 		this.expected.expectMessage("fail fast property is set");
 		this.locator.locate(this.environment);
 	}
@@ -129,9 +127,8 @@ public class ConfigServicePropertySourceLocatorTests {
 				.mock(ClientHttpRequestFactory.class);
 		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
 		ClientHttpResponse response = Mockito.mock(ClientHttpResponse.class);
-		Mockito.when(
-				requestFactory.createRequest(Mockito.any(URI.class),
-						Mockito.any(HttpMethod.class))).thenReturn(request);
+		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+				Mockito.any(HttpMethod.class))).thenReturn(request);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setFailFast(true);
@@ -141,12 +138,12 @@ public class ConfigServicePropertySourceLocatorTests {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		Mockito.when(response.getHeaders()).thenReturn(headers);
-		Mockito.when(response.getStatusCode()).thenReturn(
-				HttpStatus.NOT_FOUND);
-		Mockito.when(response.getBody()).thenReturn(
-				new ByteArrayInputStream("".getBytes()));
+		Mockito.when(response.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND);
+		Mockito.when(response.getBody())
+				.thenReturn(new ByteArrayInputStream("".getBytes()));
 		this.locator.setRestTemplate(restTemplate);
-		this.expected.expectCause(IsInstanceOf.instanceOf(IllegalArgumentException.class));
+		this.expected
+				.expectCause(IsInstanceOf.instanceOf(IllegalArgumentException.class));
 		this.expected.expectMessage("fail fast property is set");
 		this.locator.locate(this.environment);
 	}
@@ -156,65 +153,66 @@ public class ConfigServicePropertySourceLocatorTests {
 		ClientHttpRequestFactory requestFactory = Mockito
 				.mock(ClientHttpRequestFactory.class);
 		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-		Mockito.when(
-				requestFactory.createRequest(Mockito.any(URI.class),
-						Mockito.any(HttpMethod.class))).thenReturn(request);
+		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+				Mockito.any(HttpMethod.class))).thenReturn(request);
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		//defaults.setUri(new String[] {"http://localhost");
+		// defaults.setUri(new String[] {"http://localhost");
 		defaults.setFailFast(true);
 		defaults.setUsername("username");
 		defaults.setPassword("password");
 		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
- 		this.expected.expect(IllegalStateException.class);
-		this.expected.expectMessage("Could not locate PropertySource and the fail fast property is set, failing");
+		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage(
+				"Could not locate PropertySource and the fail fast property is set, failing");
 		this.locator.locate(this.environment);
 	}
 
-//	@Test
-//	public void interceptorShouldAddHeaderWhenPasswordPropertySet() throws Exception {
-//		ClientHttpRequestFactory requestFactory = Mockito
-//				.mock(ClientHttpRequestFactory.class);
-//		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-//		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
-//				Mockito.any(HttpMethod.class))).thenReturn(request);
-//
-//		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-//		defaults.setUsername("username");
-//		defaults.setPassword("password");
-//		this.locator = new ConfigServicePropertySourceLocator(defaults);
-//
-//		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
-//				"getSecureRestTemplate", defaults);
-//		restTemplate.setRequestFactory(requestFactory);
-//
-//		this.locator.setRestTemplate(restTemplate);
-//		this.locator.locate(this.environment);
-//
-//		assertThat(restTemplate.getInterceptors()).hasSize(1);
-//	}
+	// @Test
+	// public void interceptorShouldAddHeaderWhenPasswordPropertySet() throws Exception {
+	// ClientHttpRequestFactory requestFactory = Mockito
+	// .mock(ClientHttpRequestFactory.class);
+	// ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+	// Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+	// Mockito.any(HttpMethod.class))).thenReturn(request);
+	//
+	// ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+	// defaults.setUsername("username");
+	// defaults.setPassword("password");
+	// this.locator = new ConfigServicePropertySourceLocator(defaults);
+	//
+	// RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
+	// "getSecureRestTemplate", defaults);
+	// restTemplate.setRequestFactory(requestFactory);
+	//
+	// this.locator.setRestTemplate(restTemplate);
+	// this.locator.locate(this.environment);
+	//
+	// assertThat(restTemplate.getInterceptors()).hasSize(1);
+	// }
 
-//	@Test
-//	public void interceptorShouldAddHeaderWhenAuthorizationPropertySet() throws Exception {
-//		ClientHttpRequestFactory requestFactory = Mockito
-//				.mock(ClientHttpRequestFactory.class);
-//		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-//		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
-//				Mockito.any(HttpMethod.class))).thenReturn(request);
-//
-//		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-//		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
-//		this.locator = new ConfigServicePropertySourceLocator(defaults);
-//
-//		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
-//				"getSecureRestTemplate", defaults);
-//		restTemplate.setRequestFactory(requestFactory);
-//
-//		this.locator.setRestTemplate(restTemplate);
-//		this.locator.locate(this.environment);
-//
-//		assertThat(restTemplate.getInterceptors()).hasSize(1);
-//	}
+	// @Test
+	// public void interceptorShouldAddHeaderWhenAuthorizationPropertySet() throws
+	// Exception {
+	// ClientHttpRequestFactory requestFactory = Mockito
+	// .mock(ClientHttpRequestFactory.class);
+	// ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+	// Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
+	// Mockito.any(HttpMethod.class))).thenReturn(request);
+	//
+	// ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+	// defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+	// this.locator = new ConfigServicePropertySourceLocator(defaults);
+	//
+	// RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
+	// "getSecureRestTemplate", defaults);
+	// restTemplate.setRequestFactory(requestFactory);
+	//
+	// this.locator.setRestTemplate(restTemplate);
+	// this.locator.locate(this.environment);
+	//
+	// assertThat(restTemplate.getInterceptors()).hasSize(1);
+	// }
 
 	@Test
 	public void interceptorShouldAddHeadersWhenHeadersPropertySet() throws Exception {
@@ -229,7 +227,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.verify(execution).execute(request, body);
 		assertThat(request.getHeaders().getFirst("X-Example-Version")).isEqualTo("2.1");
 	}
-	
+
 	@Test
 	public void shouldAddAuthorizationHeaderWhenPasswordSet() {
 		HttpHeaders headers = new HttpHeaders();
@@ -237,10 +235,11 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
 		String password = "pass";
-		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
+		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,
+				headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
-	
+
 	@Test
 	public void shouldAddAuthorizationHeaderWhenAuthorizationSet() {
 		HttpHeaders headers = new HttpHeaders();
@@ -249,10 +248,11 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
 		String password = null;
-		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
+		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,
+				headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
-	
+
 	@Test
 	public void shouldThrowExceptionWhenPasswordAndAuthorizationBothSet() {
 		HttpHeaders headers = new HttpHeaders();
@@ -263,31 +263,30 @@ public class ConfigServicePropertySourceLocatorTests {
 		String password = "pass";
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("You must set either 'password' or 'authorization'");
-		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
+		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,
+				headers, username, password);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
-		Mockito.when(
-				this.restTemplate.exchange(Mockito.any(String.class),
-						Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
-						Mockito.any(Class.class), Matchers.anyString(),
-						Matchers.anyString(), Matchers.eq(label))).thenReturn(response);
+		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), Matchers.anyString(), Matchers.anyString(),
+				Matchers.eq(label))).thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithoutLabel(ResponseEntity<?> response) {
-		Mockito.when(
-				this.restTemplate.exchange(Mockito.any(String.class),
-						Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
-						Mockito.any(Class.class), Matchers.anyString(),
-						Matchers.anyString())).thenReturn(response);
+		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), Matchers.anyString(), Matchers.anyString()))
+				.thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
-	private void mockRequestResponseWithoutLabelWithExpectedName(ResponseEntity<?> response, String expectedName) {
-		Mockito.when(
-			this.restTemplate.exchange(Mockito.any(String.class),
+	private void mockRequestResponseWithoutLabelWithExpectedName(
+			ResponseEntity<?> response, String expectedName) {
+		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
 				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
 				Mockito.any(Class.class), Matchers.eq(expectedName),
 				Matchers.anyString())).thenReturn(response);

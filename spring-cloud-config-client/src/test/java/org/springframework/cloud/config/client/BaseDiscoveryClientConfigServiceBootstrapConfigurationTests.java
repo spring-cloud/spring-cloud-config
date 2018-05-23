@@ -51,9 +51,11 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
 				.willReturn(Arrays.asList(this.info));
 	}
-	
-	void givenDiscoveryClientReturnsInfoForMultipleInstances( ServiceInstance info1, ServiceInstance info2) {
-		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Arrays.asList( info1 , info2));
+
+	void givenDiscoveryClientReturnsInfoForMultipleInstances(ServiceInstance info1,
+			ServiceInstance info2) {
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
+				.willReturn(Arrays.asList(info1, info2));
 	}
 
 	void givenDiscoveryClientReturnsInfoOnThirdTry() {
@@ -88,8 +90,9 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 		Credentials credentials = properties.getCredentials(0);
 		assertEquals(expectedUri, credentials.getUri());
 	}
-	
-	void expectConfigClientPropertiesHasMultipleUris(final String expectedUri1,final String expectedUri2) {
+
+	void expectConfigClientPropertiesHasMultipleUris(final String expectedUri1,
+			final String expectedUri2) {
 		ConfigClientProperties properties = this.context
 				.getBean(ConfigClientProperties.class);
 		assertEquals(2, properties.getUri().length);
