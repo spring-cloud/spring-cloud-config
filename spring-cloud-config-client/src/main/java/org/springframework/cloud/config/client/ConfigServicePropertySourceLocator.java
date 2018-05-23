@@ -171,7 +171,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String name = properties.getName();
 		String profile = properties.getProfile();
 		String token = properties.getToken();
-		int noOfUrls= properties.getUri().length;
+		int noOfUrls = properties.getUri().length;
 		if(noOfUrls > 1) {
 			logger.info("Multiple Config Server Urls found listed.");
 		}
@@ -185,9 +185,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			path = path + "/{label}";
 		}
 		ResponseEntity<Environment> response = null;
-        //Iterate through the urls(if multiple) and try the next url if ResourceAccessException occurs.
-		for(int i=0;i< noOfUrls;i++) {
-			
+		
+		//Iterate through the urls ( if multiple ) and try the next url if ResourceAccessException occurs.
+		for (int i = 0; i < noOfUrls; i++) {			
 		Credentials credentials = properties.getCredentials(i);	
 		String uri = credentials.getUri();
 		String username = credentials.getUsername();

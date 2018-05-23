@@ -18,7 +18,7 @@ public class ConfigServerInstanceProvider {
 	}
 
 	@Retryable(interceptor = "configServerRetryInterceptor")
-	public List<ServiceInstance> getConfigServerInstance(String serviceId) {
+	public List<ServiceInstance> getConfigServerInstances(String serviceId) {
 		logger.debug("Locating configserver (" + serviceId + ") via discovery");
 		List<ServiceInstance> instances = this.client.getInstances(serviceId);
 		if (instances.isEmpty()) {

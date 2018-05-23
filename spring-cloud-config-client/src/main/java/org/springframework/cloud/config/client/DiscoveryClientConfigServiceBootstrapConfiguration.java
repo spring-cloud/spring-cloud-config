@@ -81,9 +81,9 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 			String serviceId = this.config.getDiscovery().getServiceId();
 			List<String> listOfUrls = new ArrayList<>();
 			List<ServiceInstance> serviceInstances = this.instanceProvider
-					.getConfigServerInstance(serviceId);
+					.getConfigServerInstances(serviceId);
 			
-			for(int i=0;i< serviceInstances.size();i++) {
+			for (int i = 0; i< serviceInstances.size(); i++) {
 			
 			ServiceInstance server = serviceInstances.get(i);	
 			String url = getHomePage(server);

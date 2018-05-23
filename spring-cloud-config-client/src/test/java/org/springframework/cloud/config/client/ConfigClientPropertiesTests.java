@@ -16,6 +16,7 @@
 package org.springframework.cloud.config.client;
 
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -26,6 +27,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import org.junit.Rule;
+
 /**
  * @author Dave Syer
  *
@@ -34,6 +37,9 @@ public class ConfigClientPropertiesTests {
 
 	private ConfigClientProperties locator = new ConfigClientProperties(
 			new StandardEnvironment());
+	
+	@Rule
+	public ExpectedException expected = ExpectedException.none();
 
 	@Test
 	public void vanilla() {
@@ -134,4 +140,29 @@ public class ConfigClientPropertiesTests {
 		assertThat(credentials.getPassword(), equalTo("explicitPW"));
 		assertThat(credentials.getUsername(), equalTo("explicitName"));
 	}
+	
+	@Test
+	public void checkIfExceptionThrownForNegativeIndex() {
+		locator.setUri(new String[] {"http://localhost:8888","http://localhost:8889"});
+		expected.expect(IllegalStateException.class);
+		expected.expectMessage("Trying to access an invalid array index");
+		Credentials credentials = locator.getCredentials(-1);
+	}
+	
+	@Test
+	public void checkIfExceptionThrownForPositiveInvalidIndex() {
+		locator.setUri(new String[] {"http://localhost:8888","http://localhost:8889"});
+		expected.expect(IllegalStateException.class);
+		expected.expectMessage("Trying to access an invalid array index");
+		Credentials credentials = locator.getCredentials(3);
+	}
+	
+	@Test
+	public void checkIfExceptionThrownForIndexEqualToLength() {
+		locator.setUri(new String[] {"http://localhost:8888","http://localhost:8889"});
+		expected.expect(IllegalStateException.class);
+		expected.expectMessage("Trying to access an invalid array index");
+		Credentials credentials = locator.getCredentials(2);
+	}
+	
 }

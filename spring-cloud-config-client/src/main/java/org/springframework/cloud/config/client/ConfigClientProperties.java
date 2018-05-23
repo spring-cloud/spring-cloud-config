@@ -218,6 +218,10 @@ public class ConfigClientProperties {
 
 	private Credentials extractCredentials(int index) {
 		Credentials result = new Credentials();
+		int noOfUrl = this.uri.length;
+		if (index < 0 || index >= noOfUrl) {
+			throw new IllegalStateException("Trying to access an invalid array index");
+		}
 		String uri = this.uri[index];
 		result.uri = uri;
 		Credentials explicitCredentials = getUsernamePassword();

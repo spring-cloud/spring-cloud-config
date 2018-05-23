@@ -258,7 +258,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		HttpHeaders headers = new HttpHeaders();
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setAuthorization("1234abcd");
-		this.locator= new ConfigServicePropertySourceLocator(defaults);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
 		String password = "pass";
 		this.expected.expect(IllegalStateException.class);
