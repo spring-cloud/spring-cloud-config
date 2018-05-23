@@ -168,52 +168,6 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator.locate(this.environment);
 	}
 
-	// @Test
-	// public void interceptorShouldAddHeaderWhenPasswordPropertySet() throws Exception {
-	// ClientHttpRequestFactory requestFactory = Mockito
-	// .mock(ClientHttpRequestFactory.class);
-	// ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-	// Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
-	// Mockito.any(HttpMethod.class))).thenReturn(request);
-	//
-	// ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-	// defaults.setUsername("username");
-	// defaults.setPassword("password");
-	// this.locator = new ConfigServicePropertySourceLocator(defaults);
-	//
-	// RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
-	// "getSecureRestTemplate", defaults);
-	// restTemplate.setRequestFactory(requestFactory);
-	//
-	// this.locator.setRestTemplate(restTemplate);
-	// this.locator.locate(this.environment);
-	//
-	// assertThat(restTemplate.getInterceptors()).hasSize(1);
-	// }
-
-	// @Test
-	// public void interceptorShouldAddHeaderWhenAuthorizationPropertySet() throws
-	// Exception {
-	// ClientHttpRequestFactory requestFactory = Mockito
-	// .mock(ClientHttpRequestFactory.class);
-	// ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-	// Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
-	// Mockito.any(HttpMethod.class))).thenReturn(request);
-	//
-	// ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-	// defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
-	// this.locator = new ConfigServicePropertySourceLocator(defaults);
-	//
-	// RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
-	// "getSecureRestTemplate", defaults);
-	// restTemplate.setRequestFactory(requestFactory);
-	//
-	// this.locator.setRestTemplate(restTemplate);
-	// this.locator.locate(this.environment);
-	//
-	// assertThat(restTemplate.getInterceptors()).hasSize(1);
-	// }
-
 	@Test
 	public void interceptorShouldAddHeadersWhenHeadersPropertySet() throws Exception {
 		MockClientHttpRequest request = new MockClientHttpRequest();
