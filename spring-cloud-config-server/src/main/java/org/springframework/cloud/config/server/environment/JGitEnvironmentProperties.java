@@ -15,15 +15,20 @@
  */
 package org.springframework.cloud.config.server.environment;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.validation.constraints.Pattern;
 
+import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
+import org.springframework.cloud.config.server.support.HttpEnvironmentRepositoryProperties;
 
 /**
  * @author Dylan Roberts
  * @author Gareth Clay
  */
-public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
+public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
+        implements HttpEnvironmentRepositoryProperties {
     private static final String DEFAULT_LABEL = "master";
 
     /** Flag to indicate that the repository should be cloned on startup (not on demand). Generally leads to slower startup but faster first query. */
@@ -84,6 +89,11 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
      * If false, ignore errors with host key
      */
     private boolean strictHostKeyChecking = true;
+
+    /**
+     * HTTP proxy configuration.
+     */
+    private Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
 
     public JGitEnvironmentProperties() {
         super();
@@ -188,11 +198,21 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties {
         this.strictHostKeyChecking = strictHostKeyChecking;
     }
 
+    @Override
     public boolean isSkipSslValidation() {
         return skipSslValidation;
     }
 
     public void setSkipSslValidation(boolean skipSslValidation) {
         this.skipSslValidation = skipSslValidation;
+    }
+
+    @Override
+    public Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy) {
+        this.proxy = proxy;
     }
 }

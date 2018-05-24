@@ -15,20 +15,12 @@
  */
 package org.springframework.cloud.config.server.config;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Optional;
 
-import javax.net.ssl.SSLContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.HttpClient;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
 
@@ -47,6 +39,9 @@ import org.springframework.cloud.config.server.environment.CompositeEnvironmentR
 import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
+import org.springframework.cloud.config.server.environment.HttpClientConfigurableHttpConnectionFactory;
+import org.springframework.cloud.config.server.environment.HttpClientVaultRestTemplateFactory;
+import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepositoryFactory;
@@ -70,9 +65,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Dave Syer
@@ -124,11 +117,24 @@ public class EnvironmentRepositoryConfiguration {
     @Configuration
     @ConditionalOnClass(TransportConfigCallback.class)
     static class JGitFactoryConfig {
+
         @Bean
         public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
                 ConfigurableEnvironment environment, ConfigServerProperties server,
+                Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
                 Optional<TransportConfigCallback> customTransportConfigCallback) {
-            return new MultipleJGitEnvironmentRepositoryFactory(environment, server, customTransportConfigCallback);
+            return new MultipleJGitEnvironmentRepositoryFactory(environment, server, jgitHttpConnectionFactory,
+					customTransportConfigCallback);
+        }
+    }
+
+    @Configuration
+    @ConditionalOnClass({ HttpClient.class, TransportConfigCallback.class })
+    static class JGitHttpClientConfig {
+
+        @Bean
+        public ConfigurableHttpConnectionFactory httpClientConnectionFactory() {
+            return new HttpClientConfigurableHttpConnectionFactory();
         }
     }
 
@@ -144,17 +150,28 @@ public class EnvironmentRepositoryConfiguration {
 
     @Configuration
     static class VaultFactoryConfig {
+
         @Bean
         public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
                 ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-                Optional<RestTemplate> skipSslValidationRestTemplate) {
-            return new VaultEnvironmentRepositoryFactory(request, watch, skipSslValidationRestTemplate);
+                Optional<VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory> vaultRestTemplateFactory) {
+            return new VaultEnvironmentRepositoryFactory(request, watch, vaultRestTemplateFactory);
+        }
+    }
+
+    @Configuration
+    @ConditionalOnClass(HttpClient.class)
+    static class VaultHttpClientConfig {
+
+        @Bean
+        public VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory vaultRestTemplateFactory() {
+            return new HttpClientVaultRestTemplateFactory();
         }
     }
 
     @Configuration
     @ConditionalOnClass(JdbcTemplate.class)
-    static class JdbcCompositeConfig {
+    static class JdbcFactoryConfig {
 	    @Bean
         @ConditionalOnBean(JdbcTemplate.class)
         public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
@@ -171,24 +188,6 @@ public class EnvironmentRepositoryConfiguration {
         }
     }
 
-	@Bean
-	@ConditionalOnClass(HttpClient.class)
-	public RestTemplate skipSslValidationRestTemplate() {
-		try {
-			SSLContext sslContext = new SSLContextBuilder()
-					.loadTrustMaterial(null, (certificate, authType) -> true)
-					.build();
-			CloseableHttpClient httpClient = HttpClients.custom()
-					.setSSLContext(sslContext)
-					.setSSLHostnameVerifier(new NoopHostnameVerifier())
-					.build();
-			HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-			requestFactory.setHttpClient(httpClient);
-			return new RestTemplate(requestFactory);
-		} catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-			throw new RuntimeException(e);
-		}
-	}
 }
 
 @Configuration
@@ -206,7 +205,7 @@ class DefaultRepositoryConfiguration {
 	@Bean
 	public MultipleJGitEnvironmentRepository defaultEnvironmentRepository(
 	        MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory,
-			MultipleJGitEnvironmentProperties environmentProperties) {
+			MultipleJGitEnvironmentProperties environmentProperties) throws Exception {
 		return gitEnvironmentRepositoryFactory.build(environmentProperties);
 	}
 }
@@ -245,7 +244,8 @@ class VaultRepositoryConfiguration {
 
 	@Bean
 	public VaultEnvironmentRepository vaultEnvironmentRepository(VaultEnvironmentRepositoryFactory factory,
-                                                                VaultEnvironmentProperties environmentProperties) {
+                                                                 VaultEnvironmentProperties environmentProperties)
+            throws Exception {
 		return factory.build(environmentProperties);
 	}
 }
