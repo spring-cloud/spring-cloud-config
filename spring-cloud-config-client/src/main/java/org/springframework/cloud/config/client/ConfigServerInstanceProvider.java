@@ -18,16 +18,15 @@ public class ConfigServerInstanceProvider {
 	}
 
 	@Retryable(interceptor = "configServerRetryInterceptor")
-	public ServiceInstance getConfigServerInstance(String serviceId) {
+	public List<ServiceInstance> getConfigServerInstances(String serviceId) {
 		logger.debug("Locating configserver (" + serviceId + ") via discovery");
 		List<ServiceInstance> instances = this.client.getInstances(serviceId);
 		if (instances.isEmpty()) {
 			throw new IllegalStateException(
 					"No instances found of configserver (" + serviceId + ")");
 		}
-		ServiceInstance instance = instances.get(0);
-		logger.debug(
-				"Located configserver (" + serviceId + ") via discovery: " + instance);
-		return instance;
+		logger.debug("Located configserver (" + serviceId
+				+ ") via discovery. No of instances found: " + instances.size());
+		return instances;
 	}
 }

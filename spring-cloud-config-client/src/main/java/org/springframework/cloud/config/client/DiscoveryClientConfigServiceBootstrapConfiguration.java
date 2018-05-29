@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,24 +79,38 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 	private void refresh() {
 		try {
 			String serviceId = this.config.getDiscovery().getServiceId();
-			ServiceInstance server = this.instanceProvider
-					.getConfigServerInstance(serviceId);
-			String url = getHomePage(server);
-			if (server.getMetadata().containsKey("password")) {
-				String user = server.getMetadata().get("user");
-				user = user == null ? "user" : user;
-				this.config.setUsername(user);
-				String password = server.getMetadata().get("password");
-				this.config.setPassword(password);
-			}
-			if (server.getMetadata().containsKey("configPath")) {
-				String path = server.getMetadata().get("configPath");
-				if (url.endsWith("/") && path.startsWith("/")) {
-					url = url.substring(0, url.length() - 1);
+			List<String> listOfUrls = new ArrayList<>();
+			List<ServiceInstance> serviceInstances = this.instanceProvider
+					.getConfigServerInstances(serviceId);
+
+			for (int i = 0; i < serviceInstances.size(); i++) {
+
+				ServiceInstance server = serviceInstances.get(i);
+				String url = getHomePage(server);
+
+				if (server.getMetadata().containsKey("password")) {
+					String user = server.getMetadata().get("user");
+					user = user == null ? "user" : user;
+					this.config.setUsername(user);
+					String password = server.getMetadata().get("password");
+					this.config.setPassword(password);
 				}
-				url = url + path;
+
+				if (server.getMetadata().containsKey("configPath")) {
+					String path = server.getMetadata().get("configPath");
+					if (url.endsWith("/") && path.startsWith("/")) {
+						url = url.substring(0, url.length() - 1);
+					}
+					url = url + path;
+				}
+
+				listOfUrls.add(url);
 			}
-			this.config.setUri(url);
+
+			String[] uri = new String[listOfUrls.size()];
+			uri = listOfUrls.toArray(uri);
+			this.config.setUri(uri);
+
 		}
 		catch (Exception ex) {
 			if (config.isFailFast()) {

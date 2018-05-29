@@ -19,8 +19,10 @@ package org.springframework.cloud.config.client;
 import org.junit.Test;
 
 import org.springframework.cloud.client.DefaultServiceInstance;
+import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
+import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.junit.Assert.assertEquals;
@@ -28,7 +30,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Dave Syer
  */
-public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {
+public class DiscoveryClientConfigServiceBootstrapConfigurationTests
+		extends BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {
 
 	@Test
 	public void offByDefault() throws Exception {
@@ -79,6 +82,24 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends Bas
 	}
 
 	@Test
+	public void multipleInstancesReturnedFromDiscovery() {
+		ServiceInstance info1 = new DefaultServiceInstance("app", "localhost", 8888,
+				true);
+		ServiceInstance info2 = new DefaultServiceInstance("app", "localhost1", 8888,
+				false);
+		givenDiscoveryClientReturnsInfoForMultipleInstances(info1, info2);
+
+		setup("spring.cloud.config.discovery.enabled=true");
+
+		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
+
+		verifyDiscoveryClientCalledOnce();
+		expectConfigClientPropertiesHasMultipleUris("https://localhost:8888/",
+				"http://localhost1:8888/");
+
+	}
+
+	@Test
 	public void setsPasssword() throws Exception {
 		this.info.getMetadata().put("password", "bar");
 		givenDiscoveryClientReturnsInfo();
@@ -87,9 +108,10 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests extends Bas
 
 		ConfigClientProperties locator = this.context
 				.getBean(ConfigClientProperties.class);
-		assertEquals("http://foo:8877/", locator.getRawUri());
-		assertEquals("bar", locator.getPassword());
-		assertEquals("user", locator.getUsername());
+		Credentials credentials = locator.getCredentials(0);
+		assertEquals("http://foo:8877/", credentials.getUri());
+		assertEquals("bar", credentials.getPassword());
+		assertEquals("user", credentials.getUsername());
 	}
 
 	@Test

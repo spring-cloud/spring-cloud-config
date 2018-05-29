@@ -76,7 +76,7 @@ public class ConfigClientProperties {
 	/**
 	 * The URI of the remote server (default http://localhost:8888).
 	 */
-	private String uri = "http://localhost:8888";
+	private String[] uri = { "http://localhost:8888" };
 
 	/**
 	 * Discovery properties.
@@ -122,15 +122,11 @@ public class ConfigClientProperties {
 		this.enabled = enabled;
 	}
 
-	public String getRawUri() {
-		return extractCredentials().uri;
-	}
-
-	public String getUri() {
+	public String[] getUri() {
 		return this.uri;
 	}
 
-	public void setUri(String url) {
+	public void setUri(String[] url) {
 		this.uri = url;
 	}
 
@@ -159,7 +155,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getUsername() {
-		return extractCredentials().username;
+		return username;
 	}
 
 	public void setUsername(String username) {
@@ -167,11 +163,15 @@ public class ConfigClientProperties {
 	}
 
 	public String getPassword() {
-		return extractCredentials().password;
+		return password;
 	}
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public Credentials getCredentials(int index) {
+		return extractCredentials(index);
 	}
 
 	public Discovery getDiscovery() {
@@ -216,9 +216,13 @@ public class ConfigClientProperties {
 		this.headers = headers;
 	}
 
-	private Credentials extractCredentials() {
+	private Credentials extractCredentials(int index) {
 		Credentials result = new Credentials();
-		String uri = this.uri;
+		int noOfUrl = this.uri.length;
+		if (index < 0 || index >= noOfUrl) {
+			throw new IllegalStateException("Trying to access an invalid array index");
+		}
+		String uri = this.uri[index];
 		result.uri = uri;
 		Credentials explicitCredentials = getUsernamePassword();
 		result.username = explicitCredentials.username;
@@ -233,16 +237,16 @@ public class ConfigClientProperties {
 			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build()
 					.toUriString();
 			result.uri = bare;
-			
+
 			// if userInfo does not contain a :, then append a : to it
 			if (!userInfo.contains(":")) {
 				userInfo = userInfo + ":";
 			}
-		    
-			int sepIndex=userInfo.indexOf(":");
+
+			int sepIndex = userInfo.indexOf(":");
 			// set username and password from uri
-			result.username = userInfo.substring(0, sepIndex); 
-			result.password = userInfo.substring(sepIndex +1);
+			result.username = userInfo.substring(0, sepIndex);
+			result.password = userInfo.substring(sepIndex + 1);
 
 			// override password if explicitly set
 			if (explicitCredentials.password != null) {
@@ -270,24 +274,38 @@ public class ConfigClientProperties {
 
 		if (StringUtils.hasText(this.username)) {
 			credentials.username = this.username.trim();
-		} else {
+		}
+		else {
 			credentials.username = "user";
 		}
 		return credentials;
 	}
 
-	private static class Credentials {
+	public static class Credentials {
+
 		private String username;
 		private String password;
 		private String uri;
+
+		public String getUsername() {
+			return username;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
+		public String getUri() {
+			return uri;
+		}
 	}
 
 	public static class Discovery {
 		public static final String DEFAULT_CONFIG_SERVER = "configserver";
 
 		/**
-		 * Flag to indicate that config server discovery is enabled (config server URL will be
-		 * looked up via discovery).
+		 * Flag to indicate that config server discovery is enabled (config server URL
+		 * will be looked up via discovery).
 		 */
 		private boolean enabled;
 		/**
@@ -336,10 +354,9 @@ public class ConfigClientProperties {
 		return "ConfigClientProperties [enabled=" + this.enabled + ", profile="
 				+ this.profile + ", name=" + this.name + ", label="
 				+ (this.label == null ? "" : this.label) + ", username=" + this.username
-				+ ", password=" + this.password + ", uri=" + this.uri
-				+ ", authorization=" + this.authorization
-				+ ", discovery.enabled=" + this.discovery.enabled + ", failFast="
-				+ this.failFast + ", token=" + this.token + "]";
+				+ ", password=" + this.password + ", uri=" + this.uri + ", authorization="
+				+ this.authorization + ", discovery.enabled=" + this.discovery.enabled
+				+ ", failFast=" + this.failFast + ", token=" + this.token + "]";
 	}
 
 }
