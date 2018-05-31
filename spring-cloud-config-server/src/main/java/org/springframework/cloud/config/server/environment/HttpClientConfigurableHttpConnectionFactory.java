@@ -15,27 +15,41 @@
  */
 package org.springframework.cloud.config.server.environment;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.eclipse.jgit.transport.http.HttpConnection;
 import org.eclipse.jgit.transport.http.apache.HttpClientConnection;
 
 import org.springframework.cloud.config.server.support.HttpClientSupport;
+import org.springframework.util.StringUtils;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * @author Dylan Roberts
  */
 public class HttpClientConfigurableHttpConnectionFactory implements ConfigurableHttpConnectionFactory {
+    Log log = LogFactory.getLog(getClass());
 
-    private Map<String, HttpClientBuilder> httpClientsByUri = new HashMap<>();
+    private static final String PLACEHOLDER_PATTERN = "\\{(\\w+)}";
+
+    Map<String, HttpClientBuilder> httpClientBuildersByUri = new LinkedHashMap<>();
 
     @Override
     public void addConfiguration(MultipleJGitEnvironmentProperties environmentProperties)
@@ -53,22 +67,81 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 
     @Override
     public HttpConnection create(URL url, Proxy proxy) throws IOException {
-        return new HttpClientConnection(url.toString(), proxy, lookupHttpClientBuilder(url).build());
+        return new HttpClientConnection(url.toString(), null, lookupHttpClientBuilder(url).build());
     }
 
     private void addHttpClient(JGitEnvironmentProperties properties) throws GeneralSecurityException {
         if (properties.getUri().startsWith("http")) {
-            httpClientsByUri.put(properties.getUri(), HttpClientSupport.builder(properties));
+            httpClientBuildersByUri.put(properties.getUri(), HttpClientSupport.builder(properties));
         }
     }
 
-    private HttpClientBuilder lookupHttpClientBuilder(URL url) throws MalformedURLException {
-        String spec = url.toString();
-        HttpClientBuilder builder = httpClientsByUri.get(spec);
-        while (builder == null) {
-            spec = spec.substring(0, spec.lastIndexOf(File.separator));
-            builder = httpClientsByUri.get(spec);
+    private HttpClientBuilder lookupHttpClientBuilder(final URL url) {
+        Map<String, HttpClientBuilder> builderMap = httpClientBuildersByUri.entrySet().stream().filter(entry -> {
+            String key = entry.getKey();
+            String spec = getUrlWithPlaceholders(url, key);
+            if (spec.equals(key)) {
+                return true;
+            }
+            int index = spec.lastIndexOf("/");
+            while (index != -1) {
+                spec = spec.substring(0, index);
+                if (spec.equals(key)) {
+                    return true;
+                }
+                index = spec.lastIndexOf("/");
+            }
+            return false;
+        }).collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        if (builderMap.isEmpty()) {
+            log.warn(String.format("No custom http config found for URL: %s", url));
+            return HttpClients.custom();
         }
-        return builder;
+        if (builderMap.size() > 1) {
+            log.error(String.format("More than one git repo URL template matched URL: %s, proxy and skipSslValidation config won't be applied. Matched templates: %s", url, builderMap.keySet().stream().collect(Collectors.joining(", "))));
+            return HttpClients.custom();
+        }
+        return new ArrayList<>(builderMap.values()).get(0);
     }
+
+    private String getUrlWithPlaceholders(URL url, String key) {
+        String spec = url.toString();
+        String[] tokens = key.split(PLACEHOLDER_PATTERN);
+        if (tokens.length > 1) {
+            List<String> placeholders = getPlaceholders(key);
+            List<String> values = getValues(spec, tokens);
+            if (placeholders.size() == values.size()) {
+                for (int i = 0; i < values.size(); i++) {
+                    spec = spec.replace(values.get(i), String.format("{%s}", placeholders.get(i)));
+                }
+            }
+        }
+        return spec;
+    }
+
+    private List<String> getValues(String spec, String[] tokens) {
+        List<String> values = new LinkedList<>();
+        for (String token : tokens) {
+            String[] valueTokens = spec.split(token);
+            if (!StringUtils.isEmpty(valueTokens[0])) {
+                values.add(valueTokens[0]);
+            }
+            if (valueTokens.length > 1) {
+                spec = valueTokens[1];
+            }
+        }
+        return values;
+    }
+
+    private List<String> getPlaceholders(String key) {
+        Pattern pattern = Pattern.compile(PLACEHOLDER_PATTERN);
+        Matcher matcher = pattern.matcher(key);
+        List<String> placeholders = new LinkedList<>();
+        while (matcher.find()) {
+            placeholders.add(matcher.group(1));
+        }
+        return placeholders;
+    }
+
 }

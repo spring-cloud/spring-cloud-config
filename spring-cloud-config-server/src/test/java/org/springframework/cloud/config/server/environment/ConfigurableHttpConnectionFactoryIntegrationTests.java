@@ -53,7 +53,7 @@ import static org.hamcrest.Matchers.instanceOf;
 /**
  * @author Dylan Roberts
  */
-public class JGitEnvironmentRepositoryHttpProxyTests {
+public class ConfigurableHttpConnectionFactoryIntegrationTests {
     private static final ProxyHostProperties AUTHENTICATED_HTTP_PROXY = new ProxyHostProperties();
     static {
         AUTHENTICATED_HTTP_PROXY.setHost("http://authenticated.http.proxy");
@@ -113,6 +113,20 @@ public class JGitEnvironmentRepositoryHttpProxyTests {
     }
 
     @Test
+    public void httpsProxy_placeholderUrl() throws Exception {
+        new SpringApplicationBuilder(TestConfiguration.class)
+                .web(WebApplicationType.NONE)
+                .properties(gitProperties("https://myrepo/{placeholder1}/{placeholder2}-repo.git", null, HTTPS_PROXY))
+                .run();
+        HttpClient httpClient = getHttpClientForUrl("https://myrepo/someplaceholdervalue/anotherplaceholdervalue-repo.git");
+        expectedException.expectCause(allOf(
+                instanceOf(UnknownHostException.class),
+                hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
+
+        makeRequest(httpClient, "https://somehost");
+    }
+
+    @Test
     public void httpsProxy_notCalled() throws Exception {
         String repoUrl = "https://myrepo/repo.git";
         new SpringApplicationBuilder(TestConfiguration.class)
@@ -150,6 +164,20 @@ public class JGitEnvironmentRepositoryHttpProxyTests {
                 .properties(gitProperties(repoUrl, HTTP_PROXY, null))
                 .run();
         HttpClient httpClient = getHttpClientForUrl(repoUrl);
+        expectedException.expectCause(allOf(
+                instanceOf(UnknownHostException.class),
+                hasProperty("message", containsString(HTTP_PROXY.getHost()))));
+
+        makeRequest(httpClient, "http://somehost");
+    }
+
+    @Test
+    public void httpProxy_placeholderUrl() throws Exception {
+        new SpringApplicationBuilder(TestConfiguration.class)
+                .web(WebApplicationType.NONE)
+                .properties(gitProperties("https://myrepo/{placeholder}-repo.git", HTTP_PROXY, null))
+                .run();
+        HttpClient httpClient = getHttpClientForUrl("https://myrepo/someplaceholdervalue-repo.git");
         expectedException.expectCause(allOf(
                 instanceOf(UnknownHostException.class),
                 hasProperty("message", containsString(HTTP_PROXY.getHost()))));
