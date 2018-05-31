@@ -53,6 +53,7 @@ import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
+import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 /**
  * @author Dave Syer
@@ -254,7 +255,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		requestFactory.setReadTimeout(client.getRequestReadTimeout());
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
-
+		if (headers.containsKey(AUTHORIZATION)) {
+			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
+		}
 		if (!headers.isEmpty()) {
 			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
 					new GenericRequestHeaderInterceptor(headers)));
@@ -265,7 +268,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private void addAuthorizationToken(ConfigClientProperties configClientProperties,
 			HttpHeaders httpHeaders, String username, String password) {
-		String authorization = configClientProperties.getAuthorization();
+		String authorization = configClientProperties.getHeaders().get(AUTHORIZATION);
 
 		if (password != null && authorization != null) {
 			throw new IllegalStateException(
@@ -291,6 +294,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			this.headers = headers;
 		}
 
+		public Map<String, String> getHeaders() {
+			return headers;
+		}
+
 		@Override
 		public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 				ClientHttpRequestExecution execution) throws IOException {
@@ -299,5 +306,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			}
 			return execution.execute(request, body);
 		}
+
 	}
 }

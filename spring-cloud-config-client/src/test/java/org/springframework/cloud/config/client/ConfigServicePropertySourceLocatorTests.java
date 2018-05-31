@@ -1,12 +1,14 @@
 package org.springframework.cloud.config.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hamcrest.core.IsInstanceOf;
@@ -17,6 +19,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
+import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
@@ -29,12 +32,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 public class ConfigServicePropertySourceLocatorTests {
 
@@ -157,11 +163,10 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class),
 				Mockito.any(HttpMethod.class))).thenReturn(request);
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		// defaults.setUri(new String[] {"http://localhost");
 		defaults.setFailFast(true);
 		defaults.setUsername("username");
 		defaults.setPassword("password");
-		defaults.setAuthorization("Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
+		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage(
@@ -199,7 +204,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	public void shouldAddAuthorizationHeaderWhenAuthorizationSet() {
 		HttpHeaders headers = new HttpHeaders();
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setAuthorization("1234abcd");
+		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
 		String password = null;
@@ -212,7 +217,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	public void shouldThrowExceptionWhenPasswordAndAuthorizationBothSet() {
 		HttpHeaders headers = new HttpHeaders();
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setAuthorization("1234abcd");
+		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
 		String password = "pass";
@@ -230,6 +235,24 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("Invalid Value for Read Timeout set.");
 		ReflectionTestUtils.invokeMethod(this.locator, "getSecureRestTemplate", defaults);
+	}
+
+	@Test
+	public void checkInterceptorHasNoAuthorizationHeaderPresent() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
+		defaults.getHeaders().put("key", "value");
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator,
+				"getSecureRestTemplate", defaults);
+		Iterator<ClientHttpRequestInterceptor> iterator = restTemplate.getInterceptors()
+				.iterator();
+		while (iterator.hasNext()) {
+			GenericRequestHeaderInterceptor genericRequestHeaderInterceptor = (GenericRequestHeaderInterceptor) iterator
+					.next();
+			assertEquals(null,
+					genericRequestHeaderInterceptor.getHeaders().get(AUTHORIZATION));
+		}
 	}
 
 	@SuppressWarnings("unchecked")
