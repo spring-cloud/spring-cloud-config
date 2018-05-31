@@ -30,6 +30,7 @@ import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpServerErrorException;
@@ -219,6 +220,16 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.expected.expectMessage("You must set either 'password' or 'authorization'");
 		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults,
 				headers, username, password);
+	}
+
+	@Test
+	public void shouldThrowExceptionWhenNegativeReadTimeoutSet() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setRequestReadTimeout(-1);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage("Invalid Value for Read Timeout set.");
+		ReflectionTestUtils.invokeMethod(this.locator, "getSecureRestTemplate", defaults);
 	}
 
 	@SuppressWarnings("unchecked")

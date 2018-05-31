@@ -209,7 +209,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
 				}
-				if (StringUtils.hasText(state)) { // TODO: opt in to sending state?
+				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
 				}
 
@@ -248,8 +248,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private RestTemplate getSecureRestTemplate(ConfigClientProperties client) {
 		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-		requestFactory.setReadTimeout((60 * 1000 * 3) + 5000); // TODO 3m5s, make
-																// configurable?
+		if (client.getRequestReadTimeout() < 0) {
+			throw new IllegalStateException("Invalid Value for Read Timeout set.");
+		}
+		requestFactory.setReadTimeout(client.getRequestReadTimeout());
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
 

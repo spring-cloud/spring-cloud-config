@@ -99,6 +99,16 @@ public class ConfigClientProperties {
 	private String authorization;
 
 	/**
+	 * timeout on waiting to read data from the Config Server.
+	 */
+	private int requestReadTimeout = (60 * 1000 * 3) + 5000;
+
+	/**
+	 * Flag to indicate whether to send state. Default true.
+	 */
+	private boolean sendState = true;
+
+	/**
 	 * Additional headers used to create the client request.
 	 */
 	private Map<String, String> headers = new HashMap<>();
@@ -206,6 +216,22 @@ public class ConfigClientProperties {
 
 	public void setAuthorization(String authorization) {
 		this.authorization = authorization;
+	}
+
+	public int getRequestReadTimeout() {
+		return requestReadTimeout;
+	}
+
+	public void setRequestReadTimeout(int requestReadTimeout) {
+		this.requestReadTimeout = requestReadTimeout;
+	}
+
+	public boolean isSendState() {
+		return sendState;
+	}
+
+	public void setSendState(boolean sendState) {
+		this.sendState = sendState;
 	}
 
 	public Map<String, String> getHeaders() {
