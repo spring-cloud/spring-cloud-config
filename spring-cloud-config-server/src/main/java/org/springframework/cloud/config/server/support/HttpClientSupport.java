@@ -17,6 +17,7 @@ package org.springframework.cloud.config.server.support;
 
 import java.security.GeneralSecurityException;
 
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
@@ -50,6 +51,12 @@ public class HttpClientSupport {
             httpClientBuilder.setDefaultCredentialsProvider(new ProxyHostCredentialsProvider(httpProxy, httpsProxy));
         }
 
-        return httpClientBuilder.setSSLContext(sslContextBuilder.build());
+        int timeout = environmentProperties.getTimeout() * 1000;
+        return httpClientBuilder
+                .setSSLContext(sslContextBuilder.build())
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setSocketTimeout(timeout)
+                        .setConnectTimeout(timeout)
+                        .build());
     }
 }

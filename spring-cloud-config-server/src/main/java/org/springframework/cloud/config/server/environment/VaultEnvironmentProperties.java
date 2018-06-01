@@ -35,6 +35,8 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
     private Integer port = 8200;
     /** Vault scheme. Defaults to http. */
     private String scheme = "http";
+    /** Timeout (in seconds) for obtaining HTTP connection, defaults to 5 seconds. */
+    private int timeout = 5;
     /** Vault backend. Defaults to secret. */
     private String backend = "secret";
     /** The key in vault shared by all applications. Defaults to application. Set to empty to disable. */
@@ -46,7 +48,6 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
      * over an HTTPS connection.
      */
     private boolean skipSslValidation = false;
-
     /**
      * HTTP proxy configuration.
      */
@@ -133,7 +134,16 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
         this.order = order;
     }
 
-    public int getKvVersion() {
+    @Override
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+	
+	public int getKvVersion() {
         return kvVersion;
     }
 
