@@ -1119,6 +1119,18 @@ To ensure high availability when you have multiple instances of Config Server de
 
 If you use HTTP basic security on your Config Server, it is currently possible to support per-Config Server auth credentials only if you embed the credentials in each URL you specify under the `spring.cloud.config.uri` property. If you use any other kind of security mechanism, you cannot (currently) support per-Config Server authentication and authorization.
 
+=== Config Client Properties
+
+The `spring.cloud.config.authorization` property has now been removed. It has now been replaced with `spring.cloud.config.headers.authorization`. Also , two new properties have been added - `spring.cloud.config.requestReadTimeout` and `spring.cloud.config.sendState'. Please find below the complete list of client properties along with their description.
+
+[options="header"]
+|===
+^|Property ^|Description
+|`spring.cloud.config.enabled`|Flag to say that remote configuration is enabled. Default true.
+|`spring.cloud.config.profile`|The default profile to use when fetching remote configuration (comma-separated).Default is 'default'.
+|`spring.cloud.config.label`|The label name to use to pull remote configuration properties. The default is set on the server (generally "master" for a git based server).
+|===
+
 === Security
 
 If you use HTTP Basic security on the server, clients need to know the password (and username if it is not the default).
