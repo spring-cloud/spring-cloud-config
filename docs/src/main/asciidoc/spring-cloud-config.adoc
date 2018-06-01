@@ -1132,13 +1132,13 @@ The `spring.cloud.config.authorization` property has now been removed. It can no
 |`spring.cloud.config.username`|The username to use (HTTP Basic) when contacting the remote server.
 |`spring.cloud.config.password`|The password to use (HTTP Basic) when contacting the remote server.
 |`spring.cloud.config.uri`|The URI of the remote server (comma-separated).
-|`spring.cloud.config.failFast`|Flag to indicate that failure to connect to the server is fatal (default false)..
-|`spring.cloud.config.token`|Security Token passed thru to underlying environment repository.
+|`spring.cloud.config.failFast`|Flag to indicate that failure to connect to the server is fatal (default false).
+|`spring.cloud.config.token`|Security Token passed through to underlying environment repository.
 |`spring.cloud.config.requestReadTimeout`|timeout on waiting to read data from the Config Server.
 |`spring.cloud.config.sendState`|Flag to indicate whether to send state. Default true.
 |`spring.cloud.config.headers.*`|Additional headers used to create the client request.
 |`spring.cloud.config.discovery.enabled`|Flag to indicate that config server discovery is enabled (config server URL will be looked up via discovery). Default is False.
-|`spring.cloud.config.discovery.serviceId`|Service id to locate config server. Default is configServer.
+|`spring.cloud.config.discovery.serviceId`|Service id to locate config server. Default is 'configServer'.
 |===
 
 === Security
