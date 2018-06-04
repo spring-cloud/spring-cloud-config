@@ -25,6 +25,7 @@ import org.springframework.core.Ordered;
 
 /**
  * @author Dylan Roberts
+ * @author Haroun Pacquee
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
 public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProperties {
@@ -52,6 +53,10 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
     private Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
 
     private int order = Ordered.LOWEST_PRECEDENCE;
+    /**
+     * Value to indicate which version of Vault kv backend is used. Defaults to 1.
+     */
+    private int kvVersion = 1;
 
     public String getHost() {
         return host;
@@ -126,5 +131,13 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
     @Override
     public void setOrder(int order) {
         this.order = order;
+    }
+
+    public int getKvVersion() {
+        return kvVersion;
+    }
+
+    public void setKvVersion(int kvVersion) {
+        this.kvVersion = kvVersion;
     }
 }
