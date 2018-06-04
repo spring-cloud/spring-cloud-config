@@ -1026,7 +1026,7 @@ handful of clients need the encrypted properties.</simpara>
   -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" \
   -keypass changeme -keystore server.jks -storepass letmein</screen>
 <simpara>Put the <literal>server.jks</literal> file in the classpath (for instance) and then in
-your <literal>application.yml</literal> for the Config Server:</simpara>
+your <literal>bootstrap.yml</literal> for the Config Server:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">encrypt:
   keyStore:
     location: classpath:/server.jks
