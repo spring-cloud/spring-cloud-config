@@ -101,16 +101,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private long lastRefresh;
 
 	/**
-	 * Time (in seconds) between refresh of the git repository
-	 */
-	private int refreshRate = 0;
-
-	/**
-	 * Time of the last refresh of the git repository
-	 */
-	private long lastRefresh;
-
-	/**
 	 * Flag to indicate that the repository should be cloned on startup (not on demand).
 	 * Generally leads to slower startup but faster first query.
 	 */
