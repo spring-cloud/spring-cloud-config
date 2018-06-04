@@ -713,7 +713,7 @@ The priority order of a repository helps resolve any potential conflicts between
 NOTE: Any type of failure when retrieving values from an environment repository results in a failure for the entire composite environment.
 
 NOTE: When using a composite environment, it is important that all repositories contain the same labels.
-If you have an environment similar to the ones in the preceding examples and you request configuration data with the `master` label but the Subversion repository does not contain a branch called `master`, the entire request fails.
+If you have an environment similar to those in the preceding examples and you request configuration data with the `master` label but the Subversion repository does not contain a branch called `master`, the entire request fails.
 
 ===== Custom Composite Environment Repositories
 
