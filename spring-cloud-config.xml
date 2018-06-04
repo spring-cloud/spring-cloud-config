@@ -620,6 +620,10 @@ The following table describes configurable Vault properties:</simpara>
 <entry align="left" valign="top"><simpara>profileSeparator</simpara></entry>
 <entry align="left" valign="top"><simpara>,</simpara></entry>
 </row>
+<row>
+<entry align="left" valign="top"><simpara>kvVersion</simpara></entry>
+<entry align="left" valign="top"><simpara>1</simpara></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -627,6 +631,7 @@ The following table describes configurable Vault properties:</simpara>
 <simpara>All of the properties in the preceding table must be prefixed with <literal>spring.cloud.config.server.vault</literal>.</simpara>
 </important>
 <simpara>All configurable properties can be found in <literal>org.springframework.cloud.config.server.environment.VaultEnvironmentRepository</literal>.</simpara>
+<simpara>Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a <literal>data/</literal> between the mount path and the actual context path and wraps secrets in a <literal>data</literal> object. Setting <literal>kvVersion=2</literal> will take this into account.</simpara>
 <simpara>With your config server running, you can make HTTP requests to the server to retrieve
 values from the Vault backend.
 To do so, you need a token for your Vault server.</simpara>
