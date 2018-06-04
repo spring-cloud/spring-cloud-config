@@ -980,7 +980,7 @@ $ keytool -genkeypair -alias mytestkey -keyalg RSA \
 ----
 
 Put the `server.jks` file in the classpath (for instance) and then in
-your `application.yml` for the Config Server:
+your `bootstrap.yml` for the Config Server:
 
 [source,yaml]
 ----
