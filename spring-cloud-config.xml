@@ -943,7 +943,7 @@ Note that the clients need to first check that the key alias is available in the
 <section xml:id="_serving_encrypted_properties">
 <title>Serving Encrypted Properties</title>
 <simpara>Sometimes you want the clients to decrypt the configuration locally, instead of doing it in the server.
-In that case, if you provide the <literal>encrypt.*</literal> configuration to locate a key, you can still have <literal>/encrypt</literal> and <literal>/decrypt</literal> endpoints, but you need to explicitly switch off the decryption of outgoing properties by setting <literal>spring.cloud.config.server.encrypt.enabled=false</literal>.
+In that case, if you provide the <literal>encrypt.*</literal> configuration to locate a key, you can still have <literal>/encrypt</literal> and <literal>/decrypt</literal> endpoints, but you need to explicitly switch off the decryption of outgoing properties by placing <literal>spring.cloud.config.server.encrypt.enabled=false</literal> in <literal>bootstrap.[yml|properties]</literal>.
 If you do not care about the endpoints, it should work if you do not configure either the key or the enabled flag.</simpara>
 </section>
 </chapter>
