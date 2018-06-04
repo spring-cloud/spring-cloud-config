@@ -1072,9 +1072,9 @@ handle all encryption as well as decryption.</simpara>
 instead of doing it in the server. In that case you can still have
 /encrypt and /decrypt endpoints (if you provide the <literal>encrypt.*</literal>
 configuration to locate a key), but you need to explicitly switch off
-the decryption of outgoing properties using
-<literal>spring.cloud.config.server.encrypt.enabled=false</literal>. If you don&#8217;t care
-about the endpoints, then it should work if you configure neither the
+the decryption of outgoing properties by placing
+<literal>spring.cloud.config.server.encrypt.enabled=false</literal> in <literal>bootstrap.[yml|properties]</literal>.
+If you don&#8217;t care about the endpoints, then it should work if you configure neither the
 key nor the enabled flag.</simpara>
 </section>
 </chapter>
