@@ -555,7 +555,7 @@ IMPORTANT: All of the properties in the preceding table must be prefixed with `s
 
 All configurable properties can be found in `org.springframework.cloud.config.server.environment.VaultEnvironmentRepository`.
 
-Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a `data/` between the mount path and the actual context path. Setting `kvVersion=2` will take this into account.
+Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a `data/` between the mount path and the actual context path and wraps secrets in a `data` object. Setting `kvVersion=2` will take this into account.
 
 With your config server running, you can make HTTP requests to the server to retrieve
 values from the Vault backend.
