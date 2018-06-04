@@ -1119,27 +1119,9 @@ To ensure high availability when you have multiple instances of Config Server de
 
 If you use HTTP basic security on your Config Server, it is currently possible to support per-Config Server auth credentials only if you embed the credentials in each URL you specify under the `spring.cloud.config.uri` property. If you use any other kind of security mechanism, you cannot (currently) support per-Config Server authentication and authorization.
 
-=== Config Client Properties
+=== Configuring Read Timeouts
 
-The `spring.cloud.config.authorization` property has now been removed. It can now be provided through the additional headers used to create the client request - `spring.cloud.config.headers.authorization`. Also , two new properties have been added - `spring.cloud.config.requestReadTimeout` and `spring.cloud.config.sendState`. Please find below the complete list of client properties along with their description.
-
-[options="header"]
-|===
-^|Property ^|Description
-|`spring.cloud.config.enabled`|Flag to say that remote configuration is enabled. Default true.
-|`spring.cloud.config.profile`|The default profile to use when fetching remote configuration (comma-separated).Default is 'default'.
-|`spring.cloud.config.label`|The label name to use to pull remote configuration properties. The default is set on the server (generally "master" for a git based server).
-|`spring.cloud.config.username`|The username to use (HTTP Basic) when contacting the remote server.
-|`spring.cloud.config.password`|The password to use (HTTP Basic) when contacting the remote server.
-|`spring.cloud.config.uri`|The URI of the remote server (comma-separated).
-|`spring.cloud.config.failFast`|Flag to indicate that failure to connect to the server is fatal (default false).
-|`spring.cloud.config.token`|Security Token passed through to underlying environment repository.
-|`spring.cloud.config.requestReadTimeout`|timeout on waiting to read data from the Config Server.
-|`spring.cloud.config.sendState`|Flag to indicate whether to send state. Default true.
-|`spring.cloud.config.headers.*`|Additional headers used to create the client request.
-|`spring.cloud.config.discovery.enabled`|Flag to indicate that config server discovery is enabled (config server URL will be looked up via discovery). Default is False.
-|`spring.cloud.config.discovery.serviceId`|Service id to locate config server. Default is 'configServer'.
-|===
+If you want to configure read timeout , this can be done by using the property `spring.cloud.config.requestReadTimeout`.
 
 === Security
 
