@@ -27,6 +27,7 @@ import org.springframework.util.StringUtils;
 /**
  * @author Spencer Gibb
  * @author Dave Syer
+ * @author Greg Jacobs
  *
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
@@ -37,8 +38,10 @@ public class BitbucketPropertyPathNotificationExtractor
 	public PropertyPathNotification extract(MultiValueMap<String, String> headers,
 			Map<String, Object> request) {
 		if (("repo:push".equals(headers.getFirst("X-Event-Key")) ||
-                                "pullrequest:fulfilled".equals(headers.getFirst("X-Event-Key"))) &&
-				StringUtils.hasText(headers.getFirst("X-Hook-UUID"))) {
+                                "pullrequest:fulfilled".equals(headers.getFirst("X-Event-Key")) ||
+		                "repo:refs_changed".equals(headers.getFirst("X-Event-Key"))) && 
+		                (StringUtils.hasText(headers.getFirst("X-Hook-UUID")) ||
+		                StringUtils.hasText(headers.getFirst("X-Request-Id"))) ) {
 			Object push = request.get("push");
 			if (push instanceof Map && ((Map<?,?>)push).get("changes") instanceof Collection) {
 				// Bitbucket doesn't tell us the files that changed so this is a
