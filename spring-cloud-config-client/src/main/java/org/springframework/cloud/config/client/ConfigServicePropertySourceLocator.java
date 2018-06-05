@@ -294,10 +294,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			this.headers = headers;
 		}
 
-		public Map<String, String> getHeaders() {
-			return headers;
-		}
-
 		@Override
 		public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 				ClientHttpRequestExecution execution) throws IOException {
@@ -305,6 +301,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				request.getHeaders().add(header.getKey(), header.getValue());
 			}
 			return execution.execute(request, body);
+		}
+
+		protected Map<String, String> getHeaders() {
+			return headers;
 		}
 
 	}

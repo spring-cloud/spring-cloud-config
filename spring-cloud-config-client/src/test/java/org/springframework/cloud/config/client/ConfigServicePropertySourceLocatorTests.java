@@ -279,4 +279,5 @@ public class ConfigServicePropertySourceLocatorTests {
 				Mockito.any(Class.class), Matchers.eq(expectedName),
 				Matchers.anyString())).thenReturn(response);
 	}
+
 }
