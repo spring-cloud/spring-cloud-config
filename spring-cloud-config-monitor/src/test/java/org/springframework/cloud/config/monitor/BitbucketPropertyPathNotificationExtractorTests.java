@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * @author Spencer Gibb
  * @author Dave Syer
+ * @author Greg Jacobs
  *
  */
 public class BitbucketPropertyPathNotificationExtractorTests {
@@ -87,7 +88,44 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNull(extracted);
 	}
+	
+	@Test
+	public void bitbucketServerSample() throws Exception {
+		// https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html
+		Map<String, Object> value = readPayload("bitbucketserver.json");
+		setServerHeaders("repo:refs_changed");
+		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
+		assertNotNull(extracted);
+		assertEquals("application.yml", extracted.getPaths()[0]);
+	}
+        
+    @Test
+	public void bitbucketServerSamplePullRequest() throws Exception {
+		// https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html
+		Map<String, Object> value = readPayload("bitbucketserver.json");
+		setServerHeaders("pr:merged");
+		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
+		assertNotNull(extracted);
+		assertEquals("application.yml", extracted.getPaths()[0]);
+	}
 
+	private void setServerHeaders(String eventKey) {
+		this.headers.set("X-Event-Key", eventKey);
+		this.headers.set("X-Request-Id", UUID.randomUUID().toString());
+	}
+
+	@Test
+	public void notAPushOrPullRequestServer() throws Exception {
+		assertNotExtractedServer("bitbucketserver.json", "repo:comment:added");
+	}
+	
+	private void assertNotExtractedServer(String path, String eventKey) throws java.io.IOException {
+		Map<String, Object> value = readPayload(path);
+		setServerHeaders(eventKey);
+		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
+		assertNull(extracted);
+	}
+	
 	private Map<String, Object> readPayload(String path) throws java.io.IOException {
 		return new ObjectMapper().readValue(
 					new ClassPathResource(path).getInputStream(),
