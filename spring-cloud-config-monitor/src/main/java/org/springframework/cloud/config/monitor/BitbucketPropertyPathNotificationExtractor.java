@@ -38,8 +38,8 @@ public class BitbucketPropertyPathNotificationExtractor
 	public PropertyPathNotification extract(MultiValueMap<String, String> headers,
 			Map<String, Object> request) {
 		if (("repo:push".equals(headers.getFirst("X-Event-Key")) ||
-                        "pullrequest:fulfilled".equals(headers.getFirst("X-Event-Key"))) && 
-		                StringUtils.hasText(headers.getFirst("X-Hook-UUID"))) {
+                                "pullrequest:fulfilled".equals(headers.getFirst("X-Event-Key"))) &&
+				StringUtils.hasText(headers.getFirst("X-Hook-UUID"))) {
 			// Bitbucket cloud
 			Object push = request.get("push");
 			if (push instanceof Map && ((Map<?,?>)push).get("changes") instanceof Collection) {
