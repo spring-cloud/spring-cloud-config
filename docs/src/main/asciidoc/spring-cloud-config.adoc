@@ -1121,7 +1121,7 @@ If you use HTTP basic security on your Config Server, it is currently possible t
 
 === Configuring Read Timeouts
 
-If you want to configure read timeout, this can be done by using the property `spring.cloud.config.requestReadTimeout`.
+If you want to configure read timeout, this can be done by using the property `spring.cloud.config.request-read-timeout`.
 
 === Security
 
