@@ -33,6 +33,12 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
     }
 
     @Test
+    public void nullPointerCheckGh1051() throws Exception {
+        MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+        connectionFactory.addConfiguration(properties);
+    }
+
+    @Test
     public void matchingUrl() throws Exception {
         String url = "http://localhost/test.git";
         MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();

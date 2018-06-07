@@ -71,7 +71,7 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
     }
 
     private void addHttpClient(JGitEnvironmentProperties properties) throws GeneralSecurityException {
-        if (properties.getUri().startsWith("http")) {
+        if (properties.getUri() != null && properties.getUri().startsWith("http")) {
             httpClientBuildersByUri.put(properties.getUri(), HttpClientSupport.builder(properties));
         }
     }
