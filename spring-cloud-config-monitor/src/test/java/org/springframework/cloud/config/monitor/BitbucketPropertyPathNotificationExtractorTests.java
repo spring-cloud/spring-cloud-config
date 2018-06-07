@@ -101,7 +101,7 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 	public void missingChanges() throws Exception {
 		// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Push
 		Map<String, Object> value = readPayload("bitbucket-invalid.json");
-		setHeaders(eventKey);
+		setHeaders("repo:push");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNull(extracted);
 	}
