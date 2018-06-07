@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
@@ -40,7 +41,12 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 
 	private BitbucketPropertyPathNotificationExtractor extractor = new BitbucketPropertyPathNotificationExtractor();
 
-	private HttpHeaders headers = new HttpHeaders();
+	private HttpHeaders headers;
+
+	@Before
+	public void setup(){
+			headers = new HttpHeaders();
+	}
 
 	@Test
 	public void bitbucketSample() throws Exception {
@@ -81,6 +87,24 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 	public void githubNotDetected() throws Exception {
 		assertNotExtracted("github.json", "repo:push");
 	}
+	
+	@Test
+	public void missingUuidHeader() throws Exception {
+		// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Push
+		Map<String, Object> value = readPayload("bitbucket.json");
+		this.headers.set("X-Event-Key", "repo:push");
+		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
+		assertNull(extracted);
+	}
+	
+	@Test
+	public void missingChanges() throws Exception {
+		// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Push
+		Map<String, Object> value = readPayload("bitbucket-invalid.json");
+		setHeaders(eventKey);
+		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
+		assertNull(extracted);
+	}
 
 	private void assertNotExtracted(String path, String eventKey) throws java.io.IOException {
 		Map<String, Object> value = readPayload(path);
@@ -117,6 +141,24 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 	@Test
 	public void notAPushOrPullRequestServer() throws Exception {
 		assertNotExtractedServer("bitbucketserver.json", "repo:comment:added");
+	}
+	
+	@Test
+	public void missingUuidHeaderServer() throws Exception {
+		// https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html
+		Map<String, Object> value = readPayload("bitbucketserver.json");
+		this.headers.set("X-Event-Key", "repo:refs_changed");
+		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
+		assertNull(extracted);
+	}
+	
+	@Test
+	public void missingChangesServer() throws Exception {
+		// https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html
+		Map<String, Object> value = readPayload("bitbucketserver-invalid.json");
+		setServerHeaders("repo:refs_changed");
+		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
+		assertNull(extracted);
 	}
 	
 	private void assertNotExtractedServer(String path, String eventKey) throws java.io.IOException {
