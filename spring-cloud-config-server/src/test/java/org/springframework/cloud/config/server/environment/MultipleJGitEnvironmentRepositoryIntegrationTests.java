@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -220,6 +221,22 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri,
 						"spring.cloud.config.server.git.basedir:/tmp")
 				.run();
+	}
+
+	@Test
+	public void patternMatchingShortcutSyntax() throws IOException {
+		String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		String test1RepoUri = ConfigServerTestUtils.prepareLocalRepo("test1-config-repo");
+
+		this.context = new SpringApplicationBuilder(TestConfiguration.class)
+				.web(WebApplicationType.NONE)
+				.properties("spring.cloud.config.server.git.repos.admin:" + test1RepoUri,
+						"spring.cloud.config.server.git.uri:" + defaultRepoUri)
+				.run();
+
+		MultipleJGitEnvironmentProperties properties = this.context.getBean(MultipleJGitEnvironmentProperties.class);
+		Assertions.assertThat(properties.getRepos()).hasSize(1)
+				.containsOnlyKeys("admin");
 	}
 
 	@Configuration
