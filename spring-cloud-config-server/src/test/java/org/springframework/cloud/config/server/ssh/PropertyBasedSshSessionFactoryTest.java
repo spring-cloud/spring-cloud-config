@@ -172,7 +172,7 @@ public class PropertyBasedSshSessionFactoryTest {
 	}
 
 	@Test
-	public void proxyHostIsSet() throws Exception {
+	public void proxyHostIsSet() {
 		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
 				.uri("git@gitlab.example.local:someorg/somerepo.git")
 				.privateKey(PRIVATE_KEY)
@@ -188,6 +188,20 @@ public class PropertyBasedSshSessionFactoryTest {
 
 		verify(session).setProxy(captor.capture());
 		Assert.assertNotNull(captor.getValue());
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void proxyPortIsMissing() {
+		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
+				.uri("git@gitlab.example.local:someorg/somerepo.git")
+				.privateKey(PRIVATE_KEY)
+				.hostKey(HOST_KEY)
+				.hostKeyAlgorithm(HOST_KEY_ALGORITHM)
+				.proxyHost("localhost")
+				.build();
+		setupSessionFactory(sshKey);
+
+		factory.configure(hc, session);
 	}
 
 	private void setupSessionFactory(SshUri sshKey) {

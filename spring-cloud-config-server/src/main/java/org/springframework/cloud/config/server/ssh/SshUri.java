@@ -38,7 +38,7 @@ public abstract class SshUri {
 	private boolean ignoreLocalSshSettings;
 	private boolean strictHostKeyChecking = true;
 	private String proxyHost;
-	private int proxyPort = 8080;
+	private Integer proxyPort;
 
 	public static SshUriPropertiesBuilder builder() {
 		return new SshUriPropertiesBuilder();
@@ -116,11 +116,11 @@ public abstract class SshUri {
 		this.proxyHost = proxyHost;
 	}
 
-	public int getProxyPort() {
+	public Integer getProxyPort() {
 		return proxyPort;
 	}
 
-	public void setProxyPort(int proxyPort) {
+	public void setProxyPort(Integer proxyPort) {
 		this.proxyPort = proxyPort;
 	}
 
@@ -147,7 +147,7 @@ public abstract class SshUri {
 		private boolean ignoreLocalSshSettings;
 		private boolean strictHostKeyChecking = true;
 		private String proxyHost;
-		private int proxyPort = 8080;
+		private Integer proxyPort;
 		private Map<String, SshUriNestedRepoProperties> repos = new LinkedHashMap<>();
 
 		SshUriPropertiesBuilder() {
@@ -198,7 +198,7 @@ public abstract class SshUri {
 			return this;
 		}
 
-		public SshUri.SshUriPropertiesBuilder proxyPort(int proxyPort) {
+		public SshUri.SshUriPropertiesBuilder proxyPort(Integer proxyPort) {
 			this.proxyPort = proxyPort;
 			return this;
 		}

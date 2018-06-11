@@ -24,6 +24,7 @@ import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.util.Base64;
 import org.eclipse.jgit.util.FS;
+import org.springframework.util.Assert;
 
 import java.util.Map;
 
@@ -67,7 +68,8 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 		}
 		String proxyHost = sshProperties.getProxyHost();
 		if (proxyHost != null) {
-			int proxyPort = sshProperties.getProxyPort();
+			Integer proxyPort = sshProperties.getProxyPort();
+			Assert.notNull(proxyPort, "Property proxyPort is required, since proxyHost is set.");
 			session.setProxy(new ProxyHTTP(proxyHost, proxyPort));
 		}
 	}
