@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.config;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.ProxyHTTP;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.*;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -96,6 +97,11 @@ public class TransportConfiguration {
 				protected void configure(OpenSshConfig.Host hc, Session session) {
 					session.setConfig("StrictHostKeyChecking",
 							sshUriProperties.isStrictHostKeyChecking() ? "yes" : "no");
+					String proxyHost = sshUriProperties.getProxyHost();
+					if (proxyHost != null) {
+						int proxyPort = sshUriProperties.getProxyPort();
+						session.setProxy(new ProxyHTTP(proxyHost, proxyPort));
+					}
 				}
 			});
 		}

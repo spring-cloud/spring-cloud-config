@@ -15,16 +15,17 @@
  */
 package org.springframework.cloud.config.server.ssh;
 
-import java.util.Map;
-
 import com.jcraft.jsch.HostKey;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.ProxyHTTP;
 import com.jcraft.jsch.Session;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.util.Base64;
 import org.eclipse.jgit.util.FS;
+
+import java.util.Map;
 
 /**
  * In a cloud environment local SSH config files such as `.known_hosts` may not be suitable for providing
@@ -63,6 +64,11 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 		String preferredAuthentications = sshProperties.getPreferredAuthentications();
 		if (preferredAuthentications != null) {
 			session.setConfig(PREFERRED_AUTHENTICATIONS, preferredAuthentications);
+		}
+		String proxyHost = sshProperties.getProxyHost();
+		if (proxyHost != null) {
+			int proxyPort = sshProperties.getProxyPort();
+			session.setProxy(new ProxyHTTP(proxyHost, proxyPort));
 		}
 	}
 
