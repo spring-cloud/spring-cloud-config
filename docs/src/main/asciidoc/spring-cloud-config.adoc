@@ -445,6 +445,12 @@ Example:
 |*hostKeyAlgorithm*
 |One of `ssh-dss, ssh-rsa, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384 ,ecdsa-sha2-nistp521`. Must be set if `hostKey` is also set
 
+|*proxyHost*
+|Hostname for the ssh proxy connection. Is optional and used only when `ignoreLocalSshSettings` is true
+
+|*proxyPort*
+|Port for the ssh proxy connection. Must be set if `proxyHost` is also set
+
 |*strictHostKeyChecking*
 |`true` or `false`. If false, ignore errors with host key
 
