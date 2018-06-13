@@ -506,6 +506,7 @@ Thus, the default behaviour with no placeholders is the same as adding a search 
 For example, `file:/tmp/config` is the same as `file:/tmp/config,file:/tmp/config/{label}`.
 This behavior can be disabled by setting `spring.cloud.config.server.native.addLabelLocations=false`.
 
+[[vault-backend]]
 ==== Vault Backend
 
 Spring Cloud Config Server also supports https://www.vaultproject.io[Vault] as a backend.
@@ -740,21 +741,22 @@ In the above example, the Subversion repository is listed first, so a value foun
 A value found in the `rex` Git repository will be used before a value found for the same property in the `walter` Git repository.
 
 If you want to pull configuration data only from repositories that are each of distinct types, you can enable the corresponding profiles, rather than the `composite` profile, in your configuration server's application properties or YAML file.
-If, for example, you want to pull configuration data from a single Git repository and a single Subversion repository, you can set the following properties for your configuration server:
+If, for example, you want to pull configuration data from a single Git repository and a single HashiCorp Vault server, you can set the following properties for your configuration server:
 
 [source,yaml]
 ----
 spring:
   profiles:
-    active: git, subversion
+    active: git, vault
   cloud:
     config:
       server:
         git:
           uri: file:///path/to/git/repo
           order: 2
-        svn:
-          uri: file:///path/to/svn/repo
+        vault:
+          host: 127.0.0.1
+          port: 8200
           order: 1
 ----
 
@@ -762,6 +764,8 @@ Using this configuration, precedence can be determined by an `order` property.
 You can use the `order` property to specify the priority order for all your repositories.
 The lower the numerical value of the `order` property, the higher priority it has.
 The priority order of a repository helps resolve any potential conflicts between repositories that contain values for the same properties.
+
+NOTE: If your composite environment includes a Vault server as in the previous example, you must include a Vault token in every request made to the configuration server. See <<vault-backend,Vault Backend>>.
 
 NOTE: Any type of failure when retrieving values from an environment repository results in a failure for the entire composite environment.
 
