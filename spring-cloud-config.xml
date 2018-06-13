@@ -571,7 +571,7 @@ Thus, the default behaviour with no placeholders is the same as adding a search 
 For example, <literal>file:/tmp/config</literal> is the same as <literal>file:/tmp/config,file:/tmp/config/{label}</literal>.
 This behavior can be disabled by setting <literal>spring.cloud.config.server.native.addLabelLocations=false</literal>.</simpara>
 </section>
-<section xml:id="_vault_backend">
+<section xml:id="vault-backend">
 <title>Vault Backend</title>
 <simpara>Spring Cloud Config Server also supports <link xl:href="https://www.vaultproject.io">Vault</link> as a backend.</simpara>
 <sidebar>
@@ -678,6 +678,62 @@ An application with the name, <literal>myApp</literal>, would have any propertie
 When <literal>myApp</literal> has the <literal>dev</literal> profile enabled, properties written to all of the above paths would be available to it, with properties in the first path in the list taking priority over the others.</simpara>
 </section>
 </section>
+<section xml:id="_accessing_backends_through_a_proxy">
+<title>Accessing Backends Through a Proxy</title>
+<simpara>The configuration server can access a Git or Vault backend through an HTTP or HTTPS proxy. This behavior is controlled for either Git or Vault by settings under <literal>proxy.http</literal> and <literal>proxy.https</literal>. These settings are per repository, so if you are using a <link linkend="composite-environment-repositories">composite environment repository</link> you must configure proxy settings for each backend in the composite individually. If using a network which requires separate proxy servers for HTTP and HTTPS URLs, you can configure both the HTTP and the HTTPS proxy settings for a single backend.</simpara>
+<simpara>The following table describes the proxy configuration properties for both HTTP and HTTPS proxies. All of these properties must be prefixed by <literal>proxy.http</literal> or <literal>proxy.https</literal>.</simpara>
+<table frame="all" rowsep="1" colsep="1">
+<title>Proxy Configuration Properties</title>
+<tgroup cols="2">
+<colspec colname="col_1" colwidth="50*"/>
+<colspec colname="col_2" colwidth="50*"/>
+<thead>
+<row>
+<entry align="left" valign="top">Property Name</entry>
+<entry align="left" valign="top">Remarks</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">host</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>The host of the proxy.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">port</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>The port with which to access the proxy.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">nonProxyHosts</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Any hosts which the configuration server should access outside the proxy. If values are provided for both <literal>proxy.http.nonProxyHosts</literal> and <literal>proxy.https.nonProxyHosts</literal>, the <literal>proxy.http</literal> value will be used.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">username</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>The username with which to authenticate to the proxy. If values are provided for both <literal>proxy.http.username</literal> and <literal>proxy.https.username</literal>, the <literal>proxy.http</literal> value will be used.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">password</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>The password with which to authenticate to the proxy. If values are provided for both <literal>proxy.http.password</literal> and <literal>proxy.https.password</literal>, the <literal>proxy.http</literal> value will be used.</simpara></entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+<simpara>The following configuration uses an HTTPS proxy to access a Git repository.</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  profiles:
+    active: git
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          proxy:
+            https:
+              host: my-proxy.host.io
+              password: myproxypassword
+              port: '3128'
+              username: myproxyusername
+              nonProxyHosts: example.com</programlisting>
+</section>
 <section xml:id="_sharing_configuration_with_all_applications">
 <title>Sharing Configuration With All Applications</title>
 <simpara>Sharing configuration between all applications varies according to which approach you take, as described in the following topics:</simpara>
@@ -716,7 +772,7 @@ If you include the right dependencies on the classpath (see the user guide for m
 All fields are of type String in Java, so you can make them <literal>VARCHAR</literal> of whatever length you need.
 Property values behave in the same way as they would if they came from Spring Boot properties files named <literal>{application}-{profile}.properties</literal>, including all the encryption and decryption, which will be applied as post-processing steps (that is, not in the repository implementation directly).</simpara>
 </section>
-<section xml:id="_composite_environment_repositories">
+<section xml:id="composite-environment-repositories">
 <title>Composite Environment Repositories</title>
 <simpara>In some scenarios, you may wish to pull configuration data from multiple environment repositories.
 To do so, you can enable the <literal>composite</literal> profile in your configuration server&#8217;s application properties or YAML file.
@@ -741,23 +797,27 @@ If, for example, you want to pull configuration data from a Subversion repositor
 In the above example, the Subversion repository is listed first, so a value found in the Subversion repository will override values found for the same property in one of the Git repositories.
 A value found in the <literal>rex</literal> Git repository will be used before a value found for the same property in the <literal>walter</literal> Git repository.</simpara>
 <simpara>If you want to pull configuration data only from repositories that are each of distinct types, you can enable the corresponding profiles, rather than the <literal>composite</literal> profile, in your configuration server&#8217;s application properties or YAML file.
-If, for example, you want to pull configuration data from a single Git repository and a single Subversion repository, you can set the following properties for your configuration server:</simpara>
+If, for example, you want to pull configuration data from a single Git repository and a single HashiCorp Vault server, you can set the following properties for your configuration server:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring:
   profiles:
-    active: git, subversion
+    active: git, vault
   cloud:
     config:
       server:
         git:
           uri: file:///path/to/git/repo
           order: 2
-        svn:
-          uri: file:///path/to/svn/repo
+        vault:
+          host: 127.0.0.1
+          port: 8200
           order: 1</programlisting>
 <simpara>Using this configuration, precedence can be determined by an <literal>order</literal> property.
 You can use the <literal>order</literal> property to specify the priority order for all your repositories.
 The lower the numerical value of the <literal>order</literal> property, the higher priority it has.
 The priority order of a repository helps resolve any potential conflicts between repositories that contain values for the same properties.</simpara>
+<note>
+<simpara>If your composite environment includes a Vault server as in the previous example, you must include a Vault token in every request made to the configuration server. See <link linkend="vault-backend">Vault Backend</link>.</simpara>
+</note>
 <note>
 <simpara>Any type of failure when retrieving values from an environment repository results in a failure for the entire composite environment.</simpara>
 </note>
