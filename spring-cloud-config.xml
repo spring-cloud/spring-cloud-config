@@ -215,10 +215,10 @@ If the YAML files have documents inside them that point to Spring profiles, thos
 If there are profile-specific YAML (or properties) files, these are also applied with higher precedence than the defaults.
 Higher precedence translates to a <literal>PropertySource</literal> listed earlier in the <literal>Environment</literal>.
 (These same rules apply in a standalone Spring Boot application.)</simpara>
-<simpara>You can set spring.cloud.config.server.accept-empty to false so that Server would return a HTTP 404 status, if the application is not found.By default, this flag is set to true.
-==== Git Backend</simpara>
-<simpara>The default implementation of <literal>EnvironmentRepository</literal> uses a Git backend, which is very convenient for managing upgrades and physical
-environments and for auditing changes.
+<simpara>You can set spring.cloud.config.server.accept-empty to false so that Server would return a HTTP 404 status, if the application is not found.By default, this flag is set to true.</simpara>
+<section xml:id="_git_backend">
+<title>Git Backend</title>
+<simpara>The default implementation of <literal>EnvironmentRepository</literal> uses a Git backend, which is very convenient for managing upgrades and physical environments and for auditing changes.
 To change the location of the repository, you can set the <literal>spring.cloud.config.server.git.uri</literal> configuration property in the Config Server (for example in <literal>application.yml</literal>).
 If you set it with a <literal>file:</literal> prefix, it should work from a local repository so that you can get started quickly and easily without a server. However, in that case, the server operates directly on the local repository without cloning it (it does not matter if it is not bare because the Config Server never makes changes to the "remote" repository).
 To scale the Config Server up and make it highly available, you need to have all instances of the server pointing to the same repository, so only a shared file system would work.
@@ -227,8 +227,29 @@ Even in that case, it is better to use the <literal>ssh:</literal> protocol for 
 If the git branch or tag name contains a slash (<literal>/</literal>), then the label in the HTTP URL should instead be specified with the special string <literal>(_)</literal> (to avoid ambiguity with other URL paths).
 For example, if the label is <literal>foo/bar</literal>, replacing the slash would result in the following label: <literal>foo(_)bar</literal>.
 The inclusion of the special string <literal>(_)</literal> can also be applied to the <literal>{application}</literal> parameter.
-If you use a command-line client such as curl, be careful with the brackets in the URL&#8201;&#8212;&#8201;you should
-escape them from the shell with single quotes ('').</simpara>
+If you use a command-line client such as curl, be careful with the brackets in the URL&#8201;&#8212;&#8201;you should escape them from the shell with single quotes ('').</simpara>
+<section xml:id="_skipping_ssl_certificate_validation">
+<title>Skipping SSL Certificate Validation</title>
+<simpara>The configuration server&#8217;s validation of the Git server&#8217;s SSL certificate can be disabled by setting the <literal>git.skipSslValidation</literal> property to <literal>true</literal> (default is <literal>false</literal>).</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          skipSslValidation: true</programlisting>
+</section>
+<section xml:id="_setting_http_connection_timeout">
+<title>Setting HTTP Connection Timeout</title>
+<simpara>You can configure the time, in seconds, that the configuration server will wait to acquire an HTTP connection. Use the <literal>git.timeout</literal> property.</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          timeout: 4</programlisting>
+</section>
 <section xml:id="_placeholders_in_git_uri">
 <title>Placeholders in Git URI</title>
 <simpara>Spring Cloud Config Server supports a git repository URL with placeholders for the <literal>{application}</literal> and <literal>{profile}</literal> (and <literal>{label}</literal> if you need it, but remember that the label is applied as a git label anyway).
@@ -536,6 +557,7 @@ Example:</simpara>
 <simpara>The default value for <literal>deleteUntrackedBranches</literal> property is <literal>false</literal>.</simpara>
 </note>
 </section>
+</section>
 <section xml:id="_version_control_backend_filesystem_use">
 <title>Version Control Backend Filesystem Use</title>
 <warning>
@@ -623,6 +645,14 @@ The following table describes configurable Vault properties:</simpara>
 <row>
 <entry align="left" valign="top"><simpara>kvVersion</simpara></entry>
 <entry align="left" valign="top"><simpara>1</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>skipSslValidation</simpara></entry>
+<entry align="left" valign="top"><simpara>false</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>timeout</simpara></entry>
+<entry align="left" valign="top"><simpara>5</simpara></entry>
 </row>
 </tbody>
 </tgroup>
