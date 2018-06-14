@@ -106,10 +106,10 @@ Higher precedence translates to a `PropertySource` listed earlier in the `Enviro
 (These same rules apply in a standalone Spring Boot application.)
 
 You can set spring.cloud.config.server.accept-empty to false so that Server would return a HTTP 404 status, if the application is not found.By default, this flag is set to true.
+
 ==== Git Backend
 
-The default implementation of `EnvironmentRepository` uses a Git backend, which is very convenient for managing upgrades and physical
-environments and for auditing changes.
+The default implementation of `EnvironmentRepository` uses a Git backend, which is very convenient for managing upgrades and physical environments and for auditing changes.
 To change the location of the repository, you can set the `spring.cloud.config.server.git.uri` configuration property in the Config Server (for example in `application.yml`).
 If you set it with a `file:` prefix, it should work from a local repository so that you can get started quickly and easily without a server. However, in that case, the server operates directly on the local repository without cloning it (it does not matter if it is not bare because the Config Server never makes changes to the "remote" repository).
 To scale the Config Server up and make it highly available, you need to have all instances of the server pointing to the same repository, so only a shared file system would work.
@@ -119,8 +119,37 @@ This repository implementation maps the `{label}` parameter of the HTTP resource
 If the git branch or tag name contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `({special-string})` (to avoid ambiguity with other URL paths).
 For example, if the label is `foo/bar`, replacing the slash would result in the following label: `foo({special-string})bar`.
 The inclusion of the special string `({special-string})` can also be applied to the `{application}` parameter.
-If you use a command-line client such as curl, be careful with the brackets in the URL -- you should
-escape them from the shell with single quotes ('').
+If you use a command-line client such as curl, be careful with the brackets in the URL -- you should escape them from the shell with single quotes ('').
+
+===== Skipping SSL Certificate Validation
+
+The configuration server's validation of the Git server's SSL certificate can be disabled by setting the `git.skipSslValidation` property to `true` (default is `false`).
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          skipSslValidation: true
+----
+
+===== Setting HTTP Connection Timeout
+
+You can configure the time, in seconds, that the configuration server will wait to acquire an HTTP connection. Use the `git.timeout` property.
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          timeout: 4
+----
 
 ===== Placeholders in Git URI
 
@@ -549,6 +578,12 @@ The following table describes configurable Vault properties:
 
 |kvVersion
 |1
+
+|skipSslValidation
+|false
+
+|timeout
+|5
 
 |===
 
