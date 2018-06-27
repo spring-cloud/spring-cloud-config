@@ -537,6 +537,14 @@ Example:</simpara>
 <entry align="left" valign="top"><simpara>One of <literal>ssh-dss, ssh-rsa, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384 ,ecdsa-sha2-nistp521</literal>. Must be set if <literal>hostKey</literal> is also set</simpara></entry>
 </row>
 <row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">proxyHost</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Hostname for the ssh proxy connection. Is optional and used only when <literal>ignoreLocalSshSettings</literal> is true</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">proxyPort</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Port for the ssh proxy connection. Must be set if <literal>proxyHost</literal> is also set</simpara></entry>
+</row>
+<row>
 <entry align="left" valign="top"><simpara><emphasis role="strong">strictHostKeyChecking</emphasis></simpara></entry>
 <entry align="left" valign="top"><simpara><literal>true</literal> or <literal>false</literal>. If false, ignore errors with host key</simpara></entry>
 </row>
