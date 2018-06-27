@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.ssh;
 
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -35,6 +36,7 @@ import org.springframework.core.io.Resource;
 import com.jcraft.jsch.HostKey;
 import com.jcraft.jsch.HostKeyRepository;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.ProxyHTTP;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
@@ -167,6 +169,39 @@ public class PropertyBasedSshSessionFactoryTest {
 
 		verify(jSch).setKnownHosts(captor.capture());
 		Assert.assertEquals("/ssh/known_hosts", captor.getValue());
+	}
+
+	@Test
+	public void proxyHostIsSet() {
+		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
+				.uri("git@gitlab.example.local:someorg/somerepo.git")
+				.privateKey(PRIVATE_KEY)
+				.hostKey(HOST_KEY)
+				.hostKeyAlgorithm(HOST_KEY_ALGORITHM)
+				.proxyHost("localhost")
+				.proxyPort(8080)
+				.build();
+		setupSessionFactory(sshKey);
+
+		factory.configure(hc, session);
+		ArgumentCaptor<ProxyHTTP> captor = ArgumentCaptor.forClass(ProxyHTTP.class);
+
+		verify(session).setProxy(captor.capture());
+		Assert.assertNotNull(captor.getValue());
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void proxyPortIsMissing() {
+		SshUri sshKey = new SshUriProperties.SshUriPropertiesBuilder()
+				.uri("git@gitlab.example.local:someorg/somerepo.git")
+				.privateKey(PRIVATE_KEY)
+				.hostKey(HOST_KEY)
+				.hostKeyAlgorithm(HOST_KEY_ALGORITHM)
+				.proxyHost("localhost")
+				.build();
+		setupSessionFactory(sshKey);
+
+		factory.configure(hc, session);
 	}
 
 	private void setupSessionFactory(SshUri sshKey) {

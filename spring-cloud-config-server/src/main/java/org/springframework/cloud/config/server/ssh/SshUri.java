@@ -37,6 +37,8 @@ public abstract class SshUri {
 	private String preferredAuthentications;
 	private boolean ignoreLocalSshSettings;
 	private boolean strictHostKeyChecking = true;
+	private String proxyHost;
+	private Integer proxyPort;
 
 	public static SshUriPropertiesBuilder builder() {
 		return new SshUriPropertiesBuilder();
@@ -106,6 +108,22 @@ public abstract class SshUri {
 		this.strictHostKeyChecking = strictHostKeyChecking;
 	}
 
+	public String getProxyHost() {
+		return proxyHost;
+	}
+
+	public void setProxyHost(String proxyHost) {
+		this.proxyHost = proxyHost;
+	}
+
+	public Integer getProxyPort() {
+		return proxyPort;
+	}
+
+	public void setProxyPort(Integer proxyPort) {
+		this.proxyPort = proxyPort;
+	}
+
 	public String toString() {
 		return "org.springframework.cloud.config.server.ssh.SshUriProperties(uri=" + this.getUri()
 				+ " hostKeyAlgorithm=" + this.getHostKeyAlgorithm()
@@ -114,7 +132,9 @@ public abstract class SshUri {
 				+ ", ignoreLocalSshSettings=" + this.isIgnoreLocalSshSettings()
 				+ ", knownHostsFile=" + this.getKnownHostsFile()
 				+ ", preferredAuthentications=" + this.getPreferredAuthentications()
-				+ ", strictHostKeyChecking=" + this.isStrictHostKeyChecking() + ",)";
+				+ ", strictHostKeyChecking=" + this.isStrictHostKeyChecking()
+				+ ", proxyHost=" + this.getProxyHost()
+				+ ", proxyPort=" + this.getProxyPort() + ",)";
 	}
 
 	public static class SshUriPropertiesBuilder {
@@ -126,6 +146,8 @@ public abstract class SshUri {
 		private String preferredAuthentications;
 		private boolean ignoreLocalSshSettings;
 		private boolean strictHostKeyChecking = true;
+		private String proxyHost;
+		private Integer proxyPort;
 		private Map<String, SshUriNestedRepoProperties> repos = new LinkedHashMap<>();
 
 		SshUriPropertiesBuilder() {
@@ -171,6 +193,16 @@ public abstract class SshUri {
 			return this;
 		}
 
+		public SshUri.SshUriPropertiesBuilder proxyHost(String proxyHost) {
+			this.proxyHost = proxyHost;
+			return this;
+		}
+
+		public SshUri.SshUriPropertiesBuilder proxyPort(Integer proxyPort) {
+			this.proxyPort = proxyPort;
+			return this;
+		}
+
 		public SshUri.SshUriPropertiesBuilder repos(Map<String, SshUriNestedRepoProperties> repos) {
 			this.repos = repos;
 			return this;
@@ -198,6 +230,8 @@ public abstract class SshUri {
 			sshUriNestedRepoProperties.setPreferredAuthentications(preferredAuthentications);
 			sshUriNestedRepoProperties.setIgnoreLocalSshSettings(ignoreLocalSshSettings);
 			sshUriNestedRepoProperties.setStrictHostKeyChecking(strictHostKeyChecking);
+			sshUriNestedRepoProperties.setProxyHost(proxyHost);
+			sshUriNestedRepoProperties.setProxyPort(proxyPort);
 		}
 
 		public String toString() {
@@ -209,6 +243,8 @@ public abstract class SshUri {
 					+ ", preferredAuthentications=" + this.preferredAuthentications
 					+ ", ignoreLocalSshSettings=" + this.ignoreLocalSshSettings
 					+ ", strictHostKeyChecking=" + this.strictHostKeyChecking
+					+ ", proxyHost=" + this.proxyHost
+					+ ", proxyPort=" + this.proxyPort
 					+ ", repos=" + this.repos + ")";
 		}
 	}
