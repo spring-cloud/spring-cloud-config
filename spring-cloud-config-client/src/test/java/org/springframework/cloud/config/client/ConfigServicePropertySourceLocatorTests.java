@@ -103,6 +103,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.when(response.getHeaders()).thenReturn(headers);
 		Mockito.when(response.getStatusCode()).thenReturn(
 				HttpStatus.INTERNAL_SERVER_ERROR);
+		Mockito.when(response.getRawStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR.value());
 		Mockito.when(response.getBody()).thenReturn(
 				new ByteArrayInputStream("{}".getBytes()));
 		this.locator.setRestTemplate(restTemplate);
@@ -132,6 +133,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.when(response.getHeaders()).thenReturn(headers);
 		Mockito.when(response.getStatusCode()).thenReturn(
 				HttpStatus.NOT_FOUND);
+		Mockito.when(response.getRawStatusCode()).thenReturn(HttpStatus.NOT_FOUND.value());
 		Mockito.when(response.getBody()).thenReturn(
 				new ByteArrayInputStream("".getBytes()));
 		this.locator.setRestTemplate(restTemplate);
