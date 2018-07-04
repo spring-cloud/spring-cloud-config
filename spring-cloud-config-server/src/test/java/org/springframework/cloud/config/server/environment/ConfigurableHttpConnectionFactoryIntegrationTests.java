@@ -16,10 +16,16 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.SocketAddress;
+import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.http.client.HttpClient;
@@ -200,6 +206,39 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
         makeRequest(httpClient, "https://somehost");
     }
 
+    @Test
+    public void httpProxy_fromSystemProperty() throws Exception {
+        ProxySelector defaultProxySelector = ProxySelector.getDefault();
+        try {
+            ProxySelector.setDefault(new ProxySelector() {
+                @Override
+                public List<Proxy> select(URI uri) {
+                    InetSocketAddress address = new InetSocketAddress(HTTP_PROXY.getHost(), HTTP_PROXY.getPort());
+                    Proxy proxy = new Proxy(Proxy.Type.HTTP, address);
+                    return Collections.singletonList(proxy);
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+
+                }
+            });
+            String repoUrl = "https://myrepo/repo.git";
+            new SpringApplicationBuilder(TestConfiguration.class)
+                    .web(WebApplicationType.NONE)
+                    .properties(new String[] {"spring.cloud.config.server.git.uri=" + repoUrl})
+                    .run();
+            HttpClient httpClient = getHttpClientForUrl(repoUrl);
+            expectedException.expectCause(allOf(
+                    instanceOf(UnknownHostException.class),
+                    hasProperty("message", containsString(HTTP_PROXY.getHost()))));
+
+            makeRequest(httpClient, "http://somehost");
+        } finally {
+            ProxySelector.setDefault(defaultProxySelector);
+        }
+    }
+
     private String[] gitProperties(String repoUrl, ProxyHostProperties httpProxy, ProxyHostProperties httpsProxy) {
         List<String> result = new ArrayList<>();
         result.add("spring.cloud.config.server.git.uri=" + repoUrl);
@@ -237,7 +276,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 
     private HttpClient getHttpClientForUrl(String repoUrl) throws IOException {
         HttpConnectionFactory connectionFactory = HttpTransport.getConnectionFactory();
-        HttpConnection httpConnection = connectionFactory.create(new URL(repoUrl));
+        URL url = new URL(repoUrl);
+        HttpConnection httpConnection = connectionFactory.create(url);
         assertThat(httpConnection).isInstanceOf(HttpClientConnection.class);
         return (HttpClient) ReflectionTestUtils.getField(httpConnection, "client");
     }
