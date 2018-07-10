@@ -15,12 +15,15 @@
  */
 package org.springframework.cloud.config.server.support;
 
+import java.net.ProxySelector;
 import java.security.GeneralSecurityException;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.SystemDefaultCredentialsProvider;
+import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.apache.http.ssl.SSLContextBuilder;
 
 import org.springframework.cloud.config.server.proxy.ProxyHostCredentialsProvider;
@@ -49,6 +52,9 @@ public class HttpClientSupport {
 
             httpClientBuilder.setRoutePlanner(new SchemeBasedRoutePlanner(httpsProxy, httpProxy));
             httpClientBuilder.setDefaultCredentialsProvider(new ProxyHostCredentialsProvider(httpProxy, httpsProxy));
+        } else {
+            httpClientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
+            httpClientBuilder.setDefaultCredentialsProvider(new SystemDefaultCredentialsProvider());
         }
 
         int timeout = environmentProperties.getTimeout() * 1000;
