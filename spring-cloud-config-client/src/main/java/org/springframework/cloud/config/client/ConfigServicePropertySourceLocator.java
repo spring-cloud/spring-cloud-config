@@ -134,8 +134,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		if (properties.isFailFast()) {
 			throw new IllegalStateException(
-					"Could not locate PropertySource and the fail fast property is set, failing",
-					error);
+					"Could not locate PropertySource and the fail fast property is set, failing" +
+						(errorBody == null ? "" : ": " + errorBody), error);
 		}
 		logger.warn("Could not locate PropertySource: " + (errorBody == null
 				? error == null ? "label not found" : error.getMessage()
