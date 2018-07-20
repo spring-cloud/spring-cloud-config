@@ -9,6 +9,8 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -23,6 +25,8 @@ import org.springframework.util.CollectionUtils;
 @ConfigurationProperties("spring.cloud.config.server.health")
 public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
+	private static Log logger = LogFactory.getLog(ConfigServerHealthIndicator.class);
+	
 	private EnvironmentRepository environmentRepository;
 
 	private Map<String, Repository> repositories = new LinkedHashMap<>();
@@ -66,6 +70,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 				}
 				details.add(detail);
 			} catch (Exception e) {
+				logger.debug("Could not read repository: " + application, e);
 				HashMap<String, String> map = new HashMap<>();
 				map.put("application", application);
 				map.put("profiles", profiles);
