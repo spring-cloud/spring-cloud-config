@@ -17,7 +17,7 @@ package org.springframework.cloud.config.client;
 
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.springframework.boot.test.util.EnvironmentTestUtils;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
@@ -122,7 +122,7 @@ public class ConfigClientPropertiesTests {
 	public void changeNameInOverride() {
 		locator.setName("one");
 		ConfigurableEnvironment environment = new StandardEnvironment();
-		EnvironmentTestUtils.addEnvironment(environment, "spring.application.name:two");
+		TestPropertyValues.of("spring.application.name:two").applyTo(environment);
 		ConfigClientProperties override = locator.override(environment);
 		assertEquals("two", override.getName());
 	}

@@ -20,7 +20,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.util.EnvironmentTestUtils;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,7 +54,7 @@ public class ConfigServiceBootstrapConfigurationTest {
 
     @Test
     public void overrideConfigServicePropertySourceLocatorWhenBeanIsProvided() {
-        EnvironmentTestUtils.addEnvironment(this.context, "spring.cloud.config.enabled=true");
+        TestPropertyValues.of("spring.cloud.config.enabled=true").applyTo(this.context);
         this.context.register(ConfigServicePropertySourceLocatorOverrideConfig.class);
         this.context.register(ConfigServiceBootstrapConfiguration.class);
         this.context.refresh();

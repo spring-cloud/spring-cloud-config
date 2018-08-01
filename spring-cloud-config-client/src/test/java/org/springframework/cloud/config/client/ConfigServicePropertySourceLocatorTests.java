@@ -1,10 +1,5 @@
 package org.springframework.cloud.config.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.HashMap;
@@ -12,13 +7,13 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hamcrest.core.IsInstanceOf;
-import org.hamcrest.core.IsNull;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.springframework.boot.test.util.EnvironmentTestUtils;
+
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -34,12 +29,14 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 public class ConfigServicePropertySourceLocatorTests {
@@ -67,8 +64,8 @@ public class ConfigServicePropertySourceLocatorTests {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithLabel(new ResponseEntity<>(body, HttpStatus.OK), "v1.0.0");
 		this.locator.setRestTemplate(this.restTemplate);
-		EnvironmentTestUtils.addEnvironment(this.environment,
-				"spring.cloud.config.label:v1.0.0");
+		TestPropertyValues.of("spring.cloud.config.label:v1.0.0")
+				.applyTo(this.environment);
 		assertNotNull(this.locator.locate(this.environment));
 	}
 
@@ -78,8 +75,8 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithLabel(new ResponseEntity<>(body, HttpStatus.OK),
 				"release(_)v1.0.0");
 		this.locator.setRestTemplate(this.restTemplate);
-		EnvironmentTestUtils.addEnvironment(this.environment,
-				"spring.cloud.config.label:release/v1.0.0");
+		TestPropertyValues.of("spring.cloud.config.label:release/v1.0.0")
+				.applyTo(this.environment);
 		assertNotNull(this.locator.locate(this.environment));
 	}
 
