@@ -60,7 +60,7 @@ public class VaultKvAccessStrategyFactory {
 
 		@Override
 		public String getPath() {
-			return "/v1/{backend}/{key}";
+			return "{key}";
 		}
 
 		@Override
@@ -80,7 +80,7 @@ public class VaultKvAccessStrategyFactory {
 
 		@Override
 		public String getPath() {
-			return "/v1/{backend}/data/{key}";
+			return "data/{key}";
 		}
 
 		@Override

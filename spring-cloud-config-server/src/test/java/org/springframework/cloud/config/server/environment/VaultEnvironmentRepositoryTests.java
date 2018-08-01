@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
  * @author Spencer Gibb
  * @author Ryan Baxter
  * @author Haroun Pacquee
+ * @author Mark Paluch
  */
 public class VaultEnvironmentRepositoryTests {
 
@@ -73,21 +74,68 @@ public class VaultEnvironmentRepositoryTests {
 		VaultResponse myAppVaultResp = mock(VaultResponse.class);
 		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
 		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/{key}"),
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
 				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
-				eq("secret"), eq("myapp"))).thenReturn(myAppResp);
+				eq("myapp"))).thenReturn(myAppResp);
 
 		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
 		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
 		VaultResponse appVaultResp = mock(VaultResponse.class);
 		when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
 		when(appResp.getBody()).thenReturn(appVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/{key}"),
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
 				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
-				eq("secret"), eq("application"))).thenReturn(appResp);
+				eq("application"))).thenReturn(appResp);
 
 		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockProvide(configRequest),
 				new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties());
+
+		Environment e = repo.findOne("myapp", null, null);
+		assertEquals("Name should be the same as the application argument", "myapp", e.getName());
+		assertEquals("Properties for specified application and default application with key 'application' should be returned",
+				2, e.getPropertySources().size());
+		Map<String, String> firstResult = new HashMap<String, String>();
+		firstResult.put("foo", "bar");
+		assertEquals("Properties for specified application should be returned in priority position",
+				firstResult, e.getPropertySources().get(0).getSource());
+
+		Map<String, String> secondResult = new HashMap<String, String>();
+		secondResult.put("def-foo", "def-bar");
+		assertEquals("Properties for default application with key 'application' should be returned in second position",
+				secondResult, e.getPropertySources().get(1).getSource());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testBackendWithSlashes() {
+		MockHttpServletRequest configRequest = new MockHttpServletRequest();
+		configRequest.addHeader("X-CONFIG-TOKEN", "mytoken");
+
+		RestTemplate rest = mock(RestTemplate.class);
+
+		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
+		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse myAppVaultResp = mock(VaultResponse.class);
+		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
+		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/foo/bar/secret/{key}"),
+				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
+				eq("myapp"))).thenReturn(myAppResp);
+
+		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
+		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse appVaultResp = mock(VaultResponse.class);
+		when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
+		when(appResp.getBody()).thenReturn(appVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/foo/bar/secret/{key}"),
+				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
+				eq("application"))).thenReturn(appResp);
+
+		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		properties.setBackend("foo/bar/secret");
+
+		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockProvide(configRequest),
+				new EnvironmentWatch.Default(), rest, properties);
 
 		Environment e = repo.findOne("myapp", null, null);
 		assertEquals("Name should be the same as the application argument", "myapp", e.getName());
@@ -116,18 +164,18 @@ public class VaultEnvironmentRepositoryTests {
 		VaultResponse myAppVaultResp = mock(VaultResponse.class);
 		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
 		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/{key}"),
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
 				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
-				eq("secret"), eq("myapp"))).thenReturn(myAppResp);
+				eq("myapp"))).thenReturn(myAppResp);
 
 		ResponseEntity<VaultResponse> myDefaultKeyResp = mock(ResponseEntity.class);
 		when(myDefaultKeyResp.getStatusCode()).thenReturn(HttpStatus.OK);
 		VaultResponse myDefaultKeyVaultResp = mock(VaultResponse.class);
 		when(myDefaultKeyVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
 		when(myDefaultKeyResp.getBody()).thenReturn(myDefaultKeyVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/{key}"),
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
 				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
-				eq("secret"), eq("mydefaultkey"))).thenReturn(myDefaultKeyResp);
+				eq("mydefaultkey"))).thenReturn(myDefaultKeyResp);
 
 		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockProvide(configRequest),
 				new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties());
@@ -161,18 +209,18 @@ public class VaultEnvironmentRepositoryTests {
 		VaultResponse myAppVaultResp = mock(VaultResponse.class);
 		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
 		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/{key}"),
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
 				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
-				eq("secret"), eq("myapp"))).thenReturn(myAppResp);
+				eq("myapp"))).thenReturn(myAppResp);
 
 		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
 		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
 		VaultResponse appVaultResp = mock(VaultResponse.class);
 		when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
 		when(appResp.getBody()).thenReturn(appVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/{key}"),
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
 				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
-				eq("secret"), eq("application"))).thenReturn(appResp);
+				eq("application"))).thenReturn(appResp);
 
 		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockProvide(configRequest),
 				new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties());
@@ -200,9 +248,9 @@ public class VaultEnvironmentRepositoryTests {
 		VaultResponse myAppVaultResp = mock(VaultResponse.class);
 		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
 		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/{key}"),
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
 				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
-				eq("secret"), eq("myapp"))).thenReturn(myAppResp);
+				eq("myapp"))).thenReturn(myAppResp);
 		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockProvide(configRequest),
 				new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties());
 		repo.findOne("myapp", null, null);
@@ -232,17 +280,17 @@ public class VaultEnvironmentRepositoryTests {
         when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
         VaultResponse myAppVaultResp = getVaultResponse("{\"data\": {\"data\": {\"foo\": \"bar\"}}}");
         when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-        when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/data/{key}"),
+        when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/data/{key}"),
                 eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
-                eq("secret"), eq("myapp"))).thenReturn(myAppResp);
+                eq("myapp"))).thenReturn(myAppResp);
 
         ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
         when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
         VaultResponse appVaultResp = getVaultResponse("{\"data\": {\"data\": {\"def-foo\":\"def-bar\"}}}");
         when(appResp.getBody()).thenReturn(appVaultResp);
-        when(rest.exchange(eq("http://127.0.0.1:8200/v1/{backend}/data/{key}"),
+        when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/data/{key}"),
                 eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
-                eq("secret"), eq("application"))).thenReturn(appResp);
+                eq("application"))).thenReturn(appResp);
 
         final VaultEnvironmentProperties vaultEnvironmentProperties = new VaultEnvironmentProperties();
         vaultEnvironmentProperties.setKvVersion(2);

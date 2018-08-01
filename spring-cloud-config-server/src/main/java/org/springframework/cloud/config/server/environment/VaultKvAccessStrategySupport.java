@@ -39,7 +39,9 @@ abstract class VaultKvAccessStrategySupport implements VaultKvAccessStrategy {
 	}
 
 	/**
-	 * @return the context path to append to the {@code baseUrl}.
+	 * @return the relative context path template within a secret backend to append to a
+	 * URL containing the {@code baseURL}, API version segment and secret backend. May be
+	 * templated with {@literal {key}} to as template variable for the secret key.
 	 */
 	abstract String getPath();
 
@@ -60,9 +62,11 @@ abstract class VaultKvAccessStrategySupport implements VaultKvAccessStrategy {
 	@Override
 	public String getData(HttpHeaders headers, String backend, String key) {
 		try {
-			ResponseEntity<VaultResponse> response = rest.exchange(baseUrl + getPath(),
-					HttpMethod.GET, new HttpEntity<>(headers), VaultResponse.class,
-					backend, key);
+
+			String urlTemplate = String.format("%s/v1/%s/%s", baseUrl, backend, getPath());
+
+			ResponseEntity<VaultResponse> response = rest.exchange(urlTemplate, HttpMethod.GET,
+					new HttpEntity<>(headers), VaultResponse.class, key);
 			HttpStatus status = response.getStatusCode();
 			if (status == HttpStatus.OK) {
 				return extractDataFromBody(response.getBody());
