@@ -116,6 +116,7 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
         this.forcePull = forcePull;
     }
 
+    @Override
     public int getTimeout() {
         return timeout;
     }

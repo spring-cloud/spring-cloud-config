@@ -26,25 +26,15 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRawValue;
-import com.fasterxml.jackson.databind.JsonNode;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
@@ -53,6 +43,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
 /**
  * @author Spencer Gibb
  * @author Mark Paluch
+ * @author Haroun Pacquee
  */
 @Validated
 public class VaultEnvironmentRepository implements EnvironmentRepository, Ordered {
@@ -84,18 +75,18 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private int order;
 
-	private RestTemplate rest;
+	private VaultKvAccessStrategy accessStrategy;
 
 	// TODO: move to watchState:String on findOne?
 	private ObjectProvider<HttpServletRequest> request;
 
 	private EnvironmentWatch watch;
 
-	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch, RestTemplate rest,
-									  VaultEnvironmentProperties properties) {
+	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request,
+			EnvironmentWatch watch, RestTemplate rest,
+			VaultEnvironmentProperties properties) {
 		this.request = request;
 		this.watch = watch;
-		this.rest = rest;
 		this.backend = properties.getBackend();
 		this.defaultKey = properties.getDefaultKey();
 		this.host = properties.getHost();
@@ -103,6 +94,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		this.port = properties.getPort();
 		this.profileSeparator = properties.getProfileSeparator();
 		this.scheme = properties.getScheme();
+
+		String baseUrl = String.format("%s://%s:%s", this.scheme, this.host, this.port);
+
+		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl,
+				properties.getKvVersion());
 	}
 
 	@Override
@@ -172,7 +168,6 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	String read(HttpServletRequest servletRequest, String key) {
-		String url = String.format("%s://%s:%s/v1/{backend}/{key}", this.scheme, this.host, this.port);
 
 		HttpHeaders headers = new HttpHeaders();
 
@@ -181,22 +176,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 			throw new IllegalArgumentException("Missing required header: " + TOKEN_HEADER);
 		}
 		headers.add(VAULT_TOKEN, token);
-		try {
-			ResponseEntity<VaultResponse> response = this.rest.exchange(url, HttpMethod.GET, new HttpEntity<>(headers),
-					VaultResponse.class, this.backend, key);
-
-			HttpStatus status = response.getStatusCode();
-			if (status == HttpStatus.OK) {
-				return response.getBody().getData();
-			}
-		} catch (HttpStatusCodeException e) {
-			if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-				return null;
-			}
-			throw e;
-		}
-
-		return null;
+		return accessStrategy.getData(headers, backend, key);
 	}
 
 	public void setHost(String host) {
@@ -230,65 +210,5 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	@Override
 	public int getOrder() {
 		return order;
-	}
-
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	static class VaultResponse {
-
-		private String auth;
-
-		private Object data;
-
-		@JsonProperty("lease_duration")
-		private long leaseDuration;
-
-		@JsonProperty("lease_id")
-		private String leaseId;
-
-		private boolean renewable;
-
-		public VaultResponse() {
-		}
-
-		public String getAuth() {
-			return auth;
-		}
-
-		public void setAuth(String auth) {
-			this.auth = auth;
-		}
-
-		@JsonRawValue
-		public String getData() {
-			return data == null ? null : data.toString();
-		}
-
-		public void setData(JsonNode data) {
-			this.data = data;
-		}
-
-		public long getLeaseDuration() {
-			return leaseDuration;
-		}
-
-		public void setLeaseDuration(long leaseDuration) {
-			this.leaseDuration = leaseDuration;
-		}
-
-		public String getLeaseId() {
-			return leaseId;
-		}
-
-		public void setLeaseId(String leaseId) {
-			this.leaseId = leaseId;
-		}
-
-		public boolean isRenewable() {
-			return renewable;
-		}
-
-		public void setRenewable(boolean renewable) {
-			this.renewable = renewable;
-		}
 	}
 }

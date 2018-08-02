@@ -25,6 +25,7 @@ import org.springframework.core.Ordered;
 
 /**
  * @author Dylan Roberts
+ * @author Haroun Pacquee
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
 public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProperties {
@@ -34,6 +35,8 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
     private Integer port = 8200;
     /** Vault scheme. Defaults to http. */
     private String scheme = "http";
+    /** Timeout (in seconds) for obtaining HTTP connection, defaults to 5 seconds. */
+    private int timeout = 5;
     /** Vault backend. Defaults to secret. */
     private String backend = "secret";
     /** The key in vault shared by all applications. Defaults to application. Set to empty to disable. */
@@ -45,13 +48,16 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
      * over an HTTPS connection.
      */
     private boolean skipSslValidation = false;
-
     /**
      * HTTP proxy configuration.
      */
     private Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
 
     private int order = Ordered.LOWEST_PRECEDENCE;
+    /**
+     * Value to indicate which version of Vault kv backend is used. Defaults to 1.
+     */
+    private int kvVersion = 1;
 
     public String getHost() {
         return host;
@@ -126,5 +132,22 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
     @Override
     public void setOrder(int order) {
         this.order = order;
+    }
+
+    @Override
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+	
+	public int getKvVersion() {
+        return kvVersion;
+    }
+
+    public void setKvVersion(int kvVersion) {
+        this.kvVersion = kvVersion;
     }
 }

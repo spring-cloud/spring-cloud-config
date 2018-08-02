@@ -106,10 +106,10 @@ Higher precedence translates to a `PropertySource` listed earlier in the `Enviro
 (These same rules apply in a standalone Spring Boot application.)
 
 You can set spring.cloud.config.server.accept-empty to false so that Server would return a HTTP 404 status, if the application is not found.By default, this flag is set to true.
+
 ==== Git Backend
 
-The default implementation of `EnvironmentRepository` uses a Git backend, which is very convenient for managing upgrades and physical
-environments and for auditing changes.
+The default implementation of `EnvironmentRepository` uses a Git backend, which is very convenient for managing upgrades and physical environments and for auditing changes.
 To change the location of the repository, you can set the `spring.cloud.config.server.git.uri` configuration property in the Config Server (for example in `application.yml`).
 If you set it with a `file:` prefix, it should work from a local repository so that you can get started quickly and easily without a server. However, in that case, the server operates directly on the local repository without cloning it (it does not matter if it is not bare because the Config Server never makes changes to the "remote" repository).
 To scale the Config Server up and make it highly available, you need to have all instances of the server pointing to the same repository, so only a shared file system would work.
@@ -119,8 +119,37 @@ This repository implementation maps the `{label}` parameter of the HTTP resource
 If the git branch or tag name contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `({special-string})` (to avoid ambiguity with other URL paths).
 For example, if the label is `foo/bar`, replacing the slash would result in the following label: `foo({special-string})bar`.
 The inclusion of the special string `({special-string})` can also be applied to the `{application}` parameter.
-If you use a command-line client such as curl, be careful with the brackets in the URL -- you should
-escape them from the shell with single quotes ('').
+If you use a command-line client such as curl, be careful with the brackets in the URL -- you should escape them from the shell with single quotes ('').
+
+===== Skipping SSL Certificate Validation
+
+The configuration server's validation of the Git server's SSL certificate can be disabled by setting the `git.skipSslValidation` property to `true` (default is `false`).
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          skipSslValidation: true
+----
+
+===== Setting HTTP Connection Timeout
+
+You can configure the time, in seconds, that the configuration server will wait to acquire an HTTP connection. Use the `git.timeout` property.
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          timeout: 4
+----
 
 ===== Placeholders in Git URI
 
@@ -506,6 +535,7 @@ Thus, the default behaviour with no placeholders is the same as adding a search 
 For example, `file:/tmp/config` is the same as `file:/tmp/config,file:/tmp/config/{label}`.
 This behavior can be disabled by setting `spring.cloud.config.server.native.addLabelLocations=false`.
 
+[[vault-backend]]
 ==== Vault Backend
 
 Spring Cloud Config Server also supports https://www.vaultproject.io[Vault] as a backend.
@@ -546,11 +576,22 @@ The following table describes configurable Vault properties:
 |profileSeparator
 |,
 
+|kvVersion
+|1
+
+|skipSslValidation
+|false
+
+|timeout
+|5
+
 |===
 
 IMPORTANT: All of the properties in the preceding table must be prefixed with `spring.cloud.config.server.vault`.
 
 All configurable properties can be found in `org.springframework.cloud.config.server.environment.VaultEnvironmentRepository`.
+
+Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a `data/` between the mount path and the actual context path and wraps secrets in a `data` object. Setting `kvVersion=2` will take this into account.
 
 With your config server running, you can make HTTP requests to the server to retrieve
 values from the Vault backend.
@@ -615,6 +656,53 @@ Properties written to `secret/application` are available to <<_vault_server,all 
 An application with the name, `myApp`, would have any properties written to `secret/myApp` and `secret/application` available to it.
 When `myApp` has the `dev` profile enabled, properties written to all of the above paths would be available to it, with properties in the first path in the list taking priority over the others.
 
+==== Accessing Backends Through a Proxy
+
+The configuration server can access a Git or Vault backend through an HTTP or HTTPS proxy. This behavior is controlled for either Git or Vault by settings under `proxy.http` and `proxy.https`. These settings are per repository, so if you are using a <<composite-environment-repositories,composite environment repository>> you must configure proxy settings for each backend in the composite individually. If using a network which requires separate proxy servers for HTTP and HTTPS URLs, you can configure both the HTTP and the HTTPS proxy settings for a single backend.
+
+The following table describes the proxy configuration properties for both HTTP and HTTPS proxies. All of these properties must be prefixed by `proxy.http` or `proxy.https`.
+
+.Proxy Configuration Properties
+|===
+|Property Name |Remarks
+
+|*host*
+|The host of the proxy.
+
+|*port*
+|The port with which to access the proxy.
+
+|*nonProxyHosts*
+|Any hosts which the configuration server should access outside the proxy. If values are provided for both `proxy.http.nonProxyHosts` and `proxy.https.nonProxyHosts`, the `proxy.http` value will be used.
+
+|*username*
+|The username with which to authenticate to the proxy. If values are provided for both `proxy.http.username` and `proxy.https.username`, the `proxy.http` value will be used.
+
+|*password*
+|The password with which to authenticate to the proxy. If values are provided for both `proxy.http.password` and `proxy.https.password`, the `proxy.http` value will be used.
+|===
+
+The following configuration uses an HTTPS proxy to access a Git repository.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: git
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          proxy:
+            https:
+              host: my-proxy.host.io
+              password: myproxypassword
+              port: '3128'
+              username: myproxyusername
+              nonProxyHosts: example.com
+----
+
 ==== Sharing Configuration With All Applications
 
 Sharing configuration between all applications varies according to which approach you take, as described in the following topics:
@@ -656,37 +744,68 @@ The database needs to have a table called `PROPERTIES` with columns called `APPL
 All fields are of type String in Java, so you can make them `VARCHAR` of whatever length you need.
 Property values behave in the same way as they would if they came from Spring Boot properties files named `{application}-{profile}.properties`, including all the encryption and decryption, which will be applied as post-processing steps (that is, not in the repository implementation directly).
 
+[[composite-environment-repositories]]
 ==== Composite Environment Repositories
 
 In some scenarios, you may wish to pull configuration data from multiple environment repositories.
-To do so, you can enable multiple profiles in your config server's application properties or YAML file.
-If, for example, you want to pull configuration data from a Git repository as well as an SVN repository, you can set the following properties for your configuration server:
+To do so, you can enable the `composite` profile in your configuration server's application properties or YAML file.
+If, for example, you want to pull configuration data from a Subversion repository as well as two Git repositories, you can set the following properties for your configuration server:
 
 [source,yaml]
 ----
 spring:
   profiles:
-    active: git, svn
+    active: composite
   cloud:
     config:
       server:
-        svn:
+        composite:
+        -
+          type: svn
           uri: file:///path/to/svn/repo
-          order: 2
+        -
+          type: git
+          uri: file:///path/to/rex/git/repo
+        -
+          type: git
+          uri: file:///path/to/walter/git/repo
+----
+
+Using this configuration, precedence is determined by the order in which repositories are listed under the `composite` key.
+In the above example, the Subversion repository is listed first, so a value found in the Subversion repository will override values found for the same property in one of the Git repositories.
+A value found in the `rex` Git repository will be used before a value found for the same property in the `walter` Git repository.
+
+If you want to pull configuration data only from repositories that are each of distinct types, you can enable the corresponding profiles, rather than the `composite` profile, in your configuration server's application properties or YAML file.
+If, for example, you want to pull configuration data from a single Git repository and a single HashiCorp Vault server, you can set the following properties for your configuration server:
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: git, vault
+  cloud:
+    config:
+      server:
         git:
           uri: file:///path/to/git/repo
+          order: 2
+        vault:
+          host: 127.0.0.1
+          port: 8200
           order: 1
 ----
 
-In addition to each repository specifying a URI, you can also specify an `order` property.
-The `order` property lets you specify the priority order for all your repositories.
+Using this configuration, precedence can be determined by an `order` property.
+You can use the `order` property to specify the priority order for all your repositories.
 The lower the numerical value of the `order` property, the higher priority it has.
 The priority order of a repository helps resolve any potential conflicts between repositories that contain values for the same properties.
+
+NOTE: If your composite environment includes a Vault server as in the previous example, you must include a Vault token in every request made to the configuration server. See <<vault-backend,Vault Backend>>.
 
 NOTE: Any type of failure when retrieving values from an environment repository results in a failure for the entire composite environment.
 
 NOTE: When using a composite environment, it is important that all repositories contain the same labels.
-If you have an environment similar to the one in the preceding example and you request configuration data with the `master` label but the SVN repository does not contain a branch called `master`, the entire request fails.
+If you have an environment similar to those in the preceding examples and you request configuration data with the `master` label but the Subversion repository does not contain a branch called `master`, the entire request fails.
 
 ===== Custom Composite Environment Repositories
 
@@ -912,7 +1031,7 @@ TIP: If you want to let the Config Server handle all encryption as well as decry
 === Serving Encrypted Properties
 
 Sometimes you want the clients to decrypt the configuration locally, instead of doing it in the server.
-In that case, if you provide the `encrypt.*` configuration to locate a key, you can still have `/encrypt` and `/decrypt` endpoints, but you need to explicitly switch off the decryption of outgoing properties by setting `spring.cloud.config.server.encrypt.enabled=false`.
+In that case, if you provide the `encrypt.*` configuration to locate a key, you can still have `/encrypt` and `/decrypt` endpoints, but you need to explicitly switch off the decryption of outgoing properties by placing `spring.cloud.config.server.encrypt.enabled=false` in `bootstrap.[yml|properties]`.
 If you do not care about the endpoints, it should work if you do not configure either the key or the enabled flag.
 
 == Serving Alternative Formats
@@ -1118,6 +1237,10 @@ For instance, you might want to align the config label with your branch but make
 To ensure high availability when you have multiple instances of Config Server deployed and expect one or more instances to be unavailable from time to time, you can either specify multiple URLs (as a comma-separated list under the `spring.cloud.config.uri` property) or have all your instances register in a Service Registry like Eureka ( if using Discovery-First Bootstrap mode ). Note that doing so ensures high availability only when the Config Server is not running (that is, when the application has exited) or when a connection timeout has occurred. For example, if the Config Server returns a 500 (Internal Server Error) response or the Config Client receives a 401 from the Config Server (due to bad credentials or other causes), the Config Client does not try to fetch properties from other URLs. An error of that kind indicates a user issue rather than an availability problem. 
 
 If you use HTTP basic security on your Config Server, it is currently possible to support per-Config Server auth credentials only if you embed the credentials in each URL you specify under the `spring.cloud.config.uri` property. If you use any other kind of security mechanism, you cannot (currently) support per-Config Server authentication and authorization.
+
+=== Configuring Read Timeouts
+
+If you want to configure read timeout, this can be done by using the property `spring.cloud.config.request-read-timeout`.
 
 === Security
 

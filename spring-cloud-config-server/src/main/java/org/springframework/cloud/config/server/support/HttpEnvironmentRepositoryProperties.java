@@ -28,4 +28,6 @@ public interface HttpEnvironmentRepositoryProperties extends EnvironmentReposito
     Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> getProxy();
 
     boolean isSkipSslValidation();
+
+    int getTimeout();
 }

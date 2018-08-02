@@ -58,6 +58,13 @@ public class MultipleJGitEnvironmentProperties extends JGitEnvironmentProperties
          */
         private String name;
 
+        public PatternMatchingJGitEnvironmentProperties() {
+        }
+
+        public PatternMatchingJGitEnvironmentProperties(String uri) {
+            setUri(uri);
+        }
+
         public String[] getPattern() {
             return pattern;
         }

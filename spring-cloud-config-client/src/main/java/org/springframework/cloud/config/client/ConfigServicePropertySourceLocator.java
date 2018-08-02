@@ -53,6 +53,7 @@ import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
+import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 /**
  * @author Dave Syer
@@ -133,8 +134,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		if (properties.isFailFast()) {
 			throw new IllegalStateException(
-					"Could not locate PropertySource and the fail fast property is set, failing",
-					error);
+					"Could not locate PropertySource and the fail fast property is set, failing" +
+						(errorBody == null ? "" : ": " + errorBody), error);
 		}
 		logger.warn("Could not locate PropertySource: " + (errorBody == null
 				? error == null ? "label not found" : error.getMessage()
@@ -209,7 +210,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
 				}
-				if (StringUtils.hasText(state)) { // TODO: opt in to sending state?
+				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
 				}
 
@@ -248,11 +249,15 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private RestTemplate getSecureRestTemplate(ConfigClientProperties client) {
 		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-		requestFactory.setReadTimeout((60 * 1000 * 3) + 5000); // TODO 3m5s, make
-																// configurable?
+		if (client.getRequestReadTimeout() < 0) {
+			throw new IllegalStateException("Invalid Value for Read Timeout set.");
+		}
+		requestFactory.setReadTimeout(client.getRequestReadTimeout());
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
-
+		if (headers.containsKey(AUTHORIZATION)) {
+			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
+		}
 		if (!headers.isEmpty()) {
 			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
 					new GenericRequestHeaderInterceptor(headers)));
@@ -263,7 +268,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private void addAuthorizationToken(ConfigClientProperties configClientProperties,
 			HttpHeaders httpHeaders, String username, String password) {
-		String authorization = configClientProperties.getAuthorization();
+		String authorization = configClientProperties.getHeaders().get(AUTHORIZATION);
 
 		if (password != null && authorization != null) {
 			throw new IllegalStateException(
@@ -297,5 +302,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			}
 			return execution.execute(request, body);
 		}
+
+		protected Map<String, String> getHeaders() {
+			return headers;
+		}
+
 	}
 }

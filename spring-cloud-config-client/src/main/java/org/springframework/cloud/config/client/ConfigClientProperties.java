@@ -18,6 +18,7 @@ package org.springframework.cloud.config.client;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +40,7 @@ public class ConfigClientProperties {
 	public static final String PREFIX = "spring.cloud.config";
 	public static final String TOKEN_HEADER = "X-Config-Token";
 	public static final String STATE_HEADER = "X-Config-State";
+	public static final String AUTHORIZATION = "authorization";
 
 	/**
 	 * Flag to say that remote configuration is enabled. Default true;
@@ -94,9 +96,14 @@ public class ConfigClientProperties {
 	private String token;
 
 	/**
-	 * Authorization token used by the client to connect to the server.
+	 * timeout on waiting to read data from the Config Server.
 	 */
-	private String authorization;
+	private int requestReadTimeout = (60 * 1000 * 3) + 5000;
+
+	/**
+	 * Flag to indicate whether to send state. Default true.
+	 */
+	private boolean sendState = true;
 
 	/**
 	 * Additional headers used to create the client request.
@@ -198,14 +205,20 @@ public class ConfigClientProperties {
 		this.token = token;
 	}
 
-	@DeprecatedConfigurationProperty(reason = "replaced by headers", replacement = "headers")
-	@Deprecated
-	public String getAuthorization() {
-		return this.authorization;
+	public int getRequestReadTimeout() {
+		return requestReadTimeout;
 	}
 
-	public void setAuthorization(String authorization) {
-		this.authorization = authorization;
+	public void setRequestReadTimeout(int requestReadTimeout) {
+		this.requestReadTimeout = requestReadTimeout;
+	}
+
+	public boolean isSendState() {
+		return sendState;
+	}
+
+	public void setSendState(boolean sendState) {
+		this.sendState = sendState;
 	}
 
 	public Map<String, String> getHeaders() {
@@ -351,12 +364,14 @@ public class ConfigClientProperties {
 
 	@Override
 	public String toString() {
-		return "ConfigClientProperties [enabled=" + this.enabled + ", profile="
-				+ this.profile + ", name=" + this.name + ", label="
-				+ (this.label == null ? "" : this.label) + ", username=" + this.username
-				+ ", password=" + this.password + ", uri=" + this.uri + ", authorization="
-				+ this.authorization + ", discovery.enabled=" + this.discovery.enabled
-				+ ", failFast=" + this.failFast + ", token=" + this.token + "]";
+		return "ConfigClientProperties [enabled=" + enabled + ", profile=" + profile
+				+ ", name=" + name + ", label=" + label + ", username=" + username
+				+ ", password=" + password + ", uri=" + Arrays.toString(uri)
+				+ ", discovery=" + discovery + ", failFast=" + failFast + ", token="
+				+ token + ", requestReadTimeout=" + requestReadTimeout + ", sendState="
+				+ sendState + ", headers=" + headers + "]";
 	}
+
+	
 
 }
