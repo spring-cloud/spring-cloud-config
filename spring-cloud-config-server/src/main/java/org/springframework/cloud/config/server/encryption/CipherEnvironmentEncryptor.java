@@ -64,11 +64,8 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 			for (Map.Entry<Object, Object> entry : new LinkedHashSet<>(map.entrySet())) {
 				Object key = entry.getKey();
 				String name = key.toString();
-				String value = null;
-				if(entry.getValue() != null){
-				  value = entry.getValue().toString();		
-				}
-				if (value != null && value.startsWith("{cipher}")) {
+				if(entry.getValue() != null && entry.getValue().toString().startsWith("{cipher}")){
+					String value = entry.getValue().toString();
 					map.remove(key);
 					try {
 						value = value.substring("{cipher}".length());
