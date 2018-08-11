@@ -1224,6 +1224,8 @@ The Config Service serves property sources from `/{name}/{profile}/{label}`, whe
 * "profile" = `${spring.profiles.active}` (actually `Environment.getActiveProfiles()`)
 * "label" = "master"
 
+NOTE: When setting the property `${spring.application.name}` do not prefix your app name with the reserved word `application-` to prevent issues resolving the correct property source.
+
 You can override all of them by setting `spring.cloud.config.\*` (where `*` is `name`, `profile` or `label`).
 The `label` is useful for rolling back to previous versions of configuration.
 With the default Config Server implementation, it can be a git label, branch name, or commit ID.
