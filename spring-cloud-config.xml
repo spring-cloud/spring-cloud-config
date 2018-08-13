@@ -113,6 +113,11 @@ public class Application {
 <simpara>When this HTTP server runs, it picks up the external configuration from the default local config server (if it is running) on port 8888.
 To modify the startup behavior, you can change the location of the config server by using <literal>bootstrap.properties</literal> (similar to <literal>application.properties</literal> but for the bootstrap phase of an application context), as shown in the following example:</simpara>
 <screen>spring.cloud.config.uri: http://myconfigserver.com</screen>
+<simpara>By default, if no application name is set, <literal>application</literal> will be used as the default. To modify the name, the following property can be added to the <literal>bootstrap.properties</literal> file:</simpara>
+<screen>spring.application.name: myapp</screen>
+<note>
+<simpara>When setting the property <literal>${spring.application.name}</literal> do not prefix your app name with the reserved word <literal>application-</literal> to prevent issues resolving the correct property source.</simpara>
+</note>
 <simpara>The bootstrap properties show up in the <literal>/env</literal> endpoint as a high-priority property source, as shown in the following example.</simpara>
 <screen>$ curl localhost:8080/env
 {
@@ -1231,6 +1236,9 @@ Spring Retry has a <literal>RetryInterceptorBuilder</literal> that supports crea
 <simpara>"label" = "master"</simpara>
 </listitem>
 </itemizedlist>
+<note>
+<simpara>When setting the property <literal>${spring.application.name}</literal> do not prefix your app name with the reserved word <literal>application-</literal> to prevent issues resolving the correct property source.</simpara>
+</note>
 <simpara>You can override all of them by setting <literal>spring.cloud.config.*</literal> (where <literal>*</literal> is <literal>name</literal>, <literal>profile</literal> or <literal>label</literal>).
 The <literal>label</literal> is useful for rolling back to previous versions of configuration.
 With the default Config Server implementation, it can be a git label, branch name, or commit ID.
