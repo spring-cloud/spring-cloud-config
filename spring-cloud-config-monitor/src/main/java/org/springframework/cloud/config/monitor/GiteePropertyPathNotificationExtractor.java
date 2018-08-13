@@ -17,7 +17,9 @@
 package org.springframework.cloud.config.monitor;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -39,11 +41,29 @@ public class GiteePropertyPathNotificationExtractor
 	public PropertyPathNotification extract(MultiValueMap<String, String> headers,
 			Map<String, Object> request) {
 		if (HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY))) {
-			if (request.get("commits") instanceof Collection &&
-					((Collection<Map<String, Object>>) request.get("commits")).size() > 0) {
-				return new PropertyPathNotification("application.yml");
+			if (request.get("commits") instanceof Collection) {
+				Set<String> paths = new HashSet<>();
+				@SuppressWarnings("unchecked")
+				Collection<Map<String, Object>> commits = (Collection<Map<String, Object>>) request
+						.get("commits");
+				for (Map<String, Object> commit : commits) {
+					addAllPaths(paths, commit, "added");
+					addAllPaths(paths, commit, "removed");
+					addAllPaths(paths, commit, "modified");
+				}
+				if (!paths.isEmpty()) {
+					return new PropertyPathNotification(paths.toArray(new String[paths.size()]));
+				}
 			}
 		}
 		return null;
+	}
+
+	private void addAllPaths(Set<String> paths, Map<String, Object> commit, String name) {
+		@SuppressWarnings("unchecked")
+		Collection<String> files = (Collection<String>) commit.get(name);
+		if (files != null) {
+			paths.addAll(files);
+		}
 	}
 }

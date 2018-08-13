@@ -38,7 +38,7 @@ public class GiteePropertyPathNotificationExtractorTests {
 	private HttpHeaders headers = new HttpHeaders();
 
 	@Test
-	public void githubSample() throws Exception {
+	public void giteeExample() throws Exception {
 		// See http://git.mydoc.io/?t=154711
 		Map<String, Object> value = new ObjectMapper().readValue(
 				new ClassPathResource("gitee.json").getInputStream(),
@@ -47,7 +47,7 @@ public class GiteePropertyPathNotificationExtractorTests {
 		this.headers.set("x-git-oschina-event", "Push Hook");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNotNull(extracted);
-		assertEquals("application.yml", extracted.getPaths()[0]);
+		assertEquals("d.txt", extracted.getPaths()[0]);
 	}
 
 	@Test
