@@ -70,6 +70,11 @@ public class EnvironmentMonitorAutoConfiguration {
 		public GiteePropertyPathNotificationExtractor giteePropertyPathNotificationExtractor() {
 			return new GiteePropertyPathNotificationExtractor();
 		}
+		@Bean
+		@ConditionalOnProperty(value="spring.cloud.config.server.monitor.gogs.enabled", havingValue="true", matchIfMissing=true)
+		public GogsPropertyPathNotificationExtractor gogsPropertyPathNotificationExtractor() {
+			return new GogsPropertyPathNotificationExtractor();
+		}
 	}
 
 }

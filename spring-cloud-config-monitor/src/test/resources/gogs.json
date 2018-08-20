@@ -1,0 +1,74 @@
+{
+  "ref": "refs/heads/master",
+  "before": "3d876387fd8d1ffd1a8bc8154b98914dbb1b712f",
+  "after": "ecd69b58bd29248bcb0401b3c910428aa5fd0839",
+  "compare_url": "https://repo.j99.io/spring/config_repo/compare/3d876387fd8d1ffd1a8bc8154b98914dbb1b712f...ecd69b58bd29248bcb0401b3c910428aa5fd0839",
+  "commits": [
+    {
+      "id": "ecd69b58bd29248bcb0401b3c910428aa5fd0839",
+      "message": "更新 'application-dev.yml'\n",
+      "url": "https://repo.j99.io/spring/config_repo/commit/ecd69b58bd29248bcb0401b3c910428aa5fd0839",
+      "author": {
+        "name": "henjue",
+        "email": "henjue@gmail.com",
+        "username": "henjue"
+      },
+      "committer": {
+        "name": "henjue",
+        "email": "henjue@gmail.com",
+        "username": "henjue"
+      },
+      "added": [],
+      "removed": [],
+      "modified": ["application-dev.yml"],
+      "timestamp": "2018-08-20T05:51:42Z"
+    }
+  ],
+  "repository": {
+    "id": 58,
+    "owner": {
+      "id": 9,
+      "login": "spring",
+      "full_name": "",
+      "email": "",
+      "avatar_url": "https://repo.j99.io/avatars/9",
+      "username": "spring"
+    },
+    "name": "config_repo",
+    "full_name": "spring/config_repo",
+    "description": "",
+    "private": false,
+    "fork": false,
+    "parent": null,
+    "empty": false,
+    "mirror": false,
+    "size": 12288,
+    "html_url": "https://repo.j99.io/spring/config_repo",
+    "ssh_url": "ssh://git@repo.j99.io:20116/spring/config_repo.git",
+    "clone_url": "https://repo.j99.io/spring/config_repo.git",
+    "website": "",
+    "stars_count": 0,
+    "forks_count": 0,
+    "watchers_count": 2,
+    "open_issues_count": 0,
+    "default_branch": "master",
+    "created_at": "2018-08-20T01:53:54Z",
+    "updated_at": "2018-08-20T05:40:06Z"
+  },
+  "pusher": {
+    "id": 1,
+    "login": "henjue",
+    "full_name": "",
+    "email": "henjue@gmail.com",
+    "avatar_url": "https://secure.gravatar.com/avatar/456d0cd4ba07e07f1aae1f8207fc7b0d",
+    "username": "henjue"
+  },
+  "sender": {
+    "id": 1,
+    "login": "henjue",
+    "full_name": "",
+    "email": "henjue@gmail.com",
+    "avatar_url": "https://secure.gravatar.com/avatar/456d0cd4ba07e07f1aae1f8207fc7b0d",
+    "username": "henjue"
+  }
+}
