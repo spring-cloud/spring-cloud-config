@@ -124,7 +124,7 @@ To modify the startup behavior, you can change the location of the config server
 spring.cloud.config.uri: http://myconfigserver.com
 ----
 
-By default, if no application name is set, `application` will be used as the default. To modify the name, the following property can be added to the `bootstrap.properties` file:
+By default, if no application name is set, `application` will be used. To modify the name, the following property can be added to the `bootstrap.properties` file:
 
 ----
 spring.application.name: myapp
