@@ -38,7 +38,7 @@ public class GiteePropertyPathNotificationExtractorTests {
 	private HttpHeaders headers = new HttpHeaders();
 
 	@Test
-	public void githubSample() throws Exception {
+	public void giteeSample() throws Exception {
 		// See http://git.mydoc.io/?t=154711
 		Map<String, Object> value = new ObjectMapper().readValue(
 				new ClassPathResource("gitee.json").getInputStream(),
