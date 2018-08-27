@@ -223,7 +223,7 @@ public class EncryptionController {
 	
 	@ExceptionHandler(EncryptionTooWeakException.class)
 	@ResponseBody
-	public ResponseEntity<Map<String, Object>> notInstalled() {
+	public ResponseEntity<Map<String, Object>> encryptionTooWeak() {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "INVALID");
 		body.put("description", "Encryption method provided too weak");
