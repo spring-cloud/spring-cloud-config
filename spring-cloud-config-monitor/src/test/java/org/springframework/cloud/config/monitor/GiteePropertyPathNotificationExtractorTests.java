@@ -47,7 +47,7 @@ public class GiteePropertyPathNotificationExtractorTests {
 		this.headers.set("x-git-oschina-event", "Push Hook");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNotNull(extracted);
-		assertEquals("application.yml", extracted.getPaths()[0]);
+		assertEquals("d.txt", extracted.getPaths()[0]);
 	}
 
 	@Test
