@@ -113,7 +113,7 @@ public class Application {
 <simpara>When this HTTP server runs, it picks up the external configuration from the default local config server (if it is running) on port 8888.
 To modify the startup behavior, you can change the location of the config server by using <literal>bootstrap.properties</literal> (similar to <literal>application.properties</literal> but for the bootstrap phase of an application context), as shown in the following example:</simpara>
 <screen>spring.cloud.config.uri: http://myconfigserver.com</screen>
-<simpara>By default, if no application name is set, <literal>application</literal> will be used as the default. To modify the name, the following property can be added to the <literal>bootstrap.properties</literal> file:</simpara>
+<simpara>By default, if no application name is set, <literal>application</literal> will be used. To modify the name, the following property can be added to the <literal>bootstrap.properties</literal> file:</simpara>
 <screen>spring.application.name: myapp</screen>
 <note>
 <simpara>When setting the property <literal>${spring.application.name}</literal> do not prefix your app name with the reserved word <literal>application-</literal> to prevent issues resolving the correct property source.</simpara>
