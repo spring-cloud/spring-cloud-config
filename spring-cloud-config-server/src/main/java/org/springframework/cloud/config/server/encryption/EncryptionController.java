@@ -226,7 +226,7 @@ public class EncryptionController {
 	public ResponseEntity<Map<String, Object>> encryptionTooWeak() {
 		Map<String, Object> body = new HashMap<String, Object>();
 		body.put("status", "INVALID");
-		body.put("description", "Encryption method provided too weak");
+		body.put("description", "The encryption algorithm is not strong enough");
 		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
 	}
 
