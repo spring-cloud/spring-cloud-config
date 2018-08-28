@@ -163,10 +163,12 @@ public class EncryptionController {
 	}
 
 	private void checkEncryptorInstalled(String name, String profiles) {
-		if (this.encryptor == null
-				|| this.encryptor.locate(this.helper.getEncryptorKeys(name, profiles, ""))
-						.encrypt("FOO").equals("FOO")) {
+		if (this.encryptor == null) {
 			throw new KeyNotInstalledException();
+		}
+		if (this.encryptor.locate(this.helper.getEncryptorKeys(name, profiles, ""))
+				.encrypt("FOO").equals("FOO")) {
+			throw new EncryptionTooWeakException();
 		}
 	}
 
@@ -218,6 +220,15 @@ public class EncryptionController {
 		body.put("description", "No key was installed for encryption service");
 		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
 	}
+	
+	@ExceptionHandler(EncryptionTooWeakException.class)
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> encryptionTooWeak() {
+		Map<String, Object> body = new HashMap<String, Object>();
+		body.put("status", "INVALID");
+		body.put("description", "The encryption algorithm is not strong enough");
+		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+	}
 
 	@ExceptionHandler(InvalidCipherException.class)
 	@ResponseBody
@@ -236,6 +247,10 @@ class KeyNotInstalledException extends RuntimeException {
 
 @SuppressWarnings("serial")
 class KeyNotAvailableException extends RuntimeException {
+}
+
+@SuppressWarnings("serial")
+class EncryptionTooWeakException extends RuntimeException {
 }
 
 @SuppressWarnings("serial")

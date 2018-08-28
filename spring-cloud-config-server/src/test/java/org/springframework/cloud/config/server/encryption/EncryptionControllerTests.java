@@ -45,12 +45,12 @@ public class EncryptionControllerTests {
 	private EncryptionController controller = new EncryptionController(
 			new SingleTextEncryptorLocator(Encryptors.noOpText()));
 
-	@Test(expected = KeyNotInstalledException.class)
+	@Test(expected = EncryptionTooWeakException.class)
 	public void cannotDecryptWithoutKey() {
 		this.controller.decrypt("foo", MediaType.TEXT_PLAIN);
 	}
 
-	@Test(expected = KeyNotInstalledException.class)
+	@Test(expected = EncryptionTooWeakException.class)
 	public void cannotDecryptWithNoopEncryptor() {
 		this.controller.decrypt("foo", MediaType.TEXT_PLAIN);
 	}
