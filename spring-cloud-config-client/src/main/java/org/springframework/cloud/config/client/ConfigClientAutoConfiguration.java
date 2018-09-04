@@ -65,7 +65,7 @@ public class ConfigClientAutoConfiguration {
 	protected static class ConfigServerHealthIndicatorConfiguration {
 
 		@Bean
-		public ConfigServerHealthIndicator configServerHealthIndicator(
+		public ConfigServerHealthIndicator clientConfigServerHealthIndicator(
 				ConfigServicePropertySourceLocator locator,
 				ConfigClientHealthProperties properties, Environment environment) {
 			return new ConfigServerHealthIndicator(locator, environment, properties);

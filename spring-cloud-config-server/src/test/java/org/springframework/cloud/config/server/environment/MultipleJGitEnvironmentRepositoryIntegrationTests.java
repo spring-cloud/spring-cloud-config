@@ -217,7 +217,7 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		expected.expectCause(ThrowableMessageMatcher
 				.hasMessage(containsString("Cannot write parent")));
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(false)
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri,
 						"spring.cloud.config.server.git.basedir:/tmp")
 				.run();

@@ -9,7 +9,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.test.util.EnvironmentTestUtils;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -112,8 +112,8 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 
 	void setup(String... env) {
 		this.context = new AnnotationConfigApplicationContext();
-		EnvironmentTestUtils.addEnvironment(this.context, env);
-		EnvironmentTestUtils.addEnvironment(this.context, "eureka.client.enabled=false");
+		TestPropertyValues.of(env).applyTo(this.context);
+		TestPropertyValues.of("eureka.client.enabled=false").applyTo(this.context);
 		this.context.getDefaultListableBeanFactory().registerSingleton("discoveryClient",
 				this.client);
 		this.context.register(UtilAutoConfiguration.class,

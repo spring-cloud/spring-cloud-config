@@ -16,47 +16,49 @@
 
 package org.springframework.cloud.config.monitor;
 
-import java.util.Map;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpHeaders;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.Map;
+
+import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpHeaders;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
- * @author lly835
+ * @author Juan Pablo Santos Rodríguez
  *
  */
-public class GiteePropertyPathNotificationExtractorTests {
+public class GiteaPropertyPathNotificationExtractorTests {
 
-	private GiteePropertyPathNotificationExtractor extractor = new GiteePropertyPathNotificationExtractor();
+	private GiteaPropertyPathNotificationExtractor extractor = new GiteaPropertyPathNotificationExtractor();
 
 	private HttpHeaders headers = new HttpHeaders();
 
 	@Test
-	public void giteeSample() throws Exception {
-		// See http://git.mydoc.io/?t=154711
-		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("gitee.json").getInputStream(),
+	public void giteaSample() throws Exception {
+	    // See https://docs.gitea.io/en-us/webhooks/
+        Map<String, Object> value = new ObjectMapper().readValue(
+				new ClassPathResource("gitea.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
-		this.headers.set("x-git-oschina-event", "Push Hook");
+		this.headers.set("X-Gitea-Event", "push");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNotNull(extracted);
-		assertEquals("d.txt", extracted.getPaths()[0]);
+		assertEquals("application.yml", extracted.getPaths()[0]);
 	}
 
 	@Test
 	public void notAPushNotDetected() throws Exception {
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("github.json").getInputStream(),
+				new ClassPathResource("gitea.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
-		this.headers.set("x-git-oschina-event", "Issue Hook");
+		this.headers.set("X-Gitea-Event", "issues");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertNull(extracted);
 	}

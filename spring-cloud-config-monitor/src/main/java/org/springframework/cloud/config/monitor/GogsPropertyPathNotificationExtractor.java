@@ -21,15 +21,19 @@ import org.springframework.core.annotation.Order;
 import org.springframework.util.MultiValueMap;
 
 /**
- * @author Dave Syer
+ * @author lly835
  *
  */
-@Order(Ordered.LOWEST_PRECEDENCE - 300)
-public class GithubPropertyPathNotificationExtractor
+@Order(Ordered.LOWEST_PRECEDENCE - 100)
+public class GogsPropertyPathNotificationExtractor
 		extends BasePropertyPathNotificationExtractor {
 
-	@Override
+    private static final String HEADERS_KEY = "X-Gogs-Event";
+
+    private static final String HEADERS_VALUE = "push";
+
+    @Override
     protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
-        return "push".equals(headers.getFirst("X-Github-Event"));
+        return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
     }
 }

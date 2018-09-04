@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
@@ -29,11 +30,13 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.cloud.client.discovery.event.HeartbeatMonitor;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.context.event.SmartApplicationListener;
 
 /**
  * Bootstrap configuration for a config client that wants to lookup the config server via
@@ -45,7 +48,7 @@ import org.springframework.context.event.EventListener;
 @Configuration
 @Import({ UtilAutoConfiguration.class })
 @EnableDiscoveryClient
-public class DiscoveryClientConfigServiceBootstrapConfiguration {
+public class DiscoveryClientConfigServiceBootstrapConfiguration implements SmartApplicationListener {
 
 	private static Log logger = LogFactory
 			.getLog(DiscoveryClientConfigServiceBootstrapConfiguration.class);
@@ -62,6 +65,21 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 	public ConfigServerInstanceProvider configServerInstanceProvider(
 			DiscoveryClient discoveryClient) {
 		return new ConfigServerInstanceProvider(discoveryClient);
+	}
+
+	@Override
+	public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+		return ContextRefreshedEvent.class.isAssignableFrom(eventType)
+				|| HeartbeatEvent.class.isAssignableFrom(eventType);
+	}
+
+	@Override
+	public void onApplicationEvent(ApplicationEvent event) {
+		if (event instanceof ContextRefreshedEvent) {
+			startup((ContextRefreshedEvent) event);
+		} else if (event instanceof HeartbeatEvent) {
+			heartbeat((HeartbeatEvent) event);
+		}
 	}
 
 	@EventListener(ContextRefreshedEvent.class)

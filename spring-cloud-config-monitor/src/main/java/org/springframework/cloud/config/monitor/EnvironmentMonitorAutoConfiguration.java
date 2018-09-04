@@ -66,9 +66,21 @@ public class EnvironmentMonitorAutoConfiguration {
 		}
 
 		@Bean
+		@ConditionalOnProperty(value="spring.cloud.config.server.monitor.gitea.enabled", havingValue="true", matchIfMissing=true)
+		public GiteaPropertyPathNotificationExtractor giteaPropertyPathNotificationExtractor() {
+			return new GiteaPropertyPathNotificationExtractor();
+		}
+
+		@Bean
 		@ConditionalOnProperty(value="spring.cloud.config.server.monitor.gitee.enabled", havingValue="true", matchIfMissing=true)
 		public GiteePropertyPathNotificationExtractor giteePropertyPathNotificationExtractor() {
 			return new GiteePropertyPathNotificationExtractor();
+		}
+
+		@Bean
+		@ConditionalOnProperty(value="spring.cloud.config.server.monitor.gogs.enabled", havingValue="true", matchIfMissing=true)
+		public GogsPropertyPathNotificationExtractor gogsPropertyPathNotificationExtractor() {
+			return new GogsPropertyPathNotificationExtractor();
 		}
 	}
 
