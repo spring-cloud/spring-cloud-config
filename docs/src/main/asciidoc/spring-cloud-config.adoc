@@ -1018,7 +1018,7 @@ foo:
 
 The locator looks for a key named "testkey".
 A secret can also be supplied by using a `{secret:...}` value in the prefix.
-However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keytore and do not specify a secret).
+However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keystore and do not specify a secret).
 If you do supply a secret, you should also encrypt the secret using a custom `SecretLocator`.
 
 When the keys are being used only to encrypt a few bytes of configuration data (that is, they are not being used elsewhere), key rotation is hardly ever necessary on cryptographic grounds.
