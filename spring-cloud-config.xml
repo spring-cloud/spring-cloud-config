@@ -1051,7 +1051,7 @@ If you have configured a keystore (<literal>encrypt.keystore.location</literal>)
   bar: `{cipher}{key:testkey}...`</programlisting>
 <simpara>The locator looks for a key named "testkey".
 A secret can also be supplied by using a <literal>{secret:&#8230;&#8203;}</literal> value in the prefix.
-However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keytore and do not specify a secret).
+However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keystore and do not specify a secret).
 If you do supply a secret, you should also encrypt the secret using a custom <literal>SecretLocator</literal>.</simpara>
 <simpara>When the keys are being used only to encrypt a few bytes of configuration data (that is, they are not being used elsewhere), key rotation is hardly ever necessary on cryptographic grounds.
 However, you might occasionally  need to change the keys (for example, in the event of a security breach).

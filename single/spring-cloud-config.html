@@ -504,7 +504,7 @@ The keys are passed to a <code class="literal">TextEncryptorLocator</code>, whic
 If you have configured a keystore (<code class="literal">encrypt.keystore.location</code>), the default locator looks for keys with aliases supplied by the <code class="literal">key</code> prefix, with a cipher text like resembling the following:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">foo</span>:
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  bar</span>: `{cipher}{key:testkey}...`</pre><p>The locator looks for a key named "testkey".
 A secret can also be supplied by using a <code class="literal">{secret:&#8230;&#8203;}</code> value in the prefix.
-However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keytore and do not specify a secret).
+However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keystore and do not specify a secret).
 If you do supply a secret, you should also encrypt the secret using a custom <code class="literal">SecretLocator</code>.</p><p>When the keys are being used only to encrypt a few bytes of configuration data (that is, they are not being used elsewhere), key rotation is hardly ever necessary on cryptographic grounds.
 However, you might occasionally  need to change the keys (for example, in the event of a security breach).
 In that case, all the clients would need to change their source config files (for example, in git) and use a new <code class="literal">{key:&#8230;&#8203;}</code> prefix in all the ciphers.
