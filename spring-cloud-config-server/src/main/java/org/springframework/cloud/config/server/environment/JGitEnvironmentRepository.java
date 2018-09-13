@@ -264,19 +264,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				}
 				// checkout after fetch so we can get any new branches, tags, ect.
 				checkout(git, label);
-				if (isBranch(git, label)) {
-					// merge results from fetch
-					merge(git, label);
-					if (!isClean(git, label)) {
-						logger.warn("The local repository is dirty or ahead of origin. Resetting"
-								+ " it to origin/" + label + ".");
-						resetHard(git, label, LOCAL_BRANCH_REF_PREFIX + label);
-					}
-				}
+				tryMerge(git, label);
 			}
 			else {
-				// nothing to update so just checkout
+				// nothing to update so just checkout and merge.
+				// Merge because remote branch could have been updated before
 				checkout(git, label);
+				tryMerge(git, label);
 			}
 			// always return what is currently HEAD as the version
 			return git.getRepository().findRef("HEAD").getObjectId().getName();
@@ -303,6 +297,24 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			catch (Exception e) {
 				this.logger.warn("Could not close git repository", e);
 			}
+		}
+	}
+	
+	private void tryMerge(Git git, String label) {
+		try {
+			if (isBranch(git, label)) {
+				// merge results from fetch
+				merge(git, label);
+				if (!isClean(git, label)) {
+					logger.warn("The local repository is dirty or ahead of origin. Resetting"
+							+ " it to origin/" + label + ".");
+					resetHard(git, label, LOCAL_BRANCH_REF_PREFIX + label);
+				}
+			}
+		} 
+		catch (GitAPIException e) {
+			throw new NoSuchRepositoryException(
+					"Cannot clone or checkout repository: " + getUri(), e);
 		}
 	}
 
