@@ -35,7 +35,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.context.event.SmartApplicationListener;
 
 /**
@@ -82,12 +81,10 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration implements Smart
 		}
 	}
 
-	@EventListener(ContextRefreshedEvent.class)
 	public void startup(ContextRefreshedEvent event) {
 		refresh();
 	}
 
-	@EventListener(HeartbeatEvent.class)
 	public void heartbeat(HeartbeatEvent event) {
 		if (monitor.update(event.getValue())) {
 			refresh();
