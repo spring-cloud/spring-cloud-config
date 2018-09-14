@@ -1135,7 +1135,7 @@ You can switch off the endpoints entirely by not using the `@EnableConfigServer`
 
 == Push Notifications and Spring Cloud Bus
 
-Many source code repository providers (such as Github, Gitlab, Gitee, or Bitbucket) notify you of changes in a repository through a webhook.
+Many source code repository providers (such as Github, Gitlab, Gitea, Gitee, Gogs, or Bitbucket) notify you of changes in a repository through a webhook.
 You can configure the webhook through the provider's user interface as a URL and a set of events in which you are interested.
 For instance, https://developer.github.com/v3/activity/events/types/#pushevent[Github] uses a POST to the webhook with a JSON body containing a list of commits and a header (`X-Github-Event`) set to `push`.
 If you add a dependency on the `spring-cloud-config-monitor` library and activate the Spring Cloud Bus in your Config Server, then a `/monitor` endpoint is enabled.
@@ -1145,7 +1145,7 @@ The change detection can be strategized.
 However, by default, it looks for changes in files that match the application name (for example, `foo.properties` is targeted at the `foo` application, while `application.properties` is targeted at all applications).
 The strategy to use when you want to override the behavior is `PropertyPathNotificationExtractor`, which accepts the request headers and body as parameters and returns a list of file paths that changed.
 
-The default configuration works out of the box with Github, Gitlab, Gitee, or Bitbucket.
+The default configuration works out of the box with Github, Gitlab, Gitea, Gitee, Gogs or Bitbucket.
 In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to `/monitor` with form-encoded body parameters in the pattern of `path={name}`.
 Doing so broadcasts to applications matching the `{name}` pattern (which can contain wildcards).
 
@@ -1223,6 +1223,8 @@ The Config Service serves property sources from `/{name}/{profile}/{label}`, whe
 * "name" = `${spring.application.name}`
 * "profile" = `${spring.profiles.active}` (actually `Environment.getActiveProfiles()`)
 * "label" = "master"
+
+NOTE: When setting the property `${spring.application.name}` do not prefix your app name with the reserved word `application-` to prevent issues resolving the correct property source.
 
 You can override all of them by setting `spring.cloud.config.\*` (where `*` is `name`, `profile` or `label`).
 The `label` is useful for rolling back to previous versions of configuration.
