@@ -16,20 +16,38 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.MultiValueMap;
 
 /**
- * @author Dave Syer
+ * @author Juan Pablo Santos Rodríguez
  *
  */
-@Order(Ordered.LOWEST_PRECEDENCE - 300)
-public class GithubPropertyPathNotificationExtractor
+@Order(Ordered.LOWEST_PRECEDENCE - 100)
+public class GiteaPropertyPathNotificationExtractor
         extends BasePropertyPathNotificationExtractor {
+
+    private static final String HEADERS_KEY = "X-Gitea-Event";
+
+    private static final String HEADERS_VALUE = "push";
+    
+    /**
+     * gitea doesn't return which files have been added/modified/deleted yet.
+     * 
+     * @see https://github.com/go-gitea/gitea/issues/4313
+     */
+    @Override
+    protected void addPaths(Set<String> paths, Collection<Map<String, Object>> commits) {
+        paths.add( "application.yml" );
+    }
 
     @Override
     protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
-        return "push".equals(headers.getFirst("X-Github-Event"));
+        return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
     }
 }

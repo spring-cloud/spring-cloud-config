@@ -24,7 +24,16 @@
       "name": "123",
       "email": "123@123.com",
       "time": "2016-12-09T17:28:02 08:00"
-    }
+    },
+    "added": [
+      "d.txt"
+    ],
+    "modified": [
+      "c.txt"
+    ],
+    "removed": [
+      "b.txt"
+    ]
   }],
   "total_commits_count": 1,
   "commits_more_than_ten": false,
