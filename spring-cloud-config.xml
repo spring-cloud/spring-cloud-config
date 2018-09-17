@@ -1149,7 +1149,7 @@ You can switch off the endpoints entirely by not using the <literal>@EnableConfi
 </chapter>
 <chapter xml:id="_push_notifications_and_spring_cloud_bus">
 <title>Push Notifications and Spring Cloud Bus</title>
-<simpara>Many source code repository providers (such as Github, Gitlab, Gitee, or Bitbucket) notify you of changes in a repository through a webhook.
+<simpara>Many source code repository providers (such as Github, Gitlab, Gitea, Gitee, Gogs, or Bitbucket) notify you of changes in a repository through a webhook.
 You can configure the webhook through the provider&#8217;s user interface as a URL and a set of events in which you are interested.
 For instance, <link xl:href="https://developer.github.com/v3/activity/events/types/#pushevent">Github</link> uses a POST to the webhook with a JSON body containing a list of commits and a header (<literal>X-Github-Event</literal>) set to <literal>push</literal>.
 If you add a dependency on the <literal>spring-cloud-config-monitor</literal> library and activate the Spring Cloud Bus in your Config Server, then a <literal>/monitor</literal> endpoint is enabled.</simpara>
@@ -1157,7 +1157,7 @@ If you add a dependency on the <literal>spring-cloud-config-monitor</literal> li
 The change detection can be strategized.
 However, by default, it looks for changes in files that match the application name (for example, <literal>foo.properties</literal> is targeted at the <literal>foo</literal> application, while <literal>application.properties</literal> is targeted at all applications).
 The strategy to use when you want to override the behavior is <literal>PropertyPathNotificationExtractor</literal>, which accepts the request headers and body as parameters and returns a list of file paths that changed.</simpara>
-<simpara>The default configuration works out of the box with Github, Gitlab, Gitee, or Bitbucket.
+<simpara>The default configuration works out of the box with Github, Gitlab, Gitea, Gitee, Gogs or Bitbucket.
 In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to <literal>/monitor</literal> with form-encoded body parameters in the pattern of <literal>path={name}</literal>.
 Doing so broadcasts to applications matching the <literal>{name}</literal> pattern (which can contain wildcards).</simpara>
 <note>
