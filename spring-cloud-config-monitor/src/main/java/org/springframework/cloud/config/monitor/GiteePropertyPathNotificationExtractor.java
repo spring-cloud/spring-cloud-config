@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.config.monitor;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.MultiValueMap;
@@ -29,21 +26,14 @@ import org.springframework.util.MultiValueMap;
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
 public class GiteePropertyPathNotificationExtractor
-		implements PropertyPathNotificationExtractor {
+		extends BasePropertyPathNotificationExtractor {
 
 	private static final String HEADERS_KEY = "x-git-oschina-event";
 
 	private static final String HEADERS_VALUE = "Push Hook";
 
 	@Override
-	public PropertyPathNotification extract(MultiValueMap<String, String> headers,
-			Map<String, Object> request) {
-		if (HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY))) {
-			if (request.get("commits") instanceof Collection &&
-					((Collection<Map<String, Object>>) request.get("commits")).size() > 0) {
-				return new PropertyPathNotification("application.yml");
-			}
-		}
-		return null;
-	}
+    protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
+        return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
+    }
 }
