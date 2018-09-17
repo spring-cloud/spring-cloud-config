@@ -35,7 +35,7 @@ public class EncryptionControllerMultiTextEncryptorTests {
 				encrypted, TEXT_PLAIN));
 	}
 
-	@Test(expected = KeyNotInstalledException.class)
+	@Test(expected = EncryptionTooWeakException.class)
 	public void shouldNotEncryptUsingNoOp() {
 		// given
 		String application = "unknown";
@@ -46,7 +46,7 @@ public class EncryptionControllerMultiTextEncryptorTests {
 		// then exception is thrown
 	}
 
-	@Test(expected = KeyNotInstalledException.class)
+	@Test(expected = EncryptionTooWeakException.class)
 	public void shouldNotDecryptUsingNoOp() {
 		// given
 		String application = "unknown";

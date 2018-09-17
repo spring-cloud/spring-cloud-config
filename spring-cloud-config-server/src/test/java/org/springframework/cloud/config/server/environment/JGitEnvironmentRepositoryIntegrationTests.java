@@ -65,6 +65,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Dave Syer
@@ -453,6 +454,65 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		testData.getServerGit().getGit().commit().setMessage("Updated for pull").call();
 		String updatedRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
 
+		// do a normal request and verify we get the new version
+		environment = testData.getRepository().findOne("bar", "staging", "master");
+		assertEquals(environment.getVersion(), updatedRemoteVersion);
+		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertEquals(fooProperty, "barNewCommit");
+
+		// request the prior commit ID and make sure we get it
+		environment = testData.getRepository().findOne("bar", "staging", startingRemoteVersion);
+		assertEquals(environment.getVersion(), startingRemoteVersion);
+		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertEquals(fooProperty, "bar");
+	}
+	
+	@Test
+	/**
+	 * In this scenario there is set the refresh rate so the remote repository is not fetched for every configuration read.
+	 * 
+	 * There is more than one label queried - test and master - but only one such branch exists - master.
+	 * 
+	 * There is a new commit to master branch but when client loads new configuration, the "test" label is queried first.
+	 */
+	public void testNewCommitIDWithRefreshRate() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData
+				.prepareClonedGitRepository(TestConfiguration.class);
+		
+		// get our starting versions
+		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
+
+		//Ask test label configuration first
+		try {
+			testData.getRepository().findOne("bar", "staging", "test");
+			fail("Should have thrown NoSuchLabelException.");
+		} catch (NoSuchLabelException ex) {
+			// OK
+		}
+		
+		// make sure we get the right version out of the gate
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
+		assertEquals(environment.getVersion(), startingRemoteVersion);
+
+		// update the remote repo
+		FileOutputStream out = new FileOutputStream(
+				new File(testData.getServerGit().getGitWorkingDirectory(), "bar.properties"));
+		StreamUtils.copy("foo: barNewCommit", Charset.defaultCharset(), out);
+		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
+		testData.getServerGit().getGit().commit().setMessage("Updated for pull").call();
+		String updatedRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
+
+		// Set refresh rate to 60 seconds (now it will fetch the remote repo only once)
+		testData.getRepository().setRefreshRate(60);
+		
+		//Ask test label configuration first
+		try {
+			testData.getRepository().findOne("bar", "staging", "test");
+			fail("Should have thrown NoSuchLabelException.");
+		} catch (NoSuchLabelException ex) {
+			// OK
+		}
+		
 		// do a normal request and verify we get the new version
 		environment = testData.getRepository().findOne("bar", "staging", "master");
 		assertEquals(environment.getVersion(), updatedRemoteVersion);

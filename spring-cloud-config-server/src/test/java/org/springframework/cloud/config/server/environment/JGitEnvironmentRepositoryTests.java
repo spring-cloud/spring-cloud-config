@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +57,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
+import org.mockito.Mockito;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitSkipSslValidationCredentialsProvider;
@@ -522,6 +523,59 @@ public class JGitEnvironmentRepositoryTests {
 
 		verify(git, times(0)).branchDelete();
     }
+	
+	@Test
+	public void testRefreshWithoutFetch() throws Exception {
+		Git git = mock(Git.class);
+		
+		CloneCommand cloneCommand = mock(CloneCommand.class);
+		when(cloneCommand.setURI(anyString())).thenReturn(cloneCommand);
+		when(cloneCommand.setDirectory(any(File.class))).thenReturn(cloneCommand);
+		when(cloneCommand.call()).thenReturn(git);
+		
+		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
+		
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class, Mockito.RETURNS_DEEP_STUBS);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		Ref ref = mock(Ref.class);
+		ListBranchCommand listBranchCommand = mock(ListBranchCommand.class);
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+		FetchResult fetchResult = mock(FetchResult.class);
+		Ref branch1Ref = mock(Ref.class);
+
+		when(git.branchList()).thenReturn(listBranchCommand);
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(git.checkout()).thenReturn(checkoutCommand);
+		when(git.fetch()).thenReturn(fetchCommand);
+		when(git.merge()).thenReturn(mock(MergeCommand.class, Mockito.RETURNS_DEEP_STUBS));
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(checkoutCommand.call()).thenReturn(ref);
+		when(listBranchCommand.call()).thenReturn(Arrays.asList(branch1Ref));
+		when(fetchCommand.call()).thenReturn(fetchResult);
+		when(branch1Ref.getName()).thenReturn("origin/master");
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, new JGitEnvironmentProperties());
+		repo.setGitFactory(factory);
+		repo.setUri("http://somegitserver/somegitrepo");
+		repo.setBasedir(this.basedir);
+
+		// Set the refresh rate to 2 seconds and last update before 100ms. There should be no remote repo fetch.
+		repo.setLastRefresh(System.currentTimeMillis() - 100);
+		repo.setRefreshRate(2);
+
+		repo.refresh("master");
+		
+		// Verify no fetch but merge only.
+		verify(git, times(0)).fetch();
+		verify(git).merge();
+	}
 
 	@Test
 	public void testResetHardException() throws Exception {

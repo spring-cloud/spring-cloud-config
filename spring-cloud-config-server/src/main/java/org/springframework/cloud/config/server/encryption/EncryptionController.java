@@ -92,7 +92,6 @@ public class EncryptionController {
 	}
 
 	@ExceptionHandler(KeyFormatException.class)
-	@ResponseBody
 	public ResponseEntity<Map<String, Object>> keyFormat() {
 		Map<String, Object> body = new HashMap<>();
 		body.put("status", "BAD_REQUEST");
@@ -101,9 +100,8 @@ public class EncryptionController {
 	}
 
 	@ExceptionHandler(KeyNotAvailableException.class)
-	@ResponseBody
 	public ResponseEntity<Map<String, Object>> keyUnavailable() {
-		Map<String, Object> body = new HashMap<String, Object>();
+		Map<String, Object> body = new HashMap<>();
 		body.put("status", "NOT_FOUND");
 		body.put("description", "No public key available");
 		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
@@ -112,7 +110,7 @@ public class EncryptionController {
 	@RequestMapping(value = "encrypt/status", method = RequestMethod.GET)
 	public Map<String, Object> status() {
 		checkEncryptorInstalled("application", "default");
-		return Collections.<String, Object>singletonMap("status", "OK");
+		return Collections.singletonMap("status", "OK");
 	}
 
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
@@ -163,10 +161,12 @@ public class EncryptionController {
 	}
 
 	private void checkEncryptorInstalled(String name, String profiles) {
-		if (this.encryptor == null
-				|| this.encryptor.locate(this.helper.getEncryptorKeys(name, profiles, ""))
-						.encrypt("FOO").equals("FOO")) {
+		if (this.encryptor == null) {
 			throw new KeyNotInstalledException();
+		}
+		if (this.encryptor.locate(this.helper.getEncryptorKeys(name, profiles, ""))
+				.encrypt("FOO").equals("FOO")) {
+			throw new EncryptionTooWeakException();
 		}
 	}
 
@@ -211,18 +211,24 @@ public class EncryptionController {
 	}
 
 	@ExceptionHandler(KeyNotInstalledException.class)
-	@ResponseBody
 	public ResponseEntity<Map<String, Object>> notInstalled() {
-		Map<String, Object> body = new HashMap<String, Object>();
+		Map<String, Object> body = new HashMap<>();
 		body.put("status", "NO_KEY");
 		body.put("description", "No key was installed for encryption service");
 		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
 	}
+	
+	@ExceptionHandler(EncryptionTooWeakException.class)
+	public ResponseEntity<Map<String, Object>> encryptionTooWeak() {
+		Map<String, Object> body = new HashMap<>();
+		body.put("status", "INVALID");
+		body.put("description", "The encryption algorithm is not strong enough");
+		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+	}
 
 	@ExceptionHandler(InvalidCipherException.class)
-	@ResponseBody
 	public ResponseEntity<Map<String, Object>> invalidCipher() {
-		Map<String, Object> body = new HashMap<String, Object>();
+		Map<String, Object> body = new HashMap<>();
 		body.put("status", "INVALID");
 		body.put("description", "Text not encrypted with this key");
 		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
@@ -236,6 +242,10 @@ class KeyNotInstalledException extends RuntimeException {
 
 @SuppressWarnings("serial")
 class KeyNotAvailableException extends RuntimeException {
+}
+
+@SuppressWarnings("serial")
+class EncryptionTooWeakException extends RuntimeException {
 }
 
 @SuppressWarnings("serial")
