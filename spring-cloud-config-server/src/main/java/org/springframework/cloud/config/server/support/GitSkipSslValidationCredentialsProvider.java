@@ -17,6 +17,7 @@ package org.springframework.cloud.config.server.support;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.internal.JGitText;
@@ -36,6 +37,8 @@ import org.eclipse.jgit.transport.URIish;
  * @author Gareth Clay
  */
 public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider {
+
+	private static final Pattern FORMAT_PLACEHOLDER_PATTERN = Pattern.compile("\\s*\\{\\d}\\s*");
 
 	private final CredentialsProvider delegate;
 
@@ -128,6 +131,6 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 	}
 
 	private static String stripFormattingPlaceholders(String string) {
-		return string.replaceAll("\\s*\\{\\d}\\s*", "");
+		return FORMAT_PLACEHOLDER_PATTERN.matcher(string).replaceAll("");
 	}
 }
