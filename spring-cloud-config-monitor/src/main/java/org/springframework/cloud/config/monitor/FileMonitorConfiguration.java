@@ -33,6 +33,8 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.server.environment.AbstractScmEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
@@ -47,8 +49,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.PatternMatchUtils;
 
-import lombok.extern.apachecommons.CommonsLog;
-
 /**
  * Configuration for a file watcher that detects changes in local files related to the
  * environment repository. If any files change the {@link PropertyPathEndpoint} is pinged
@@ -59,9 +59,10 @@ import lombok.extern.apachecommons.CommonsLog;
  *
  */
 @Configuration
-@CommonsLog
 @EnableScheduling
 public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderAware {
+
+	private static final Log log = LogFactory.getLog(FileMonitorConfiguration.class);
 
 	@Autowired
 	PropertyPathEndpoint endpoint;
