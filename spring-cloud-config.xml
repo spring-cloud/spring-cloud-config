@@ -258,14 +258,14 @@ If you use a command-line client such as curl, be careful with the brackets in t
 <section xml:id="_placeholders_in_git_uri">
 <title>Placeholders in Git URI</title>
 <simpara>Spring Cloud Config Server supports a git repository URL with placeholders for the <literal>{application}</literal> and <literal>{profile}</literal> (and <literal>{label}</literal> if you need it, but remember that the label is applied as a git label anyway).
-So you can support a &#8220;one repository per application&#8221; policy by using a structure similar to the following:</simpara>
+So you can support a <quote>one repository per application</quote> policy by using a structure similar to the following:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring:
   cloud:
     config:
       server:
         git:
           uri: https://github.com/myorg/{application}</programlisting>
-<simpara>You can also support a &#8220;one repository per profile&#8221; policy by using a similar pattern but with
+<simpara>You can also support a <quote>one repository per profile</quote> policy by using a similar pattern but with
 <literal>{profile}</literal>.</simpara>
 <simpara>Additionally, using the special string "(_)" within your <literal>{application}</literal> parameters can enable support for multiple
 organizations, as shown in the following example:</simpara>
@@ -297,9 +297,9 @@ The pattern format is a comma-separated list of <literal>{application}/{profile}
               pattern: local*
               uri: file:/home/configsvc/config-repo</programlisting>
 <simpara>If <literal>{application}/{profile}</literal> does not match any of the patterns, it uses the default URI defined under <literal>spring.cloud.config.server.git.uri</literal>.
-In the above example, for the &#8220;simple&#8221; repository, the pattern is <literal>simple/*</literal> (it only matches one application named <literal>simple</literal> in all profiles). The &#8220;local&#8221; repository matches all application names beginning with <literal>local</literal> in all profiles (the <literal>/*</literal> suffix is added automatically to any pattern that does not have a profile matcher).</simpara>
+In the above example, for the <quote>simple</quote> repository, the pattern is <literal>simple/*</literal> (it only matches one application named <literal>simple</literal> in all profiles). The <quote>local</quote> repository matches all application names beginning with <literal>local</literal> in all profiles (the <literal>/*</literal> suffix is added automatically to any pattern that does not have a profile matcher).</simpara>
 <note>
-<simpara>The &#8220;one-liner&#8221; short cut used in the &#8220;simple&#8221; example can be used only if the only property to be set is the URI.
+<simpara>The <quote>one-liner</quote> short cut used in the <quote>simple</quote> example can be used only if the only property to be set is the URI.
 If you need to set anything else (credentials, pattern, and so on) you need to use the full form.</simpara>
 </note>
 <simpara>The <literal>pattern</literal> property in the repo is actually an array, so you can use a YAML array (or <literal>[0]</literal>, <literal>[1]</literal>, etc. suffixes in properties files) to bind to multiple patterns.
@@ -323,7 +323,7 @@ You may need to do so if you are going to run apps with multiple profiles, as sh
               uri: https://github.com/staging/config-repo</programlisting>
 <note>
 <simpara>Spring Cloud guesses that a pattern containing a profile that does not end in <literal>*</literal> implies that you actually want to match a list of profiles starting with this pattern (so <literal>*/staging</literal> is a shortcut for <literal>["*/staging", "*/staging,*"]</literal>, and so on).
-This is common where, for instance, you need to run applications in the &#8220;development&#8221; profile locally but also the &#8220;cloud&#8221; profile remotely.</simpara>
+This is common where, for instance, you need to run applications in the <quote>development</quote> profile locally but also the <quote>cloud</quote> profile remotely.</simpara>
 </note>
 <simpara>Every repository can also optionally store config files in sub-directories, and patterns to search for those directories can be specified as <literal>searchPaths</literal>.
 The following example shows a config file at the top level:</simpara>
@@ -576,7 +576,7 @@ To avoid this problem, change the directory that Config Server uses by setting <
 </section>
 <section xml:id="_file_system_backend">
 <title>File System Backend</title>
-<simpara>There is also a &#8220;native&#8221; profile in the Config Server that does not use Git but loads the config files from the local classpath or file system (any static URL you want to point to with <literal>spring.cloud.config.server.native.searchLocations</literal>).
+<simpara>There is also a <quote>native</quote> profile in the Config Server that does not use Git but loads the config files from the local classpath or file system (any static URL you want to point to with <literal>spring.cloud.config.server.native.searchLocations</literal>).
 To use the native profile, launch the Config Server with <literal>spring.profiles.active=native</literal>.</simpara>
 <note>
 <simpara>Remember to use the <literal>file:</literal> prefix for file resources (the default without a prefix is usually the classpath).
@@ -787,7 +787,7 @@ You can use resources with these file names to configure global defaults and hav
 <simpara>The #_property_overrides[property overrides] feature can also be used for setting global defaults, with placeholders applications
 allowed to override them locally.</simpara>
 <tip>
-<simpara>With the &#8220;native&#8221; profile (a local file system backend) , you should use an explicit search location that is not part of the server&#8217;s own configuration.
+<simpara>With the <quote>native</quote> profile (a local file system backend) , you should use an explicit search location that is not part of the server&#8217;s own configuration.
 Otherwise, the <literal>application*</literal> resources in the default search locations get removed because they are part of the server.</simpara>
 </tip>
 </section>
@@ -870,7 +870,7 @@ If you do not implement the <literal>Ordered</literal> interface, your <literal>
 </section>
 <section xml:id="_property_overrides">
 <title>Property Overrides</title>
-<simpara>The Config Server has an &#8220;overrides&#8221; feature that lets the operator provide configuration properties to all applications.
+<simpara>The Config Server has an <quote>overrides</quote> feature that lets the operator provide configuration properties to all applications.
 The overridden properties cannot be accidentally changed by the application with the normal Spring Boot hooks.
 To declare overrides, add a map of name-value pairs to <literal>spring.cloud.config.server.overrides</literal>, as shown in the following example:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring:
@@ -924,11 +924,11 @@ The default is a username of <literal>user</literal> and a randomly generated pa
 <title>Encryption and Decryption</title>
 <important>
 <simpara>To use the encryption and decryption features you need the full-strength JCE installed in your JVM (it is not included by default).
-You can download the &#8220;Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files&#8221; from Oracle and follow the installation instructions (essentially, you need to replace the two policy files in the JRE lib/security directory with the ones that you downloaded).</simpara>
+You can download the <quote>Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files</quote> from Oracle and follow the installation instructions (essentially, you need to replace the two policy files in the JRE lib/security directory with the ones that you downloaded).</simpara>
 </important>
 <simpara>If the remote property sources contain encrypted content (values starting with <literal>{cipher}</literal>), they are decrypted before sending to clients over HTTP.
-The main advantage of this setup is that the property values need not be in plain text when they are &#8220;at rest&#8221; (for example, in a git repository).
-If a value cannot be decrypted, it is removed from the property source and an additional property is added with the same key but prefixed with <literal>invalid</literal> and a value that means &#8220;not applicable&#8221; (usually <literal>&lt;n/a&gt;</literal>).
+The main advantage of this setup is that the property values need not be in plain text when they are <quote>at rest</quote> (for example, in a git repository).
+If a value cannot be decrypted, it is removed from the property source and an additional property is added with the same key but prefixed with <literal>invalid</literal> and a value that means <quote>not applicable</quote> (usually <literal>&lt;n/a&gt;</literal>).
 This is largely to prevent cipher text being used as a password and accidentally leaking.</simpara>
 <simpara>If you set up a remote config repository for config client applications, it might contain an <literal>application.yml</literal> similar to the following:</simpara>
 <formalpara>
@@ -1180,7 +1180,7 @@ When a config client starts, it binds to the Config Server (through the <literal
 <section xml:id="discovery-first-bootstrap">
 <title>Discovery First Bootstrap</title>
 <simpara>If you use a `DiscoveryClient implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
-However, in the default &#8220;Config First&#8221; mode, clients cannot take advantage of the registration.</simpara>
+However, in the default <quote>Config First</quote> mode, clients cannot take advantage of the registration.</simpara>
 <simpara>If you prefer to use <literal>DiscoveryClient</literal> to locate the Config Server, you can do so by setting <literal>spring.cloud.config.discovery.enabled=true</literal> (the default is <literal>false</literal>).
 The net result of doing so is that client applications all need a <literal>bootstrap.yml</literal> (or an environment variable) with the appropriate discovery configuration.
 For example, with Spring Cloud Netflix, you need to define the Eureka server address (for example, in <literal>eureka.client.serviceUrl.defaultZone</literal>).
