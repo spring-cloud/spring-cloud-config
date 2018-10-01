@@ -1025,8 +1025,9 @@ To configure a symmetric key you just need to set `encrypt.key` to a
 secret String (or use an enviroment variable `ENCRYPT_KEY` to keep it
 out of plain text configuration files).
 
-To configure an asymmetric key you can either set the key as a
-PEM-encoded text value (in `encrypt.key`), or via a keystore (e.g. as
+NOTE: You cannot configure an asymmetric key using `encrypt.key`.
+
+To configure an asymmetric key use a keystore (e.g. as
 created by the `keytool` utility that comes with the JDK). The
 keystore properties are `encrypt.keyStore.\*` with `*` equal to
 
