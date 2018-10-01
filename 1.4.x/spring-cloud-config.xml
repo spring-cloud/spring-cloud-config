@@ -1062,8 +1062,10 @@ it is just a single property value to configure in the <literal>bootstrap.proper
 <simpara>To configure a symmetric key you just need to set <literal>encrypt.key</literal> to a
 secret String (or use an enviroment variable <literal>ENCRYPT_KEY</literal> to keep it
 out of plain text configuration files).</simpara>
-<simpara>To configure an asymmetric key you can either set the key as a
-PEM-encoded text value (in <literal>encrypt.key</literal>), or via a keystore (e.g. as
+<note>
+<simpara>You cannot configure an asymmetric key using <literal>encrypt.key</literal>.</simpara>
+</note>
+<simpara>To configure an asymmetric key use a keystore (e.g. as
 created by the <literal>keytool</literal> utility that comes with the JDK). The
 keystore properties are <literal>encrypt.keyStore.*</literal> with <literal>*</literal> equal to</simpara>
 <itemizedlist>

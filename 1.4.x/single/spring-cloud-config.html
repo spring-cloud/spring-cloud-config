@@ -648,8 +648,7 @@ one (RSA key pair). The asymmetric choice is superior in terms of
 security, but it is often more convenient to use a symmetric key since
 it is just a single property value to configure in the <code class="literal">bootstrap.properties</code>.</p><p>To configure a symmetric key you just need to set <code class="literal">encrypt.key</code> to a
 secret String (or use an enviroment variable <code class="literal">ENCRYPT_KEY</code> to keep it
-out of plain text configuration files).</p><p>To configure an asymmetric key you can either set the key as a
-PEM-encoded text value (in <code class="literal">encrypt.key</code>), or via a keystore (e.g. as
+out of plain text configuration files).</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>You cannot configure an asymmetric key using <code class="literal">encrypt.key</code>.</p></td></tr></table></div><p>To configure an asymmetric key use a keystore (e.g. as
 created by the <code class="literal">keytool</code> utility that comes with the JDK). The
 keystore properties are <code class="literal">encrypt.keyStore.*</code> with <code class="literal">*</code> equal to</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><code class="literal">location</code> (a <code class="literal">Resource</code> location),</li><li class="listitem"><code class="literal">password</code> (to unlock the keystore) and</li><li class="listitem"><code class="literal">alias</code> (to identify which key in the store is to be
 used).</li></ul></div><p>The encryption is done with the public key, and a private key is
