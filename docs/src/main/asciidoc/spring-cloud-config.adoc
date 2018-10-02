@@ -503,6 +503,14 @@ spring:
 
 NOTE: The default value for `deleteUntrackedBranches` property is `false`.
 
+===== Git Refresh Rate
+
+You can control how often the config server will fetch updated configuration data
+from your Git backend by using `spring.cloud.config.server.git.refreshRate`.  The
+value of this property is specified in seconds.  By default the value is 0, meaning
+the config server will fetch updated configuration from the Git repo every time it
+is requested.
+
 ==== Version Control Backend Filesystem Use
 
 WARNING: With VCS-based backends (git, svn), files are checked out or cloned to the local filesystem.
