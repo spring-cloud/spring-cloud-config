@@ -80,6 +80,8 @@ import static org.eclipse.jgit.transport.ReceiveCommand.Type.DELETE;
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
 
+	public static final String MESSAGE = "You need to configure a uri for the git repository.";
+
 	private static final String FILE_URI_PREFIX = "file:";
 
 	private static final String LOCAL_BRANCH_REF_PREFIX = "refs/remotes/origin/";
@@ -243,7 +245,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		Assert.state(getUri() != null,
-				"You need to configure a uri for the git repository");
+				MESSAGE);
 		initialize();
 		if (this.cloneOnStart) {
 			initClonedRepository();
