@@ -1130,6 +1130,24 @@ An optional property named `spring.cloud.config.server.bootstrap` can be useful 
 It is a flag to indicate whether the server should configure itself from its own remote repository.
 By default, the flag is off, because it can delay startup.
 However, when embedded in another application, it makes sense to initialize the same way as any other application.
+When setting `spring.cloud.config.server.bootstrap` to `true` you must also use a <<composite-environment-repositories,composite environment repository configuration>>.
+For example
+
+[source,yaml]
+----
+spring:
+  application:
+    name: configserver
+  profiles:
+    active: composite
+  cloud:
+    config:
+      server:
+        composite:
+          - type: native
+            search-locations: ${HOME}/Desktop/config
+        bootstrap: true
+----
 
 NOTE: If you use the bootstrap flag, the config server needs to have its name and repository URI configured in `bootstrap.yml`.
 
