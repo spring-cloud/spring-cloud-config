@@ -574,6 +574,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			return clone.call();
 		}
 		catch (GitAPIException e) {
+			logger.warn("Error occured cloning to base directory.", e);
 			deleteBaseDirIfExists();
 			throw e;
 		}
