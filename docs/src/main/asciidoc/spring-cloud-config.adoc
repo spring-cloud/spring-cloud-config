@@ -1164,7 +1164,7 @@ It also picks up some additional useful features related to `Environment` change
 The default behavior for any application that has the Spring Cloud Config Client on the classpath is as follows:
 When a config client starts, it binds to the Config Server (through the `spring.cloud.config.uri` bootstrap configuration property) and initializes Spring `Environment` with remote property sources.
 
-The net result of this behavior is that all client applciations that want to consume the Config Server need a `bootstrap.yml` (or an environment variable) with the server address set in `spring.cloud.config.uri` (it defaults to "http://localhost:8888").
+The net result of this behavior is that all client applications that want to consume the Config Server need a `bootstrap.yml` (or an environment variable) with the server address set in `spring.cloud.config.uri` (it defaults to "http://localhost:8888").
 
 [[discovery-first-bootstrap]]
 === Discovery First Bootstrap
