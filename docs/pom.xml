@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-config</artifactId>
-		<version>1.4.5.BUILD-SNAPSHOT</version>
+		<version>1.4.5.RELEASE</version>
 		<relativePath>..</relativePath>
 	</parent>
 
