@@ -1,23 +1,20 @@
 package org.springframework.cloud.config.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.assertj.core.api.Assertions;
 import org.hamcrest.core.IsInstanceOf;
-import org.hamcrest.core.IsNull;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
+
 import org.springframework.boot.test.util.EnvironmentTestUtils;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor;
 import org.springframework.cloud.config.environment.Environment;
@@ -34,12 +31,16 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 public class ConfigServicePropertySourceLocatorTests {
@@ -59,7 +60,18 @@ public class ConfigServicePropertySourceLocatorTests {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
 		this.locator.setRestTemplate(this.restTemplate);
+
+		ArgumentCaptor<HttpEntity> argumentCaptor = ArgumentCaptor
+				.forClass(HttpEntity.class);
+
 		assertNotNull(this.locator.locate(this.environment));
+
+		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
+				argumentCaptor.capture(), any(Class.class), anyString(), anyString());
+
+		HttpEntity httpEntity = argumentCaptor.getValue();
+		Assertions.assertThat(httpEntity.getHeaders().getAccept())
+				.containsExactly(MediaType.APPLICATION_JSON);
 	}
 
 	@Test
@@ -259,7 +271,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
 				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
-				Mockito.any(Class.class), Matchers.anyString(), Matchers.anyString(),
+				Mockito.any(Class.class), anyString(), anyString(),
 				Matchers.eq(label))).thenReturn(response);
 	}
 
@@ -267,7 +279,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	private void mockRequestResponseWithoutLabel(ResponseEntity<?> response) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
 				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
-				Mockito.any(Class.class), Matchers.anyString(), Matchers.anyString()))
+				Mockito.any(Class.class), anyString(), anyString()))
 				.thenReturn(response);
 	}
 
@@ -277,7 +289,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
 				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
 				Mockito.any(Class.class), Matchers.eq(expectedName),
-				Matchers.anyString())).thenReturn(response);
+				anyString())).thenReturn(response);
 	}
 
 }

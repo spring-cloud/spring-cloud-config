@@ -18,6 +18,7 @@ package org.springframework.cloud.config.client;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -213,6 +214,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
 				}
+				headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
 				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity,
