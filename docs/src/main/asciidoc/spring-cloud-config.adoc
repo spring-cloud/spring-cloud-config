@@ -553,7 +553,7 @@ Vault is a tool for securely accessing secrets.
 A secret is anything that to which you want to tightly control access, such as API keys, passwords, certificates, and other sensitive information. Vault provides a unified interface to any secret while providing tight access control and recording a detailed audit log.
 ****
 
-For more information on Vault, see the https://www.vaultproject.io/intro/index.html[Vault quick start guide].
+For more information on Vault, see the https://learn.hashicorp.com/vault/?track=getting-started#getting-started[Vault quick start guide].
 
 To enable the config server to use a Vault backend, you can run your config server with the `vault` profile.
 For example, in your config server's `application.properties`, you can add `spring.profiles.active=vault`.
@@ -609,8 +609,8 @@ First, place some data in you Vault, as shown in the following example:
 
 [source,sh]
 ----
-$ vault write secret/application foo=bar baz=bam
-$ vault write secret/myapp foo=myappsbar
+$ vault kv put secret/application foo=bar baz=bam
+$ vault kv put secret/myapp foo=myappsbar
 ----
 
 Second, make an HTTP request to your config server to retrieve the values, as shown in the following example:
