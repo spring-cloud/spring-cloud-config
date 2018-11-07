@@ -102,7 +102,8 @@ public class GitCredentialsProviderFactory {
 					+ uri);
 			provider = new GitSkipSslValidationCredentialsProvider(provider);
 		}
-		else {
+
+		if (provider == null) {
 			logger.debug("No credentials provider required for URI " + uri);
 		}
 
