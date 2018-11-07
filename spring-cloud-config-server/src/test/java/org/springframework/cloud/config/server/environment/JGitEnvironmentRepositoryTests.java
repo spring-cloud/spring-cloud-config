@@ -41,8 +41,13 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.NotMergedException;
 import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.attributes.AttributesNodeProvider;
+import org.eclipse.jgit.lib.BaseRepositoryBuilder;
+import org.eclipse.jgit.lib.ObjectDatabase;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.RefDatabase;
+import org.eclipse.jgit.lib.ReflogReader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.transport.CredentialItem;
@@ -76,6 +81,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -90,6 +96,9 @@ public class JGitEnvironmentRepositoryTests {
 	private JGitEnvironmentRepository repository;
 
 	private File basedir = new File("target/config");
+
+
+	RefDatabase database = Mockito.mock(RefDatabase.class);
 
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
@@ -409,7 +418,8 @@ public class JGitEnvironmentRepositoryTests {
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
 		when(git.status()).thenReturn(statusCommand);
-		Repository repository = mock(Repository.class);
+
+		Repository repository = stubbedRepo();
 		when(git.getRepository()).thenReturn(repository);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
@@ -455,7 +465,7 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(repository.findRef(anyString())).thenReturn(headRef);
+		when(database.getRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
@@ -464,6 +474,50 @@ public class JGitEnvironmentRepositoryTests {
 		assertEquals(locations.getVersion(), newObjectId.getName());
 
 		verify(git, times(0)).branchDelete();
+	}
+
+	private Repository stubbedRepo() {
+		return spy(new Repository(new BaseRepositoryBuilder()) {
+			@Override
+			public void create(boolean bare) throws IOException {
+
+			}
+
+			@Override
+			public ObjectDatabase getObjectDatabase() {
+				return null;
+			}
+
+			@Override
+			public RefDatabase getRefDatabase() {
+				return database;
+			}
+
+			@Override
+			public StoredConfig getConfig() {
+				return null;
+			}
+
+			@Override
+			public AttributesNodeProvider createAttributesNodeProvider() {
+				return null;
+			}
+
+			@Override
+			public void scanForRepoChanges() throws IOException {
+
+			}
+
+			@Override
+			public void notifyIndexChanged(boolean internal) {
+
+			}
+
+			@Override
+			public ReflogReader getReflogReader(String refName) throws IOException {
+				return null;
+			}
+		});
 	}
 
 	@Test
@@ -478,7 +532,7 @@ public class JGitEnvironmentRepositoryTests {
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
 		when(git.status()).thenReturn(statusCommand);
-		Repository repository = mock(Repository.class);
+		Repository repository = stubbedRepo();
 		when(git.getRepository()).thenReturn(repository);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
@@ -513,7 +567,7 @@ public class JGitEnvironmentRepositoryTests {
 
 		//refresh()->return git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(repository.findRef(anyString())).thenReturn(headRef);
+		when(database.getRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[]{1,2,3,4,5});
 		when(headRef.getObjectId()).thenReturn(newObjectId);
@@ -589,7 +643,7 @@ public class JGitEnvironmentRepositoryTests {
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
 		when(git.status()).thenReturn(statusCommand);
-		Repository repository = mock(Repository.class);
+		Repository repository = stubbedRepo();
 		when(git.getRepository()).thenReturn(repository);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
@@ -636,7 +690,7 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(repository.findRef(anyString())).thenReturn(headRef);
+		when(database.getRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
@@ -921,7 +975,7 @@ public class JGitEnvironmentRepositoryTests {
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
 		when(git.status()).thenReturn(statusCommand);
-		Repository repository = mock(Repository.class);
+		Repository repository = stubbedRepo();
 		when(git.getRepository()).thenReturn(repository);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
@@ -983,7 +1037,7 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(repository.findRef(anyString())).thenReturn(headRef);
+		when(database.getRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[]{1, 2, 3, 4, 5});
 		when(headRef.getObjectId()).thenReturn(newObjectId);
