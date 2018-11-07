@@ -96,8 +96,7 @@ public class GitCredentialsProviderFactory {
 			logger.debug("Constructing PassphraseCredentialsProvider for URI " + uri);
 			provider = new PassphraseCredentialsProvider(passphrase);
 		}
-
-		if (skipSslValidation && GitSkipSslValidationCredentialsProvider.canHandle(uri)) {
+		else if (skipSslValidation && GitSkipSslValidationCredentialsProvider.canHandle(uri)) {
 			logger.debug("Constructing GitSkipSslValidationCredentialsProvider for URI "
 					+ uri);
 			provider = new GitSkipSslValidationCredentialsProvider(provider);
