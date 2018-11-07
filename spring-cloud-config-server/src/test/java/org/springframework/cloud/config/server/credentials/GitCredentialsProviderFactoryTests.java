@@ -90,6 +90,13 @@ public class GitCredentialsProviderFactoryTests {
 	}
 
 	@Test
+	public void testEmptyProvider(){
+		CredentialsProvider provider = factory.createFor(HTTPS_GIT_REPO, USER, PASSWORD,
+														 null, true);
+
+	}
+
+	@Test
 	public void testCreateForHttpsServerWithoutSpecifyingSkipSslValidation() {
 		CredentialsProvider provider = factory.createFor(HTTPS_GIT_REPO, USER, PASSWORD, null);
 		assertNotNull(provider);
