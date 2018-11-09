@@ -1130,7 +1130,7 @@ The prefix should start but not end with a `/`.
 It is applied to the `@RequestMappings` in the Config Server (that is, underneath the Spring Boot `server.servletPath` and `server.contextPath` prefixes).
 
 If you want to read the configuration for an application directly from the backend repository (instead of from the config server), you
-basically wat an embedded config server with no endpoints.
+basically want an embedded config server with no endpoints.
 You can switch off the endpoints entirely by not using the `@EnableConfigServer` annotation (set `spring.cloud.config.server.bootstrap=true`).
 
 == Push Notifications and Spring Cloud Bus
