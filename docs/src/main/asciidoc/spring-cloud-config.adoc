@@ -1118,7 +1118,7 @@ So, the preceding example for the `default` profile could be `/foo/default/nginx
 The Config Server runs best as a standalone application.
 However, if need be, you can embed it in another application.
 To do so, use the `@EnableConfigServer` annotation.
-An optional property named `spring.cloud.config.server.bootstrap` can be useful in this case is.
+An optional property named `spring.cloud.config.server.bootstrap` can be useful in this case.
 It is a flag to indicate whether the server should configure itself from its own remote repository.
 By default, the flag is off, because it can delay startup.
 However, when embedded in another application, it makes sense to initialize the same way as any other application.
