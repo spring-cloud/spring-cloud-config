@@ -34,7 +34,9 @@ public class NativeEnvironmentRepositoryFactory implements EnvironmentRepository
 	@Override
 	public NativeEnvironmentRepository build(NativeEnvironmentProperties environmentProperties) {
 		NativeEnvironmentRepository repository = new NativeEnvironmentRepository(environment, environmentProperties);
-		repository.setDefaultLabel(properties.getDefaultLabel());
+		if(properties.getDefaultLabel() != null) {
+			repository.setDefaultLabel(properties.getDefaultLabel());
+		}
 		return repository;
 	}
 }
