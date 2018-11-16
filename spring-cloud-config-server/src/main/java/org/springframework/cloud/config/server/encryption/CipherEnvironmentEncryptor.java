@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +23,10 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 
 /**
  * EnvironmentEncryptor that can decrypt property values prefixed with {cipher} marker.
@@ -64,8 +64,8 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 			for (Map.Entry<Object, Object> entry : new LinkedHashSet<>(map.entrySet())) {
 				Object key = entry.getKey();
 				String name = key.toString();
-				String value = entry.getValue().toString();
-				if (value.startsWith("{cipher}")) {
+				if(entry.getValue() != null && entry.getValue().toString().startsWith("{cipher}")){
+					String value = entry.getValue().toString();
 					map.remove(key);
 					try {
 						value = value.substring("{cipher}".length());

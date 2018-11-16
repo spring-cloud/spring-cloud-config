@@ -16,20 +16,19 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
@@ -88,6 +87,19 @@ public class CipherEnvironmentEncryptorTests {
 
 		// then
 		assertEquals(secret, this.encryptor.decrypt(environment).getPropertySources()
+				.get(0).getSource().get(environment.getName()));
+	}
+	@Test
+	public void shouldBeAbleToUseNullAsPropertyValue() {
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a",
+				Collections.<Object, Object>singletonMap(environment.getName(),
+						null)));
+
+		// then
+		assertEquals(null, this.encryptor.decrypt(environment).getPropertySources()
 				.get(0).getSource().get(environment.getName()));
 	}
 
