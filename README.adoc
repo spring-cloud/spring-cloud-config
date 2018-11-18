@@ -163,6 +163,14 @@ To modify the startup behavior, you can change the location of the config server
 spring.cloud.config.uri: http://myconfigserver.com
 ----
 
+By default, if no application name is set, `application` will be used. To modify the name, the following property can be added to the `bootstrap.properties` file:
+
+----
+spring.application.name: myapp
+----
+
+NOTE: When setting the property `${spring.application.name}` do not prefix your app name with the reserved word `application-` to prevent issues resolving the correct property source.
+
 The bootstrap properties show up in the `/env` endpoint as a high-priority property source, as shown in the following example.
 
 ----
