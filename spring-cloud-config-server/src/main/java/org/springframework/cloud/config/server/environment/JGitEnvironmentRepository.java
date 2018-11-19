@@ -243,7 +243,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
+	public synchronized void afterPropertiesSet() throws Exception {
 		Assert.state(getUri() != null,
 				MESSAGE);
 		initialize();

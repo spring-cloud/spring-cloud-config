@@ -971,8 +971,11 @@ The asymmetric choice is superior in terms of security, but it is often more con
 
 To configure a symmetric key, you need to set `encrypt.key` to a secret String (or use the `ENCRYPT_KEY` environment variable to keep it out of plain-text configuration files).
 
-To configure an asymmetric key, you can either set the key as a PEM-encoded text value (in `encrypt.key`) or use a keystore (such as the keystore created by the `keytool` utility that comes with the JDK).
-The following table describes the keystore properties:
+NOTE: You cannot configure an asymmetric key using `encrypt.key`.
+
+To configure an asymmetric key use a keystore (e.g. as
+created by the `keytool` utility that comes with the JDK). The
+keystore properties are `encrypt.keyStore.\*` with `*` equal to
 
 [options="header"]
 |===
