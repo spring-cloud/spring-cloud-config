@@ -80,6 +80,8 @@ import static org.eclipse.jgit.transport.ReceiveCommand.Type.DELETE;
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
 
+	public static final String MESSAGE = "You need to configure a uri for the git repository.";
+
 	private static final String FILE_URI_PREFIX = "file:";
 
 	private static final String LOCAL_BRANCH_REF_PREFIX = "refs/remotes/origin/";
@@ -241,9 +243,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
+	public synchronized void afterPropertiesSet() throws Exception {
 		Assert.state(getUri() != null,
-				"You need to configure a uri for the git repository");
+				MESSAGE);
 		initialize();
 		if (this.cloneOnStart) {
 			initClonedRepository();
@@ -572,6 +574,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			return clone.call();
 		}
 		catch (GitAPIException e) {
+			logger.warn("Error occured cloning to base directory.", e);
 			deleteBaseDirIfExists();
 			throw e;
 		}
@@ -683,7 +686,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 * Wraps the static method calls to {@link org.eclipse.jgit.api.Git} and
 	 * {@link org.eclipse.jgit.api.CloneCommand} allowing for easier unit testing.
 	 */
-	static class JGitFactory {
+	public static class JGitFactory {
 
 		public Git getGitByOpen(File file) throws IOException {
 			Git git = Git.open(file);

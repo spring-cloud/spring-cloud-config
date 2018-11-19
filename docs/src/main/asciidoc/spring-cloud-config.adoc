@@ -503,6 +503,14 @@ spring:
 
 NOTE: The default value for `deleteUntrackedBranches` property is `false`.
 
+===== Git Refresh Rate
+
+You can control how often the config server will fetch updated configuration data
+from your Git backend by using `spring.cloud.config.server.git.refreshRate`.  The
+value of this property is specified in seconds.  By default the value is 0, meaning
+the config server will fetch updated configuration from the Git repo every time it
+is requested.
+
 ==== Version Control Backend Filesystem Use
 
 WARNING: With VCS-based backends (git, svn), files are checked out or cloned to the local filesystem.
@@ -545,7 +553,7 @@ Vault is a tool for securely accessing secrets.
 A secret is anything that to which you want to tightly control access, such as API keys, passwords, certificates, and other sensitive information. Vault provides a unified interface to any secret while providing tight access control and recording a detailed audit log.
 ****
 
-For more information on Vault, see the https://www.vaultproject.io/intro/index.html[Vault quick start guide].
+For more information on Vault, see the https://learn.hashicorp.com/vault/?track=getting-started#getting-started[Vault quick start guide].
 
 To enable the config server to use a Vault backend, you can run your config server with the `vault` profile.
 For example, in your config server's `application.properties`, you can add `spring.profiles.active=vault`.
@@ -601,8 +609,8 @@ First, place some data in you Vault, as shown in the following example:
 
 [source,sh]
 ----
-$ vault write secret/application foo=bar baz=bam
-$ vault write secret/myapp foo=myappsbar
+$ vault kv put secret/application foo=bar baz=bam
+$ vault kv put secret/myapp foo=myappsbar
 ----
 
 Second, make an HTTP request to your config server to retrieve the values, as shown in the following example:
@@ -963,8 +971,11 @@ The asymmetric choice is superior in terms of security, but it is often more con
 
 To configure a symmetric key, you need to set `encrypt.key` to a secret String (or use the `ENCRYPT_KEY` environment variable to keep it out of plain-text configuration files).
 
-To configure an asymmetric key, you can either set the key as a PEM-encoded text value (in `encrypt.key`) or use a keystore (such as the keystore created by the `keytool` utility that comes with the JDK).
-The following table describes the keystore properties:
+NOTE: You cannot configure an asymmetric key using `encrypt.key`.
+
+To configure an asymmetric key use a keystore (e.g. as
+created by the `keytool` utility that comes with the JDK). The
+keystore properties are `encrypt.keyStore.\*` with `*` equal to
 
 [options="header"]
 |===
@@ -1122,6 +1133,24 @@ An optional property named `spring.cloud.config.server.bootstrap` can be useful 
 It is a flag to indicate whether the server should configure itself from its own remote repository.
 By default, the flag is off, because it can delay startup.
 However, when embedded in another application, it makes sense to initialize the same way as any other application.
+When setting `spring.cloud.config.server.bootstrap` to `true` you must also use a <<composite-environment-repositories,composite environment repository configuration>>.
+For example
+
+[source,yaml]
+----
+spring:
+  application:
+    name: configserver
+  profiles:
+    active: composite
+  cloud:
+    config:
+      server:
+        composite:
+          - type: native
+            search-locations: ${HOME}/Desktop/config
+        bootstrap: true
+----
 
 NOTE: If you use the bootstrap flag, the config server needs to have its name and repository URI configured in `bootstrap.yml`.
 
