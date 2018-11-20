@@ -191,7 +191,7 @@ public class EnvironmentRepositoryConfiguration {
 }
 
 @Configuration
-@ConditionalOnMissingBean(value = EnvironmentRepository.class)//, search = SearchStrategy.CURRENT)
+@ConditionalOnMissingBean(value = EnvironmentRepository.class, search = SearchStrategy.CURRENT)
 class DefaultRepositoryConfiguration {
 	@Autowired
 	private ConfigurableEnvironment environment;

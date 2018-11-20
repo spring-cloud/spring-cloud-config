@@ -18,8 +18,7 @@ public class NativeBootstrapFailureAnalyzerTests {
 
 	@Rule
 	public OutputCapture outputCapture = new OutputCapture();
-
-	@Ignore
+	
 	@Test
 	public void contextLoads(){
 		try {
