@@ -1198,7 +1198,7 @@ The net result of this behavior is that all client applications that want to con
 [[discovery-first-bootstrap]]
 === Discovery First Bootstrap
 
-If you use a `DiscoveryClient implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
+If you use a `DiscoveryClient` implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
 However, in the default "`Config First`" mode, clients cannot take advantage of the registration.
 
 If you prefer to use `DiscoveryClient` to locate the Config Server, you can do so by setting `spring.cloud.config.discovery.enabled=true` (the default is `false`).
@@ -1210,7 +1210,7 @@ The default service ID is `configserver`, but you can change that on the client 
 
 The discovery client implementations all support some kind of metadata map (for example, we have `eureka.instance.metadataMap` for Eureka).
 Some additional properties of the Config Server may need to be configured in its service registration metadata so that clients can connect correctly.
-If the Config Server is secured with HTTP Basic, you can configure the credentials as `username` and `password`.
+If the Config Server is secured with HTTP Basic, you can configure the credentials as `user` and `password`.
 Also, if the Config Server has a context path, you can set `configPath`.
 For example, the following YAML file is for a Config Server that is a Eureka client:
 
