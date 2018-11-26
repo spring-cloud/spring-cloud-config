@@ -1205,7 +1205,7 @@ When a config client starts, it binds to the Config Server (through the <literal
 </section>
 <section xml:id="discovery-first-bootstrap">
 <title>Discovery First Bootstrap</title>
-<simpara>If you use a `DiscoveryClient implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
+<simpara>If you use a <literal>DiscoveryClient</literal> implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
 However, in the default <quote>Config First</quote> mode, clients cannot take advantage of the registration.</simpara>
 <simpara>If you prefer to use <literal>DiscoveryClient</literal> to locate the Config Server, you can do so by setting <literal>spring.cloud.config.discovery.enabled=true</literal> (the default is <literal>false</literal>).
 The net result of doing so is that client applications all need a <literal>bootstrap.yml</literal> (or an environment variable) with the appropriate discovery configuration.
@@ -1215,7 +1215,7 @@ The benefit is that, as long as the Discovery Service is a fixed point, the Conf
 The default service ID is <literal>configserver</literal>, but you can change that on the client by setting <literal>spring.cloud.config.discovery.serviceId</literal> (and on the server, in the usual way for a service, such as by setting <literal>spring.application.name</literal>).</simpara>
 <simpara>The discovery client implementations all support some kind of metadata map (for example, we have <literal>eureka.instance.metadataMap</literal> for Eureka).
 Some additional properties of the Config Server may need to be configured in its service registration metadata so that clients can connect correctly.
-If the Config Server is secured with HTTP Basic, you can configure the credentials as <literal>username</literal> and <literal>password</literal>.
+If the Config Server is secured with HTTP Basic, you can configure the credentials as <literal>user</literal> and <literal>password</literal>.
 Also, if the Config Server has a context path, you can set <literal>configPath</literal>.
 For example, the following YAML file is for a Config Server that is a Eureka client:</simpara>
 <formalpara>
