@@ -1239,7 +1239,7 @@ If this is the desired behavior, set the bootstrap configuration property <liter
 <section xml:id="config-client-retry">
 <title>Config Client Retry</title>
 <simpara>If you expect that the config server may occasionally be unavailable when your application starts, you can make it keep trying after a failure.
-First, you need to set <literal>spring.cloud.config.fail-fast=true</literal>.
+First, you need to set <literal>spring.cloud.config.fail-fast=false</literal>.
 Then you need to add <literal>spring-retry</literal> and <literal>spring-boot-starter-aop</literal> to your classpath.
 The default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs.
 You can configure these properties (and others) by setting the <literal>spring.cloud.config.retry.*</literal> configuration properties.</simpara>
