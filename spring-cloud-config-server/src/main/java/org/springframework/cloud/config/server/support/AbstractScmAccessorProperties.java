@@ -57,7 +57,7 @@ public class AbstractScmAccessorProperties implements EnvironmentRepositoryPrope
     /** The order of the environment repository. */
     private int order = Ordered.LOWEST_PRECEDENCE;
 
-    /** The default label to be used with the remore repository */
+    /** The default label to be used with the remote repository */
     private String defaultLabel;
 
     public String getUri() {
