@@ -48,7 +48,7 @@ public class CompositePropertyPathNotificationExtractorTests {
 	public void githubSample() throws Exception {
 		// See https://developer.github.com/v3/activity/events/types/#pushevent
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("github.json").getInputStream(),
+				new ClassPathResource("pathsamples/github.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Github-Event", "push");
@@ -60,7 +60,7 @@ public class CompositePropertyPathNotificationExtractorTests {
 	@Test
 	public void gitlabDetected() throws Exception {
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("gitlab.json").getInputStream(),
+				new ClassPathResource("pathsamples/gitlab.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Gitlab-Event", "Push Hook");

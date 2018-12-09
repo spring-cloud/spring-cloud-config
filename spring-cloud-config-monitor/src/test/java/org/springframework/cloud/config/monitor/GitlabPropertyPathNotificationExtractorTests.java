@@ -44,7 +44,7 @@ public class GitlabPropertyPathNotificationExtractorTests {
 	public void pushEvent() throws Exception {
 		// See http://doc.gitlab.com/ee/web_hooks/web_hooks.html#push-events
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("gitlab.json").getInputStream(),
+				new ClassPathResource("pathsamples/gitlab.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Gitlab-Event", "Push Hook");
@@ -58,7 +58,7 @@ public class GitlabPropertyPathNotificationExtractorTests {
 	public void nonPushEventNotDetected() throws Exception {
 		// See http://doc.gitlab.com/ee/web_hooks/web_hooks.html#push-events
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("gitlab.json").getInputStream(),
+				new ClassPathResource("pathsamples/gitlab.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Gitlab-Event", "Issue Hook");

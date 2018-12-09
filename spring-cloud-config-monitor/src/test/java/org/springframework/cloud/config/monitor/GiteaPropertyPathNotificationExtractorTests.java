@@ -43,7 +43,7 @@ public class GiteaPropertyPathNotificationExtractorTests {
     public void giteaSample() throws Exception {
         // See https://docs.gitea.io/en-us/webhooks/
         Map<String, Object> value = new ObjectMapper().readValue(
-                new ClassPathResource("gitea.json").getInputStream(),
+                new ClassPathResource("pathsamples/gitea.json").getInputStream(),
                 new TypeReference<Map<String, Object>>() {
                 });
         this.headers.set("X-Gitea-Event", "push");
@@ -55,7 +55,7 @@ public class GiteaPropertyPathNotificationExtractorTests {
     @Test
     public void notAPushNotDetected() throws Exception {
         Map<String, Object> value = new ObjectMapper().readValue(
-                new ClassPathResource("gitea.json").getInputStream(),
+                new ClassPathResource("pathsamples/gitea.json").getInputStream(),
                 new TypeReference<Map<String, Object>>() {
                 });
         this.headers.set("X-Gitea-Event", "issues");

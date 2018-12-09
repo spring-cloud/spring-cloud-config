@@ -41,7 +41,7 @@ public class GogsPropertyPathNotificationExtractorTests {
     public void gogsSample() throws Exception {
         // See https://gogs.io/docs/features/webhook
         Map<String, Object> value = new ObjectMapper().readValue(
-                new ClassPathResource("gogs.json").getInputStream(),
+                new ClassPathResource("pathsamples/gogs.json").getInputStream(),
                 new TypeReference<Map<String, Object>>() {
                 });
         this.headers.set("X-Gogs-Event", "push");
@@ -53,7 +53,7 @@ public class GogsPropertyPathNotificationExtractorTests {
     @Test
     public void notAPushNotDetected() throws Exception {
         Map<String, Object> value = new ObjectMapper().readValue(
-                new ClassPathResource("gogs.json").getInputStream(),
+                new ClassPathResource("pathsamples/gogs.json").getInputStream(),
                 new TypeReference<Map<String, Object>>() {
                 });
         this.headers.set("X-Gogs-Event", "issues");

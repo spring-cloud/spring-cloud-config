@@ -43,7 +43,7 @@ public class GithubPropertyPathNotificationExtractorTests {
 	public void githubSample() throws Exception {
 		// See https://developer.github.com/v3/activity/events/types/#pushevent
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("github.json").getInputStream(),
+				new ClassPathResource("pathsamples/github.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Github-Event", "push");
@@ -55,7 +55,7 @@ public class GithubPropertyPathNotificationExtractorTests {
 	@Test
 	public void notAPushNotDetected() throws Exception {
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("github.json").getInputStream(),
+				new ClassPathResource("pathsamples/github.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Github-Event", "issues");
