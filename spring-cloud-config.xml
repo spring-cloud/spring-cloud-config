@@ -815,6 +815,91 @@ If you include the right dependencies on the classpath (see the user guide for m
 All fields are of type String in Java, so you can make them <literal>VARCHAR</literal> of whatever length you need.
 Property values behave in the same way as they would if they came from Spring Boot properties files named <literal>{application}-{profile}.properties</literal>, including all the encryption and decryption, which will be applied as post-processing steps (that is, not in the repository implementation directly).</simpara>
 </section>
+<section xml:id="_credhub_backend">
+<title>CredHub Backend</title>
+<simpara>Spring Cloud Config Server supports <link xl:href="https://docs.cloudfoundry.org/credhub">CredHub</link> as a backend for configuration properties.
+You can enable this feature by adding a dependency to <link xl:href="https://spring.io/projects/spring-credhub">Spring CredHub</link>.</simpara>
+<formalpara>
+<title>pom.xml</title>
+<para>
+<programlisting language="xml" linenumbering="unnumbered">&lt;dependencies&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.credhub&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-credhub-starter&lt;/artifactId&gt;
+	&lt;/dependency&gt;
+&lt;/dependencies&gt;</programlisting>
+</para>
+</formalpara>
+<simpara>The following configuration uses mutual TLS to access a CredHub:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  profiles:
+    active: credhub
+  cloud:
+    config:
+      server:
+        credhub:
+          url: https://credhub:8844</programlisting>
+<simpara>The properties should be stored as JSON, such as:</simpara>
+<programlisting language="sh" linenumbering="unnumbered">credhub set --name "/demo-app/default/master/toggles" --type=json
+value: {"toggle.button": "blue", "toggle.link": "red"}</programlisting>
+<programlisting language="sh" linenumbering="unnumbered">credhub set --name "/demo-app/default/master/abs" --type=json
+value: {"marketing.enabled": true, "external.enabled": false}</programlisting>
+<simpara>All client applications with the name <literal>spring.cloud.config.name=demo-app</literal> will have the following properties available to them:</simpara>
+<screen>{
+    toggle.button: "blue",
+    toggle.link: "red",
+    marketing.enabled: true,
+    external.enabled: false
+}</screen>
+<note>
+<simpara>When no profile is specified <literal>default</literal> will be used and when no label is specified <literal>master</literal> will be used as a default value.</simpara>
+</note>
+<section xml:id="_oauth_2_0">
+<title>OAuth 2.0</title>
+<simpara>You can authenticate with <link xl:href="https://oauth.net/2/">OAuth 2.0</link> using <link xl:href="https://docs.cloudfoundry.org/concepts/architecture/uaa.html">UAA</link> as a provider.</simpara>
+<formalpara>
+<title>pom.xml</title>
+<para>
+<programlisting language="xml" linenumbering="unnumbered">&lt;dependencies&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.security&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-security-config&lt;/artifactId&gt;
+	&lt;/dependency&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.security&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-security-oauth2-client&lt;/artifactId&gt;
+	&lt;/dependency&gt;
+&lt;/dependencies&gt;</programlisting>
+</para>
+</formalpara>
+<simpara>The following configuration uses OAuth 2.0 and UAA to access a CredHub:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  profiles:
+    active: credhub
+  cloud:
+    config:
+      server:
+        credhub:
+          url: https://credhub:8844
+          oauth2:
+            registration-id: credhub-client
+  security:
+    oauth2:
+      client:
+        registration:
+          credhub-client:
+            provider: uaa
+            client-id: credhub_config_server
+            client-secret: asecret
+            authorization-grant-type: client_credentials
+        provider:
+          uaa:
+            token-uri: https://uaa:8443/oauth/token</programlisting>
+<note>
+<simpara>The used UAA client-id should have <literal>credhub.read</literal> as scope.</simpara>
+</note>
+</section>
+</section>
 <section xml:id="composite-environment-repositories">
 <title>Composite Environment Repositories</title>
 <simpara>In some scenarios, you may wish to pull configuration data from multiple environment repositories.
