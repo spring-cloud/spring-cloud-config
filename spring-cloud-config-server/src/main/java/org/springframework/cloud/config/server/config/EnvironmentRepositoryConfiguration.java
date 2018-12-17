@@ -15,10 +15,9 @@
  */
 package org.springframework.cloud.config.server.config;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
@@ -36,12 +35,15 @@ import org.springframework.cloud.config.server.composite.CompositeEnvironmentBea
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
 import org.springframework.cloud.config.server.composite.ConditionalOnSearchPathLocator;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
+import org.springframework.cloud.config.server.environment.CredhubEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.CredhubEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.CredhubEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.HttpClientConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.HttpClientVaultRestTemplateFactory;
-import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepositoryFactory;
@@ -65,6 +67,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -72,14 +75,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author Ryan Baxter
  * @author Daniel Lavoie
  * @author Dylan Roberts
- *
+ * @author Alberto C. Ríos
  */
 @Configuration
-@EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
+@EnableConfigurationProperties({ SvnKitEnvironmentProperties.class, CredhubEnvironmentProperties.class,
 		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultRepositoryConfiguration.class,
-		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
-		DefaultRepositoryConfiguration.class })
+		CredhubConfiguration.class, CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
+		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 	@Bean
 	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
@@ -179,6 +182,17 @@ public class EnvironmentRepositoryConfiguration {
         }
     }
 
+	@Configuration
+	@ConditionalOnClass(CredHubOperations.class)
+	static class CredhubFactoryConfig {
+
+		@Bean
+		public CredhubEnvironmentRepositoryFactory credhubEnvironmentRepositoryFactory(
+				Optional<CredHubOperations> credHubOperations) {
+			return new CredhubEnvironmentRepositoryFactory(credHubOperations.orElse(null));
+		}
+	}
+
     @Configuration
     static class NativeFactoryConfig {
         @Bean
@@ -246,6 +260,17 @@ class VaultRepositoryConfiguration {
 	public VaultEnvironmentRepository vaultEnvironmentRepository(VaultEnvironmentRepositoryFactory factory,
                                                                  VaultEnvironmentProperties environmentProperties)
             throws Exception {
+		return factory.build(environmentProperties);
+	}
+}
+
+@Configuration
+@Profile("credhub")
+class CredhubRepositoryConfiguration {
+
+	@Bean
+	public CredhubEnvironmentRepository credhubEnvironmentRepository(CredhubEnvironmentRepositoryFactory factory,
+																	 CredhubEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 }
