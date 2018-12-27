@@ -33,31 +33,20 @@
 		<profile>
 			<id>docs</id>
 			<build>
-			   <plugins>
-								<plugin>
-									<groupId>org.apache.maven.plugins</groupId>
-									<artifactId>maven-dependency-plugin</artifactId>
-								</plugin>
-							   <plugin>
-								   <groupId>org.asciidoctor</groupId>
-								   <artifactId>asciidoctor-maven-plugin</artifactId>
-								   <inherited>false</inherited>
-							   </plugin>
-							   <plugin>
-								   <groupId>com.agilejava.docbkx</groupId>
-								   <artifactId>docbkx-maven-plugin</artifactId>
-							   </plugin>
-							   <plugin>
-								   <groupId>org.apache.maven.plugins</groupId>
-								   <artifactId>maven-antrun-plugin</artifactId>
-								   <inherited>false</inherited>
-							   </plugin>
-							   <plugin>
-								   <groupId>org.codehaus.mojo</groupId>
-								   <artifactId>build-helper-maven-plugin</artifactId>
-								   <inherited>false</inherited>
-							   </plugin>
-						   </plugins>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+					</plugin>
+					<plugin>
+						<groupId>org.asciidoctor</groupId>
+						<artifactId>asciidoctor-maven-plugin</artifactId>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+					</plugin>
+				</plugins>
 			</build>
 		</profile>
 	</profiles>
