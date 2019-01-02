@@ -51,17 +51,16 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	/**
 	 * Map of repository identifier to location and other properties.
 	 */
-	private Map<String, PatternMatchingJGitEnvironmentRepository> repos;
+	private Map<String, PatternMatchingJGitEnvironmentRepository> repos = new LinkedHashMap<>();
 
 	private Map<String, JGitEnvironmentRepository> placeholders = new LinkedHashMap<>();
 
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment,
 											 MultipleJGitEnvironmentProperties properties) {
 		super(environment, properties);
-		this.repos = properties.getRepos().entrySet().stream()
-				.map(e -> new AbstractMap.SimpleEntry<>(e.getKey(),
-						new PatternMatchingJGitEnvironmentRepository(environment, e.getValue())))
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		properties.getRepos().entrySet().forEach ((name, props) ->
+			repos.put(name, new PatternMatchingJGitEnvironmentRepository(environment, props))
+		);
 	}
 
 	@Override
