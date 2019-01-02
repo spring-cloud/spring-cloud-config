@@ -58,7 +58,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment,
 											 MultipleJGitEnvironmentProperties properties) {
 		super(environment, properties);
-		properties.getRepos().entrySet().forEach ((name, props) ->
+		properties.getRepos().forEach ((name, props) ->
 			repos.put(name, new PatternMatchingJGitEnvironmentRepository(environment, props))
 		);
 	}
