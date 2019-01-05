@@ -15,9 +15,9 @@
  */
 package org.springframework.cloud.config.server.support;
 
-import java.io.File;
-
 import org.springframework.core.Ordered;
+
+import java.io.File;
 
 /**
  * @author Dylan Roberts
@@ -29,6 +29,10 @@ public class AbstractScmAccessorProperties implements EnvironmentRepositoryPrope
      * URI of remote repository.
      */
     private String uri;
+    /**
+     * BACKUP URI FOR FALLBACK
+     */
+    private String backupUri;
     /**
      * Base directory for local working copy of repository.
      */
@@ -131,5 +135,13 @@ public class AbstractScmAccessorProperties implements EnvironmentRepositoryPrope
 
     public void setDefaultLabel(String defaultLabel) {
         this.defaultLabel = defaultLabel;
+    }
+
+    public String getBackupUri() {
+        return backupUri;
+    }
+
+    public void setBackupUri(String backupUri) {
+        this.backupUri = backupUri;
     }
 }

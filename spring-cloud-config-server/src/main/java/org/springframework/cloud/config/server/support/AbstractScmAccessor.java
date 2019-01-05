@@ -16,18 +16,8 @@
 
 package org.springframework.cloud.config.server.support;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -37,6 +27,15 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * Base class for components that want to access a source control management system.
@@ -55,6 +54,11 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 	 * URI of remote repository.
 	 */
 	private String uri;
+	/*
+	* BACKUP URI of remote repository.
+	 */
+	private String backupUri;
+
 	private ConfigurableEnvironment environment;
 	/**
 	 * Username for authentication with remote repository.
@@ -95,6 +99,7 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 		this.strictHostKeyChecking = properties.isStrictHostKeyChecking();
 		this.uri = properties.getUri();
 		this.username = properties.getUsername();
+		this.backupUri = properties.getBackupUri();
 	}
 
 	@Override
@@ -190,6 +195,14 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 
 	public boolean isStrictHostKeyChecking() {
 		return strictHostKeyChecking;
+	}
+
+	public String getBackupUri() {
+		return backupUri;
+	}
+
+	public void setBackupUri(String backupUri) {
+		this.backupUri = backupUri;
 	}
 
 	public void setStrictHostKeyChecking(boolean strictHostKeyChecking) {
