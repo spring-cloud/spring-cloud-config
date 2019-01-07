@@ -234,7 +234,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public synchronized void afterPropertiesSet() throws Exception {
         Assert.state(getUri() != null,
                 MESSAGE);
         initialize();
@@ -702,7 +702,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
      * Wraps the static method calls to {@link org.eclipse.jgit.api.Git} and
      * {@link org.eclipse.jgit.api.CloneCommand} allowing for easier unit testing.
      */
-    static class JGitFactory {
+    public static class JGitFactory {
 
         public Git getGitByOpen(File file) throws IOException {
             Git git = Git.open(file);
