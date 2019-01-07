@@ -68,7 +68,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
     private Boolean backupRepoInUse = false;
 
     /**
-     *  Since when the backup repo is in usage
+     * Since when the backup repo is in usage
      */
     private long backupInUseTimestamp = 0;
 
@@ -258,8 +258,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
                 // checkout after fetch so we can get any new branches, tags, ect.
                 checkout(git, label);
                 tryMerge(git, label);
-            }
-            else {
+            } else {
                 // nothing to update so just checkout and merge.
                 // Merge because remote branch could have been updated before
                 checkout(git, label);
@@ -267,27 +266,21 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
             }
             // always return what is currently HEAD as the version
             return git.getRepository().findRef("HEAD").getObjectId().getName();
-        }
-        catch (RefNotFoundException e) {
+        } catch (RefNotFoundException e) {
             throw new NoSuchLabelException("No such label: " + label, e);
-        }
-        catch (NoRemoteRepositoryException e) {
+        } catch (NoRemoteRepositoryException e) {
             throw new NoSuchRepositoryException("No such repository: " + getUri(), e);
-        }
-        catch (GitAPIException e) {
+        } catch (GitAPIException e) {
             throw new NoSuchRepositoryException(
                     "Cannot clone or checkout repository: " + getUri(), e);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new IllegalStateException("Cannot load environment", e);
-        }
-        finally {
+        } finally {
             try {
                 if (git != null) {
                     git.close();
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 this.logger.warn("Could not close git repository", e);
             }
         }
@@ -304,8 +297,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
                     resetHard(git, label, LOCAL_BRANCH_REF_PREFIX + label);
                 }
             }
-        }
-        catch (GitAPIException e) {
+        } catch (GitAPIException e) {
             throw new NoSuchRepositoryException(
                     "Cannot clone or checkout repository: " + getUri(), e);
         }
@@ -385,8 +377,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
         CheckoutCommand checkout = git.checkout();
         if (shouldTrack(git, label)) {
             trackBranch(git, checkout, label);
-        }
-        else {
+        } else {
             // works for tags and local branches
             checkout.setName(label);
         }
@@ -408,8 +399,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
         if (this.forcePull && !isWorkingTreeClean) {
             shouldPull = true;
             logDirty(gitStatus);
-        }
-        else {
+        } else {
             shouldPull = isWorkingTreeClean && originUrl != null;
         }
         if (!isWorkingTreeClean && !this.forcePull) {
@@ -458,8 +448,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
                         + result.getTrackingRefUpdates().size() + " updates");
             }
             return result;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             String message = "Could not fetch remote for " + label + " remote: " + git
                     .getRepository().getConfig().getString("remote", "origin", "url");
             warn(message, ex);
@@ -477,8 +466,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
                         + result.getMergeStatus());
             }
             return result;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             String message = "Could not merge remote for " + label + " remote: " + git
                     .getRepository().getConfig().getString("remote", "origin", "url");
             warn(message, ex);
@@ -497,8 +485,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
                         "Reset label " + label + " to version " + resetRef.getObjectId());
             }
             return resetRef;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             String message = "Could not reset to remote for " + label + " (current ref="
                     + ref + "), remote: " + git.getRepository().getConfig()
                     .getString("remote", "origin", "url");
@@ -517,12 +504,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
             lock.delete();
         }
 
-        if(backupRepoInUse){
+        if (backupRepoInUse) {
             logger.info("We are running on the backup repo origin...");
         }
 
         // When we use the backup repo we try to check out the main repo after the cool down
-        if (backupRepoInUse &&  (System.currentTimeMillis() - backupInUseTimestamp > mainRepoCheckCoolDown)) {
+        if (backupRepoInUse && (System.currentTimeMillis() - backupInUseTimestamp > mainRepoCheckCoolDown)) {
             logger.info("Retry to get the main repo running...");
             return copyRepository();
         } else if (new File(getWorkingDirectory(), ".git").exists()) {
@@ -543,8 +530,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
         Assert.state(getBasedir().exists(), "Could not create basedir: " + getBasedir());
         if (getUri().startsWith(FILE_URI_PREFIX)) {
             return copyFromLocalRepository();
-        }
-        else {
+        } else {
             return cloneToBasedir();
         }
     }
@@ -576,23 +562,28 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
         } catch (GitAPIException e) {
             logger.warn("Error occured cloning to base directory.", e);
             // try with backup uri
-            if (getBackupUri() == null || getBackupUri().isEmpty()) {
+            String backupUri = getBackupUri();
+            if (backupUri == null || backupUri.isEmpty()) {
                 deleteBaseDirIfExists();
                 throw e;
             }
-            clone = this.gitFactory.getCloneCommandByCloneRepository()
-                    .setURI(getBackupUri()).setDirectory(getBasedir());
-            configureCommand(clone);
-            try {
-                Git call = clone.call();
-                backupRepoInUse = true;
-                backupInUseTimestamp = System.currentTimeMillis();
-                return call;
-            } catch (GitAPIException e2) {
-                logger.warn("Error occured cloning backup to base directory.", e2);
-                deleteBaseDirIfExists();
-                throw e2;
+            String[] backupUris = backupUri.split(",");
+            for (String uri : backupUris) {
+                clone = this.gitFactory.getCloneCommandByCloneRepository()
+                        .setURI(uri.trim()).setDirectory(getBasedir());
+                configureCommand(clone);
+                try {
+                    Git call = clone.call();
+                    backupRepoInUse = true;
+                    backupInUseTimestamp = System.currentTimeMillis();
+                    return call;
+                } catch (GitAPIException e2) {
+                    logger.warn("Error occured cloning backup to base directory.", e2);
+                    deleteBaseDirIfExists();
+                }
             }
+            deleteBaseDirIfExists();
+            throw e;
         }
     }
 
@@ -601,8 +592,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
             for (File file : getBasedir().listFiles()) {
                 try {
                     FileUtils.delete(file, FileUtils.RECURSIVE);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     throw new IllegalStateException("Failed to initialize base directory",
                             e);
                 }
@@ -645,8 +635,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
             BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(git.getRepository(), label);
             boolean isBranchAhead = trackingStatus != null && trackingStatus.getAheadCount() > 0;
             return status.call().isClean() && !isBranchAhead;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             String message = "Could not execute status command on local repository. Cause: ("
                     + e.getClass().getSimpleName() + ") " + e.getMessage();
             warn(message, e);
