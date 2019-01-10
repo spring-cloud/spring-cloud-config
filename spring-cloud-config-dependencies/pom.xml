@@ -15,7 +15,7 @@
 	<description>Spring Cloud Config Dependencies</description>
 	<properties>
 		<jgit.version>5.1.3.201810200350-r</jgit.version>
-		<spring-credhub.version>2.0.0.RC1</spring-credhub.version>
+		<spring-credhub.version>2.0.0.RELEASE</spring-credhub.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
