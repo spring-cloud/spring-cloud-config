@@ -49,7 +49,6 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  *
  * @author Dave Syer
  * @author Daniel Lavoie
- *
  */
 @RestController
 @RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
@@ -61,36 +60,32 @@ public class ResourceController {
 
 	private UrlPathHelper helper = new UrlPathHelper();
 
-	public ResourceController(ResourceRepository resourceRepository,
-			EnvironmentRepository environmentRepository) {
+	public ResourceController(ResourceRepository resourceRepository, EnvironmentRepository environmentRepository) {
 		this.resourceRepository = resourceRepository;
 		this.environmentRepository = environmentRepository;
 		this.helper.setAlwaysUseFullPath(true);
 	}
 
 	@RequestMapping("/{name}/{profile}/{label}/**")
-	public String retrieve(@PathVariable String name, @PathVariable String profile,
-			@PathVariable String label, ServletWebRequest request,
-            @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws IOException {
+	public String retrieve(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
+		ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+		throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return retrieve(request, name, profile, label, path, resolvePlaceholders);
 	}
 
 	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel")
-	public String retrieve(@PathVariable String name, @PathVariable String profile,
-			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws IOException {
+	public String retrieve(@PathVariable String name, @PathVariable String profile, ServletWebRequest request,
+		@RequestParam(defaultValue = "true") boolean resolvePlaceholders) throws IOException {
 		String path = getFilePath(request, name, profile, null);
 		return retrieve(request, name, profile, null, path, resolvePlaceholders);
 	}
 
-	private String getFilePath(ServletWebRequest request, String name, String profile,
-			String label) {
+	private String getFilePath(ServletWebRequest request, String name, String profile, String label) {
 		String stem;
-		if(label != null ) {
+		if (label != null) {
 			stem = String.format("/%s/%s/%s/", name, profile, label);
-		}else {
+		} else {
 			stem = String.format("/%s/%s/", name, profile);
 		}
 		String path = this.helper.getPathWithinApplication(request.getRequest());
@@ -98,38 +93,37 @@ public class ResourceController {
 		return path;
 	}
 
-    private synchronized String retrieve(ServletWebRequest request, String name, String profile, String label,
-        String path, boolean resolvePlaceholders) throws IOException {
-        name = resolveName(name);
-        label = resolveLabel(label);
-        Resource resource = this.resourceRepository.findOne(name, profile, label, path);
-        if (checkNotModified(request, resource)) {
-            // Content was not modified. Just return.
-            return null;
-        }
-        // ensure InputStream will be closed to prevent file locks on Windows
-        try (InputStream is = resource.getInputStream()) {
-            String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
-            if (resolvePlaceholders) {
-                Environment environment = this.environmentRepository.findOne(name, profile, label);
-                text = resolvePlaceholders(prepareEnvironment(environment), text);
-            }
-            return text;
-        }
-    }
+	private synchronized String retrieve(ServletWebRequest request, String name, String profile, String label,
+		String path, boolean resolvePlaceholders) throws IOException {
+		name = resolveName(name);
+		label = resolveLabel(label);
+		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+		if (checkNotModified(request, resource)) {
+			// Content was not modified. Just return.
+			return null;
+		}
+		// ensure InputStream will be closed to prevent file locks on Windows
+		try (InputStream is = resource.getInputStream()) {
+			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
+			if (resolvePlaceholders) {
+				Environment environment = this.environmentRepository.findOne(name, profile, label);
+				text = resolvePlaceholders(prepareEnvironment(environment), text);
+			}
+			return text;
+		}
+	}
 
-    /*
-     * Used only for unit tests.
-     */
-    String retrieve(String name, String profile, String label, String path,
-        boolean resolvePlaceholders) throws IOException {
-	    return retrieve(null, name, profile, label, path, resolvePlaceholders);
-    }
+	/*
+	 * Used only for unit tests.
+	 */
+	String retrieve(String name, String profile, String label, String path, boolean resolvePlaceholders)
+		throws IOException {
+		return retrieve(null, name, profile, label, path, resolvePlaceholders);
+	}
 
 	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-	public synchronized byte[] binary(@PathVariable String name,
-			@PathVariable String profile, @PathVariable String label,
-			ServletWebRequest request) throws IOException {
+	public synchronized byte[] binary(@PathVariable String name, @PathVariable String profile,
+		@PathVariable String label, ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return binary(request, name, profile, label, path);
 	}
@@ -138,18 +132,18 @@ public class ResourceController {
 	 * Used only for unit tests.
 	 */
 	byte[] binary(String name, String profile, String label, String path) throws IOException {
-        return binary(null, name, profile, label, path);
-    }
+		return binary(null, name, profile, label, path);
+	}
 
 	private synchronized byte[] binary(ServletWebRequest request, String name, String profile, String label,
-        String path) throws IOException {
-        name = resolveName(name);
-        label = resolveLabel(label);
-        Resource resource = this.resourceRepository.findOne(name, profile, label, path);
-        if (checkNotModified(request, resource)) {
-            // Content was not modified. Just return.
-            return null;
-        }
+		String path) throws IOException {
+		name = resolveName(name);
+		label = resolveLabel(label);
+		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+		if (checkNotModified(request, resource)) {
+			// Content was not modified. Just return.
+			return null;
+		}
 		// TODO: is this line needed for side effects?
 		prepareEnvironment(this.environmentRepository.findOne(name, profile, label));
 		try (InputStream is = resource.getInputStream()) {
@@ -158,31 +152,31 @@ public class ResourceController {
 	}
 
 	private boolean checkNotModified(ServletWebRequest request, Resource resource) {
-        try {
-            return request != null && request.checkNotModified(resource.lastModified());
-        } catch (Exception ex) {
-            // Ignore the exception since caching is optional.
-        }
-        return false;
-    }
+		try {
+			return request != null && request.checkNotModified(resource.lastModified());
+		} catch (Exception ex) {
+			// Ignore the exception since caching is optional.
+		}
+		return false;
+	}
 
 	private String resolveName(String name) {
-        if (name != null && name.contains("(_)")) {
-            // "(_)" is uncommon in a git repo name, but "/" cannot be matched
-            // by Spring MVC
-            name = name.replace("(_)", "/");
-        }
-        return name;
-    }
+		if (name != null && name.contains("(_)")) {
+			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
+			// by Spring MVC
+			name = name.replace("(_)", "/");
+		}
+		return name;
+	}
 
-    private String resolveLabel(String label) {
-        if (label != null && label.contains("(_)")) {
-            // "(_)" is uncommon in a git branch name, but "/" cannot be matched
-            // by Spring MVC
-            label = label.replace("(_)", "/");
-        }
-        return label;
-    }
+	private String resolveLabel(String label) {
+		if (label != null && label.contains("(_)")) {
+			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
+			// by Spring MVC
+			label = label.replace("(_)", "/");
+		}
+		return label;
+	}
 
 	@ExceptionHandler(NoSuchResourceException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
