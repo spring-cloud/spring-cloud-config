@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.server.resource;
 
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -36,9 +39,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.util.UrlPathHelper;
 
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
-
 /**
  * An HTTP endpoint for serving up templated plain text resources from an underlying
  * repository. Can be used to supply config files for consumption by a wide variety of
@@ -49,6 +49,7 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  *
  * @author Dave Syer
  * @author Daniel Lavoie
+ *
  */
 @RestController
 @RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
@@ -60,32 +61,37 @@ public class ResourceController {
 
 	private UrlPathHelper helper = new UrlPathHelper();
 
-	public ResourceController(ResourceRepository resourceRepository, EnvironmentRepository environmentRepository) {
+	public ResourceController(ResourceRepository resourceRepository,
+			EnvironmentRepository environmentRepository) {
 		this.resourceRepository = resourceRepository;
 		this.environmentRepository = environmentRepository;
 		this.helper.setAlwaysUseFullPath(true);
 	}
 
 	@RequestMapping("/{name}/{profile}/{label}/**")
-	public String retrieve(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
-		ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-		throws IOException {
+	public String retrieve(@PathVariable String name, @PathVariable String profile,
+        	@PathVariable String label, ServletWebRequest request,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return retrieve(request, name, profile, label, path, resolvePlaceholders);
 	}
 
 	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel")
-	public String retrieve(@PathVariable String name, @PathVariable String profile, ServletWebRequest request,
-		@RequestParam(defaultValue = "true") boolean resolvePlaceholders) throws IOException {
+	public String retrieve(@PathVariable String name, @PathVariable String profile,
+			ServletWebRequest request,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws IOException {
 		String path = getFilePath(request, name, profile, null);
 		return retrieve(request, name, profile, null, path, resolvePlaceholders);
 	}
 
-	private String getFilePath(ServletWebRequest request, String name, String profile, String label) {
+	private String getFilePath(ServletWebRequest request, String name, String profile,
+			String label) {
 		String stem;
-		if (label != null) {
+		if(label != null ) {
 			stem = String.format("/%s/%s/%s/", name, profile, label);
-		} else {
+		}else {
 			stem = String.format("/%s/%s/", name, profile);
 		}
 		String path = this.helper.getPathWithinApplication(request.getRequest());
@@ -93,8 +99,8 @@ public class ResourceController {
 		return path;
 	}
 
-	private synchronized String retrieve(ServletWebRequest request, String name, String profile, String label,
-		String path, boolean resolvePlaceholders) throws IOException {
+	synchronized String retrieve(ServletWebRequest request, String name, String profile, String label,
+			String path, boolean resolvePlaceholders) throws IOException {
 		name = resolveName(name);
 		label = resolveLabel(label);
 		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
@@ -122,8 +128,9 @@ public class ResourceController {
 	}
 
 	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-	public synchronized byte[] binary(@PathVariable String name, @PathVariable String profile,
-		@PathVariable String label, ServletWebRequest request) throws IOException {
+	public synchronized byte[] binary(@PathVariable String name,
+			@PathVariable String profile, @PathVariable String label,
+			ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return binary(request, name, profile, label, path);
 	}
@@ -136,7 +143,7 @@ public class ResourceController {
 	}
 
 	private synchronized byte[] binary(ServletWebRequest request, String name, String profile, String label,
-		String path) throws IOException {
+			String path) throws IOException {
 		name = resolveName(name);
 		label = resolveLabel(label);
 		Resource resource = this.resourceRepository.findOne(name, profile, label, path);

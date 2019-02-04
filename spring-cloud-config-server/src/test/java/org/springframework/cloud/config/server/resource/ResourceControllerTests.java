@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.resource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
@@ -35,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * @author Dave Syer
+ *
  */
 public class ResourceControllerTests {
 
@@ -52,13 +54,14 @@ public class ResourceControllerTests {
 
 	@Before
 	public void init() {
-		this.context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
-			.run();
+		this.context = new SpringApplicationBuilder(
+				NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE).run();
 		this.environmentRepository = new NativeEnvironmentRepository(this.context.getEnvironment(),
-			new NativeEnvironmentProperties());
+				new NativeEnvironmentProperties());
 		this.repository = new GenericResourceRepository(this.environmentRepository);
 		this.repository.setResourceLoader(this.context);
-		this.controller = new ResourceController(this.repository, this.environmentRepository);
+		this.controller = new ResourceController(this.repository,
+				this.environmentRepository);
 		this.context.close();
 	}
 
@@ -130,7 +133,8 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		try {
 			this.controller.retrieve(null, "foo", "bar", "spam/foo.txt", true);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			assertNotNull(e);
 		}
 	}
@@ -234,7 +238,8 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		try {
 			this.controller.binary(null, "foo", "bar", "spam/foo.txt");
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			assertNotNull(e);
 		}
 	}
