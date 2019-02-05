@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server.environment;
 
-import static org.junit.Assert.assertEquals;
+package org.springframework.cloud.config.server.environment;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,8 +25,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -55,9 +57,10 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master")).thenReturn(this.environment);
-		assertEquals("{foo=bar}", this.controller.findOne("foo", "bar", "master")
-				.getPropertySources().get(0).getSource().toString());
+		Mockito.when(this.repository.findOne("foo", "bar", "master"))
+				.thenReturn(this.environment);
+		assertThat(this.controller.findOne("foo", "bar", "master").getPropertySources()
+				.get(0).getSource().toString()).isEqualTo("{foo=bar}");
 	}
 
 	@Test
@@ -66,9 +69,10 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("bar", "foo");
 		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master")).thenReturn(this.environment);
-		assertEquals("{foo=${bar}}", this.controller.findOne("foo", "bar", "master")
-				.getPropertySources().get(0).getSource().toString());
+		Mockito.when(this.repository.findOne("foo", "bar", "master"))
+				.thenReturn(this.environment);
+		assertThat(this.controller.findOne("foo", "bar", "master").getPropertySources()
+				.get(0).getSource().toString()).isEqualTo("{foo=${bar}}");
 	}
 
 }

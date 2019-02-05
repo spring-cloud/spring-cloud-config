@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.config.client;
 
 import java.io.ByteArrayInputStream;
@@ -34,9 +50,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 public class ConfigServicePropertySourceLocatorTests {
@@ -56,7 +69,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
 		this.locator.setRestTemplate(this.restTemplate);
-		assertNotNull(this.locator.locate(this.environment));
+		assertThat(this.locator.locate(this.environment)).isNotNull();
 	}
 
 	@Test
@@ -66,7 +79,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator.setRestTemplate(this.restTemplate);
 		TestPropertyValues.of("spring.cloud.config.label:v1.0.0")
 				.applyTo(this.environment);
-		assertNotNull(this.locator.locate(this.environment));
+		assertThat(this.locator.locate(this.environment)).isNotNull();
 	}
 
 	@Test
@@ -77,7 +90,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator.setRestTemplate(this.restTemplate);
 		TestPropertyValues.of("spring.cloud.config.label:release/v1.0.0")
 				.applyTo(this.environment);
-		assertNotNull(this.locator.locate(this.environment));
+		assertThat(this.locator.locate(this.environment)).isNotNull();
 	}
 
 	@Test
@@ -86,7 +99,7 @@ public class ConfigServicePropertySourceLocatorTests {
 				new ResponseEntity<Void>((Void) null, HttpStatus.NOT_FOUND),
 				"nosuchlabel");
 		this.locator.setRestTemplate(this.restTemplate);
-		assertNull(this.locator.locate(this.environment));
+		assertThat(this.locator.locate(this.environment)).isNull();
 	}
 
 	@Test
@@ -94,7 +107,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithoutLabel(
 				new ResponseEntity<>("Wah!", HttpStatus.INTERNAL_SERVER_ERROR));
 		this.locator.setRestTemplate(this.restTemplate);
-		assertNull(this.locator.locate(this.environment));
+		assertThat(this.locator.locate(this.environment)).isNull();
 	}
 
 	@Test
@@ -247,8 +260,8 @@ public class ConfigServicePropertySourceLocatorTests {
 		while (iterator.hasNext()) {
 			GenericRequestHeaderInterceptor genericRequestHeaderInterceptor = (GenericRequestHeaderInterceptor) iterator
 					.next();
-			assertEquals(null,
-					genericRequestHeaderInterceptor.getHeaders().get(AUTHORIZATION));
+			assertThat(genericRequestHeaderInterceptor.getHeaders().get(AUTHORIZATION))
+					.isEqualTo(null);
 		}
 	}
 

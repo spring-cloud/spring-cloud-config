@@ -1,3 +1,19 @@
+/*
+ * Copyright 2013-2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.config.server;
 
 import java.io.IOException;
@@ -20,14 +36,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ConfigServerApplication.class, properties = {
-		"spring.config.name:configserver", "spring.cloud.config.server.git.uri:file:./target/repos/config-repo"},
-		webEnvironment = RANDOM_PORT)
+		"spring.config.name:configserver",
+		"spring.cloud.config.server.git.uri:file:./target/repos/config-repo" }, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 public class VanillaConfigServerIntegrationTests {
 
@@ -41,29 +56,32 @@ public class VanillaConfigServerIntegrationTests {
 
 	@Test
 	public void contextLoads() {
-		Environment environment = new TestRestTemplate().getForObject("http://localhost:"
-				+ port + "/foo/development/", Environment.class);
-		assertFalse(environment.getPropertySources().isEmpty());
-		assertEquals("overrides", environment.getPropertySources().get(0).getName());
-		assertEquals("{spring.cloud.config.enabled=true}", environment
-				.getPropertySources().get(0).getSource().toString());
+		Environment environment = new TestRestTemplate().getForObject(
+				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		assertThat(environment.getPropertySources().isEmpty()).isFalse();
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo("overrides");
+		assertThat(environment.getPropertySources().get(0).getSource().toString())
+				.isEqualTo("{spring.cloud.config.enabled=true}");
 	}
 
 	@Test
 	public void resourseEndpointsWork() {
-		String text = new TestRestTemplate().getForObject("http://localhost:"
-				+ port + "/foo/development/master/bar.properties", String.class);
+		String text = new TestRestTemplate().getForObject("http://localhost:" + this.port
+				+ "/foo/development/master/bar.properties", String.class);
 
 		String expected = "foo: bar";
-		assertEquals("invalid content", expected, text);
+		assertThat(text).as("invalid content").isEqualTo(expected);
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
-		ResponseEntity<byte[]> response = new TestRestTemplate().exchange("http://localhost:"
-				+ port + "/foo/development/raw/bar.properties", HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
-		//FIXME: this is calling the text endpoint, not the binary one
-		// assertTrue("invalid content type", response.getHeaders().getContentType().isCompatibleWith(MediaType.APPLICATION_OCTET_STREAM));
-		assertEquals(expected.length(), response.getBody().length);
+		ResponseEntity<byte[]> response = new TestRestTemplate().exchange(
+				"http://localhost:" + this.port + "/foo/development/raw/bar.properties",
+				HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
+		// FIXME: this is calling the text endpoint, not the binary one
+		// assertTrue("invalid content type",
+		// response.getHeaders().getContentType().isCompatibleWith(MediaType.APPLICATION_OCTET_STREAM));
+		assertThat(response.getBody().length).isEqualTo(expected.length());
 	}
 
 }

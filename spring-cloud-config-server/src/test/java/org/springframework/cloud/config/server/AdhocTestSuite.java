@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,25 +63,19 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
  */
 @RunWith(Suite.class)
 @SuiteClasses({ NativeConfigServerIntegrationTests.class,
-		GenericResourceRepositoryTests.class,
-		ResourceControllerTests.class,
-		ResourceControllerIntegrationTests.class,
-		ConfigClientOnIntegrationTests.class,
-		ConfigServerApplicationTests.class,
-		VanillaConfigServerIntegrationTests.class,
+		GenericResourceRepositoryTests.class, ResourceControllerTests.class,
+		ResourceControllerIntegrationTests.class, ConfigClientOnIntegrationTests.class,
+		ConfigServerApplicationTests.class, VanillaConfigServerIntegrationTests.class,
 		EnvironmentControllerIntegrationTests.class,
 		MultipleJGitEnvironmentRepositoryIntegrationTests.class,
 		EnvironmentEncryptorEnvironmentRepositoryTests.class,
 		EnvironmentControllerTests.class,
 		SVNKitEnvironmentRepositoryIntegrationTests.class,
 		MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests.class,
-		JdbcEnvironmentRepositoryTests.class,
-		CompositeEnvironmentRepositoryTests.class,
+		JdbcEnvironmentRepositoryTests.class, CompositeEnvironmentRepositoryTests.class,
 		JGitEnvironmentRepositoryConcurrencyTests.class,
-		NativeEnvironmentRepositoryTests.class,
-		JGitEnvironmentRepositoryTests.class,
-		SVNKitEnvironmentRepositoryTests.class,
-		VaultEnvironmentRepositoryTests.class,
+		NativeEnvironmentRepositoryTests.class, JGitEnvironmentRepositoryTests.class,
+		SVNKitEnvironmentRepositoryTests.class, VaultEnvironmentRepositoryTests.class,
 		MultipleJGitEnvironmentRepositoryTests.class,
 		JGitEnvironmentRepositoryIntegrationTests.class,
 		MultipleJGitEnvironmentProfilePlaceholderRepositoryTests.class,
@@ -97,18 +91,14 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
 		EncryptionControllerTests.class,
 		EncryptionIntegrationTests.ConfigSymmetricEncryptionIntegrationTests.class,
 		EncryptionIntegrationTests.KeystoreConfigurationIntegrationTests.class,
-		KeyStoreTextEncryptorLocatorTests.class,
-		EnvironmentPrefixHelperTests.class,
-		SshUriPropertyProcessorTest.class,
-		PropertyBasedSshSessionFactoryTest.class,
-		SshPropertyValidatorTest.class,
-		CompositeIntegrationTests.class,
+		KeyStoreTextEncryptorLocatorTests.class, EnvironmentPrefixHelperTests.class,
+		SshUriPropertyProcessorTest.class, PropertyBasedSshSessionFactoryTest.class,
+		SshPropertyValidatorTest.class, CompositeIntegrationTests.class,
 		SubversionConfigServerIntegrationTests.class,
 		ConfigServerHealthIndicatorTests.class,
 		CustomCompositeEnvironmentRepositoryTests.class,
 		CustomEnvironmentRepositoryTests.class,
-		BootstrapConfigServerIntegrationTests.class,
-})
+		BootstrapConfigServerIntegrationTests.class })
 @Ignore
 public class AdhocTestSuite {
 

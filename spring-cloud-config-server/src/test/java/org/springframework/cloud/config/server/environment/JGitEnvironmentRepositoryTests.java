@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitSkipSslValidationCredentialsProvider;
@@ -71,11 +72,7 @@ import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -92,21 +89,22 @@ import static org.mockito.Mockito.when;
  */
 public class JGitEnvironmentRepositoryTests {
 
+	@Rule
+	public final ExpectedException exception = ExpectedException.none();
+
+	RefDatabase database = Mockito.mock(RefDatabase.class);
+
 	private StandardEnvironment environment = new StandardEnvironment();
+
 	private JGitEnvironmentRepository repository;
 
 	private File basedir = new File("target/config");
 
-
-	RefDatabase database = Mockito.mock(RefDatabase.class);
-
-	@Rule
-	public final ExpectedException exception = ExpectedException.none();
-
 	@Before
 	public void init() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
-		this.repository = new JGitEnvironmentRepository(this.environment, new JGitEnvironmentProperties());
+		this.repository = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
 		this.repository.setUri(uri);
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
@@ -117,8 +115,9 @@ public class JGitEnvironmentRepositoryTests {
 	public void vanilla() {
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -129,9 +128,9 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setSearchPaths(new String[] { "sub" });
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/sub/application.yml",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
@@ -142,16 +141,17 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setSearchPaths(new String[] { "{application}" });
 		this.repository.findOne("sub", "staging", "master");
 		Environment environment = this.repository.findOne("sub", "staging", "master");
-		assertEquals(1, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/sub/application.yml",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
-		assertNotNull("version was null", version);
-		assertTrue("version length was wrong", version.length() >= 40 && version.length() <= 64);
+		assertThat(version).as("version was null").isNotNull();
+		assertTrue("version length was wrong",
+				version.length() >= 40 && version.length() <= 64);
 	}
 
 	@Test
@@ -161,9 +161,9 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setSearchPaths(new String[] { "sub*" });
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/sub/application.yml",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
@@ -171,8 +171,9 @@ public class JGitEnvironmentRepositoryTests {
 	public void branch() {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.repository.findOne("bar", "staging", "raw");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -180,8 +181,9 @@ public class JGitEnvironmentRepositoryTests {
 	public void tag() {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.repository.findOne("bar", "staging", "foo");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -190,45 +192,48 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setBasedir(this.basedir);
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
 	@Test
 	public void basedirExists() throws Exception {
-		assertTrue(this.basedir.mkdirs());
-		assertTrue(new File(this.basedir, ".nothing").createNewFile());
+		assertThat(this.basedir.mkdirs()).isTrue();
+		assertThat(new File(this.basedir, ".nothing").createNewFile()).isTrue();
 		this.repository.setBasedir(this.basedir);
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties", environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
 	@Test
 	public void uriWithHostOnly() throws Exception {
 		this.repository.setUri("git://localhost");
-		assertEquals("git://localhost/", this.repository.getUri());
+		assertThat(this.repository.getUri()).isEqualTo("git://localhost/");
 	}
 
 	@Test
 	public void uriWithHostAndPath() throws Exception {
 		this.repository.setUri("git://localhost/foo/");
-		assertEquals("git://localhost/foo", this.repository.getUri());
+		assertThat(this.repository.getUri()).isEqualTo("git://localhost/foo");
 	}
 
 	@Test
-	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchCalled() throws Exception {
+	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchCalled()
+			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
 
 		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setCloneOnStart(true);
@@ -237,15 +242,16 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void afterPropertiesSet_CloneOnStartFalse_CloneAndFetchNotCalled() throws Exception {
+	public void afterPropertiesSet_CloneOnStartFalse_CloneAndFetchNotCalled()
+			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
 
 		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.afterPropertiesSet();
@@ -254,15 +260,16 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void afterPropertiesSet_CloneOnStartTrueWithFileURL_CloneAndFetchNotCalled() throws Exception {
+	public void afterPropertiesSet_CloneOnStartTrueWithFileURL_CloneAndFetchNotCalled()
+			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
 
 		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("file://somefilesystem/somegitrepo");
 		envRepository.setCloneOnStart(true);
@@ -282,7 +289,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.status()).thenReturn(statusCommand);
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(false);
 
@@ -292,7 +300,7 @@ public class JGitEnvironmentRepositoryTests {
 
 		boolean shouldPull = repo.shouldPull(git);
 
-		assertThat("shouldPull was false", shouldPull, is(true));
+		assertThat(shouldPull).as("shouldPull was false").isTrue();
 	}
 
 	@Test
@@ -306,7 +314,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.status()).thenReturn(statusCommand);
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(false);
 
@@ -315,7 +324,7 @@ public class JGitEnvironmentRepositoryTests {
 
 		boolean shouldPull = repo.shouldPull(git);
 
-		assertThat("shouldPull was true", shouldPull, is(false));
+		assertThat(shouldPull).as("shouldPull was true").isFalse();
 	}
 
 	@Test
@@ -329,7 +338,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.status()).thenReturn(statusCommand);
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
@@ -338,7 +348,7 @@ public class JGitEnvironmentRepositoryTests {
 
 		boolean shouldPull = repo.shouldPull(git);
 
-		assertThat("shouldPull was false", shouldPull, is(true));
+		assertThat(shouldPull).as("shouldPull was false").isTrue();
 	}
 
 	@Test
@@ -352,26 +362,28 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.status()).thenReturn(statusCommand);
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		properties.setRefreshRate(2);
 
-		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties);
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				properties);
 
 		repo.setLastRefresh(System.currentTimeMillis() - 5000);
 
 		boolean shouldPull = repo.shouldPull(git);
 
-		assertThat("shouldPull was false", shouldPull, is(true));
+		assertThat(shouldPull).as("shouldPull was false").isTrue();
 
 		repo.setRefreshRate(30);
 
 		shouldPull = repo.shouldPull(git);
 
-		assertThat("shouldPull was true", shouldPull, is(false));
+		assertThat(shouldPull).as("shouldPull was true").isFalse();
 	}
 
 	@Test
@@ -389,20 +401,24 @@ public class JGitEnvironmentRepositoryTests {
 		when(fetchCommand.call()).thenReturn(fetchResult);
 		when(git.fetch()).thenReturn(fetchCommand);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		properties.setRefreshRate(1000);
-		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties);
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				properties);
 
 		repo.setLastRefresh(0);
 		repo.fetch(git, "master");
 
 		long timeDiff = System.currentTimeMillis() - repo.getLastRefresh();
 
-		assertThat("time difference ("+timeDiff+") was longer than 1 second", timeDiff < 1000L, is(true));
+		assertThat(timeDiff < 1000L)
+				.as("time difference (" + timeDiff + ") was longer than 1 second")
+				.isTrue();
 	}
 
 	@Test
@@ -423,7 +439,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.getRepository()).thenReturn(repository);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
@@ -431,13 +448,14 @@ public class JGitEnvironmentRepositoryTests {
 		FetchCommand fetchCommand = mock(FetchCommand.class);
 		when(git.fetch()).thenReturn(fetchCommand);
 		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
-		when(fetchCommand.call()).thenThrow(new InvalidRemoteException("invalid mock remote")); // here
-																								// is
-																								// our
-																								// exception
-																								// we
-																								// are
-																								// testing
+		when(fetchCommand.call())
+				.thenThrow(new InvalidRemoteException("invalid mock remote")); // here
+																				// is
+																				// our
+																				// exception
+																				// we
+																				// are
+																				// testing
 
 		// refresh()->checkout
 		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
@@ -465,13 +483,14 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(database.getRef(anyString())).thenReturn(headRef);
+		when(this.database.getRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
 
-		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", null);
-		assertEquals(locations.getVersion(), newObjectId.getName());
+		SearchPathLocator.Locations locations = this.repository.getLocations("bar",
+				"staging", null);
+		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
 		verify(git, times(0)).branchDelete();
 	}
@@ -490,7 +509,7 @@ public class JGitEnvironmentRepositoryTests {
 
 			@Override
 			public RefDatabase getRefDatabase() {
-				return database;
+				return JGitEnvironmentRepositoryTests.this.database;
 			}
 
 			@Override
@@ -521,14 +540,14 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
-    public void testMergeException() throws Exception {
+	public void testMergeException() throws Exception {
 
 		Git git = mock(Git.class);
 		CloneCommand cloneCommand = mock(CloneCommand.class);
 		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
 		this.repository.setGitFactory(factory);
 
-		//refresh()->shouldPull
+		// refresh()->shouldPull
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		Status status = mock(Status.class);
 		when(git.status()).thenReturn(statusCommand);
@@ -536,21 +555,23 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.getRepository()).thenReturn(repository);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
-		//refresh()->fetch
+		// refresh()->fetch
 		FetchCommand fetchCommand = mock(FetchCommand.class);
 		FetchResult fetchResult = mock(FetchResult.class);
 		when(git.fetch()).thenReturn(fetchCommand);
 		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
 		when(fetchCommand.call()).thenReturn(fetchResult);
-		when(fetchResult.getTrackingRefUpdates()).thenReturn(Collections.<TrackingRefUpdate>emptyList());
+		when(fetchResult.getTrackingRefUpdates())
+				.thenReturn(Collections.<TrackingRefUpdate>emptyList());
 
-		//refresh()->checkout
+		// refresh()->checkout
 		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
-		//refresh()->checkout->containsBranch
+		// refresh()->checkout->containsBranch
 		ListBranchCommand listBranchCommand = mock(ListBranchCommand.class);
 		when(git.checkout()).thenReturn(checkoutCommand);
 		when(git.branchList()).thenReturn(listBranchCommand);
@@ -560,35 +581,38 @@ public class JGitEnvironmentRepositoryTests {
 		when(ref.getName()).thenReturn("/master");
 		when(listBranchCommand.call()).thenReturn(refs);
 
-		//refresh()->merge
+		// refresh()->merge
 		MergeCommand mergeCommand = mock(MergeCommand.class);
 		when(git.merge()).thenReturn(mergeCommand);
-		when(mergeCommand.call()).thenThrow(new NotMergedException()); //here is our exception we are testing
+		when(mergeCommand.call()).thenThrow(new NotMergedException()); // here is our
+																		// exception we
+																		// are testing
 
-		//refresh()->return git.getRepository().findRef("HEAD").getObjectId().getName();
+		// refresh()->return git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(database.getRef(anyString())).thenReturn(headRef);
+		when(this.database.getRef(anyString())).thenReturn(headRef);
 
-		ObjectId newObjectId = ObjectId.fromRaw(new int[]{1,2,3,4,5});
+		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
 
-		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
-		assertEquals(locations.getVersion(),newObjectId.getName());
+		SearchPathLocator.Locations locations = this.repository.getLocations("bar",
+				"staging", "master");
+		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
 		verify(git, times(0)).branchDelete();
-    }
-	
+	}
+
 	@Test
 	public void testRefreshWithoutFetch() throws Exception {
 		Git git = mock(Git.class);
-		
+
 		CloneCommand cloneCommand = mock(CloneCommand.class);
 		when(cloneCommand.setURI(anyString())).thenReturn(cloneCommand);
 		when(cloneCommand.setDirectory(any(File.class))).thenReturn(cloneCommand);
 		when(cloneCommand.call()).thenReturn(git);
-		
+
 		MockGitFactory factory = new MockGitFactory(git, cloneCommand);
-		
+
 		StatusCommand statusCommand = mock(StatusCommand.class);
 		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
 		Status status = mock(Status.class);
@@ -605,9 +629,11 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.getRepository()).thenReturn(repository);
 		when(git.checkout()).thenReturn(checkoutCommand);
 		when(git.fetch()).thenReturn(fetchCommand);
-		when(git.merge()).thenReturn(mock(MergeCommand.class, Mockito.RETURNS_DEEP_STUBS));
+		when(git.merge())
+				.thenReturn(mock(MergeCommand.class, Mockito.RETURNS_DEEP_STUBS));
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(checkoutCommand.call()).thenReturn(ref);
 		when(listBranchCommand.call()).thenReturn(Arrays.asList(branch1Ref));
@@ -615,17 +641,19 @@ public class JGitEnvironmentRepositoryTests {
 		when(branch1Ref.getName()).thenReturn("origin/master");
 		when(status.isClean()).thenReturn(true);
 
-		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, new JGitEnvironmentProperties());
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
 		repo.setGitFactory(factory);
 		repo.setUri("http://somegitserver/somegitrepo");
 		repo.setBasedir(this.basedir);
 
-		// Set the refresh rate to 2 seconds and last update before 100ms. There should be no remote repo fetch.
+		// Set the refresh rate to 2 seconds and last update before 100ms. There should be
+		// no remote repo fetch.
 		repo.setLastRefresh(System.currentTimeMillis() - 100);
 		repo.setRefreshRate(2);
 
 		repo.refresh("master");
-		
+
 		// Verify no fetch but merge only.
 		verify(git, times(0)).fetch();
 		verify(git).merge();
@@ -647,7 +675,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.getRepository()).thenReturn(repository);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true).thenReturn(false);
 
@@ -657,7 +686,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.fetch()).thenReturn(fetchCommand);
 		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
 		when(fetchCommand.call()).thenReturn(fetchResult);
-		when(fetchResult.getTrackingRefUpdates()).thenReturn(Collections.<TrackingRefUpdate>emptyList());
+		when(fetchResult.getTrackingRefUpdates())
+				.thenReturn(Collections.<TrackingRefUpdate>emptyList());
 
 		// refresh()->checkout
 		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
@@ -690,13 +720,14 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(database.getRef(anyString())).thenReturn(headRef);
+		when(this.database.getRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
 
-		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
-		assertEquals(locations.getVersion(), newObjectId.getName());
+		SearchPathLocator.Locations locations = this.repository.getLocations("bar",
+				"staging", "master");
+		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
 		verify(git, times(0)).branchDelete();
 	}
@@ -708,21 +739,24 @@ public class JGitEnvironmentRepositoryTests {
 
 		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
-		when(mockCloneCommand.call()).thenThrow(new TransportException("failed to clone"));
+		when(mockCloneCommand.call())
+				.thenThrow(new TransportException("failed to clone"));
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setBasedir(this.basedir);
 
 		try {
 			envRepository.findOne("bar", "staging", "master");
-		} catch (Exception ex) {
+		}
+		catch (Exception ex) {
 			// expected - ignore
 		}
 
-		assertFalse("baseDir should be deleted when clone fails", this.basedir.listFiles().length>0);
+		assertThat(this.basedir.listFiles().length > 0)
+				.as("baseDir should be deleted when clone fails").isFalse();
 	}
 
 	@Test
@@ -730,8 +764,8 @@ public class JGitEnvironmentRepositoryTests {
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("git+ssh://git@somegitserver/somegitrepo");
 		envRepository.setBasedir(new File("./mybasedir"));
@@ -742,18 +776,19 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
+		assertTrue(mockCloneCommand
+				.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		CredentialItem.Username usernameCredential = new CredentialItem.Username();
 		CredentialItem.Password passwordCredential = new CredentialItem.Password();
-		assertTrue(provider.supports(usernameCredential));
-		assertTrue(provider.supports(passwordCredential));
+		assertThat(provider.supports(usernameCredential)).isTrue();
+		assertThat(provider.supports(passwordCredential)).isTrue();
 
 		provider.get(new URIish(), usernameCredential);
-		assertEquals(usernameCredential.getValue(), username);
+		assertThat(username).isEqualTo(usernameCredential.getValue());
 		provider.get(new URIish(), passwordCredential);
-		assertEquals(String.valueOf(passwordCredential.getValue()), password);
+		assertThat(password).isEqualTo(String.valueOf(passwordCredential.getValue()));
 	}
 
 	@Test
@@ -762,8 +797,8 @@ public class JGitEnvironmentRepositoryTests {
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("git+ssh://git@somegitserver/somegitrepo");
 		envRepository.setBasedir(new File("./mybasedir"));
@@ -771,28 +806,29 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.hasPassphraseCredentialsProvider());
+		assertThat(mockCloneCommand.hasPassphraseCredentialsProvider()).isTrue();
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
-		assertFalse(provider.isInteractive());
+		assertThat(provider.isInteractive()).isFalse();
 
-		CredentialItem.StringType stringCredential = new CredentialItem.StringType(PassphraseCredentialsProvider.PROMPT,
-				true);
+		CredentialItem.StringType stringCredential = new CredentialItem.StringType(
+				PassphraseCredentialsProvider.PROMPT, true);
 
-		assertTrue(provider.supports(stringCredential));
+		assertThat(provider.supports(stringCredential)).isTrue();
 		provider.get(new URIish(), stringCredential);
-		assertEquals(stringCredential.getValue(), passphrase);
+		assertThat(passphrase).isEqualTo(stringCredential.getValue());
 	}
 
 	@Test
-	public void gitCredentialsProviderFactoryCreatesPassphraseProvider() throws Exception {
+	public void gitCredentialsProviderFactoryCreatesPassphraseProvider()
+			throws Exception {
 		final String passphrase = "mypassphrase";
 		final String gitUri = "git+ssh://git@somegitserver/somegitrepo";
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri(gitUri);
 		envRepository.setBasedir(new File("./mybasedir"));
@@ -800,29 +836,30 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.hasPassphraseCredentialsProvider());
+		assertThat(mockCloneCommand.hasPassphraseCredentialsProvider()).isTrue();
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
-		assertFalse(provider.isInteractive());
+		assertThat(provider.isInteractive()).isFalse();
 
-		CredentialItem.StringType stringCredential = new CredentialItem.StringType(PassphraseCredentialsProvider.PROMPT,
-				true);
+		CredentialItem.StringType stringCredential = new CredentialItem.StringType(
+				PassphraseCredentialsProvider.PROMPT, true);
 
-		assertTrue(provider.supports(stringCredential));
+		assertThat(provider.supports(stringCredential)).isTrue();
 		provider.get(new URIish(), stringCredential);
-		assertEquals(stringCredential.getValue(), passphrase);
+		assertThat(passphrase).isEqualTo(stringCredential.getValue());
 
 	}
 
 	@Test
-	public void gitCredentialsProviderFactoryCreatesUsernamePasswordProvider() throws Exception {
+	public void gitCredentialsProviderFactoryCreatesUsernamePasswordProvider()
+			throws Exception {
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 		final String username = "someuser";
 		final String password = "mypassword";
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("git+ssh://git@somegitserver/somegitrepo");
 		envRepository.setBasedir(new File("./mybasedir"));
@@ -831,34 +868,37 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
+		assertTrue(mockCloneCommand
+				.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		CredentialItem.Username usernameCredential = new CredentialItem.Username();
 		CredentialItem.Password passwordCredential = new CredentialItem.Password();
-		assertTrue(provider.supports(usernameCredential));
-		assertTrue(provider.supports(passwordCredential));
+		assertThat(provider.supports(usernameCredential)).isTrue();
+		assertThat(provider.supports(passwordCredential)).isTrue();
 
 		provider.get(new URIish(), usernameCredential);
-		assertEquals(usernameCredential.getValue(), username);
+		assertThat(username).isEqualTo(usernameCredential.getValue());
 		provider.get(new URIish(), passwordCredential);
-		assertEquals(String.valueOf(passwordCredential.getValue()), password);
+		assertThat(password).isEqualTo(String.valueOf(passwordCredential.getValue()));
 	}
 
 	@Test
-	public void gitCredentialsProviderFactoryCreatesAwsCodeCommitProvider() throws Exception {
+	public void gitCredentialsProviderFactoryCreatesAwsCodeCommitProvider()
+			throws Exception {
 		Git mockGit = mock(Git.class);
 		MockCloneCommand mockCloneCommand = new MockCloneCommand(mockGit);
 		final String awsUri = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test";
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri(awsUri);
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof AwsCodeCommitCredentialProvider);
+		assertTrue(mockCloneCommand
+				.getCredentialsProvider() instanceof AwsCodeCommitCredentialProvider);
 	}
 
 	@Test
@@ -882,24 +922,24 @@ public class JGitEnvironmentRepositoryTests {
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 
-		assertTrue(provider instanceof GitSkipSslValidationCredentialsProvider);
+		assertThat(provider instanceof GitSkipSslValidationCredentialsProvider).isTrue();
 
 		CredentialItem.Username usernameCredential = new CredentialItem.Username();
 		CredentialItem.Password passwordCredential = new CredentialItem.Password();
-		assertTrue(provider.supports(usernameCredential));
-		assertTrue(provider.supports(passwordCredential));
+		assertThat(provider.supports(usernameCredential)).isTrue();
+		assertThat(provider.supports(passwordCredential)).isTrue();
 
 		provider.get(new URIish(), usernameCredential);
-		assertEquals(usernameCredential.getValue(), username);
+		assertThat(username).isEqualTo(usernameCredential.getValue());
 		provider.get(new URIish(), passwordCredential);
-		assertEquals(String.valueOf(passwordCredential.getValue()), password);
+		assertThat(password).isEqualTo(String.valueOf(passwordCredential.getValue()));
 	}
 
 	@Test
 	public void shouldPrintStacktraceIfDebugEnabled() throws Exception {
 		final Log mockLogger = mock(Log.class);
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties()) {
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties()) {
 			@Override
 			public void afterPropertiesSet() throws Exception {
 				this.logger = mockLogger;
@@ -914,7 +954,8 @@ public class JGitEnvironmentRepositoryTests {
 		verify(mockLogger).debug(eq("Stacktrace for: "), any(RuntimeException.class));
 
 		int numberOfInvocations = mockingDetails(mockLogger).getInvocations().size();
-		assertEquals("should call isDebugEnabled warn and debug", 3, numberOfInvocations);
+		assertThat(numberOfInvocations).as("should call isDebugEnabled warn and debug")
+				.isEqualTo(3);
 	}
 
 	@Test
@@ -929,8 +970,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
 		TransportConfigCallback configCallback = mock(TransportConfigCallback.class);
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setTransportConfigCallback(configCallback);
@@ -951,9 +992,10 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockGit.fetch()).thenReturn(fetchCommand);
 		when(fetchCommand.call()).thenReturn(mock(FetchResult.class));
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
-				new JGitEnvironmentProperties());
-		envRepository.setGitFactory(new MockGitFactory(mockGit, mock(CloneCommand.class)));
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
+		envRepository
+				.setGitFactory(new MockGitFactory(mockGit, mock(CloneCommand.class)));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setDeleteUntrackedBranches(true);
 
@@ -979,7 +1021,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.getRepository()).thenReturn(repository);
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
@@ -988,7 +1031,8 @@ public class JGitEnvironmentRepositoryTests {
 		FetchResult fetchResult = mock(FetchResult.class);
 
 		TrackingRefUpdate trackingRefUpdate = mock(TrackingRefUpdate.class);
-		Collection<TrackingRefUpdate> trackingRefUpdates = Collections.singletonList(trackingRefUpdate);
+		Collection<TrackingRefUpdate> trackingRefUpdates = Collections
+				.singletonList(trackingRefUpdate);
 
 		when(git.fetch()).thenReturn(fetchCommand);
 		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
@@ -999,19 +1043,21 @@ public class JGitEnvironmentRepositoryTests {
 		ReceiveCommand receiveCommand = mock(ReceiveCommand.class);
 		when(trackingRefUpdate.asReceiveCommand()).thenReturn(receiveCommand);
 		when(receiveCommand.getType()).thenReturn(ReceiveCommand.Type.DELETE);
-		when(trackingRefUpdate.getLocalName()).thenReturn("refs/remotes/origin/feature/deletedBranchFromOrigin");
+		when(trackingRefUpdate.getLocalName())
+				.thenReturn("refs/remotes/origin/feature/deletedBranchFromOrigin");
 
 		DeleteBranchCommand deleteBranchCommand = mock(DeleteBranchCommand.class);
 		when(git.branchDelete()).thenReturn(deleteBranchCommand);
-		when(deleteBranchCommand.setBranchNames(eq("feature/deletedBranchFromOrigin"))).thenReturn(deleteBranchCommand);
+		when(deleteBranchCommand.setBranchNames(eq("feature/deletedBranchFromOrigin")))
+				.thenReturn(deleteBranchCommand);
 		when(deleteBranchCommand.setForce(true)).thenReturn(deleteBranchCommand);
-		when(deleteBranchCommand.call()).thenThrow(new NotMergedException());// here
-																			// is
-																			// our
-																			// exception
-																			// we
-																			// are
-																			// testing
+		when(deleteBranchCommand.call()).thenThrow(new NotMergedException()); // here
+																				// is
+																				// our
+																				// exception
+																				// we
+																				// are
+																				// testing
 
 		// refresh()->checkout
 		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
@@ -1037,13 +1083,14 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(database.getRef(anyString())).thenReturn(headRef);
+		when(this.database.getRef(anyString())).thenReturn(headRef);
 
-		ObjectId newObjectId = ObjectId.fromRaw(new int[]{1, 2, 3, 4, 5});
+		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
 
-		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
-		assertEquals(locations.getVersion(), newObjectId.getName());
+		SearchPathLocator.Locations locations = this.repository.getLocations("bar",
+				"staging", "master");
+		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
 		verify(deleteBranchCommand).setBranchNames(eq("feature/deletedBranchFromOrigin"));
 		verify(deleteBranchCommand).setForce(true);
@@ -1051,32 +1098,35 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	class MockCloneCommand extends CloneCommand {
+
 		private Git mockGit;
 
-		public MockCloneCommand(Git mockGit) {
+		MockCloneCommand(Git mockGit) {
 			this.mockGit = mockGit;
 		}
 
 		@Override
 		public Git call() throws GitAPIException, InvalidRemoteException {
-			return mockGit;
+			return this.mockGit;
 		}
 
 		public boolean hasPassphraseCredentialsProvider() {
-			return credentialsProvider instanceof PassphraseCredentialsProvider;
+			return this.credentialsProvider instanceof PassphraseCredentialsProvider;
 		}
 
 		public CredentialsProvider getCredentialsProvider() {
-			return credentialsProvider;
+			return this.credentialsProvider;
 		}
+
 	}
 
 	class MockGitFactory extends JGitEnvironmentRepository.JGitFactory {
 
 		private Git mockGit;
+
 		private CloneCommand mockCloneCommand;
 
-		public MockGitFactory(Git mockGit, CloneCommand mockCloneCommand) {
+		MockGitFactory(Git mockGit, CloneCommand mockCloneCommand) {
 			this.mockGit = mockGit;
 			this.mockCloneCommand = mockCloneCommand;
 		}
@@ -1090,5 +1140,7 @@ public class JGitEnvironmentRepositoryTests {
 		public CloneCommand getCloneCommandByCloneRepository() {
 			return this.mockCloneCommand;
 		}
+
 	}
+
 }

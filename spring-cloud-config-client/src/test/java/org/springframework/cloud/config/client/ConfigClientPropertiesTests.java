@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.client;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.mock.env.MockEnvironment;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-
-import org.junit.Rule;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -35,96 +34,96 @@ import org.junit.Rule;
  */
 public class ConfigClientPropertiesTests {
 
-	private ConfigClientProperties locator = new ConfigClientProperties(
-			new StandardEnvironment());
-
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
 
+	private ConfigClientProperties locator = new ConfigClientProperties(
+			new StandardEnvironment());
+
 	@Test
 	public void vanilla() {
-		locator.setUri(new String[] { "http://localhost:9999" });
-		locator.setPassword("secret");
-		Credentials credentials = locator.getCredentials(0);
-		assertEquals("http://localhost:9999", credentials.getUri());
-		assertEquals("user", credentials.getUsername());
-		assertEquals("secret", credentials.getPassword());
+		this.locator.setUri(new String[] { "http://localhost:9999" });
+		this.locator.setPassword("secret");
+		Credentials credentials = this.locator.getCredentials(0);
+		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
+		assertThat(credentials.getUsername()).isEqualTo("user");
+		assertThat(credentials.getPassword()).isEqualTo("secret");
 	}
 
 	@Test
 	public void uriCreds() {
-		locator.setUri(new String[] { "http://foo:bar@localhost:9999" });
-		Credentials credentials = locator.getCredentials(0);
-		assertEquals("http://localhost:9999", credentials.getUri());
-		assertEquals("foo", credentials.getUsername());
-		assertEquals("bar", credentials.getPassword());
+		this.locator.setUri(new String[] { "http://foo:bar@localhost:9999" });
+		Credentials credentials = this.locator.getCredentials(0);
+		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
+		assertThat(credentials.getUsername()).isEqualTo("foo");
+		assertThat(credentials.getPassword()).isEqualTo("bar");
 	}
 
 	@Test
 	public void explicitPassword() {
-		locator.setUri(new String[] { "http://foo:bar@localhost:9999" });
-		locator.setPassword("secret");
-		Credentials credentials = locator.getCredentials(0);
-		assertEquals("http://localhost:9999", credentials.getUri());
-		assertEquals("foo", credentials.getUsername());
-		assertEquals("secret", credentials.getPassword());
+		this.locator.setUri(new String[] { "http://foo:bar@localhost:9999" });
+		this.locator.setPassword("secret");
+		Credentials credentials = this.locator.getCredentials(0);
+		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
+		assertThat(credentials.getUsername()).isEqualTo("foo");
+		assertThat(credentials.getPassword()).isEqualTo("secret");
 	}
 
 	@Test
 	public void testIfNoColonPresentInUriCreds() {
-		locator.setUri(new String[] { "http://foobar@localhost:9999" });
-		locator.setPassword("secret");
-		Credentials credentials = locator.getCredentials(0);
-		assertEquals("http://localhost:9999", credentials.getUri());
-		assertEquals("foobar", credentials.getUsername());
-		assertEquals("secret", credentials.getPassword());
+		this.locator.setUri(new String[] { "http://foobar@localhost:9999" });
+		this.locator.setPassword("secret");
+		Credentials credentials = this.locator.getCredentials(0);
+		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
+		assertThat(credentials.getUsername()).isEqualTo("foobar");
+		assertThat(credentials.getPassword()).isEqualTo("secret");
 	}
 
 	@Test
 	public void testIfColonPresentAtTheEndInUriCreds() {
-		locator.setUri(new String[] { "http://foobar:@localhost:9999" });
-		locator.setPassword("secret");
-		Credentials credentials = locator.getCredentials(0);
-		assertEquals("http://localhost:9999", credentials.getUri());
-		assertEquals("foobar", credentials.getUsername());
-		assertEquals("secret", credentials.getPassword());
+		this.locator.setUri(new String[] { "http://foobar:@localhost:9999" });
+		this.locator.setPassword("secret");
+		Credentials credentials = this.locator.getCredentials(0);
+		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
+		assertThat(credentials.getUsername()).isEqualTo("foobar");
+		assertThat(credentials.getPassword()).isEqualTo("secret");
 	}
 
 	@Test
 	public void testIfColonPresentAtTheStartInUriCreds() {
-		locator.setUri(new String[] { "http://:foobar@localhost:9999" });
-		Credentials credentials = locator.getCredentials(0);
-		assertEquals("http://localhost:9999", credentials.getUri());
-		assertEquals("", credentials.getUsername());
-		assertEquals("foobar", credentials.getPassword());
+		this.locator.setUri(new String[] { "http://:foobar@localhost:9999" });
+		Credentials credentials = this.locator.getCredentials(0);
+		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
+		assertThat(credentials.getUsername()).isEqualTo("");
+		assertThat(credentials.getPassword()).isEqualTo("foobar");
 	}
 
 	@Test
 	public void testIfColonPresentAtTheStartAndEndInUriCreds() {
-		locator.setUri(new String[] { "http://:foobar:@localhost:9999" });
-		Credentials credentials = locator.getCredentials(0);
-		assertEquals("http://localhost:9999", credentials.getUri());
-		assertEquals("", credentials.getUsername());
-		assertEquals("foobar:", credentials.getPassword());
+		this.locator.setUri(new String[] { "http://:foobar:@localhost:9999" });
+		Credentials credentials = this.locator.getCredentials(0);
+		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
+		assertThat(credentials.getUsername()).isEqualTo("");
+		assertThat(credentials.getPassword()).isEqualTo("foobar:");
 	}
 
 	@Test
 	public void testIfSpacePresentAsUriCreds() {
-		locator.setUri(new String[] { "http://  @localhost:9999" });
-		locator.setPassword("secret");
-		Credentials credentials = locator.getCredentials(0);
-		assertEquals("http://localhost:9999", credentials.getUri());
-		assertEquals("  ", credentials.getUsername());
-		assertEquals("secret", credentials.getPassword());
+		this.locator.setUri(new String[] { "http://  @localhost:9999" });
+		this.locator.setPassword("secret");
+		Credentials credentials = this.locator.getCredentials(0);
+		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
+		assertThat(credentials.getUsername()).isEqualTo("  ");
+		assertThat(credentials.getPassword()).isEqualTo("secret");
 	}
 
 	@Test
 	public void changeNameInOverride() {
-		locator.setName("one");
+		this.locator.setName("one");
 		ConfigurableEnvironment environment = new StandardEnvironment();
 		TestPropertyValues.of("spring.application.name:two").applyTo(environment);
-		ConfigClientProperties override = locator.override(environment);
-		assertEquals("two", override.getName());
+		ConfigClientProperties override = this.locator.override(environment);
+		assertThat(override.getName()).isEqualTo("two");
 	}
 
 	@Test
@@ -137,32 +136,35 @@ public class ConfigClientPropertiesTests {
 		properties.setUsername("explicitName");
 		properties.setPassword("explicitPW");
 		Credentials credentials = properties.getCredentials(0);
-		assertThat(credentials.getPassword(), equalTo("explicitPW"));
-		assertThat(credentials.getUsername(), equalTo("explicitName"));
+		assertThat(credentials.getPassword()).isEqualTo("explicitPW");
+		assertThat(credentials.getUsername()).isEqualTo("explicitName");
 	}
 
 	@Test
 	public void checkIfExceptionThrownForNegativeIndex() {
-		locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
-		expected.expect(IllegalStateException.class);
-		expected.expectMessage("Trying to access an invalid array index");
-		Credentials credentials = locator.getCredentials(-1);
+		this.locator.setUri(
+				new String[] { "http://localhost:8888", "http://localhost:8889" });
+		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage("Trying to access an invalid array index");
+		Credentials credentials = this.locator.getCredentials(-1);
 	}
 
 	@Test
 	public void checkIfExceptionThrownForPositiveInvalidIndex() {
-		locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
-		expected.expect(IllegalStateException.class);
-		expected.expectMessage("Trying to access an invalid array index");
-		Credentials credentials = locator.getCredentials(3);
+		this.locator.setUri(
+				new String[] { "http://localhost:8888", "http://localhost:8889" });
+		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage("Trying to access an invalid array index");
+		Credentials credentials = this.locator.getCredentials(3);
 	}
 
 	@Test
 	public void checkIfExceptionThrownForIndexEqualToLength() {
-		locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
-		expected.expect(IllegalStateException.class);
-		expected.expectMessage("Trying to access an invalid array index");
-		Credentials credentials = locator.getCredentials(2);
+		this.locator.setUri(
+				new String[] { "http://localhost:8888", "http://localhost:8889" });
+		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage("Trying to access an invalid array index");
+		Credentials credentials = this.locator.getCredentials(2);
 	}
 
 }

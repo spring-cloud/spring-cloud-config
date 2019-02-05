@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 
 package org.springframework.cloud.config.server.environment;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +42,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.containsString;
+
 /**
  * @author Andy Chan (iceycake)
  * @author Dave Syer
@@ -52,12 +52,12 @@ import org.springframework.context.annotation.Import;
  */
 public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 
+	@Rule
+	public ExpectedException expected = ExpectedException.none();
+
 	private ConfigurableApplicationContext context;
 
 	private File basedir = new File("target/config");
-
-	@Rule
-	public ExpectedException expected = ExpectedException.none();
 
 	@Before
 	public void init() throws Exception {
@@ -84,7 +84,7 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
 	@Test
@@ -103,7 +103,7 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
 	@Test
@@ -115,15 +115,17 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		repoMapping.put("spring.cloud.config.server.git.repos[test1].pattern", "*test1*");
 		repoMapping.put("spring.cloud.config.server.git.repos[test1].uri", test1RepoUri);
 		repoMapping.put("spring.cloud.config.server.git.refresh-rate", "30");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+		this.context = new SpringApplicationBuilder(TestConfiguration.class)
+				.web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri)
 				.properties(repoMapping).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(((MultipleJGitEnvironmentRepository) repository).getRepos().get("test1").getRefreshRate(), 30);
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(30).isEqualTo(((MultipleJGitEnvironmentRepository) repository)
+				.getRepos().get("test1").getRefreshRate());
 	}
 
 	@Test
@@ -143,7 +145,7 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
 	@Test
@@ -164,7 +166,7 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging,cloud",
 				"master");
-		assertEquals(2, environment.getPropertySources().size());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
 	@Test
@@ -189,9 +191,9 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "cloud,staging",
 				"master");
-		assertEquals(2, environment.getPropertySources().size());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		environment = repository.findOne("test1-svc", "staging,cloud", "master");
-		assertEquals(2, environment.getPropertySources().size());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
 	@Test
@@ -200,7 +202,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		String test1RepoUri = ConfigServerTestUtils.prepareLocalRepo("test1-config-repo");
 
 		Map<String, Object> repoMapping = new LinkedHashMap<String, Object>();
-		repoMapping.put("spring.cloud.config.server.git.repos.test1-svc.uri", test1RepoUri);
+		repoMapping.put("spring.cloud.config.server.git.repos.test1-svc.uri",
+				test1RepoUri);
 		this.context = new SpringApplicationBuilder(TestConfiguration.class)
 				.web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri)
@@ -209,15 +212,16 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
 	@Test
 	public void nonWritableBasedir() throws IOException {
 		String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
-		expected.expectCause(ThrowableMessageMatcher
+		this.expected.expectCause(ThrowableMessageMatcher
 				.hasMessage(containsString("Cannot write parent")));
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+		this.context = new SpringApplicationBuilder(TestConfiguration.class)
+				.web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri,
 						"spring.cloud.config.server.git.basedir:/tmp")
 				.run();
@@ -234,9 +238,9 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 						"spring.cloud.config.server.git.uri:" + defaultRepoUri)
 				.run();
 
-		MultipleJGitEnvironmentProperties properties = this.context.getBean(MultipleJGitEnvironmentProperties.class);
-		Assertions.assertThat(properties.getRepos()).hasSize(1)
-				.containsOnlyKeys("admin");
+		MultipleJGitEnvironmentProperties properties = this.context
+				.getBean(MultipleJGitEnvironmentProperties.class);
+		Assertions.assertThat(properties.getRepos()).hasSize(1).containsOnlyKeys("admin");
 	}
 
 	@Configuration
@@ -244,6 +248,7 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })
 	protected static class TestConfiguration {
+
 	}
 
 }

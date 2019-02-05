@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.proxy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Properties for a proxy host.
+ *
+ * @author Dylan Roberts
+ */
 public class ProxyHostProperties {
+
 	private String host;
+
 	private int port;
+
 	private String nonProxyHosts;
+
 	private String username;
+
 	private String password;
 
 	public String getHost() {
-		return host;
+		return this.host;
 	}
 
 	public void setHost(String host) {
@@ -34,7 +45,7 @@ public class ProxyHostProperties {
 	}
 
 	public int getPort() {
-		return port;
+		return this.port;
 	}
 
 	public void setPort(int port) {
@@ -42,7 +53,7 @@ public class ProxyHostProperties {
 	}
 
 	public String getNonProxyHosts() {
-		return nonProxyHosts;
+		return this.nonProxyHosts;
 	}
 
 	public void setNonProxyHosts(String nonProxyHosts) {
@@ -50,7 +61,7 @@ public class ProxyHostProperties {
 	}
 
 	public String getUsername() {
-		return username;
+		return this.username;
 	}
 
 	public void setUsername(String username) {
@@ -58,15 +69,25 @@ public class ProxyHostProperties {
 	}
 
 	public String getPassword() {
-		return password;
+		return this.password;
 	}
 
 	public void setPassword(String password) {
 		this.password = password;
 	}
 
+	/**
+	 * Proxy for a given scheme.
+	 */
 	public enum ProxyForScheme {
+
+		/**
+		 * HTTP scheme.
+		 */
 		HTTP,
+		/**
+		 * HTTPS scheme.
+		 */
 		HTTPS;
 
 		@JsonCreator
@@ -78,5 +99,7 @@ public class ProxyHostProperties {
 		public String lowercaseName() {
 			return this.name().toLowerCase();
 		}
+
 	}
+
 }

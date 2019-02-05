@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.environment.Environment;
@@ -51,9 +52,9 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
-import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 /**
  * @author Dave Syer
@@ -67,6 +68,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			.getLog(ConfigServicePropertySourceLocator.class);
 
 	private RestTemplate restTemplate;
+
 	private ConfigClientProperties defaultProperties;
 
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
@@ -80,8 +82,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		CompositePropertySource composite = new CompositePropertySource("configService");
 		RestTemplate restTemplate = this.restTemplate == null
-				? getSecureRestTemplate(properties)
-				: this.restTemplate;
+				? getSecureRestTemplate(properties) : this.restTemplate;
 		Exception error = null;
 		String errorBody = null;
 		try {
@@ -134,12 +135,12 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		if (properties.isFailFast()) {
 			throw new IllegalStateException(
-					"Could not locate PropertySource and the fail fast property is set, failing" +
-						(errorBody == null ? "" : ": " + errorBody), error);
+					"Could not locate PropertySource and the fail fast property is set, failing"
+							+ (errorBody == null ? "" : ": " + errorBody),
+					error);
 		}
 		logger.warn("Could not locate PropertySource: " + (errorBody == null
-				? error == null ? "label not found" : error.getMessage()
-				: errorBody));
+				? error == null ? "label not found" : error.getMessage() : errorBody));
 		return null;
 
 	}
@@ -226,10 +227,12 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			catch (ResourceAccessException e) {
 				logger.info("Connect Timeout Exception on Url - " + uri
 						+ ". Will be trying the next url if available");
-				if (i == noOfUrls - 1)
+				if (i == noOfUrls - 1) {
 					throw e;
-				else
+				}
+				else {
 					continue;
+				}
 			}
 
 			if (response == null || response.getStatusCode() != HttpStatus.OK) {
@@ -259,7 +262,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
 		}
 		if (!headers.isEmpty()) {
-			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor> asList(
+			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 					new GenericRequestHeaderInterceptor(headers)));
 		}
 
@@ -285,6 +288,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	}
 
+	/**
+	 * Adds the provided headers to the request.
+	 */
 	public static class GenericRequestHeaderInterceptor
 			implements ClientHttpRequestInterceptor {
 
@@ -297,15 +303,16 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		@Override
 		public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 				ClientHttpRequestExecution execution) throws IOException {
-			for (Entry<String, String> header : headers.entrySet()) {
+			for (Entry<String, String> header : this.headers.entrySet()) {
 				request.getHeaders().add(header.getKey(), header.getValue());
 			}
 			return execution.execute(request, body);
 		}
 
 		protected Map<String, String> getHeaders() {
-			return headers;
+			return this.headers;
 		}
 
 	}
+
 }

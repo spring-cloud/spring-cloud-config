@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.proxy;
 
 import org.apache.http.HttpHost;
@@ -25,26 +26,29 @@ import org.apache.http.protocol.HttpContext;
  */
 public class SchemeBasedRoutePlanner extends DefaultRoutePlanner {
 
-    private final ProxyHostProperties httpsProxy;
-    private final ProxyHostProperties httpProxy;
+	private final ProxyHostProperties httpsProxy;
 
-    public SchemeBasedRoutePlanner(ProxyHostProperties httpsProxy, ProxyHostProperties httpProxy) {
-        super(null);
-        this.httpsProxy = httpsProxy;
-        this.httpProxy = httpProxy;
-    }
+	private final ProxyHostProperties httpProxy;
 
-    @Override
-    protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context) {
-        return "https".equals(target.getSchemeName()) ?
-                determineProxy(httpsProxy) :
-                determineProxy(httpProxy);
-    }
+	public SchemeBasedRoutePlanner(ProxyHostProperties httpsProxy,
+			ProxyHostProperties httpProxy) {
+		super(null);
+		this.httpsProxy = httpsProxy;
+		this.httpProxy = httpProxy;
+	}
 
-    private HttpHost determineProxy(ProxyHostProperties properties) {
-        if (properties == null) {
-            return null;
-        }
-        return new HttpHost(properties.getHost(), properties.getPort());
-    }
+	@Override
+	protected HttpHost determineProxy(HttpHost target, HttpRequest request,
+			HttpContext context) {
+		return "https".equals(target.getSchemeName()) ? determineProxy(this.httpsProxy)
+				: determineProxy(this.httpProxy);
+	}
+
+	private HttpHost determineProxy(ProxyHostProperties properties) {
+		if (properties == null) {
+			return null;
+		}
+		return new HttpHost(properties.getHost(), properties.getPort());
+	}
+
 }

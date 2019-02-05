@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public class EncryptionAutoConfiguration {
 		public EnvironmentEncryptor environmentEncryptor() {
 			TextEncryptorLocator locator = this.locator;
 			if (locator == null) {
-				locator = new SingleTextEncryptorLocator(encryptor);
+				locator = new SingleTextEncryptorLocator(this.encryptor);
 			}
 			return new CipherEnvironmentEncryptor(locator);
 		}
@@ -120,7 +120,7 @@ class SingleTextEncryptorConfiguration {
 
 	@Bean
 	public SingleTextEncryptorLocator textEncryptorLocator() {
-		return new SingleTextEncryptorLocator(encryptor);
+		return new SingleTextEncryptorLocator(this.encryptor);
 	}
 
 }
@@ -137,8 +137,8 @@ class DefaultTextEncryptorConfiguration {
 
 	@Bean
 	public TextEncryptor defaultTextEncryptor() {
-		if (locator != null) {
-			return new LocatorTextEncryptor(locator);
+		if (this.locator != null) {
+			return new LocatorTextEncryptor(this.locator);
 		}
 		if (StringUtils.hasText(this.key.getKey())) {
 			return new EncryptorFactory(this.key.getSalt()).create(this.key.getKey());

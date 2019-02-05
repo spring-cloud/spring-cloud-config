@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.junit.Test;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.CompositeConfiguration;
@@ -29,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -37,34 +40,6 @@ import static org.mockito.Mockito.mock;
  * @author Ryan Baxter
  */
 public class CompositeEnvironmentRepositoryTests {
-
-	private static class TestOrderedEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
-
-		private Environment env;
-		private Locations locations;
-		private int order = Ordered.LOWEST_PRECEDENCE;
-
-		public TestOrderedEnvironmentRepository(int order, Environment env, Locations locations) {
-			this.order = order;
-			this.env = env;
-			this.locations = locations;
-		}
-
-		@Override
-		public Environment findOne(String application, String profile, String label) {
-			return env;
-		}
-
-		@Override
-		public Locations getLocations(String application, String profile, String label) {
-			return locations;
-		}
-
-		@Override
-		public int getOrder() {
-			return order;
-		}
-	}
 
 	@Test
 	public void testOrder() {
@@ -91,31 +66,36 @@ public class CompositeEnvironmentRepositoryTests {
 		Environment e3 = new Environment("app", "dev");
 		e3.add(p3);
 		e3.add(p4);
-		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc1});
-		SearchPathLocator.Locations loc2 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc5, sLoc4});
-		SearchPathLocator.Locations loc3 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc3, sLoc2});
+		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev",
+				"label", "version", new String[] { sLoc1 });
+		SearchPathLocator.Locations loc2 = new SearchPathLocator.Locations("app", "dev",
+				"label", "version", new String[] { sLoc5, sLoc4 });
+		SearchPathLocator.Locations loc3 = new SearchPathLocator.Locations("app", "dev",
+				"label", "version", new String[] { sLoc3, sLoc2 });
 		List<EnvironmentRepository> repos = new ArrayList<EnvironmentRepository>();
 		repos.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		repos.add(new TestOrderedEnvironmentRepository(2, e3, loc2));
 		repos.add(new TestOrderedEnvironmentRepository(1, e2, loc3));
-		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos);
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(
+				repos);
 		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world");
 		List<PropertySource> propertySources = compositeEnv.getPropertySources();
-		assertEquals(5, propertySources.size());
-		assertEquals("p2", propertySources.get(0).getName());
-		assertEquals("p3", propertySources.get(1).getName());
-		assertEquals("p4", propertySources.get(2).getName());
-		assertEquals("p1", propertySources.get(3).getName());
-		assertEquals("p5", propertySources.get(4).getName());
+		assertThat(propertySources.size()).isEqualTo(5);
+		assertThat(propertySources.get(0).getName()).isEqualTo("p2");
+		assertThat(propertySources.get(1).getName()).isEqualTo("p3");
+		assertThat(propertySources.get(2).getName()).isEqualTo("p4");
+		assertThat(propertySources.get(3).getName()).isEqualTo("p1");
+		assertThat(propertySources.get(4).getName()).isEqualTo("p5");
 
-		SearchPathLocator.Locations locations = compositeRepo.getLocations("app", "dev", "label");
+		SearchPathLocator.Locations locations = compositeRepo.getLocations("app", "dev",
+				"label");
 		String[] locationStrings = locations.getLocations();
-		assertEquals(5, locationStrings.length);
-		assertEquals(sLoc3, locationStrings[0]);
-		assertEquals(sLoc2, locationStrings[1]);
-		assertEquals(sLoc5, locationStrings[2]);
-		assertEquals(sLoc4, locationStrings[3]);
-		assertEquals(sLoc1, locationStrings[4]);
+		assertThat(locationStrings.length).isEqualTo(5);
+		assertThat(locationStrings[0]).isEqualTo(sLoc3);
+		assertThat(locationStrings[1]).isEqualTo(sLoc2);
+		assertThat(locationStrings[2]).isEqualTo(sLoc5);
+		assertThat(locationStrings[3]).isEqualTo(sLoc4);
+		assertThat(locationStrings[4]).isEqualTo(sLoc1);
 	}
 
 	@Test
@@ -134,38 +114,81 @@ public class CompositeEnvironmentRepositoryTests {
 		e2.add(p2);
 		e2.setVersion("2");
 		e2.setState("state2");
-		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc1});
-		SearchPathLocator.Locations loc2 = new SearchPathLocator.Locations("app", "dev", "label", "version", new String[]{sLoc1, sLoc2});
+		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev",
+				"label", "version", new String[] { sLoc1 });
+		SearchPathLocator.Locations loc2 = new SearchPathLocator.Locations("app", "dev",
+				"label", "version", new String[] { sLoc1, sLoc2 });
 		List<EnvironmentRepository> repos = new ArrayList<EnvironmentRepository>();
 		repos.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		List<EnvironmentRepository> repos2 = new ArrayList<EnvironmentRepository>();
 		repos2.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		repos2.add(new TestOrderedEnvironmentRepository(3, e2, loc2));
-		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos);
-		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(repos2);
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(
+				repos);
+		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(
+				repos2);
 		Environment env = compositeRepo.findOne("app", "dev", "label");
-		assertEquals("1", env.getVersion());
-		assertEquals("state", env.getState());
+		assertThat(env.getVersion()).isEqualTo("1");
+		assertThat(env.getState()).isEqualTo("state");
 		Environment multiEnv = multiCompositeRepo.findOne("app", "dev", "label");
-		assertEquals(null, multiEnv.getVersion());
-		assertEquals(null, multiEnv.getState());
+		assertThat(multiEnv.getVersion()).isEqualTo(null);
+		assertThat(multiEnv.getState()).isEqualTo(null);
 
 	}
 
 	@Test
 	public void overridingCompositeEnvRepo_contextLoads() {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
-			context.register(OverrideCompositeConfig.class, CompositeConfiguration.class, ConfigServerHealthIndicator.class);
+			context.register(OverrideCompositeConfig.class, CompositeConfiguration.class,
+					ConfigServerHealthIndicator.class);
 			context.refresh();
 		}
 	}
 
+	private static class TestOrderedEnvironmentRepository
+			implements EnvironmentRepository, SearchPathLocator, Ordered {
+
+		private Environment env;
+
+		private Locations locations;
+
+		private int order = Ordered.LOWEST_PRECEDENCE;
+
+		TestOrderedEnvironmentRepository(int order, Environment env,
+				Locations locations) {
+			this.order = order;
+			this.env = env;
+			this.locations = locations;
+		}
+
+		@Override
+		public Environment findOne(String application, String profile, String label) {
+			return this.env;
+		}
+
+		@Override
+		public Locations getLocations(String application, String profile, String label) {
+			return this.locations;
+		}
+
+		@Override
+		public int getOrder() {
+			return this.order;
+		}
+
+	}
+
 	@Configuration
 	static class OverrideCompositeConfig {
+
 		@Bean
 		@Primary
 		CompositeEnvironmentRepository customCompositeEnvironmentRepository() {
-			return new CompositeEnvironmentRepository(Arrays.<EnvironmentRepository>asList(new TestOrderedEnvironmentRepository(1, new Environment("app", "dev"), null)));
+			return new CompositeEnvironmentRepository(Arrays
+					.<EnvironmentRepository>asList(new TestOrderedEnvironmentRepository(1,
+							new Environment("app", "dev"), null)));
 		}
+
 	}
+
 }

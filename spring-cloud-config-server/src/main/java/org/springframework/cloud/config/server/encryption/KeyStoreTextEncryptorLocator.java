@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,9 @@ public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 	private SecretLocator secretLocator = new PassthruSecretLocator();
 
 	private RsaAlgorithm rsaAlgorithm = RsaAlgorithm.DEFAULT;
+
 	private boolean strong = false;
+
 	private String salt = "deadbeef";
 
 	public KeyStoreTextEncryptorLocator(KeyStoreKeyFactory keys, String defaultSecret,
@@ -81,8 +83,9 @@ public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 	public TextEncryptor locate(Map<String, String> keys) {
 		String alias = keys.containsKey(KEY) ? keys.get(KEY) : this.defaultAlias;
 		String secret = keys.containsKey(SECRET) ? keys.get(SECRET) : this.defaultSecret;
-		return new RsaSecretEncryptor(this.keys.getKeyPair(alias,
-				this.secretLocator.locate(secret)), this.rsaAlgorithm, this.salt, this.strong);
+		return new RsaSecretEncryptor(
+				this.keys.getKeyPair(alias, this.secretLocator.locate(secret)),
+				this.rsaAlgorithm, this.salt, this.strong);
 	}
 
 }

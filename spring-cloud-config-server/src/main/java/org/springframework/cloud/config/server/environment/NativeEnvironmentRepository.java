@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
@@ -55,6 +56,9 @@ import org.springframework.util.StringUtils;
 public class NativeEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, Ordered {
 
+	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/",
+			"classpath:/config/", "file:./", "file:./config/" };
+
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
 	private String defaultLabel;
@@ -76,18 +80,16 @@ public class NativeEnvironmentRepository
 	private boolean addLabelLocations;
 
 	/**
-	 * Version string to be reported for native repository
+	 * Version string to be reported for native repository.
 	 */
 	private String version;
-
-	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/",
-			"classpath:/config/", "file:./", "file:./config/" };
 
 	private ConfigurableEnvironment environment;
 
 	private int order;
 
-	public NativeEnvironmentRepository(ConfigurableEnvironment environment, NativeEnvironmentProperties properties) {
+	public NativeEnvironmentRepository(ConfigurableEnvironment environment,
+			NativeEnvironmentProperties properties) {
 		this.environment = environment;
 		this.addLabelLocations = properties.getAddLabelLocations();
 		this.defaultLabel = properties.getDefaultLabel();
@@ -97,24 +99,24 @@ public class NativeEnvironmentRepository
 		this.version = properties.getVersion();
 	}
 
-	public void setFailOnError(boolean failOnError) {
-		this.failOnError = failOnError;
-	}
-
 	public boolean isFailOnError() {
 		return this.failOnError;
 	}
 
-	public void setAddLabelLocations(boolean addLabelLocations) {
-		this.addLabelLocations = addLabelLocations;
+	public void setFailOnError(boolean failOnError) {
+		this.failOnError = failOnError;
 	}
 
 	public boolean isAddLabelLocations() {
 		return this.addLabelLocations;
 	}
 
+	public void setAddLabelLocations(boolean addLabelLocations) {
+		this.addLabelLocations = addLabelLocations;
+	}
+
 	public String getDefaultLabel() {
-		return defaultLabel;
+		return this.defaultLabel;
 	}
 
 	public void setDefaultLabel(String defaultLabel) {
@@ -157,7 +159,7 @@ public class NativeEnvironmentRepository
 		Collection<String> output = new LinkedHashSet<String>();
 
 		if (label == null) {
-			label = defaultLabel;
+			label = this.defaultLabel;
 		}
 		for (String location : locations) {
 			String[] profiles = new String[] { profile };
@@ -313,10 +315,11 @@ public class NativeEnvironmentRepository
 
 	@Override
 	public int getOrder() {
-		return order;
+		return this.order;
 	}
 
 	public void setOrder(int order) {
 		this.order = order;
 	}
+
 }

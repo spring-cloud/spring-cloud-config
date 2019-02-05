@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,12 @@ import org.springframework.util.MultiValueMap;
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
 public class GitlabPropertyPathNotificationExtractor
-        extends BasePropertyPathNotificationExtractor {
+		extends BasePropertyPathNotificationExtractor {
 
-    @Override
-    protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
-        return "Push Hook".equals(headers.getFirst("X-Gitlab-Event"));
-    }
+	@Override
+	protected boolean requestBelongsToGitRepoManager(
+			MultiValueMap<String, String> headers) {
+		return "Push Hook".equals(headers.getFirst("X-Gitlab-Event"));
+	}
+
 }

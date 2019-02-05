@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 
 package org.springframework.cloud.config.server.resource;
-
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +36,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UrlPathHelper;
+
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 
 /**
  * An HTTP endpoint for serving up templated plain text resources from an underlying
@@ -90,9 +90,10 @@ public class ResourceController {
 	private String getFilePath(HttpServletRequest request, String name, String profile,
 			String label) {
 		String stem;
-		if(label != null ) {
+		if (label != null) {
 			stem = String.format("/%s/%s/%s/", name, profile, label);
-		}else {
+		}
+		else {
 			stem = String.format("/%s/%s/", name, profile);
 		}
 		String path = this.helper.getPathWithinApplication(request);
@@ -127,9 +128,8 @@ public class ResourceController {
 	}
 
 	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-	public byte[] binary(@PathVariable String name,
-			@PathVariable String profile, @PathVariable String label,
-			HttpServletRequest request) throws IOException {
+	public byte[] binary(@PathVariable String name, @PathVariable String profile,
+			@PathVariable String label, HttpServletRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return binary(name, profile, label, path);
 	}

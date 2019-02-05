@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,12 @@
 
 package org.springframework.cloud.config.client;
 
+import java.lang.reflect.Field;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -28,8 +31,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.lang.reflect.Field;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -38,50 +39,54 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class ConfigServiceBootstrapConfigurationTest {
 
-    private AnnotationConfigApplicationContext context;
+	private AnnotationConfigApplicationContext context;
 
-    @Before
-    public void setUp() throws Exception {
-        this.context = new AnnotationConfigApplicationContext();
-    }
+	@Before
+	public void setUp() throws Exception {
+		this.context = new AnnotationConfigApplicationContext();
+	}
 
-    @After
-    public void tearDown() throws Exception {
-        if (this.context != null) {
-            this.context.close();
-        }
-    }
+	@After
+	public void tearDown() throws Exception {
+		if (this.context != null) {
+			this.context.close();
+		}
+	}
 
-    @Test
-    public void overrideConfigServicePropertySourceLocatorWhenBeanIsProvided() {
-        TestPropertyValues.of("spring.cloud.config.enabled=true").applyTo(this.context);
-        this.context.register(ConfigServicePropertySourceLocatorOverrideConfig.class);
-        this.context.register(ConfigServiceBootstrapConfiguration.class);
-        this.context.refresh();
+	@Test
+	public void overrideConfigServicePropertySourceLocatorWhenBeanIsProvided() {
+		TestPropertyValues.of("spring.cloud.config.enabled=true").applyTo(this.context);
+		this.context.register(ConfigServicePropertySourceLocatorOverrideConfig.class);
+		this.context.register(ConfigServiceBootstrapConfiguration.class);
+		this.context.refresh();
 
-        ConfigServicePropertySourceLocator locator = this.context.getBean(ConfigServicePropertySourceLocator.class);
+		ConfigServicePropertySourceLocator locator = this.context
+				.getBean(ConfigServicePropertySourceLocator.class);
 
-        Field restTemplateField = ReflectionUtils.findField(ConfigServicePropertySourceLocator.class, "restTemplate");
-        restTemplateField.setAccessible(true);
+		Field restTemplateField = ReflectionUtils
+				.findField(ConfigServicePropertySourceLocator.class, "restTemplate");
+		restTemplateField.setAccessible(true);
 
-        RestTemplate restTemplate = (RestTemplate) ReflectionUtils.getField(restTemplateField, locator);
+		RestTemplate restTemplate = (RestTemplate) ReflectionUtils
+				.getField(restTemplateField, locator);
 
-        assertThat(restTemplate).isNotNull();
-    }
+		assertThat(restTemplate).isNotNull();
+	}
 
-    @Configuration
-    protected static class ConfigServicePropertySourceLocatorOverrideConfig {
+	@Configuration
+	protected static class ConfigServicePropertySourceLocatorOverrideConfig {
 
-        @Autowired
-        private Environment environment;
+		@Autowired
+		private Environment environment;
 
-        @Bean
-        public ConfigServicePropertySourceLocator locator() {
-            ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(new ConfigClientProperties(environment));
-            locator.setRestTemplate(new RestTemplate());
-            return locator;
-        }
+		@Bean
+		public ConfigServicePropertySourceLocator locator() {
+			ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
+					new ConfigClientProperties(this.environment));
+			locator.setRestTemplate(new RestTemplate());
+			return locator;
+		}
 
-    }
+	}
 
 }

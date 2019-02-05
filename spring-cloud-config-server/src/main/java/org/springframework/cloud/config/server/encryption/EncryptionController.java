@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.encryption;
 
 import java.io.UnsupportedEncodingException;
@@ -38,7 +39,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -125,8 +125,7 @@ public class EncryptionController {
 			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
 		checkEncryptorInstalled(name, profiles);
 		String input = stripFormData(data, type, false);
-		Map<String, String> keys = this.helper.getEncryptorKeys(name, profiles,
-				input);
+		Map<String, String> keys = this.helper.getEncryptorKeys(name, profiles, input);
 		String textToEncrypt = this.helper.stripPrefix(input);
 		String encrypted = this.helper.addPrefix(keys,
 				this.encryptor.locate(keys).encrypt(textToEncrypt));
@@ -154,7 +153,7 @@ public class EncryptionController {
 			logger.info("Decrypted cipher data");
 			return decrypted;
 		}
-		catch (IllegalArgumentException|IllegalStateException e) {
+		catch (IllegalArgumentException | IllegalStateException e) {
 			logger.error("Cannot decrypt key:" + name + ", value:" + data, e);
 			throw new InvalidCipherException();
 		}
@@ -217,7 +216,7 @@ public class EncryptionController {
 		body.put("description", "No key was installed for encryption service");
 		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
 	}
-	
+
 	@ExceptionHandler(EncryptionTooWeakException.class)
 	public ResponseEntity<Map<String, Object>> encryptionTooWeak() {
 		Map<String, Object> body = new HashMap<>();
@@ -238,16 +237,20 @@ public class EncryptionController {
 
 @SuppressWarnings("serial")
 class KeyNotInstalledException extends RuntimeException {
+
 }
 
 @SuppressWarnings("serial")
 class KeyNotAvailableException extends RuntimeException {
+
 }
 
 @SuppressWarnings("serial")
 class EncryptionTooWeakException extends RuntimeException {
+
 }
 
 @SuppressWarnings("serial")
 class InvalidCipherException extends RuntimeException {
+
 }

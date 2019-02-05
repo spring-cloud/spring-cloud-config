@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 the original author or authors.
+ * Copyright 2016-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.sql.ResultSet;
@@ -43,28 +44,33 @@ import org.springframework.util.StringUtils;
  * <code>{application}-{profile}.properties</code>, including all the encryption and
  * decryption, which will be applied as post-processing steps (i.e. not in this repository
  * directly).
- * 
+ *
  * @author Dave Syer
  *
  */
 public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered {
-	private int order;
+
 	private final JdbcTemplate jdbc;
-	private String sql;
+
 	private final PropertiesResultSetExtractor extractor = new PropertiesResultSetExtractor();
 
-	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
+	private int order;
+
+	private String sql;
+
+	public JdbcEnvironmentRepository(JdbcTemplate jdbc,
+			JdbcEnvironmentProperties properties) {
 		this.jdbc = jdbc;
 		this.order = properties.getOrder();
 		this.sql = properties.getSql();
 	}
 
-	public void setSql(String sql) {
-		this.sql = sql;
-	}
-
 	public String getSql() {
 		return this.sql;
+	}
+
+	public void setSql(String sql) {
+		this.sql = sql;
 	}
 
 	@Override
@@ -87,12 +93,13 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		}
 		List<String> applications = new ArrayList<String>(new LinkedHashSet<>(
 				Arrays.asList(StringUtils.commaDelimitedListToStringArray(config))));
-		List<String> envs = new ArrayList<String>(new LinkedHashSet<>(Arrays.asList(profiles)));
+		List<String> envs = new ArrayList<String>(
+				new LinkedHashSet<>(Arrays.asList(profiles)));
 		Collections.reverse(applications);
 		Collections.reverse(envs);
 		for (String app : applications) {
 			for (String env : envs) {
-				Map<String, String> next = (Map<String, String>) jdbc.query(this.sql,
+				Map<String, String> next = (Map<String, String>) this.jdbc.query(this.sql,
 						new Object[] { app, env, label }, this.extractor);
 				if (!next.isEmpty()) {
 					environment.add(new PropertySource(app + "-" + env, next));
@@ -104,7 +111,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	@Override
 	public int getOrder() {
-		return order;
+		return this.order;
 	}
 
 	public void setOrder(int order) {

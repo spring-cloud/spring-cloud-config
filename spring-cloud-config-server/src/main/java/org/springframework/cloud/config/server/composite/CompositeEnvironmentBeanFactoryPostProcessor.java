@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.composite;
 
 import java.lang.reflect.Type;
@@ -31,12 +32,14 @@ import org.springframework.cloud.config.server.support.EnvironmentRepositoryProp
 import org.springframework.core.env.Environment;
 
 /**
- * A {@link BeanFactoryPostProcessor} to register {@link EnvironmentRepository} {@link BeanDefinition}s based on the
- * 	composite list configuration.
+ * A {@link BeanFactoryPostProcessor} to register {@link EnvironmentRepository}
+ * {@link BeanDefinition}s based on the composite list configuration.
  *
  * @author Dylan Roberts
  */
-public class CompositeEnvironmentBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+public class CompositeEnvironmentBeanFactoryPostProcessor
+		implements BeanFactoryPostProcessor {
+
 	private Environment environment;
 
 	public CompositeEnvironmentBeanFactoryPostProcessor(Environment environment) {
@@ -44,35 +47,40 @@ public class CompositeEnvironmentBeanFactoryPostProcessor implements BeanFactory
 	}
 
 	@Override
-	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-		List<String> typePropertyList = CompositeUtils.getCompositeTypeList(environment);
-		for(int i = 0; i < typePropertyList.size(); i++) {
+	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
+			throws BeansException {
+		List<String> typePropertyList = CompositeUtils
+				.getCompositeTypeList(this.environment);
+		for (int i = 0; i < typePropertyList.size(); i++) {
 			String type = typePropertyList.get(i);
 			String factoryName = CompositeUtils.getFactoryName(type, beanFactory);
 
-
-			Type[] factoryTypes = CompositeUtils.getEnvironmentRepositoryFactoryTypeParams(beanFactory, factoryName);
-			Class<? extends EnvironmentRepositoryProperties> propertiesClass =
-					(Class<? extends EnvironmentRepositoryProperties>) factoryTypes[1];
-			EnvironmentRepositoryProperties properties = bindProperties(i, propertiesClass, environment);
+			Type[] factoryTypes = CompositeUtils
+					.getEnvironmentRepositoryFactoryTypeParams(beanFactory, factoryName);
+			Class<? extends EnvironmentRepositoryProperties> propertiesClass;
+			propertiesClass = (Class<? extends EnvironmentRepositoryProperties>) factoryTypes[1];
+			EnvironmentRepositoryProperties properties = bindProperties(i,
+					propertiesClass, this.environment);
 
 			AbstractBeanDefinition beanDefinition = BeanDefinitionBuilder
 					.genericBeanDefinition(EnvironmentRepository.class)
 					.setFactoryMethodOnBean("build", factoryName)
-					.addConstructorArgValue(properties)
-					.getBeanDefinition();
+					.addConstructorArgValue(properties).getBeanDefinition();
 			String beanName = String.format("%s-env-repo%d", type, i);
 			BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
 			registry.registerBeanDefinition(beanName, beanDefinition);
 		}
 	}
 
-	private <P extends EnvironmentRepositoryProperties> P bindProperties(
-			int index, Class<P> propertiesClass, Environment environment) {
+	private <P extends EnvironmentRepositoryProperties> P bindProperties(int index,
+			Class<P> propertiesClass, Environment environment) {
 		Binder binder = Binder.get(environment);
-		String environmentConfigurationPropertyName = String.format("spring.cloud.config.server.composite[%d]", index);
-		P properties = binder.bind(environmentConfigurationPropertyName, propertiesClass).orElseCreate(propertiesClass);
+		String environmentConfigurationPropertyName = String
+				.format("spring.cloud.config.server.composite[%d]", index);
+		P properties = binder.bind(environmentConfigurationPropertyName, propertiesClass)
+				.orElseCreate(propertiesClass);
 		properties.setOrder(index + 1);
 		return properties;
 	}
+
 }

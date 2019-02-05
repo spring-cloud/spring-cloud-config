@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.server.environment.AbstractScmEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
@@ -98,7 +99,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	}
 
 	/**
-	 * see {@link #getPhase()}
+	 * see {@link #getPhase()}.
 	 * @param phase the phase.
 	 */
 	public void setPhase(int phase) {
@@ -111,8 +112,8 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	}
 
 	/**
-	 * @see #isRunning()
 	 * @param running true if running.
+	 * @see #isRunning()
 	 */
 	public void setRunning(boolean running) {
 		this.running = running;
@@ -124,8 +125,8 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	}
 
 	/**
-	 * @see #isAutoStartup()
 	 * @param autoStartup true to auto start.
+	 * @see #isAutoStartup()
 	 */
 	public void setAutoStartup(boolean autoStartup) {
 		this.autoStartup = autoStartup;
@@ -187,7 +188,8 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 		if (this.scmRepository != null) {
 			try {
 
-				Resource resource = this.resourceLoader.getResource(this.scmRepository.getUri());
+				Resource resource = this.resourceLoader
+						.getResource(this.scmRepository.getUri());
 				if (resource instanceof FileSystemResource) {
 					return Collections.singleton(Paths.get(resource.getURI()));
 				}
@@ -306,11 +308,13 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 			log.debug("registering: " + dir + " for file creation events");
 		}
 		try {
-		dir.register(this.watcher, StandardWatchEventKinds.ENTRY_CREATE,
-				StandardWatchEventKinds.ENTRY_MODIFY);
-		} catch (IOException e) {
+			dir.register(this.watcher, StandardWatchEventKinds.ENTRY_CREATE,
+					StandardWatchEventKinds.ENTRY_MODIFY);
+		}
+		catch (IOException e) {
 			throw e;
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new IOException("Cannot register watcher for " + dir, e);
 		}
 	}

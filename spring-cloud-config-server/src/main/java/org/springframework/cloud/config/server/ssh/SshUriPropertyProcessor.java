@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server.ssh;
 
+package org.springframework.cloud.config.server.ssh;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -28,7 +28,9 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import static org.springframework.cloud.config.server.ssh.SshPropertyValidator.isSshUri;
 
 /**
- * Check if Git repo properties refer to an SSH based transport then filter and extract the properties
+ * Check if Git repo properties refer to an SSH based transport then filter and extract
+ * the properties.
+ *
  * @author William Tran
  * @author Ollie Hughes
  */
@@ -40,19 +42,32 @@ public class SshUriPropertyProcessor {
 		this.sshUriProperties = sshUriProperties;
 	}
 
-	public Map<String, JGitEnvironmentProperties> getSshKeysByHostname() {
-		return extractNestedProperties(sshUriProperties);
+	protected static String getHostname(String uri) {
+		try {
+			URIish urIish = new URIish(uri);
+			return urIish.getHost();
+		}
+		catch (URISyntaxException e) {
+			return null;
+		}
 	}
 
-	private Map<String, JGitEnvironmentProperties> extractNestedProperties(MultipleJGitEnvironmentProperties uriProperties) {
+	public Map<String, JGitEnvironmentProperties> getSshKeysByHostname() {
+		return extractNestedProperties(this.sshUriProperties);
+	}
+
+	private Map<String, JGitEnvironmentProperties> extractNestedProperties(
+			MultipleJGitEnvironmentProperties uriProperties) {
 		Map<String, JGitEnvironmentProperties> sshUriPropertyMap = new HashMap<>();
 		String parentUri = uriProperties.getUri();
 		if (isSshUri(parentUri) && getHostname(parentUri) != null) {
 			sshUriPropertyMap.put(getHostname(parentUri), uriProperties);
 		}
-		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = uriProperties.getRepos();
-		if(repos != null) {
-			for (MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties repoProperties : repos.values()) {
+		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = uriProperties
+				.getRepos();
+		if (repos != null) {
+			for (MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties repoProperties : repos
+					.values()) {
 				String repoUri = repoProperties.getUri();
 				if (isSshUri(repoUri) && getHostname(repoUri) != null) {
 					sshUriPropertyMap.put(getHostname(repoUri), repoProperties);
@@ -62,12 +77,4 @@ public class SshUriPropertyProcessor {
 		return sshUriPropertyMap;
 	}
 
-	protected static String getHostname(String uri) {
-		try {
-			URIish urIish = new URIish(uri);
-			return urIish.getHost();
-		} catch (URISyntaxException e) {
-			return null;
-		}
-	}
 }

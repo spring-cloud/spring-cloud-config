@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.HashMap;
@@ -50,7 +51,8 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository {
 
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profilesList);
 
-		Environment environment = new Environment(application, profiles, label, null, null);
+		Environment environment = new Environment(application, profiles, label, null,
+				null);
 		Map<Object, Object> properties = new HashMap<>();
 		for (String profile : profiles) {
 			properties.putAll(findProperties(application, profile, label));
@@ -60,18 +62,14 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository {
 		return environment;
 	}
 
-	private Map<Object, Object> findProperties(String application, String profile, String label) {
+	private Map<Object, Object> findProperties(String application, String profile,
+			String label) {
 		String path = "/" + application + "/" + profile + "/" + label;
 
-		return credHubOperations
-				.credentials()
-				.findByPath(path)
-				.stream()
+		return this.credHubOperations.credentials().findByPath(path).stream()
 				.map(credentialSummary -> credentialSummary.getName().getName())
-				.map(name ->
-						credHubOperations
-								.credentials()
-								.getByName(new SimpleCredentialName(name), JsonCredential.class))
+				.map(name -> this.credHubOperations.credentials()
+						.getByName(new SimpleCredentialName(name), JsonCredential.class))
 				.map(CredentialDetails::getValue)
 				.flatMap(jsonCredential -> jsonCredential.entrySet().stream())
 				.collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));

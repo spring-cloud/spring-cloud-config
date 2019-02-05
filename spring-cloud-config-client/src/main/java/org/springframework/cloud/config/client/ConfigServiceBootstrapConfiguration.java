@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.client;
 
 import org.aspectj.lang.annotation.Aspect;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -53,13 +54,14 @@ public class ConfigServiceBootstrapConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(ConfigServicePropertySourceLocator.class)
 	@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
-	public ConfigServicePropertySourceLocator configServicePropertySource(ConfigClientProperties properties) {
+	public ConfigServicePropertySourceLocator configServicePropertySource(
+			ConfigClientProperties properties) {
 		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
 				properties);
 		return locator;
 	}
 
-	@ConditionalOnProperty(value = "spring.cloud.config.fail-fast")
+	@ConditionalOnProperty("spring.cloud.config.fail-fast")
 	@ConditionalOnClass({ Retryable.class, Aspect.class, AopAutoConfiguration.class })
 	@Configuration
 	@EnableRetry(proxyTargetClass = true)
@@ -71,12 +73,12 @@ public class ConfigServiceBootstrapConfiguration {
 		@ConditionalOnMissingBean(name = "configServerRetryInterceptor")
 		public RetryOperationsInterceptor configServerRetryInterceptor(
 				RetryProperties properties) {
-			return RetryInterceptorBuilder
-					.stateless()
+			return RetryInterceptorBuilder.stateless()
 					.backOffOptions(properties.getInitialInterval(),
 							properties.getMultiplier(), properties.getMaxInterval())
 					.maxAttempts(properties.getMaxAttempts()).build();
 		}
+
 	}
 
 }

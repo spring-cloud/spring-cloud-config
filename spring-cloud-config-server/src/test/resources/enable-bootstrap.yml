@@ -10,4 +10,3 @@ encrypt:
     location: classpath:server.jks
     password: letmein
     secret: changeme
-  

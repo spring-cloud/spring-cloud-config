@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ package org.springframework.cloud.config.monitor;
  */
 public class PropertyPathNotification {
 
+	private String[] paths;
+
 	public PropertyPathNotification(String... paths) {
 		this.paths = paths;
 	}
-
-	private String[] paths;
 
 	public PropertyPathNotification() {
 	}
@@ -42,15 +42,19 @@ public class PropertyPathNotification {
 	}
 
 	public boolean equals(Object o) {
-		if (o == this)
+		if (o == this) {
 			return true;
-		if (!(o instanceof PropertyPathNotification))
+		}
+		if (!(o instanceof PropertyPathNotification)) {
 			return false;
+		}
 		final PropertyPathNotification other = (PropertyPathNotification) o;
-		if (!other.canEqual(this))
+		if (!other.canEqual(this)) {
 			return false;
-		if (!java.util.Arrays.deepEquals(this.getPaths(), other.getPaths()))
+		}
+		if (!java.util.Arrays.deepEquals(this.getPaths(), other.getPaths())) {
 			return false;
+		}
 		return true;
 	}
 
@@ -66,7 +70,8 @@ public class PropertyPathNotification {
 	}
 
 	public String toString() {
-		return "PropertyPathNotification(paths=" + java.util.Arrays
-				.deepToString(this.getPaths()) + ")";
+		return "PropertyPathNotification(paths="
+				+ java.util.Arrays.deepToString(this.getPaths()) + ")";
 	}
+
 }

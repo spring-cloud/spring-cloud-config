@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
@@ -23,64 +24,64 @@ import org.junit.Test;
 
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategy.VaultResponse;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Haroun Pacquee
  */
 public class VaultKvAccessStrategyTest {
 
+	private static final String FOO_BAR = "{\"foo\":\"bar\"}";
+
 	private ObjectMapper objectMapper = new ObjectMapper();
 
-	private static final String FOO_BAR = "{\"foo\":\"bar\"}";
+	private static VaultKvAccessStrategySupport getStrategy(int version) {
+		return (VaultKvAccessStrategySupport) VaultKvAccessStrategyFactory
+				.forVersion(null, "foo", version);
+	}
 
 	@Test
 	public void testV1ExtractFromBody() {
 		String json = "{\"data\": {\"foo\": \"bar\"}}";
 		String s = getStrategy(1).extractDataFromBody(getVaultResponse(json));
-		assertThat(s, is(FOO_BAR));
+		assertThat(s).isEqualTo(FOO_BAR);
 	}
 
 	@Test
 	public void testV1ExtractFromBodyNoData() {
 		String json = "{}";
 		String s = getStrategy(1).extractDataFromBody(getVaultResponse(json));
-		assertNull(s);
+		assertThat(s).isNull();
 	}
 
 	@Test
 	public void testV2ExtractFromBody() {
 		String json = "{\"data\": {\"data\": {\"foo\": \"bar\"}}}";
 		String s = getStrategy(2).extractDataFromBody(getVaultResponse(json));
-		assertThat(s, is(FOO_BAR));
+		assertThat(s).isEqualTo(FOO_BAR);
 	}
 
 	@Test
 	public void testV2ExtractFromBodyEmptyNestedData() {
 		String json = "{\"data\": {}}";
 		String s = getStrategy(2).extractDataFromBody(getVaultResponse(json));
-		assertNull(s);
+		assertThat(s).isNull();
 	}
 
 	@Test
 	public void testV2ExtractFromBodyNoData() {
 		String json = "{}";
 		String s = getStrategy(2).extractDataFromBody(getVaultResponse(json));
-		assertNull(s);
+		assertThat(s).isNull();
 	}
 
 	private VaultResponse getVaultResponse(String json) {
 		try {
-			return objectMapper.readValue(json, VaultResponse.class);
+			return this.objectMapper.readValue(json, VaultResponse.class);
 		}
 		catch (IOException e) {
 			throw new UndeclaredThrowableException(e);
 		}
 	}
 
-	private static VaultKvAccessStrategySupport getStrategy(int version) {
-		return (VaultKvAccessStrategySupport) VaultKvAccessStrategyFactory
-				.forVersion(null, "foo", version);
-	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
- * Validate SSH related properties
+ * Validate SSH related properties.
  *
  * @author Ollie Hughes
  */
@@ -40,30 +40,36 @@ import static org.springframework.util.StringUtils.hasText;
 public class SshPropertyValidator {
 
 	protected static boolean isSshUri(Object uri) {
-		if(uri != null) {
+		if (uri != null) {
 			try {
 				URIish urIish = new URIish(uri.toString());
 				String scheme = urIish.getScheme();
-				if(scheme == null && hasText(urIish.getHost()) && hasText(urIish.getUser())) {
-					//JGit returns null if using SCP URI but user and host will be populated
+				if (scheme == null && hasText(urIish.getHost())
+						&& hasText(urIish.getUser())) {
+					// JGit returns null if using SCP URI but user and host will be
+					// populated
 					return true;
 				}
 				return scheme != null && !scheme.matches("^(http|https)$");
 
-			} catch (URISyntaxException e) {
+			}
+			catch (URISyntaxException e) {
 				return false;
 			}
 		}
 		return false;
 	}
 
-	protected List<JGitEnvironmentProperties> extractRepoProperties(MultipleJGitEnvironmentProperties sshUriProperties) {
+	protected List<JGitEnvironmentProperties> extractRepoProperties(
+			MultipleJGitEnvironmentProperties sshUriProperties) {
 		List<JGitEnvironmentProperties> allRepoProperties = new ArrayList<>();
 		allRepoProperties.add(sshUriProperties);
-		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = sshUriProperties.getRepos();
+		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = sshUriProperties
+				.getRepos();
 		if (repos != null) {
 			allRepoProperties.addAll(repos.values());
 		}
 		return allRepoProperties;
 	}
+
 }

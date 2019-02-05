@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cloud.config.environment.Environment;
@@ -56,11 +55,10 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	private Map<String, JGitEnvironmentRepository> placeholders = new LinkedHashMap<>();
 
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment,
-											 MultipleJGitEnvironmentProperties properties) {
+			MultipleJGitEnvironmentProperties properties) {
 		super(environment, properties);
-		properties.getRepos().forEach((name, props) ->
-			repos.put(name, new PatternMatchingJGitEnvironmentRepository(environment, props))
-		);
+		properties.getRepos().forEach((name, props) -> this.repos.put(name,
+				new PatternMatchingJGitEnvironmentRepository(environment, props)));
 	}
 
 	@Override
@@ -98,10 +96,9 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			}
 			repo.afterPropertiesSet();
 		}
-		if (!getBasedir().exists() &&
-			!getBasedir().mkdirs()) {
-				throw new IllegalStateException(
-					"Basedir does not exist and can not be created: "	+ getBasedir());
+		if (!getBasedir().exists() && !getBasedir().mkdirs()) {
+			throw new IllegalStateException(
+					"Basedir does not exist and can not be created: " + getBasedir());
 		}
 		if (!getBasedir().getParentFile().canWrite()) {
 			throw new IllegalStateException(
@@ -110,12 +107,12 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 	}
 
-	public void setRepos(Map<String, PatternMatchingJGitEnvironmentRepository> repos) {
-		this.repos.putAll(repos);
-	}
-
 	public Map<String, PatternMatchingJGitEnvironmentRepository> getRepos() {
 		return this.repos;
+	}
+
+	public void setRepos(Map<String, PatternMatchingJGitEnvironmentRepository> repos) {
+		this.repos.putAll(repos);
 	}
 
 	@Override
@@ -132,7 +129,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 						}
 					}
 					catch (Exception e) {
-						if (logger.isDebugEnabled()) {
+						if (this.logger.isDebugEnabled()) {
 							this.logger.debug("Cannot retrieve resource locations from "
 									+ candidate.getUri() + ", cause: ("
 									+ e.getClass().getSimpleName() + ") "
@@ -168,7 +165,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 						}
 					}
 					catch (Exception e) {
-						if (logger.isDebugEnabled()) {
+						if (this.logger.isDebugEnabled()) {
 							this.logger.debug(
 									"Cannot load configuration from " + candidate.getUri()
 											+ ", cause: (" + e.getClass().getSimpleName()
@@ -242,6 +239,14 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		return repository;
 	}
 
+	@Override
+	public void setOrder(int order) {
+		super.setOrder(order);
+	}
+
+	/**
+	 * A {@link JGitEnvironmentProperties} that matches patterns.
+	 */
 	public static class PatternMatchingJGitEnvironmentRepository
 			extends JGitEnvironmentRepository {
 
@@ -249,6 +254,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		 * Pattern to match on application name and profiles.
 		 */
 		private String[] pattern = new String[0];
+
 		/**
 		 * Name of repository (same as map key by default).
 		 */
@@ -334,8 +340,4 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	}
 
-	@Override
-	public void setOrder(int order) {
-		super.setOrder(order);
-	}
 }

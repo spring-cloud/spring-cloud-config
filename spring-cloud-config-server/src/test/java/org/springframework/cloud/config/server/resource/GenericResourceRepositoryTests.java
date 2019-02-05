@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.springframework.cloud.config.server.environment.NativeEnvironmentRepo
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -36,7 +36,9 @@ import static org.junit.Assert.assertNotNull;
 public class GenericResourceRepositoryTests {
 
 	private GenericResourceRepository repository;
+
 	private ConfigurableApplicationContext context;
+
 	private NativeEnvironmentRepository nativeRepository;
 
 	@After
@@ -49,34 +51,38 @@ public class GenericResourceRepositoryTests {
 	@Before
 	public void init() {
 		this.context = new SpringApplicationBuilder(
-				NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE).run();
-		this.nativeRepository = new NativeEnvironmentRepository(this.context.getEnvironment(),
-				new NativeEnvironmentProperties());
-		this.repository = new GenericResourceRepository(
-				this.nativeRepository);
+				NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
+						.run();
+		this.nativeRepository = new NativeEnvironmentRepository(
+				this.context.getEnvironment(), new NativeEnvironmentProperties());
+		this.repository = new GenericResourceRepository(this.nativeRepository);
 		this.repository.setResourceLoader(this.context);
 		this.context.close();
 	}
 
 	@Test
 	public void locateResource() {
-		assertNotNull(this.repository.findOne("blah", "default", "master", "foo.properties"));
+		assertThat(this.repository.findOne("blah", "default", "master", "foo.properties"))
+				.isNotNull();
 	}
 
 	@Test
 	public void locateProfiledResource() {
-		assertNotNull(this.repository.findOne("blah", "local", "master", "foo.txt"));
+		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt"))
+				.isNotNull();
 	}
 
 	@Test
 	public void locateProfiledResourceWithPlaceholder() {
 		this.nativeRepository.setSearchLocations("classpath:/test/{profile}");
-		assertNotNull(this.repository.findOne("blah", "local", "master", "foo.txt"));
+		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt"))
+				.isNotNull();
 	}
 
-	@Test(expected=NoSuchResourceException.class)
+	@Test(expected = NoSuchResourceException.class)
 	public void locateMissingResource() {
-		assertNotNull(this.repository.findOne("blah", "default", "master", "foo.txt"));
+		assertThat(this.repository.findOne("blah", "default", "master", "foo.txt"))
+				.isNotNull();
 	}
 
 }

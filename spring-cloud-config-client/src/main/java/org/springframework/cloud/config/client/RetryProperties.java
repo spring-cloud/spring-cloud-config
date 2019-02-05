@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,14 +29,17 @@ public class RetryProperties {
 	 * Initial retry interval in milliseconds.
 	 */
 	long initialInterval = 1000;
+
 	/**
 	 * Multiplier for next interval.
 	 */
 	double multiplier = 1.1;
+
 	/**
 	 * Maximum interval for backoff.
 	 */
 	long maxInterval = 2000;
+
 	/**
 	 * Maximum number of attempts.
 	 */

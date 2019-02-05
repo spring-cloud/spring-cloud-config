@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.ssh;
 
 import com.jcraft.jsch.JSch;
@@ -23,28 +24,34 @@ import org.eclipse.jgit.transport.Transport;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 
 /**
- * Configure JGit transport command to use a SSH session factory that is configured using properties defined
- * in {@link MultipleJGitEnvironmentProperties}
+ * Configure JGit transport command to use a SSH session factory that is configured using
+ * properties defined in {@link MultipleJGitEnvironmentProperties}.
+ *
+ * @author Dylan Roberts
  */
-public class PropertiesBasedSshTransportConfigCallback implements TransportConfigCallback {
+public class PropertiesBasedSshTransportConfigCallback
+		implements TransportConfigCallback {
 
-    private MultipleJGitEnvironmentProperties sshUriProperties;
+	private MultipleJGitEnvironmentProperties sshUriProperties;
 
-    public PropertiesBasedSshTransportConfigCallback(MultipleJGitEnvironmentProperties sshUriProperties) {
-        this.sshUriProperties = sshUriProperties;
-    }
+	public PropertiesBasedSshTransportConfigCallback(
+			MultipleJGitEnvironmentProperties sshUriProperties) {
+		this.sshUriProperties = sshUriProperties;
+	}
 
-    public MultipleJGitEnvironmentProperties getSshUriProperties() {
-        return sshUriProperties;
-    }
+	public MultipleJGitEnvironmentProperties getSshUriProperties() {
+		return this.sshUriProperties;
+	}
 
-    @Override
-    public void configure(Transport transport) {
-        if (transport instanceof SshTransport) {
-            SshTransport sshTransport = (SshTransport) transport;
-            sshTransport.setSshSessionFactory(
-                    new PropertyBasedSshSessionFactory(
-                            new SshUriPropertyProcessor(sshUriProperties).getSshKeysByHostname(), new JSch()));
-        }
-    }
+	@Override
+	public void configure(Transport transport) {
+		if (transport instanceof SshTransport) {
+			SshTransport sshTransport = (SshTransport) transport;
+			sshTransport.setSshSessionFactory(new PropertyBasedSshSessionFactory(
+					new SshUriPropertyProcessor(this.sshUriProperties)
+							.getSshKeysByHostname(),
+					new JSch()));
+		}
+	}
+
 }

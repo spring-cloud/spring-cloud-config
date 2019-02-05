@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.config;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
@@ -78,12 +80,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author Alberto C. Ríos
  */
 @Configuration
-@EnableConfigurationProperties({ SvnKitEnvironmentProperties.class, CredhubEnvironmentProperties.class,
-		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class })
-@Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultRepositoryConfiguration.class,
-		CredhubConfiguration.class, CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
-		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
+@EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
+		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
+		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class })
+@Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
+		VaultRepositoryConfiguration.class, CredhubConfiguration.class,
+		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
+		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
+		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
+
 	@Bean
 	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
 	public ConfigServerHealthIndicator configServerHealthIndicator(
@@ -98,13 +104,14 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnProperty(value = "spring.cloud.config.server.consul.watch.enabled")
+	@ConditionalOnProperty("spring.cloud.config.server.consul.watch.enabled")
 	protected static class ConsulEnvironmentWatchConfiguration {
 
 		@Bean
 		public EnvironmentWatch environmentWatch() {
 			return new ConsulEnvironmentWatch();
 		}
+
 	}
 
 	@Configuration
@@ -115,72 +122,83 @@ public class EnvironmentRepositoryConfiguration {
 		public EnvironmentWatch environmentWatch() {
 			return new EnvironmentWatch.Default();
 		}
+
 	}
 
-    @Configuration
-    @ConditionalOnClass(TransportConfigCallback.class)
-    static class JGitFactoryConfig {
+	@Configuration
+	@ConditionalOnClass(TransportConfigCallback.class)
+	static class JGitFactoryConfig {
 
-        @Bean
-        public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
-                ConfigurableEnvironment environment, ConfigServerProperties server,
-                Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
-                Optional<TransportConfigCallback> customTransportConfigCallback) {
-            return new MultipleJGitEnvironmentRepositoryFactory(environment, server, jgitHttpConnectionFactory,
-					customTransportConfigCallback);
-        }
-    }
+		@Bean
+		public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
+				ConfigurableEnvironment environment, ConfigServerProperties server,
+				Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
+				Optional<TransportConfigCallback> customTransportConfigCallback) {
+			return new MultipleJGitEnvironmentRepositoryFactory(environment, server,
+					jgitHttpConnectionFactory, customTransportConfigCallback);
+		}
 
-    @Configuration
-    @ConditionalOnClass({ HttpClient.class, TransportConfigCallback.class })
-    static class JGitHttpClientConfig {
+	}
 
-        @Bean
-        public ConfigurableHttpConnectionFactory httpClientConnectionFactory() {
-            return new HttpClientConfigurableHttpConnectionFactory();
-        }
-    }
+	@Configuration
+	@ConditionalOnClass({ HttpClient.class, TransportConfigCallback.class })
+	static class JGitHttpClientConfig {
 
-    @Configuration
-    @ConditionalOnClass(SVNException.class)
-    static class SvnFactoryConfig {
-        @Bean
-        public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-                                                                               ConfigServerProperties server) {
-            return new SvnEnvironmentRepositoryFactory(environment, server);
-        }
-    }
+		@Bean
+		public ConfigurableHttpConnectionFactory httpClientConnectionFactory() {
+			return new HttpClientConfigurableHttpConnectionFactory();
+		}
 
-    @Configuration
-    static class VaultFactoryConfig {
+	}
 
-        @Bean
-        public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
-                ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-                Optional<VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory> vaultRestTemplateFactory) {
-            return new VaultEnvironmentRepositoryFactory(request, watch, vaultRestTemplateFactory);
-        }
-    }
+	@Configuration
+	@ConditionalOnClass(SVNException.class)
+	static class SvnFactoryConfig {
 
-    @Configuration
-    @ConditionalOnClass(HttpClient.class)
-    static class VaultHttpClientConfig {
+		@Bean
+		public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(
+				ConfigurableEnvironment environment, ConfigServerProperties server) {
+			return new SvnEnvironmentRepositoryFactory(environment, server);
+		}
 
-        @Bean
-        public VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory vaultRestTemplateFactory() {
-            return new HttpClientVaultRestTemplateFactory();
-        }
-    }
+	}
 
-    @Configuration
-    @ConditionalOnClass(JdbcTemplate.class)
-    static class JdbcFactoryConfig {
-	    @Bean
-        @ConditionalOnBean(JdbcTemplate.class)
-        public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
-            return new JdbcEnvironmentRepositoryFactory(jdbc);
-        }
-    }
+	@Configuration
+	static class VaultFactoryConfig {
+
+		@Bean
+		public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
+				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+				Optional<VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory> vaultRestTemplateFactory) {
+			return new VaultEnvironmentRepositoryFactory(request, watch,
+					vaultRestTemplateFactory);
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnClass(HttpClient.class)
+	static class VaultHttpClientConfig {
+
+		@Bean
+		public VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory vaultRestTemplateFactory() {
+			return new HttpClientVaultRestTemplateFactory();
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnClass(JdbcTemplate.class)
+	static class JdbcFactoryConfig {
+
+		@Bean
+		@ConditionalOnBean(JdbcTemplate.class)
+		public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(
+				JdbcTemplate jdbc) {
+			return new JdbcEnvironmentRepositoryFactory(jdbc);
+		}
+
+	}
 
 	@Configuration
 	@ConditionalOnClass(CredHubOperations.class)
@@ -189,24 +207,29 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public CredhubEnvironmentRepositoryFactory credhubEnvironmentRepositoryFactory(
 				Optional<CredHubOperations> credHubOperations) {
-			return new CredhubEnvironmentRepositoryFactory(credHubOperations.orElse(null));
+			return new CredhubEnvironmentRepositoryFactory(
+					credHubOperations.orElse(null));
 		}
+
 	}
 
-    @Configuration
-    static class NativeFactoryConfig {
-        @Bean
-        public NativeEnvironmentRepositoryFactory nativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-                                                                                     ConfigServerProperties properties) {
-            return new NativeEnvironmentRepositoryFactory(environment, properties);
-        }
-    }
+	@Configuration
+	static class NativeFactoryConfig {
+
+		@Bean
+		public NativeEnvironmentRepositoryFactory nativeEnvironmentRepositoryFactory(
+				ConfigurableEnvironment environment, ConfigServerProperties properties) {
+			return new NativeEnvironmentRepositoryFactory(environment, properties);
+		}
+
+	}
 
 }
 
 @Configuration
 @ConditionalOnMissingBean(value = EnvironmentRepository.class, search = SearchStrategy.CURRENT)
 class DefaultRepositoryConfiguration {
+
 	@Autowired
 	private ConfigurableEnvironment environment;
 
@@ -218,10 +241,11 @@ class DefaultRepositoryConfiguration {
 
 	@Bean
 	public MultipleJGitEnvironmentRepository defaultEnvironmentRepository(
-	        MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory,
+			MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory,
 			MultipleJGitEnvironmentProperties environmentProperties) throws Exception {
 		return gitEnvironmentRepositoryFactory.build(environmentProperties);
 	}
+
 }
 
 @Configuration
@@ -230,15 +254,18 @@ class DefaultRepositoryConfiguration {
 class NativeRepositoryConfiguration {
 
 	@Bean
-	public NativeEnvironmentRepository nativeEnvironmentRepository(NativeEnvironmentRepositoryFactory factory,
+	public NativeEnvironmentRepository nativeEnvironmentRepository(
+			NativeEnvironmentRepositoryFactory factory,
 			NativeEnvironmentProperties environmentProperties) {
-        return factory.build(environmentProperties);
+		return factory.build(environmentProperties);
 	}
+
 }
 
 @Configuration
 @Profile("git")
 class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {
+
 }
 
 @Configuration
@@ -246,10 +273,12 @@ class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {
 class SvnRepositoryConfiguration {
 
 	@Bean
-	public SvnKitEnvironmentRepository svnKitEnvironmentRepository(SvnKitEnvironmentProperties environmentProperties,
-                                                                   SvnEnvironmentRepositoryFactory factory) {
+	public SvnKitEnvironmentRepository svnKitEnvironmentRepository(
+			SvnKitEnvironmentProperties environmentProperties,
+			SvnEnvironmentRepositoryFactory factory) {
 		return factory.build(environmentProperties);
 	}
+
 }
 
 @Configuration
@@ -257,11 +286,12 @@ class SvnRepositoryConfiguration {
 class VaultRepositoryConfiguration {
 
 	@Bean
-	public VaultEnvironmentRepository vaultEnvironmentRepository(VaultEnvironmentRepositoryFactory factory,
-                                                                 VaultEnvironmentProperties environmentProperties)
-            throws Exception {
+	public VaultEnvironmentRepository vaultEnvironmentRepository(
+			VaultEnvironmentRepositoryFactory factory,
+			VaultEnvironmentProperties environmentProperties) throws Exception {
 		return factory.build(environmentProperties);
 	}
+
 }
 
 @Configuration
@@ -269,10 +299,12 @@ class VaultRepositoryConfiguration {
 class CredhubRepositoryConfiguration {
 
 	@Bean
-	public CredhubEnvironmentRepository credhubEnvironmentRepository(CredhubEnvironmentRepositoryFactory factory,
-																	 CredhubEnvironmentProperties environmentProperties) {
+	public CredhubEnvironmentRepository credhubEnvironmentRepository(
+			CredhubEnvironmentRepositoryFactory factory,
+			CredhubEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
+
 }
 
 @Configuration
@@ -282,10 +314,12 @@ class JdbcRepositoryConfiguration {
 
 	@Bean
 	@ConditionalOnBean(JdbcTemplate.class)
-	public JdbcEnvironmentRepository jdbcEnvironmentRepository(JdbcEnvironmentRepositoryFactory factory,
-															   JdbcEnvironmentProperties environmentProperties) {
+	public JdbcEnvironmentRepository jdbcEnvironmentRepository(
+			JdbcEnvironmentRepositoryFactory factory,
+			JdbcEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
+
 }
 
 @Configuration
@@ -313,4 +347,5 @@ class CompositeRepositoryConfiguration {
 			List<EnvironmentRepository> environmentRepositories) throws Exception {
 		return new CompositeEnvironmentRepository(environmentRepositories);
 	}
+
 }

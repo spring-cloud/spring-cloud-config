@@ -1,4 +1,4 @@
 foo:
-# whitespace error!
-	bar: spam
+  # whitespace error!
+  bar: spam
     bucket: wham

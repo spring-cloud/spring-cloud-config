@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+		"-//Puppy Crawl//DTD Suppressions 1.1//EN"
+		"http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+<suppressions>
+	<suppress files=".*ConfigServerApplication\.java" checks="HideUtilityClassConstructor"/>
+	<suppress files=".*ConfigClientWatch\.java" checks="LineLengthCheck"/>
+	<suppress files=".*EnvironmentMonitorAutoConfiguration\.java" checks="LineLengthCheck"/>
+	<suppress files=".*ConfigClientOnIntegrationTests\.java" checks="LineLengthCheck"/>
+	<suppress files=".*CustomCompositeEnvironmentRepositoryTests\.java" checks="LineLengthCheck"/>
+	<suppress files=".*EncryptionIntegrationTests\.java" checks="LineLengthCheck"/>
+	<suppress files=".*ConsulEnvironmentWatch\.java" checks="LineLengthCheck"/>
+	<suppress files=".*EnvironmentRepositoryFactory\.java" checks="LineLengthCheck"/>
+	<suppress files=".*VaultEnvironmentRepositoryIntegrationTests\.java" checks="LineLengthCheck"/>
+	<suppress files=".*HttpClientSupportTest\.java" checks="LineLengthCheck"/>
+</suppressions>

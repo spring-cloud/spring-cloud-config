@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,20 +36,20 @@ public class LocatorTextEncryptor implements TextEncryptor {
 
 	@Override
 	public String encrypt(String text) {
-		Map<String, String> keys = helper.getEncryptorKeys("configserver", "default",
+		Map<String, String> keys = this.helper.getEncryptorKeys("configserver", "default",
 				text);
-		return getLocator().locate(keys).encrypt(helper.stripPrefix(text));
+		return getLocator().locate(keys).encrypt(this.helper.stripPrefix(text));
 	}
 
 	private TextEncryptorLocator getLocator() {
-		return locator;
+		return this.locator;
 	}
 
 	@Override
 	public String decrypt(String encryptedText) {
-		Map<String, String> keys = helper.getEncryptorKeys("configserver", "default",
+		Map<String, String> keys = this.helper.getEncryptorKeys("configserver", "default",
 				encryptedText);
-		return getLocator().locate(keys).decrypt(helper.stripPrefix(encryptedText));
+		return getLocator().locate(keys).decrypt(this.helper.stripPrefix(encryptedText));
 	}
 
 }

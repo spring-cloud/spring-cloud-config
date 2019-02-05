@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.Optional;
+
 import javax.net.ssl.SSLHandshakeException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -39,71 +41,72 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * author Dylan Roberts
+ * @author Dylan Roberts
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = VaultEnvironmentRepositoryIntegrationTests.TestApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {
-                "server.ssl.key-store=classpath:ssl-test.jks",
-                "server.ssl.key-store-password=password",
-                "server.ssl.key-password=password",
-                "server.key-alias=ssl-test"})
+@SpringBootTest(classes = VaultEnvironmentRepositoryIntegrationTests.TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+		"server.ssl.key-store=classpath:ssl-test.jks",
+		"server.ssl.key-store-password=password", "server.ssl.key-password=password",
+		"server.key-alias=ssl-test" })
 public class VaultEnvironmentRepositoryIntegrationTests {
 
-    @LocalServerPort
-    private String localServerPort;
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+	@LocalServerPort
+	private String localServerPort;
 
-    @Test
-    public void withSslValidation() throws Exception {
-        VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory =
-                new VaultEnvironmentRepositoryFactory(withRequest(), new EnvironmentWatch.Default(),
-                        Optional.of(new HttpClientVaultRestTemplateFactory()));
-        VaultEnvironmentRepository vaultEnvironmentRepository =
-                vaultEnvironmentRepositoryFactory.build(withEnvironmentProperties(false));
-        expectedException.expectCause(instanceOf(SSLHandshakeException.class));
+	@Test
+	public void withSslValidation() throws Exception {
+		VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory = new VaultEnvironmentRepositoryFactory(
+				withRequest(), new EnvironmentWatch.Default(),
+				Optional.of(new HttpClientVaultRestTemplateFactory()));
+		VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
+				.build(withEnvironmentProperties(false));
+		this.expectedException.expectCause(instanceOf(SSLHandshakeException.class));
 
-        vaultEnvironmentRepository.findOne("application", "profile", "label");
-    }
+		vaultEnvironmentRepository.findOne("application", "profile", "label");
+	}
 
-    @Test
-    public void skipSslValidation() throws Exception {
-        VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory =
-                new VaultEnvironmentRepositoryFactory(withRequest(), new EnvironmentWatch.Default(),
-                        Optional.of(new HttpClientVaultRestTemplateFactory()));
-        VaultEnvironmentRepository vaultEnvironmentRepository =
-                vaultEnvironmentRepositoryFactory.build(withEnvironmentProperties(true));
+	@Test
+	public void skipSslValidation() throws Exception {
+		VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory = new VaultEnvironmentRepositoryFactory(
+				withRequest(), new EnvironmentWatch.Default(),
+				Optional.of(new HttpClientVaultRestTemplateFactory()));
+		VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
+				.build(withEnvironmentProperties(true));
 
-        Environment actual = vaultEnvironmentRepository.findOne("application", "profile", "label");
+		Environment actual = vaultEnvironmentRepository.findOne("application", "profile",
+				"label");
 
-        assertThat(actual).isNotNull();
-    }
+		assertThat(actual).isNotNull();
+	}
 
-    private VaultEnvironmentProperties withEnvironmentProperties(boolean skipSslValidation) {
-        VaultEnvironmentProperties environmentProperties = new VaultEnvironmentProperties();
-        environmentProperties.setPort(Integer.decode(localServerPort));
-        environmentProperties.setScheme("https");
-        environmentProperties.setSkipSslValidation(skipSslValidation);
-        return environmentProperties;
-    }
+	private VaultEnvironmentProperties withEnvironmentProperties(
+			boolean skipSslValidation) {
+		VaultEnvironmentProperties environmentProperties = new VaultEnvironmentProperties();
+		environmentProperties.setPort(Integer.decode(this.localServerPort));
+		environmentProperties.setScheme("https");
+		environmentProperties.setSkipSslValidation(skipSslValidation);
+		return environmentProperties;
+	}
 
-    private ObjectProvider<HttpServletRequest> withRequest() {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getHeader("X-Config-Token")).thenReturn("configToken");
-        ObjectProvider<HttpServletRequest> requestProvider = mock(ObjectProvider.class);
-        when(requestProvider.getIfAvailable()).thenReturn(request);
-        return requestProvider;
-    }
+	private ObjectProvider<HttpServletRequest> withRequest() {
+		HttpServletRequest request = mock(HttpServletRequest.class);
+		when(request.getHeader("X-Config-Token")).thenReturn("configToken");
+		ObjectProvider<HttpServletRequest> requestProvider = mock(ObjectProvider.class);
+		when(requestProvider.getIfAvailable()).thenReturn(request);
+		return requestProvider;
+	}
 
-    @SpringBootConfiguration
-    @EnableAutoConfiguration
-    public static class TestApplication {
+	@SpringBootConfiguration
+	@EnableAutoConfiguration
+	public static class TestApplication {
 
-        public static void main(String[] args) {
-            SpringApplication.run(TestApplication.class, args);
-        }
-    }
+		public static void main(String[] args) {
+			SpringApplication.run(TestApplication.class, args);
+		}
+
+	}
+
 }

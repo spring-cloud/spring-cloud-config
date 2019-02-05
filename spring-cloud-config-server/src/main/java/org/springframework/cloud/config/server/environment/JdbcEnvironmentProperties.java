@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -24,14 +25,17 @@ import org.springframework.core.Ordered;
  */
 @ConfigurationProperties("spring.cloud.config.server.jdbc")
 public class JdbcEnvironmentProperties implements EnvironmentRepositoryProperties {
-	private static final String DEFAULT_SQL = "SELECT KEY, VALUE from PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=?";
+
+	private static final String DEFAULT_SQL = "SELECT KEY, VALUE from PROPERTIES"
+			+ " where APPLICATION=? and PROFILE=? and LABEL=?";
 
 	private int order = Ordered.LOWEST_PRECEDENCE - 10;
-	/** SQL used to query database for keys and values */
+
+	/** SQL used to query database for keys and values. */
 	private String sql = DEFAULT_SQL;
 
 	public int getOrder() {
-		return order;
+		return this.order;
 	}
 
 	@Override
@@ -40,10 +44,11 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	}
 
 	public String getSql() {
-		return sql;
+		return this.sql;
 	}
 
 	public void setSql(String sql) {
 		this.sql = sql;
 	}
+
 }

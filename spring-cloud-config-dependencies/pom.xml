@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xmlns="http://maven.apache.org/POM/4.0.0"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
@@ -19,56 +20,56 @@
 	</properties>
 	<dependencyManagement>
 		<dependencies>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-config</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-config-client</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-config-server</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-config-monitor</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.credhub</groupId>
-			<artifactId>spring-credhub-core</artifactId>
-			<version>${spring-credhub.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jgit</groupId>
-			<artifactId>org.eclipse.jgit</artifactId>
-			<version>${jgit.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jgit</groupId>
-			<artifactId>org.eclipse.jgit.junit.http</artifactId>
-			<version>${jgit.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jgit</groupId>
-			<artifactId>org.eclipse.jgit.http.apache</artifactId>
-			<version>${jgit.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.jcraft</groupId>
-			<artifactId>jsch</artifactId>
-			<version>0.1.54</version>
-		</dependency>
-		<dependency>
-			<groupId>org.tmatesoft.svnkit</groupId>
-			<artifactId>svnkit</artifactId>
-			<version>1.8.12</version>
-		</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-config</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-config-client</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-config-server</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-config-monitor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.credhub</groupId>
+				<artifactId>spring-credhub-core</artifactId>
+				<version>${spring-credhub.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.jgit</groupId>
+				<artifactId>org.eclipse.jgit</artifactId>
+				<version>${jgit.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.jgit</groupId>
+				<artifactId>org.eclipse.jgit.junit.http</artifactId>
+				<version>${jgit.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.jgit</groupId>
+				<artifactId>org.eclipse.jgit.http.apache</artifactId>
+				<version>${jgit.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.jcraft</groupId>
+				<artifactId>jsch</artifactId>
+				<version>0.1.54</version>
+			</dependency>
+			<dependency>
+				<groupId>org.tmatesoft.svnkit</groupId>
+				<artifactId>svnkit</artifactId>
+				<version>1.8.12</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<profiles>

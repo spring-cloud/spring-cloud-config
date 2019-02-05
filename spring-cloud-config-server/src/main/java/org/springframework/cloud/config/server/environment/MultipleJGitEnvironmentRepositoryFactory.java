@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.Optional;
@@ -28,21 +29,26 @@ import org.springframework.core.env.ConfigurableEnvironment;
 /**
  * @author Dylan Roberts
  */
-public class MultipleJGitEnvironmentRepositoryFactory implements EnvironmentRepositoryFactory<MultipleJGitEnvironmentRepository,
-		MultipleJGitEnvironmentProperties> {
+public class MultipleJGitEnvironmentRepositoryFactory implements
+		EnvironmentRepositoryFactory<MultipleJGitEnvironmentRepository, MultipleJGitEnvironmentProperties> {
+
 	private ConfigurableEnvironment environment;
+
 	private ConfigServerProperties server;
+
 	private Optional<ConfigurableHttpConnectionFactory> connectionFactory;
+
 	private Optional<TransportConfigCallback> customTransportConfigCallback;
 
-    @Deprecated
-    public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
-                                                    Optional<TransportConfigCallback> customTransportConfigCallback) {
-        this(environment, server, Optional.empty(), customTransportConfigCallback);
-    }
+	@Deprecated
+	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
+			ConfigServerProperties server,
+			Optional<TransportConfigCallback> customTransportConfigCallback) {
+		this(environment, server, Optional.empty(), customTransportConfigCallback);
+	}
 
-	public MultipleJGitEnvironmentRepositoryFactory(
-			ConfigurableEnvironment environment, ConfigServerProperties server,
+	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
+			ConfigServerProperties server,
 			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
 			Optional<TransportConfigCallback> customTransportConfigCallback) {
 		this.environment = environment;
@@ -52,28 +58,30 @@ public class MultipleJGitEnvironmentRepositoryFactory implements EnvironmentRepo
 	}
 
 	@Override
-	public MultipleJGitEnvironmentRepository build(MultipleJGitEnvironmentProperties environmentProperties)
-			throws Exception {
-		if (connectionFactory.isPresent()) {
-			HttpTransport.setConnectionFactory(connectionFactory.get());
-			connectionFactory.get().addConfiguration(environmentProperties);
+	public MultipleJGitEnvironmentRepository build(
+			MultipleJGitEnvironmentProperties environmentProperties) throws Exception {
+		if (this.connectionFactory.isPresent()) {
+			HttpTransport.setConnectionFactory(this.connectionFactory.get());
+			this.connectionFactory.get().addConfiguration(environmentProperties);
 		}
 
-		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(environment,
-				environmentProperties);
-		repository.setTransportConfigCallback(customTransportConfigCallback
+		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(
+				this.environment, environmentProperties);
+		repository.setTransportConfigCallback(this.customTransportConfigCallback
 				.orElse(buildTransportConfigCallback(environmentProperties)));
-		if (server.getDefaultLabel() != null) {
-			repository.setDefaultLabel(server.getDefaultLabel());
+		if (this.server.getDefaultLabel() != null) {
+			repository.setDefaultLabel(this.server.getDefaultLabel());
 		}
 		return repository;
 	}
 
-    private TransportConfigCallback buildTransportConfigCallback(MultipleJGitEnvironmentProperties gitEnvironmentProperties) {
-        if (gitEnvironmentProperties.isIgnoreLocalSshSettings()) {
-            return new PropertiesBasedSshTransportConfigCallback(gitEnvironmentProperties);
-        }
-        return new FileBasedSshTransportConfigCallback(gitEnvironmentProperties);
-    }
+	private TransportConfigCallback buildTransportConfigCallback(
+			MultipleJGitEnvironmentProperties gitEnvironmentProperties) {
+		if (gitEnvironmentProperties.isIgnoreLocalSshSettings()) {
+			return new PropertiesBasedSshTransportConfigCallback(
+					gitEnvironmentProperties);
+		}
+		return new FileBasedSshTransportConfigCallback(gitEnvironmentProperties);
+	}
 
 }

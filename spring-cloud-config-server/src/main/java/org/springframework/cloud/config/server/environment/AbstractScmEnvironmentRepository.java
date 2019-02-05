@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -29,21 +30,24 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 		implements EnvironmentRepository, SearchPathLocator, Ordered {
 
 	private EnvironmentCleaner cleaner = new EnvironmentCleaner();
+
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
 	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment) {
 		super(environment);
 	}
 
-	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment, AbstractScmAccessorProperties properties) {
+	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
+			AbstractScmAccessorProperties properties) {
 		super(environment, properties);
 		this.order = properties.getOrder();
 	}
 
 	@Override
-	public synchronized Environment findOne(String application, String profile, String label) {
-		NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(getEnvironment(),
-				new NativeEnvironmentProperties());
+	public synchronized Environment findOne(String application, String profile,
+			String label) {
+		NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(
+				getEnvironment(), new NativeEnvironmentProperties());
 		Locations locations = getLocations(application, profile, label);
 		delegate.setSearchLocations(locations.getLocations());
 		Environment result = delegate.findOne(application, profile, "");
@@ -55,10 +59,11 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	@Override
 	public int getOrder() {
-		return order;
+		return this.order;
 	}
 
 	public void setOrder(int order) {
 		this.order = order;
 	}
+
 }

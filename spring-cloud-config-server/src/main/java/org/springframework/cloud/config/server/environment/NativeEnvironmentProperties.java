@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -24,72 +25,79 @@ import org.springframework.core.Ordered;
  */
 @ConfigurationProperties("spring.cloud.config.server.native")
 public class NativeEnvironmentProperties implements EnvironmentRepositoryProperties {
-    /**
-     * Flag to determine how to handle exceptions during decryption (default false).
-     */
-    private Boolean failOnError = false;
-    /**
-     * Flag to determine whether label locations should be added.
-     */
-    private Boolean addLabelLocations = true;
-    private String defaultLabel = "master";
-    /**
-     * Locations to search for configuration files. Defaults to the same as a Spring Boot
-     * app so [classpath:/,classpath:/config/,file:./,file:./config/].
-     */
-    private String[] searchLocations = new String[0];
-    /**
-     * Version string to be reported for native repository
-     */
-    private String version;
-    private int order = Ordered.LOWEST_PRECEDENCE;
 
-    public Boolean getFailOnError() {
-        return failOnError;
-    }
+	/**
+	 * Flag to determine how to handle exceptions during decryption (default false).
+	 */
+	private Boolean failOnError = false;
 
-    public void setFailOnError(Boolean failOnError) {
-        this.failOnError = failOnError;
-    }
+	/**
+	 * Flag to determine whether label locations should be added.
+	 */
+	private Boolean addLabelLocations = true;
 
-    public Boolean getAddLabelLocations() {
-        return addLabelLocations;
-    }
+	private String defaultLabel = "master";
 
-    public void setAddLabelLocations(Boolean addLabelLocations) {
-        this.addLabelLocations = addLabelLocations;
-    }
+	/**
+	 * Locations to search for configuration files. Defaults to the same as a Spring Boot
+	 * app so [classpath:/,classpath:/config/,file:./,file:./config/].
+	 */
+	private String[] searchLocations = new String[0];
 
-    public String getDefaultLabel() {
-        return defaultLabel;
-    }
+	/**
+	 * Version string to be reported for native repository.
+	 */
+	private String version;
 
-    public void setDefaultLabel(String defaultLabel) {
-        this.defaultLabel = defaultLabel;
-    }
+	private int order = Ordered.LOWEST_PRECEDENCE;
 
-    public String[] getSearchLocations() {
-        return searchLocations;
-    }
+	public Boolean getFailOnError() {
+		return this.failOnError;
+	}
 
-    public void setSearchLocations(String[] searchLocations) {
-        this.searchLocations = searchLocations;
-    }
+	public void setFailOnError(Boolean failOnError) {
+		this.failOnError = failOnError;
+	}
 
-    public String getVersion() {
-        return version;
-    }
+	public Boolean getAddLabelLocations() {
+		return this.addLabelLocations;
+	}
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+	public void setAddLabelLocations(Boolean addLabelLocations) {
+		this.addLabelLocations = addLabelLocations;
+	}
 
-    public int getOrder() {
-        return order;
-    }
+	public String getDefaultLabel() {
+		return this.defaultLabel;
+	}
 
-    @Override
-    public void setOrder(int order) {
-        this.order = order;
-    }
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
+	}
+
+	public String[] getSearchLocations() {
+		return this.searchLocations;
+	}
+
+	public void setSearchLocations(String[] searchLocations) {
+		this.searchLocations = searchLocations;
+	}
+
+	public String getVersion() {
+		return this.version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	public int getOrder() {
+		return this.order;
+	}
+
+	@Override
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
 }

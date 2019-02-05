@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -41,33 +41,29 @@ public class EnvironmentMonitorAutoConfigurationTests {
 	@Test
 	public void testExtractorsCount() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				BusConfig.class,
-				EnvironmentMonitorAutoConfiguration.class,
+				BusConfig.class, EnvironmentMonitorAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
 						.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
-		assertEquals(7,
-				((Collection<?>) ReflectionTestUtils.getField(
-						ReflectionTestUtils.getField(endpoint, "extractor"),
-						"extractors")).size());
+		assertThat(((Collection<?>) ReflectionTestUtils.getField(
+				ReflectionTestUtils.getField(endpoint, "extractor"), "extractors"))
+						.size()).isEqualTo(7);
 		context.close();
 	}
 
 	@Test
 	public void testCanAddCustomPropertyPathNotificationExtractor() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				BusConfig.class,
-				CustomPropertyPathNotificationExtractorConfig.class,
+				BusConfig.class, CustomPropertyPathNotificationExtractorConfig.class,
 				EnvironmentMonitorAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
 						.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
-		assertEquals(8,
-				((Collection<?>) ReflectionTestUtils.getField(
-						ReflectionTestUtils.getField(endpoint, "extractor"),
-						"extractors")).size());
+		assertThat(((Collection<?>) ReflectionTestUtils.getField(
+				ReflectionTestUtils.getField(endpoint, "extractor"), "extractors"))
+						.size()).isEqualTo(8);
 		context.close();
 	}
 
@@ -78,16 +74,19 @@ public class EnvironmentMonitorAutoConfigurationTests {
 		public BusProperties busProperties() {
 			return new BusProperties();
 		}
-    }
+
+	}
 
 	@Configuration
 	static class CustomPropertyPathNotificationExtractorConfig {
+
 		@Bean
 		public PropertyPathNotificationExtractor customNotificationExtractor() {
 			return (headers, payload) -> {
-                throw new UnsupportedOperationException("doesn't do anything");
-            };
+				throw new UnsupportedOperationException("doesn't do anything");
+			};
 		}
+
 	}
 
 }

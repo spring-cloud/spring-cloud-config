@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2016-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,23 @@ import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
 
+/**
+ * A {@link CredentialsProvider} that uses a passphrase.
+ *
+ * @author Chris Fraser
+ */
 public class PassphraseCredentialsProvider extends CredentialsProvider {
+
+	/**
+	 * Prompt to skip iteration for.
+	 */
 	public static final String PROMPT = "Passphrase for";
+
 	private final String passphrase;
 
 	/**
 	 * Initialize the provider with a the ssh passphrase.
-	 *
-	 * @param passphrase
+	 * @param passphrase passphrase to populate the credential items with
 	 */
 	public PassphraseCredentialsProvider(String passphrase) {
 		super();
@@ -51,9 +60,11 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 	@Override
 	public boolean supports(CredentialItem... items) {
 		for (final CredentialItem item : items) {
-			if (item instanceof CredentialItem.StringType && item.getPromptText().startsWith(PROMPT)) {
+			if (item instanceof CredentialItem.StringType
+					&& item.getPromptText().startsWith(PROMPT)) {
 				continue;
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
@@ -62,26 +73,26 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 
 	/**
 	 * Ask for the credential items to be populated with the passphrase.
-	 *
-	 * @param uri
-	 *            the URI of the remote resource that needs authentication.
-	 * @param items
-	 *            the items the application requires to complete authentication.
-	 * @return {@code true} if the request was successful and values were
-	 *         supplied; {@code false} if the user canceled the request and did
-	 *         not supply all requested values.
-	 * @throws UnsupportedCredentialItem
-	 *             if one of the items supplied is not supported.
-     */
+	 * @param uri the URI of the remote resource that needs authentication.
+	 * @param items the items the application requires to complete authentication.
+	 * @return {@code true} if the request was successful and values were supplied;
+	 * {@code false} if the user canceled the request and did not supply all requested
+	 * values.
+	 * @throws UnsupportedCredentialItem if one of the items supplied is not supported.
+	 */
 	@Override
-	public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
+	public boolean get(URIish uri, CredentialItem... items)
+			throws UnsupportedCredentialItem {
 		for (final CredentialItem item : items) {
-			if (item instanceof CredentialItem.StringType && item.getPromptText().startsWith(PROMPT)) {
-				((CredentialItem.StringType) item).setValue(passphrase);
+			if (item instanceof CredentialItem.StringType
+					&& item.getPromptText().startsWith(PROMPT)) {
+				((CredentialItem.StringType) item).setValue(this.passphrase);
 				continue;
 			}
-			throw new UnsupportedCredentialItem(uri, item.getClass().getName() + ":" + item.getPromptText());
+			throw new UnsupportedCredentialItem(uri,
+					item.getClass().getName() + ":" + item.getPromptText());
 		}
 		return true;
 	}
+
 }

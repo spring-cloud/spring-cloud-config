@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
@@ -30,12 +31,7 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.StringUtils;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -44,8 +40,9 @@ import static org.junit.Assert.assertTrue;
 public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
-	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
-			new MultipleJGitEnvironmentProperties());
+
+	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(
+			this.environment, new MultipleJGitEnvironmentProperties());
 
 	@Before
 	public void init() throws Exception {
@@ -80,9 +77,9 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	@Test
 	public void defaultRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -90,24 +87,23 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("application",
 				"test1-config-repo", "master");
-		assertEquals(1, environment.getPropertySources().size());
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		String uri = getUri("*").replace("{profile}", "test1-config-repo");
-		assertEquals(uri + "/application.yml",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(uri + "/application.yml");
 		assertVersion(environment);
-		assertThat(StringUtils.cleanPath(getRepository(uri).getBasedir().toString()),
-				containsString("target/repos"));
+		assertThat(StringUtils.cleanPath(getRepository(uri).getBasedir().toString()))
+				.contains("target/repos");
 	}
 
 	@Test
 	public void otherMappingRepo() {
 		Environment environment = this.repository.findOne("application",
 				"test2-config-repo", "master");
-		assertEquals(1, environment.getPropertySources().size());
-		assertEquals(
-				getUri("*").replace("{profile}", "test2-config-repo")
-						+ "/application.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(getUri("*").replace("{profile}", "test2-config-repo")
+						+ "/application.properties");
 		assertVersion(environment);
 	}
 
@@ -115,52 +111,49 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	public void locationsTwoProfiles() throws Exception {
 		Locations locations = this.repository.getLocations("application",
 				"test1-config-repo,test2-config-repo", "master");
-		assertEquals(1, locations.getLocations().length);
-		assertEquals(
-				new File(getUri("*").replace("{profile}", "test2-config-repo")
-						.replace("file:", "")).getCanonicalPath(),
-				new File(locations.getLocations()[0].replace("file:", ""))
-						.getCanonicalPath());
+		assertThat(locations.getLocations().length).isEqualTo(1);
+		assertThat(new File(locations.getLocations()[0].replace("file:", ""))
+				.getCanonicalPath()).isEqualTo(
+						new File(getUri("*").replace("{profile}", "test2-config-repo")
+								.replace("file:", "")).getCanonicalPath());
 	}
 
 	@Test
 	public void locationsMissingProfile() throws Exception {
 		Locations locations = this.repository.getLocations("application",
 				"not-there,another-not-there", "master");
-		assertEquals(1, locations.getLocations().length);
-		assertEquals(
-				new File(this.repository.getUri().replace("file:", ""))
-						.getCanonicalPath(),
-				new File(locations.getLocations()[0].replace("file:", ""))
-						.getCanonicalPath());
+		assertThat(locations.getLocations().length).isEqualTo(1);
+		assertThat(new File(locations.getLocations()[0].replace("file:", ""))
+				.getCanonicalPath())
+						.isEqualTo(new File(this.repository.getUri().replace("file:", ""))
+								.getCanonicalPath());
 	}
 
 	@Test
 	public void twoMappingRepos() {
 		Environment environment = this.repository.findOne("application",
 				"test1-config-repo,test2-config-repo,missing-config-repo", "master");
-		assertEquals(1, environment.getPropertySources().size());
-		assertEquals(
-				getUri("*").replace("{profile}", "test2-config-repo")
-						+ "/application.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(getUri("*").replace("{profile}", "test2-config-repo")
+						+ "/application.properties");
 		assertVersion(environment);
-		assertArrayEquals(environment.getProfiles(), new String[] { "test1-config-repo",
-				"test2-config-repo", "missing-config-repo" });
+		assertThat(new String[] { "test1-config-repo", "test2-config-repo",
+				"missing-config-repo" }).isEqualTo(environment.getProfiles());
 	}
 
 	@SuppressWarnings("unchecked")
 	private JGitEnvironmentRepository getRepository(String uri) {
 		Map<String, JGitEnvironmentRepository> repos = (Map<String, JGitEnvironmentRepository>) ReflectionTestUtils
-				.getField(repository, "placeholders");
+				.getField(this.repository, "placeholders");
 		return repos.get(uri);
 	}
 
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
-		assertNotNull("version was null", version);
-		assertTrue("version length was wrong",
-				version.length() >= 40 && version.length() <= 64);
+		assertThat(version).as("version was null").isNotNull();
+		assertThat(version.length() >= 40 && version.length() <= 64)
+				.as("version length was wrong").isTrue();
 	}
 
 	private String getUri(String pattern) {
@@ -179,4 +172,5 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 
 		return uri;
 	}
+
 }

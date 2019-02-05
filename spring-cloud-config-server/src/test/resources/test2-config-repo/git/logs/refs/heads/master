@@ -3,3 +3,4 @@
 c4bd92016dc14b9fe376d9c3f7af1c9d22d44ee4 dfd1f2f006c9ea71be688e3eeaf383ff640fd21a Dave Syer <dsyer@pivotal.io> 1449047214 +0000	commit: Fix
 dfd1f2f006c9ea71be688e3eeaf383ff640fd21a dfe21d586fc45ba72db173421c5139e26e50a7af Dave Syer <dsyer@pivotal.io> 1449047243 +0000	rebase -i (finish): refs/heads/master onto c4bd92016dc14b9fe376d9c3f7af1c9d22d44ee4
 dfe21d586fc45ba72db173421c5139e26e50a7af 29f2b1020f4b87e1de6aab368ff496cc4e99a959 Dave Syer <dsyer@pivotal.io> 1449047248 +0000	commit (amend): Add application.properties
+29f2b1020f4b87e1de6aab368ff496cc4e99a959 df6fc33edab5de1a6faaaa141de2ff0d99fb99e2 Marcin Grzejszczak <marcin@grzejszczak.pl> 1549357756 +0100	commit: Updated

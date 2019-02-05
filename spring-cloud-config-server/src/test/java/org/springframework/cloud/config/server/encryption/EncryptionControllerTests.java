@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,28 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.config.server.encryption;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+package org.springframework.cloud.config.server.encryption;
 
 import java.util.Map;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Dave Syer
@@ -59,7 +56,7 @@ public class EncryptionControllerTests {
 	public void shouldThrowExceptionOnDecryptInvalidData() {
 		this.controller = new EncryptionController(
 				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
-		controller.decrypt("foo", MediaType.TEXT_PLAIN);
+		this.controller.decrypt("foo", MediaType.TEXT_PLAIN);
 	}
 
 	@Test(expected = InvalidCipherException.class)
@@ -67,7 +64,7 @@ public class EncryptionControllerTests {
 		RsaSecretEncryptor encryptor = new RsaSecretEncryptor();
 		this.controller = new EncryptionController(
 				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
-		controller.decrypt(encryptor.encrypt("foo"), MediaType.TEXT_PLAIN);
+		this.controller.decrypt(encryptor.encrypt("foo"), MediaType.TEXT_PLAIN);
 	}
 
 	@Test
@@ -75,7 +72,8 @@ public class EncryptionControllerTests {
 		this.controller = new EncryptionController(
 				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
 		String cipher = this.controller.encrypt("foo", MediaType.TEXT_PLAIN);
-		assertEquals("foo", this.controller.decrypt(cipher, MediaType.TEXT_PLAIN));
+		assertThat(this.controller.decrypt(cipher, MediaType.TEXT_PLAIN))
+				.isEqualTo("foo");
 	}
 
 	@Test
@@ -83,7 +81,7 @@ public class EncryptionControllerTests {
 		this.controller = new EncryptionController(
 				new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
 		String key = this.controller.getPublicKey();
-		assertTrue("Wrong key format: " + key, key.startsWith("ssh-rsa"));
+		assertThat(key.startsWith("ssh-rsa")).as("Wrong key format: " + key).isTrue();
 	}
 
 	@Test
@@ -95,7 +93,8 @@ public class EncryptionControllerTests {
 				MediaType.TEXT_PLAIN);
 		String decrypt = this.controller.decrypt("app", "default", cipher,
 				MediaType.TEXT_PLAIN);
-		assertEquals("Wrong decrypted plaintext: " + decrypt, "foo bar", decrypt);
+		assertThat(decrypt).as("Wrong decrypted plaintext: " + decrypt)
+				.isEqualTo("foo bar");
 	}
 
 	@Test
@@ -107,7 +106,8 @@ public class EncryptionControllerTests {
 				MediaType.APPLICATION_FORM_URLENCODED);
 		String decrypt = this.controller.decrypt(cipher + "=",
 				MediaType.APPLICATION_FORM_URLENCODED);
-		assertEquals("Wrong decrypted plaintext: " + decrypt, "foo bar", decrypt);
+		assertThat(decrypt).as("Wrong decrypted plaintext: " + decrypt)
+				.isEqualTo("foo bar");
 	}
 
 	@Test
@@ -119,7 +119,8 @@ public class EncryptionControllerTests {
 				MediaType.APPLICATION_FORM_URLENCODED);
 		String decrypt = this.controller.decrypt(cipher + "=",
 				MediaType.APPLICATION_FORM_URLENCODED);
-		assertEquals("Wrong decrypted plaintext: " + decrypt, "foo bar", decrypt);
+		assertThat(decrypt).as("Wrong decrypted plaintext: " + decrypt)
+				.isEqualTo("foo bar");
 	}
 
 	@Test
@@ -127,12 +128,14 @@ public class EncryptionControllerTests {
 		TextEncryptor encryptor = mock(TextEncryptor.class);
 		when(encryptor.encrypt(anyString())).thenReturn("myEncryptedValue");
 
-		this.controller = new EncryptionController(new SingleTextEncryptorLocator(encryptor));
+		this.controller = new EncryptionController(
+				new SingleTextEncryptorLocator(encryptor));
 		this.controller.encrypt("{key:test}foo", MediaType.TEXT_PLAIN);
 
 		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 		verify(encryptor, atLeastOnce()).encrypt(captor.capture());
-		assertThat("Prefix must be stripped prior to encrypt", captor.getValue(), not(containsString("{key:test}")));
+		assertThat(captor.getValue()).doesNotContain("{key:test}")
+				.as("Prefix must be stripped prior to encrypt");
 	}
 
 	@Test
@@ -146,7 +149,7 @@ public class EncryptionControllerTests {
 				MediaType.APPLICATION_FORM_URLENCODED);
 		String decrypt = this.controller.decrypt(cipher,
 				MediaType.APPLICATION_FORM_URLENCODED);
-		assertEquals(plain, decrypt);
+		assertThat(decrypt).isEqualTo(plain);
 	}
 
 	@Test
@@ -164,10 +167,11 @@ public class EncryptionControllerTests {
 		// Add space to input
 		String cipher = this.controller.encrypt("app", "default", "foo bar",
 				MediaType.TEXT_PLAIN);
-		assertFalse("Wrong cipher: " + cipher, cipher.contains("{name:app}"));
+		assertThat(cipher.contains("{name:app}")).as("Wrong cipher: " + cipher).isFalse();
 		String decrypt = this.controller.decrypt("app", "default", cipher,
 				MediaType.TEXT_PLAIN);
-		assertEquals("Wrong decrypted plaintext: " + decrypt, "foo bar", decrypt);
+		assertThat(decrypt).as("Wrong decrypted plaintext: " + decrypt)
+				.isEqualTo("foo bar");
 	}
 
 }

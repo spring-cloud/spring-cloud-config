@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.Map;
@@ -25,15 +26,17 @@ import org.springframework.core.env.MapPropertySource;
 
 /**
  * A PropertySourceLocator that reads from an EnvironmentRepository.
- * 
- * @author Dave Syer
  *
+ * @author Dave Syer
  */
 public class EnvironmentRepositoryPropertySourceLocator implements PropertySourceLocator {
 
 	private EnvironmentRepository repository;
+
 	private String name;
+
 	private String profiles;
+
 	private String label;
 
 	public EnvironmentRepositoryPropertySourceLocator(EnvironmentRepository repository,
@@ -45,10 +48,11 @@ public class EnvironmentRepositoryPropertySourceLocator implements PropertySourc
 	}
 
 	@Override
-	public org.springframework.core.env.PropertySource<?> locate(Environment environment) {
+	public org.springframework.core.env.PropertySource<?> locate(
+			Environment environment) {
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		for (PropertySource source : repository.findOne(name, profiles, label)
-				.getPropertySources()) {
+		for (PropertySource source : this.repository
+				.findOne(this.name, this.profiles, this.label).getPropertySources()) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) source.getSource();
 			composite.addPropertySource(new MapPropertySource(source.getName(), map));

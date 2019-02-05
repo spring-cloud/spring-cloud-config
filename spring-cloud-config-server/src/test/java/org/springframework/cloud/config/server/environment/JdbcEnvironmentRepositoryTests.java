@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2016-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,8 @@ public class JdbcEnvironmentRepositoryTests {
 
 	@Test
 	public void basicProperties() {
-		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(dataSource), new JdbcEnvironmentProperties())
-				.findOne("foo", "bar", "");
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
+				new JdbcEnvironmentProperties()).findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default", "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -66,8 +66,8 @@ public class JdbcEnvironmentRepositoryTests {
 
 	@Test
 	public void defaults() {
-		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(dataSource), new JdbcEnvironmentProperties())
-				.findOne("application", "", "");
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
+				new JdbcEnvironmentProperties()).findOne("application", "", "");
 		assertThat(env.getName()).isEqualTo("application");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -77,6 +77,7 @@ public class JdbcEnvironmentRepositoryTests {
 
 	@Configuration
 	protected static class ApplicationConfiguration {
+
 	}
 
 }

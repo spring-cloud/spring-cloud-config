@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.support;
 
 import java.io.File;
@@ -23,113 +24,121 @@ import org.springframework.core.Ordered;
  * @author Dylan Roberts
  */
 public class AbstractScmAccessorProperties implements EnvironmentRepositoryProperties {
-    static final String[] DEFAULT_LOCATIONS = new String[] { "/" };
 
-    /**
-     * URI of remote repository.
-     */
-    private String uri;
-    /**
-     * Base directory for local working copy of repository.
-     */
-    private File basedir;
-    /**
-     * Search paths to use within local working copy. By default searches only the root.
-     */
-    private String[] searchPaths = DEFAULT_LOCATIONS.clone();;
-    /**
-     * Username for authentication with remote repository.
-     */
-    private String username;
-    /**
-     * Password for authentication with remote repository.
-     */
-    private String password;
-    /**
-     * Passphrase for unlocking your ssh private key.
-     */
-    private String passphrase;
-    /**
-     * Reject incoming SSH host keys from remote servers not in the known host list.
-     */
-    private boolean strictHostKeyChecking = true;
+	static final String[] DEFAULT_LOCATIONS = new String[] { "/" };
 
-    /** The order of the environment repository. */
-    private int order = Ordered.LOWEST_PRECEDENCE;
+	/**
+	 * URI of remote repository.
+	 */
+	private String uri;
 
-    /** The default label to be used with the remote repository */
-    private String defaultLabel;
+	/**
+	 * Base directory for local working copy of repository.
+	 */
+	private File basedir;
 
-    public String getUri() {
-        return uri;
-    }
+	/**
+	 * Search paths to use within local working copy. By default searches only the root.
+	 */
+	private String[] searchPaths = DEFAULT_LOCATIONS.clone();
 
-    public void setUri(String uri) {
-        this.uri = uri;
-    }
+	/**
+	 * Username for authentication with remote repository.
+	 */
+	private String username;
 
-    public File getBasedir() {
-        return basedir;
-    }
+	/**
+	 * Password for authentication with remote repository.
+	 */
+	private String password;
 
-    public void setBasedir(File basedir) {
-        this.basedir = basedir;
-    }
+	/**
+	 * Passphrase for unlocking your ssh private key.
+	 */
+	private String passphrase;
 
-    public String[] getSearchPaths() {
-        return searchPaths;
-    }
+	/**
+	 * Reject incoming SSH host keys from remote servers not in the known host list.
+	 */
+	private boolean strictHostKeyChecking = true;
 
-    public void setSearchPaths(String... searchPaths) {
-        this.searchPaths = searchPaths;
-    }
+	/** The order of the environment repository. */
+	private int order = Ordered.LOWEST_PRECEDENCE;
 
-    public String getUsername() {
-        return username;
-    }
+	/** The default label to be used with the remote repository. */
+	private String defaultLabel;
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	public String getUri() {
+		return this.uri;
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	public void setUri(String uri) {
+		this.uri = uri;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public File getBasedir() {
+		return this.basedir;
+	}
 
-    public String getPassphrase() {
-        return passphrase;
-    }
+	public void setBasedir(File basedir) {
+		this.basedir = basedir;
+	}
 
-    public void setPassphrase(String passphrase) {
-        this.passphrase = passphrase;
-    }
+	public String[] getSearchPaths() {
+		return this.searchPaths;
+	}
 
-    public boolean isStrictHostKeyChecking() {
-        return strictHostKeyChecking;
-    }
+	public void setSearchPaths(String... searchPaths) {
+		this.searchPaths = searchPaths;
+	}
 
-    public void setStrictHostKeyChecking(boolean strictHostKeyChecking) {
-        this.strictHostKeyChecking = strictHostKeyChecking;
-    }
+	public String getUsername() {
+		return this.username;
+	}
 
-    public int getOrder() {
-        return order;
-    }
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    @Override
-    public void setOrder(int order) {
-        this.order = order;
-    }
+	public String getPassword() {
+		return this.password;
+	}
 
-    public String getDefaultLabel() {
-        return defaultLabel;
-    }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    public void setDefaultLabel(String defaultLabel) {
-        this.defaultLabel = defaultLabel;
-    }
+	public String getPassphrase() {
+		return this.passphrase;
+	}
+
+	public void setPassphrase(String passphrase) {
+		this.passphrase = passphrase;
+	}
+
+	public boolean isStrictHostKeyChecking() {
+		return this.strictHostKeyChecking;
+	}
+
+	public void setStrictHostKeyChecking(boolean strictHostKeyChecking) {
+		this.strictHostKeyChecking = strictHostKeyChecking;
+	}
+
+	public int getOrder() {
+		return this.order;
+	}
+
+	@Override
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
+	public String getDefaultLabel() {
+		return this.defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
+	}
+
 }

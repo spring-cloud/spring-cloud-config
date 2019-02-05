@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.bus.event.RefreshRemoteApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -46,22 +47,24 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping(path = "${spring.cloud.config.monitor.endpoint.path:}/monitor")
-public class PropertyPathEndpoint
-		implements ApplicationEventPublisherAware {
+public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 
 	private static Log log = LogFactory.getLog(PropertyPathEndpoint.class);
 
 	private final PropertyPathNotificationExtractor extractor;
+
 	private ApplicationEventPublisher applicationEventPublisher;
+
 	private String busId;
 
-	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId) {
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor,
+			String busId) {
 		this.extractor = extractor;
 		this.busId = busId;
 	}
 
 	/* for testing */ String getBusId() {
-		return busId;
+		return this.busId;
 	}
 
 	@Override
@@ -84,9 +87,8 @@ public class PropertyPathEndpoint
 			if (this.applicationEventPublisher != null) {
 				for (String service : services) {
 					log.info("Refresh for: " + service);
-					this.applicationEventPublisher
-							.publishEvent(new RefreshRemoteApplicationEvent(this,
-									this.busId, service));
+					this.applicationEventPublisher.publishEvent(
+							new RefreshRemoteApplicationEvent(this, this.busId, service));
 				}
 				return services;
 			}
@@ -107,8 +109,8 @@ public class PropertyPathEndpoint
 	private Set<String> guessServiceName(String path) {
 		Set<String> services = new LinkedHashSet<>();
 		if (path != null) {
-			String stem = StringUtils
-					.stripFilenameExtension(StringUtils.getFilename(StringUtils.cleanPath(path)));
+			String stem = StringUtils.stripFilenameExtension(
+					StringUtils.getFilename(StringUtils.cleanPath(path)));
 			// TODO: correlate with service registry
 			int index = stem.indexOf("-");
 			while (index >= 0) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server;
 
 import org.junit.Test;
@@ -24,20 +25,16 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 /**
  * @author Alberto C. Ríos
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class,
-		properties = {
-				"spring.profiles.active:credhub",
-				"spring.cloud.config.server.credhub.url:https://credhub:8844"
-		},
-		webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class, properties = {
+		"spring.profiles.active:credhub",
+		"spring.cloud.config.server.credhub.url:https://credhub:8844" }, webEnvironment = RANDOM_PORT)
 public class CredhubConfigServerIntegrationTests extends CredhubIntegrationTest {
 
 	@LocalServerPort
@@ -46,12 +43,14 @@ public class CredhubConfigServerIntegrationTests extends CredhubIntegrationTest 
 	@Test
 	public void shouldRetrieveValuesFromCredhub() {
 		Environment environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/myapp/master/default", Environment.class);
+				"http://localhost:" + this.port + "/myapp/master/default",
+				Environment.class);
 
-		assertFalse(environment.getPropertySources().isEmpty());
-		assertEquals("credhub-myapp", environment.getPropertySources().get(0).getName());
-		assertEquals("{key=value}",
-				environment.getPropertySources().get(0).getSource().toString());
+		assertThat(environment.getPropertySources().isEmpty()).isFalse();
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo("credhub-myapp");
+		assertThat(environment.getPropertySources().get(0).getSource().toString())
+				.isEqualTo("{key=value}");
 	}
 
 }

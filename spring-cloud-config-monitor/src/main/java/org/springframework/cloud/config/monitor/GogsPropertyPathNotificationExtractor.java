@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,19 +21,21 @@ import org.springframework.core.annotation.Order;
 import org.springframework.util.MultiValueMap;
 
 /**
- * @author lly835
+ * @author lly 835
  *
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
 public class GogsPropertyPathNotificationExtractor
-        extends BasePropertyPathNotificationExtractor {
+		extends BasePropertyPathNotificationExtractor {
 
-    private static final String HEADERS_KEY = "X-Gogs-Event";
+	private static final String HEADERS_KEY = "X-Gogs-Event";
 
-    private static final String HEADERS_VALUE = "push";
+	private static final String HEADERS_VALUE = "push";
 
-    @Override
-    protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
-        return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
-    }
+	@Override
+	protected boolean requestBelongsToGitRepoManager(
+			MultiValueMap<String, String> headers) {
+		return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
+	}
+
 }

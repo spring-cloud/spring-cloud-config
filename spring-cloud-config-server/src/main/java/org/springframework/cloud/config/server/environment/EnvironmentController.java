@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
@@ -29,7 +30,6 @@ import java.util.TreeMap;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
@@ -66,9 +66,11 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
 public class EnvironmentController {
 
 	private EnvironmentRepository repository;
+
 	private ObjectMapper objectMapper;
 
 	private boolean stripDocument = true;
+
 	private boolean acceptEmpty = true;
 
 	public EnvironmentController(EnvironmentRepository repository) {
@@ -84,7 +86,6 @@ public class EnvironmentController {
 	/**
 	 * Flag to indicate that YAML documents which are not a map should be stripped of the
 	 * "document" prefix that is added by Spring (to facilitate conversion to Properties).
-	 *
 	 * @param stripDocument the flag to set
 	 */
 	public void setStripDocumentFromYaml(boolean stripDocument) {
@@ -92,14 +93,13 @@ public class EnvironmentController {
 	}
 
 	/**
-	 * Flag to indicate that If HTTP 404 needs to be sent if Application is not Found
-	 *
+	 * Flag to indicate that If HTTP 404 needs to be sent if Application is not Found.
 	 * @param acceptEmpty the flag to set
 	 */
 	public void setAcceptEmpty(boolean acceptEmpty) {
 		this.acceptEmpty = acceptEmpty;
 	}
-	
+
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
 	public Environment defaultLabel(@PathVariable String name,
 			@PathVariable String profiles) {
@@ -120,8 +120,9 @@ public class EnvironmentController {
 			label = label.replace("(_)", "/");
 		}
 		Environment environment = this.repository.findOne(name, profiles, label);
-		if(!acceptEmpty && (environment == null || environment.getPropertySources().isEmpty())){
-			 throw new EnvironmentNotFoundException("Profile Not found");
+		if (!this.acceptEmpty
+				&& (environment == null || environment.getPropertySources().isEmpty())) {
+			throw new EnvironmentNotFoundException("Profile Not found");
 		}
 		return environment;
 	}
@@ -222,13 +223,14 @@ public class EnvironmentController {
 	}
 
 	/**
-	 * Method {@code convertToMap} converts an {@code Environment} to a nested Map which represents a yml/json structure.
-	 *
+	 * Method {@code convertToMap} converts an {@code Environment} to a nested Map which
+	 * represents a yml/json structure.
 	 * @param input the environment to be converted
 	 * @return the nested map containing the environment's properties
 	 */
 	private Map<String, Object> convertToMap(Environment input) {
-		// First use the current convertToProperties to get a flat Map from the environment
+		// First use the current convertToProperties to get a flat Map from the
+		// environment
 		Map<String, Object> properties = convertToProperties(input);
 
 		// The root map which holds all the first level properties
@@ -331,11 +333,11 @@ public class EnvironmentController {
 	}
 
 	/**
-	 * Class {@code PropertyNavigator} is used to navigate through the property key and create necessary Maps and Lists
-	 * making up the nested structure to finally set the property value at the leaf node.
+	 * Class {@code PropertyNavigator} is used to navigate through the property key and
+	 * create necessary Maps and Lists making up the nested structure to finally set the
+	 * property value at the leaf node.
 	 * <p>
-	 * The following rules in yml/json are implemented:
-	 * <pre>
+	 * The following rules in yml/json are implemented: <pre>
 	 * 1. an array element can be:
 	 *    - a value (leaf)
 	 *    - a map
@@ -346,23 +348,23 @@ public class EnvironmentController {
 	 *    - an array
 	 * </pre>
 	 */
-	private static class PropertyNavigator {
-
-		private enum NodeType {LEAF, MAP, ARRAY}
+	private static final class PropertyNavigator {
 
 		private final String propertyKey;
+
 		private int currentPos;
+
 		private NodeType valueType;
 
 		private PropertyNavigator(String propertyKey) {
 			this.propertyKey = propertyKey;
-			currentPos = -1;
-			valueType = NodeType.MAP;
+			this.currentPos = -1;
+			this.valueType = NodeType.MAP;
 		}
 
 		private void setMapValue(Map<String, Object> map, Object value) {
 			String key = getKey();
-			if (NodeType.MAP.equals(valueType)) {
+			if (NodeType.MAP.equals(this.valueType)) {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> nestedMap = (Map<String, Object>) map.get(key);
 				if (nestedMap == null) {
@@ -370,7 +372,8 @@ public class EnvironmentController {
 					map.put(key, nestedMap);
 				}
 				setMapValue(nestedMap, value);
-			} else if (NodeType.ARRAY.equals(valueType)) {
+			}
+			else if (NodeType.ARRAY.equals(this.valueType)) {
 				@SuppressWarnings("unchecked")
 				List<Object> list = (List<Object>) map.get(key);
 				if (list == null) {
@@ -378,7 +381,8 @@ public class EnvironmentController {
 					map.put(key, list);
 				}
 				setListValue(list, value);
-			} else {
+			}
+			else {
 				map.put(key, value);
 			}
 		}
@@ -389,7 +393,7 @@ public class EnvironmentController {
 			while (list.size() <= index) {
 				list.add(null);
 			}
-			if (NodeType.MAP.equals(valueType)) {
+			if (NodeType.MAP.equals(this.valueType)) {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> map = (Map<String, Object>) list.get(index);
 				if (map == null) {
@@ -397,7 +401,8 @@ public class EnvironmentController {
 					list.set(index, map);
 				}
 				setMapValue(map, value);
-			} else if (NodeType.ARRAY.equals(valueType)) {
+			}
+			else if (NodeType.ARRAY.equals(this.valueType)) {
 				@SuppressWarnings("unchecked")
 				List<Object> nestedList = (List<Object>) list.get(index);
 				if (nestedList == null) {
@@ -405,43 +410,50 @@ public class EnvironmentController {
 					list.set(index, nestedList);
 				}
 				setListValue(nestedList, value);
-			} else {
+			}
+			else {
 				list.set(index, value);
 			}
 		}
 
 		private int getIndex() {
 			// Consider [
-			int start = currentPos + 1;
+			int start = this.currentPos + 1;
 
-			for (int i = start; i < propertyKey.length(); i++) {
-				char c = propertyKey.charAt(i);
+			for (int i = start; i < this.propertyKey.length(); i++) {
+				char c = this.propertyKey.charAt(i);
 				if (c == ']') {
-					currentPos = i;
+					this.currentPos = i;
 					break;
-				} else if (!Character.isDigit(c)) {
-					throw new IllegalArgumentException("Invalid key: " + propertyKey);
+				}
+				else if (!Character.isDigit(c)) {
+					throw new IllegalArgumentException(
+							"Invalid key: " + this.propertyKey);
 				}
 			}
 			// If no closing ] or if '[]'
-			if (currentPos < start || currentPos == start) {
-				throw new IllegalArgumentException("Invalid key: " + propertyKey);
-			} else {
-				int index = Integer.parseInt(propertyKey.substring(start, currentPos));
+			if (this.currentPos < start || this.currentPos == start) {
+				throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
+			}
+			else {
+				int index = Integer
+						.parseInt(this.propertyKey.substring(start, this.currentPos));
 				// Skip the closing ]
-				currentPos++;
-				if (currentPos == propertyKey.length()) {
-					valueType = NodeType.LEAF;
-				} else {
-					switch (propertyKey.charAt(currentPos)) {
-						case '.':
-							valueType = NodeType.MAP;
-							break;
-						case '[':
-							valueType = NodeType.ARRAY;
-							break;
-						default:
-							throw new IllegalArgumentException("Invalid key: " + propertyKey);
+				this.currentPos++;
+				if (this.currentPos == this.propertyKey.length()) {
+					this.valueType = NodeType.LEAF;
+				}
+				else {
+					switch (this.propertyKey.charAt(this.currentPos)) {
+					case '.':
+						this.valueType = NodeType.MAP;
+						break;
+					case '[':
+						this.valueType = NodeType.ARRAY;
+						break;
+					default:
+						throw new IllegalArgumentException(
+								"Invalid key: " + this.propertyKey);
 					}
 				}
 				return index;
@@ -450,28 +462,39 @@ public class EnvironmentController {
 
 		private String getKey() {
 			// Consider initial value or previous char '.' or '['
-			int start = currentPos + 1;
-			for (int i = start; i < propertyKey.length(); i++) {
-				char currentChar = propertyKey.charAt(i);
+			int start = this.currentPos + 1;
+			for (int i = start; i < this.propertyKey.length(); i++) {
+				char currentChar = this.propertyKey.charAt(i);
 				if (currentChar == '.') {
-					valueType = NodeType.MAP;
-					currentPos = i;
+					this.valueType = NodeType.MAP;
+					this.currentPos = i;
 					break;
-				} else if (currentChar == '[') {
-					valueType = NodeType.ARRAY;
-					currentPos = i;
+				}
+				else if (currentChar == '[') {
+					this.valueType = NodeType.ARRAY;
+					this.currentPos = i;
 					break;
 				}
 			}
 			// If there's no delimiter then it's a key of a leaf
-			if (currentPos < start) {
-				currentPos = propertyKey.length();
-				valueType = NodeType.LEAF;
-				// Else if we encounter '..' or '.[' or start of the property is . or [ then it's invalid
-			} else if (currentPos == start) {
-				throw new IllegalArgumentException("Invalid key: " + propertyKey);
+			if (this.currentPos < start) {
+				this.currentPos = this.propertyKey.length();
+				this.valueType = NodeType.LEAF;
+				// Else if we encounter '..' or '.[' or start of the property is . or [
+				// then it's invalid
 			}
-			return propertyKey.substring(start, currentPos);
+			else if (this.currentPos == start) {
+				throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
+			}
+			return this.propertyKey.substring(start, this.currentPos);
 		}
+
+		private enum NodeType {
+
+			LEAF, MAP, ARRAY
+
+		}
+
 	}
+
 }

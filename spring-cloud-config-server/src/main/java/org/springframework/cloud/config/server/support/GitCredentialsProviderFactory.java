@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,19 +28,19 @@ import static org.springframework.util.StringUtils.hasText;
 /**
  * A CredentialsProvider factory for Git repositories. Can handle AWS CodeCommit
  * repositories and other repositories with username/password.
- * 
+ *
  * @author Don Laidlaw
  * @author Gareth Clay
  *
  */
 public class GitCredentialsProviderFactory {
+
 	protected Log logger = LogFactory.getLog(getClass());
 
 	/**
-	 * Enable the AWS Code Commit credentials provider for Git URI's
-	 * that match the AWS Code Commit pattern of
-	 * https://git-codecommit.${AWS_REGION}.amazonaws.com/${repoPath}.
-	 * Enabled by default.
+	 * Enable the AWS Code Commit credentials provider for Git URI's that match the AWS
+	 * Code Commit pattern of
+	 * https://git-codecommit.${AWS_REGION}.amazonaws.com/${repoPath}. Enabled by default.
 	 */
 	protected boolean awsCodeCommitEnabled = true;
 
@@ -53,11 +53,12 @@ public class GitCredentialsProviderFactory {
 	 * @param password the password provided for the repository (may be null)
 	 * @param passphrase the passphrase to unlock the ssh private key (may be null)
 	 * @return the first matched credentials provider or the default or null.
-	 * @deprecated in favour of {@link #createFor(String, String, String, String, boolean)}
+	 * @deprecated in favour of
+	 * {@link #createFor(String, String, String, String, boolean)}
 	 */
 	@Deprecated
 	public CredentialsProvider createFor(String uri, String username, String password,
-										 String passphrase) {
+			String passphrase) {
 		return createFor(uri, username, password, passphrase, false);
 	}
 
@@ -66,9 +67,9 @@ public class GitCredentialsProviderFactory {
 	 * and the username or passphrase has text, then create a default using the provided
 	 * username and password or passphrase.
 	 *
-	 * If skipSslValidation is true and the URI has an https scheme, the default credential
-	 * provider's behaviour is modified to suppress any SSL validation errors that occur
-	 * when communicating via the URI.
+	 * If skipSslValidation is true and the URI has an https scheme, the default
+	 * credential provider's behaviour is modified to suppress any SSL validation errors
+	 * that occur when communicating via the URI.
 	 *
 	 * Otherwise null.
 	 * @param uri the URI of the repository (cannot be null)
@@ -82,49 +83,54 @@ public class GitCredentialsProviderFactory {
 			String passphrase, boolean skipSslValidation) {
 		CredentialsProvider provider = null;
 		if (awsAvailable() && AwsCodeCommitCredentialProvider.canHandle(uri)) {
-			logger.debug("Constructing AwsCodeCommitCredentialProvider for URI " + uri);
+			this.logger
+					.debug("Constructing AwsCodeCommitCredentialProvider for URI " + uri);
 			AwsCodeCommitCredentialProvider aws = new AwsCodeCommitCredentialProvider();
 			aws.setUsername(username);
 			aws.setPassword(password);
 			provider = aws;
 		}
 		else if (hasText(username)) {
-			logger.debug("Constructing UsernamePasswordCredentialsProvider for URI " + uri);
-			provider = new UsernamePasswordCredentialsProvider(username, password.toCharArray());
+			this.logger.debug(
+					"Constructing UsernamePasswordCredentialsProvider for URI " + uri);
+			provider = new UsernamePasswordCredentialsProvider(username,
+					password.toCharArray());
 		}
 		else if (hasText(passphrase)) {
-			logger.debug("Constructing PassphraseCredentialsProvider for URI " + uri);
+			this.logger
+					.debug("Constructing PassphraseCredentialsProvider for URI " + uri);
 			provider = new PassphraseCredentialsProvider(passphrase);
 		}
 
 		if (skipSslValidation && GitSkipSslValidationCredentialsProvider.canHandle(uri)) {
-			logger.debug("Constructing GitSkipSslValidationCredentialsProvider for URI "
-					+ uri);
+			this.logger
+					.debug("Constructing GitSkipSslValidationCredentialsProvider for URI "
+							+ uri);
 			provider = new GitSkipSslValidationCredentialsProvider(provider);
 		}
 
 		if (provider == null) {
-			logger.debug("No credentials provider required for URI " + uri);
+			this.logger.debug("No credentials provider required for URI " + uri);
 		}
 
 		return provider;
 	}
-	
+
 	/**
 	 * Check to see if the AWS Authentication API is available.
-	 * @return true if the com.amazonaws.auth.DefaultAWSCredentialsProviderChain is present,
-	 * 		false otherwise.
+	 * @return true if the com.amazonaws.auth.DefaultAWSCredentialsProviderChain is
+	 * present, false otherwise.
 	 */
 	private boolean awsAvailable() {
-		return awsCodeCommitEnabled
-			&& ClassUtils.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
+		return this.awsCodeCommitEnabled && ClassUtils
+				.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
 	}
 
 	/**
 	 * @return the awsCodeCommitEnabled
 	 */
 	public boolean isAwsCodeCommitEnabled() {
-		return awsCodeCommitEnabled;
+		return this.awsCodeCommitEnabled;
 	}
 
 	/**
@@ -133,5 +139,5 @@ public class GitCredentialsProviderFactory {
 	public void setAwsCodeCommitEnabled(boolean awsCodeCommitEnabled) {
 		this.awsCodeCommitEnabled = awsCodeCommitEnabled;
 	}
-	
+
 }

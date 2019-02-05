@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 - 2018 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import com.jcraft.jsch.HostKeyRepository;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -38,32 +37,60 @@ import org.springframework.cloud.config.server.environment.JGitEnvironmentProper
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for property based SSH config processor
+ * Unit tests for property based SSH config processor.
+ *
  * @author William Tran
  * @author Ollie Hughes
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PropertyBasedSshSessionFactoryTest {
 
-	private static final String HOST_KEY = "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBMzCa0AcNbahUFjFYJHIilhJOhKFHuDOOuY+/HqV9kALftitwNYo6dQ+tC9IK5JVZCZfqKfDWVMxspcPDf9eMoE=";
+	private static final String HOST_KEY = "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAAB"
+			+ "BBMzCa0AcNbahUFjFYJHIilhJOhKFHuDOOuY+/HqV9kALftitwNYo6dQ+tC9IK5JVZCZfqKfDWVMxspcPDf9eMoE=";
+
 	private static final String HOST_KEY_ALGORITHM = "ecdsa-sha2-nistp256";
+
 	private static final String PRIVATE_KEY = getResourceAsString("/ssh/key");
+
 	private PropertyBasedSshSessionFactory factory;
+
 	@Mock
 	private Host hc;
+
 	@Mock
 	private Session session;
+
 	@Mock
 	private JSch jSch;
+
 	@Mock
 	private HostKeyRepository hostKeyRepository;
-	
+
+	public static String getResourceAsString(String path) {
+		try {
+			Resource resource = new ClassPathResource(path);
+			try (BufferedReader br = new BufferedReader(
+					new InputStreamReader(resource.getInputStream()))) {
+				StringBuilder builder = new StringBuilder();
+				String line;
+				while ((line = br.readLine()) != null) {
+					builder.append(line).append('\n');
+				}
+				return builder.toString();
+			}
+		}
+		catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
 	@Test
 	public void strictHostKeyCheckingIsOptional() {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
@@ -71,12 +98,12 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		factory.configure(hc, session);
-		
-		verify(session).setConfig("StrictHostKeyChecking", "no");
-		verifyNoMoreInteractions(session);
+		this.factory.configure(this.hc, this.session);
+
+		verify(this.session).setConfig("StrictHostKeyChecking", "no");
+		verifyNoMoreInteractions(this.session);
 	}
-	
+
 	@Test
 	public void strictHostKeyCheckingIsUsed() {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
@@ -85,12 +112,12 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		factory.configure(hc, session);
-		
-		verify(session).setConfig("StrictHostKeyChecking", "yes");
-		verifyNoMoreInteractions(session);
+		this.factory.configure(this.hc, this.session);
+
+		verify(this.session).setConfig("StrictHostKeyChecking", "yes");
+		verifyNoMoreInteractions(this.session);
 	}
-	
+
 	@Test
 	public void hostKeyAlgorithmIsSpecified() {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
@@ -100,12 +127,12 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		factory.configure(hc, session);
-		verify(session).setConfig("server_host_key", HOST_KEY_ALGORITHM);
-		verify(session).setConfig("StrictHostKeyChecking", "yes");
-		verifyNoMoreInteractions(session);
+		this.factory.configure(this.hc, this.session);
+		verify(this.session).setConfig("server_host_key", HOST_KEY_ALGORITHM);
+		verify(this.session).setConfig("StrictHostKeyChecking", "yes");
+		verifyNoMoreInteractions(this.session);
 	}
-	
+
 	@Test
 	public void privateKeyIsUsed() throws Exception {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
@@ -113,8 +140,10 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		factory.createSession(hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
-		verify(jSch).addIdentity("gitlab.example.local", PRIVATE_KEY.getBytes(), null, null);
+		this.factory.createSession(this.hc, null,
+				SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
+		verify(this.jSch).addIdentity("gitlab.example.local", PRIVATE_KEY.getBytes(),
+				null, null);
 	}
 
 	@Test
@@ -125,12 +154,13 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		factory.createSession(hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
+		this.factory.createSession(this.hc, null,
+				SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
 		ArgumentCaptor<HostKey> captor = ArgumentCaptor.forClass(HostKey.class);
-		verify(hostKeyRepository).add(captor.capture(), isNull());
+		verify(this.hostKeyRepository).add(captor.capture(), isNull());
 		HostKey hostKey = captor.getValue();
-		Assert.assertEquals("gitlab.example.local", hostKey.getHost());
-		Assert.assertEquals(HOST_KEY, hostKey.getKey());
+		assertThat(hostKey.getHost()).isEqualTo("gitlab.example.local");
+		assertThat(hostKey.getKey()).isEqualTo(HOST_KEY);
 	}
 
 	@Test
@@ -141,10 +171,11 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPreferredAuthentications("password,keyboard-interactive");
 		setupSessionFactory(sshKey);
 
-		factory.configure(hc, session);
-		verify(session).setConfig("PreferredAuthentications", "password,keyboard-interactive");
-		verify(session).setConfig("StrictHostKeyChecking", "no");
-		verifyNoMoreInteractions(session);
+		this.factory.configure(this.hc, this.session);
+		verify(this.session).setConfig("PreferredAuthentications",
+				"password,keyboard-interactive");
+		verify(this.session).setConfig("StrictHostKeyChecking", "no");
+		verifyNoMoreInteractions(this.session);
 	}
 
 	@Test
@@ -155,34 +186,22 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setKnownHostsFile("/ssh/known_hosts");
 		setupSessionFactory(sshKey);
 
-		factory.createSession(hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
+		this.factory.createSession(this.hc, null,
+				SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
 		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 
-		verify(jSch).setKnownHosts(captor.capture());
-		Assert.assertEquals("/ssh/known_hosts", captor.getValue());
+		verify(this.jSch).setKnownHosts(captor.capture());
+		assertThat(captor.getValue()).isEqualTo("/ssh/known_hosts");
 	}
 
 	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {
 		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new HashMap<>();
-		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()), sshKey);
-		factory = new PropertyBasedSshSessionFactory(sshKeysByHostname, jSch) ;
-		when(hc.getHostName()).thenReturn(SshUriPropertyProcessor.getHostname(sshKey.getUri()));
-		when(jSch.getHostKeyRepository()).thenReturn(hostKeyRepository);
+		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()),
+				sshKey);
+		this.factory = new PropertyBasedSshSessionFactory(sshKeysByHostname, this.jSch);
+		when(this.hc.getHostName())
+				.thenReturn(SshUriPropertyProcessor.getHostname(sshKey.getUri()));
+		when(this.jSch.getHostKeyRepository()).thenReturn(this.hostKeyRepository);
 	}
 
-	public static String getResourceAsString(String path) {
-		try {
-			Resource resource = new ClassPathResource(path);
-			try (BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
-				StringBuilder builder = new StringBuilder();
-				String line;
-				while ((line = br.readLine()) != null) {
-					builder.append(line).append('\n');
-				}
-				return builder.toString();
-			}
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
-		}
-	}
 }

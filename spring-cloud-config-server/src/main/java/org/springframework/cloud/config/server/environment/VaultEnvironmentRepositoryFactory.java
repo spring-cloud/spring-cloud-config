@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.Optional;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -24,30 +26,44 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author Dylan Roberts
  */
-public class VaultEnvironmentRepositoryFactory implements EnvironmentRepositoryFactory<VaultEnvironmentRepository,
-		VaultEnvironmentProperties> {
+public class VaultEnvironmentRepositoryFactory implements
+		EnvironmentRepositoryFactory<VaultEnvironmentRepository, VaultEnvironmentProperties> {
+
 	private ObjectProvider<HttpServletRequest> request;
+
 	private EnvironmentWatch watch;
+
 	private Optional<VaultRestTemplateFactory> vaultRestTemplateFactory;
 
-	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-                                             Optional<VaultRestTemplateFactory> vaultRestTemplateFactory) {
+	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request,
+			EnvironmentWatch watch,
+			Optional<VaultRestTemplateFactory> vaultRestTemplateFactory) {
 		this.request = request;
 		this.watch = watch;
 		this.vaultRestTemplateFactory = vaultRestTemplateFactory;
 	}
 
 	@Override
-	public VaultEnvironmentRepository build(VaultEnvironmentProperties environmentProperties) throws Exception {
-		if (vaultRestTemplateFactory.isPresent()) {
-			RestTemplate restTemplate = vaultRestTemplateFactory.get().build(environmentProperties);
-			return new VaultEnvironmentRepository(request, watch, restTemplate, environmentProperties);
+	public VaultEnvironmentRepository build(
+			VaultEnvironmentProperties environmentProperties) throws Exception {
+		if (this.vaultRestTemplateFactory.isPresent()) {
+			RestTemplate restTemplate = this.vaultRestTemplateFactory.get()
+					.build(environmentProperties);
+			return new VaultEnvironmentRepository(this.request, this.watch, restTemplate,
+					environmentProperties);
 		}
-		return new VaultEnvironmentRepository(request, watch, new RestTemplate(), environmentProperties);
+		return new VaultEnvironmentRepository(this.request, this.watch,
+				new RestTemplate(), environmentProperties);
 	}
 
+	/**
+	 * Rest template factory for Vault.
+	 */
 	public interface VaultRestTemplateFactory {
 
-		RestTemplate build(VaultEnvironmentProperties environmentProperties) throws Exception;
+		RestTemplate build(VaultEnvironmentProperties environmentProperties)
+				throws Exception;
+
 	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.config;
 
 import java.util.HashMap;
@@ -42,8 +43,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Ryan Baxter
@@ -51,12 +51,11 @@ import static org.junit.Assert.assertTrue;
 public class CustomCompositeEnvironmentRepositoryTests {
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests
-			.StaticTests.Config.class, properties = {
+	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.StaticTests.Config.class, properties = {
 			"spring.config.name:compositeconfigserver",
 			"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
 			"spring.cloud.config.server.git.order:1" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-	@ActiveProfiles({"test", "git"})
+	@ActiveProfiles({ "test", "git" })
 	@DirtiesContext
 	public static class StaticTests {
 
@@ -71,12 +70,13 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate().getForObject(
-					"http://localhost:" + port + "/foo/development/", Environment.class);
+					"http://localhost:" + this.port + "/foo/development/",
+					Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
-			assertEquals(3, propertySources.size());
-			assertEquals("overrides", propertySources.get(0).getName());
-			assertTrue(propertySources.get(1).getName().contains("config-repo"));
-			assertEquals("p", propertySources.get(2).getName());
+			assertThat(3).isEqualTo(propertySources.size());
+			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
+			assertThat(propertySources.get(1).getName().contains("config-repo")).isTrue();
+			assertThat("p").isEqualTo(propertySources.get(2).getName());
 		}
 
 		@Configuration
@@ -84,30 +84,32 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@EnableConfigServer
 		protected static class Config {
 
-			@Bean
-			public EnvironmentRepository environmentRepository() {
-				return new CustomEnvironmentRepository(new CustomEnvironmentProperties("p"));
+			public static void main(String[] args) throws Exception {
+				SpringApplication.run(
+						CustomEnvironmentRepositoryTests.TestApplication.class, args);
 			}
 
-			public static void main(String[] args) throws Exception {
-				SpringApplication.run(CustomEnvironmentRepositoryTests.TestApplication.class,
-						args);
+			@Bean
+			public EnvironmentRepository environmentRepository() {
+				return new CustomEnvironmentRepository(
+						new CustomEnvironmentProperties("p"));
 			}
+
 		}
+
 	}
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests
-			.ListTests.Config.class, properties = {
+	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.ListTests.Config.class, properties = {
 			"spring.config.name:compositeconfigserver",
 			"spring.cloud.config.server.composite[0].type:git",
 			"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
 			"spring.cloud.config.server.composite[1].type:custom",
-			"spring.cloud.config.server.composite[1].propertySourceName:p"
-			}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-	@ActiveProfiles({"test", "composite"})
+			"spring.cloud.config.server.composite[1].propertySourceName:p" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+	@ActiveProfiles({ "test", "composite" })
 	@DirtiesContext
 	public static class ListTests {
+
 		@LocalServerPort
 		private int port;
 
@@ -119,12 +121,13 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate().getForObject(
-					"http://localhost:" + port + "/foo/development/", Environment.class);
+					"http://localhost:" + this.port + "/foo/development/",
+					Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
-			assertEquals(3, propertySources.size());
-			assertEquals("overrides", propertySources.get(0).getName());
-			assertTrue(propertySources.get(1).getName().contains("config-repo"));
-			assertEquals("p", propertySources.get(2).getName());
+			assertThat(3).isEqualTo(propertySources.size());
+			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
+			assertThat(propertySources.get(1).getName().contains("config-repo")).isTrue();
+			assertThat("p").isEqualTo(propertySources.get(2).getName());
 		}
 
 		@Configuration
@@ -132,41 +135,45 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@EnableConfigServer
 		protected static class Config {
 
+			public static void main(String[] args) throws Exception {
+				SpringApplication.run(
+						CustomEnvironmentRepositoryTests.TestApplication.class, args);
+			}
+
 			@Bean
-			public CustomEnvironmentRepositoryFactory customEnvironmentRepositoryFactory(ConfigurableEnvironment environment)
-			{
+			public CustomEnvironmentRepositoryFactory customEnvironmentRepositoryFactory(
+					ConfigurableEnvironment environment) {
 				return new CustomEnvironmentRepositoryFactory();
 			}
 
-			public static void main(String[] args) throws Exception {
-				SpringApplication.run(CustomEnvironmentRepositoryTests.TestApplication.class,
-						args);
-			}
-
 		}
+
 	}
 
-	static class CustomEnvironmentRepositoryFactory implements EnvironmentRepositoryFactory<CustomEnvironmentRepository,
-			CustomEnvironmentProperties> {
+	static class CustomEnvironmentRepositoryFactory implements
+			EnvironmentRepositoryFactory<CustomEnvironmentRepository, CustomEnvironmentProperties> {
 
 		@Override
-		public CustomEnvironmentRepository build(CustomEnvironmentProperties environmentProperties) throws Exception {
+		public CustomEnvironmentRepository build(
+				CustomEnvironmentProperties environmentProperties) throws Exception {
 			return new CustomEnvironmentRepository(environmentProperties);
 		}
+
 	}
 
 	static class CustomEnvironmentProperties implements EnvironmentRepositoryProperties {
+
 		private String propertySourceName;
 
-		public CustomEnvironmentProperties() {
+		CustomEnvironmentProperties() {
 		}
 
-		public CustomEnvironmentProperties(String propertySourceName) {
+		CustomEnvironmentProperties(String propertySourceName) {
 			this.propertySourceName = propertySourceName;
 		}
 
 		public String getPropertySourceName() {
-			return propertySourceName;
+			return this.propertySourceName;
 		}
 
 		public void setPropertySourceName(String propertySourceName) {
@@ -177,13 +184,14 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		public void setOrder(int order) {
 
 		}
+
 	}
 
 	static class CustomEnvironmentRepository implements EnvironmentRepository, Ordered {
 
 		private final CustomEnvironmentProperties properties;
 
-		public CustomEnvironmentRepository(CustomEnvironmentProperties properties) {
+		CustomEnvironmentRepository(CustomEnvironmentProperties properties) {
 			this.properties = properties;
 		}
 
@@ -191,7 +199,8 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		public Environment findOne(String application, String profile, String label) {
 			Environment e = new Environment("test", new String[0], "label", "version",
 					"state");
-			PropertySource p = new PropertySource(properties.getPropertySourceName(), new HashMap<>());
+			PropertySource p = new PropertySource(this.properties.getPropertySourceName(),
+					new HashMap<>());
 			e.add(p);
 			return e;
 		}
@@ -200,5 +209,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		public int getOrder() {
 			return Ordered.LOWEST_PRECEDENCE;
 		}
+
 	}
+
 }

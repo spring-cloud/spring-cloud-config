@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.test;
+
+import java.io.File;
+import java.io.IOException;
 
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryCache.FileKey;
 import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.FileUtils;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.File;
-import java.io.IOException;
-
 /**
  * @author Dave Syer
  * @author Daniel Lavoie
  */
-public class ConfigServerTestUtils {
+public final class ConfigServerTestUtils {
 
+	private ConfigServerTestUtils() {
+		throw new IllegalStateException("Can't instantiate utility class");
+	}
+
+	/**
+	 * Location where the repos get copied to.
+	 */
 	public static final String REPO_PREFIX = "target/repos/";
 
 	public static Repository prepareBareRemote() throws IOException {
@@ -57,8 +66,8 @@ public class ConfigServerTestUtils {
 		return prepareLocalRepo("./", "target/repos", repoPath, "target/config");
 	}
 
-	public static String prepareLocalRepo(String baseDir, String buildDir, String repoPath,
-			String checkoutDir) throws IOException {
+	public static String prepareLocalRepo(String baseDir, String buildDir,
+			String repoPath, String checkoutDir) throws IOException {
 		buildDir = baseDir + buildDir;
 		new File(buildDir).mkdirs();
 		if (!repoPath.startsWith("/")) {
@@ -91,7 +100,8 @@ public class ConfigServerTestUtils {
 		return "file:" + buildDir + repoPath;
 	}
 
-	public static String prepareLocalSvnRepo(String sourceDir, String checkoutDir) throws Exception {
+	public static String prepareLocalSvnRepo(String sourceDir, String checkoutDir)
+			throws Exception {
 		File sourceDirFile = new File(sourceDir);
 		sourceDirFile.mkdirs();
 		File local = new File(checkoutDir);
@@ -101,7 +111,6 @@ public class ConfigServerTestUtils {
 		local.mkdirs();
 		FileSystemUtils.copyRecursively(sourceDirFile, local);
 		return StringUtils.cleanPath("file:///" + local.getAbsolutePath());
-
 	}
 
 	public static String getBaseDirectory(String potentialRoot) {
@@ -120,9 +129,10 @@ public class ConfigServerTestUtils {
 		return FileSystemUtils.deleteRecursively(dest);
 	}
 
-	public static Object getProperty(Environment env, String sourceNameEndsWith, String property) {
-		for(PropertySource source: env.getPropertySources()) {
-			if(source.getName().endsWith(sourceNameEndsWith)) {
+	public static Object getProperty(Environment env, String sourceNameEndsWith,
+			String property) {
+		for (PropertySource source : env.getPropertySources()) {
+			if (source.getName().endsWith(sourceNameEndsWith)) {
 				return source.getSource().get(property);
 			}
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.support;
 
 import java.util.ArrayList;
@@ -38,7 +39,8 @@ import org.eclipse.jgit.transport.URIish;
  */
 public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider {
 
-	private static final Pattern FORMAT_PLACEHOLDER_PATTERN = Pattern.compile("\\s*\\{\\d}\\s*");
+	private static final Pattern FORMAT_PLACEHOLDER_PATTERN = Pattern
+			.compile("\\s*\\{\\d}\\s*");
 
 	private final CredentialsProvider delegate;
 
@@ -47,15 +49,21 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 	}
 
 	/**
-	 * This provider can handle uris like https://github.com/org/repo
+	 * This provider can handle uris like https://github.com/org/repo .
+	 * @param uri uri to verify if can be handled
+	 * @return {@code true} if it can be handled
 	 */
 	public static boolean canHandle(String uri) {
 		return uri != null && uri.toLowerCase().startsWith("https://");
 	}
 
+	private static String stripFormattingPlaceholders(String string) {
+		return FORMAT_PLACEHOLDER_PATTERN.matcher(string).replaceAll("");
+	}
+
 	@Override
 	public boolean isInteractive() {
-		return (delegate != null) && delegate.isInteractive();
+		return (this.delegate != null) && this.delegate.isInteractive();
 	}
 
 	@Override
@@ -65,8 +73,9 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 		for (CredentialItem item : items) {
 			if (item instanceof CredentialItem.InformationalMessage
 					&& item.getPromptText() != null && item.getPromptText()
-							.contains(JGitText.get().sslFailureTrustExplanation))
+							.contains(JGitText.get().sslFailureTrustExplanation)) {
 				continue;
+			}
 
 			if (item instanceof CredentialItem.YesNoType && item.getPromptText() != null
 					&& (item.getPromptText().equals(JGitText.get().sslTrustNow)
@@ -74,14 +83,15 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 									.startsWith(stripFormattingPlaceholders(
 											JGitText.get().sslTrustForRepo))
 							|| item.getPromptText()
-									.equals(JGitText.get().sslTrustAlways)))
+									.equals(JGitText.get().sslTrustAlways))) {
 				continue;
+			}
 
 			unprocessedItems.add(item);
 		}
 
-		return unprocessedItems.isEmpty() || (delegate != null
-				&& delegate.supports(unprocessedItems.toArray(new CredentialItem[0])));
+		return unprocessedItems.isEmpty() || (this.delegate != null && this.delegate
+				.supports(unprocessedItems.toArray(new CredentialItem[0])));
 	}
 
 	@Override
@@ -116,8 +126,9 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 		if (unprocessedItems.isEmpty()) {
 			return true;
 		}
-		if (delegate != null) {
-			return delegate.get(uri, unprocessedItems.toArray(new CredentialItem[0]));
+		if (this.delegate != null) {
+			return this.delegate.get(uri,
+					unprocessedItems.toArray(new CredentialItem[0]));
 		}
 		throw new UnsupportedCredentialItem(uri,
 				unprocessedItems.size() + " credential items not supported");
@@ -125,12 +136,9 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 
 	@Override
 	public void reset(URIish uri) {
-		if (delegate != null) {
-			delegate.reset(uri);
+		if (this.delegate != null) {
+			this.delegate.reset(uri);
 		}
 	}
 
-	private static String stripFormattingPlaceholders(String string) {
-		return FORMAT_PLACEHOLDER_PATTERN.matcher(string).replaceAll("");
-	}
 }

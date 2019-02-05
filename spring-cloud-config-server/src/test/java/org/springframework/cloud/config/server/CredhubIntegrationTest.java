@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server;
 
 import org.junit.Before;
@@ -40,20 +41,24 @@ public class CredhubIntegrationTest {
 
 	@Before
 	public void setUp() {
-		CredHubCredentialOperations credhubCredentialOperations = Mockito.mock(CredHubCredentialOperations.class);
+		CredHubCredentialOperations credhubCredentialOperations = Mockito
+				.mock(CredHubCredentialOperations.class);
 
 		String expectedPath = "/myapp/master/default";
-		SimpleCredentialName togglesCredentialName = new SimpleCredentialName(expectedPath + "/toggles");
-		when(credhubCredentialOperations
-				.findByPath(expectedPath))
+		SimpleCredentialName togglesCredentialName = new SimpleCredentialName(
+				expectedPath + "/toggles");
+		when(credhubCredentialOperations.findByPath(expectedPath))
 				.thenReturn(singletonList(new CredentialSummary(togglesCredentialName)));
 		JsonCredential credentials = new JsonCredential();
 		credentials.put("key", "value");
-		when(credhubCredentialOperations
-				.getByName(new SimpleCredentialName(expectedPath + "/toggles"), JsonCredential.class))
-				.thenReturn(new CredentialDetails<>("id1", togglesCredentialName, CredentialType.JSON, credentials));
+		when(credhubCredentialOperations.getByName(
+				new SimpleCredentialName(expectedPath + "/toggles"),
+				JsonCredential.class))
+						.thenReturn(new CredentialDetails<>("id1", togglesCredentialName,
+								CredentialType.JSON, credentials));
 
-		when(credHubOperations.credentials()).thenReturn(credhubCredentialOperations);
+		when(this.credHubOperations.credentials())
+				.thenReturn(credhubCredentialOperations);
 	}
 
 }
