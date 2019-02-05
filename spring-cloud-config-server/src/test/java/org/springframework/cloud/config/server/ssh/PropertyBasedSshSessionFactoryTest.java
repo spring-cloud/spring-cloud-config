@@ -25,6 +25,7 @@ import java.util.Map;
 import com.jcraft.jsch.HostKey;
 import com.jcraft.jsch.HostKeyRepository;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.ProxyHTTP;
 import com.jcraft.jsch.Session;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.junit.Test;
@@ -34,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -72,6 +74,9 @@ public class PropertyBasedSshSessionFactoryTest {
 
 	@Mock
 	private HostKeyRepository hostKeyRepository;
+
+	@Mock
+	private ProxyHTTP proxyMock;
 
 	public static String getResourceAsString(String path) {
 		try {
@@ -194,11 +199,38 @@ public class PropertyBasedSshSessionFactoryTest {
 		assertThat(captor.getValue()).isEqualTo("/ssh/known_hosts");
 	}
 
+	@Test
+	public void proxySettingsIsUsed() {
+		JGitEnvironmentProperties sshProperties = new JGitEnvironmentProperties();
+		sshProperties.setPrivateKey(PRIVATE_KEY);
+		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> map = new HashMap<>();
+		ProxyHostProperties proxyHostProperties = new ProxyHostProperties();
+		proxyHostProperties.setUsername("user");
+		proxyHostProperties.setPassword("password");
+		map.put(ProxyHostProperties.ProxyForScheme.HTTP, proxyHostProperties);
+
+		sshProperties.setProxy(map);
+		setupSessionFactory(sshProperties);
+
+		this.factory.configure(this.hc, this.session);
+		ArgumentCaptor<ProxyHTTP> captor = ArgumentCaptor.forClass(ProxyHTTP.class);
+
+		verify(this.session).setProxy(captor.capture());
+		assertThat(captor.getValue()).isNotNull();
+		verify(this.proxyMock).setUserPasswd("user", "password");
+	}
+
 	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {
 		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new HashMap<>();
 		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()),
 				sshKey);
-		this.factory = new PropertyBasedSshSessionFactory(sshKeysByHostname, this.jSch);
+		this.factory = new PropertyBasedSshSessionFactory(sshKeysByHostname, this.jSch) {
+
+			@Override
+			protected ProxyHTTP createProxy(ProxyHostProperties proxyHostProperties) {
+				return proxyMock;
+			}
+		};
 		when(this.hc.getHostName())
 				.thenReturn(SshUriPropertyProcessor.getHostname(sshKey.getUri()));
 		when(this.jSch.getHostKeyRepository()).thenReturn(this.hostKeyRepository);

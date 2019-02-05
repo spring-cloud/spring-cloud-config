@@ -21,6 +21,7 @@ import java.util.Map;
 import com.jcraft.jsch.HostKey;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.ProxyHTTP;
 import com.jcraft.jsch.Session;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig.Host;
@@ -28,6 +29,7 @@ import org.eclipse.jgit.util.Base64;
 import org.eclipse.jgit.util.FS;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 
 /**
  * In a cloud environment local SSH config files such as `.known_hosts` may not be
@@ -78,6 +80,20 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 		if (preferredAuthentications != null) {
 			session.setConfig(PREFERRED_AUTHENTICATIONS, preferredAuthentications);
 		}
+
+		ProxyHostProperties proxyHostProperties = sshProperties.getProxy()
+				.get(ProxyHostProperties.ProxyForScheme.HTTP);
+		if (proxyHostProperties != null) {
+			ProxyHTTP proxy = createProxy(proxyHostProperties);
+			proxy.setUserPasswd(proxyHostProperties.getUsername(),
+					proxyHostProperties.getPassword());
+			session.setProxy(proxy);
+		}
+	}
+
+	protected ProxyHTTP createProxy(ProxyHostProperties proxyHostProperties) {
+		return new ProxyHTTP(proxyHostProperties.getHost(),
+				proxyHostProperties.getPort());
 	}
 
 	@Override
