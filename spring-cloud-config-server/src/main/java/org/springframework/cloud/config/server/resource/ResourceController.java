@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.util.UrlPathHelper;
 
 /**
@@ -71,23 +72,23 @@ public class ResourceController {
 
 	@RequestMapping("/{name}/{profile}/{label}/**")
 	public String retrieve(@PathVariable String name, @PathVariable String profile,
-			@PathVariable String label, HttpServletRequest request,
+        	@PathVariable String label, ServletWebRequest request,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
 		String path = getFilePath(request, name, profile, label);
-		return retrieve(name, profile, label, path, resolvePlaceholders);
+		return retrieve(request, name, profile, label, path, resolvePlaceholders);
 	}
 
 	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel")
 	public String retrieve(@PathVariable String name, @PathVariable String profile,
-			HttpServletRequest request,
+			ServletWebRequest request,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
 		String path = getFilePath(request, name, profile, null);
-		return retrieve(name, profile, null, path, resolvePlaceholders);
+		return retrieve(request, name, profile, null, path, resolvePlaceholders);
 	}
 
-	private String getFilePath(HttpServletRequest request, String name, String profile,
+	private String getFilePath(ServletWebRequest request, String name, String profile,
 			String label) {
 		String stem;
 		if(label != null ) {
@@ -95,63 +96,97 @@ public class ResourceController {
 		}else {
 			stem = String.format("/%s/%s/", name, profile);
 		}
-		String path = this.helper.getPathWithinApplication(request);
+		String path = this.helper.getPathWithinApplication(request.getRequest());
 		path = path.substring(path.indexOf(stem) + stem.length());
 		return path;
 	}
 
-	synchronized String retrieve(String name, String profile, String label, String path,
-			boolean resolvePlaceholders) throws IOException {
-		if (name != null && name.contains("(_)")) {
-			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
-			// by Spring MVC
-			name = name.replace("(_)", "/");
+	synchronized String retrieve(ServletWebRequest request, String name, String profile, String label,
+			String path, boolean resolvePlaceholders) throws IOException {
+		name = resolveName(name);
+		label = resolveLabel(label);
+		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+		if (checkNotModified(request, resource)) {
+			// Content was not modified. Just return.
+			return null;
 		}
-		if (label != null && label.contains("(_)")) {
-			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
-			// by Spring MVC
-			label = label.replace("(_)", "/");
-		}
-
 		// ensure InputStream will be closed to prevent file locks on Windows
-		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
-				.getInputStream()) {
+		try (InputStream is = resource.getInputStream()) {
 			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
 			if (resolvePlaceholders) {
-				Environment environment = this.environmentRepository.findOne(name,
-						profile, label);
+				Environment environment = this.environmentRepository.findOne(name, profile, label);
 				text = resolvePlaceholders(prepareEnvironment(environment), text);
 			}
 			return text;
 		}
 	}
 
+	/*
+	 * Used only for unit tests.
+	 */
+	String retrieve(String name, String profile, String label, String path, boolean resolvePlaceholders)
+		throws IOException {
+		return retrieve(null, name, profile, label, path, resolvePlaceholders);
+	}
+
 	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public synchronized byte[] binary(@PathVariable String name,
 			@PathVariable String profile, @PathVariable String label,
-			HttpServletRequest request) throws IOException {
+			ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
-		return binary(name, profile, label, path);
+		return binary(request, name, profile, label, path);
 	}
 
-	synchronized byte[] binary(String name, String profile, String label, String path)
-			throws IOException {
+
+
+	/*
+	 * Used only for unit tests.
+	 */
+	byte[] binary(String name, String profile, String label, String path) throws IOException {
+		return binary(null, name, profile, label, path);
+	}
+
+	private synchronized byte[] binary(ServletWebRequest request, String name, String profile, String label,
+			String path) throws IOException {
+		name = resolveName(name);
+		label = resolveLabel(label);
+		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+		if (checkNotModified(request, resource)) {
+			// Content was not modified. Just return.
+			return null;
+		}
+		// TODO: is this line needed for side effects?
+		prepareEnvironment(this.environmentRepository.findOne(name, profile, label));
+		try (InputStream is = resource.getInputStream()) {
+			return StreamUtils.copyToByteArray(is);
+		}
+	}
+
+	private boolean checkNotModified(ServletWebRequest request, Resource resource) {
+		try {
+			return request != null && request.checkNotModified(resource.lastModified());
+		} catch (Exception ex) {
+			// Ignore the exception since caching is optional.
+		}
+		return false;
+	}
+
+	private String resolveName(String name) {
 		if (name != null && name.contains("(_)")) {
 			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
 			// by Spring MVC
 			name = name.replace("(_)", "/");
 		}
+		return name;
+	}
+
+	private String resolveLabel(String label) {
 		if (label != null && label.contains("(_)")) {
 			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
 			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
-		// TODO: is this line needed for side effects?
-		prepareEnvironment(this.environmentRepository.findOne(name, profile, label));
-		try (InputStream is = this.resourceRepository.findOne(name, profile, label, path)
-				.getInputStream()) {
-			return StreamUtils.copyToByteArray(is);
-		}
+		return label;
 	}
 
 	@ExceptionHandler(NoSuchResourceException.class)

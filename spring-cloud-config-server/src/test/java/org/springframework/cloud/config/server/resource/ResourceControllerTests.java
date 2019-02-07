@@ -27,6 +27,8 @@ import org.springframework.cloud.config.server.environment.NativeEnvironmentRepo
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.context.request.ServletWebRequest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -69,7 +71,7 @@ public class ResourceControllerTests {
 		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", true);
 		assertTrue("Wrong content: " + resource, resource.matches("\\{\\s*\"foo\": \"dev_bar\"\\s*\\}"));
 	}
-	
+
 	@Test
 	public void templateReplacementNotForResolvePlaceholdersFalse() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
@@ -155,8 +157,9 @@ public class ResourceControllerTests {
 	public void resourceWithSlashRequest() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		MockHttpServletRequest request = new MockHttpServletRequest();
+		ServletWebRequest webRequest = new ServletWebRequest(request, new MockHttpServletResponse());
 		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
-		String resource = this.controller.retrieve("foo", "bar", "dev", request, true);
+		String resource = this.controller.retrieve("foo", "bar", "dev", webRequest, true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
@@ -164,9 +167,10 @@ public class ResourceControllerTests {
 	public void resourceWithSlashRequestAndServletPath() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		MockHttpServletRequest request = new MockHttpServletRequest();
+		ServletWebRequest webRequest = new ServletWebRequest(request, new MockHttpServletResponse());
 		request.setServletPath("/spring");
 		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
-		String resource = this.controller.retrieve("foo", "bar", "dev", request, true);
+		String resource = this.controller.retrieve("foo", "bar", "dev", webRequest, true);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
 
@@ -188,11 +192,12 @@ public class ResourceControllerTests {
 	public void resourceWithSlashForResolvePlaceholdersFalseRequest() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		MockHttpServletRequest request = new MockHttpServletRequest();
+		ServletWebRequest webRequest = new ServletWebRequest(request, new MockHttpServletResponse());
 		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
-		String resource = this.controller.retrieve("foo", "bar", "dev", request, false);
+		String resource = this.controller.retrieve("foo", "bar", "dev", webRequest, false);
 		assertEquals("foo: dev_bar/spam", resource);
 	}
-	
+
 	@Test
 	public void applicationAndLabelPlaceholdersWithoutSlashForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}/{label}");
@@ -257,8 +262,9 @@ public class ResourceControllerTests {
 	public void resourceWithSlashForBinaryRequest() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		MockHttpServletRequest request = new MockHttpServletRequest();
+		ServletWebRequest webRequest = new ServletWebRequest(request, new MockHttpServletResponse());
 		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
-		byte[] resource = this.controller.binary("foo", "bar", "dev", request );
+		byte[] resource = this.controller.binary("foo", "bar", "dev", webRequest);
 		assertEquals("foo: dev_bar/spam", new String(resource));
 	}
 
