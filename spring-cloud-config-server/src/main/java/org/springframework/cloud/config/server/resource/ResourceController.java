@@ -70,18 +70,6 @@ public class ResourceController {
 		this.helper.setAlwaysUseFullPath(true);
 	}
 
-	/*
-	 * This method is here to provide backward compatibility for anyone who
-	 * might have been calling it. It does not support last modified checks.
-	 * @Deprecated
-	 */
-	public String retrieve(String name, String profile, String label,
-			HttpServletRequest request, boolean resolvePlaceholders)
-		throws IOException {
-		return retrieve(name, profile, label, new ServletWebRequest(request),
-			resolvePlaceholders);
-	}
-
 	@RequestMapping("/{name}/{profile}/{label}/**")
 	public String retrieve(@PathVariable String name, @PathVariable String profile,
         	@PathVariable String label, ServletWebRequest request,
@@ -89,17 +77,6 @@ public class ResourceController {
 			throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return retrieve(request, name, profile, label, path, resolvePlaceholders);
-	}
-
-	/*
-	 * This method is here to provide backward compatibility for anyone who
-	 * might have been calling it. It does not support last modified checks.
-	 * @Deprecated
-	 */
-	public String retrieve(String name, String profile,
-		HttpServletRequest request, boolean resolvePlaceholders)
-		throws IOException {
-		return retrieve(name, profile, new ServletWebRequest(request), resolvePlaceholders);
 	}
 
 	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel")
@@ -150,16 +127,6 @@ public class ResourceController {
 	String retrieve(String name, String profile, String label, String path, boolean resolvePlaceholders)
 		throws IOException {
 		return retrieve(null, name, profile, label, path, resolvePlaceholders);
-	}
-
-	/*
-	 * This method is here to provide backward compatibility for anyone who
-	 * might have been calling it. It does not support last modified checks.
-	 * @Deprecated
-	 */
-	public byte[] binary(String name, String profile, String label,
-			HttpServletRequest request) throws IOException {
-		return binary(name, profile, label, new ServletWebRequest(request));
 	}
 
 	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
