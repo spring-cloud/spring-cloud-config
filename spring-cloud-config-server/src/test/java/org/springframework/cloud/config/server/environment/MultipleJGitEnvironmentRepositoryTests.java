@@ -94,10 +94,13 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void baseDirRepo() {
-		this.repository.setUri(this.repository.getUri().replace("config-repo", "{application}"));
+		this.repository
+				.setUri(this.repository.getUri().replace("config-repo", "{application}"));
 		repository.setBasedir(new File("target/testBase"));
-		JGitEnvironmentRepository newRepo = this.repository.getRepository(this.repository, "config-repo", "staging", "master");
-		assertTrue(newRepo.getBasedir().getAbsolutePath().contains("target/testBase"));
+		JGitEnvironmentRepository newRepo = this.repository.getRepository(this.repository,
+				"config-repo", "staging", "master");
+		assertThat(newRepo.getBasedir().getAbsolutePath().contains("target/testBase"))
+				.isTrue();
 	}
 
 	private void assertVersion(Environment environment) {
