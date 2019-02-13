@@ -200,7 +200,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		return list;
 	}
 
-	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository repository,
+	JGitEnvironmentRepository getRepository(JGitEnvironmentRepository repository,
 			String application, String profile, String label) {
 		if (!repository.getUri().contains("{")) {
 			return repository;
@@ -234,8 +234,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		File basedir = repository.getBasedir();
 		BeanUtils.copyProperties(source, repository);
 		repository.setUri(uri);
-		repository.setBasedir(
-				new File(source.getBasedir().getParentFile(), basedir.getName()));
+		repository.setBasedir(new File(source.getBasedir(), basedir.getName()));
 		return repository;
 	}
 

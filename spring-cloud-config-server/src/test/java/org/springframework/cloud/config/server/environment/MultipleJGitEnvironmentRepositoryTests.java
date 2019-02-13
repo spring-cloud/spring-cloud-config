@@ -92,6 +92,17 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		assertVersion(environment);
 	}
 
+	@Test
+	public void baseDirRepo() {
+		this.repository
+				.setUri(this.repository.getUri().replace("config-repo", "{application}"));
+		repository.setBasedir(new File("target/testBase"));
+		JGitEnvironmentRepository newRepo = this.repository.getRepository(this.repository,
+				"config-repo", "staging", "master");
+		assertThat(newRepo.getBasedir().getAbsolutePath().contains("target/testBase"))
+				.isTrue();
+	}
+
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
 		assertThat(version).as("version was null").isNotNull();
