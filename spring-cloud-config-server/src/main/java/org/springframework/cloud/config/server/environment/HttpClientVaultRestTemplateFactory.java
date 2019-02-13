@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.security.GeneralSecurityException;
 
 import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.CloseableHttpClient;
 
 import org.springframework.cloud.config.server.support.HttpClientSupport;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -27,11 +27,14 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author Dylan Roberts
  */
-public class HttpClientVaultRestTemplateFactory implements VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory {
+public class HttpClientVaultRestTemplateFactory
+		implements VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory {
 
-    @Override
-    public RestTemplate build(VaultEnvironmentProperties environmentProperties) throws GeneralSecurityException {
-        HttpClient httpClient = HttpClientSupport.builder(environmentProperties).build();
-        return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
-    }
+	@Override
+	public RestTemplate build(VaultEnvironmentProperties environmentProperties)
+			throws GeneralSecurityException {
+		HttpClient httpClient = HttpClientSupport.builder(environmentProperties).build();
+		return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
+	}
+
 }

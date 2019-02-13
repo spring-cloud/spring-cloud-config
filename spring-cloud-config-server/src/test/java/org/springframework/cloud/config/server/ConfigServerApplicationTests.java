@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.test.ClassPathExclusions;
 import org.springframework.cloud.test.ModifiedClassPathRunner;
@@ -34,9 +35,11 @@ public class ConfigServerApplicationTests {
 
 	@Test
 	public void contextLoads() {
-		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(ConfigServerApplication.class)
-				.properties("spring.config.name=configserver").run("--server.port=0")) {
-
+		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(
+				ConfigServerApplication.class)
+						.properties("spring.config.name=configserver")
+						.run("--server.port=0")) {
+			// empty
 		}
 	}
 

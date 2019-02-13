@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,14 @@ public class JGitEnvironmentRepositorySslTests {
 		server.stop();
 	}
 
+	private static String[] configServerProperties(String... extraProperties) {
+		List<String> properties = new ArrayList<>(Arrays.asList(extraProperties));
+		properties.add("spring.cloud.config.server.git.uri=" + server.getSecureUri());
+		properties.add("spring.cloud.config.server.git.username=agitter");
+		properties.add("spring.cloud.config.server.git.password=letmein");
+		return properties.toArray(new String[0]);
+	}
+
 	@Test(expected = CertificateException.class)
 	public void selfSignedCertIsRejected() throws Throwable {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
@@ -73,8 +81,9 @@ public class JGitEnvironmentRepositorySslTests {
 		catch (Throwable e) {
 			while (e.getCause() != null) {
 				e = e.getCause();
-				if (e instanceof CertificateException)
+				if (e instanceof CertificateException) {
 					break;
+				}
 			}
 			throw e;
 		}
@@ -93,18 +102,12 @@ public class JGitEnvironmentRepositorySslTests {
 		repository.findOne("bar", "staging", "master");
 	}
 
-	private static String[] configServerProperties(String... extraProperties) {
-		List<String> properties = new ArrayList<>(Arrays.asList(extraProperties));
-		properties.add("spring.cloud.config.server.git.uri=" + server.getSecureUri());
-		properties.add("spring.cloud.config.server.git.username=agitter");
-		properties.add("spring.cloud.config.server.git.password=letmein");
-		return properties.toArray(new String[0]);
-	}
-
 	@Configuration
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })
 	static class TestConfiguration {
+
 	}
+
 }

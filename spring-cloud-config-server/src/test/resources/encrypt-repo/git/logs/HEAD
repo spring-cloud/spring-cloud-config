@@ -5,3 +5,4 @@
 7df4a26d5437d9d4090cd5809967f870444cde8f 7df4a26d5437d9d4090cd5809967f870444cde8f Ryan Baxter <rbaxter@pivotal.io> 1481905552 -0500	checkout: moving from composite to raw
 7df4a26d5437d9d4090cd5809967f870444cde8f 9f01fb972bc9617e4ea59f5c8ee3ceb5ff515cd0 Dave Syer <dsyer@pivotal.io> 1498491043 +0100	checkout: moving from raw to master
 9f01fb972bc9617e4ea59f5c8ee3ceb5ff515cd0 ad5e0cb7036ed11ddd4b7be6ed86ad3565c8a3fc Dave Syer <dsyer@pivotal.io> 1498491468 +0100	commit: Add encrypted property
+ad5e0cb7036ed11ddd4b7be6ed86ad3565c8a3fc bd414a6cc8653d7e282df0a257babc6283b83596 Marcin Grzejszczak <marcin@grzejszczak.pl> 1549357702 +0100	commit: Updated

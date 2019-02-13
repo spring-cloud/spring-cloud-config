@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import static java.util.UUID.randomUUID;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(Parameterized.class)
 public class CipherEnvironmentEncryptorTests {
@@ -41,23 +41,23 @@ public class CipherEnvironmentEncryptorTests {
 
 	EnvironmentEncryptor encryptor;
 
-	@Parameters
-	public static List<Object[]> params() {
-		List<Object[]> list = new ArrayList<>();
-		list.add(new Object[] { "deadbeef", "foo" });
-		list.add(new Object[] { "4567890a12345678", "bar" });
-		return list;
-	}
-
 	public CipherEnvironmentEncryptorTests(String salt, String key) {
-		textEncryptor = new EncryptorFactory(salt).create(key);
-		encryptor = new CipherEnvironmentEncryptor(new TextEncryptorLocator() {
+		this.textEncryptor = new EncryptorFactory(salt).create(key);
+		this.encryptor = new CipherEnvironmentEncryptor(new TextEncryptorLocator() {
 
 			@Override
 			public TextEncryptor locate(Map<String, String> keys) {
 				return CipherEnvironmentEncryptorTests.this.textEncryptor;
 			}
 		});
+	}
+
+	@Parameters
+	public static List<Object[]> params() {
+		List<Object[]> list = new ArrayList<>();
+		list.add(new Object[] { "deadbeef", "foo" });
+		list.add(new Object[] { "4567890a12345678", "bar" });
+		return list;
 	}
 
 	@Test
@@ -71,8 +71,8 @@ public class CipherEnvironmentEncryptorTests {
 				environment.getName(), "{cipher}" + this.textEncryptor.encrypt(secret))));
 
 		// then
-		assertEquals(secret, this.encryptor.decrypt(environment).getPropertySources()
-				.get(0).getSource().get(environment.getName()));
+		assertThat(this.encryptor.decrypt(environment).getPropertySources().get(0)
+				.getSource().get(environment.getName())).isEqualTo(secret);
 	}
 
 	@Test
@@ -87,8 +87,21 @@ public class CipherEnvironmentEncryptorTests {
 						"{cipher}{key:test}" + this.textEncryptor.encrypt(secret))));
 
 		// then
-		assertEquals(secret, this.encryptor.decrypt(environment).getPropertySources()
-				.get(0).getSource().get(environment.getName()));
+		assertThat(this.encryptor.decrypt(environment).getPropertySources().get(0)
+				.getSource().get(environment.getName())).isEqualTo(secret);
+	}
+
+	@Test
+	public void shouldBeAbleToUseNullAsPropertyValue() {
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a",
+				Collections.<Object, Object>singletonMap(environment.getName(), null)));
+
+		// then
+		assertThat(this.encryptor.decrypt(environment).getPropertySources().get(0)
+				.getSource().get(environment.getName())).isEqualTo(null);
 	}
 
 }

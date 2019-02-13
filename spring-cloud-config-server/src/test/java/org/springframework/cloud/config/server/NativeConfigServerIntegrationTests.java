@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.config.server;
 
 import java.io.IOException;
@@ -16,37 +32,39 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class,
-		properties = { "spring.config.name:configserver" },
-		webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class, properties = {
+		"spring.config.name:configserver" }, webEnvironment = RANDOM_PORT)
 @ActiveProfiles({ "test", "native" })
 public class NativeConfigServerIntegrationTests {
-	
+
 	@LocalServerPort
 	private int port;
-	
+
 	@BeforeClass
-	public static void init() throws IOException{
+	public static void init() throws IOException {
 		ConfigServerTestUtils.prepareLocalRepo();
 	}
 
 	@Test
 	public void contextLoads() {
-		Environment environment = new TestRestTemplate().getForObject("http://localhost:" + port + "/foo/development/", Environment.class);
-		assertFalse(environment.getPropertySources().isEmpty());
-		assertEquals("overrides", environment.getPropertySources().get(0).getName());
-		assertEquals("{spring.cloud.config.enabled=true}", environment.getPropertySources().get(0).getSource().toString());
+		Environment environment = new TestRestTemplate().getForObject(
+				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		assertThat(environment.getPropertySources().isEmpty()).isFalse();
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo("overrides");
+		assertThat(environment.getPropertySources().get(0).getSource().toString())
+				.isEqualTo("{spring.cloud.config.enabled=true}");
 	}
 
 	@Test
 	public void badYaml() {
-		ResponseEntity<String> response = new TestRestTemplate().getForEntity("http://localhost:"
-				+ port + "/bad/default/", String.class);
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+		ResponseEntity<String> response = new TestRestTemplate().getForEntity(
+				"http://localhost:" + this.port + "/bad/default/", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
+
 }

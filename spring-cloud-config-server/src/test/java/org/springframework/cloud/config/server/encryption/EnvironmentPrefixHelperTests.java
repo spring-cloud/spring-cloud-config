@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Collections;
 import java.util.Map;
 
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -33,62 +33,66 @@ public class EnvironmentPrefixHelperTests {
 
 	@Test
 	public void testAddPrefix() {
-		assertEquals("{bar:spam}foo",
-				this.helper.addPrefix(Collections.singletonMap("bar", "spam"), "foo"));
+		assertThat(this.helper.addPrefix(Collections.singletonMap("bar", "spam"), "foo"))
+				.isEqualTo("{bar:spam}foo");
 	}
 
 	@Test
 	public void testAddNoPrefix() {
-		assertEquals("foo",
-				this.helper.addPrefix(Collections.<String, String> emptyMap(), "foo"));
+		assertThat(this.helper.addPrefix(Collections.<String, String>emptyMap(), "foo"))
+				.isEqualTo("foo");
 	}
 
 	@Test
 	public void testStripNoPrefix() {
-		assertEquals("foo", this.helper.stripPrefix("foo"));
+		assertThat(this.helper.stripPrefix("foo")).isEqualTo("foo");
 	}
 
 	@Test
 	public void testStripPrefix() {
-		assertEquals("foo", this.helper.stripPrefix("{key:foo}foo"));
+		assertThat(this.helper.stripPrefix("{key:foo}foo")).isEqualTo("foo");
 	}
 
 	@Test
 	public void testStripPrefixWithEscape() {
-		assertEquals("{key:foo}foo", this.helper.stripPrefix("{plain}{key:foo}foo"));
+		assertThat(this.helper.stripPrefix("{plain}{key:foo}foo"))
+				.isEqualTo("{key:foo}foo");
 	}
 
 	@Test
 	public void testKeysDefaults() {
 		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar", "spam");
-		assertEquals("foo", keys.get("name"));
-		assertEquals("bar", keys.get("profiles"));
+		assertThat(keys.get("name")).isEqualTo("foo");
+		assertThat(keys.get("profiles")).isEqualTo("bar");
 	}
 
 	@Test
 	public void testKeysWithPrefix() {
 		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar",
 				"{key:mykey}foo");
-		assertEquals(3, keys.size());
-		assertEquals("mykey", keys.get("key"));
+		assertThat(keys.size()).isEqualTo(3);
+		assertThat(keys.get("key")).isEqualTo("mykey");
 	}
 
 	@Test
 	public void testKeysWithPrefixAndEscape() {
 		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar",
 				"{key:mykey}{plain}{foo:bar}foo");
-		assertEquals(3, keys.size());
-		assertEquals("mykey", keys.get("key"));
+		assertThat(keys.size()).isEqualTo(3);
+		assertThat(keys.get("key")).isEqualTo("mykey");
 	}
 
 	@Test
 	public void testTextWithCurlyBracesNoPrefix() {
-		assertEquals("textwith}brac{es", this.helper.stripPrefix("textwith}brac{es"));
+		assertThat(this.helper.stripPrefix("textwith}brac{es"))
+				.isEqualTo("textwith}brac{es");
 	}
 
 	@Test
 	public void testTextWithCurlyBracesPrefix() {
-		assertEquals("textwith}brac{es{and}prefix", this.helper
-				.stripPrefix("{key:foo}{name:bar}textwith}brac{es{and}prefix"));
+		assertThat(
+				this.helper.stripPrefix("{key:foo}{name:bar}textwith}brac{es{and}prefix"))
+						.isEqualTo("textwith}brac{es{and}prefix");
 	}
+
 }

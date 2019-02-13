@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -48,35 +45,36 @@ public class CompositePropertyPathNotificationExtractorTests {
 	public void githubSample() throws Exception {
 		// See https://developer.github.com/v3/activity/events/types/#pushevent
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("github.json").getInputStream(),
+				new ClassPathResource("pathsamples/github.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Github-Event", "push");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
-		assertNotNull(extracted);
-		assertEquals("README.md", extracted.getPaths()[0]);
+		assertThat(extracted).isNotNull();
+		assertThat(extracted.getPaths()[0]).isEqualTo("README.md");
 	}
 
 	@Test
 	public void gitlabDetected() throws Exception {
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("gitlab.json").getInputStream(),
+				new ClassPathResource("pathsamples/gitlab.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Gitlab-Event", "Push Hook");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
-		assertNotNull(extracted);
+		assertThat(extracted).isNotNull();
 		String[] paths = extracted.getPaths();
-		assertThat("paths was wrong", paths, arrayContainingInAnyOrder("oldapp.yml", "newapp.properties", "application.yml"));
+		assertThat(paths).as("paths was wrong").contains("oldapp.yml",
+				"newapp.properties", "application.yml");
 	}
 
 	@Test
 	public void fallback() throws Exception {
-		Map<String, Object> value = Collections.<String, Object> singletonMap("path",
+		Map<String, Object> value = Collections.<String, Object>singletonMap("path",
 				"foo");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
-		assertNotNull(extracted);
-		assertEquals("foo", extracted.getPaths()[0]);
+		assertThat(extracted).isNotNull();
+		assertThat(extracted.getPaths()[0]).isEqualTo("foo");
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.config;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,7 +35,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -53,14 +54,19 @@ public class CustomEnvironmentRepositoryTests {
 	@Test
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + port + "/foo/development/", Environment.class);
-		assertFalse(environment.getPropertySources().isEmpty());
+				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableConfigServer
 	protected static class TestApplication {
+
+		public static void main(String[] args) throws Exception {
+			SpringApplication.run(CustomEnvironmentRepositoryTests.TestApplication.class,
+					args);
+		}
 
 		@Bean
 		public EnvironmentRepository environmentRepository() {
@@ -73,11 +79,6 @@ public class CustomEnvironmentRepositoryTests {
 							"state");
 				}
 			};
-		}
-
-		public static void main(String[] args) throws Exception {
-			SpringApplication.run(CustomEnvironmentRepositoryTests.TestApplication.class,
-					args);
 		}
 
 	}

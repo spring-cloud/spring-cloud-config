@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.config.server.environment;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -9,6 +25,7 @@ import org.springframework.web.client.RestClientException;
 
 /**
  * Strategy interface to obtain secrets from Vault's key-value secret backend.
+ *
  * @author Haroun Pacquee
  * @author Mark Paluch
  * @since 2.0
@@ -29,6 +46,9 @@ public interface VaultKvAccessStrategy {
 	String getData(HttpHeaders headers, String backend, String key)
 			throws RestClientException;
 
+	/**
+	 * Vault response POJO.
+	 */
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	class VaultResponse {
 
@@ -48,7 +68,7 @@ public interface VaultKvAccessStrategy {
 		}
 
 		public String getAuth() {
-			return auth;
+			return this.auth;
 		}
 
 		public void setAuth(String auth) {
@@ -56,7 +76,7 @@ public interface VaultKvAccessStrategy {
 		}
 
 		public Object getData() {
-			return data;
+			return this.data;
 		}
 
 		public void setData(JsonNode data) {
@@ -64,7 +84,7 @@ public interface VaultKvAccessStrategy {
 		}
 
 		public long getLeaseDuration() {
-			return leaseDuration;
+			return this.leaseDuration;
 		}
 
 		public void setLeaseDuration(long leaseDuration) {
@@ -72,7 +92,7 @@ public interface VaultKvAccessStrategy {
 		}
 
 		public String getLeaseId() {
-			return leaseId;
+			return this.leaseId;
 		}
 
 		public void setLeaseId(String leaseId) {
@@ -80,11 +100,13 @@ public interface VaultKvAccessStrategy {
 		}
 
 		public boolean isRenewable() {
-			return renewable;
+			return this.renewable;
 		}
 
 		public void setRenewable(boolean renewable) {
 			this.renewable = renewable;
 		}
+
 	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.support;
 
 import java.net.ProxySelector;
@@ -34,35 +35,45 @@ import org.springframework.util.CollectionUtils;
 /**
  * @author Dylan Roberts
  */
-public class HttpClientSupport {
+public final class HttpClientSupport {
 
-    public static HttpClientBuilder builder(HttpEnvironmentRepositoryProperties environmentProperties)
-            throws GeneralSecurityException {
-        SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
-        HttpClientBuilder httpClientBuilder = HttpClients.custom();
+	private HttpClientSupport() {
+		throw new IllegalStateException("Can't instantiate a utility class");
+	}
 
-        if (environmentProperties.isSkipSslValidation()) {
-            sslContextBuilder.loadTrustMaterial(null, (certificate, authType) -> true);
-            httpClientBuilder.setSSLHostnameVerifier(new NoopHostnameVerifier());
-        }
+	public static HttpClientBuilder builder(
+			HttpEnvironmentRepositoryProperties environmentProperties)
+			throws GeneralSecurityException {
+		SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
+		HttpClientBuilder httpClientBuilder = HttpClients.custom();
 
-        if (!CollectionUtils.isEmpty(environmentProperties.getProxy())) {
-            ProxyHostProperties httpsProxy = environmentProperties.getProxy().get(ProxyHostProperties.ProxyForScheme.HTTPS);
-            ProxyHostProperties httpProxy = environmentProperties.getProxy().get(ProxyHostProperties.ProxyForScheme.HTTP);
+		if (environmentProperties.isSkipSslValidation()) {
+			sslContextBuilder.loadTrustMaterial(null, (certificate, authType) -> true);
+			httpClientBuilder.setSSLHostnameVerifier(new NoopHostnameVerifier());
+		}
 
-            httpClientBuilder.setRoutePlanner(new SchemeBasedRoutePlanner(httpsProxy, httpProxy));
-            httpClientBuilder.setDefaultCredentialsProvider(new ProxyHostCredentialsProvider(httpProxy, httpsProxy));
-        } else {
-            httpClientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
-            httpClientBuilder.setDefaultCredentialsProvider(new SystemDefaultCredentialsProvider());
-        }
+		if (!CollectionUtils.isEmpty(environmentProperties.getProxy())) {
+			ProxyHostProperties httpsProxy = environmentProperties.getProxy()
+					.get(ProxyHostProperties.ProxyForScheme.HTTPS);
+			ProxyHostProperties httpProxy = environmentProperties.getProxy()
+					.get(ProxyHostProperties.ProxyForScheme.HTTP);
 
-        int timeout = environmentProperties.getTimeout() * 1000;
-        return httpClientBuilder
-                .setSSLContext(sslContextBuilder.build())
-                .setDefaultRequestConfig(RequestConfig.custom()
-                        .setSocketTimeout(timeout)
-                        .setConnectTimeout(timeout)
-                        .build());
-    }
+			httpClientBuilder
+					.setRoutePlanner(new SchemeBasedRoutePlanner(httpsProxy, httpProxy));
+			httpClientBuilder.setDefaultCredentialsProvider(
+					new ProxyHostCredentialsProvider(httpProxy, httpsProxy));
+		}
+		else {
+			httpClientBuilder.setRoutePlanner(
+					new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
+			httpClientBuilder.setDefaultCredentialsProvider(
+					new SystemDefaultCredentialsProvider());
+		}
+
+		int timeout = environmentProperties.getTimeout() * 1000;
+		return httpClientBuilder.setSSLContext(sslContextBuilder.build())
+				.setDefaultRequestConfig(RequestConfig.custom().setSocketTimeout(timeout)
+						.setConnectTimeout(timeout).build());
+	}
+
 }

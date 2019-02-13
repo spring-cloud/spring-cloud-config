@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.ArrayList;
@@ -48,6 +49,9 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
 @Validated
 public class VaultEnvironmentRepository implements EnvironmentRepository, Ordered {
 
+	/**
+	 * Vault token header name.
+	 */
 	public static final String VAULT_TOKEN = "X-Vault-Token";
 
 	/** Vault host. Defaults to 127.0.0.1. */
@@ -66,7 +70,10 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	@NotEmpty
 	private String backend;
 
-	/** The key in vault shared by all applications. Defaults to application. Set to empty to disable. */
+	/**
+	 * The key in vault shared by all applications. Defaults to application. Set to empty
+	 * to disable.
+	 */
 	private String defaultKey;
 
 	/** Vault profile separator. Defaults to comma. */
@@ -104,7 +111,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 
-		HttpServletRequest servletRequest = request.getIfAvailable();
+		HttpServletRequest servletRequest = this.request.getIfAvailable();
 		if (servletRequest == null) {
 			throw new IllegalStateException("No HttpServletRequest available");
 		}
@@ -117,7 +124,8 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 		List<String> keys = findKeys(application, scrubbedProfiles);
 
-		Environment environment = new Environment(application, profiles, label, null, newState);
+		Environment environment = new Environment(application, profiles, label, null,
+				newState);
 
 		for (String key : keys) {
 			// read raw 'data' key from vault
@@ -140,7 +148,8 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	private List<String> findKeys(String application, List<String> profiles) {
 		List<String> keys = new ArrayList<>();
 
-		if (StringUtils.hasText(this.defaultKey) && !this.defaultKey.equals(application)) {
+		if (StringUtils.hasText(this.defaultKey)
+				&& !this.defaultKey.equals(application)) {
 			keys.add(this.defaultKey);
 			addProfiles(keys, this.defaultKey, profiles);
 		}
@@ -173,10 +182,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 		String token = servletRequest.getHeader(TOKEN_HEADER);
 		if (!StringUtils.hasLength(token)) {
-			throw new IllegalArgumentException("Missing required header: " + TOKEN_HEADER);
+			throw new IllegalArgumentException(
+					"Missing required header: " + TOKEN_HEADER);
 		}
 		headers.add(VAULT_TOKEN, token);
-		return accessStrategy.getData(headers, backend, key);
+		return this.accessStrategy.getData(headers, this.backend, key);
 	}
 
 	public void setHost(String host) {
@@ -203,12 +213,13 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		this.profileSeparator = profileSeparator;
 	}
 
+	@Override
+	public int getOrder() {
+		return this.order;
+	}
+
 	public void setOrder(int order) {
 		this.order = order;
 	}
 
-	@Override
-	public int getOrder() {
-		return order;
-	}
 }

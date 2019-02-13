@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
@@ -53,17 +54,18 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	 */
 	private String defaultLabel;
 
+	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment,
+			SvnKitEnvironmentProperties properties) {
+		super(environment, properties);
+		this.defaultLabel = properties.getDefaultLabel();
+	}
+
 	public String getDefaultLabel() {
 		return this.defaultLabel;
 	}
 
 	public void setDefaultLabel(String defaultLabel) {
 		this.defaultLabel = defaultLabel;
-	}
-
-	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment, SvnKitEnvironmentProperties properties) {
-		super(environment, properties);
-		this.defaultLabel = properties.getDefaultLabel();
 	}
 
 	@Override
@@ -98,7 +100,8 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	private String[] getPaths(String application, String profile, String label) {
-		String[] locations = getSearchLocations(getSvnPath(getWorkingDirectory(), label), application, profile, label);
+		String[] locations = getSearchLocations(getSvnPath(getWorkingDirectory(), label),
+				application, profile, label);
 		boolean exists = false;
 		for (String location : locations) {
 			location = StringUtils.cleanPath(location);
@@ -127,7 +130,8 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		return id.toString();
 	}
 
-	private String update(SvnOperationFactory svnOperationFactory, String label) throws SVNException {
+	private String update(SvnOperationFactory svnOperationFactory, String label)
+			throws SVNException {
 		logger.debug("Repo already checked out - updating instead.");
 
 		try {
@@ -145,10 +149,12 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		}
 		catch (Exception e) {
 			String message = "Could not update remote for " + label + " (current local="
-					+ getWorkingDirectory().getPath() + "), remote: " + this.getUri() + ")";
+					+ getWorkingDirectory().getPath() + "), remote: " + this.getUri()
+					+ ")";
 			if (logger.isDebugEnabled()) {
 				logger.debug(message, e);
-			} else if (logger.isWarnEnabled()) {
+			}
+			else if (logger.isWarnEnabled()) {
 				logger.warn(message);
 			}
 		}
@@ -183,16 +189,16 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		// use label as path relative to repository root
 		// if it doesn't exists check branches and then tags folders
 		File svnPath = new File(workingDirectory, label);
-		if(!svnPath.exists()) {
+		if (!svnPath.exists()) {
 			svnPath = new File(workingDirectory, "branches" + File.separator + label);
-			if(!svnPath.exists()) {
+			if (!svnPath.exists()) {
 				svnPath = new File(workingDirectory, "tags" + File.separator + label);
-				if(!svnPath.exists()) {
+				if (!svnPath.exists()) {
 					throw new NoSuchLabelException("No label found for: " + label);
 				}
 			}
 		}
-		return svnPath; 
+		return svnPath;
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,8 +21,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 /**
  * @author Dylan Roberts
  */
-public class JdbcEnvironmentRepositoryFactory implements EnvironmentRepositoryFactory<JdbcEnvironmentRepository,
-		JdbcEnvironmentProperties> {
+public class JdbcEnvironmentRepositoryFactory implements
+		EnvironmentRepositoryFactory<JdbcEnvironmentRepository, JdbcEnvironmentProperties> {
+
 	private JdbcTemplate jdbc;
 
 	public JdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
@@ -29,7 +31,9 @@ public class JdbcEnvironmentRepositoryFactory implements EnvironmentRepositoryFa
 	}
 
 	@Override
-	public JdbcEnvironmentRepository build(JdbcEnvironmentProperties environmentProperties) {
-		return new JdbcEnvironmentRepository(jdbc, environmentProperties);
+	public JdbcEnvironmentRepository build(
+			JdbcEnvironmentProperties environmentProperties) {
+		return new JdbcEnvironmentRepository(this.jdbc, environmentProperties);
 	}
+
 }

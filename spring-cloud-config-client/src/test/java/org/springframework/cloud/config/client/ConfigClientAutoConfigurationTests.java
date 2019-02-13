@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConfigClientAutoConfigurationTests {
 
@@ -32,17 +32,18 @@ public class ConfigClientAutoConfigurationTests {
 	public void sunnyDay() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				ConfigClientAutoConfiguration.class);
-		assertEquals(1, BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context,
-				ConfigClientProperties.class).length);
+		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context,
+				ConfigClientProperties.class).length).isEqualTo(1);
 		context.close();
 	}
 
 	@Test
 	public void withParent() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				ConfigClientAutoConfiguration.class).child(Object.class).web(WebApplicationType.NONE).run();
-		assertEquals(1, BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context,
-				ConfigClientProperties.class).length);
+				ConfigClientAutoConfiguration.class).child(Object.class)
+						.web(WebApplicationType.NONE).run();
+		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context,
+				ConfigClientProperties.class).length).isEqualTo(1);
 		context.close();
 	}
 

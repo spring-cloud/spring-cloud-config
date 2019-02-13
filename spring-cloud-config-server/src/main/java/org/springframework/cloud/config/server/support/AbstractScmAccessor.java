@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,36 +42,43 @@ import org.springframework.util.StringUtils;
  * Base class for components that want to access a source control management system.
  *
  * @author Dave Syer
- *
  */
 public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 
 	protected Log logger = LogFactory.getLog(getClass());
+
 	/**
 	 * Base directory for local working copy of repository.
 	 */
 	private File basedir;
+
 	/**
 	 * URI of remote repository.
 	 */
 	private String uri;
+
 	private ConfigurableEnvironment environment;
+
 	/**
 	 * Username for authentication with remote repository.
 	 */
 	private String username;
+
 	/**
 	 * Password for authentication with remote repository.
 	 */
 	private String password;
+
 	/**
 	 * Passphrase for unlocking your ssh private key.
 	 */
 	private String passphrase;
+
 	/**
 	 * Reject incoming SSH host keys from remote servers not in the known host list.
 	 */
 	private boolean strictHostKeyChecking;
+
 	/**
 	 * Search paths to use within local working copy. By default searches only the root.
 	 */
@@ -132,6 +139,10 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 		this.environment = environment;
 	}
 
+	public String getUri() {
+		return this.uri;
+	}
+
 	public void setUri(String uri) {
 		while (uri.endsWith("/")) {
 			uri = uri.substring(0, uri.length() - 1);
@@ -144,24 +155,20 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 		this.uri = uri;
 	}
 
-	public String getUri() {
-		return this.uri;
+	public File getBasedir() {
+		return this.basedir;
 	}
 
 	public void setBasedir(File basedir) {
 		this.basedir = basedir.getAbsoluteFile();
 	}
 
-	public File getBasedir() {
-		return this.basedir;
+	public String[] getSearchPaths() {
+		return this.searchPaths;
 	}
 
 	public void setSearchPaths(String... searchPaths) {
 		this.searchPaths = searchPaths;
-	}
-
-	public String[] getSearchPaths() {
-		return this.searchPaths;
 	}
 
 	public String getUsername() {
@@ -181,7 +188,7 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 	}
 
 	public String getPassphrase() {
-		return passphrase;
+		return this.passphrase;
 	}
 
 	public void setPassphrase(String passphrase) {
@@ -189,7 +196,7 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 	}
 
 	public boolean isStrictHostKeyChecking() {
-		return strictHostKeyChecking;
+		return this.strictHostKeyChecking;
 	}
 
 	public void setStrictHostKeyChecking(boolean strictHostKeyChecking) {
@@ -216,7 +223,8 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 			locations = AbstractScmAccessorProperties.DEFAULT_LOCATIONS;
 		}
 		else if (locations != AbstractScmAccessorProperties.DEFAULT_LOCATIONS) {
-			locations = StringUtils.concatenateStringArrays(AbstractScmAccessorProperties.DEFAULT_LOCATIONS, locations);
+			locations = StringUtils.concatenateStringArrays(
+					AbstractScmAccessorProperties.DEFAULT_LOCATIONS, locations);
 		}
 		Collection<String> output = new LinkedHashSet<String>();
 		for (String location : locations) {

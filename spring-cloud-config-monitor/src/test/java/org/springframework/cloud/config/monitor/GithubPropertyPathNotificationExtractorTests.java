@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,14 @@ package org.springframework.cloud.config.monitor;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -43,24 +41,24 @@ public class GithubPropertyPathNotificationExtractorTests {
 	public void githubSample() throws Exception {
 		// See https://developer.github.com/v3/activity/events/types/#pushevent
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("github.json").getInputStream(),
+				new ClassPathResource("pathsamples/github.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Github-Event", "push");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
-		assertNotNull(extracted);
-		assertEquals("README.md", extracted.getPaths()[0]);
+		assertThat(extracted).isNotNull();
+		assertThat(extracted.getPaths()[0]).isEqualTo("README.md");
 	}
 
 	@Test
 	public void notAPushNotDetected() throws Exception {
 		Map<String, Object> value = new ObjectMapper().readValue(
-				new ClassPathResource("github.json").getInputStream(),
+				new ClassPathResource("pathsamples/github.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
 		this.headers.set("X-Github-Event", "issues");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
-		assertNull(extracted);
+		assertThat(extracted).isNull();
 	}
 
 }

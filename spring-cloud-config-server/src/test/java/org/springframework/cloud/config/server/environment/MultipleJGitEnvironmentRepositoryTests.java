@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
@@ -34,12 +35,6 @@ import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -56,8 +51,8 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public ExpectedException exception = ExpectedException.none();
 
 	private StandardEnvironment environment = new StandardEnvironment();
-	private MultipleJGitEnvironmentRepository repository;
 
+	private MultipleJGitEnvironmentRepository repository;
 
 	@Before
 	public void init() throws Exception {
@@ -91,9 +86,9 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	public void defaultRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -107,9 +102,9 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
-		assertNotNull("version was null", version);
-		assertTrue("version length was wrong",
-				version.length() >= 40 && version.length() <= 64);
+		assertThat(version).as("version was null").isNotNull();
+		assertThat(version.length() >= 40 && version.length() <= 64)
+				.as("version length was wrong").isTrue();
 	}
 
 	@Test
@@ -119,27 +114,27 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.setSearchPaths(new String[] { "sub" });
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/sub/application.yml",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
 	@Test
 	public void defaultRepoBranch() {
 		Environment environment = this.repository.findOne("bar", "staging", "raw");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
 	@Test
 	public void defaultRepoTag() {
 		Environment environment = this.repository.findOne("bar", "staging", "foo");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -147,27 +142,27 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void defaultRepoTwice() {
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
 	@Test
 	public void defaultRepoBasedir() {
-		repository.setBasedir(new File("target/testBase"));
-		assertThat(repository.getBasedir().toString(), containsString("target/testBase"));
-		assertThat(repository.getRepos().get("test1").getBasedir().toString(),
-				containsString("/test1"));
+		this.repository.setBasedir(new File("target/testBase"));
+		assertThat(this.repository.getBasedir().toString()).contains("target/testBase");
+		assertThat(this.repository.getRepos().get("test1").getBasedir().toString())
+				.contains("/test1");
 	}
 
 	@Test
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("test1-svc", "staging",
 				"master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(getUri("*test1*") + "/test1-svc.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
 		assertVersion(environment);
 	}
 
@@ -175,20 +170,20 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void defaultLabel() {
 		this.repository.setDefaultLabel("raw");
 		Environment environment = this.repository.findOne("bar", "staging", null);
-		assertEquals("raw", environment.getLabel());
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(this.repository.getUri() + "/bar.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getLabel()).isEqualTo("raw");
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
 	@Test
 	public void mappingRepoWithDefaultLabel() {
 		Environment environment = this.repository.findOne("test1-svc", "staging", null);
-		assertEquals("master", environment.getLabel());
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals(getUri("*test1*") + "/test1-svc.properties",
-				environment.getPropertySources().get(0).getName());
+		assertThat(environment.getLabel()).isEqualTo("master");
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
 		assertVersion(environment);
 	}
 
@@ -197,9 +192,11 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		TransportConfigCallback mockCallback1 = mock(TransportConfigCallback.class);
 		TransportConfigCallback mockCallback2 = mock(TransportConfigCallback.class);
 
-		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1", "*test1*", "test1Uri");
+		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1",
+				"*test1*", "test1Uri");
 
-		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2", "*test2*", "test2Uri");
+		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2",
+				"*test2*", "test2Uri");
 		repo2.setTransportConfigCallback(mockCallback2);
 
 		Map<String, PatternMatchingJGitEnvironmentRepository> repos = new HashMap<>();
@@ -210,8 +207,8 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.setTransportConfigCallback(mockCallback1);
 		this.repository.afterPropertiesSet();
 
-		assertEquals(repo1.getTransportConfigCallback(), mockCallback1);
-		assertEquals(repo2.getTransportConfigCallback(), mockCallback2);
+		assertThat(mockCallback1).isEqualTo(repo1.getTransportConfigCallback());
+		assertThat(mockCallback2).isEqualTo(repo2.getTransportConfigCallback());
 	}
 
 	@Test
@@ -240,22 +237,24 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.setPassphrase(multiRepoPassphrase);
 		this.repository.afterPropertiesSet();
 
-		assertEquals("Repo1 has its own username which should not be overwritten",
-				repo1.getUsername(), repo1Username);
-		assertEquals("Repo1 has its own password which should not be overwritten",
-				repo1.getPassword(), repo1Password);
-		assertEquals(
-				"Repo1 did not specify a passphrase so this should have been copied from the multi repo",
-				repo1.getPassphrase(), multiRepoPassphrase);
-		assertEquals(
-				"Repo2 did not specify a username so this should have been copied from the multi repo",
-				repo2.getUsername(), multiRepoUsername);
-		assertEquals(
-				"Repo2 did not specify a username so this should have been copied from the multi repo",
-				repo2.getPassword(), multiRepoPassword);
-		assertEquals(
-				"Repo2 has its own passphrase which should not have been overwritten",
-				repo2.getPassphrase(), repo2Passphrase);
+		assertThat(repo1Username)
+				.as("Repo1 has its own username which should not be overwritten")
+				.isEqualTo(repo1.getUsername());
+		assertThat(repo1Password)
+				.as("Repo1 has its own password which should not be overwritten")
+				.isEqualTo(repo1.getPassword());
+		assertThat(multiRepoPassphrase).as(
+				"Repo1 did not specify a passphrase so this should have been copied from the multi repo")
+				.isEqualTo(repo1.getPassphrase());
+		assertThat(multiRepoUsername).as(
+				"Repo2 did not specify a username so this should have been copied from the multi repo")
+				.isEqualTo(repo2.getUsername());
+		assertThat(multiRepoPassword).as(
+				"Repo2 did not specify a username so this should have been copied from the multi repo")
+				.isEqualTo(repo2.getPassword());
+		assertThat(repo2Passphrase)
+				.as("Repo2 has its own passphrase which should not have been overwritten")
+				.isEqualTo(repo2.getPassphrase());
 	}
 
 	@Test
@@ -276,21 +275,21 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.setRepos(repos);
 		this.repository.setSkipSslValidation(false);
 		this.repository.afterPropertiesSet();
-		assertFalse(
-				"If skip SSL validation is false at multi-repo level, then per-repo settings take priority",
-				repo1.isSkipSslValidation());
-		assertTrue(
-				"If skip SSL validation is false at multi-repo level, then per-repo settings take priority",
-				repo2.isSkipSslValidation());
+		assertThat(repo1.isSkipSslValidation()).as(
+				"If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
+				.isFalse();
+		assertThat(repo2.isSkipSslValidation()).as(
+				"If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
+				.isTrue();
 
 		this.repository.setSkipSslValidation(true);
 		this.repository.afterPropertiesSet();
-		assertTrue(
-				"If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos",
-				repo1.isSkipSslValidation());
-		assertTrue(
-				"If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos",
-				repo2.isSkipSslValidation());
+		assertThat(repo1.isSkipSslValidation()).as(
+				"If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos")
+				.isTrue();
+		assertThat(repo2.isSkipSslValidation()).as(
+				"If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos")
+				.isTrue();
 	}
 
 	@Test
@@ -310,7 +309,8 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	// test for gh-700
-	public void exceptionThrownIfBasedirDoesnotExistAndCannotBeCreated() throws Exception {
+	public void exceptionThrownIfBasedirDoesnotExistAndCannotBeCreated()
+			throws Exception {
 		File basedir = mock(File.class);
 		File absoluteBasedir = mock(File.class);
 		when(basedir.getAbsoluteFile()).thenReturn(absoluteBasedir);
@@ -342,4 +342,5 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 		return uri;
 	}
+
 }

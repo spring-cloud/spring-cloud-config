@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import org.junit.Test;
@@ -20,7 +21,7 @@ import org.junit.Test;
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategyFactory.V1VaultKvAccessStrategy;
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategyFactory.V2VaultKvAccessStrategy;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Haroun Pacquee
@@ -31,18 +32,19 @@ public class VaultKvAccessStrategyFactoryTest {
 	public void testGetV1Strategy() {
 		VaultKvAccessStrategy vaultKvAccessStrategy = VaultKvAccessStrategyFactory
 				.forVersion(null, "foo", 1);
-		assertTrue(vaultKvAccessStrategy instanceof V1VaultKvAccessStrategy);
+		assertThat(vaultKvAccessStrategy instanceof V1VaultKvAccessStrategy).isTrue();
 	}
 
 	@Test
 	public void testGetV2Strategy() {
 		VaultKvAccessStrategy vaultKvAccessStrategy = VaultKvAccessStrategyFactory
 				.forVersion(null, "foo", 2);
-		assertTrue(vaultKvAccessStrategy instanceof V2VaultKvAccessStrategy);
+		assertThat(vaultKvAccessStrategy instanceof V2VaultKvAccessStrategy).isTrue();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testGetUnsupportedStrategy() {
 		VaultKvAccessStrategyFactory.forVersion(null, "foo", 0);
 	}
+
 }

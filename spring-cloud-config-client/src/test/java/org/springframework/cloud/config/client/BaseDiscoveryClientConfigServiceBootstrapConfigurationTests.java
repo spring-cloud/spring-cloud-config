@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.config.client;
 
 import java.util.Arrays;
@@ -9,7 +25,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.test.util.EnvironmentTestUtils;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -17,7 +33,7 @@ import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,7 +60,7 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 
 	void givenDiscoveryClientReturnsNoInfo() {
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
-				.willReturn(Collections.<ServiceInstance> emptyList());
+				.willReturn(Collections.<ServiceInstance>emptyList());
 	}
 
 	void givenDiscoveryClientReturnsInfo() {
@@ -60,20 +76,21 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 
 	void givenDiscoveryClientReturnsInfoOnThirdTry() {
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
-				.willReturn(Collections.<ServiceInstance> emptyList())
-				.willReturn(Collections.<ServiceInstance> emptyList())
+				.willReturn(Collections.<ServiceInstance>emptyList())
+				.willReturn(Collections.<ServiceInstance>emptyList())
 				.willReturn(Arrays.asList(this.info));
 	}
 
 	void expectNoInstancesOfConfigServerException() {
-		expectedException.expect(IllegalStateException.class);
-		expectedException.expectMessage(
+		this.expectedException.expect(IllegalStateException.class);
+		this.expectedException.expectMessage(
 				"No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
 	}
 
 	void expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup() {
-		assertEquals(1, this.context.getBeanNamesForType(
-				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
+		assertThat(this.context.getBeanNamesForType(
+				DiscoveryClientConfigServiceBootstrapConfiguration.class).length)
+						.isEqualTo(1);
 	}
 
 	void expectConfigClientPropertiesHasDefaultConfiguration() {
@@ -88,18 +105,18 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 		ConfigClientProperties properties = this.context
 				.getBean(ConfigClientProperties.class);
 		Credentials credentials = properties.getCredentials(0);
-		assertEquals(expectedUri, credentials.getUri());
+		assertThat(credentials.getUri()).isEqualTo(expectedUri);
 	}
 
 	void expectConfigClientPropertiesHasMultipleUris(final String expectedUri1,
 			final String expectedUri2) {
 		ConfigClientProperties properties = this.context
 				.getBean(ConfigClientProperties.class);
-		assertEquals(2, properties.getUri().length);
+		assertThat(properties.getUri().length).isEqualTo(2);
 		Credentials credentials1 = properties.getCredentials(0);
 		Credentials credentials2 = properties.getCredentials(1);
-		assertEquals(expectedUri1, credentials1.getUri());
-		assertEquals(expectedUri2, credentials2.getUri());
+		assertThat(credentials1.getUri()).isEqualTo(expectedUri1);
+		assertThat(credentials2.getUri()).isEqualTo(expectedUri2);
 	}
 
 	void verifyDiscoveryClientCalledThreeTimes() {
@@ -112,8 +129,8 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 
 	void setup(String... env) {
 		this.context = new AnnotationConfigApplicationContext();
-		EnvironmentTestUtils.addEnvironment(this.context, env);
-		EnvironmentTestUtils.addEnvironment(this.context, "eureka.client.enabled=false");
+		TestPropertyValues.of(env).applyTo(this.context);
+		TestPropertyValues.of("eureka.client.enabled=false").applyTo(this.context);
 		this.context.getDefaultListableBeanFactory().registerSingleton("discoveryClient",
 				this.client);
 		this.context.register(UtilAutoConfiguration.class,

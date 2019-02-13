@@ -1,9 +1,20 @@
-package org.springframework.cloud.config.client;
+/*
+ * Copyright 2018-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+package org.springframework.cloud.config.client;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
@@ -12,13 +23,14 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hamcrest.core.IsInstanceOf;
-import org.hamcrest.core.IsNull;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.springframework.boot.test.util.EnvironmentTestUtils;
+
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -34,12 +46,13 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 public class ConfigServicePropertySourceLocatorTests {
@@ -59,7 +72,18 @@ public class ConfigServicePropertySourceLocatorTests {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
 		this.locator.setRestTemplate(this.restTemplate);
-		assertNotNull(this.locator.locate(this.environment));
+
+		ArgumentCaptor<HttpEntity> argumentCaptor = ArgumentCaptor
+				.forClass(HttpEntity.class);
+
+		assertThat(this.locator.locate(this.environment)).isNotNull();
+
+		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
+				argumentCaptor.capture(), any(Class.class), anyString(), anyString());
+
+		HttpEntity httpEntity = argumentCaptor.getValue();
+		assertThat(httpEntity.getHeaders().getAccept())
+				.containsExactly(MediaType.APPLICATION_JSON);
 	}
 
 	@Test
@@ -67,9 +91,9 @@ public class ConfigServicePropertySourceLocatorTests {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithLabel(new ResponseEntity<>(body, HttpStatus.OK), "v1.0.0");
 		this.locator.setRestTemplate(this.restTemplate);
-		EnvironmentTestUtils.addEnvironment(this.environment,
-				"spring.cloud.config.label:v1.0.0");
-		assertNotNull(this.locator.locate(this.environment));
+		TestPropertyValues.of("spring.cloud.config.label:v1.0.0")
+				.applyTo(this.environment);
+		assertThat(this.locator.locate(this.environment)).isNotNull();
 	}
 
 	@Test
@@ -78,9 +102,9 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithLabel(new ResponseEntity<>(body, HttpStatus.OK),
 				"release(_)v1.0.0");
 		this.locator.setRestTemplate(this.restTemplate);
-		EnvironmentTestUtils.addEnvironment(this.environment,
-				"spring.cloud.config.label:release/v1.0.0");
-		assertNotNull(this.locator.locate(this.environment));
+		TestPropertyValues.of("spring.cloud.config.label:release/v1.0.0")
+				.applyTo(this.environment);
+		assertThat(this.locator.locate(this.environment)).isNotNull();
 	}
 
 	@Test
@@ -89,7 +113,7 @@ public class ConfigServicePropertySourceLocatorTests {
 				new ResponseEntity<Void>((Void) null, HttpStatus.NOT_FOUND),
 				"nosuchlabel");
 		this.locator.setRestTemplate(this.restTemplate);
-		assertNull(this.locator.locate(this.environment));
+		assertThat(this.locator.locate(this.environment)).isNull();
 	}
 
 	@Test
@@ -97,7 +121,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithoutLabel(
 				new ResponseEntity<>("Wah!", HttpStatus.INTERNAL_SERVER_ERROR));
 		this.locator.setRestTemplate(this.restTemplate);
-		assertNull(this.locator.locate(this.environment));
+		assertThat(this.locator.locate(this.environment)).isNull();
 	}
 
 	@Test
@@ -250,8 +274,8 @@ public class ConfigServicePropertySourceLocatorTests {
 		while (iterator.hasNext()) {
 			GenericRequestHeaderInterceptor genericRequestHeaderInterceptor = (GenericRequestHeaderInterceptor) iterator
 					.next();
-			assertEquals(null,
-					genericRequestHeaderInterceptor.getHeaders().get(AUTHORIZATION));
+			assertThat(genericRequestHeaderInterceptor.getHeaders().get(AUTHORIZATION))
+					.isEqualTo(null);
 		}
 	}
 
@@ -259,16 +283,15 @@ public class ConfigServicePropertySourceLocatorTests {
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
 				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
-				Mockito.any(Class.class), Matchers.anyString(), Matchers.anyString(),
-				Matchers.eq(label))).thenReturn(response);
+				Mockito.any(Class.class), anyString(), anyString(), Matchers.eq(label)))
+				.thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithoutLabel(ResponseEntity<?> response) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
 				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
-				Mockito.any(Class.class), Matchers.anyString(), Matchers.anyString()))
-				.thenReturn(response);
+				Mockito.any(Class.class), anyString(), anyString())).thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -276,8 +299,8 @@ public class ConfigServicePropertySourceLocatorTests {
 			ResponseEntity<?> response, String expectedName) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
 				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
-				Mockito.any(Class.class), Matchers.eq(expectedName),
-				Matchers.anyString())).thenReturn(response);
+				Mockito.any(Class.class), Matchers.eq(expectedName), anyString()))
+				.thenReturn(response);
 	}
 
 }

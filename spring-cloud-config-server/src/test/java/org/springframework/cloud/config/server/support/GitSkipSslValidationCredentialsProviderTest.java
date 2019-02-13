@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,6 +42,7 @@ public class GitSkipSslValidationCredentialsProviderTest {
 
 	@Mock
 	private CredentialsProvider mockDelegateCredentialsProvider;
+
 	private GitSkipSslValidationCredentialsProvider skipSslValidationCredentialsProvider;
 
 	@Before
@@ -53,51 +53,55 @@ public class GitSkipSslValidationCredentialsProviderTest {
 
 	@Test
 	public void testCanHandle() {
-		assertTrue("GitSkipSslValidationCredentialsProvider only handles HTTPS uris",
-				GitSkipSslValidationCredentialsProvider
-						.canHandle("https://github.com/org/repo"));
-		assertFalse("GitSkipSslValidationCredentialsProvider only handles HTTPS uris",
-				GitSkipSslValidationCredentialsProvider
-						.canHandle("git@github.com:org/repo"));
+		assertThat(GitSkipSslValidationCredentialsProvider
+				.canHandle("https://github.com/org/repo")).as(
+						"GitSkipSslValidationCredentialsProvider only handles HTTPS uris")
+						.isTrue();
+		assertThat(GitSkipSslValidationCredentialsProvider
+				.canHandle("git@github.com:org/repo")).as(
+						"GitSkipSslValidationCredentialsProvider only handles HTTPS uris")
+						.isFalse();
 	}
 
 	@Test
 	public void testIsInteractive() {
-		assertFalse(
-				"GitSkipSslValidationCredentialsProvider with no delegate requires no user interaction",
-				skipSslValidationCredentialsProvider.isInteractive());
+		assertThat(this.skipSslValidationCredentialsProvider.isInteractive()).as(
+				"GitSkipSslValidationCredentialsProvider with no delegate requires no user interaction")
+				.isFalse();
 	}
 
 	@Test
 	public void testIsInteractiveWithDelegate() {
 		this.skipSslValidationCredentialsProvider = new GitSkipSslValidationCredentialsProvider(
-				mockDelegateCredentialsProvider);
+				this.mockDelegateCredentialsProvider);
 
-		when(mockDelegateCredentialsProvider.isInteractive()).thenReturn(true);
+		when(this.mockDelegateCredentialsProvider.isInteractive()).thenReturn(true);
 
-		assertTrue(
-				"With a delegate provider, isInteractive value depends on the delegate",
-				skipSslValidationCredentialsProvider.isInteractive());
+		assertThat(this.skipSslValidationCredentialsProvider.isInteractive()).as(
+				"With a delegate provider, isInteractive value depends on the delegate")
+				.isTrue();
 	}
 
 	@Test
 	public void testSupportsSslFailureInformationalMessage() {
 		CredentialItem informationalMessage = new CredentialItem.InformationalMessage(
 				"text " + JGitText.get().sslFailureTrustExplanation + " more text");
-		assertTrue(
-				"GitSkipSslValidationCredentialsProvider should always support SSL failure InformationalMessage",
-				skipSslValidationCredentialsProvider.supports(informationalMessage));
+		assertThat(this.skipSslValidationCredentialsProvider
+				.supports(informationalMessage)).as(
+						"GitSkipSslValidationCredentialsProvider should always support SSL failure InformationalMessage")
+						.isTrue();
 
 		informationalMessage = new CredentialItem.InformationalMessage("unrelated");
-		assertFalse(
-				"GitSkipSslValidationCredentialsProvider should not support unrelated InformationalMessage items",
-				skipSslValidationCredentialsProvider.supports(informationalMessage));
+		assertThat(this.skipSslValidationCredentialsProvider
+				.supports(informationalMessage)).as(
+						"GitSkipSslValidationCredentialsProvider should not support unrelated InformationalMessage items")
+						.isFalse();
 	}
 
 	@Test
 	public void testSupportsSslFailureInformationalMessageWithDelegate() {
 		this.skipSslValidationCredentialsProvider = new GitSkipSslValidationCredentialsProvider(
-				mockDelegateCredentialsProvider);
+				this.mockDelegateCredentialsProvider);
 
 		testSupportsSslFailureInformationalMessage();
 	}
@@ -106,31 +110,31 @@ public class GitSkipSslValidationCredentialsProviderTest {
 	public void testSupportsSslValidationYesNoTypes() {
 		CredentialItem yesNoType = new CredentialItem.YesNoType(
 				JGitText.get().sslTrustNow);
-		assertTrue(
-				"GitSkipSslValidationCredentialsProvider should always support the trust now YesNoType item",
-				skipSslValidationCredentialsProvider.supports(yesNoType));
+		assertThat(this.skipSslValidationCredentialsProvider.supports(yesNoType)).as(
+				"GitSkipSslValidationCredentialsProvider should always support the trust now YesNoType item")
+				.isTrue();
 
 		yesNoType = new CredentialItem.YesNoType(
 				MessageFormat.format(JGitText.get().sslTrustForRepo, "/a/path.git"));
-		assertTrue(
-				"GitSkipSslValidationCredentialsProvider should always support the trust repo YesNoType item",
-				skipSslValidationCredentialsProvider.supports(yesNoType));
+		assertThat(this.skipSslValidationCredentialsProvider.supports(yesNoType)).as(
+				"GitSkipSslValidationCredentialsProvider should always support the trust repo YesNoType item")
+				.isTrue();
 
 		yesNoType = new CredentialItem.YesNoType(JGitText.get().sslTrustAlways);
-		assertTrue(
-				"GitSkipSslValidationCredentialsProvider should always support the trust always YesNoType item",
-				skipSslValidationCredentialsProvider.supports(yesNoType));
+		assertThat(this.skipSslValidationCredentialsProvider.supports(yesNoType)).as(
+				"GitSkipSslValidationCredentialsProvider should always support the trust always YesNoType item")
+				.isTrue();
 
 		yesNoType = new CredentialItem.YesNoType("unrelated");
-		assertFalse(
-				"GitSkipSslValidationCredentialsProvider should not support unrelated YesNoType items",
-				skipSslValidationCredentialsProvider.supports(yesNoType));
+		assertThat(this.skipSslValidationCredentialsProvider.supports(yesNoType)).as(
+				"GitSkipSslValidationCredentialsProvider should not support unrelated YesNoType items")
+				.isFalse();
 	}
 
 	@Test
 	public void testSupportsYesNoTypeWithDelegate() {
 		this.skipSslValidationCredentialsProvider = new GitSkipSslValidationCredentialsProvider(
-				mockDelegateCredentialsProvider);
+				this.mockDelegateCredentialsProvider);
 
 		testSupportsSslValidationYesNoTypes();
 	}
@@ -139,29 +143,29 @@ public class GitSkipSslValidationCredentialsProviderTest {
 	public void testSupportsUnrelatedCredentialItemTypes() {
 		CredentialItem usernameCredentialItem = new CredentialItem.Username();
 
-		boolean supportsItems = skipSslValidationCredentialsProvider
+		boolean supportsItems = this.skipSslValidationCredentialsProvider
 				.supports(usernameCredentialItem);
 
-		assertFalse(
-				"Credential item types not related to SSL validation skipping should not be supported",
-				supportsItems);
+		assertThat(supportsItems).as(
+				"Credential item types not related to SSL validation skipping should not be supported")
+				.isFalse();
 	}
 
 	@Test
 	public void testSupportsUnrelatedCredentialItemTypesWithDelegate() {
 		this.skipSslValidationCredentialsProvider = new GitSkipSslValidationCredentialsProvider(
-				mockDelegateCredentialsProvider);
+				this.mockDelegateCredentialsProvider);
 		CredentialItem usernameCredentialItem = new CredentialItem.Username();
 
-		when(mockDelegateCredentialsProvider.supports(usernameCredentialItem))
+		when(this.mockDelegateCredentialsProvider.supports(usernameCredentialItem))
 				.thenReturn(true);
 
-		boolean supportsItems = skipSslValidationCredentialsProvider
+		boolean supportsItems = this.skipSslValidationCredentialsProvider
 				.supports(usernameCredentialItem);
 
-		assertTrue(
-				"GitSkipSslValidationCredentialsProvider must support the types supported by its delegate CredentialsProvider",
-				supportsItems);
+		assertThat(supportsItems).as(
+				"GitSkipSslValidationCredentialsProvider must support the types supported by its delegate CredentialsProvider")
+				.isTrue();
 	}
 
 	@Test(expected = UnsupportedCredentialItem.class)
@@ -170,7 +174,7 @@ public class GitSkipSslValidationCredentialsProviderTest {
 		CredentialItem usernameCredentialItem = new CredentialItem.Username();
 		CredentialItem passwordCredentialItem = new CredentialItem.Password();
 
-		skipSslValidationCredentialsProvider.get(uri, usernameCredentialItem,
+		this.skipSslValidationCredentialsProvider.get(uri, usernameCredentialItem,
 				passwordCredentialItem);
 	}
 
@@ -178,20 +182,20 @@ public class GitSkipSslValidationCredentialsProviderTest {
 	public void testGetUnrelatedCredentialItemTypesWithDelegate()
 			throws URISyntaxException {
 		this.skipSslValidationCredentialsProvider = new GitSkipSslValidationCredentialsProvider(
-				mockDelegateCredentialsProvider);
+				this.mockDelegateCredentialsProvider);
 		URIish uri = new URIish("https://example.com/repo.git");
 		CredentialItem usernameCredentialItem = new CredentialItem.Username();
 		CredentialItem passwordCredentialItem = new CredentialItem.Password();
 
-		when(mockDelegateCredentialsProvider.get(uri, usernameCredentialItem,
+		when(this.mockDelegateCredentialsProvider.get(uri, usernameCredentialItem,
 				passwordCredentialItem)).thenReturn(true);
 
-		boolean getSuccessful = skipSslValidationCredentialsProvider.get(uri,
+		boolean getSuccessful = this.skipSslValidationCredentialsProvider.get(uri,
 				usernameCredentialItem, passwordCredentialItem);
 
-		assertTrue(
-				"GitSkipSslValidationCredentialsProvider must successfully get the types supported by its delegate CredentialsProvider",
-				getSuccessful);
+		assertThat(getSuccessful).as("GitSkipSslValidationCredentialsProvider "
+				+ "must successfully get the types supported by its delegate CredentialsProvider")
+				.isTrue();
 	}
 
 	@Test
@@ -204,23 +208,23 @@ public class GitSkipSslValidationCredentialsProviderTest {
 		CredentialItem.YesNoType trustAlways = new CredentialItem.YesNoType(
 				JGitText.get().sslTrustAlways);
 
-		boolean getSuccessful = skipSslValidationCredentialsProvider.get(uri, message,
-				trustNow, trustAlways);
+		boolean getSuccessful = this.skipSslValidationCredentialsProvider.get(uri,
+				message, trustNow, trustAlways);
 
-		assertTrue(
-				"SkipSSlValidationCredentialsProvider must successfully get the types required for SSL validation skipping",
-				getSuccessful);
-		assertTrue(
-				"SkipSSlValidationCredentialsProvider should trust the current repo operation",
-				trustNow.getValue());
-		assertFalse("We should not globally skip all SSL validation",
-				trustAlways.getValue());
+		assertThat(getSuccessful).as(
+				"SkipSSlValidationCredentialsProvider must successfully get the types required for SSL validation skipping")
+				.isTrue();
+		assertThat(trustNow.getValue()).as(
+				"SkipSSlValidationCredentialsProvider should trust the current repo operation")
+				.isTrue();
+		assertThat(trustAlways.getValue())
+				.as("We should not globally skip all SSL validation").isFalse();
 	}
 
 	@Test
 	public void testGetSslTrustItemsWithDelegate() throws URISyntaxException {
 		this.skipSslValidationCredentialsProvider = new GitSkipSslValidationCredentialsProvider(
-				mockDelegateCredentialsProvider);
+				this.mockDelegateCredentialsProvider);
 
 		testGetSslTrustItems();
 	}
@@ -237,25 +241,26 @@ public class GitSkipSslValidationCredentialsProviderTest {
 		CredentialItem.YesNoType trustAlways = new CredentialItem.YesNoType(
 				JGitText.get().sslTrustAlways);
 
-		boolean getSuccessful = skipSslValidationCredentialsProvider.get(uri, message,
-				trustNow, trustForRepo, trustAlways);
+		boolean getSuccessful = this.skipSslValidationCredentialsProvider.get(uri,
+				message, trustNow, trustForRepo, trustAlways);
 
-		assertTrue(
-				"SkipSSlValidationCredentialsProvider must successfully get the types required for SSL validation skipping",
-				getSuccessful);
-		assertTrue(
-				"SkipSSlValidationCredentialsProvider should trust the current repo operation",
-				trustNow.getValue());
-		assertTrue("Future operations on this repository should also be trusted",
-				trustForRepo.getValue());
-		assertFalse("We should not globally skip all SSL validation",
-				trustAlways.getValue());
+		assertThat(getSuccessful).as(
+				"SkipSSlValidationCredentialsProvider must successfully get the types required for SSL validation skipping")
+				.isTrue();
+		assertThat(trustNow.getValue()).as(
+				"SkipSSlValidationCredentialsProvider should trust the current repo operation")
+				.isTrue();
+		assertThat(trustForRepo.getValue())
+				.as("Future operations on this repository should also be trusted")
+				.isTrue();
+		assertThat(trustAlways.getValue())
+				.as("We should not globally skip all SSL validation").isFalse();
 	}
 
 	@Test
 	public void testGetSslTrustItemsWithLocalRepoAndDelegate() throws URISyntaxException {
 		this.skipSslValidationCredentialsProvider = new GitSkipSslValidationCredentialsProvider(
-				mockDelegateCredentialsProvider);
+				this.mockDelegateCredentialsProvider);
 
 		testGetSslTrustItemsWithLocalRepo();
 	}
@@ -264,17 +269,18 @@ public class GitSkipSslValidationCredentialsProviderTest {
 	public void testReset() throws URISyntaxException {
 		URIish uri = new URIish("https://example.com/repo.git");
 
-		skipSslValidationCredentialsProvider.reset(uri);
+		this.skipSslValidationCredentialsProvider.reset(uri);
 	}
 
 	@Test
 	public void testResetWithDelegate() throws URISyntaxException {
 		this.skipSslValidationCredentialsProvider = new GitSkipSslValidationCredentialsProvider(
-				mockDelegateCredentialsProvider);
+				this.mockDelegateCredentialsProvider);
 		URIish uri = new URIish("https://example.com/repo.git");
 
-		skipSslValidationCredentialsProvider.reset(uri);
+		this.skipSslValidationCredentialsProvider.reset(uri);
 
-		verify(mockDelegateCredentialsProvider).reset(uri);
+		verify(this.mockDelegateCredentialsProvider).reset(uri);
 	}
+
 }

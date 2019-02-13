@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.LinkedHashMap;
@@ -35,50 +36,59 @@ import org.springframework.validation.annotation.Validated;
 @HostKeyAlgoSupported
 @KnownHostsFileIsValid
 public class MultipleJGitEnvironmentProperties extends JGitEnvironmentProperties {
-    /**
-     * Map of repository identifier to location and other properties.
-     */
-    private Map<String, PatternMatchingJGitEnvironmentProperties> repos = new LinkedHashMap<>();
 
-    public Map<String, PatternMatchingJGitEnvironmentProperties> getRepos() {
-        return repos;
-    }
+	/**
+	 * Map of repository identifier to location and other properties.
+	 */
+	private Map<String, PatternMatchingJGitEnvironmentProperties> repos = new LinkedHashMap<>();
 
-    public void setRepos(Map<String, PatternMatchingJGitEnvironmentProperties> repos) {
-        this.repos = repos;
-    }
+	public Map<String, PatternMatchingJGitEnvironmentProperties> getRepos() {
+		return this.repos;
+	}
 
-    public static class PatternMatchingJGitEnvironmentProperties extends JGitEnvironmentProperties {
-        /**
-         * Pattern to match on application name and profiles.
-         */
-        private String[] pattern = new String[0];
-        /**
-         * Name of repository (same as map key by default).
-         */
-        private String name;
+	public void setRepos(Map<String, PatternMatchingJGitEnvironmentProperties> repos) {
+		this.repos = repos;
+	}
 
-        public PatternMatchingJGitEnvironmentProperties() {
-        }
+	/**
+	 * A {@link JGitEnvironmentProperties} that matches patterns.
+	 */
+	public static class PatternMatchingJGitEnvironmentProperties
+			extends JGitEnvironmentProperties {
 
-        public PatternMatchingJGitEnvironmentProperties(String uri) {
-            setUri(uri);
-        }
+		/**
+		 * Pattern to match on application name and profiles.
+		 */
+		private String[] pattern = new String[0];
 
-        public String[] getPattern() {
-            return pattern;
-        }
+		/**
+		 * Name of repository (same as map key by default).
+		 */
+		private String name;
 
-        public void setPattern(String[] pattern) {
-            this.pattern = pattern;
-        }
+		public PatternMatchingJGitEnvironmentProperties() {
+		}
 
-        public String getName() {
-            return name;
-        }
+		public PatternMatchingJGitEnvironmentProperties(String uri) {
+			setUri(uri);
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
-    }
+		public String[] getPattern() {
+			return this.pattern;
+		}
+
+		public void setPattern(String[] pattern) {
+			this.pattern = pattern;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+	}
+
 }

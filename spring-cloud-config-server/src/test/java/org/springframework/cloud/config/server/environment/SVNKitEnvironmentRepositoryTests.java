@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.StandardEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Michael Prankl
@@ -42,16 +40,19 @@ import static org.junit.Assert.assertTrue;
 public class SVNKitEnvironmentRepositoryTests {
 
 	private static final String REPOSITORY_NAME = "svn-config-repo";
+
 	private StandardEnvironment environment = new StandardEnvironment();
-	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment,
-			new SvnKitEnvironmentProperties());
+
+	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(
+			this.environment, new SvnKitEnvironmentProperties());
 
 	private File basedir = new File("target/config");
 
 	@Before
 	public void init() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/"
-				+ REPOSITORY_NAME, "target/repos/" + REPOSITORY_NAME);
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
+				"src/test/resources/" + REPOSITORY_NAME,
+				"target/repos/" + REPOSITORY_NAME);
 		this.repository.setUri(uri);
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
@@ -61,22 +62,22 @@ public class SVNKitEnvironmentRepositoryTests {
 	@Test
 	public void vanilla() {
 		Environment environment = this.findOne();
-		assertEquals(2, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties"));
-		assertTrue(environment.getPropertySources().get(1).getName()
-				.contains("application.yml"));
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(1).getName()
+				.contains("application.yml")).isTrue();
 	}
 
 	@Test
 	public void basedir() {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.findOne();
-		assertEquals(2, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties"));
-		assertTrue(environment.getPropertySources().get(1).getName()
-				.contains("application.yml"));
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(1).getName()
+				.contains("application.yml")).isTrue();
 	}
 
 	@Test
@@ -89,54 +90,53 @@ public class SVNKitEnvironmentRepositoryTests {
 		this.repository.setBasedir(basedirWithSpace);
 
 		Environment environment = this.findOne();
-		assertEquals(2, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties"));
-		assertTrue(environment.getPropertySources().get(1).getName()
-				.contains("application.yml"));
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(1).getName()
+				.contains("application.yml")).isTrue();
 	}
 
 	@Test
 	public void branch() {
 		Environment environment = this.repository.findOne("bar", "staging",
 				"branches/demobranch");
-		assertEquals(1, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties"));
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties")).isTrue();
 	}
 
 	@Test
 	public void branch_no_folder() {
-		Environment environment = this.repository.findOne("bar", "staging",
-				"demobranch");
-		assertEquals(1, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties"));
+		Environment environment = this.repository.findOne("bar", "staging", "demobranch");
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties")).isTrue();
 	}
 
 	@Test
 	public void vanilla_with_update() {
 		this.findOne();
 		Environment environment = this.findOne();
-		assertEquals(2, environment.getPropertySources().size());
-		assertTrue(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties"));
-		assertTrue(environment.getPropertySources().get(1).getName()
-				.contains("application.yml"));
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName()
+				.contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(1).getName()
+				.contains("application.yml")).isTrue();
 	}
 
 	@Test(expected = NoSuchLabelException.class)
 	public void invalidLabel() {
 		Environment environment = this.repository.findOne("bar", "staging",
 				"unknownlabel");
-		assertEquals(0, environment.getPropertySources().size());
+		assertThat(environment.getPropertySources().size()).isEqualTo(0);
 	}
 
 	@Test
 	public void vanilla_with_update_after_repo_delete() throws IOException {
 		this.vanilla_with_update();
 		ConfigServerTestUtils.deleteLocalRepo(REPOSITORY_NAME);
-		assertThat(new File(basedir, REPOSITORY_NAME)).doesNotExist();
+		assertThat(new File(this.basedir, REPOSITORY_NAME)).doesNotExist();
 		this.vanilla();
 	}
 
@@ -151,15 +151,16 @@ public class SVNKitEnvironmentRepositoryTests {
 
 		public static void main(String[] args) throws Exception {
 			File basedir = new File("target/config");
-			String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/"
-					+ REPOSITORY_NAME, "target/repos/" + REPOSITORY_NAME);
+			String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
+					"src/test/resources/" + REPOSITORY_NAME,
+					"target/repos/" + REPOSITORY_NAME);
 			if (basedir.exists()) {
 				FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 			}
-			new SpringApplicationBuilder(TestApplication.class)
-					.profiles("subversion")
+			new SpringApplicationBuilder(TestApplication.class).profiles("subversion")
 					.properties("server.port=8888",
-							"spring.cloud.config.server.svn.uri:" + uri).run(args);
+							"spring.cloud.config.server.svn.uri:" + uri)
+					.run(args);
 		}
 
 	}

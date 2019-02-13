@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,17 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -35,13 +36,14 @@ public class KeyStoreTextEncryptorLocatorTests {
 
 	private KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(
 			new KeyStoreKeyFactory(new ClassPathResource("server.jks"),
-					"letmein".toCharArray()), "changeme", "mytestkey");
+					"letmein".toCharArray()),
+			"changeme", "mytestkey");
 
 	@Test
 	public void testDefaults() {
-		TextEncryptor encryptor = this.locator.locate(Collections
-				.<String, String> emptyMap());
-		assertEquals("foo", encryptor.decrypt(encryptor.encrypt("foo")));
+		TextEncryptor encryptor = this.locator
+				.locate(Collections.<String, String>emptyMap());
+		assertThat(encryptor.decrypt(encryptor.encrypt("foo"))).isEqualTo("foo");
 	}
 
 	@Test
@@ -50,14 +52,14 @@ public class KeyStoreTextEncryptorLocatorTests {
 
 			@Override
 			public char[] locate(String secret) {
-				assertEquals("changeme", secret);
+				assertThat(secret).isEqualTo("changeme");
 				// The actual secret for "mykey" is the same as the keystore password
 				return "letmein".toCharArray();
 			}
 		});
-		TextEncryptor encryptor = this.locator.locate(Collections
-				.<String, String> singletonMap("key", "mykey"));
-		assertEquals("foo", encryptor.decrypt(encryptor.encrypt("foo")));
+		TextEncryptor encryptor = this.locator
+				.locate(Collections.<String, String>singletonMap("key", "mykey"));
+		assertThat(encryptor.decrypt(encryptor.encrypt("foo"))).isEqualTo("foo");
 	}
 
 	@Test
@@ -66,7 +68,7 @@ public class KeyStoreTextEncryptorLocatorTests {
 		map.put("key", "mytestkey");
 		map.put("secret", "changeme");
 		TextEncryptor encryptor = this.locator.locate(map);
-		assertEquals("foo", encryptor.decrypt(encryptor.encrypt("foo")));
+		assertThat(encryptor.decrypt(encryptor.encrypt("foo"))).isEqualTo("foo");
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -38,9 +38,11 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 		this.context = new AnnotationConfigApplicationContext(
 				DiscoveryClientConfigServiceBootstrapConfiguration.class);
 
-		assertEquals(0, this.context.getBeanNamesForType(DiscoveryClient.class).length);
-		assertEquals(0, this.context.getBeanNamesForType(
-				DiscoveryClientConfigServiceBootstrapConfiguration.class).length);
+		assertThat(this.context.getBeanNamesForType(DiscoveryClient.class).length)
+				.isEqualTo(0);
+		assertThat(this.context.getBeanNamesForType(
+				DiscoveryClientConfigServiceBootstrapConfiguration.class).length)
+						.isEqualTo(0);
 	}
 
 	@Test
@@ -63,7 +65,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 		givenDiscoveryClientReturnsInfo();
 		verifyDiscoveryClientCalledOnce();
 
-		context.publishEvent(new HeartbeatEvent(context, "new"));
+		this.context.publishEvent(new HeartbeatEvent(this.context, "new"));
 
 		expectConfigClientPropertiesHasConfigurationFromEureka();
 	}
@@ -109,9 +111,9 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 		ConfigClientProperties locator = this.context
 				.getBean(ConfigClientProperties.class);
 		Credentials credentials = locator.getCredentials(0);
-		assertEquals("http://foo:8877/", credentials.getUri());
-		assertEquals("bar", credentials.getPassword());
-		assertEquals("user", credentials.getUsername());
+		assertThat(credentials.getUri()).isEqualTo("http://foo:8877/");
+		assertThat(credentials.getPassword()).isEqualTo("bar");
+		assertThat(credentials.getUsername()).isEqualTo("user");
 	}
 
 	@Test
@@ -148,7 +150,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		verifyDiscoveryClientCalledThreeTimes();
 
-		context.publishEvent(new HeartbeatEvent(context, "new"));
+		this.context.publishEvent(new HeartbeatEvent(this.context, "new"));
 
 		expectConfigClientPropertiesHasConfigurationFromEureka();
 	}

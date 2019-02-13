@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.composite;
 
 import java.lang.reflect.Type;
@@ -32,29 +33,40 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  * @author Dylan Roberts
  */
 public class OnSearchPathLocatorPresent extends SpringBootCondition {
+
 	@Override
-	public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
-        ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
-        List<String> types = CompositeUtils.getCompositeTypeList(context.getEnvironment());
+	public ConditionOutcome getMatchOutcome(ConditionContext context,
+			AnnotatedTypeMetadata metadata) {
+		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
+		List<String> types = CompositeUtils
+				.getCompositeTypeList(context.getEnvironment());
 
-        // get EnvironmentRepository types from registered factories
-        List<Class<? extends EnvironmentRepository>> repositoryTypes = new ArrayList<>();
-        for (String type : types) {
-            String factoryName = CompositeUtils.getFactoryName(type, beanFactory);
-            Type[] actualTypeArguments = CompositeUtils.getEnvironmentRepositoryFactoryTypeParams(beanFactory, factoryName);
-            Class<? extends EnvironmentRepository> repositoryType =
-                    (Class<? extends EnvironmentRepository>) actualTypeArguments[0];
-            repositoryTypes.add(repositoryType);
-        }
+		// get EnvironmentRepository types from registered factories
+		List<Class<? extends EnvironmentRepository>> repositoryTypes = new ArrayList<>();
+		for (String type : types) {
+			String factoryName = CompositeUtils.getFactoryName(type, beanFactory);
+			Type[] actualTypeArguments = CompositeUtils
+					.getEnvironmentRepositoryFactoryTypeParams(beanFactory, factoryName);
+			Class<? extends EnvironmentRepository> repositoryType;
+			repositoryType = (Class<? extends EnvironmentRepository>) actualTypeArguments[0];
+			repositoryTypes.add(repositoryType);
+		}
 
-        boolean required = metadata.isAnnotated(ConditionalOnSearchPathLocator.class.getName());
-        boolean foundSearchPathLocator = repositoryTypes.stream().anyMatch(SearchPathLocator.class::isAssignableFrom);
-        if (required && !foundSearchPathLocator) {
-            return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnSearchPathLocator.class).notAvailable(SearchPathLocator.class.getTypeName()));
-        }
-        if (!required && foundSearchPathLocator) {
-            return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnMissingSearchPathLocator.class).available(SearchPathLocator.class.getTypeName()));
-        }
-        return ConditionOutcome.match();
-    }
+		boolean required = metadata
+				.isAnnotated(ConditionalOnSearchPathLocator.class.getName());
+		boolean foundSearchPathLocator = repositoryTypes.stream()
+				.anyMatch(SearchPathLocator.class::isAssignableFrom);
+		if (required && !foundSearchPathLocator) {
+			return ConditionOutcome.noMatch(
+					ConditionMessage.forCondition(ConditionalOnSearchPathLocator.class)
+							.notAvailable(SearchPathLocator.class.getTypeName()));
+		}
+		if (!required && foundSearchPathLocator) {
+			return ConditionOutcome.noMatch(ConditionMessage
+					.forCondition(ConditionalOnMissingSearchPathLocator.class)
+					.available(SearchPathLocator.class.getTypeName()));
+		}
+		return ConditionOutcome.match();
+	}
+
 }

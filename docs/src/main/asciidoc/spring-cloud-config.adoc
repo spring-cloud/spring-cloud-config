@@ -752,6 +752,108 @@ The database needs to have a table called `PROPERTIES` with columns called `APPL
 All fields are of type String in Java, so you can make them `VARCHAR` of whatever length you need.
 Property values behave in the same way as they would if they came from Spring Boot properties files named `{application}-{profile}.properties`, including all the encryption and decryption, which will be applied as post-processing steps (that is, not in the repository implementation directly).
 
+==== CredHub Backend
+
+Spring Cloud Config Server supports link:https://docs.cloudfoundry.org/credhub[CredHub] as a backend for configuration properties.
+You can enable this feature by adding a dependency to link:https://spring.io/projects/spring-credhub[Spring CredHub].
+
+[source,xml,indent=0]
+.pom.xml
+----
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.credhub</groupId>
+			<artifactId>spring-credhub-starter</artifactId>
+		</dependency>
+	</dependencies>
+----
+
+The following configuration uses mutual TLS to access a CredHub:
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: credhub
+  cloud:
+    config:
+      server:
+        credhub:
+          url: https://credhub:8844
+----
+
+The properties should be stored as JSON, such as:
+[source,sh]
+----
+credhub set --name "/demo-app/default/master/toggles" --type=json
+value: {"toggle.button": "blue", "toggle.link": "red"}
+----
+[source,sh]
+----
+credhub set --name "/demo-app/default/master/abs" --type=json
+value: {"marketing.enabled": true, "external.enabled": false}
+----
+
+All client applications with the name `spring.cloud.config.name=demo-app` will have the following properties available to them:
+
+----
+{
+    toggle.button: "blue",
+    toggle.link: "red",
+    marketing.enabled: true,
+    external.enabled: false
+}
+----
+
+NOTE: When no profile is specified `default` will be used and when no label is specified `master` will be used as a default value.
+
+===== OAuth 2.0
+You can authenticate with link:https://oauth.net/2/[OAuth 2.0] using link:https://docs.cloudfoundry.org/concepts/architecture/uaa.html[UAA] as a provider.
+
+[source,xml,indent=0]
+.pom.xml
+----
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-client</artifactId>
+		</dependency>
+	</dependencies>
+----
+
+The following configuration uses OAuth 2.0 and UAA to access a CredHub:
+[source,yaml]
+----
+spring:
+  profiles:
+    active: credhub
+  cloud:
+    config:
+      server:
+        credhub:
+          url: https://credhub:8844
+          oauth2:
+            registration-id: credhub-client
+  security:
+    oauth2:
+      client:
+        registration:
+          credhub-client:
+            provider: uaa
+            client-id: credhub_config_server
+            client-secret: asecret
+            authorization-grant-type: client_credentials
+        provider:
+          uaa:
+            token-uri: https://uaa:8443/oauth/token
+----
+
+NOTE: The used UAA client-id should have `credhub.read` as scope.
+
 [[composite-environment-repositories]]
 ==== Composite Environment Repositories
 
@@ -971,8 +1073,11 @@ The asymmetric choice is superior in terms of security, but it is often more con
 
 To configure a symmetric key, you need to set `encrypt.key` to a secret String (or use the `ENCRYPT_KEY` environment variable to keep it out of plain-text configuration files).
 
-To configure an asymmetric key, you can either set the key as a PEM-encoded text value (in `encrypt.key`) or use a keystore (such as the keystore created by the `keytool` utility that comes with the JDK).
-The following table describes the keystore properties:
+NOTE: You cannot configure an asymmetric key using `encrypt.key`.
+
+To configure an asymmetric key use a keystore (e.g. as
+created by the `keytool` utility that comes with the JDK). The
+keystore properties are `encrypt.keyStore.\*` with `*` equal to
 
 [options="header"]
 |===
@@ -1026,7 +1131,7 @@ foo:
 
 The locator looks for a key named "testkey".
 A secret can also be supplied by using a `{secret:...}` value in the prefix.
-However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keytore and do not specify a secret).
+However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keystore and do not specify a secret).
 If you do supply a secret, you should also encrypt the secret using a custom `SecretLocator`.
 
 When the keys are being used only to encrypt a few bytes of configuration data (that is, they are not being used elsewhere), key rotation is hardly ever necessary on cryptographic grounds.
@@ -1126,7 +1231,7 @@ So, the preceding example for the `default` profile could be `/foo/default/nginx
 The Config Server runs best as a standalone application.
 However, if need be, you can embed it in another application.
 To do so, use the `@EnableConfigServer` annotation.
-An optional property named `spring.cloud.config.server.bootstrap` can be useful in this case is.
+An optional property named `spring.cloud.config.server.bootstrap` can be useful in this case.
 It is a flag to indicate whether the server should configure itself from its own remote repository.
 By default, the flag is off, because it can delay startup.
 However, when embedded in another application, it makes sense to initialize the same way as any other application.
@@ -1156,7 +1261,7 @@ The prefix should start but not end with a `/`.
 It is applied to the `@RequestMappings` in the Config Server (that is, underneath the Spring Boot `server.servletPath` and `server.contextPath` prefixes).
 
 If you want to read the configuration for an application directly from the backend repository (instead of from the config server), you
-basically wat an embedded config server with no endpoints.
+basically want an embedded config server with no endpoints.
 You can switch off the endpoints entirely by not using the `@EnableConfigServer` annotation (set `spring.cloud.config.server.bootstrap=true`).
 
 == Push Notifications and Spring Cloud Bus
@@ -1190,12 +1295,12 @@ It also picks up some additional useful features related to `Environment` change
 The default behavior for any application that has the Spring Cloud Config Client on the classpath is as follows:
 When a config client starts, it binds to the Config Server (through the `spring.cloud.config.uri` bootstrap configuration property) and initializes Spring `Environment` with remote property sources.
 
-The net result of this behavior is that all client applciations that want to consume the Config Server need a `bootstrap.yml` (or an environment variable) with the server address set in `spring.cloud.config.uri` (it defaults to "http://localhost:8888").
+The net result of this behavior is that all client applications that want to consume the Config Server need a `bootstrap.yml` (or an environment variable) with the server address set in `spring.cloud.config.uri` (it defaults to "http://localhost:8888").
 
 [[discovery-first-bootstrap]]
 === Discovery First Bootstrap
 
-If you use a `DiscoveryClient implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
+If you use a `DiscoveryClient` implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
 However, in the default "`Config First`" mode, clients cannot take advantage of the registration.
 
 If you prefer to use `DiscoveryClient` to locate the Config Server, you can do so by setting `spring.cloud.config.discovery.enabled=true` (the default is `false`).
@@ -1207,7 +1312,7 @@ The default service ID is `configserver`, but you can change that on the client 
 
 The discovery client implementations all support some kind of metadata map (for example, we have `eureka.instance.metadataMap` for Eureka).
 Some additional properties of the Config Server may need to be configured in its service registration metadata so that clients can connect correctly.
-If the Config Server is secured with HTTP Basic, you can configure the credentials as `username` and `password`.
+If the Config Server is secured with HTTP Basic, you can configure the credentials as `user` and `password`.
 Also, if the Config Server has a context path, you can set `configPath`.
 For example, the following YAML file is for a Config Server that is a Eureka client:
 
@@ -1234,7 +1339,7 @@ If this is the desired behavior, set the bootstrap configuration property `sprin
 === Config Client Retry
 
 If you expect that the config server may occasionally be unavailable when your application starts, you can make it keep trying after a failure.
-First, you need to set `spring.cloud.config.fail-fast=true`.
+First, you need to set `spring.cloud.config.fail-fast=false`.
 Then you need to add `spring-retry` and `spring-boot-starter-aop` to your classpath.
 The default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs.
 You can configure these properties (and others) by setting the `spring.cloud.config.retry.*` configuration properties.

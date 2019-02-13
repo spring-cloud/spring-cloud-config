@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.config;
 
 import java.util.LinkedHashMap;
@@ -56,8 +57,9 @@ public class ConfigServerProperties {
 	 * should be returned in "native" form.
 	 */
 	private boolean stripDocumentFromYaml = true;
+
 	/**
-	 * Flag to indicate that If HTTP 404 needs to be sent if Application is not Found
+	 * Flag to indicate that If HTTP 404 needs to be sent if Application is not Found.
 	 */
 	private boolean acceptEmpty = true;
 
@@ -72,7 +74,8 @@ public class ConfigServerProperties {
 	private String defaultProfile = "default";
 
 	/**
-	 * Decryption configuration for when server handles encrypted properties before sending them to clients.
+	 * Decryption configuration for when server handles encrypted properties before
+	 * sending them to clients.
 	 */
 	private Encrypt encrypt = new Encrypt();
 
@@ -119,7 +122,7 @@ public class ConfigServerProperties {
 	public void setStripDocumentFromYaml(boolean stripDocumentFromYaml) {
 		this.stripDocumentFromYaml = stripDocumentFromYaml;
 	}
-	
+
 	public boolean isAcceptEmpty() {
 		return this.acceptEmpty;
 	}
@@ -127,6 +130,7 @@ public class ConfigServerProperties {
 	public void setAcceptEmpty(boolean acceptEmpty) {
 		this.acceptEmpty = acceptEmpty;
 	}
+
 	public String getDefaultApplicationName() {
 		return this.defaultApplicationName;
 	}
@@ -143,7 +147,11 @@ public class ConfigServerProperties {
 		this.defaultProfile = defaultProfile;
 	}
 
+	/**
+	 * Encryption properties.
+	 */
 	public static class Encrypt {
+
 		/**
 		 * Enable decryption of environment properties before sending to client.
 		 */
@@ -156,5 +164,7 @@ public class ConfigServerProperties {
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
 		}
+
 	}
+
 }

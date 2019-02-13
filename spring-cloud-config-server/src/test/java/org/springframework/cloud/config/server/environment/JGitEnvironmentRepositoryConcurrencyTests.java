@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,30 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.FetchCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRefNameException;
+import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -40,14 +58,15 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  * @author Roy Clarkson
  */
 public class JGitEnvironmentRepositoryConcurrencyTests {
+
+	protected Log logger = LogFactory.getLog(getClass());
 
 	private ConfigurableApplicationContext context;
 
@@ -90,10 +109,73 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 			future.get();
 		}
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertEquals(2, environment.getPropertySources().size());
-		assertEquals("bar", environment.getName());
-		assertArrayEquals(new String[] { "staging" }, environment.getProfiles());
-		assertEquals("master", environment.getLabel());
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getName()).isEqualTo("bar");
+		assertThat(environment.getProfiles()).isEqualTo(new String[] { "staging" });
+		assertThat(environment.getLabel()).isEqualTo("master");
+	}
+
+	/**
+	 * Simulates following actions in parallel: - Client tries to obtain configuration
+	 * with specified label - Spring Refresh Context Event occurs.
+	 * @throws Exception when git related exception happens
+	 */
+	@Test
+	public void concurrentRefreshContextAndGetLabels() throws Exception {
+		// Prepare the repo
+		final JGitConfigServerTestData testData = JGitConfigServerTestData
+				.prepareClonedGitRepository(TestConfiguration.class);
+		JGitEnvironmentRepository repository = testData.getRepository();
+		repository.setCloneOnStart(true);
+		repository.setGitFactory(new DelayedGitFactoryMock());
+		repository.setBasedir(testData.getClonedGit().getGitWorkingDirectory());
+		repository.setUri(testData.getServerGit().getGitWorkingDirectory()
+				.getAbsolutePath().replace("file://", ""));
+
+		final AtomicInteger errorCount = new AtomicInteger();
+
+		// Prepare two threads to do the parallel work
+		Thread client = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				JGitEnvironmentRepositoryConcurrencyTests.this.logger
+						.info("client start.");
+				try {
+					Environment environment = testData.getRepository().findOne("bar",
+							"staging", "master");
+				}
+				catch (Exception e) {
+					errorCount.incrementAndGet();
+					e.printStackTrace();
+				}
+				JGitEnvironmentRepositoryConcurrencyTests.this.logger.info("client end.");
+			}
+		});
+
+		Thread refresh = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					JGitEnvironmentRepositoryConcurrencyTests.this.logger
+							.info("refresh start.");
+					testData.getRepository().afterPropertiesSet();
+					JGitEnvironmentRepositoryConcurrencyTests.this.logger
+							.info("refresh end.");
+				}
+				catch (Exception e) {
+					errorCount.incrementAndGet();
+					e.printStackTrace();
+				}
+			}
+		});
+
+		// Start the parallel actions and wait till the end.
+		refresh.start();
+		client.start();
+		refresh.join();
+		client.join();
+
+		assertThat(errorCount.get()).isEqualTo(0);
 	}
 
 	@Configuration
@@ -101,6 +183,97 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })
 	protected static class TestConfiguration {
+
+	}
+
+	private static class DelayedGitFactoryMock
+			extends JGitEnvironmentRepository.JGitFactory {
+
+		@Override
+		public Git getGitByOpen(File file) throws IOException {
+			Git originalGit = DelayedGitMock.open(file);
+			return new DelayedGitMock(originalGit.getRepository());
+		}
+
+		@Override
+		public CloneCommand getCloneCommandByCloneRepository() {
+			return new DelayedCloneCommand();
+		}
+
+	}
+
+	private static class DelayedGitMock extends Git {
+
+		DelayedGitMock(Repository repo) {
+			super(repo);
+		}
+
+		@Override
+		public FetchCommand fetch() {
+			return new DelayedFetchCommand(getRepository());
+		}
+
+		@Override
+		public CheckoutCommand checkout() {
+			return new DelayedCheckoutCommand(getRepository());
+		}
+
+	}
+
+	private static class DelayedCloneCommand extends CloneCommand {
+
+		@Override
+		public Git call()
+				throws GitAPIException, InvalidRemoteException, TransportException {
+			try {
+				Thread.sleep(250);
+			}
+			catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return super.call();
+		}
+
+	}
+
+	private static class DelayedFetchCommand extends FetchCommand {
+
+		DelayedFetchCommand(Repository repo) {
+			super(repo);
+		}
+
+		@Override
+		public FetchResult call()
+				throws GitAPIException, InvalidRemoteException, TransportException {
+			try {
+				Thread.sleep(250);
+			}
+			catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return super.call();
+		}
+
+	}
+
+	private static class DelayedCheckoutCommand extends CheckoutCommand {
+
+		DelayedCheckoutCommand(Repository repo) {
+			super(repo);
+		}
+
+		@Override
+		public Ref call() throws GitAPIException, RefAlreadyExistsException,
+				RefNotFoundException, InvalidRefNameException, CheckoutConflictException {
+			try {
+				Thread.sleep(250);
+			}
+			catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return super.call();
+		}
+
 	}
 
 }

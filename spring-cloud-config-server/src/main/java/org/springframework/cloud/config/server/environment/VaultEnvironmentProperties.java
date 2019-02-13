@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.HashMap;
@@ -29,125 +30,140 @@ import org.springframework.core.Ordered;
  */
 @ConfigurationProperties("spring.cloud.config.server.vault")
 public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProperties {
-    /** Vault host. Defaults to 127.0.0.1. */
-    private String host = "127.0.0.1";
-    /** Vault port. Defaults to 8200. */
-    private Integer port = 8200;
-    /** Vault scheme. Defaults to http. */
-    private String scheme = "http";
-    /** Timeout (in seconds) for obtaining HTTP connection, defaults to 5 seconds. */
-    private int timeout = 5;
-    /** Vault backend. Defaults to secret. */
-    private String backend = "secret";
-    /** The key in vault shared by all applications. Defaults to application. Set to empty to disable. */
-    private String defaultKey = "application";
-    /** Vault profile separator. Defaults to comma. */
-    private String profileSeparator = ",";
-    /**
-     * Flag to indicate that SSL certificate validation should be bypassed when communicating with a repository served
-     * over an HTTPS connection.
-     */
-    private boolean skipSslValidation = false;
-    /**
-     * HTTP proxy configuration.
-     */
-    private Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
 
-    private int order = Ordered.LOWEST_PRECEDENCE;
-    /**
-     * Value to indicate which version of Vault kv backend is used. Defaults to 1.
-     */
-    private int kvVersion = 1;
+	/** Vault host. Defaults to 127.0.0.1. */
+	private String host = "127.0.0.1";
 
-    public String getHost() {
-        return host;
-    }
+	/** Vault port. Defaults to 8200. */
+	private Integer port = 8200;
 
-    public void setHost(String host) {
-        this.host = host;
-    }
+	/** Vault scheme. Defaults to http. */
+	private String scheme = "http";
 
-    public Integer getPort() {
-        return port;
-    }
+	/** Timeout (in seconds) for obtaining HTTP connection, defaults to 5 seconds. */
+	private int timeout = 5;
 
-    public void setPort(Integer port) {
-        this.port = port;
-    }
+	/** Vault backend. Defaults to secret. */
+	private String backend = "secret";
 
-    public String getScheme() {
-        return scheme;
-    }
+	/**
+	 * The key in vault shared by all applications. Defaults to application. Set to empty
+	 * to disable.
+	 */
+	private String defaultKey = "application";
 
-    public void setScheme(String scheme) {
-        this.scheme = scheme;
-    }
+	/** Vault profile separator. Defaults to comma. */
+	private String profileSeparator = ",";
 
-    public String getBackend() {
-        return backend;
-    }
+	/**
+	 * Flag to indicate that SSL certificate validation should be bypassed when
+	 * communicating with a repository served over an HTTPS connection.
+	 */
+	private boolean skipSslValidation = false;
 
-    public void setBackend(String backend) {
-        this.backend = backend;
-    }
+	/**
+	 * HTTP proxy configuration.
+	 */
+	private Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
 
-    public String getDefaultKey() {
-        return defaultKey;
-    }
+	private int order = Ordered.LOWEST_PRECEDENCE;
 
-    public void setDefaultKey(String defaultKey) {
-        this.defaultKey = defaultKey;
-    }
+	/**
+	 * Value to indicate which version of Vault kv backend is used. Defaults to 1.
+	 */
+	private int kvVersion = 1;
 
-    public String getProfileSeparator() {
-        return profileSeparator;
-    }
+	public String getHost() {
+		return this.host;
+	}
 
-    public void setProfileSeparator(String profileSeparator) {
-        this.profileSeparator = profileSeparator;
-    }
+	public void setHost(String host) {
+		this.host = host;
+	}
 
-    @Override
-    public boolean isSkipSslValidation() {
-        return skipSslValidation;
-    }
+	public Integer getPort() {
+		return this.port;
+	}
 
-    public void setSkipSslValidation(boolean skipSslValidation) {
-        this.skipSslValidation = skipSslValidation;
-    }
+	public void setPort(Integer port) {
+		this.port = port;
+	}
 
-    @Override
-    public Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> getProxy() {
-        return proxy;
-    }
+	public String getScheme() {
+		return this.scheme;
+	}
 
-    public void setProxy(Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy) {
-        this.proxy = proxy;
-    }
+	public void setScheme(String scheme) {
+		this.scheme = scheme;
+	}
 
-    public int getOrder() {
-        return order;
-    }
+	public String getBackend() {
+		return this.backend;
+	}
 
-    @Override
-    public void setOrder(int order) {
-        this.order = order;
-    }
+	public void setBackend(String backend) {
+		this.backend = backend;
+	}
 
-    @Override
-    public int getTimeout() {
-        return timeout;
-    }
+	public String getDefaultKey() {
+		return this.defaultKey;
+	}
 
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
-    }
-	
+	public void setDefaultKey(String defaultKey) {
+		this.defaultKey = defaultKey;
+	}
+
+	public String getProfileSeparator() {
+		return this.profileSeparator;
+	}
+
+	public void setProfileSeparator(String profileSeparator) {
+		this.profileSeparator = profileSeparator;
+	}
+
+	@Override
+	public boolean isSkipSslValidation() {
+		return this.skipSslValidation;
+	}
+
+	public void setSkipSslValidation(boolean skipSslValidation) {
+		this.skipSslValidation = skipSslValidation;
+	}
+
+	@Override
+	public Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> getProxy() {
+		return this.proxy;
+	}
+
+	public void setProxy(
+			Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy) {
+		this.proxy = proxy;
+	}
+
+	public int getOrder() {
+		return this.order;
+	}
+
+	@Override
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
+	@Override
+	public int getTimeout() {
+		return this.timeout;
+	}
+
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
+	}
+
 	public int getKvVersion() {
-        return kvVersion;
-    }
+		return this.kvVersion;
+	}
 
-    public void setKvVersion(int kvVersion) {
-        this.kvVersion = kvVersion;
-    }
+	public void setKvVersion(int kvVersion) {
+		this.kvVersion = kvVersion;
+	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.ssh;
 
-import org.springframework.validation.annotation.Validated;
-
-import javax.validation.Constraint;
-import javax.validation.Payload;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import javax.validation.Constraint;
+import javax.validation.Payload;
+
+import org.springframework.validation.annotation.Validated;
+
 /**
- * Beans annotated with {@link HostKeyAndAlgoBothExist} and {@link Validated} will have the constraints applied.
+ * Beans annotated with {@link HostKeyAndAlgoBothExist} and {@link Validated} will have
+ * the constraints applied.
  * @author Ollie Hughes
  */
 @Constraint(validatedBy = HostKeyAndAlgoBothExistValidator.class)
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface HostKeyAndAlgoBothExist {
+
 	String message() default "{HostKeyAndAlgoBothExist.message}";
+
 	Class<?>[] groups() default {};
+
 	Class<? extends Payload>[] payload() default {};
+
 }

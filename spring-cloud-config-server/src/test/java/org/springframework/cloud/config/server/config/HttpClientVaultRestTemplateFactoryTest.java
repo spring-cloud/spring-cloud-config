@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.config;
 
 import java.net.UnknownHostException;
@@ -38,113 +39,125 @@ import static org.hamcrest.Matchers.instanceOf;
  * @author Dylan Roberts
  */
 public class HttpClientVaultRestTemplateFactoryTest {
-    private static final ProxyHostProperties AUTHENTICATED_HTTP_PROXY = new ProxyHostProperties();
-    static {
-        AUTHENTICATED_HTTP_PROXY.setHost("http://authenticated.http.proxy");
-        AUTHENTICATED_HTTP_PROXY.setPort(8080);
-        AUTHENTICATED_HTTP_PROXY.setUsername("username");
-        AUTHENTICATED_HTTP_PROXY.setPassword("password");
-    }
-    private static final ProxyHostProperties AUTHENTICATED_HTTPS_PROXY = new ProxyHostProperties();
-    static {
-        AUTHENTICATED_HTTPS_PROXY.setHost("http://authenticated.https.proxy");
-        AUTHENTICATED_HTTPS_PROXY.setPort(8081);
-        AUTHENTICATED_HTTPS_PROXY.setUsername("username2");
-        AUTHENTICATED_HTTPS_PROXY.setPassword("password2");
-    }
-    private static final ProxyHostProperties HTTP_PROXY = new ProxyHostProperties();
-    static {
-        HTTP_PROXY.setHost("http://http.proxy");
-        HTTP_PROXY.setPort(8080);
-    }
-    private static final ProxyHostProperties HTTPS_PROXY = new ProxyHostProperties();
-    static {
-        HTTPS_PROXY.setHost("http://https.proxy");
-        HTTPS_PROXY.setPort(8081);
-    }
 
-    private HttpClientVaultRestTemplateFactory factory;
+	private static final ProxyHostProperties AUTHENTICATED_HTTP_PROXY = new ProxyHostProperties();
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+	private static final ProxyHostProperties AUTHENTICATED_HTTPS_PROXY = new ProxyHostProperties();
 
-    @Before
-    public void setUp() {
-        factory = new HttpClientVaultRestTemplateFactory();
-    }
+	private static final ProxyHostProperties HTTP_PROXY = new ProxyHostProperties();
 
-    @Test
-    public void authenticatedHttpsProxy() throws Exception {
-        VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null, AUTHENTICATED_HTTPS_PROXY);
-        RestTemplate restTemplate = factory.build(properties);
-        expectedException.expectCause(allOf(
-                instanceOf(UnknownHostException.class),
-                hasProperty("message", containsString(AUTHENTICATED_HTTPS_PROXY.getHost()))));
+	private static final ProxyHostProperties HTTPS_PROXY = new ProxyHostProperties();
 
-        restTemplate.getForObject("https://somehost", String.class);
-    }
+	static {
+		AUTHENTICATED_HTTP_PROXY.setHost("http://authenticated.http.proxy");
+		AUTHENTICATED_HTTP_PROXY.setPort(8080);
+		AUTHENTICATED_HTTP_PROXY.setUsername("username");
+		AUTHENTICATED_HTTP_PROXY.setPassword("password");
+	}
 
-    @Test
-    public void httpsProxy() throws Exception {
-        VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null, HTTPS_PROXY);
-        RestTemplate restTemplate = factory.build(properties);
-        expectedException.expectCause(allOf(
-                instanceOf(UnknownHostException.class),
-                hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
+	static {
+		AUTHENTICATED_HTTPS_PROXY.setHost("http://authenticated.https.proxy");
+		AUTHENTICATED_HTTPS_PROXY.setPort(8081);
+		AUTHENTICATED_HTTPS_PROXY.setUsername("username2");
+		AUTHENTICATED_HTTPS_PROXY.setPassword("password2");
+	}
 
-        restTemplate.getForObject("https://somehost", String.class);
-    }
+	static {
+		HTTP_PROXY.setHost("http://http.proxy");
+		HTTP_PROXY.setPort(8080);
+	}
 
-    @Test
-    public void httpsProxy_notCalled() throws Exception {
-        VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null, HTTPS_PROXY);
-        RestTemplate restTemplate = factory.build(properties);
-        expectedException.expectCause(allOf(
-                instanceOf(UnknownHostException.class),
-                hasProperty("message", containsString("somehost"))));
+	static {
+		HTTPS_PROXY.setHost("http://https.proxy");
+		HTTPS_PROXY.setPort(8081);
+	}
 
-        restTemplate.getForObject("http://somehost", String.class);
-    }
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
-    @Test
-    public void authenticatedHttpProxy() throws Exception {
-        VaultEnvironmentProperties properties = getVaultEnvironmentProperties(AUTHENTICATED_HTTP_PROXY, null);
-        RestTemplate restTemplate = factory.build(properties);
-        expectedException.expectCause(allOf(
-                instanceOf(UnknownHostException.class),
-                hasProperty("message", containsString(AUTHENTICATED_HTTP_PROXY.getHost()))));
+	private HttpClientVaultRestTemplateFactory factory;
 
-        restTemplate.getForObject("http://somehost", String.class);
-    }
+	@Before
+	public void setUp() {
+		this.factory = new HttpClientVaultRestTemplateFactory();
+	}
 
-    @Test
-    public void httpProxy() throws Exception {
-        VaultEnvironmentProperties properties = getVaultEnvironmentProperties(HTTP_PROXY, null);
-        RestTemplate restTemplate = factory.build(properties);
-        expectedException.expectCause(allOf(
-                instanceOf(UnknownHostException.class),
-                hasProperty("message", containsString(HTTP_PROXY.getHost()))));
+	@Test
+	public void authenticatedHttpsProxy() throws Exception {
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null,
+				AUTHENTICATED_HTTPS_PROXY);
+		RestTemplate restTemplate = this.factory.build(properties);
+		this.expectedException.expectCause(
+				allOf(instanceOf(UnknownHostException.class), hasProperty("message",
+						containsString(AUTHENTICATED_HTTPS_PROXY.getHost()))));
 
-        restTemplate.getForObject("http://somehost", String.class);
-    }
+		restTemplate.getForObject("https://somehost", String.class);
+	}
 
-    @Test
-    public void httpProxy_notCalled() throws Exception {
-        VaultEnvironmentProperties properties = getVaultEnvironmentProperties(HTTP_PROXY, null);
-        RestTemplate restTemplate = factory.build(properties);
-        expectedException.expectCause(allOf(
-                instanceOf(UnknownHostException.class),
-                hasProperty("message", containsString("somehost"))));
+	@Test
+	public void httpsProxy() throws Exception {
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null,
+				HTTPS_PROXY);
+		RestTemplate restTemplate = this.factory.build(properties);
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+				hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
 
-        restTemplate.getForObject("https://somehost", String.class);
-    }
+		restTemplate.getForObject("https://somehost", String.class);
+	}
 
-    private VaultEnvironmentProperties getVaultEnvironmentProperties(ProxyHostProperties httpProxy, ProxyHostProperties httpsProxy) {
-        Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxyMap = new HashMap<>();
-        proxyMap.put(ProxyHostProperties.ProxyForScheme.HTTP, httpProxy);
-        proxyMap.put(ProxyHostProperties.ProxyForScheme.HTTPS, httpsProxy);
-        VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-        properties.setProxy(proxyMap);
-        return properties;
-    }
+	@Test
+	public void httpsProxy_notCalled() throws Exception {
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null,
+				HTTPS_PROXY);
+		RestTemplate restTemplate = this.factory.build(properties);
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+				hasProperty("message", containsString("somehost"))));
+
+		restTemplate.getForObject("http://somehost", String.class);
+	}
+
+	@Test
+	public void authenticatedHttpProxy() throws Exception {
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(
+				AUTHENTICATED_HTTP_PROXY, null);
+		RestTemplate restTemplate = this.factory.build(properties);
+		this.expectedException.expectCause(
+				allOf(instanceOf(UnknownHostException.class), hasProperty("message",
+						containsString(AUTHENTICATED_HTTP_PROXY.getHost()))));
+
+		restTemplate.getForObject("http://somehost", String.class);
+	}
+
+	@Test
+	public void httpProxy() throws Exception {
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(HTTP_PROXY,
+				null);
+		RestTemplate restTemplate = this.factory.build(properties);
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+				hasProperty("message", containsString(HTTP_PROXY.getHost()))));
+
+		restTemplate.getForObject("http://somehost", String.class);
+	}
+
+	@Test
+	public void httpProxy_notCalled() throws Exception {
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(HTTP_PROXY,
+				null);
+		RestTemplate restTemplate = this.factory.build(properties);
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+				hasProperty("message", containsString("somehost"))));
+
+		restTemplate.getForObject("https://somehost", String.class);
+	}
+
+	private VaultEnvironmentProperties getVaultEnvironmentProperties(
+			ProxyHostProperties httpProxy, ProxyHostProperties httpsProxy) {
+		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxyMap = new HashMap<>();
+		proxyMap.put(ProxyHostProperties.ProxyForScheme.HTTP, httpProxy);
+		proxyMap.put(ProxyHostProperties.ProxyForScheme.HTTPS, httpsProxy);
+		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		properties.setProxy(proxyMap);
+		return properties;
+	}
+
 }

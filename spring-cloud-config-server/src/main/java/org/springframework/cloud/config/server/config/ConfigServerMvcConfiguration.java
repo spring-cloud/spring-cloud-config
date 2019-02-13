@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -29,8 +32,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Dave Syer
@@ -54,8 +55,10 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 	}
 
 	@Bean
-	public EnvironmentController environmentController(EnvironmentRepository envRepository, ConfigServerProperties server) {
-		EnvironmentController controller = new EnvironmentController(encrypted(envRepository, server), this.objectMapper);
+	public EnvironmentController environmentController(
+			EnvironmentRepository envRepository, ConfigServerProperties server) {
+		EnvironmentController controller = new EnvironmentController(
+				encrypted(envRepository, server), this.objectMapper);
 		controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
 		controller.setAcceptEmpty(server.isAcceptEmpty());
 		return controller;
@@ -63,16 +66,19 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 
 	@Bean
 	@ConditionalOnBean(ResourceRepository.class)
-	public ResourceController resourceController(ResourceRepository repository, EnvironmentRepository envRepository, ConfigServerProperties server) {
+	public ResourceController resourceController(ResourceRepository repository,
+			EnvironmentRepository envRepository, ConfigServerProperties server) {
 		ResourceController controller = new ResourceController(repository,
 				encrypted(envRepository, server));
 		return controller;
 	}
 
-	private EnvironmentRepository encrypted(EnvironmentRepository envRepository, ConfigServerProperties server) {
+	private EnvironmentRepository encrypted(EnvironmentRepository envRepository,
+			ConfigServerProperties server) {
 		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
 				envRepository, this.environmentEncryptor);
 		encrypted.setOverrides(server.getOverrides());
 		return encrypted;
 	}
+
 }

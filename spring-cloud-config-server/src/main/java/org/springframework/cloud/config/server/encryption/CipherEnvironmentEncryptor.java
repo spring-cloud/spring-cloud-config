@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -64,24 +65,28 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 			for (Map.Entry<Object, Object> entry : new LinkedHashSet<>(map.entrySet())) {
 				Object key = entry.getKey();
 				String name = key.toString();
-				String value = entry.getValue().toString();
-				if (value.startsWith("{cipher}")) {
+				if (entry.getValue() != null
+						&& entry.getValue().toString().startsWith("{cipher}")) {
+					String value = entry.getValue().toString();
 					map.remove(key);
 					try {
 						value = value.substring("{cipher}".length());
-						value = encryptor.locate(
-								this.helper.getEncryptorKeys(name, StringUtils
-										.arrayToCommaDelimitedString(environment
-												.getProfiles()), value)).decrypt(this.helper.stripPrefix(value));
+						value = encryptor
+								.locate(this.helper.getEncryptorKeys(name,
+										StringUtils.arrayToCommaDelimitedString(
+												environment.getProfiles()),
+										value))
+								.decrypt(this.helper.stripPrefix(value));
 					}
 					catch (Exception e) {
 						value = "<n/a>";
 						name = "invalid." + name;
-						String message = "Cannot decrypt key: " + key + " (" + e.getClass()
-								+ ": " + e.getMessage() + ")";
+						String message = "Cannot decrypt key: " + key + " ("
+								+ e.getClass() + ": " + e.getMessage() + ")";
 						if (logger.isDebugEnabled()) {
 							logger.debug(message, e);
-						} else if (logger.isWarnEnabled()) {
+						}
+						else if (logger.isWarnEnabled()) {
 							logger.warn(message);
 						}
 					}

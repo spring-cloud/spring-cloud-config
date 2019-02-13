@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,131 +28,144 @@ import org.junit.Test;
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
- * It would be nice to do an integration test, however, this would require
- * using real AWS credentials. How can we test the credential generation
- * without real credentials? 
- * 
+ * It would be nice to do an integration test, however, this would require using real AWS
+ * credentials. How can we test the credential generation without real credentials?
+ *
  * @author don laidlaw
  *
  */
 public class AwsCodeCommitCredentialsProviderTests {
+
 	private static final String PASSWORD = "secret";
+
 	private static final String USER = "test";
+
 	private static final String AWS_REPO = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/test";
+
 	private static final String BAD_REPO = "https://amazonaws.com/v1/repos/test";
-  	private static final String CURLY_BRACES_REPO = "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/{application}";
+
+	private static final String CURLY_BRACES_REPO = "https://git-codecommit.us-east-1.amazonaws.com/"
+			+ "v1/repos/{application}";
 
 	private AwsCodeCommitCredentialProvider provider;
-	
+
 	@Before
 	public void init() {
 		GitCredentialsProviderFactory factory = new GitCredentialsProviderFactory();
-		provider = (AwsCodeCommitCredentialProvider) 
-		factory.createFor(AWS_REPO, USER, PASSWORD, null, false);
+		this.provider = (AwsCodeCommitCredentialProvider) factory.createFor(AWS_REPO,
+				USER, PASSWORD, null, false);
 	}
-	
+
 	@Test
 	public void basics() {
-		assertNotNull(provider);
-		assertEquals(USER, provider.getUsername());
-		assertEquals(PASSWORD, provider.getPassword());
-		assertFalse(provider.isInteractive());
+		assertThat(this.provider).isNotNull();
+		assertThat(this.provider.getUsername()).isEqualTo(USER);
+		assertThat(this.provider.getPassword()).isEqualTo(PASSWORD);
+		assertThat(this.provider.isInteractive()).isFalse();
 	}
 
 	@Test
 	public void testSupportsUsernamePassword() {
-		assertTrue(provider.supports(new CredentialItem[] {
-			new CredentialItem.Username(),
-			new CredentialItem.Password()
-		}));
+		assertThat(this.provider.supports(new CredentialItem[] {
+				new CredentialItem.Username(), new CredentialItem.Password() })).isTrue();
 	}
 
 	@Test
 	public void testNotSupportsOther() {
-		assertFalse(provider.supports(new CredentialItem[] {
-			new CredentialItem.YesNoType("OK To Login?")	// this is not ok
-		}));
-		assertFalse(provider.supports(new CredentialItem[] {
-			new CredentialItem.StringType("OK To Login?", true)	// this is not ok
-		}));
-		assertFalse(provider.supports(new CredentialItem[] {
-				new CredentialItem.Username(),	// this is ok
-				new CredentialItem.Password(),	// this is ok
-				new CredentialItem.StringType("OK To Login?", true) // this is not ok
-		}));
+		assertThat(this.provider.supports(
+				new CredentialItem[] { new CredentialItem.YesNoType("OK To Login?") // this
+				// is
+				// not
+				// ok
+				})).isFalse();
+		assertThat(this.provider.supports(
+				new CredentialItem[] { new CredentialItem.StringType("OK To Login?", true) // this
+				// is
+				// not
+				// ok
+				})).isFalse();
+		assertThat(this.provider
+				.supports(new CredentialItem[] { new CredentialItem.Username(), // this
+						// is
+						// ok
+						new CredentialItem.Password(), // this is ok
+						new CredentialItem.StringType("OK To Login?", true) // this is not
+				// ok
+		})).isFalse();
 	}
-	
+
 	@Test
 	public void testAwsCredentialsProviderIsNullInitially() {
-		AWSCredentialsProvider awsProvider = provider.getAwsCredentialProvider();
-		assertNull(awsProvider);
+		AWSCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
+		assertThat(awsProvider).isNull();
 	}
 
 	@Test
 	public void testAwsCredentialsProviderIsDefinedAfterGet() throws URISyntaxException {
-		AWSCredentialsProvider awsProvider = provider.getAwsCredentialProvider();
-		assertNull(awsProvider);
-		assertTrue(provider.get(new URIish(AWS_REPO), makeCredentialItems()));
-		awsProvider = provider.getAwsCredentialProvider();
-		assertNotNull(awsProvider);
-		assertTrue(awsProvider instanceof AwsCodeCommitCredentialProvider.AWSStaticCredentialsProvider);
+		AWSCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
+		assertThat(awsProvider).isNull();
+		assertThat(this.provider.get(new URIish(AWS_REPO), makeCredentialItems()))
+				.isTrue();
+		awsProvider = this.provider.getAwsCredentialProvider();
+		assertThat(awsProvider).isNotNull();
+		assertThat(
+				awsProvider instanceof AwsCodeCommitCredentialProvider.AWSStaticCredentialsProvider)
+						.isTrue();
 	}
-	
+
 	@Test
-	public void testBadUriReturnsFalse() throws UnsupportedCredentialItem, URISyntaxException {
+	public void testBadUriReturnsFalse()
+			throws UnsupportedCredentialItem, URISyntaxException {
 		CredentialItem[] credentialItems = makeCredentialItems();
-		assertFalse(provider.get(new URIish(BAD_REPO), credentialItems));
+		assertThat(this.provider.get(new URIish(BAD_REPO), credentialItems)).isFalse();
 	}
-	
+
 	@Test
-	public void testUriWithCurlyBracesReturnsTrue() throws UnsupportedCredentialItem, URISyntaxException {
+	public void testUriWithCurlyBracesReturnsTrue()
+			throws UnsupportedCredentialItem, URISyntaxException {
 		GitCredentialsProviderFactory factory = new GitCredentialsProviderFactory();
-		provider = (AwsCodeCommitCredentialProvider) 
-		factory.createFor(CURLY_BRACES_REPO, USER, PASSWORD, null, false);
+		this.provider = (AwsCodeCommitCredentialProvider) factory
+				.createFor(CURLY_BRACES_REPO, USER, PASSWORD, null, false);
 		CredentialItem[] credentialItems = makeCredentialItems();
-		assertTrue(provider.get(new URIish(CURLY_BRACES_REPO), credentialItems));
+		assertThat(this.provider.get(new URIish(CURLY_BRACES_REPO), credentialItems))
+				.isTrue();
 	}
-  
+
 	@Test
 	public void testThrowsUnsupportedCredentialException() throws URISyntaxException {
 		CredentialItem[] goodCredentialItems = makeCredentialItems();
 		CredentialItem[] badCredentialItems = new CredentialItem[] {
-				goodCredentialItems[0],
-				goodCredentialItems[1],
-				new CredentialItem.YesNoType("OK?")
-		};
+				goodCredentialItems[0], goodCredentialItems[1],
+				new CredentialItem.YesNoType("OK?") };
 		try {
-			provider.get(new URIish(AWS_REPO), badCredentialItems);
+			this.provider.get(new URIish(AWS_REPO), badCredentialItems);
 			fail("Expected UnsupportedCredentialItem exception");
-		} catch (UnsupportedCredentialItem e) {
-			assertNotNull(e.getMessage());
+		}
+		catch (UnsupportedCredentialItem e) {
+			assertThat(e.getMessage()).isNotNull();
 		}
 	}
-	
+
 	@Test
 	public void testReturnsCredentials() throws URISyntaxException {
 		CredentialItem[] credentialItems = makeCredentialItems();
-		assertTrue(provider.get(new URIish(AWS_REPO), credentialItems));
-		
+		assertThat(this.provider.get(new URIish(AWS_REPO), credentialItems)).isTrue();
+
 		String theUsername = ((CredentialItem.Username) credentialItems[0]).getValue();
 		char[] thePassword = ((CredentialItem.Password) credentialItems[1]).getValue();
-		
-		assertEquals(USER, theUsername);
-		assertNotNull(thePassword);
-		
+
+		assertThat(theUsername).isEqualTo(USER);
+		assertThat(thePassword).isNotNull();
+
 		// The password will always begin with a timestamp like
 		// 20161113T121314Z
-		assertTrue(thePassword.length > 16);
-		assertEquals('T', thePassword[8]);
-		assertEquals('Z', thePassword[15]);
+		assertThat(thePassword.length > 16).isTrue();
+		assertThat(thePassword[8]).isEqualTo('T');
+		assertThat(thePassword[15]).isEqualTo('Z');
 	}
 
 	private CredentialItem[] makeCredentialItems() {
@@ -161,4 +174,5 @@ public class AwsCodeCommitCredentialsProviderTests {
 		credentialItems[1] = new CredentialItem.Password();
 		return credentialItems;
 	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright 2014-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,24 +45,27 @@ import org.springframework.core.env.PropertySource;
  * @author Dave Syer
  *
  */
-public class ConfigServerBootstrapApplicationListener implements
-ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
+public class ConfigServerBootstrapApplicationListener
+		implements ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
 
+	/**
+	 * Default order of the bootstrap application listener.
+	 */
 	public static final int DEFAULT_ORDER = Ordered.HIGHEST_PRECEDENCE + 4;
 
 	private int order = DEFAULT_ORDER;
 
-	private PropertySource<?> propertySource = new MapPropertySource(
-			"configServerClient", Collections.<String, Object> singletonMap(
-					"spring.cloud.config.enabled", "false"));
-
-	public void setOrder(int order) {
-		this.order = order;
-	}
+	private PropertySource<?> propertySource = new MapPropertySource("configServerClient",
+			Collections.<String, Object>singletonMap("spring.cloud.config.enabled",
+					"false"));
 
 	@Override
 	public int getOrder() {
 		return this.order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
 	}
 
 	@Override
@@ -70,7 +73,8 @@ ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
 		ConfigurableEnvironment environment = event.getEnvironment();
 		if (!environment.resolvePlaceholders("${spring.cloud.config.enabled:false}")
 				.equalsIgnoreCase("true")) {
-			if (!environment.getPropertySources().contains(this.propertySource.getName())) {
+			if (!environment.getPropertySources()
+					.contains(this.propertySource.getName())) {
 				environment.getPropertySources().addLast(this.propertySource);
 			}
 		}

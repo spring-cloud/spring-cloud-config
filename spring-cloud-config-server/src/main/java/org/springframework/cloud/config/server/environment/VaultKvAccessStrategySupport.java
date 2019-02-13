@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import org.springframework.http.HttpEntity;
@@ -25,12 +26,14 @@ import org.springframework.web.client.RestOperations;
 
 /**
  * Base class for {@link VaultKvAccessStrategy} implementors.
+ *
  * @author Mark Paluch
  * @since 2.0
  */
 abstract class VaultKvAccessStrategySupport implements VaultKvAccessStrategy {
 
 	private final String baseUrl;
+
 	private final RestOperations rest;
 
 	VaultKvAccessStrategySupport(String baseUrl, RestOperations rest) {
@@ -48,8 +51,8 @@ abstract class VaultKvAccessStrategySupport implements VaultKvAccessStrategy {
 	/**
 	 * Extract the raw JSON from the
 	 * {@link org.springframework.cloud.config.server.environment.VaultKvAccessStrategy.VaultResponse}.
-	 * @param body
-	 * @return
+	 * @param body vault response
+	 * @return raw JSON
 	 */
 	abstract String extractDataFromBody(VaultResponse body);
 
@@ -63,10 +66,11 @@ abstract class VaultKvAccessStrategySupport implements VaultKvAccessStrategy {
 	public String getData(HttpHeaders headers, String backend, String key) {
 		try {
 
-			String urlTemplate = String.format("%s/v1/%s/%s", baseUrl, backend, getPath());
+			String urlTemplate = String.format("%s/v1/%s/%s", this.baseUrl, backend,
+					getPath());
 
-			ResponseEntity<VaultResponse> response = rest.exchange(urlTemplate, HttpMethod.GET,
-					new HttpEntity<>(headers), VaultResponse.class, key);
+			ResponseEntity<VaultResponse> response = this.rest.exchange(urlTemplate,
+					HttpMethod.GET, new HttpEntity<>(headers), VaultResponse.class, key);
 			HttpStatus status = response.getStatusCode();
 			if (status == HttpStatus.OK) {
 				return extractDataFromBody(response.getBody());
@@ -80,4 +84,5 @@ abstract class VaultKvAccessStrategySupport implements VaultKvAccessStrategy {
 		}
 		return null;
 	}
+
 }

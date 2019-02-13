@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
@@ -21,20 +22,28 @@ import org.springframework.core.env.ConfigurableEnvironment;
 /**
  * @author Dylan Roberts
  */
-public class NativeEnvironmentRepositoryFactory implements EnvironmentRepositoryFactory<NativeEnvironmentRepository,
-		NativeEnvironmentProperties> {
+public class NativeEnvironmentRepositoryFactory implements
+		EnvironmentRepositoryFactory<NativeEnvironmentRepository, NativeEnvironmentProperties> {
+
 	private ConfigurableEnvironment environment;
+
 	private ConfigServerProperties properties;
 
-	public NativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties properties) {
+	public NativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
+			ConfigServerProperties properties) {
 		this.environment = environment;
 		this.properties = properties;
 	}
 
 	@Override
-	public NativeEnvironmentRepository build(NativeEnvironmentProperties environmentProperties) {
-		NativeEnvironmentRepository repository = new NativeEnvironmentRepository(environment, environmentProperties);
-		repository.setDefaultLabel(properties.getDefaultLabel());
+	public NativeEnvironmentRepository build(
+			NativeEnvironmentProperties environmentProperties) {
+		NativeEnvironmentRepository repository = new NativeEnvironmentRepository(
+				this.environment, environmentProperties);
+		if (this.properties.getDefaultLabel() != null) {
+			repository.setDefaultLabel(this.properties.getDefaultLabel());
+		}
 		return repository;
 	}
+
 }

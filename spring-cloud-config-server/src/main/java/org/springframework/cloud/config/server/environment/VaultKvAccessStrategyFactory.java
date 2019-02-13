@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.environment;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,11 +22,16 @@ import org.springframework.web.client.RestOperations;
 
 /**
  * Factory for {@link VaultKvAccessStrategy}.
+ *
  * @author Haroun Pacquee
  * @author Mark Paluch
  * @since 2.0
  */
-public class VaultKvAccessStrategyFactory {
+public final class VaultKvAccessStrategyFactory {
+
+	private VaultKvAccessStrategyFactory() {
+		throw new IllegalStateException("Can't instantiate an utility class");
+	}
 
 	/**
 	 * Create a new {@link VaultKvAccessStrategy} given {@link RestOperations},
@@ -67,6 +73,7 @@ public class VaultKvAccessStrategyFactory {
 		public String extractDataFromBody(VaultResponse body) {
 			return body.getData() == null ? null : body.getData().toString();
 		}
+
 	}
 
 	/**
@@ -89,5 +96,7 @@ public class VaultKvAccessStrategyFactory {
 					: ((JsonNode) body.getData()).get("data");
 			return nestedDataNode == null ? null : nestedDataNode.toString();
 		}
+
 	}
+
 }

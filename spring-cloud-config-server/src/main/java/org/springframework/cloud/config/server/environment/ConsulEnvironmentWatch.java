@@ -1,11 +1,29 @@
+/*
+ * Copyright 2018-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.validation.constraints.NotNull;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -23,15 +41,25 @@ import org.springframework.web.client.RestTemplate;
 @ConfigurationProperties("spring.cloud.config.server.consul.watch")
 public class ConsulEnvironmentWatch implements EnvironmentWatch {
 
+	/**
+	 * Consul index header name.
+	 */
 	public static final String CONSUL_INDEX = "X-Consul-Index";
+
+	/**
+	 * Consul token header name.
+	 */
 	public static final String CONSUL_TOKEN = "X-Consul-Token";
 
-	private static Log LOG = LogFactory.getLog(ConsulEnvironmentWatch.class);
+	/**
+	 * Response types.
+	 */
+	public static final ParameterizedTypeReference<List<String>> RESPONSE_TYPE = new ParameterizedTypeReference<List<String>>() {
+	};
 
 	private static final String WATCH_URL = "{scheme}://{host}:{port}/v1/kv/{path}?keys&recurse&wait={wait}&index={index}";
 
-	public static final ParameterizedTypeReference<List<String>> RESPONSE_TYPE = new ParameterizedTypeReference<List<String>>() {
-	};
+	private static Log LOG = LogFactory.getLog(ConsulEnvironmentWatch.class);
 
 	private RestTemplate restTemplate = new RestTemplate();
 
@@ -66,12 +94,12 @@ public class ConsulEnvironmentWatch implements EnvironmentWatch {
 		params.add(String.valueOf(this.port));
 		params.add(this.path);
 		params.add(this.wait);
-		params.add (StringUtils.hasText(state) ? state : "");
+		params.add(StringUtils.hasText(state) ? state : "");
 
 		try {
 			HttpHeaders headers = new HttpHeaders();
-			if (StringUtils.hasText(token)) {
-				headers.add(CONSUL_TOKEN, token);
+			if (StringUtils.hasText(this.token)) {
+				headers.add(CONSUL_TOKEN, this.token);
 			}
 			HttpEntity<Object> request = new HttpEntity<>(headers);
 			ResponseEntity<List<String>> response = this.restTemplate.exchange(WATCH_URL,
@@ -123,4 +151,5 @@ public class ConsulEnvironmentWatch implements EnvironmentWatch {
 	public void setToken(String token) {
 		this.token = token;
 	}
+
 }

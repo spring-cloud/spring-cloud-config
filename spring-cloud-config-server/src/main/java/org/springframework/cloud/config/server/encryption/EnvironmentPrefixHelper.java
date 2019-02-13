@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,8 +57,13 @@ class EnvironmentPrefixHelper {
 	 * Extract keys for looking up a {@link TextEncryptor} from the input text in the form
 	 * of a prefix of zero or many <code>{name:value}</code> pairs. The name and profiles
 	 * properties are always added to the keys (replacing any provided in the inputs).
+	 * @param name application name
+	 * @param profiles list of profiles
+	 * @param text text to cipher
+	 * @return encryptor keys
 	 */
-	public Map<String, String> getEncryptorKeys(String name, String profiles, String text) {
+	public Map<String, String> getEncryptorKeys(String name, String profiles,
+			String text) {
 
 		Map<String, String> keys = new LinkedHashMap<String, String>();
 
@@ -98,6 +103,9 @@ class EnvironmentPrefixHelper {
 	 * <code>{name:value}</code> pairs. The "name" and "profiles" keys are special in that
 	 * they are stripped since that information is always available when deriving the keys
 	 * in {@link #getEncryptorKeys(String, String, String)}.
+	 * @param keys name, value pairs
+	 * @param input input to append
+	 * @return prefixed input
 	 */
 	public String addPrefix(Map<String, String> keys, String input) {
 		keys.remove(NAME);

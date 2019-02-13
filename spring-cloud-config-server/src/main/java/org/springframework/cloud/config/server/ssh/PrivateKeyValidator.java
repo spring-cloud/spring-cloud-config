@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.cloud.config.server.ssh;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
@@ -34,32 +36,39 @@ import static org.springframework.cloud.config.server.ssh.SshPropertyValidator.i
 import static org.springframework.util.StringUtils.hasText;
 
 /**
- * JSR-303 Cross Field validator that ensures that an {@link MultipleJGitEnvironmentProperties} bean for the constraints:
- * - Private key is present and can be correctly parsed using {@link com.jcraft.jsch.KeyPair}
+ * JSR-303 Cross Field validator that ensures that an
+ * {@link MultipleJGitEnvironmentProperties} bean for the constraints: - Private key is
+ * present and can be correctly parsed using {@link com.jcraft.jsch.KeyPair}
  *
- * Beans annotated with {@link PrivateKeyValidator} and {@link Validated} will have the constraints applied.
+ * Beans annotated with {@link PrivateKeyValidator} and {@link Validated} will have the
+ * constraints applied.
  *
  * @author Ollie Hughes
  */
-public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsValid, MultipleJGitEnvironmentProperties> {
+public class PrivateKeyValidator implements
+		ConstraintValidator<PrivateKeyIsValid, MultipleJGitEnvironmentProperties> {
+
 	private static final String GIT_PROPERTY_PREFIX = "spring.cloud.config.server.git.";
+
 	private final SshPropertyValidator sshPropertyValidator = new SshPropertyValidator();
 
 	@Override
 	public void initialize(PrivateKeyIsValid constrainAnnotation) {
-		//No special initialization of validator required
+		// No special initialization of validator required
 	}
 
 	@Override
-	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
+	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties,
+			ConstraintValidatorContext context) {
 		context.disableDefaultConstraintViolation();
 		Set<Boolean> validationResults = new HashSet<>();
-		List<JGitEnvironmentProperties> extractedProperties = sshPropertyValidator.extractRepoProperties(sshUriProperties);
+		List<JGitEnvironmentProperties> extractedProperties = this.sshPropertyValidator
+				.extractRepoProperties(sshUriProperties);
 
 		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
-			if (extractedProperty.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
-				validationResults.add(
-						 isPrivateKeyPresent(extractedProperty, context)
+			if (extractedProperty.isIgnoreLocalSshSettings()
+					&& isSshUri(extractedProperty.getUri())) {
+				validationResults.add(isPrivateKeyPresent(extractedProperty, context)
 						&& isPrivateKeyFormatCorrect(extractedProperty, context));
 			}
 		}
@@ -67,25 +76,30 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 
 	}
 
-	private boolean isPrivateKeyPresent(JGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
+	private boolean isPrivateKeyPresent(JGitEnvironmentProperties sshUriProperties,
+			ConstraintValidatorContext context) {
 		if (!hasText(sshUriProperties.getPrivateKey())) {
-			context.buildConstraintViolationWithTemplate(
-					format("Property '%sprivateKey' must be set when '%signoreLocalSshSettings' is specified", GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
-					.addConstraintViolation();
+			context.buildConstraintViolationWithTemplate(format(
+					"Property '%sprivateKey' must be set when '%signoreLocalSshSettings' is specified",
+					GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX)).addConstraintViolation();
 			return false;
 		}
 		return true;
 	}
 
-	private boolean isPrivateKeyFormatCorrect(JGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
+	private boolean isPrivateKeyFormatCorrect(JGitEnvironmentProperties sshUriProperties,
+			ConstraintValidatorContext context) {
 		try {
 			KeyPair.load(new JSch(), sshUriProperties.getPrivateKey().getBytes(), null);
 			return true;
-		} catch (JSchException e) {
+		}
+		catch (JSchException e) {
 			context.buildConstraintViolationWithTemplate(
-					format("Property '%sprivateKey' is not a valid private key", GIT_PROPERTY_PREFIX))
+					format("Property '%sprivateKey' is not a valid private key",
+							GIT_PROPERTY_PREFIX))
 					.addConstraintViolation();
 			return false;
 		}
 	}
+
 }

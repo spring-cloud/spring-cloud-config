@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,18 +51,18 @@ public class Environment {
 	}
 
 	/**
-	 * Copies all fields except propertySources
-	 * @param env
+	 * Copies all fields except propertySources.
+	 * @param env Spring Environment
 	 */
 	public Environment(Environment env) {
-		this(env.getName(), env.getProfiles(), env.getLabel(), env.getVersion(), env.getState());
+		this(env.getName(), env.getProfiles(), env.getLabel(), env.getVersion(),
+				env.getState());
 	}
 
 	@JsonCreator
 	public Environment(@JsonProperty("name") String name,
 			@JsonProperty("profiles") String[] profiles,
-			@JsonProperty("label") String label,
-			@JsonProperty("version") String version,
+			@JsonProperty("label") String label, @JsonProperty("version") String version,
 			@JsonProperty("state") String state) {
 		super();
 		this.name = name;
@@ -85,11 +85,11 @@ public class Environment {
 	}
 
 	public List<PropertySource> getPropertySources() {
-		return propertySources;
+		return this.propertySources;
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	public void setName(String name) {
@@ -97,7 +97,7 @@ public class Environment {
 	}
 
 	public String getLabel() {
-		return label;
+		return this.label;
 	}
 
 	public void setLabel(String label) {
@@ -105,7 +105,7 @@ public class Environment {
 	}
 
 	public String[] getProfiles() {
-		return profiles;
+		return this.profiles;
 	}
 
 	public void setProfiles(String[] profiles) {
@@ -113,7 +113,7 @@ public class Environment {
 	}
 
 	public String getVersion() {
-		return version;
+		return this.version;
 	}
 
 	public void setVersion(String version) {
@@ -121,7 +121,7 @@ public class Environment {
 	}
 
 	public String getState() {
-		return state;
+		return this.state;
 	}
 
 	public void setState(String state) {
@@ -130,10 +130,10 @@ public class Environment {
 
 	@Override
 	public String toString() {
-		return "Environment [name=" + name + ", profiles=" + Arrays.asList(profiles)
-				+ ", label=" + label + ", propertySources=" + propertySources
-				+ ", version=" + version
-				+ ", state=" + state + "]";
+		return "Environment [name=" + this.name + ", profiles="
+				+ Arrays.asList(this.profiles) + ", label=" + this.label
+				+ ", propertySources=" + this.propertySources + ", version="
+				+ this.version + ", state=" + this.state + "]";
 	}
 
 }

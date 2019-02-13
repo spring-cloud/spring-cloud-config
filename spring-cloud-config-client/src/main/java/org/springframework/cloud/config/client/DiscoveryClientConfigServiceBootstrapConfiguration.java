@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
@@ -29,11 +30,12 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.cloud.client.discovery.event.HeartbeatMonitor;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.event.SmartApplicationListener;
 
 /**
  * Bootstrap configuration for a config client that wants to lookup the config server via
@@ -45,7 +47,8 @@ import org.springframework.context.event.EventListener;
 @Configuration
 @Import({ UtilAutoConfiguration.class })
 @EnableDiscoveryClient
-public class DiscoveryClientConfigServiceBootstrapConfiguration {
+public class DiscoveryClientConfigServiceBootstrapConfiguration
+		implements SmartApplicationListener {
 
 	private static Log logger = LogFactory
 			.getLog(DiscoveryClientConfigServiceBootstrapConfiguration.class);
@@ -64,14 +67,28 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 		return new ConfigServerInstanceProvider(discoveryClient);
 	}
 
-	@EventListener(ContextRefreshedEvent.class)
+	@Override
+	public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+		return ContextRefreshedEvent.class.isAssignableFrom(eventType)
+				|| HeartbeatEvent.class.isAssignableFrom(eventType);
+	}
+
+	@Override
+	public void onApplicationEvent(ApplicationEvent event) {
+		if (event instanceof ContextRefreshedEvent) {
+			startup((ContextRefreshedEvent) event);
+		}
+		else if (event instanceof HeartbeatEvent) {
+			heartbeat((HeartbeatEvent) event);
+		}
+	}
+
 	public void startup(ContextRefreshedEvent event) {
 		refresh();
 	}
 
-	@EventListener(HeartbeatEvent.class)
 	public void heartbeat(HeartbeatEvent event) {
-		if (monitor.update(event.getValue())) {
+		if (this.monitor.update(event.getValue())) {
 			refresh();
 		}
 	}
@@ -113,7 +130,7 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
 		}
 		catch (Exception ex) {
-			if (config.isFailFast()) {
+			if (this.config.isFailFast()) {
 				throw ex;
 			}
 			else {

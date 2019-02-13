@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.util.Map;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -37,9 +36,24 @@ import org.springframework.web.util.UriComponentsBuilder;
 @ConfigurationProperties(ConfigClientProperties.PREFIX)
 public class ConfigClientProperties {
 
+	/**
+	 * Prefix for Spring Cloud Config properties.
+	 */
 	public static final String PREFIX = "spring.cloud.config";
+
+	/**
+	 * Token header name.
+	 */
 	public static final String TOKEN_HEADER = "X-Config-Token";
+
+	/**
+	 * State header name.
+	 */
 	public static final String STATE_HEADER = "X-Config-State";
+
+	/**
+	 * Authorization header name.
+	 */
 	public static final String AUTHORIZATION = "authorization";
 
 	/**
@@ -162,7 +176,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getUsername() {
-		return username;
+		return this.username;
 	}
 
 	public void setUsername(String username) {
@@ -170,7 +184,7 @@ public class ConfigClientProperties {
 	}
 
 	public String getPassword() {
-		return password;
+		return this.password;
 	}
 
 	public void setPassword(String password) {
@@ -206,7 +220,7 @@ public class ConfigClientProperties {
 	}
 
 	public int getRequestReadTimeout() {
-		return requestReadTimeout;
+		return this.requestReadTimeout;
 	}
 
 	public void setRequestReadTimeout(int requestReadTimeout) {
@@ -214,7 +228,7 @@ public class ConfigClientProperties {
 	}
 
 	public boolean isSendState() {
-		return sendState;
+		return this.sendState;
 	}
 
 	public void setSendState(boolean sendState) {
@@ -222,7 +236,7 @@ public class ConfigClientProperties {
 	}
 
 	public Map<String, String> getHeaders() {
-		return headers;
+		return this.headers;
 	}
 
 	public void setHeaders(Map<String, String> headers) {
@@ -294,26 +308,68 @@ public class ConfigClientProperties {
 		return credentials;
 	}
 
+	public ConfigClientProperties override(
+			org.springframework.core.env.Environment environment) {
+		ConfigClientProperties override = new ConfigClientProperties();
+		BeanUtils.copyProperties(this, override);
+		override.setName(
+				environment.resolvePlaceholders("${" + ConfigClientProperties.PREFIX
+						+ ".name:${spring.application.name:application}}"));
+		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
+			override.setProfile(
+					environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
+		}
+		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".label")) {
+			override.setLabel(
+					environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
+		}
+		return override;
+	}
+
+	@Override
+	public String toString() {
+		return "ConfigClientProperties [enabled=" + this.enabled + ", profile="
+				+ this.profile + ", name=" + this.name + ", label=" + this.label
+				+ ", username=" + this.username + ", password=" + this.password + ", uri="
+				+ Arrays.toString(this.uri) + ", discovery=" + this.discovery
+				+ ", failFast=" + this.failFast + ", token=" + this.token
+				+ ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
+				+ this.sendState + ", headers=" + this.headers + "]";
+	}
+
+	/**
+	 * Credentials properties.
+	 */
 	public static class Credentials {
 
 		private String username;
+
 		private String password;
+
 		private String uri;
 
 		public String getUsername() {
-			return username;
+			return this.username;
 		}
 
 		public String getPassword() {
-			return password;
+			return this.password;
 		}
 
 		public String getUri() {
-			return uri;
+			return this.uri;
 		}
+
 	}
 
+	/**
+	 * Discovery properties.
+	 */
 	public static class Discovery {
+
+		/**
+		 * Default config server service id name.
+		 */
 		public static final String DEFAULT_CONFIG_SERVER = "configserver";
 
 		/**
@@ -321,6 +377,7 @@ public class ConfigClientProperties {
 		 * will be looked up via discovery).
 		 */
 		private boolean enabled;
+
 		/**
 		 * Service id to locate config server.
 		 */
@@ -343,35 +400,5 @@ public class ConfigClientProperties {
 		}
 
 	}
-
-	public ConfigClientProperties override(
-			org.springframework.core.env.Environment environment) {
-		ConfigClientProperties override = new ConfigClientProperties();
-		BeanUtils.copyProperties(this, override);
-		override.setName(
-				environment.resolvePlaceholders("${" + ConfigClientProperties.PREFIX
-						+ ".name:${spring.application.name:application}}"));
-		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
-			override.setProfile(
-					environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
-		}
-		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".label")) {
-			override.setLabel(
-					environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
-		}
-		return override;
-	}
-
-	@Override
-	public String toString() {
-		return "ConfigClientProperties [enabled=" + enabled + ", profile=" + profile
-				+ ", name=" + name + ", label=" + label + ", username=" + username
-				+ ", password=" + password + ", uri=" + Arrays.toString(uri)
-				+ ", discovery=" + discovery + ", failFast=" + failFast + ", token="
-				+ token + ", requestReadTimeout=" + requestReadTimeout + ", sendState="
-				+ sendState + ", headers=" + headers + "]";
-	}
-
-	
 
 }
