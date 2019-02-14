@@ -98,7 +98,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring-cloud.version>${project.version}</spring-cloud.version>
+		<spring-cloud.version>Finchley.BUILD-SNAPSHOT</spring-cloud.version>
 		<start-class>org.springframework.cloud.config.server.ConfigServerApplication</start-class>
 	</properties>
 
