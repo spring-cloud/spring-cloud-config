@@ -1114,6 +1114,10 @@ keystore properties are <literal>encrypt.keyStore.*</literal> with <literal>*</l
 <entry align="left" valign="top"><simpara><literal>encrypt.keyStore.alias</literal></simpara></entry>
 <entry align="left" valign="top"><simpara>Identifies which key in the store to use</simpara></entry>
 </row>
+<row>
+<entry align="left" valign="top"><simpara><literal>encrypt.keyStore.type</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>The type of KeyStore to create.  Defaults to <literal>jks</literal>.</simpara></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
