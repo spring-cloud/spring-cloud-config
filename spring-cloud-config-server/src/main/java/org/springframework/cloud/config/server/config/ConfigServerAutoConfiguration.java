@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Import;
 @EnableConfigurationProperties(ConfigServerProperties.class)
 @Import({ EnvironmentRepositoryConfiguration.class, CompositeConfiguration.class,
 		ResourceRepositoryConfiguration.class, ConfigServerEncryptionConfiguration.class,
-		ConfigServerMvcConfiguration.class })
+		ConfigServerMvcConfiguration.class, GoogleCloudSourceConfiguration.class })
 public class ConfigServerAutoConfiguration {
 
 }
