@@ -983,6 +983,7 @@ keystore properties are `encrypt.keyStore.\*` with `*` equal to
 |`encrypt.keyStore.location`|Contains a `Resource` location
 |`encrypt.keyStore.password`|Holds the password that unlocks the keystore
 |`encrypt.keyStore.alias`|Identifies which key in the store to use
+|`encrypt.keyStore.type`|The type of KeyStore to create.  Defaults to `jks`.
 |===
 
 The encryption is done with the public key, and a private key is
