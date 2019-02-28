@@ -34,7 +34,7 @@ The HTTP service has resources in the following form:
 
 where `application` is injected as the `spring.config.name` in the `SpringApplication` (what is normally `application` in a regular Spring Boot app), `profile` is an active profile (or comma-separated list of properties), and `label` is an optional git label (defaults to `master`.)
 
-Spring Cloud Config Server pulls configuration for remote clients from a git repository (which must be provided), as shown in the following example:
+Spring Cloud Config Server pulls configuration for remote clients from various sources. The following example gets configuration from a git repository (which must be provided), as shown in the following example:
 
 [source,yaml]
 ----
@@ -45,6 +45,8 @@ spring:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
 ----
+
+Other sources are any JDBC compatible database, Subversion, Hashicorp Vault, Credhub and local filesystems.
 
 === Client Side Usage
 

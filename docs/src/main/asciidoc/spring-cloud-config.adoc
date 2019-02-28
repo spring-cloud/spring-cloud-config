@@ -593,13 +593,18 @@ The following table describes configurable Vault properties:
 |timeout
 |5
 
+|namespace
+|null
+
 |===
 
-IMPORTANT: All of the properties in the preceding table must be prefixed with `spring.cloud.config.server.vault`.
+IMPORTANT: All of the properties in the preceding table must be prefixed with `spring.cloud.config.server.vault` or placed in the correct Vault section of a composite configuration.
 
-All configurable properties can be found in `org.springframework.cloud.config.server.environment.VaultEnvironmentRepository`.
+All configurable properties can be found in `org.springframework.cloud.config.server.environment.VaultEnvironmentProperties`.
 
 Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a `data/` between the mount path and the actual context path and wraps secrets in a `data` object. Setting `kvVersion=2` will take this into account.
+
+Optionally, there is support for the Vault Enterprise `X-Vault-Namespace` header. To have it sent to Vault set the `namespace` property.
 
 With your config server running, you can make HTTP requests to the server to retrieve
 values from the Vault backend.

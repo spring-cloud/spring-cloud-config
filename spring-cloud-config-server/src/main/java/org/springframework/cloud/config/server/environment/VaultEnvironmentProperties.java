@@ -73,6 +73,11 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	 */
 	private int kvVersion = 1;
 
+	/**
+	 * The value of the Vault X-Vault-Namespace header. Defaults to null. This a Vault Enterprise feature only.
+	 */
+	private String namespace;
+
 	public String getHost() {
 		return this.host;
 	}
@@ -164,6 +169,14 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 	public void setKvVersion(int kvVersion) {
 		this.kvVersion = kvVersion;
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public void setNamespace(String namespace) {
+		this.namespace = namespace;
 	}
 
 }
