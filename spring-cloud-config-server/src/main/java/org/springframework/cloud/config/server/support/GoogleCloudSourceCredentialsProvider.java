@@ -38,9 +38,8 @@ import static java.util.stream.Collectors.toMap;
  * default credentials and adds them as a http header.
  *
  * @author Eduard Wirch
- * @see <a href=
- * "https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login"> gcloud
- * auth application-default login</a>
+ * @see <a href="https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login">
+ *     gcloud auth application-default login</a>
  */
 public class GoogleCloudSourceCredentialsProvider implements TransportConfigCallback {
 
@@ -63,8 +62,11 @@ public class GoogleCloudSourceCredentialsProvider implements TransportConfigCall
 
 	private Map<String, String> getAuthorizationHeaders() {
 		try {
-			return GoogleCredentials.getApplicationDefault().getRequestMetadata()
-					.entrySet().stream().collect(toMap(Entry::getKey, this::joinValues));
+			return GoogleCredentials.getApplicationDefault()
+				.getRequestMetadata()
+				.entrySet()
+				.stream()
+				.collect(toMap(Entry::getKey, this::joinValues));
 		}
 		catch (IOException ex) {
 			throw new IllegalStateException(ex);
