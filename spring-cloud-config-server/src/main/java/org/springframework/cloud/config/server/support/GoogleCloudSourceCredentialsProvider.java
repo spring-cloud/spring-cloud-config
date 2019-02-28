@@ -26,6 +26,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.TransportHttp;
+import org.eclipse.jgit.transport.URIish;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -47,13 +48,13 @@ public class GoogleCloudSourceCredentialsProvider implements TransportConfigCall
 
 	@Override
 	public void configure(Transport transport) {
-		if (transport instanceof TransportHttp && isGoogleCloudSourceUri(transport)) {
+		if (transport instanceof TransportHttp && isGoogleCloudSourceUri(transport.getURI())) {
 			addHeaders((TransportHttp) transport, getAuthorizationHeaders());
 		}
 	}
 
-	private boolean isGoogleCloudSourceUri(Transport transport) {
-		return Objects.equals(transport.getURI().getHost(), GOOGLE_CLOUD_SOURCE_DOMAIN);
+	private boolean isGoogleCloudSourceUri(URIish uri) {
+		return Objects.equals(uri.getHost(), GOOGLE_CLOUD_SOURCE_DOMAIN);
 	}
 
 	private void addHeaders(TransportHttp transport, Map<String, String> headers) {
