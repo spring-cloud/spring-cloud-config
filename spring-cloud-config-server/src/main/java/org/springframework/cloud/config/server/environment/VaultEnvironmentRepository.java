@@ -195,7 +195,6 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 					"Missing required header: " + TOKEN_HEADER);
 		}
 		headers.add(VAULT_TOKEN, token);
-		System.out.println("Namespace : " + this.namespace);
 		if (this.namespace != null && !this.namespace.isEmpty()) {
 			headers.add(VAULT_NAMESPACE, this.namespace);
 		}

@@ -74,9 +74,9 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	private int kvVersion = 1;
 
 	/**
-	 * Value namespace. default to root
+	 * Value namespace. default to null which is root namespace
 	 */
-	private String namespace = "";
+	private String namespace = null;
 
 	public String getHost() {
 		return this.host;
