@@ -37,13 +37,14 @@ The mini-application&#8217;s <literal>Environment</literal> is used to enumerate
 /{application}-{profile}.properties
 /{label}/{application}-{profile}.properties</screen>
 <simpara>where <literal>application</literal> is injected as the <literal>spring.config.name</literal> in the <literal>SpringApplication</literal> (what is normally <literal>application</literal> in a regular Spring Boot app), <literal>profile</literal> is an active profile (or comma-separated list of properties), and <literal>label</literal> is an optional git label (defaults to <literal>master</literal>.)</simpara>
-<simpara>Spring Cloud Config Server pulls configuration for remote clients from a git repository (which must be provided), as shown in the following example:</simpara>
+<simpara>Spring Cloud Config Server pulls configuration for remote clients from various sources. The following example gets configuration from a git repository (which must be provided), as shown in the following example:</simpara>
 <programlisting language="yaml" linenumbering="unnumbered">spring:
   cloud:
     config:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo</programlisting>
+<simpara>Other sources are any JDBC compatible database, Subversion, Hashicorp Vault, Credhub and local filesystems.</simpara>
 <section xml:id="_client_side_usage">
 <title>Client Side Usage</title>
 <simpara>To use these features in an application, you can build it as a Spring Boot application that depends on spring-cloud-config-client (for an example, see the test cases for the config-client or the sample application).
@@ -667,14 +668,19 @@ The following table describes configurable Vault properties:</simpara>
 <entry align="left" valign="top"><simpara>timeout</simpara></entry>
 <entry align="left" valign="top"><simpara>5</simpara></entry>
 </row>
+<row>
+<entry align="left" valign="top"><simpara>namespace</simpara></entry>
+<entry align="left" valign="top"><simpara>null</simpara></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
 <important>
-<simpara>All of the properties in the preceding table must be prefixed with <literal>spring.cloud.config.server.vault</literal>.</simpara>
+<simpara>All of the properties in the preceding table must be prefixed with <literal>spring.cloud.config.server.vault</literal> or placed in the correct Vault section of a composite configuration.</simpara>
 </important>
-<simpara>All configurable properties can be found in <literal>org.springframework.cloud.config.server.environment.VaultEnvironmentRepository</literal>.</simpara>
+<simpara>All configurable properties can be found in <literal>org.springframework.cloud.config.server.environment.VaultEnvironmentProperties</literal>.</simpara>
 <simpara>Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a <literal>data/</literal> between the mount path and the actual context path and wraps secrets in a <literal>data</literal> object. Setting <literal>kvVersion=2</literal> will take this into account.</simpara>
+<simpara>Optionally, there is support for the Vault Enterprise <literal>X-Vault-Namespace</literal> header. To have it sent to Vault set the <literal>namespace</literal> property.</simpara>
 <simpara>With your config server running, you can make HTTP requests to the server to retrieve
 values from the Vault backend.
 To do so, you need a token for your Vault server.</simpara>
