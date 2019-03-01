@@ -54,6 +54,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	 */
 	public static final String VAULT_TOKEN = "X-Vault-Token";
 
+	/**
+	 * Vault namespace header name.
+	 */
+	public static final String VAULT_NAMESPACE = "X-Vault-Namespace";
+
 	/** Vault host. Defaults to 127.0.0.1. */
 	@NotEmpty
 	private String host;
@@ -75,6 +80,9 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	 * to disable.
 	 */
 	private String defaultKey;
+
+	/** Vault Namespace header value. */
+	private String namespace;
 
 	/** Vault profile separator. Defaults to comma. */
 	@NotEmpty
@@ -101,11 +109,16 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		this.port = properties.getPort();
 		this.profileSeparator = properties.getProfileSeparator();
 		this.scheme = properties.getScheme();
+		this.namespace = properties.getNamespace();
 
 		String baseUrl = String.format("%s://%s:%s", this.scheme, this.host, this.port);
 
 		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl,
 				properties.getKvVersion());
+	}
+
+	/* for testing */ void setAccessStrategy(VaultKvAccessStrategy accessStrategy) {
+		this.accessStrategy = accessStrategy;
 	}
 
 	@Override
@@ -186,6 +199,10 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 					"Missing required header: " + TOKEN_HEADER);
 		}
 		headers.add(VAULT_TOKEN, token);
+		if (StringUtils.hasText(this.namespace)) {
+			headers.add(VAULT_NAMESPACE, this.namespace);
+		}
+
 		return this.accessStrategy.getData(headers, this.backend, key);
 	}
 
@@ -211,6 +228,10 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	public void setProfileSeparator(String profileSeparator) {
 		this.profileSeparator = profileSeparator;
+	}
+
+	public void setNamespace(String namespace) {
+		this.namespace = namespace;
 	}
 
 	@Override

@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,10 +30,12 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategy.VaultResponse;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -335,6 +338,48 @@ public class VaultEnvironmentRepositoryTests {
 				.isEqualTo(firstResult);
 	}
 
+	@Test
+	@SuppressWarnings({ "Duplicates", "unchecked" })
+	public void testNamespaceHeaderSent() {
+		MockHttpServletRequest configRequest = new MockHttpServletRequest();
+		configRequest.addHeader("X-CONFIG-TOKEN", "mytoken");
+
+		RestTemplate rest = mock(RestTemplate.class);
+
+		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
+		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse myAppVaultResp = mock(VaultResponse.class);
+		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
+		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
+				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
+				eq("myapp"))).thenReturn(myAppResp);
+
+		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
+		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse appVaultResp = mock(VaultResponse.class);
+		when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
+		when(appResp.getBody()).thenReturn(appVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
+				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
+				eq("application"))).thenReturn(appResp);
+
+		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		properties.setNamespace("mynamespace");
+		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(
+				mockProvide(configRequest), new EnvironmentWatch.Default(), rest,
+				properties);
+
+		TestAccessStrategy accessStrategy = new TestAccessStrategy(rest, properties);
+		repo.setAccessStrategy(accessStrategy);
+
+		repo.findOne("myapp", null, null);
+
+		assertThat(accessStrategy.headers).containsEntry(
+				VaultEnvironmentRepository.VAULT_NAMESPACE,
+				Collections.singletonList("mynamespace"));
+	}
+
 	private VaultResponse getVaultResponse(String json) {
 		try {
 			return this.objectMapper.readValue(json, VaultResponse.class);
@@ -343,6 +388,29 @@ public class VaultEnvironmentRepositoryTests {
 			fail(e.getMessage());
 		}
 		return null;
+	}
+
+	private static class TestAccessStrategy implements VaultKvAccessStrategy {
+
+		private final VaultKvAccessStrategy accessStrategy;
+
+		private HttpHeaders headers;
+
+		TestAccessStrategy(RestTemplate restTemplate,
+				VaultEnvironmentProperties properties) {
+			String baseUrl = String.format("%s://%s:%s", properties.getScheme(),
+					properties.getHost(), properties.getPort());
+			this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(restTemplate,
+					baseUrl, properties.getKvVersion());
+		}
+
+		@Override
+		public String getData(HttpHeaders headers, String backend, String key)
+				throws RestClientException {
+			this.headers = headers;
+			return this.accessStrategy.getData(headers, backend, key);
+		}
+
 	}
 
 }
