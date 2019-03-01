@@ -26,7 +26,6 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -229,15 +228,6 @@ public class EnvironmentRepositoryConfiguration {
 @Configuration
 @ConditionalOnMissingBean(value = EnvironmentRepository.class, search = SearchStrategy.CURRENT)
 class DefaultRepositoryConfiguration {
-
-	@Autowired
-	private ConfigurableEnvironment environment;
-
-	@Autowired
-	private ConfigServerProperties server;
-
-	@Autowired(required = false)
-	private TransportConfigCallback customTransportConfigCallback;
 
 	@Bean
 	public MultipleJGitEnvironmentRepository defaultEnvironmentRepository(
