@@ -83,6 +83,11 @@ spring:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
+        vault:
+          port: 443
+          scheme: https
+          host: yourvault.com
+          namespace: devops/cicd		  
 ----
 
 === Client Side Usage
