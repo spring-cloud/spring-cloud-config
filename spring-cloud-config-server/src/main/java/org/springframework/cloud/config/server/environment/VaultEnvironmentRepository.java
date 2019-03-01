@@ -73,7 +73,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	/** Vault backend. Defaults to secret. */
 	@NotEmpty
-	private String backend;
+	private String[] backends;
 
 	/**
 	 * The key in vault shared by all applications. Defaults to application. Set to empty
@@ -102,7 +102,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 			VaultEnvironmentProperties properties) {
 		this.request = request;
 		this.watch = watch;
-		this.backend = properties.getBackend();
+		this.backends = properties.getBackends();
 		this.defaultKey = properties.getDefaultKey();
 		this.host = properties.getHost();
 		this.order = properties.getOrder();
@@ -141,16 +141,19 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 				newState);
 
 		for (String key : keys) {
-			// read raw 'data' key from vault
-			String data = read(servletRequest, key);
-			if (data != null) {
-				// data is in json format of which, yaml is a superset, so parse
-				final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
-				yaml.setResources(new ByteArrayResource(data.getBytes()));
-				Properties properties = yaml.getObject();
+			for (String backend : this.backends) {
+				// read raw 'data' key from vault
+				String data = read(servletRequest, backend, key);
+				if (data != null) {
+					// data is in json format of which, yaml is a superset, so parse
+					final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
+					yaml.setResources(new ByteArrayResource(data.getBytes()));
+					Properties properties = yaml.getObject();
 
-				if (!properties.isEmpty()) {
-					environment.add(new PropertySource("vault:" + key, properties));
+					if (!properties.isEmpty()) {
+						environment.add(new PropertySource("vault/" + backend + ":" + key,
+								properties));
+					}
 				}
 			}
 		}
@@ -189,7 +192,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 	}
 
-	String read(HttpServletRequest servletRequest, String key) {
+	String read(HttpServletRequest servletRequest, String backend, String key) {
 
 		HttpHeaders headers = new HttpHeaders();
 
@@ -203,7 +206,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 			headers.add(VAULT_NAMESPACE, this.namespace);
 		}
 
-		return this.accessStrategy.getData(headers, this.backend, key);
+		return this.accessStrategy.getData(headers, backend, key);
 	}
 
 	public void setHost(String host) {
@@ -218,8 +221,8 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		this.scheme = scheme;
 	}
 
-	public void setBackend(String backend) {
-		this.backend = backend;
+	public void setBackends(String[] backends) {
+		this.backends = backends;
 	}
 
 	public void setDefaultKey(String defaultKey) {

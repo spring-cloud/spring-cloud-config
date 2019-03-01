@@ -44,7 +44,7 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	private int timeout = 5;
 
 	/** Vault backend. Defaults to secret. */
-	private String backend = "secret";
+	private String[] backends = new String[] { "secret" };
 
 	/**
 	 * The key in vault shared by all applications. Defaults to application. Set to empty
@@ -74,7 +74,8 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	private int kvVersion = 1;
 
 	/**
-	 * The value of the Vault X-Vault-Namespace header. Defaults to null. This a Vault Enterprise feature only.
+	 * The value of the Vault X-Vault-Namespace header. Defaults to null. This a Vault
+	 * Enterprise feature only.
 	 */
 	private String namespace;
 
@@ -102,12 +103,12 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 		this.scheme = scheme;
 	}
 
-	public String getBackend() {
-		return this.backend;
+	public String[] getBackends() {
+		return this.backends;
 	}
 
-	public void setBackend(String backend) {
-		this.backend = backend;
+	public void setBackends(String[] backends) {
+		this.backends = backends;
 	}
 
 	public String getDefaultKey() {
@@ -172,7 +173,7 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	}
 
 	public String getNamespace() {
-		return namespace;
+		return this.namespace;
 	}
 
 	public void setNamespace(String namespace) {
