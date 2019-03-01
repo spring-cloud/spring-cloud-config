@@ -23,7 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
+import org.eclipse.jgit.junit.MockSystemReader;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -58,6 +61,12 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	private StandardEnvironment environment = new StandardEnvironment();
 	private MultipleJGitEnvironmentRepository repository;
 
+
+	@BeforeClass
+	public static void initClass() {
+		// mock Git configuration to make tests independent of local Git configuration
+		SystemReader.setInstance(new MockSystemReader());
+	}
 
 	@Before
 	public void init() throws Exception {
