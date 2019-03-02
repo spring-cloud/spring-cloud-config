@@ -114,4 +114,23 @@ public class CompositeClasspathTests {
 
 	}
 
+	@RunWith(ModifiedClassPathRunner.class)
+	@ClassPathExclusions("google-auth-library-oauth2-http-*.jar")
+	public static class GoogleAuthTests {
+
+		@Test
+		public void contextLoads() {
+			new WebApplicationContextRunner()
+					.withUserConfiguration(ConfigServerApplication.class)
+					.withPropertyValues("spring.profiles.active:test,composite",
+							"spring.jmx.enabled=false", "spring.config.name:configserver",
+							"spring.cloud.config.server.composite[0].uri:https://source.developers.google.com",
+							"spring.cloud.config.server.composite[0].type:git")
+					.run(context -> {
+						CompositeUtils.getCompositeTypeList(context.getEnvironment());
+					});
+		}
+
+	}
+
 }

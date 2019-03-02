@@ -29,9 +29,15 @@ public class TransportConfigCallbackFactory {
 	@Nullable
 	private final TransportConfigCallback customTransportConfigCallback;
 
+	@Nullable
+	private final GoogleCloudSourceSupport googleCloudSourceSupport;
+
 	public TransportConfigCallbackFactory(
-			TransportConfigCallback customTransportConfigCallback) {
+			TransportConfigCallback customTransportConfigCallback,
+			GoogleCloudSourceSupport googleCloudSourceSupport) {
+
 		this.customTransportConfigCallback = customTransportConfigCallback;
+		this.googleCloudSourceSupport = googleCloudSourceSupport;
 	}
 
 	public TransportConfigCallback build(
@@ -42,6 +48,15 @@ public class TransportConfigCallbackFactory {
 		// all repositories.
 		if (customTransportConfigCallback != null) {
 			return customTransportConfigCallback;
+		}
+
+		// If the currently configured repository is a Google Cloud Source repository
+		// we use GoogleCloudSourceSupport.
+		if (googleCloudSourceSupport != null) {
+			final String uri = environmentProperties.getUri();
+			if (googleCloudSourceSupport.canHandle(uri)) {
+				return googleCloudSourceSupport.createTransportConfigCallback();
+			}
 		}
 
 		// Otherwise - legacy behaviour - use SshTransportConfigCallback for all

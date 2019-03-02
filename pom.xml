@@ -65,6 +65,11 @@
 				<artifactId>aws-java-sdk-core</artifactId>
 				<version>1.11.52</version>
 			</dependency>
+			<dependency>
+				<groupId>com.google.auth</groupId>
+				<artifactId>google-auth-library-oauth2-http</artifactId>
+				<version>0.15.0</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<profiles>
