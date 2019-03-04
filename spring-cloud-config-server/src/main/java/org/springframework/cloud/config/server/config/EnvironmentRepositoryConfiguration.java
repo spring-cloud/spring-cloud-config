@@ -64,6 +64,7 @@ import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepo
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -138,8 +139,10 @@ public class EnvironmentRepositoryConfiguration {
 				ConfigurableEnvironment environment, ConfigServerProperties server,
 				Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
 				Optional<TransportConfigCallback> customTransportConfigCallback) {
+			final TransportConfigCallbackFactory transportConfigCallbackFactory = new TransportConfigCallbackFactory(
+					customTransportConfigCallback.orElse(null));
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server,
-					jgitHttpConnectionFactory, customTransportConfigCallback);
+					jgitHttpConnectionFactory, transportConfigCallbackFactory);
 		}
 
 	}

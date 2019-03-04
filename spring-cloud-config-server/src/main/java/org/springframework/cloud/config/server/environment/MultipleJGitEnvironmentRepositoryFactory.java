@@ -18,12 +18,10 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.Optional;
 
-import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.HttpTransport;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
-import org.springframework.cloud.config.server.ssh.FileBasedSshTransportConfigCallback;
-import org.springframework.cloud.config.server.ssh.PropertiesBasedSshTransportConfigCallback;
+import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
@@ -38,23 +36,23 @@ public class MultipleJGitEnvironmentRepositoryFactory implements
 
 	private Optional<ConfigurableHttpConnectionFactory> connectionFactory;
 
-	private Optional<TransportConfigCallback> customTransportConfigCallback;
+	private final TransportConfigCallbackFactory transportConfigCallbackFactory;
 
 	@Deprecated
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
 			ConfigServerProperties server,
-			Optional<TransportConfigCallback> customTransportConfigCallback) {
-		this(environment, server, Optional.empty(), customTransportConfigCallback);
+			TransportConfigCallbackFactory transportConfigCallbackFactory) {
+		this(environment, server, Optional.empty(), transportConfigCallbackFactory);
 	}
 
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
 			ConfigServerProperties server,
 			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
-			Optional<TransportConfigCallback> customTransportConfigCallback) {
+			TransportConfigCallbackFactory transportConfigCallbackFactory) {
 		this.environment = environment;
 		this.server = server;
 		this.connectionFactory = connectionFactory;
-		this.customTransportConfigCallback = customTransportConfigCallback;
+		this.transportConfigCallbackFactory = transportConfigCallbackFactory;
 	}
 
 	@Override
@@ -67,21 +65,12 @@ public class MultipleJGitEnvironmentRepositoryFactory implements
 
 		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(
 				this.environment, environmentProperties);
-		repository.setTransportConfigCallback(this.customTransportConfigCallback
-				.orElse(buildTransportConfigCallback(environmentProperties)));
+		repository.setTransportConfigCallback(
+				transportConfigCallbackFactory.build(environmentProperties));
 		if (this.server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.server.getDefaultLabel());
 		}
 		return repository;
-	}
-
-	private TransportConfigCallback buildTransportConfigCallback(
-			MultipleJGitEnvironmentProperties gitEnvironmentProperties) {
-		if (gitEnvironmentProperties.isIgnoreLocalSshSettings()) {
-			return new PropertiesBasedSshTransportConfigCallback(
-					gitEnvironmentProperties);
-		}
-		return new FileBasedSshTransportConfigCallback(gitEnvironmentProperties);
 	}
 
 }
