@@ -559,7 +559,7 @@ To enable the config server to use a Vault backend, you can run your config serv
 For example, in your config server's `application.properties`, you can add `spring.profiles.active=vault`.
 
 By default, the config server assumes that your Vault server runs at `http://127.0.0.1:8200`.
-It also assumes that the name of backend is `secret` and the key is `application`.
+It also assumes that the use of a single backend named `secret` and a default key named `application`.
 All of these defaults can be configured in your config server's `application.properties`.
 The following table describes configurable Vault properties:
 
@@ -575,8 +575,8 @@ The following table describes configurable Vault properties:
 |scheme
 |http
 
-|backend
-|secret
+|backends
+|[secret]
 
 |defaultKey
 |application
@@ -636,13 +636,13 @@ You should see a response similar to the following:
    "state":null,
    "propertySources":[
       {
-         "name":"vault:myapp",
+         "name":"vault/secret:myapp",
          "source":{
             "foo":"myappsbar"
          }
       },
       {
-         "name":"vault:application",
+         "name":"vault/secret:application",
          "source":{
             "baz":"bam",
             "foo":"bar"

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.cloud.config.server.support.HttpEnvironmentRepositoryProperties;
 import org.springframework.core.Ordered;
@@ -43,7 +44,7 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	/** Timeout (in seconds) for obtaining HTTP connection, defaults to 5 seconds. */
 	private int timeout = 5;
 
-	/** Vault backend. Defaults to secret. */
+	/** Vault backend. Defaults to a single backend named secret. */
 	private String[] backends = new String[] { "secret" };
 
 	/**
@@ -101,6 +102,18 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 	public void setScheme(String scheme) {
 		this.scheme = scheme;
+	}
+
+	@DeprecatedConfigurationProperty(replacement = "spring.cloud.config.server.vault.backends")
+	@Deprecated
+	public String getBackend() {
+		return this.backends != null && this.backends.length > 0 ? this.backends[0]
+				: null;
+	}
+
+	@Deprecated
+	public void setBackend(String backend) {
+		setBackends(new String[] { backend });
 	}
 
 	public String[] getBackends() {

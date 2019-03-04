@@ -112,6 +112,7 @@ public class VaultEnvironmentRepositoryTests {
 				.isEqualTo(secondResult);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testBackendWithSlashes() {
 		MockHttpServletRequest configRequest = new MockHttpServletRequest();
@@ -123,7 +124,7 @@ public class VaultEnvironmentRepositoryTests {
 				"application");
 
 		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.setBackends(new String[] { "foo/bar/secret" });
+		properties.setBackend("foo/bar/secret");
 
 		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(
 				mockProvide(configRequest), new EnvironmentWatch.Default(), rest,
@@ -188,13 +189,13 @@ public class VaultEnvironmentRepositoryTests {
 		result.clear();
 		result.put("def-foo1", "def-bar1");
 		assertThat(e.getPropertySources().get(2).getSource()).as(
-				"Properties for default application with key 'application' and the first backend should be returned in third position")
+				"Properties for default application with key 'application' and first backend should be in third position")
 				.isEqualTo(result);
 
 		result.clear();
 		result.put("def-foo2", "def-bar2");
 		assertThat(e.getPropertySources().get(3).getSource()).as(
-				"Properties for default application with key 'application' and the second backend should be returned in fourth position")
+				"Properties for default application with key 'application' and second backend should be in fourth position")
 				.isEqualTo(result);
 	}
 
