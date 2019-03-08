@@ -1,0 +1,83 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>1.&nbsp;Quick Start</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="multi_spring-cloud-config.html" title="Spring Cloud Config"><link rel="up" href="multi_spring-cloud-config.html" title="Spring Cloud Config"><link rel="prev" href="multi_pr01.html" title=""><link rel="next" href="multi__spring_cloud_config_server.html" title="2.&nbsp;Spring Cloud Config Server"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1.&nbsp;Quick Start</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="multi_pr01.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="multi__spring_cloud_config_server.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_quick_start" href="#_quick_start"></a>1.&nbsp;Quick Start</h1></div></div></div><p>This quick start walks through using both the server and the client of Spring Cloud Config Server.</p><p>First, start the server, as follows:</p><pre class="screen">$ cd spring-cloud-config-server
+$ ../mvnw spring-boot:run</pre><p>The server is a Spring Boot application, so you can run it from your IDE if you prefer to do so (the main class is <code class="literal">ConfigServerApplication</code>).</p><p>Next try out a client, as follows:</p><pre class="screen">$ curl localhost:8888/foo/development
+{"name":"foo","label":"master","propertySources":[
+  {"name":"https://github.com/scratches/config-repo/foo-development.properties","source":{"bar":"spam"}},
+  {"name":"https://github.com/scratches/config-repo/foo.properties","source":{"foo":"bar"}}
+]}</pre><p>The default strategy for locating property sources is to clone a git repository (at <code class="literal">spring.cloud.config.server.git.uri</code>) and use it to initialize a mini <code class="literal">SpringApplication</code>.
+The mini-application&#8217;s <code class="literal">Environment</code> is used to enumerate property sources and publish them at a JSON endpoint.</p><p>The HTTP service has resources in the following form:</p><pre class="screen">/{application}/{profile}[/{label}]
+/{application}-{profile}.yml
+/{label}/{application}-{profile}.yml
+/{application}-{profile}.properties
+/{label}/{application}-{profile}.properties</pre><p>where <code class="literal">application</code> is injected as the <code class="literal">spring.config.name</code> in the <code class="literal">SpringApplication</code> (what is normally <code class="literal">application</code> in a regular Spring Boot app), <code class="literal">profile</code> is an active profile (or comma-separated list of properties), and <code class="literal">label</code> is an optional git label (defaults to <code class="literal">master</code>.)</p><p>Spring Cloud Config Server pulls configuration for remote clients from various sources. The following example gets configuration from a git repository (which must be provided), as shown in the following example:</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">  cloud</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">    config</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">      server</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">        git</span>:
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">          uri</span>: https://github.com/spring-cloud-samples/config-repo</pre><p>Other sources are any JDBC compatible database, Subversion, Hashicorp Vault, Credhub and local filesystems.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_client_side_usage" href="#_client_side_usage"></a>1.1&nbsp;Client Side Usage</h2></div></div></div><p>To use these features in an application, you can build it as a Spring Boot application that depends on spring-cloud-config-client (for an example, see the test cases for the config-client or the sample application).
+The most convenient way to add the dependency is with a Spring Boot starter <code class="literal">org.springframework.cloud:spring-cloud-starter-config</code>.
+There is also a parent pom and BOM (<code class="literal">spring-cloud-starter-parent</code>) for Maven users and a Spring IO version management properties file for Gradle and Spring CLI users. The following example shows a typical Maven configuration:</p><p><b>pom.xml.&nbsp;</b>
+</p><pre class="programlisting">   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;parent&gt;</span>
+       <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;groupId&gt;</span>org.springframework.boot<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/groupId&gt;</span>
+       <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;artifactId&gt;</span>spring-boot-starter-parent<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/artifactId&gt;</span>
+       <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;version&gt;</span>{spring-boot-docs-version}<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/version&gt;</span>
+       <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;relativePath /&gt;</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">&lt;!-- lookup parent from repository --&gt;</span>
+   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/parent&gt;</span>
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;dependencyManagement&gt;</span>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;dependencies&gt;</span>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;dependency&gt;</span>
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;groupId&gt;</span>org.springframework.cloud<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/groupId&gt;</span>
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;artifactId&gt;</span>spring-cloud-dependencies<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/artifactId&gt;</span>
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;version&gt;</span>{spring-cloud-version}<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/version&gt;</span>
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;type&gt;</span>pom<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/type&gt;</span>
+			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;scope&gt;</span>import<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/scope&gt;</span>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/dependency&gt;</span>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/dependencies&gt;</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/dependencyManagement&gt;</span>
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;dependencies&gt;</span>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;dependency&gt;</span>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;groupId&gt;</span>org.springframework.cloud<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/groupId&gt;</span>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;artifactId&gt;</span>spring-cloud-starter-config<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/artifactId&gt;</span>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/dependency&gt;</span>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;dependency&gt;</span>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;groupId&gt;</span>org.springframework.boot<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/groupId&gt;</span>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;artifactId&gt;</span>spring-boot-starter-test<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/artifactId&gt;</span>
+		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;scope&gt;</span>test<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/scope&gt;</span>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/dependency&gt;</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/dependencies&gt;</span>
+
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;build&gt;</span>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;plugins&gt;</span>
+           <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;plugin&gt;</span>
+               <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;groupId&gt;</span>org.springframework.boot<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/groupId&gt;</span>
+               <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;artifactId&gt;</span>spring-boot-maven-plugin<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/artifactId&gt;</span>
+           <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/plugin&gt;</span>
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/plugins&gt;</span>
+<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;/build&gt;</span>
+
+   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">&lt;!-- repositories also needed for snapshots and milestones --&gt;</span></pre><p>
+</p><p>Now you can create a standard Spring Boot application, such as the following HTTP server:</p><pre class="screen">@SpringBootApplication
+@RestController
+public class Application {
+
+    @RequestMapping("/")
+    public String home() {
+        return "Hello World!";
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+}</pre><p>When this HTTP server runs, it picks up the external configuration from the default local config server (if it is running) on port 8888.
+To modify the startup behavior, you can change the location of the config server by using <code class="literal">bootstrap.properties</code> (similar to <code class="literal">application.properties</code> but for the bootstrap phase of an application context), as shown in the following example:</p><pre class="screen">spring.cloud.config.uri: http://myconfigserver.com</pre><p>By default, if no application name is set, <code class="literal">application</code> will be used. To modify the name, the following property can be added to the <code class="literal">bootstrap.properties</code> file:</p><pre class="screen">spring.application.name: myapp</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>When setting the property <code class="literal">${spring.application.name}</code> do not prefix your app name with the reserved word <code class="literal">application-</code> to prevent issues resolving the correct property source.</p></td></tr></table></div><p>The bootstrap properties show up in the <code class="literal">/env</code> endpoint as a high-priority property source, as shown in the following example.</p><pre class="screen">$ curl localhost:8080/env
+{
+  "profiles":[],
+  "configService:https://github.com/spring-cloud-samples/config-repo/bar.properties":{"foo":"bar"},
+  "servletContextInitParams":{},
+  "systemProperties":{...},
+  ...
+}</pre><p>A property source called <code class="literal">``configService:&lt;URL of remote repository&gt;/&lt;file name&gt;</code> contains the <code class="literal">foo</code> property with a value of <code class="literal">bar</code> and is highest priority.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>The URL in the property source name is the git repository, not the config server URL.</p></td></tr></table></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi_pr01.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__spring_cloud_config_server.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-config.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;2.&nbsp;Spring Cloud Config Server</td></tr></table></div></body></html>

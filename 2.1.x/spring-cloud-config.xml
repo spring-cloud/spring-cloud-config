@@ -1,0 +1,1491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+<book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
+<info>
+<title>Spring Cloud Config</title>
+<date>2019-03-08</date>
+</info>
+<preface>
+<title></title>
+<simpara><emphasis role="strong">2.1.2.BUILD-SNAPSHOT</emphasis></simpara>
+<simpara>Spring Cloud Config provides server-side and client-side support for externalized configuration in a distributed system. With the Config Server, you have a central place to manage external properties for applications across all environments.
+The concepts on both client and server map identically to the Spring <literal>Environment</literal> and <literal>PropertySource</literal> abstractions, so they fit very well with Spring applications but can be used with any application running in any language.
+As an application moves through the deployment pipeline from dev to test and into production, you can manage the configuration between those environments and be certain that applications have everything they need to run when they migrate.
+The default implementation of the server storage backend uses git, so it easily supports labelled versions of configuration environments as well as being accessible to a wide range of tooling for managing the content.
+It is easy to add alternative implementations and plug them in with Spring configuration.</simpara>
+</preface>
+<chapter xml:id="_quick_start">
+<title>Quick Start</title>
+<simpara>This quick start walks through using both the server and the client of Spring Cloud Config Server.</simpara>
+<simpara>First, start the server, as follows:</simpara>
+<screen>$ cd spring-cloud-config-server
+$ ../mvnw spring-boot:run</screen>
+<simpara>The server is a Spring Boot application, so you can run it from your IDE if you prefer to do so (the main class is <literal>ConfigServerApplication</literal>).</simpara>
+<simpara>Next try out a client, as follows:</simpara>
+<screen>$ curl localhost:8888/foo/development
+{"name":"foo","label":"master","propertySources":[
+  {"name":"https://github.com/scratches/config-repo/foo-development.properties","source":{"bar":"spam"}},
+  {"name":"https://github.com/scratches/config-repo/foo.properties","source":{"foo":"bar"}}
+]}</screen>
+<simpara>The default strategy for locating property sources is to clone a git repository (at <literal>spring.cloud.config.server.git.uri</literal>) and use it to initialize a mini <literal>SpringApplication</literal>.
+The mini-application&#8217;s <literal>Environment</literal> is used to enumerate property sources and publish them at a JSON endpoint.</simpara>
+<simpara>The HTTP service has resources in the following form:</simpara>
+<screen>/{application}/{profile}[/{label}]
+/{application}-{profile}.yml
+/{label}/{application}-{profile}.yml
+/{application}-{profile}.properties
+/{label}/{application}-{profile}.properties</screen>
+<simpara>where <literal>application</literal> is injected as the <literal>spring.config.name</literal> in the <literal>SpringApplication</literal> (what is normally <literal>application</literal> in a regular Spring Boot app), <literal>profile</literal> is an active profile (or comma-separated list of properties), and <literal>label</literal> is an optional git label (defaults to <literal>master</literal>.)</simpara>
+<simpara>Spring Cloud Config Server pulls configuration for remote clients from various sources. The following example gets configuration from a git repository (which must be provided), as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo</programlisting>
+<simpara>Other sources are any JDBC compatible database, Subversion, Hashicorp Vault, Credhub and local filesystems.</simpara>
+<section xml:id="_client_side_usage">
+<title>Client Side Usage</title>
+<simpara>To use these features in an application, you can build it as a Spring Boot application that depends on spring-cloud-config-client (for an example, see the test cases for the config-client or the sample application).
+The most convenient way to add the dependency is with a Spring Boot starter <literal>org.springframework.cloud:spring-cloud-starter-config</literal>.
+There is also a parent pom and BOM (<literal>spring-cloud-starter-parent</literal>) for Maven users and a Spring IO version management properties file for Gradle and Spring CLI users. The following example shows a typical Maven configuration:</simpara>
+<formalpara>
+<title>pom.xml</title>
+<para>
+<programlisting language="xml" linenumbering="unnumbered">   &lt;parent&gt;
+       &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+       &lt;version&gt;{spring-boot-docs-version}&lt;/version&gt;
+       &lt;relativePath /&gt; &lt;!-- lookup parent from repository --&gt;
+   &lt;/parent&gt;
+
+&lt;dependencyManagement&gt;
+	&lt;dependencies&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+			&lt;version&gt;{spring-cloud-version}&lt;/version&gt;
+			&lt;type&gt;pom&lt;/type&gt;
+			&lt;scope&gt;import&lt;/scope&gt;
+		&lt;/dependency&gt;
+	&lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+&lt;dependencies&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-cloud-starter-config&lt;/artifactId&gt;
+	&lt;/dependency&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+		&lt;scope&gt;test&lt;/scope&gt;
+	&lt;/dependency&gt;
+&lt;/dependencies&gt;
+
+&lt;build&gt;
+	&lt;plugins&gt;
+           &lt;plugin&gt;
+               &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+               &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+           &lt;/plugin&gt;
+	&lt;/plugins&gt;
+&lt;/build&gt;
+
+   &lt;!-- repositories also needed for snapshots and milestones --&gt;</programlisting>
+</para>
+</formalpara>
+<simpara>Now you can create a standard Spring Boot application, such as the following HTTP server:</simpara>
+<screen>@SpringBootApplication
+@RestController
+public class Application {
+
+    @RequestMapping("/")
+    public String home() {
+        return "Hello World!";
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+}</screen>
+<simpara>When this HTTP server runs, it picks up the external configuration from the default local config server (if it is running) on port 8888.
+To modify the startup behavior, you can change the location of the config server by using <literal>bootstrap.properties</literal> (similar to <literal>application.properties</literal> but for the bootstrap phase of an application context), as shown in the following example:</simpara>
+<screen>spring.cloud.config.uri: http://myconfigserver.com</screen>
+<simpara>By default, if no application name is set, <literal>application</literal> will be used. To modify the name, the following property can be added to the <literal>bootstrap.properties</literal> file:</simpara>
+<screen>spring.application.name: myapp</screen>
+<note>
+<simpara>When setting the property <literal>${spring.application.name}</literal> do not prefix your app name with the reserved word <literal>application-</literal> to prevent issues resolving the correct property source.</simpara>
+</note>
+<simpara>The bootstrap properties show up in the <literal>/env</literal> endpoint as a high-priority property source, as shown in the following example.</simpara>
+<screen>$ curl localhost:8080/env
+{
+  "profiles":[],
+  "configService:https://github.com/spring-cloud-samples/config-repo/bar.properties":{"foo":"bar"},
+  "servletContextInitParams":{},
+  "systemProperties":{...},
+  ...
+}</screen>
+<simpara>A property source called <literal>``configService:&lt;URL of remote repository&gt;/&lt;file name&gt;</literal> contains the <literal>foo</literal> property with a value of <literal>bar</literal> and is highest priority.</simpara>
+<note>
+<simpara>The URL in the property source name is the git repository, not the config server URL.</simpara>
+</note>
+</section>
+</chapter>
+<chapter xml:id="_spring_cloud_config_server">
+<title>Spring Cloud Config Server</title>
+<simpara>Spring Cloud Config Server provides an HTTP resource-based API for external configuration (name-value pairs or equivalent YAML content).
+The server is embeddable in a Spring Boot application, by using the <literal>@EnableConfigServer</literal> annotation.
+Consequently, the following application is a config server:</simpara>
+<formalpara>
+<title>ConfigServer.java</title>
+<para>
+<programlisting language="java" linenumbering="unnumbered">@SpringBootApplication
+@EnableConfigServer
+public class ConfigServer {
+  public static void main(String[] args) {
+    SpringApplication.run(ConfigServer.class, args);
+  }
+}</programlisting>
+</para>
+</formalpara>
+<simpara>Like all Spring Boot applications, it runs on port 8080 by default, but you can switch it to the more conventional port 8888 in various ways.
+The easiest, which also sets a default configuration repository, is by launching it with <literal>spring.config.name=configserver</literal> (there is a <literal>configserver.yml</literal> in the Config Server jar).
+Another is to use your own <literal>application.properties</literal>, as shown in the following example:</simpara>
+<formalpara>
+<title>application.properties</title>
+<para>
+<programlisting language="properties" linenumbering="unnumbered">server.port: 8888
+spring.cloud.config.server.git.uri: file://${user.home}/config-repo</programlisting>
+</para>
+</formalpara>
+<simpara>where <literal>${user.home}/config-repo</literal> is a git repository containing YAML and properties files.</simpara>
+<note>
+<simpara>On Windows, you need an extra "/" in the file URL if it is absolute with a drive prefix (for example,<literal><link xl:href="file:///${user.home}/config-repo">file:///${user.home}/config-repo</link></literal>).</simpara>
+</note>
+<tip>
+<simpara>The following listing shows a recipe for creating the git repository in the preceding example:</simpara>
+<screen>$ cd $HOME
+$ mkdir config-repo
+$ cd config-repo
+$ git init .
+$ echo info.foo: bar &gt; application.properties
+$ git add -A .
+$ git commit -m "Add application.properties"</screen>
+</tip>
+<warning>
+<simpara>Using the local filesystem for your git repository is intended for testing only.
+You should use a server to host your configuration repositories in production.</simpara>
+</warning>
+<warning>
+<simpara>The initial clone of your configuration repository can be quick and efficient if you keep only text files in it.
+If you store binary files, especially large ones, you may experience delays on the first request for configuration or encounter out of memory errors in the server.</simpara>
+</warning>
+<section xml:id="_environment_repository">
+<title>Environment Repository</title>
+<simpara>Where should you store the configuration data for the Config Server?
+The strategy that governs this behaviour is the <literal>EnvironmentRepository</literal>, serving <literal>Environment</literal> objects.
+This <literal>Environment</literal> is a shallow copy of the domain from the Spring <literal>Environment</literal> (including <literal>propertySources</literal> as the main feature).
+The <literal>Environment</literal> resources are parametrized by three variables:</simpara>
+<itemizedlist>
+<listitem>
+<simpara><literal>{application}</literal>, which maps to <literal>spring.application.name</literal> on the client side.</simpara>
+</listitem>
+<listitem>
+<simpara><literal>{profile}</literal>, which maps to <literal>spring.profiles.active</literal> on the client (comma-separated list).</simpara>
+</listitem>
+<listitem>
+<simpara><literal>{label}</literal>, which is a server side feature labelling a "versioned" set of config files.</simpara>
+</listitem>
+</itemizedlist>
+<simpara>Repository implementations generally behave like a Spring Boot application, loading configuration files from a <literal>spring.config.name</literal> equal to the <literal>{application}</literal> parameter, and <literal>spring.profiles.active</literal> equal to the <literal>{profiles}</literal> parameter.
+Precedence rules for profiles are also the same as in a regular Spring Boot application: Active profiles take precedence over defaults, and, if there are multiple profiles, the last one wins (similar to adding entries to a <literal>Map</literal>).</simpara>
+<simpara>The following sample client application has this bootstrap configuration:</simpara>
+<formalpara>
+<title>bootstrap.yml</title>
+<para>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  application:
+    name: foo
+  profiles:
+    active: dev,mysql</programlisting>
+</para>
+</formalpara>
+<simpara>(As usual with a Spring Boot application, these properties could also be set by environment variables or command line arguments).</simpara>
+<simpara>If the repository is file-based, the server creates an
+<literal>Environment</literal> from <literal>application.yml</literal> (shared between all clients) and
+<literal>foo.yml</literal> (with <literal>foo.yml</literal> taking precedence).
+If the YAML files have documents inside them that point to Spring profiles, those are applied with higher precedence (in order of the profiles listed).
+If there are profile-specific YAML (or properties) files, these are also applied with higher precedence than the defaults.
+Higher precedence translates to a <literal>PropertySource</literal> listed earlier in the <literal>Environment</literal>.
+(These same rules apply in a standalone Spring Boot application.)</simpara>
+<simpara>You can set spring.cloud.config.server.accept-empty to false so that Server would return a HTTP 404 status, if the application is not found.By default, this flag is set to true.</simpara>
+<section xml:id="_git_backend">
+<title>Git Backend</title>
+<simpara>The default implementation of <literal>EnvironmentRepository</literal> uses a Git backend, which is very convenient for managing upgrades and physical environments and for auditing changes.
+To change the location of the repository, you can set the <literal>spring.cloud.config.server.git.uri</literal> configuration property in the Config Server (for example in <literal>application.yml</literal>).
+If you set it with a <literal>file:</literal> prefix, it should work from a local repository so that you can get started quickly and easily without a server. However, in that case, the server operates directly on the local repository without cloning it (it does not matter if it is not bare because the Config Server never makes changes to the "remote" repository).
+To scale the Config Server up and make it highly available, you need to have all instances of the server pointing to the same repository, so only a shared file system would work.
+Even in that case, it is better to use the <literal>ssh:</literal> protocol for a shared filesystem repository, so that the server can clone it and use a local working copy as a cache.</simpara>
+<simpara>This repository implementation maps the <literal>{label}</literal> parameter of the HTTP resource to a git label (commit id, branch name, or tag).
+If the git branch or tag name contains a slash (<literal>/</literal>), then the label in the HTTP URL should instead be specified with the special string <literal>(_)</literal> (to avoid ambiguity with other URL paths).
+For example, if the label is <literal>foo/bar</literal>, replacing the slash would result in the following label: <literal>foo(_)bar</literal>.
+The inclusion of the special string <literal>(_)</literal> can also be applied to the <literal>{application}</literal> parameter.
+If you use a command-line client such as curl, be careful with the brackets in the URL&#8201;&#8212;&#8201;you should escape them from the shell with single quotes ('').</simpara>
+<section xml:id="_skipping_ssl_certificate_validation">
+<title>Skipping SSL Certificate Validation</title>
+<simpara>The configuration server&#8217;s validation of the Git server&#8217;s SSL certificate can be disabled by setting the <literal>git.skipSslValidation</literal> property to <literal>true</literal> (default is <literal>false</literal>).</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          skipSslValidation: true</programlisting>
+</section>
+<section xml:id="_setting_http_connection_timeout">
+<title>Setting HTTP Connection Timeout</title>
+<simpara>You can configure the time, in seconds, that the configuration server will wait to acquire an HTTP connection. Use the <literal>git.timeout</literal> property.</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          timeout: 4</programlisting>
+</section>
+<section xml:id="_placeholders_in_git_uri">
+<title>Placeholders in Git URI</title>
+<simpara>Spring Cloud Config Server supports a git repository URL with placeholders for the <literal>{application}</literal> and <literal>{profile}</literal> (and <literal>{label}</literal> if you need it, but remember that the label is applied as a git label anyway).
+So you can support a <quote>one repository per application</quote> policy by using a structure similar to the following:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/myorg/{application}</programlisting>
+<simpara>You can also support a <quote>one repository per profile</quote> policy by using a similar pattern but with
+<literal>{profile}</literal>.</simpara>
+<simpara>Additionally, using the special string "(_)" within your <literal>{application}</literal> parameters can enable support for multiple
+organizations, as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/{application}</programlisting>
+<simpara>where <literal>{application}</literal> is provided at request time in the following format: <literal>organization(_)application</literal>.</simpara>
+</section>
+<section xml:id="_pattern_matching_and_multiple_repositories">
+<title>Pattern Matching and Multiple Repositories</title>
+<simpara>Spring Cloud Config also includes support for more complex requirements with pattern
+matching on the application and profile name.
+The pattern format is a comma-separated list of <literal>{application}/{profile}</literal> names with wildcards (note that a pattern beginning with a wildcard may need to be quoted), as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          repos:
+            simple: https://github.com/simple/config-repo
+            special:
+              pattern: special*/dev*,*special*/dev*
+              uri: https://github.com/special/config-repo
+            local:
+              pattern: local*
+              uri: file:/home/configsvc/config-repo</programlisting>
+<simpara>If <literal>{application}/{profile}</literal> does not match any of the patterns, it uses the default URI defined under <literal>spring.cloud.config.server.git.uri</literal>.
+In the above example, for the <quote>simple</quote> repository, the pattern is <literal>simple/*</literal> (it only matches one application named <literal>simple</literal> in all profiles). The <quote>local</quote> repository matches all application names beginning with <literal>local</literal> in all profiles (the <literal>/*</literal> suffix is added automatically to any pattern that does not have a profile matcher).</simpara>
+<note>
+<simpara>The <quote>one-liner</quote> short cut used in the <quote>simple</quote> example can be used only if the only property to be set is the URI.
+If you need to set anything else (credentials, pattern, and so on) you need to use the full form.</simpara>
+</note>
+<simpara>The <literal>pattern</literal> property in the repo is actually an array, so you can use a YAML array (or <literal>[0]</literal>, <literal>[1]</literal>, etc. suffixes in properties files) to bind to multiple patterns.
+You may need to do so if you are going to run apps with multiple profiles, as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          repos:
+            development:
+              pattern:
+                - '*/development'
+                - '*/staging'
+              uri: https://github.com/development/config-repo
+            staging:
+              pattern:
+                - '*/qa'
+                - '*/production'
+              uri: https://github.com/staging/config-repo</programlisting>
+<note>
+<simpara>Spring Cloud guesses that a pattern containing a profile that does not end in <literal>*</literal> implies that you actually want to match a list of profiles starting with this pattern (so <literal>*/staging</literal> is a shortcut for <literal>["*/staging", "*/staging,*"]</literal>, and so on).
+This is common where, for instance, you need to run applications in the <quote>development</quote> profile locally but also the <quote>cloud</quote> profile remotely.</simpara>
+</note>
+<simpara>Every repository can also optionally store config files in sub-directories, and patterns to search for those directories can be specified as <literal>searchPaths</literal>.
+The following example shows a config file at the top level:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          searchPaths: foo,bar*</programlisting>
+<simpara>In the preceding example, the server searches for config files in the top level and in the <literal>foo/</literal> sub-directory and also any sub-directory whose name begins with <literal>bar</literal>.</simpara>
+<simpara>By default, the server clones remote repositories when configuration
+is first requested.
+The server can be configured to clone the repositories at startup, as shown in the following top-level example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://git/common/config-repo.git
+          repos:
+            team-a:
+                pattern: team-a-*
+                cloneOnStart: true
+                uri: http://git/team-a/config-repo.git
+            team-b:
+                pattern: team-b-*
+                cloneOnStart: false
+                uri: http://git/team-b/config-repo.git
+            team-c:
+                pattern: team-c-*
+                uri: http://git/team-a/config-repo.git</programlisting>
+<simpara>In the preceding example, the server clones team-a&#8217;s config-repo on startup, before it
+accepts any requests.
+All other repositories are not cloned until configuration from the repository is requested.</simpara>
+<note>
+<simpara>Setting a repository to be cloned when the Config Server starts up can help to identify a misconfigured configuration source (such as an invalid repository URI) quickly, while the Config Server is starting up.
+With <literal>cloneOnStart</literal> not enabled for a configuration source, the Config Server may start successfully with a misconfigured or invalid configuration source and not detect an error until an application requests configuration from that configuration source.</simpara>
+</note>
+</section>
+<section xml:id="_authentication">
+<title>Authentication</title>
+<simpara>To use HTTP basic authentication on the remote repository, add the <literal>username</literal> and <literal>password</literal> properties separately (not in the URL), as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          username: trolley
+          password: strongpassword</programlisting>
+<simpara>If you do not use HTTPS and user credentials, SSH should also work out of the box when you store keys in the default directories (<literal>~/.ssh</literal>) and the URI points to an SSH location, such as <literal>git@github.com:configuration/cloud-configuration</literal>.
+It is important that an entry for the Git server be present in the <literal>~/.ssh/known_hosts</literal> file and that it is in <literal>ssh-rsa</literal> format.
+Other formats (such as <literal>ecdsa-sha2-nistp256</literal>) are not supported.
+To avoid surprises, you should ensure that only one entry is present in the <literal>known_hosts</literal> file for the Git server and that it matches the URL you provided to the config server.
+If you use a hostname in the URL, you want to have exactly that (not the IP) in the <literal>known_hosts</literal> file.
+The repository is accessed by using JGit, so any documentation you find on that should be applicable.
+HTTPS proxy settings can be set in <literal>~/.git/config</literal> or (in the same way as for any other JVM process) with
+system properties (<literal>-Dhttps.proxyHost</literal> and <literal>-Dhttps.proxyPort</literal>).</simpara>
+<tip>
+<simpara>If you do not know where your <literal>~/.git</literal> directory is, use <literal>git config --global</literal> to manipulate the settings (for example, <literal>git config --global http.sslVerify false</literal>).</simpara>
+</tip>
+</section>
+<section xml:id="_authentication_with_aws_codecommit">
+<title>Authentication with AWS CodeCommit</title>
+<simpara>Spring Cloud Config Server also supports <link xl:href="http://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">AWS CodeCommit</link> authentication.
+AWS CodeCommit uses an authentication helper when using Git from the command line.
+This helper is not used with the JGit library, so a JGit CredentialProvider for AWS CodeCommit is created if the Git URI matches the AWS CodeCommit pattern.
+AWS CodeCommit URIs follow this pattern://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}.</simpara>
+<simpara>If you provide a username and password with an AWS CodeCommit URI, they must be the <link xl:href="http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html">AWS accessKeyId and secretAccessKey</link> that provide access to the repository.
+If you do not specify a username and password, the accessKeyId and secretAccessKey are retrieved by using the <link xl:href="http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">AWS Default Credential Provider Chain</link>.</simpara>
+<simpara>If your Git URI matches the CodeCommit URI pattern (shown earlier), you must provide valid AWS credentials in the username and password or in one of the locations supported by the default credential provider chain.
+AWS EC2 instances may use <link xl:href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html">IAM Roles for EC2 Instances</link>.</simpara>
+<note>
+<simpara>The <literal>aws-java-sdk-core</literal> jar is an optional dependency.
+If the <literal>aws-java-sdk-core</literal> jar is not on your classpath, the AWS Code Commit credential provider is not created, regardless of the git server URI.</simpara>
+</note>
+</section>
+<section xml:id="_git_ssh_configuration_using_properties">
+<title>Git SSH configuration using properties</title>
+<simpara>By default, the JGit library used by Spring Cloud Config Server uses SSH configuration files such as <literal>~/.ssh/known_hosts</literal> and <literal>/etc/ssh/ssh_config</literal> when connecting to Git repositories by using an SSH URI.
+In cloud environments such as Cloud Foundry, the local filesystem may be ephemeral or not easily accessible.
+For those cases, SSH configuration can be set by using Java properties.
+In order to activate property-based SSH configuration, the <literal>spring.cloud.config.server.git.ignoreLocalSshSettings</literal> property must be set to <literal>true</literal>, as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">  spring:
+    cloud:
+      config:
+        server:
+          git:
+            uri: git@gitserver.com:team/repo1.git
+            ignoreLocalSshSettings: true
+            hostKey: someHostKey
+            hostKeyAlgorithm: ssh-rsa
+            privateKey: |
+                         -----BEGIN RSA PRIVATE KEY-----
+                         MIIEpgIBAAKCAQEAx4UbaDzY5xjW6hc9jwN0mX33XpTDVW9WqHp5AKaRbtAC3DqX
+                         IXFMPgw3K45jxRb93f8tv9vL3rD9CUG1Gv4FM+o7ds7FRES5RTjv2RT/JVNJCoqF
+                         ol8+ngLqRZCyBtQN7zYByWMRirPGoDUqdPYrj2yq+ObBBNhg5N+hOwKjjpzdj2Ud
+                         1l7R+wxIqmJo1IYyy16xS8WsjyQuyC0lL456qkd5BDZ0Ag8j2X9H9D5220Ln7s9i
+                         oezTipXipS7p7Jekf3Ywx6abJwOmB0rX79dV4qiNcGgzATnG1PkXxqt76VhcGa0W
+                         DDVHEEYGbSQ6hIGSh0I7BQun0aLRZojfE3gqHQIDAQABAoIBAQCZmGrk8BK6tXCd
+                         fY6yTiKxFzwb38IQP0ojIUWNrq0+9Xt+NsypviLHkXfXXCKKU4zUHeIGVRq5MN9b
+                         BO56/RrcQHHOoJdUWuOV2qMqJvPUtC0CpGkD+valhfD75MxoXU7s3FK7yjxy3rsG
+                         EmfA6tHV8/4a5umo5TqSd2YTm5B19AhRqiuUVI1wTB41DjULUGiMYrnYrhzQlVvj
+                         5MjnKTlYu3V8PoYDfv1GmxPPh6vlpafXEeEYN8VB97e5x3DGHjZ5UrurAmTLTdO8
+                         +AahyoKsIY612TkkQthJlt7FJAwnCGMgY6podzzvzICLFmmTXYiZ/28I4BX/mOSe
+                         pZVnfRixAoGBAO6Uiwt40/PKs53mCEWngslSCsh9oGAaLTf/XdvMns5VmuyyAyKG
+                         ti8Ol5wqBMi4GIUzjbgUvSUt+IowIrG3f5tN85wpjQ1UGVcpTnl5Qo9xaS1PFScQ
+                         xrtWZ9eNj2TsIAMp/svJsyGG3OibxfnuAIpSXNQiJPwRlW3irzpGgVx/AoGBANYW
+                         dnhshUcEHMJi3aXwR12OTDnaLoanVGLwLnkqLSYUZA7ZegpKq90UAuBdcEfgdpyi
+                         PhKpeaeIiAaNnFo8m9aoTKr+7I6/uMTlwrVnfrsVTZv3orxjwQV20YIBCVRKD1uX
+                         VhE0ozPZxwwKSPAFocpyWpGHGreGF1AIYBE9UBtjAoGBAI8bfPgJpyFyMiGBjO6z
+                         FwlJc/xlFqDusrcHL7abW5qq0L4v3R+FrJw3ZYufzLTVcKfdj6GelwJJO+8wBm+R
+                         gTKYJItEhT48duLIfTDyIpHGVm9+I1MGhh5zKuCqIhxIYr9jHloBB7kRm0rPvYY4
+                         VAykcNgyDvtAVODP+4m6JvhjAoGBALbtTqErKN47V0+JJpapLnF0KxGrqeGIjIRV
+                         cYA6V4WYGr7NeIfesecfOC356PyhgPfpcVyEztwlvwTKb3RzIT1TZN8fH4YBr6Ee
+                         KTbTjefRFhVUjQqnucAvfGi29f+9oE3Ei9f7wA+H35ocF6JvTYUsHNMIO/3gZ38N
+                         CPjyCMa9AoGBAMhsITNe3QcbsXAbdUR00dDsIFVROzyFJ2m40i4KCRM35bC/BIBs
+                         q0TY3we+ERB40U8Z2BvU61QuwaunJ2+uGadHo58VSVdggqAo0BSkH58innKKt96J
+                         69pcVH/4rmLbXdcmNYGm6iu+MlPQk4BUZknHSmVHIFdJ0EPupVaQ8RHT
+                         -----END RSA PRIVATE KEY-----</programlisting>
+<simpara>The following table describes the SSH configuration properties.</simpara>
+<table frame="all" rowsep="1" colsep="1">
+<title>SSH Configuration Properties</title>
+<tgroup cols="2">
+<colspec colname="col_1" colwidth="50*"/>
+<colspec colname="col_2" colwidth="50*"/>
+<thead>
+<row>
+<entry align="left" valign="top">Property Name</entry>
+<entry align="left" valign="top">Remarks</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">ignoreLocalSshSettings</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>If <literal>true</literal>, use property-based instead of file-based SSH config. Must be set at as <literal>spring.cloud.config.server.git.ignoreLocalSshSettings</literal>, <emphasis role="strong">not</emphasis> inside a repository definition.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">privateKey</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Valid SSH private key. Must be set if <literal>ignoreLocalSshSettings</literal> is true and Git URI is SSH format.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">hostKey</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Valid SSH host key. Must be set if <literal>hostKeyAlgorithm</literal> is also set.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">hostKeyAlgorithm</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>One of <literal>ssh-dss, ssh-rsa, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384, or ecdsa-sha2-nistp521</literal>. Must be set if <literal>hostKey</literal> is also set.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">strictHostKeyChecking</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara><literal>true</literal> or <literal>false</literal>. If false, ignore errors with host key.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">knownHostsFile</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Location of custom <literal>.known_hosts</literal> file.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">preferredAuthentications</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Override server authentication method order. This should allow for evading login prompts if server has keyboard-interactive authentication before the <literal>publickey</literal> method.</simpara></entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</section>
+<section xml:id="_placeholders_in_git_search_paths">
+<title>Placeholders in Git Search Paths</title>
+<simpara>Spring Cloud Config Server also supports a search path with placeholders for the <literal>{application}</literal> and <literal>{profile}</literal> (and <literal>{label}</literal> if
+you need it), as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          searchPaths: '{application}'</programlisting>
+<simpara>The preceding listing causes a search of the repository for files in the same name as the directory (as well as the top level).
+Wildcards are also valid in a search path with placeholders (any matching directory is included in the search).</simpara>
+</section>
+<section xml:id="_force_pull_in_git_repositories">
+<title>Force pull in Git Repositories</title>
+<simpara>As mentioned earlier, Spring Cloud Config Server makes a clone of the remote git repository in case the local copy gets dirty (for example,
+folder content changes by an OS process) such that Spring Cloud Config Server cannot update the local copy from remote repository.</simpara>
+<simpara>To solve this issue, there is a <literal>force-pull</literal> property that makes Spring Cloud Config Server force pull from the remote repository if the local copy is dirty, as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          force-pull: true</programlisting>
+<simpara>If you have a multiple-repositories configuration, you can configure the <literal>force-pull</literal> property per repository, as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://git/common/config-repo.git
+          force-pull: true
+          repos:
+            team-a:
+                pattern: team-a-*
+                uri: http://git/team-a/config-repo.git
+                force-pull: true
+            team-b:
+                pattern: team-b-*
+                uri: http://git/team-b/config-repo.git
+                force-pull: true
+            team-c:
+                pattern: team-c-*
+                uri: http://git/team-a/config-repo.git</programlisting>
+<note>
+<simpara>The default value for <literal>force-pull</literal> property is <literal>false</literal>.</simpara>
+</note>
+</section>
+<section xml:id="_deleting_untracked_branches_in_git_repositories">
+<title>Deleting untracked branches in Git Repositories</title>
+<simpara>As Spring Cloud Config Server has a clone of the remote git repository
+after check-outing branch to local repo (e.g fetching properties by label) it will keep this branch
+forever or till the next server restart (which creates new local repo).
+So there could be a case when remote branch is deleted but local copy of it is still available for fetching.
+And if Spring Cloud Config Server client service starts with <literal>--spring.cloud.config.label=deletedRemoteBranch,master</literal>
+it will fetch properties from <literal>deletedRemoteBranch</literal> local branch, but not from <literal>master</literal>.</simpara>
+<simpara>In order to keep local repository branches clean and up to remote - <literal>deleteUntrackedBranches</literal> property could be set.
+It will make Spring Cloud Config Server <emphasis role="strong">force</emphasis> delete untracked branches from local repository.
+Example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          deleteUntrackedBranches: true</programlisting>
+<note>
+<simpara>The default value for <literal>deleteUntrackedBranches</literal> property is <literal>false</literal>.</simpara>
+</note>
+</section>
+<section xml:id="_git_refresh_rate">
+<title>Git Refresh Rate</title>
+<simpara>You can control how often the config server will fetch updated configuration data
+from your Git backend by using <literal>spring.cloud.config.server.git.refreshRate</literal>.  The
+value of this property is specified in seconds.  By default the value is 0, meaning
+the config server will fetch updated configuration from the Git repo every time it
+is requested.</simpara>
+</section>
+</section>
+<section xml:id="_version_control_backend_filesystem_use">
+<title>Version Control Backend Filesystem Use</title>
+<warning>
+<simpara>With VCS-based backends (git, svn), files are checked out or cloned to the local filesystem.
+By default, they are put in the system temporary directory with a prefix of <literal>config-repo-</literal>.
+On linux, for example, it could be <literal>/tmp/config-repo-&lt;randomid&gt;</literal>.
+Some operating systems <link xl:href="http://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349">routinely clean out</link> temporary directories.
+This can lead to unexpected behavior, such as missing properties.
+To avoid this problem, change the directory that Config Server uses by setting <literal>spring.cloud.config.server.git.basedir</literal> or <literal>spring.cloud.config.server.svn.basedir</literal> to a directory that does not reside in the system temp structure.</simpara>
+</warning>
+</section>
+<section xml:id="_file_system_backend">
+<title>File System Backend</title>
+<simpara>There is also a <quote>native</quote> profile in the Config Server that does not use Git but loads the config files from the local classpath or file system (any static URL you want to point to with <literal>spring.cloud.config.server.native.searchLocations</literal>).
+To use the native profile, launch the Config Server with <literal>spring.profiles.active=native</literal>.</simpara>
+<note>
+<simpara>Remember to use the <literal>file:</literal> prefix for file resources (the default without a prefix is usually the classpath).
+As with any Spring Boot configuration, you can embed <literal>${}</literal>-style environment placeholders, but remember that absolute paths in Windows require an extra <literal>/</literal> (for example, <literal><link xl:href="file:///${user.home}/config-repo">file:///${user.home}/config-repo</link></literal>).</simpara>
+</note>
+<warning>
+<simpara>The default value of the <literal>searchLocations</literal> is identical to a local Spring Boot application (that is, <literal>[classpath:/, classpath:/config,
+file:./, file:./config]</literal>).
+This does not expose the <literal>application.properties</literal> from the server to all clients, because any property sources present in the server are removed before being sent to the client.</simpara>
+</warning>
+<tip>
+<simpara>A filesystem backend is great for getting started quickly and for testing.
+To use it in production, you need to be sure that the file system is reliable and shared across all instances of the Config Server.</simpara>
+</tip>
+<simpara>The search locations can contain placeholders for <literal>{application}</literal>, <literal>{profile}</literal>, and <literal>{label}</literal>.
+In this way, you can segregate the directories in the path and choose a strategy that makes sense for you (such as subdirectory per application or subdirectory per profile).</simpara>
+<simpara>If you do not use placeholders in the search locations, this repository also appends the <literal>{label}</literal> parameter of the HTTP resource to a suffix on the search path, so properties files are loaded from each search location <emphasis role="strong">and</emphasis> a subdirectory with the same name as the label (the labelled properties take precedence in the Spring Environment).
+Thus, the default behaviour with no placeholders is the same as adding a search location ending with <literal>/{label}/</literal>.
+For example, <literal>file:/tmp/config</literal> is the same as <literal>file:/tmp/config,file:/tmp/config/{label}</literal>.
+This behavior can be disabled by setting <literal>spring.cloud.config.server.native.addLabelLocations=false</literal>.</simpara>
+</section>
+<section xml:id="vault-backend">
+<title>Vault Backend</title>
+<simpara>Spring Cloud Config Server also supports <link xl:href="https://www.vaultproject.io">Vault</link> as a backend.</simpara>
+<sidebar>
+<simpara>Vault is a tool for securely accessing secrets.
+A secret is anything that to which you want to tightly control access, such as API keys, passwords, certificates, and other sensitive information. Vault provides a unified interface to any secret while providing tight access control and recording a detailed audit log.</simpara>
+</sidebar>
+<simpara>For more information on Vault, see the <link xl:href="https://learn.hashicorp.com/vault/?track=getting-started#getting-started">Vault quick start guide</link>.</simpara>
+<simpara>To enable the config server to use a Vault backend, you can run your config server with the <literal>vault</literal> profile.
+For example, in your config server&#8217;s <literal>application.properties</literal>, you can add <literal>spring.profiles.active=vault</literal>.</simpara>
+<simpara>By default, the config server assumes that your Vault server runs at <literal><link xl:href="http://127.0.0.1:8200">http://127.0.0.1:8200</link></literal>.
+It also assumes that the name of backend is <literal>secret</literal> and the key is <literal>application</literal>.
+All of these defaults can be configured in your config server&#8217;s <literal>application.properties</literal>.
+The following table describes configurable Vault properties:</simpara>
+<informaltable frame="all" rowsep="1" colsep="1">
+<tgroup cols="2">
+<colspec colname="col_1" colwidth="50*"/>
+<colspec colname="col_2" colwidth="50*"/>
+<thead>
+<row>
+<entry align="left" valign="top">Name</entry>
+<entry align="left" valign="top">Default Value</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry align="left" valign="top"><simpara>host</simpara></entry>
+<entry align="left" valign="top"><simpara>127.0.0.1</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>port</simpara></entry>
+<entry align="left" valign="top"><simpara>8200</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>scheme</simpara></entry>
+<entry align="left" valign="top"><simpara>http</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>backend</simpara></entry>
+<entry align="left" valign="top"><simpara>secret</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>defaultKey</simpara></entry>
+<entry align="left" valign="top"><simpara>application</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>profileSeparator</simpara></entry>
+<entry align="left" valign="top"><simpara>,</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>kvVersion</simpara></entry>
+<entry align="left" valign="top"><simpara>1</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>skipSslValidation</simpara></entry>
+<entry align="left" valign="top"><simpara>false</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>timeout</simpara></entry>
+<entry align="left" valign="top"><simpara>5</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>namespace</simpara></entry>
+<entry align="left" valign="top"><simpara>null</simpara></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<important>
+<simpara>All of the properties in the preceding table must be prefixed with <literal>spring.cloud.config.server.vault</literal> or placed in the correct Vault section of a composite configuration.</simpara>
+</important>
+<simpara>All configurable properties can be found in <literal>org.springframework.cloud.config.server.environment.VaultEnvironmentProperties</literal>.</simpara>
+<simpara>Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a <literal>data/</literal> between the mount path and the actual context path and wraps secrets in a <literal>data</literal> object. Setting <literal>kvVersion=2</literal> will take this into account.</simpara>
+<simpara>Optionally, there is support for the Vault Enterprise <literal>X-Vault-Namespace</literal> header. To have it sent to Vault set the <literal>namespace</literal> property.</simpara>
+<simpara>With your config server running, you can make HTTP requests to the server to retrieve
+values from the Vault backend.
+To do so, you need a token for your Vault server.</simpara>
+<simpara>First, place some data in you Vault, as shown in the following example:</simpara>
+<programlisting language="sh" linenumbering="unnumbered">$ vault kv put secret/application foo=bar baz=bam
+$ vault kv put secret/myapp foo=myappsbar</programlisting>
+<simpara>Second, make an HTTP request to your config server to retrieve the values, as shown in the following example:</simpara>
+<simpara><literal>$ curl -X "GET" "http://localhost:8888/myapp/default" -H "X-Config-Token: yourtoken"</literal></simpara>
+<simpara>You should see a response similar to the following:</simpara>
+<programlisting language="json" linenumbering="unnumbered">{
+   "name":"myapp",
+   "profiles":[
+      "default"
+   ],
+   "label":null,
+   "version":null,
+   "state":null,
+   "propertySources":[
+      {
+         "name":"vault:myapp",
+         "source":{
+            "foo":"myappsbar"
+         }
+      },
+      {
+         "name":"vault:application",
+         "source":{
+            "baz":"bam",
+            "foo":"bar"
+         }
+      }
+   ]
+}</programlisting>
+<section xml:id="_multiple_properties_sources">
+<title>Multiple Properties Sources</title>
+<simpara>When using Vault, you can provide your applications with multiple properties sources.
+For example, assume you have written data to the following paths in Vault:</simpara>
+<programlisting language="sh" linenumbering="unnumbered">secret/myApp,dev
+secret/myApp
+secret/application,dev
+secret/application</programlisting>
+<simpara>Properties written to <literal>secret/application</literal> are available to <link linkend="_vault_server">all applications using the Config Server</link>.
+An application with the name, <literal>myApp</literal>, would have any properties written to <literal>secret/myApp</literal> and <literal>secret/application</literal> available to it.
+When <literal>myApp</literal> has the <literal>dev</literal> profile enabled, properties written to all of the above paths would be available to it, with properties in the first path in the list taking priority over the others.</simpara>
+</section>
+</section>
+<section xml:id="_accessing_backends_through_a_proxy">
+<title>Accessing Backends Through a Proxy</title>
+<simpara>The configuration server can access a Git or Vault backend through an HTTP or HTTPS proxy. This behavior is controlled for either Git or Vault by settings under <literal>proxy.http</literal> and <literal>proxy.https</literal>. These settings are per repository, so if you are using a <link linkend="composite-environment-repositories">composite environment repository</link> you must configure proxy settings for each backend in the composite individually. If using a network which requires separate proxy servers for HTTP and HTTPS URLs, you can configure both the HTTP and the HTTPS proxy settings for a single backend.</simpara>
+<simpara>The following table describes the proxy configuration properties for both HTTP and HTTPS proxies. All of these properties must be prefixed by <literal>proxy.http</literal> or <literal>proxy.https</literal>.</simpara>
+<table frame="all" rowsep="1" colsep="1">
+<title>Proxy Configuration Properties</title>
+<tgroup cols="2">
+<colspec colname="col_1" colwidth="50*"/>
+<colspec colname="col_2" colwidth="50*"/>
+<thead>
+<row>
+<entry align="left" valign="top">Property Name</entry>
+<entry align="left" valign="top">Remarks</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">host</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>The host of the proxy.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">port</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>The port with which to access the proxy.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">nonProxyHosts</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>Any hosts which the configuration server should access outside the proxy. If values are provided for both <literal>proxy.http.nonProxyHosts</literal> and <literal>proxy.https.nonProxyHosts</literal>, the <literal>proxy.http</literal> value will be used.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">username</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>The username with which to authenticate to the proxy. If values are provided for both <literal>proxy.http.username</literal> and <literal>proxy.https.username</literal>, the <literal>proxy.http</literal> value will be used.</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><emphasis role="strong">password</emphasis></simpara></entry>
+<entry align="left" valign="top"><simpara>The password with which to authenticate to the proxy. If values are provided for both <literal>proxy.http.password</literal> and <literal>proxy.https.password</literal>, the <literal>proxy.http</literal> value will be used.</simpara></entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+<simpara>The following configuration uses an HTTPS proxy to access a Git repository.</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  profiles:
+    active: git
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          proxy:
+            https:
+              host: my-proxy.host.io
+              password: myproxypassword
+              port: '3128'
+              username: myproxyusername
+              nonProxyHosts: example.com</programlisting>
+</section>
+<section xml:id="_sharing_configuration_with_all_applications">
+<title>Sharing Configuration With All Applications</title>
+<simpara>Sharing configuration between all applications varies according to which approach you take, as described in the following topics:</simpara>
+<itemizedlist>
+<listitem>
+<simpara><xref linkend="spring-cloud-config-server-file-based-repositories"/></simpara>
+</listitem>
+<listitem>
+<simpara><xref linkend="spring-cloud-config-server-vault-server"/></simpara>
+</listitem>
+</itemizedlist>
+<section xml:id="spring-cloud-config-server-file-based-repositories">
+<title>File Based Repositories</title>
+<simpara>With file-based (git, svn, and native) repositories, resources with file names in <literal>application*</literal> (<literal>application.properties</literal>, <literal>application.yml</literal>, <literal>application-*.properties</literal>, and so on) are shared between all client applications.
+You can use resources with these file names to configure global defaults and have them be overridden by application-specific files as necessary.</simpara>
+<simpara>The #_property_overrides[property overrides] feature can also be used for setting global defaults, with placeholders applications
+allowed to override them locally.</simpara>
+<tip>
+<simpara>With the <quote>native</quote> profile (a local file system backend) , you should use an explicit search location that is not part of the server&#8217;s own configuration.
+Otherwise, the <literal>application*</literal> resources in the default search locations get removed because they are part of the server.</simpara>
+</tip>
+</section>
+<section xml:id="spring-cloud-config-server-vault-server">
+<title>Vault Server</title>
+<simpara>When using Vault as a backend, you can share configuration with all applications by placing configuration in <literal>secret/application</literal>.
+For example, if you run the following Vault command, all applications using the config server will have the properties <literal>foo</literal> and <literal>baz</literal> available to them:</simpara>
+<programlisting language="sh" linenumbering="unnumbered">$ vault write secret/application foo=bar baz=bam</programlisting>
+</section>
+</section>
+<section xml:id="_jdbc_backend">
+<title>JDBC Backend</title>
+<simpara>Spring Cloud Config Server supports JDBC (relational database) as a backend for configuration properties.
+You can enable this feature by adding <literal>spring-jdbc</literal> to the classpath and using the <literal>jdbc</literal> profile or by adding a bean of type <literal>JdbcEnvironmentRepository</literal>.
+If you include the right dependencies on the classpath (see the user guide for more details on that), Spring Boot configures a data source.</simpara>
+<simpara>The database needs to have a table called <literal>PROPERTIES</literal> with columns called <literal>APPLICATION</literal>, <literal>PROFILE</literal>, and <literal>LABEL</literal> (with the usual <literal>Environment</literal> meaning), plus <literal>KEY</literal> and <literal>VALUE</literal> for the key and value pairs in <literal>Properties</literal> style.
+All fields are of type String in Java, so you can make them <literal>VARCHAR</literal> of whatever length you need.
+Property values behave in the same way as they would if they came from Spring Boot properties files named <literal>{application}-{profile}.properties</literal>, including all the encryption and decryption, which will be applied as post-processing steps (that is, not in the repository implementation directly).</simpara>
+</section>
+<section xml:id="_credhub_backend">
+<title>CredHub Backend</title>
+<simpara>Spring Cloud Config Server supports <link xl:href="https://docs.cloudfoundry.org/credhub">CredHub</link> as a backend for configuration properties.
+You can enable this feature by adding a dependency to <link xl:href="https://spring.io/projects/spring-credhub">Spring CredHub</link>.</simpara>
+<formalpara>
+<title>pom.xml</title>
+<para>
+<programlisting language="xml" linenumbering="unnumbered">&lt;dependencies&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.credhub&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-credhub-starter&lt;/artifactId&gt;
+	&lt;/dependency&gt;
+&lt;/dependencies&gt;</programlisting>
+</para>
+</formalpara>
+<simpara>The following configuration uses mutual TLS to access a CredHub:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  profiles:
+    active: credhub
+  cloud:
+    config:
+      server:
+        credhub:
+          url: https://credhub:8844</programlisting>
+<simpara>The properties should be stored as JSON, such as:</simpara>
+<programlisting language="sh" linenumbering="unnumbered">credhub set --name "/demo-app/default/master/toggles" --type=json
+value: {"toggle.button": "blue", "toggle.link": "red"}</programlisting>
+<programlisting language="sh" linenumbering="unnumbered">credhub set --name "/demo-app/default/master/abs" --type=json
+value: {"marketing.enabled": true, "external.enabled": false}</programlisting>
+<simpara>All client applications with the name <literal>spring.cloud.config.name=demo-app</literal> will have the following properties available to them:</simpara>
+<screen>{
+    toggle.button: "blue",
+    toggle.link: "red",
+    marketing.enabled: true,
+    external.enabled: false
+}</screen>
+<note>
+<simpara>When no profile is specified <literal>default</literal> will be used and when no label is specified <literal>master</literal> will be used as a default value.</simpara>
+</note>
+<section xml:id="_oauth_2_0">
+<title>OAuth 2.0</title>
+<simpara>You can authenticate with <link xl:href="https://oauth.net/2/">OAuth 2.0</link> using <link xl:href="https://docs.cloudfoundry.org/concepts/architecture/uaa.html">UAA</link> as a provider.</simpara>
+<formalpara>
+<title>pom.xml</title>
+<para>
+<programlisting language="xml" linenumbering="unnumbered">&lt;dependencies&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.security&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-security-config&lt;/artifactId&gt;
+	&lt;/dependency&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.security&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-security-oauth2-client&lt;/artifactId&gt;
+	&lt;/dependency&gt;
+&lt;/dependencies&gt;</programlisting>
+</para>
+</formalpara>
+<simpara>The following configuration uses OAuth 2.0 and UAA to access a CredHub:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  profiles:
+    active: credhub
+  cloud:
+    config:
+      server:
+        credhub:
+          url: https://credhub:8844
+          oauth2:
+            registration-id: credhub-client
+  security:
+    oauth2:
+      client:
+        registration:
+          credhub-client:
+            provider: uaa
+            client-id: credhub_config_server
+            client-secret: asecret
+            authorization-grant-type: client_credentials
+        provider:
+          uaa:
+            token-uri: https://uaa:8443/oauth/token</programlisting>
+<note>
+<simpara>The used UAA client-id should have <literal>credhub.read</literal> as scope.</simpara>
+</note>
+</section>
+</section>
+<section xml:id="composite-environment-repositories">
+<title>Composite Environment Repositories</title>
+<simpara>In some scenarios, you may wish to pull configuration data from multiple environment repositories.
+To do so, you can enable the <literal>composite</literal> profile in your configuration server&#8217;s application properties or YAML file.
+If, for example, you want to pull configuration data from a Subversion repository as well as two Git repositories, you can set the following properties for your configuration server:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  profiles:
+    active: composite
+  cloud:
+    config:
+      server:
+        composite:
+        -
+          type: svn
+          uri: file:///path/to/svn/repo
+        -
+          type: git
+          uri: file:///path/to/rex/git/repo
+        -
+          type: git
+          uri: file:///path/to/walter/git/repo</programlisting>
+<simpara>Using this configuration, precedence is determined by the order in which repositories are listed under the <literal>composite</literal> key.
+In the above example, the Subversion repository is listed first, so a value found in the Subversion repository will override values found for the same property in one of the Git repositories.
+A value found in the <literal>rex</literal> Git repository will be used before a value found for the same property in the <literal>walter</literal> Git repository.</simpara>
+<simpara>If you want to pull configuration data only from repositories that are each of distinct types, you can enable the corresponding profiles, rather than the <literal>composite</literal> profile, in your configuration server&#8217;s application properties or YAML file.
+If, for example, you want to pull configuration data from a single Git repository and a single HashiCorp Vault server, you can set the following properties for your configuration server:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  profiles:
+    active: git, vault
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///path/to/git/repo
+          order: 2
+        vault:
+          host: 127.0.0.1
+          port: 8200
+          order: 1</programlisting>
+<simpara>Using this configuration, precedence can be determined by an <literal>order</literal> property.
+You can use the <literal>order</literal> property to specify the priority order for all your repositories.
+The lower the numerical value of the <literal>order</literal> property, the higher priority it has.
+The priority order of a repository helps resolve any potential conflicts between repositories that contain values for the same properties.</simpara>
+<note>
+<simpara>If your composite environment includes a Vault server as in the previous example, you must include a Vault token in every request made to the configuration server. See <link linkend="vault-backend">Vault Backend</link>.</simpara>
+</note>
+<note>
+<simpara>Any type of failure when retrieving values from an environment repository results in a failure for the entire composite environment.</simpara>
+</note>
+<note>
+<simpara>When using a composite environment, it is important that all repositories contain the same labels.
+If you have an environment similar to those in the preceding examples and you request configuration data with the <literal>master</literal> label but the Subversion repository does not contain a branch called <literal>master</literal>, the entire request fails.</simpara>
+</note>
+<section xml:id="_custom_composite_environment_repositories">
+<title>Custom Composite Environment Repositories</title>
+<simpara>In addition to using one of the environment repositories from Spring Cloud, you can also provide your own <literal>EnvironmentRepository</literal> bean to be included as part of a composite environment.
+To do so, your bean must implement the <literal>EnvironmentRepository</literal> interface.
+If you want to control the priority of your custom <literal>EnvironmentRepository</literal> within the composite environment, you should also implement the <literal>Ordered</literal> interface and override the <literal>getOrdered</literal> method.
+If you do not implement the <literal>Ordered</literal> interface, your <literal>EnvironmentRepository</literal> is given the lowest priority.</simpara>
+</section>
+</section>
+<section xml:id="_property_overrides">
+<title>Property Overrides</title>
+<simpara>The Config Server has an <quote>overrides</quote> feature that lets the operator provide configuration properties to all applications.
+The overridden properties cannot be accidentally changed by the application with the normal Spring Boot hooks.
+To declare overrides, add a map of name-value pairs to <literal>spring.cloud.config.server.overrides</literal>, as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        overrides:
+          foo: bar</programlisting>
+<simpara>The preceding examples causes all applications that are config clients to read <literal>foo=bar</literal>, independent of their own configuration.</simpara>
+<note>
+<simpara>A configuration system cannot force an application to use configuration data in any particular way.
+Consequently, overrides are not enforceable.
+However, they do provide useful default behavior for Spring Cloud Config clients.</simpara>
+</note>
+<tip>
+<simpara>Normally, Spring environment placeholders with <literal>${}</literal> can be escaped (and resolved on the client) by using backslash (<literal>\</literal>) to escape the <literal>$</literal> or the <literal>{</literal>.
+For example, <literal>\${app.foo:bar}</literal> resolves to <literal>bar</literal>, unless the app provides its own <literal>app.foo</literal>.</simpara>
+</tip>
+<note>
+<simpara>In YAML, you do not need to escape the backslash itself.
+However, in properties files, you do need to escape the backslash, when you configure the overrides on the server.</simpara>
+</note>
+<simpara>You can change the priority of all overrides in the client to be more like default values, letting applications supply their own values in environment variables or System properties, by setting the  <literal>spring.cloud.config.overrideNone=true</literal> flag (the default is false) in the remote repository.</simpara>
+</section>
+</section>
+<section xml:id="_health_indicator">
+<title>Health Indicator</title>
+<simpara>Config Server comes with a Health Indicator that checks whether the configured <literal>EnvironmentRepository</literal> is working.
+By default, it asks the <literal>EnvironmentRepository</literal> for an application named <literal>app</literal>, the <literal>default</literal> profile, and the default label provided by the <literal>EnvironmentRepository</literal> implementation.</simpara>
+<simpara>You can configure the Health Indicator to check more applications along with custom profiles and custom labels, as shown in the following example:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      server:
+        health:
+          repositories:
+            myservice:
+              label: mylabel
+            myservice-dev:
+              name: myservice
+              profiles: development</programlisting>
+<simpara>You can disable the Health Indicator by setting <literal>spring.cloud.config.server.health.enabled=false</literal>.</simpara>
+</section>
+<section xml:id="_security">
+<title>Security</title>
+<simpara>You can secure your Config Server in any way that makes sense to you (from physical network security to OAuth2 bearer tokens), because Spring Security and Spring Boot offer support for many security arrangements.</simpara>
+<simpara>To use the default Spring Boot-configured HTTP Basic security, include Spring Security on the classpath (for example, through <literal>spring-boot-starter-security</literal>).
+The default is a username of <literal>user</literal> and a randomly generated password. A random password is not useful in practice, so we recommend you configure the password (by setting <literal>spring.security.user.password</literal>) and encrypt it (see below for instructions on how to do that).</simpara>
+</section>
+<section xml:id="_encryption_and_decryption">
+<title>Encryption and Decryption</title>
+<important>
+<simpara>To use the encryption and decryption features you need the full-strength JCE installed in your JVM (it is not included by default).
+You can download the <quote>Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files</quote> from Oracle and follow the installation instructions (essentially, you need to replace the two policy files in the JRE lib/security directory with the ones that you downloaded).</simpara>
+</important>
+<simpara>If the remote property sources contain encrypted content (values starting with <literal>{cipher}</literal>), they are decrypted before sending to clients over HTTP.
+The main advantage of this setup is that the property values need not be in plain text when they are <quote>at rest</quote> (for example, in a git repository).
+If a value cannot be decrypted, it is removed from the property source and an additional property is added with the same key but prefixed with <literal>invalid</literal> and a value that means <quote>not applicable</quote> (usually <literal>&lt;n/a&gt;</literal>).
+This is largely to prevent cipher text being used as a password and accidentally leaking.</simpara>
+<simpara>If you set up a remote config repository for config client applications, it might contain an <literal>application.yml</literal> similar to the following:</simpara>
+<formalpara>
+<title>application.yml</title>
+<para>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  datasource:
+    username: dbuser
+    password: '{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'</programlisting>
+</para>
+</formalpara>
+<simpara>Encrypted values in a .properties file must not be wrapped in quotes. Otherwise, the value is not decrypted. The following example shows values that would work:</simpara>
+<formalpara>
+<title>application.properties</title>
+<para>
+<screen>spring.datasource.username: dbuser
+spring.datasource.password: {cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ</screen>
+</para>
+</formalpara>
+<simpara>You can safely push this plain text to a shared git repository, and the secret password remains protected.</simpara>
+<simpara>The server also exposes <literal>/encrypt</literal> and <literal>/decrypt</literal> endpoints (on the assumption that these are secured and only accessed by authorized agents).
+If you edit a remote config file, you can use the Config Server to encrypt values by POSTing to the <literal>/encrypt</literal> endpoint, as shown in the following example:</simpara>
+<screen>$ curl localhost:8888/encrypt -d mysecret
+682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda</screen>
+<note>
+<simpara>If the value you encrypt has characters in it that need to be URL encoded, you should use the <literal>--data-urlencode</literal> option to <literal>curl</literal> to make sure they are encoded properly.</simpara>
+</note>
+<tip>
+<simpara>Be sure not to include any of the curl command statistics in the encrypted value.
+Outputting the value to a file can help avoid this problem.</simpara>
+</tip>
+<simpara>The inverse operation is also available through <literal>/decrypt</literal> (provided the server is
+configured with a symmetric key or a full key pair), as shown in the following example:</simpara>
+<screen>$ curl localhost:8888/decrypt -d 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+mysecret</screen>
+<tip>
+<simpara>If you testing with curl, then use <literal>--data-urlencode</literal> (instead of <literal>-d</literal>) or set an explicit <literal>Content-Type: text/plain</literal> to make sure curl encodes the data correctly when there are special characters ('+' is particularly tricky).</simpara>
+</tip>
+<simpara>Take the encrypted value and add the <literal>{cipher}</literal> prefix before you put it in the YAML or properties file and before you commit and push it to a remote (potentially insecure) store.</simpara>
+<simpara>The <literal>/encrypt</literal> and <literal>/decrypt</literal> endpoints also both accept paths in the form of <literal>/*/{name}/{profiles}</literal>, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.</simpara>
+<note>
+<simpara>To control the cryptography in this granular way, you must also provide a <literal>@Bean</literal> of type <literal>TextEncryptorLocator</literal> that creates a different encryptor per name and profiles.
+The one that is provided by default does not do so (all encryptions use the same key).</simpara>
+</note>
+<simpara>The <literal>spring</literal> command line client (with Spring Cloud CLI extensions
+installed) can also be used to encrypt and decrypt, as shown in the following example:</simpara>
+<screen>$ spring encrypt mysecret --key foo
+682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+$ spring decrypt --key foo 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+mysecret</screen>
+<simpara>To use a key in a file (such as an RSA public key for encryption), prepend
+the key value with "@" and provide the file path, as shown in the following example:</simpara>
+<screen>$ spring encrypt mysecret --key @${HOME}/.ssh/id_rsa.pub
+AQAjPgt3eFZQXwt8tsHAVv/QHiY5sI2dRcR+...</screen>
+<note>
+<simpara>The <literal>--key</literal> argument is mandatory (despite having a <literal>--</literal> prefix).</simpara>
+</note>
+</section>
+<section xml:id="_key_management">
+<title>Key Management</title>
+<simpara>The Config Server can use a symmetric (shared) key or an asymmetric one (RSA key pair).
+The asymmetric choice is superior in terms of security, but it is often more convenient to use a symmetric key since it is a single property value to configure in the <literal>bootstrap.properties</literal>.</simpara>
+<simpara>To configure a symmetric key, you need to set <literal>encrypt.key</literal> to a secret String (or use the <literal>ENCRYPT_KEY</literal> environment variable to keep it out of plain-text configuration files).</simpara>
+<note>
+<simpara>You cannot configure an asymmetric key using <literal>encrypt.key</literal>.</simpara>
+</note>
+<simpara>To configure an asymmetric key use a keystore (e.g. as
+created by the <literal>keytool</literal> utility that comes with the JDK). The
+keystore properties are <literal>encrypt.keyStore.*</literal> with <literal>*</literal> equal to</simpara>
+<informaltable frame="all" rowsep="1" colsep="1">
+<tgroup cols="2">
+<colspec colname="col_1" colwidth="50*"/>
+<colspec colname="col_2" colwidth="50*"/>
+<thead>
+<row>
+<entry align="center" valign="top">Property</entry>
+<entry align="center" valign="top">Description</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry align="left" valign="top"><simpara><literal>encrypt.keyStore.location</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>Contains a <literal>Resource</literal> location</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>encrypt.keyStore.password</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>Holds the password that unlocks the keystore</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>encrypt.keyStore.alias</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>Identifies which key in the store to use</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara><literal>encrypt.keyStore.type</literal></simpara></entry>
+<entry align="left" valign="top"><simpara>The type of KeyStore to create.  Defaults to <literal>jks</literal>.</simpara></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<simpara>The encryption is done with the public key, and a private key is
+needed for decryption.
+Thus, in principle, you can configure only the public key in the server if you want to only encrypt (and are prepared to decrypt the values yourself locally with the private key).
+In practice, you might not want to do decrypt locally, because it spreads the key management process around all the clients, instead of
+concentrating it in the server.
+On the other hand, it can be a useful option if your config server is relatively insecure and only a handful of clients need the encrypted properties.</simpara>
+</section>
+<section xml:id="_creating_a_key_store_for_testing">
+<title>Creating a Key Store for Testing</title>
+<simpara>To create a keystore for testing, you can use a command resembling the following:</simpara>
+<screen>$ keytool -genkeypair -alias mytestkey -keyalg RSA \
+  -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" \
+  -keypass changeme -keystore server.jks -storepass letmein</screen>
+<simpara>Put the <literal>server.jks</literal> file in the classpath (for instance) and then, in
+your <literal>bootstrap.yml</literal>, for the Config Server, create the following settings:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">encrypt:
+  keyStore:
+    location: classpath:/server.jks
+    password: letmein
+    alias: mytestkey
+    secret: changeme</programlisting>
+</section>
+<section xml:id="_using_multiple_keys_and_key_rotation">
+<title>Using Multiple Keys and Key Rotation</title>
+<simpara>In addition to the <literal>{cipher}</literal> prefix in encrypted property values, the Config Server looks for zero or more <literal>{name:value}</literal> prefixes before the start of the (Base64 encoded) cipher text.
+The keys are passed to a <literal>TextEncryptorLocator</literal>, which can do whatever logic it needs to locate a <literal>TextEncryptor</literal> for the cipher.
+If you have configured a keystore (<literal>encrypt.keystore.location</literal>), the default locator looks for keys with aliases supplied by the <literal>key</literal> prefix, with a cipher text like resembling the following:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">foo:
+  bar: `{cipher}{key:testkey}...`</programlisting>
+<simpara>The locator looks for a key named "testkey".
+A secret can also be supplied by using a <literal>{secret:&#8230;&#8203;}</literal> value in the prefix.
+However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keystore and do not specify a secret).
+If you do supply a secret, you should also encrypt the secret using a custom <literal>SecretLocator</literal>.</simpara>
+<simpara>When the keys are being used only to encrypt a few bytes of configuration data (that is, they are not being used elsewhere), key rotation is hardly ever necessary on cryptographic grounds.
+However, you might occasionally  need to change the keys (for example, in the event of a security breach).
+In that case, all the clients would need to change their source config files (for example, in git) and use a new <literal>{key:&#8230;&#8203;}</literal> prefix in all the ciphers.
+Note that the clients need to first check that the key alias is available in the Config Server keystore.</simpara>
+<tip>
+<simpara>If you want to let the Config Server handle all encryption as well as decryption, the <literal>{name:value}</literal> prefixes can also be added as plain text posted to the <literal>/encrypt</literal> endpoint, .</simpara>
+</tip>
+</section>
+<section xml:id="_serving_encrypted_properties">
+<title>Serving Encrypted Properties</title>
+<simpara>Sometimes you want the clients to decrypt the configuration locally, instead of doing it in the server.
+In that case, if you provide the <literal>encrypt.*</literal> configuration to locate a key, you can still have <literal>/encrypt</literal> and <literal>/decrypt</literal> endpoints, but you need to explicitly switch off the decryption of outgoing properties by placing <literal>spring.cloud.config.server.encrypt.enabled=false</literal> in <literal>bootstrap.[yml|properties]</literal>.
+If you do not care about the endpoints, it should work if you do not configure either the key or the enabled flag.</simpara>
+</section>
+</chapter>
+<chapter xml:id="_serving_alternative_formats">
+<title>Serving Alternative Formats</title>
+<simpara>The default JSON format from the environment endpoints is perfect for consumption by Spring applications, because it maps directly onto the <literal>Environment</literal> abstraction.
+If you prefer, you can consume the same data as YAML or Java properties by adding a suffix (".yml", ".yaml" or ".properties") to the resource path.
+This can be useful for consumption by applications that do not care about the structure of the JSON endpoints or the extra metadata they provide (for example, an application that is not using Spring might benefit from the simplicity of this approach).</simpara>
+<simpara>The YAML and properties representations have an additional flag (provided as a boolean query parameter called <literal>resolvePlaceholders</literal>) to signal that placeholders in the source documents (in the standard Spring <literal>${&#8230;&#8203;}</literal> form) should be resolved in the output before rendering, where possible.
+This is a useful feature for consumers that do not know about the Spring placeholder conventions.</simpara>
+<note>
+<simpara>There are limitations in using the YAML or properties formats, mainly in relation to the loss of metadata.
+For example, the JSON is structured as an ordered list of property sources, with names that correlate with the source.
+The YAML and properties forms are coalesced into a single map, even if the origin of the values has multiple sources, and the names of the original source files are lost.
+Also, the YAML representation is not necessarily a faithful representation of the YAML source in a backing repository either. It is constructed from a list of flat property sources, and assumptions have to be made about the form of the keys.</simpara>
+</note>
+</chapter>
+<chapter xml:id="_serving_plain_text">
+<title>Serving Plain Text</title>
+<simpara>Instead of using the <literal>Environment</literal> abstraction (or one of the alternative representations of it in YAML or properties format), your applications might need generic plain-text configuration files that are tailored to their environment.
+The Config Server provides these through an additional endpoint at <literal>/{name}/{profile}/{label}/{path}</literal>, where <literal>name</literal>, <literal>profile</literal>, and <literal>label</literal> have the same meaning as the regular environment endpoint, but <literal>path</literal> is a file name (such as <literal>log.xml</literal>).
+The source files for this endpoint are located in the same way as for the environment endpoints.
+The same search path is used for properties and YAML files.
+However, instead of aggregating all matching resources, only the first one to match is returned.</simpara>
+<simpara>After a resource is located, placeholders in the normal format (<literal>${&#8230;&#8203;}</literal>) are resolved by using the effective <literal>Environment</literal> for the supplied application name, profile, and label.
+In this way, the resource endpoint is tightly integrated with the environment endpoints.
+Consider the following example for a GIT or SVN repository:</simpara>
+<screen>application.yml
+nginx.conf</screen>
+<simpara>where <literal>nginx.conf</literal> looks like this:</simpara>
+<screen>server {
+    listen              80;
+    server_name         ${nginx.server.name};
+}</screen>
+<simpara>and <literal>application.yml</literal> like this:</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">nginx:
+  server:
+    name: example.com
+---
+spring:
+  profiles: development
+nginx:
+  server:
+    name: develop.com</programlisting>
+<simpara>The <literal>/foo/default/master/nginx.conf</literal> resource might be as follows:</simpara>
+<screen>server {
+    listen              80;
+    server_name         example.com;
+}</screen>
+<simpara>and <literal>/foo/development/master/nginx.conf</literal> like this:</simpara>
+<screen>server {
+    listen              80;
+    server_name         develop.com;
+}</screen>
+<note>
+<simpara>As with the source files for environment configuration, the <literal>profile</literal> is used to resolve the file name.
+So, if you want a profile-specific file, <literal>/*/development/*/logback.xml</literal> can be resolved by a file called <literal>logback-development.xml</literal> (in preference to <literal>logback.xml</literal>).</simpara>
+</note>
+<note>
+<simpara>If you do not want to supply the <literal>label</literal> and let the server use the default label, you can supply a <literal>useDefaultLabel</literal> request parameter.
+So, the preceding example for the <literal>default</literal> profile could be <literal>/foo/default/nginx.conf?useDefaultLabel</literal>.</simpara>
+</note>
+</chapter>
+<chapter xml:id="_embedding_the_config_server">
+<title>Embedding the Config Server</title>
+<simpara>The Config Server runs best as a standalone application.
+However, if need be, you can embed it in another application.
+To do so, use the <literal>@EnableConfigServer</literal> annotation.
+An optional property named <literal>spring.cloud.config.server.bootstrap</literal> can be useful in this case.
+It is a flag to indicate whether the server should configure itself from its own remote repository.
+By default, the flag is off, because it can delay startup.
+However, when embedded in another application, it makes sense to initialize the same way as any other application.
+When setting <literal>spring.cloud.config.server.bootstrap</literal> to <literal>true</literal> you must also use a <link linkend="composite-environment-repositories">composite environment repository configuration</link>.
+For example</simpara>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  application:
+    name: configserver
+  profiles:
+    active: composite
+  cloud:
+    config:
+      server:
+        composite:
+          - type: native
+            search-locations: ${HOME}/Desktop/config
+        bootstrap: true</programlisting>
+<note>
+<simpara>If you use the bootstrap flag, the config server needs to have its name and repository URI configured in <literal>bootstrap.yml</literal>.</simpara>
+</note>
+<simpara>To change the location of the server endpoints, you can (optionally) set <literal>spring.cloud.config.server.prefix</literal> (for example, <literal>/config</literal>), to serve the resources under a prefix.
+The prefix should start but not end with a <literal>/</literal>.
+It is applied to the <literal>@RequestMappings</literal> in the Config Server (that is, underneath the Spring Boot <literal>server.servletPath</literal> and <literal>server.contextPath</literal> prefixes).</simpara>
+<simpara>If you want to read the configuration for an application directly from the backend repository (instead of from the config server), you
+basically want an embedded config server with no endpoints.
+You can switch off the endpoints entirely by not using the <literal>@EnableConfigServer</literal> annotation (set <literal>spring.cloud.config.server.bootstrap=true</literal>).</simpara>
+</chapter>
+<chapter xml:id="_push_notifications_and_spring_cloud_bus">
+<title>Push Notifications and Spring Cloud Bus</title>
+<simpara>Many source code repository providers (such as Github, Gitlab, Gitea, Gitee, Gogs, or Bitbucket) notify you of changes in a repository through a webhook.
+You can configure the webhook through the provider&#8217;s user interface as a URL and a set of events in which you are interested.
+For instance, <link xl:href="https://developer.github.com/v3/activity/events/types/#pushevent">Github</link> uses a POST to the webhook with a JSON body containing a list of commits and a header (<literal>X-Github-Event</literal>) set to <literal>push</literal>.
+If you add a dependency on the <literal>spring-cloud-config-monitor</literal> library and activate the Spring Cloud Bus in your Config Server, then a <literal>/monitor</literal> endpoint is enabled.</simpara>
+<simpara>When the webhook is activated, the Config Server sends a <literal>RefreshRemoteApplicationEvent</literal> targeted at the applications it thinks might have changed.
+The change detection can be strategized.
+However, by default, it looks for changes in files that match the application name (for example, <literal>foo.properties</literal> is targeted at the <literal>foo</literal> application, while <literal>application.properties</literal> is targeted at all applications).
+The strategy to use when you want to override the behavior is <literal>PropertyPathNotificationExtractor</literal>, which accepts the request headers and body as parameters and returns a list of file paths that changed.</simpara>
+<simpara>The default configuration works out of the box with Github, Gitlab, Gitea, Gitee, Gogs or Bitbucket.
+In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to <literal>/monitor</literal> with form-encoded body parameters in the pattern of <literal>path={name}</literal>.
+Doing so broadcasts to applications matching the <literal>{name}</literal> pattern (which can contain wildcards).</simpara>
+<note>
+<simpara>The <literal>RefreshRemoteApplicationEvent</literal> is transmitted only if the <literal>spring-cloud-bus</literal> is activated in both the Config Server and in the client application.</simpara>
+</note>
+<note>
+<simpara>The default configuration also detects filesystem changes in local git repositories. In that case, the webhook is not used. However, as soon as you edit a config file, a refresh is broadcast.</simpara>
+</note>
+</chapter>
+<chapter xml:id="_spring_cloud_config_client">
+<title>Spring Cloud Config Client</title>
+<simpara>A Spring Boot application can take immediate advantage of the Spring Config Server (or other external property sources provided by the application developer).
+It also picks up some additional useful features related to <literal>Environment</literal> change events.</simpara>
+<section xml:id="config-first-bootstrap">
+<title>Config First Bootstrap</title>
+<simpara>The default behavior for any application that has the Spring Cloud Config Client on the classpath is as follows:
+When a config client starts, it binds to the Config Server (through the <literal>spring.cloud.config.uri</literal> bootstrap configuration property) and initializes Spring <literal>Environment</literal> with remote property sources.</simpara>
+<simpara>The net result of this behavior is that all client applications that want to consume the Config Server need a <literal>bootstrap.yml</literal> (or an environment variable) with the server address set in <literal>spring.cloud.config.uri</literal> (it defaults to "http://localhost:8888").</simpara>
+</section>
+<section xml:id="discovery-first-bootstrap">
+<title>Discovery First Bootstrap</title>
+<simpara>If you use a <literal>DiscoveryClient</literal> implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
+However, in the default <quote>Config First</quote> mode, clients cannot take advantage of the registration.</simpara>
+<simpara>If you prefer to use <literal>DiscoveryClient</literal> to locate the Config Server, you can do so by setting <literal>spring.cloud.config.discovery.enabled=true</literal> (the default is <literal>false</literal>).
+The net result of doing so is that client applications all need a <literal>bootstrap.yml</literal> (or an environment variable) with the appropriate discovery configuration.
+For example, with Spring Cloud Netflix, you need to define the Eureka server address (for example, in <literal>eureka.client.serviceUrl.defaultZone</literal>).
+The price for using this option is an extra network round trip on startup, to locate the service registration.
+The benefit is that, as long as the Discovery Service is a fixed point, the Config Server can change its coordinates.
+The default service ID is <literal>configserver</literal>, but you can change that on the client by setting <literal>spring.cloud.config.discovery.serviceId</literal> (and on the server, in the usual way for a service, such as by setting <literal>spring.application.name</literal>).</simpara>
+<simpara>The discovery client implementations all support some kind of metadata map (for example, we have <literal>eureka.instance.metadataMap</literal> for Eureka).
+Some additional properties of the Config Server may need to be configured in its service registration metadata so that clients can connect correctly.
+If the Config Server is secured with HTTP Basic, you can configure the credentials as <literal>user</literal> and <literal>password</literal>.
+Also, if the Config Server has a context path, you can set <literal>configPath</literal>.
+For example, the following YAML file is for a Config Server that is a Eureka client:</simpara>
+<formalpara>
+<title>bootstrap.yml</title>
+<para>
+<programlisting language="yaml" linenumbering="unnumbered">eureka:
+  instance:
+    ...
+    metadataMap:
+      user: osufhalskjrtl
+      password: lviuhlszvaorhvlo5847
+      configPath: /config</programlisting>
+</para>
+</formalpara>
+</section>
+<section xml:id="config-client-fail-fast">
+<title>Config Client Fail Fast</title>
+<simpara>In some cases, you may want to fail startup of a service if it cannot connect to the Config Server.
+If this is the desired behavior, set the bootstrap configuration property <literal>spring.cloud.config.fail-fast=true</literal> to make the client halt with an Exception.</simpara>
+</section>
+<section xml:id="config-client-retry">
+<title>Config Client Retry</title>
+<simpara>If you expect that the config server may occasionally be unavailable when your application starts, you can make it keep trying after a failure.
+First, you need to set <literal>spring.cloud.config.fail-fast=true</literal>.
+Then you need to add <literal>spring-retry</literal> and <literal>spring-boot-starter-aop</literal> to your classpath.
+The default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs.
+You can configure these properties (and others) by setting the <literal>spring.cloud.config.retry.*</literal> configuration properties.</simpara>
+<tip>
+<simpara>To take full control of the retry behavior, add a <literal>@Bean</literal> of type <literal>RetryOperationsInterceptor</literal> with an ID of <literal>configServerRetryInterceptor</literal>.
+Spring Retry has a <literal>RetryInterceptorBuilder</literal> that supports creating one.</simpara>
+</tip>
+</section>
+<section xml:id="_locating_remote_configuration_resources">
+<title>Locating Remote Configuration Resources</title>
+<simpara>The Config Service serves property sources from <literal>/{name}/{profile}/{label}</literal>, where the default bindings in the client app are as follows:</simpara>
+<itemizedlist>
+<listitem>
+<simpara>"name" = <literal>${spring.application.name}</literal></simpara>
+</listitem>
+<listitem>
+<simpara>"profile" = <literal>${spring.profiles.active}</literal> (actually <literal>Environment.getActiveProfiles()</literal>)</simpara>
+</listitem>
+<listitem>
+<simpara>"label" = "master"</simpara>
+</listitem>
+</itemizedlist>
+<note>
+<simpara>When setting the property <literal>${spring.application.name}</literal> do not prefix your app name with the reserved word <literal>application-</literal> to prevent issues resolving the correct property source.</simpara>
+</note>
+<simpara>You can override all of them by setting <literal>spring.cloud.config.*</literal> (where <literal>*</literal> is <literal>name</literal>, <literal>profile</literal> or <literal>label</literal>).
+The <literal>label</literal> is useful for rolling back to previous versions of configuration.
+With the default Config Server implementation, it can be a git label, branch name, or commit ID.
+Label can also be provided as a comma-separated list.
+In that case, the items in the list are tried one by one until one succeeds.
+This behavior can be useful when working on a feature branch.
+For instance, you might want to align the config label with your branch but make it optional (in that case, use <literal>spring.cloud.config.label=myfeature,develop</literal>).</simpara>
+</section>
+<section xml:id="_specifying_multiple_urls_for_the_config_server">
+<title>Specifying Multiple Urls for the Config Server</title>
+<simpara>To ensure high availability when you have multiple instances of Config Server deployed and expect one or more instances to be unavailable from time to time, you can either specify multiple URLs (as a comma-separated list under the <literal>spring.cloud.config.uri</literal> property) or have all your instances register in a Service Registry like Eureka ( if using Discovery-First Bootstrap mode ). Note that doing so ensures high availability only when the Config Server is not running (that is, when the application has exited) or when a connection timeout has occurred. For example, if the Config Server returns a 500 (Internal Server Error) response or the Config Client receives a 401 from the Config Server (due to bad credentials or other causes), the Config Client does not try to fetch properties from other URLs. An error of that kind indicates a user issue rather than an availability problem.</simpara>
+<simpara>If you use HTTP basic security on your Config Server, it is currently possible to support per-Config Server auth credentials only if you embed the credentials in each URL you specify under the <literal>spring.cloud.config.uri</literal> property. If you use any other kind of security mechanism, you cannot (currently) support per-Config Server authentication and authorization.</simpara>
+</section>
+<section xml:id="_configuring_read_timeouts">
+<title>Configuring Read Timeouts</title>
+<simpara>If you want to configure read timeout, this can be done by using the property <literal>spring.cloud.config.request-read-timeout</literal>.</simpara>
+</section>
+<section xml:id="_security_2">
+<title>Security</title>
+<simpara>If you use HTTP Basic security on the server, clients need to know the password (and username if it is not the default).
+You can specify the username and password through the config server URI or via separate username and password properties, as shown in the following example:</simpara>
+<formalpara>
+<title>bootstrap.yml</title>
+<para>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+     uri: https://user:secret@myconfig.mycompany.com</programlisting>
+</para>
+</formalpara>
+<simpara>The following example shows an alternate way to pass the same information:</simpara>
+<formalpara>
+<title>bootstrap.yml</title>
+<para>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+     uri: https://myconfig.mycompany.com
+     username: user
+     password: secret</programlisting>
+</para>
+</formalpara>
+<simpara>The <literal>spring.cloud.config.password</literal> and <literal>spring.cloud.config.username</literal> values override anything that is provided in the URI.</simpara>
+<simpara>If you deploy your apps on Cloud Foundry, the best way to provide the password is through service credentials (such as in the URI, since it does not need to be in a config file).
+The following example works locally and for a user-provided service on Cloud Foundry named <literal>configserver</literal>:</simpara>
+<formalpara>
+<title>bootstrap.yml</title>
+<para>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+     uri: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:8888}</programlisting>
+</para>
+</formalpara>
+<simpara>If you use another form of security, you might need to <link linkend="custom-rest-template">provide a <literal>RestTemplate</literal></link> to the <literal>ConfigServicePropertySourceLocator</literal> (for example, by grabbing it in the bootstrap context and injecting it).</simpara>
+<section xml:id="_health_indicator_2">
+<title>Health Indicator</title>
+<simpara>The Config Client supplies a Spring Boot Health Indicator that attempts to load configuration from the Config Server.
+The health indicator can be disabled by setting <literal>health.config.enabled=false</literal>.
+The response is also cached for performance reasons.
+The default cache time to live is 5 minutes.
+To change that value, set the <literal>health.config.time-to-live</literal> property (in milliseconds).</simpara>
+</section>
+<section xml:id="custom-rest-template">
+<title>Providing A Custom RestTemplate</title>
+<simpara>In some cases, you might need to customize the requests made to the config server from the client.
+Typically, doing so involves passing special <literal>Authorization</literal> headers to authenticate requests to the server.
+To provide a custom <literal>RestTemplate</literal>:</simpara>
+<orderedlist numeration="arabic">
+<listitem>
+<simpara>Create a new configuration bean with an implementation of <literal>PropertySourceLocator</literal>, as shown in the following example:</simpara>
+</listitem>
+</orderedlist>
+<formalpara>
+<title>CustomConfigServiceBootstrapConfiguration.java</title>
+<para>
+<programlisting language="java" linenumbering="unnumbered">@Configuration
+public class CustomConfigServiceBootstrapConfiguration {
+    @Bean
+    public ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
+        ConfigClientProperties clientProperties = configClientProperties();
+       ConfigServicePropertySourceLocator configServicePropertySourceLocator =  new ConfigServicePropertySourceLocator(clientProperties);
+        configServicePropertySourceLocator.setRestTemplate(customRestTemplate(clientProperties));
+        return configServicePropertySourceLocator;
+    }
+}</programlisting>
+</para>
+</formalpara>
+<orderedlist numeration="arabic">
+<listitem>
+<simpara>In <literal>resources/META-INF</literal>, create a file called
+<literal>spring.factories</literal> and specify your custom configuration, as shown in the following example:</simpara>
+</listitem>
+</orderedlist>
+<formalpara>
+<title>spring.factories</title>
+<para>
+<programlisting language="properties" linenumbering="unnumbered">org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration</programlisting>
+</para>
+</formalpara>
+</section>
+<section xml:id="_vault">
+<title>Vault</title>
+<simpara>When using Vault as a backend to your config server, the client needs to supply a token for the server to retrieve values from Vault.
+This token can be provided within the client by setting <literal>spring.cloud.config.token</literal>
+in <literal>bootstrap.yml</literal>, as shown in the following example:</simpara>
+<formalpara>
+<title>bootstrap.yml</title>
+<para>
+<programlisting language="yaml" linenumbering="unnumbered">spring:
+  cloud:
+    config:
+      token: YourVaultToken</programlisting>
+</para>
+</formalpara>
+</section>
+</section>
+<section xml:id="_nested_keys_in_vault">
+<title>Nested Keys In Vault</title>
+<simpara>Vault supports the ability to nest keys in a value stored in Vault, as shown in the following example:</simpara>
+<simpara><literal>echo -n '{"appA": {"secret": "appAsecret"}, "bar": "baz"}' | vault write secret/myapp -</literal></simpara>
+<simpara>This command writes a JSON object to your Vault.
+To access these values in Spring, you would use the traditional dot(<literal>.</literal>) annotation, as shown in the following example</simpara>
+<programlisting language="java" linenumbering="unnumbered">@Value("${appA.secret}")
+String name = "World";</programlisting>
+<simpara>The preceding code would sets the value of the <literal>name</literal> variable to <literal>appAsecret</literal>.</simpara>
+</section>
+</chapter>
+</book>
