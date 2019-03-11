@@ -15,6 +15,6 @@ public class RedisEnvironmentRepositoryFactory implements EnvironmentRepositoryF
 
 	@Override
 	public RedisEnvironmentRepository build(RedisEnvironmentProperties environmentProperties) {
-		return new RedisEnvironmentRepository(this.redis);
+		return new RedisEnvironmentRepository(this.redis, environmentProperties);
 	}
 }
