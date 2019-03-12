@@ -23,8 +23,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
-import org.springframework.cloud.config.server.environment.*;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.tmatesoft.svn.core.SVNException;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -37,6 +35,35 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.server.composite.CompositeEnvironmentBeanFactoryPostProcessor;
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
 import org.springframework.cloud.config.server.composite.ConditionalOnSearchPathLocator;
+import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
+import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
+import org.springframework.cloud.config.server.environment.CredhubEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.CredhubEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.CredhubEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.EnvironmentWatch;
+import org.springframework.cloud.config.server.environment.HttpClientConfigurableHttpConnectionFactory;
+import org.springframework.cloud.config.server.environment.HttpClientVaultRestTemplateFactory;
+import org.springframework.cloud.config.server.environment.JdbcEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.RedisEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.RedisEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.RedisEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.SvnEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.SvnKitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -45,6 +72,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.credhub.core.CredHubOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -177,13 +205,13 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration
-	//@ConditionalOnClass(JdbcTemplate.class)
+	// @ConditionalOnClass(JdbcTemplate.class)
 	static class RedisFactoryConfig {
 
 		@Bean
-		//@ConditionalOnBean(JdbcTemplate.class)
+		// @ConditionalOnBean(JdbcTemplate.class)
 		public RedisEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(
-			RedisTemplate redis) {
+				RedisTemplate redis) {
 			return new RedisEnvironmentRepositoryFactory(redis);
 		}
 
@@ -308,12 +336,10 @@ class RedisRepositoryConfiguration {
 
 	@Bean
 	public RedisEnvironmentRepository redisEnvironmentRepository(
-		RedisEnvironmentRepositoryFactory factory,
-		RedisEnvironmentProperties environmentProperties) {
+			RedisEnvironmentRepositoryFactory factory,
+			RedisEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
-
-
 
 }
 
