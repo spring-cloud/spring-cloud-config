@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * @author Piotr Mińkowski
@@ -24,9 +24,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 public class RedisEnvironmentRepositoryFactory implements
 		EnvironmentRepositoryFactory<RedisEnvironmentRepository, RedisEnvironmentProperties> {
 
-	private RedisTemplate redis;
+	private StringRedisTemplate redis;
 
-	public RedisEnvironmentRepositoryFactory(RedisTemplate redis) {
+	public RedisEnvironmentRepositoryFactory(StringRedisTemplate redis) {
 		this.redis = redis;
 	}
 

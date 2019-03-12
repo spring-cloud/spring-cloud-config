@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
 /**
@@ -32,11 +32,11 @@ import org.springframework.util.StringUtils;
  */
 public class RedisEnvironmentRepository implements EnvironmentRepository {
 
-	private final RedisTemplate redis;
+	private final StringRedisTemplate redis;
 
 	private final RedisEnvironmentProperties properties;
 
-	public RedisEnvironmentRepository(RedisTemplate redis,
+	public RedisEnvironmentRepository(StringRedisTemplate redis,
 			RedisEnvironmentProperties properties) {
 		this.redis = redis;
 		this.properties = properties;
