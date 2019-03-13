@@ -205,9 +205,11 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration
+	@ConditionalOnClass(StringRedisTemplate.class)
 	static class RedisFactoryConfig {
 
 		@Bean
+		@ConditionalOnBean(StringRedisTemplate.class)
 		public RedisEnvironmentRepositoryFactory redisEnvironmentRepositoryFactory(
 				StringRedisTemplate redis) {
 			return new RedisEnvironmentRepositoryFactory(redis);
@@ -330,9 +332,11 @@ class JdbcRepositoryConfiguration {
 
 @Configuration
 @Profile("redis")
+@ConditionalOnClass(StringRedisTemplate.class)
 class RedisRepositoryConfiguration {
 
 	@Bean
+	@ConditionalOnBean(StringRedisTemplate.class)
 	public RedisEnvironmentRepository redisEnvironmentRepository(
 			RedisEnvironmentRepositoryFactory factory,
 			RedisEnvironmentProperties environmentProperties) {
