@@ -91,7 +91,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 		VaultRepositoryConfiguration.class, CredhubConfiguration.class,
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
 		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
-		DefaultRepositoryConfiguration.class, RedisRepositoryConfiguration.class })
+		RedisRepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean

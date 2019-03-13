@@ -74,8 +74,7 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	private int kvVersion = 1;
 
 	/**
-	 * The value of the Vault X-Vault-Namespace header. Defaults to null. This a Vault
-	 * Enterprise feature only.
+	 * The value of the Vault X-Vault-Namespace header. Defaults to null. This a Vault Enterprise feature only.
 	 */
 	private String namespace;
 
