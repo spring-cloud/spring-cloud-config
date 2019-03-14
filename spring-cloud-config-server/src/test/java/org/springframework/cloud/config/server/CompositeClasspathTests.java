@@ -27,7 +27,7 @@ import org.springframework.cloud.test.ModifiedClassPathRunner;
 public class CompositeClasspathTests {
 
 	@RunWith(ModifiedClassPathRunner.class)
-	@ClassPathExclusions("spring-jdbc-*.jar")
+	@ClassPathExclusions({"spring-jdbc-*.jar", "spring-data-redis-*.jar"})
 	public static class JdbcTests {
 
 		@Test
