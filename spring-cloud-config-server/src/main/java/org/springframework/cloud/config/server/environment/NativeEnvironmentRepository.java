@@ -264,6 +264,10 @@ public class NativeEnvironmentRepository
 	private String[] getArgs(String application, String profile, String label) {
 		List<String> list = new ArrayList<String>();
 		String config = application;
+		String searchNames = this.environment.getProperty("spring.cloud.config.name");
+		if (searchNames != null && !searchNames.isEmpty()) {
+			config += "," + searchNames;
+		}
 		if (!config.startsWith("application")) {
 			config = "application," + config;
 		}
