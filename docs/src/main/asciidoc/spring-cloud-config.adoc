@@ -801,7 +801,7 @@ HGETALL sample-app
 }
 ----
 
-NOTE: When no profile is specified `default` will be used
+NOTE: When no profile is specified `default` will be used.
 
 ==== CredHub Backend
 
