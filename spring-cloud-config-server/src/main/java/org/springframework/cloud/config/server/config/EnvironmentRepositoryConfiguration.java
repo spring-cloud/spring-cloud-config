@@ -54,6 +54,9 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.RedisEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.RedisEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.RedisEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.SvnEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentProperties;
@@ -69,6 +72,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.credhub.core.CredHubOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -81,12 +85,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @Configuration
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
 		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
-		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class })
+		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
+		RedisEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
 		VaultRepositoryConfiguration.class, CredhubConfiguration.class,
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
 		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
-		DefaultRepositoryConfiguration.class })
+		RedisRepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
@@ -200,6 +205,19 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration
+	@ConditionalOnClass(StringRedisTemplate.class)
+	static class RedisFactoryConfig {
+
+		@Bean
+		@ConditionalOnBean(StringRedisTemplate.class)
+		public RedisEnvironmentRepositoryFactory redisEnvironmentRepositoryFactory(
+				StringRedisTemplate redis) {
+			return new RedisEnvironmentRepositoryFactory(redis);
+		}
+
+	}
+
+	@Configuration
 	@ConditionalOnClass(CredHubOperations.class)
 	static class CredhubFactoryConfig {
 
@@ -307,6 +325,21 @@ class JdbcRepositoryConfiguration {
 	public JdbcEnvironmentRepository jdbcEnvironmentRepository(
 			JdbcEnvironmentRepositoryFactory factory,
 			JdbcEnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration
+@Profile("redis")
+@ConditionalOnClass(StringRedisTemplate.class)
+class RedisRepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnBean(StringRedisTemplate.class)
+	public RedisEnvironmentRepository redisEnvironmentRepository(
+			RedisEnvironmentRepositoryFactory factory,
+			RedisEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 
