@@ -52,7 +52,7 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void uriCreds() {
-		this.locator.setUri(new String[] { "http://foo:bar@localhost:9999" });
+		this.locator.setUri(new String[] { "https://foo:bar@localhost:9999" });
 		Credentials credentials = this.locator.getCredentials(0);
 		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
 		assertThat(credentials.getUsername()).isEqualTo("foo");
@@ -61,7 +61,7 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void explicitPassword() {
-		this.locator.setUri(new String[] { "http://foo:bar@localhost:9999" });
+		this.locator.setUri(new String[] { "https://foo:bar@localhost:9999" });
 		this.locator.setPassword("secret");
 		Credentials credentials = this.locator.getCredentials(0);
 		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
@@ -71,7 +71,7 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void testIfNoColonPresentInUriCreds() {
-		this.locator.setUri(new String[] { "http://foobar@localhost:9999" });
+		this.locator.setUri(new String[] { "https://foobar@localhost:9999" });
 		this.locator.setPassword("secret");
 		Credentials credentials = this.locator.getCredentials(0);
 		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
@@ -81,7 +81,7 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void testIfColonPresentAtTheEndInUriCreds() {
-		this.locator.setUri(new String[] { "http://foobar:@localhost:9999" });
+		this.locator.setUri(new String[] { "https://foobar:@localhost:9999" });
 		this.locator.setPassword("secret");
 		Credentials credentials = this.locator.getCredentials(0);
 		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
@@ -91,7 +91,7 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void testIfColonPresentAtTheStartInUriCreds() {
-		this.locator.setUri(new String[] { "http://:foobar@localhost:9999" });
+		this.locator.setUri(new String[] { "https://:foobar@localhost:9999" });
 		Credentials credentials = this.locator.getCredentials(0);
 		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
 		assertThat(credentials.getUsername()).isEqualTo("");
@@ -100,7 +100,7 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void testIfColonPresentAtTheStartAndEndInUriCreds() {
-		this.locator.setUri(new String[] { "http://:foobar:@localhost:9999" });
+		this.locator.setUri(new String[] { "https://:foobar:@localhost:9999" });
 		Credentials credentials = this.locator.getCredentials(0);
 		assertThat(credentials.getUri()).isEqualTo("http://localhost:9999");
 		assertThat(credentials.getUsername()).isEqualTo("");

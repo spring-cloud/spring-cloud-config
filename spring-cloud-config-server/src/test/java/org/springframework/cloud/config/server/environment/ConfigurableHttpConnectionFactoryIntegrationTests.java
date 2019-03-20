@@ -71,26 +71,26 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 	private static final ProxyHostProperties HTTPS_PROXY = new ProxyHostProperties();
 
 	static {
-		AUTHENTICATED_HTTP_PROXY.setHost("http://authenticated.http.proxy");
+		AUTHENTICATED_HTTP_PROXY.setHost("https://authenticated.http.proxy");
 		AUTHENTICATED_HTTP_PROXY.setPort(8080);
 		AUTHENTICATED_HTTP_PROXY.setUsername("username");
 		AUTHENTICATED_HTTP_PROXY.setPassword("password");
 	}
 
 	static {
-		AUTHENTICATED_HTTPS_PROXY.setHost("http://authenticated.https.proxy");
+		AUTHENTICATED_HTTPS_PROXY.setHost("https://authenticated.https.proxy");
 		AUTHENTICATED_HTTPS_PROXY.setPort(8081);
 		AUTHENTICATED_HTTPS_PROXY.setUsername("username2");
 		AUTHENTICATED_HTTPS_PROXY.setPassword("password2");
 	}
 
 	static {
-		HTTP_PROXY.setHost("http://http.proxy");
+		HTTP_PROXY.setHost("https://http.proxy");
 		HTTP_PROXY.setPort(8080);
 	}
 
 	static {
-		HTTPS_PROXY.setHost("http://https.proxy");
+		HTTPS_PROXY.setHost("https://https.proxy");
 		HTTPS_PROXY.setPort(8081);
 	}
 
@@ -147,7 +147,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
 				hasProperty("message", containsString("somehost"))));
 
-		makeRequest(httpClient, "http://somehost");
+		makeRequest(httpClient, "https://somehost");
 	}
 
 	@Test
@@ -160,7 +160,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 				allOf(instanceOf(UnknownHostException.class), hasProperty("message",
 						containsString(AUTHENTICATED_HTTP_PROXY.getHost()))));
 
-		makeRequest(httpClient, "http://somehost");
+		makeRequest(httpClient, "https://somehost");
 	}
 
 	@Test
@@ -172,7 +172,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
 				hasProperty("message", containsString(HTTP_PROXY.getHost()))));
 
-		makeRequest(httpClient, "http://somehost");
+		makeRequest(httpClient, "https://somehost");
 	}
 
 	@Test
@@ -186,7 +186,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
 				hasProperty("message", containsString(HTTP_PROXY.getHost()))));
 
-		makeRequest(httpClient, "http://somehost");
+		makeRequest(httpClient, "https://somehost");
 	}
 
 	@Test
@@ -229,7 +229,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 					instanceOf(UnknownHostException.class),
 					hasProperty("message", containsString(HTTP_PROXY.getHost()))));
 
-			makeRequest(httpClient, "http://somehost");
+			makeRequest(httpClient, "https://somehost");
 		}
 		finally {
 			ProxySelector.setDefault(defaultProxySelector);

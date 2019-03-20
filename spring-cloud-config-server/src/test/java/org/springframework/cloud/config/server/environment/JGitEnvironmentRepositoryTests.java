@@ -235,7 +235,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
 				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
-		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setUri("https://somegitserver/somegitrepo");
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 		verify(mockCloneCommand, times(1)).call();
@@ -253,7 +253,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
 				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
-		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setUri("https://somegitserver/somegitrepo");
 		envRepository.afterPropertiesSet();
 		verify(mockCloneCommand, times(0)).call();
 		verify(mockGit, times(0)).fetch();
@@ -290,7 +290,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(false);
 
@@ -315,7 +315,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(false);
 
@@ -339,7 +339,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
@@ -363,7 +363,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
@@ -402,7 +402,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.fetch()).thenReturn(fetchCommand);
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
@@ -440,7 +440,7 @@ public class JGitEnvironmentRepositoryTests {
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
@@ -556,7 +556,7 @@ public class JGitEnvironmentRepositoryTests {
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 
@@ -633,7 +633,7 @@ public class JGitEnvironmentRepositoryTests {
 				.thenReturn(mock(MergeCommand.class, Mockito.RETURNS_DEEP_STUBS));
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(checkoutCommand.call()).thenReturn(ref);
 		when(listBranchCommand.call()).thenReturn(Arrays.asList(branch1Ref));
@@ -644,7 +644,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
 				new JGitEnvironmentProperties());
 		repo.setGitFactory(factory);
-		repo.setUri("http://somegitserver/somegitrepo");
+		repo.setUri("https://somegitserver/somegitrepo");
 		repo.setBasedir(this.basedir);
 
 		// Set the refresh rate to 2 seconds and last update before 100ms. There should be
@@ -676,7 +676,7 @@ public class JGitEnvironmentRepositoryTests {
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true).thenReturn(false);
 
@@ -745,7 +745,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
 				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
-		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setUri("https://somegitserver/somegitrepo");
 		envRepository.setBasedir(this.basedir);
 
 		try {
@@ -973,7 +973,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
 				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
-		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setUri("https://somegitserver/somegitrepo");
 		envRepository.setTransportConfigCallback(configCallback);
 		envRepository.setCloneOnStart(true);
 
@@ -996,7 +996,7 @@ public class JGitEnvironmentRepositoryTests {
 				this.environment, new JGitEnvironmentProperties());
 		envRepository
 				.setGitFactory(new MockGitFactory(mockGit, mock(CloneCommand.class)));
-		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setUri("https://somegitserver/somegitrepo");
 		envRepository.setDeleteUntrackedBranches(true);
 
 		envRepository.fetch(mockGit, "master");
@@ -1022,7 +1022,7 @@ public class JGitEnvironmentRepositoryTests {
 		StoredConfig storedConfig = mock(StoredConfig.class);
 		when(repository.getConfig()).thenReturn(storedConfig);
 		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
+				.thenReturn("https://example/git");
 		when(statusCommand.call()).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 

@@ -98,7 +98,7 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 	}
 
 	void expectConfigClientPropertiesHasConfigurationFromEureka() {
-		expectConfigClientPropertiesHasConfiguration("http://foo:8877/");
+		expectConfigClientPropertiesHasConfiguration("https://foo:8877/");
 	}
 
 	void expectConfigClientPropertiesHasConfiguration(final String expectedUri) {
