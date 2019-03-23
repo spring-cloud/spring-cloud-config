@@ -43,7 +43,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<start-class>sample.Application</start-class>
+		<start-class>org.springframework.cloud.config.sample.Application</start-class>
 		<java.version>1.7</java.version>
 	</properties>
 

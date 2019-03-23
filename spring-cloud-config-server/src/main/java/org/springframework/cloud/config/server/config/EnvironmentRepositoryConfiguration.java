@@ -16,9 +16,8 @@
 package org.springframework.cloud.config.server.config;
 
 import javax.servlet.http.HttpServletRequest;
-
 import org.eclipse.jgit.api.TransportConfigCallback;
-
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -104,13 +103,12 @@ class DefaultRepositoryConfiguration {
 }
 
 @Configuration
-@ConditionalOnMissingBean(EnvironmentRepository.class)
 @Profile("native")
 class NativeRepositoryConfiguration {
 
 	@Autowired
 	private ConfigurableEnvironment environment;
-	
+
 	@Autowired
 	private ConfigServerProperties configServerProperties;
 
@@ -155,7 +153,7 @@ class SvnRepositoryConfiguration {
 class VaultRepositoryConfiguration {
 	@Bean
 	public VaultEnvironmentRepository vaultEnvironmentRepository(
-			HttpServletRequest request, EnvironmentWatch watch) {
+			ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch) {
 		return new VaultEnvironmentRepository(request, watch, new RestTemplate());
 	}
 }

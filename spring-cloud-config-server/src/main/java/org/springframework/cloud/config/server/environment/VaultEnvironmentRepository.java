@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Range;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
@@ -86,11 +87,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	private RestTemplate rest;
 
 	//TODO: move to watchState:String on findOne?
-	private HttpServletRequest request;
+	private ObjectProvider<HttpServletRequest> request;
 
 	private EnvironmentWatch watch;
 
-	public VaultEnvironmentRepository(HttpServletRequest request, EnvironmentWatch watch, RestTemplate rest) {
+	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch, RestTemplate rest) {
 		this.request = request;
 		this.watch = watch;
 		this.rest = rest;
@@ -99,7 +100,12 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 
-		String state = request.getHeader(STATE_HEADER);
+		HttpServletRequest servletRequest = request.getIfAvailable();
+		if (servletRequest == null) {
+			throw new IllegalStateException("No HttpServletRequest available");
+		}
+
+		String state = servletRequest.getHeader(STATE_HEADER);
 		String newState = this.watch.watch(state);
 
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
@@ -111,7 +117,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 		for (String key : keys) {
 			// read raw 'data' key from vault
-			String data = read(key);
+			String data = read(servletRequest, key);
 			if (data != null) {
 				// data is in json format of which, yaml is a superset, so parse
 				final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
@@ -157,12 +163,12 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 	}
 
-	String read(String key) {
+	String read(HttpServletRequest servletRequest, String key) {
 		String url = String.format("%s://%s:%s/v1/{backend}/{key}", this.scheme, this.host, this.port);
 
 		HttpHeaders headers = new HttpHeaders();
 
-		String token = request.getHeader(TOKEN_HEADER);
+		String token = servletRequest.getHeader(TOKEN_HEADER);
 		if (!StringUtils.hasLength(token)) {
 			throw new IllegalArgumentException("Missing required header: " + TOKEN_HEADER);
 		}

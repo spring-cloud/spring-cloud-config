@@ -39,49 +39,52 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 				"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
 				"spring.cloud.config.server.svn.order:2",
 				"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
-				"spring.cloud.config.server.git.order:1"},
+				"spring.cloud.config.server.git.order:1",
+				"spring.cloud.config.server.native.searchLocations:file:./target/repos/native-config-repo",
+				"spring.cloud.config.server.native.order:0"},
 		webEnvironment = RANDOM_PORT)
-@ActiveProfiles({ "test", "git", "subversion" })
+@ActiveProfiles({ "test", "native", "git", "subversion" })
 public class CompositeConfigServerIntegrationTests {
 
 	@LocalServerPort
 	private int port;
 
-
-
-
 	@BeforeClass
 	public static void init() throws Exception {
-		ConfigServerTestUtils.prepareLocalRepo();
+		ConfigServerTestUtils.prepareLocalRepo("./", "target/repos", "native-config-repo", "target/config");
+		ConfigServerTestUtils.prepareLocalRepo("./", "target/repos", "config-repo", "target/config");
 		ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
-				"target/repos/svn-config-repo");
+			"target/repos/svn-config-repo");
 	}
 
 	@Test
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate().getForObject("http://localhost:"
 				+ port + "/foo/development/", Environment.class);
-		assertEquals(3, environment.getPropertySources().size());
+		assertEquals(4, environment.getPropertySources().size());
 		assertEquals("overrides", environment.getPropertySources().get(0).getName());
-		assertTrue(environment.getPropertySources().get(1).getName().contains("config-repo") &&
-				!environment.getPropertySources().get(1).getName().contains("svn-config-repo"));
-		assertTrue(environment.getPropertySources().get(2).getName().contains("svn-config-repo"));
+		assertTrue(environment.getPropertySources().get(1).getName().contains("/native-config-repo"));
+		assertTrue(environment.getPropertySources().get(2).getName().contains("/config-repo"));
+		assertTrue(environment.getPropertySources().get(3).getName().contains("/svn-config-repo"));
 		assertEquals("{spring.cloud.config.enabled=true}", environment
 				.getPropertySources().get(0).getSource().toString());
 	}
 
 	@Test
-	public void resourseEndpointsWork() {
-		//This request will get the file from the Git Repo
+	public void resourceEndpointsWork() {
+		//This request will get the file from Native
 		String text = new TestRestTemplate().getForObject("http://localhost:"
-				+ port + "/foo/development/composite/bar.properties", String.class);
+			+ port + "/foo/development/composite/foobar.properties", String.class);
+		assertEquals("invalid content", "foo: bar", text);
 
-		String expected = "foo: bar";
-		assertEquals("invalid content", expected, text);
-
-		//This request will get the file from the SVN Repo
+		//This request will get the file from Git
 		text = new TestRestTemplate().getForObject("http://localhost:"
 				+ port + "/foo/development/composite/bar.properties", String.class);
-		assertEquals("invalid content", expected, text);
+		assertEquals("invalid content", "foo: bar", text);
+
+		//This request will get the file from SVN
+		text = new TestRestTemplate().getForObject("http://localhost:"
+				+ port + "/foo/development/composite/bar.properties", String.class);
+		assertEquals("invalid content", "foo: bar", text);
 	}
 }

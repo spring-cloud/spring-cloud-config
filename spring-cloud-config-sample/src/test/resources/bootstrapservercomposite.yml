@@ -1,0 +1,11 @@
+spring:
+  cloud:
+    config:
+      server:
+        native:
+          searchLocations: ${repo1}
+        git:
+          uri: ${repo1}
+        bootstrap: true
+  profiles:
+    active: native,git

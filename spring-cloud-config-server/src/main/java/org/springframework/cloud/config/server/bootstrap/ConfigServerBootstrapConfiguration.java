@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.client.ConfigClientProperties;
+import org.springframework.cloud.config.server.config.CompositeConfiguration;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
 import org.springframework.cloud.config.server.config.TransportConfiguration;
@@ -45,7 +46,7 @@ import org.springframework.util.StringUtils;
 public class ConfigServerBootstrapConfiguration {
 
 	@EnableConfigurationProperties(ConfigServerProperties.class)
-	@Import({ EnvironmentRepositoryConfiguration.class, TransportConfiguration.class })
+	@Import({ EnvironmentRepositoryConfiguration.class, CompositeConfiguration.class, TransportConfiguration.class })
 	protected static class LocalPropertySourceLocatorConfiguration {
 
 		@Autowired

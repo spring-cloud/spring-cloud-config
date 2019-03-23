@@ -1,5 +1,5 @@
 
-package sample;
+package org.springframework.cloud.config.sample;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
