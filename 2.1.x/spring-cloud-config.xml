@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?asciidoc-toc?>
 <?asciidoc-numbered?>
-<book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
+<book xmlns="https://docbook.org/ns/docbook" xmlns:xl="https://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Config</title>
 <date>2019-03-25</date>
@@ -349,14 +349,14 @@ The server can be configured to clone the repositories at startup, as shown in t
             team-a:
                 pattern: team-a-*
                 cloneOnStart: true
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
             team-b:
                 pattern: team-b-*
                 cloneOnStart: false
-                uri: http://git/team-b/config-repo.git
+                uri: https://git/team-b/config-repo.git
             team-c:
                 pattern: team-c-*
-                uri: http://git/team-a/config-repo.git</programlisting>
+                uri: https://git/team-a/config-repo.git</programlisting>
 <simpara>In the preceding example, the server clones team-a&#8217;s config-repo on startup, before it
 accepts any requests.
 All other repositories are not cloned until configuration from the repository is requested.</simpara>
@@ -390,14 +390,14 @@ system properties (<literal>-Dhttps.proxyHost</literal> and <literal>-Dhttps.pro
 </section>
 <section xml:id="_authentication_with_aws_codecommit">
 <title>Authentication with AWS CodeCommit</title>
-<simpara>Spring Cloud Config Server also supports <link xl:href="http://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">AWS CodeCommit</link> authentication.
+<simpara>Spring Cloud Config Server also supports <link xl:href="https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">AWS CodeCommit</link> authentication.
 AWS CodeCommit uses an authentication helper when using Git from the command line.
 This helper is not used with the JGit library, so a JGit CredentialProvider for AWS CodeCommit is created if the Git URI matches the AWS CodeCommit pattern.
 AWS CodeCommit URIs follow this pattern://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}.</simpara>
-<simpara>If you provide a username and password with an AWS CodeCommit URI, they must be the <link xl:href="http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html">AWS accessKeyId and secretAccessKey</link> that provide access to the repository.
-If you do not specify a username and password, the accessKeyId and secretAccessKey are retrieved by using the <link xl:href="http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">AWS Default Credential Provider Chain</link>.</simpara>
+<simpara>If you provide a username and password with an AWS CodeCommit URI, they must be the <link xl:href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html">AWS accessKeyId and secretAccessKey</link> that provide access to the repository.
+If you do not specify a username and password, the accessKeyId and secretAccessKey are retrieved by using the <link xl:href="https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">AWS Default Credential Provider Chain</link>.</simpara>
 <simpara>If your Git URI matches the CodeCommit URI pattern (shown earlier), you must provide valid AWS credentials in the username and password or in one of the locations supported by the default credential provider chain.
-AWS EC2 instances may use <link xl:href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html">IAM Roles for EC2 Instances</link>.</simpara>
+AWS EC2 instances may use <link xl:href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html">IAM Roles for EC2 Instances</link>.</simpara>
 <note>
 <simpara>The <literal>aws-java-sdk-core</literal> jar is an optional dependency.
 If the <literal>aws-java-sdk-core</literal> jar is not on your classpath, the AWS Code Commit credential provider is not created, regardless of the git server URI.</simpara>
@@ -528,15 +528,15 @@ folder content changes by an OS process) such that Spring Cloud Config Server ca
           repos:
             team-a:
                 pattern: team-a-*
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
                 force-pull: true
             team-b:
                 pattern: team-b-*
-                uri: http://git/team-b/config-repo.git
+                uri: https://git/team-b/config-repo.git
                 force-pull: true
             team-c:
                 pattern: team-c-*
-                uri: http://git/team-a/config-repo.git</programlisting>
+                uri: https://git/team-a/config-repo.git</programlisting>
 <note>
 <simpara>The default value for <literal>force-pull</literal> property is <literal>false</literal>.</simpara>
 </note>
@@ -578,7 +578,7 @@ is requested.</simpara>
 <simpara>With VCS-based backends (git, svn), files are checked out or cloned to the local filesystem.
 By default, they are put in the system temporary directory with a prefix of <literal>config-repo-</literal>.
 On linux, for example, it could be <literal>/tmp/config-repo-&lt;randomid&gt;</literal>.
-Some operating systems <link xl:href="http://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349">routinely clean out</link> temporary directories.
+Some operating systems <link xl:href="https://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349">routinely clean out</link> temporary directories.
 This can lead to unexpected behavior, such as missing properties.
 To avoid this problem, change the directory that Config Server uses by setting <literal>spring.cloud.config.server.git.basedir</literal> or <literal>spring.cloud.config.server.svn.basedir</literal> to a directory that does not reside in the system temp structure.</simpara>
 </warning>
@@ -617,7 +617,7 @@ A secret is anything that to which you want to tightly control access, such as A
 <simpara>For more information on Vault, see the <link xl:href="https://learn.hashicorp.com/vault/?track=getting-started#getting-started">Vault quick start guide</link>.</simpara>
 <simpara>To enable the config server to use a Vault backend, you can run your config server with the <literal>vault</literal> profile.
 For example, in your config server&#8217;s <literal>application.properties</literal>, you can add <literal>spring.profiles.active=vault</literal>.</simpara>
-<simpara>By default, the config server assumes that your Vault server runs at <literal><link xl:href="http://127.0.0.1:8200">http://127.0.0.1:8200</link></literal>.
+<simpara>By default, the config server assumes that your Vault server runs at <literal><link xl:href="https://127.0.0.1:8200">https://127.0.0.1:8200</link></literal>.
 It also assumes that the name of backend is <literal>secret</literal> and the key is <literal>application</literal>.
 All of these defaults can be configured in your config server&#8217;s <literal>application.properties</literal>.
 The following table describes configurable Vault properties:</simpara>
@@ -688,7 +688,7 @@ To do so, you need a token for your Vault server.</simpara>
 <programlisting language="sh" linenumbering="unnumbered">$ vault kv put secret/application foo=bar baz=bam
 $ vault kv put secret/myapp foo=myappsbar</programlisting>
 <simpara>Second, make an HTTP request to your config server to retrieve the values, as shown in the following example:</simpara>
-<simpara><literal>$ curl -X "GET" "http://localhost:8888/myapp/default" -H "X-Config-Token: yourtoken"</literal></simpara>
+<simpara><literal>$ curl -X "GET" "https://localhost:8888/myapp/default" -H "X-Config-Token: yourtoken"</literal></simpara>
 <simpara>You should see a response similar to the following:</simpara>
 <programlisting language="json" linenumbering="unnumbered">{
    "name":"myapp",
@@ -1296,7 +1296,7 @@ It also picks up some additional useful features related to <literal>Environment
 <title>Config First Bootstrap</title>
 <simpara>The default behavior for any application that has the Spring Cloud Config Client on the classpath is as follows:
 When a config client starts, it binds to the Config Server (through the <literal>spring.cloud.config.uri</literal> bootstrap configuration property) and initializes Spring <literal>Environment</literal> with remote property sources.</simpara>
-<simpara>The net result of this behavior is that all client applications that want to consume the Config Server need a <literal>bootstrap.yml</literal> (or an environment variable) with the server address set in <literal>spring.cloud.config.uri</literal> (it defaults to "http://localhost:8888").</simpara>
+<simpara>The net result of this behavior is that all client applications that want to consume the Config Server need a <literal>bootstrap.yml</literal> (or an environment variable) with the server address set in <literal>spring.cloud.config.uri</literal> (it defaults to "https://localhost:8888").</simpara>
 </section>
 <section xml:id="discovery-first-bootstrap">
 <title>Discovery First Bootstrap</title>
@@ -1411,7 +1411,7 @@ The following example works locally and for a user-provided service on Cloud Fou
 <programlisting language="yaml" linenumbering="unnumbered">spring:
   cloud:
     config:
-     uri: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:8888}</programlisting>
+     uri: ${vcap.services.configserver.credentials.uri:https://user:password@localhost:8888}</programlisting>
 </para>
 </formalpara>
 <simpara>If you use another form of security, you might need to <link linkend="custom-rest-template">provide a <literal>RestTemplate</literal></link> to the <literal>ConfigServicePropertySourceLocator</literal> (for example, by grabbing it in the bootstrap context and injecting it).</simpara>
