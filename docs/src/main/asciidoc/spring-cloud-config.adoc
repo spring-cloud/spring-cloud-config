@@ -284,14 +284,14 @@ spring:
             team-a:
                 pattern: team-a-*
                 cloneOnStart: true
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
             team-b:
                 pattern: team-b-*
                 cloneOnStart: false
-                uri: http://git/team-b/config-repo.git
+                uri: https://git/team-b/config-repo.git
             team-c:
                 pattern: team-c-*
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
 
 ----
 
@@ -361,7 +361,7 @@ search).
 
 ==== Version Control Backend Filesystem Use
 
-WARNING: With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of `config-repo-`. On linux, for example it could be `/tmp/config-repo-<randomid>`. Some operating systems http://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349[routinely clean out] temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting `spring.cloud.config.server.git.basedir` or `spring.cloud.config.server.svn.basedir` to a directory that does not reside in the system temp structure.
+WARNING: With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of `config-repo-`. On linux, for example it could be `/tmp/config-repo-<randomid>`. Some operating systems https://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349[routinely clean out] temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting `spring.cloud.config.server.git.basedir` or `spring.cloud.config.server.svn.basedir` to a directory that does not reside in the system temp structure.
 
 ==== File System Backend
 
