@@ -42,7 +42,7 @@ public class GitlabPropertyPathNotificationExtractorTests {
 
 	@Test
 	public void pushEvent() throws Exception {
-		// See http://doc.gitlab.com/ee/web_hooks/web_hooks.html#push-events
+		// See https://docs.gitlab.com/ee/web_hooks/web_hooks.html#push-events
 		Map<String, Object> value = new ObjectMapper().readValue(
 				new ClassPathResource("gitlab.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {
@@ -56,7 +56,7 @@ public class GitlabPropertyPathNotificationExtractorTests {
 
 	@Test
 	public void nonPushEventNotDetected() throws Exception {
-		// See http://doc.gitlab.com/ee/web_hooks/web_hooks.html#push-events
+		// See https://docs.gitlab.com/ee/web_hooks/web_hooks.html#push-events
 		Map<String, Object> value = new ObjectMapper().readValue(
 				new ClassPathResource("gitlab.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {

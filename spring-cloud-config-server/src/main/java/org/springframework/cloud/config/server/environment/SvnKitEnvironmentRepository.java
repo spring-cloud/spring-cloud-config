@@ -163,7 +163,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		Assert.state(getUri() != null,
-				"You need to configure a uri for the subversion repository (e.g. 'http://example.com/svn/')");
+				"You need to configure a uri for the subversion repository (e.g. 'https://example.com/svn/')");
 		resolveRelativeFileUri();
 	}
 

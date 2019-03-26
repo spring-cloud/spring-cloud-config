@@ -304,14 +304,14 @@ spring:
             team-a:
                 pattern: team-a-*
                 cloneOnStart: true
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
             team-b:
                 pattern: team-b-*
                 cloneOnStart: false
-                uri: http://git/team-b/config-repo.git
+                uri: https://git/team-b/config-repo.git
             team-c:
                 pattern: team-c-*
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
 
 ----
 
@@ -360,22 +360,22 @@ http.sslVerify false`).
 
 ===== Authentication with AWS CodeCommit
 
-http://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html[AWS CodeCommit] authentication can also be
+https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html[AWS CodeCommit] authentication can also be
 done. AWS CodeCommit uses an authentication helper when using Git from the command line. This helper is not
 used with the JGit library, so a JGit CredentialProvider for AWS CodeCommit will be created if the Git
 URI matches the AWS CodeCommit pattern. AWS CodeCommit URIs always look like
 https://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}.
 
 If you provide a username and password with an AWS CodeCommit URI, then these must be
-the http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html[AWS accessKeyId and secretAccessKey]
+the https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html[AWS accessKeyId and secretAccessKey]
 to be used to access the repository. If you do not specify a username and password,
 then the accessKeyId and secretAccessKey will be retrieved using the
-http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[AWS Default Credential Provider Chain].
+https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[AWS Default Credential Provider Chain].
 
 If your Git URI matches the CodeCommit URI pattern (above) then you must provide
 valid AWS credentials in the username and password, or in one of the locations supported
 by the default credential provider chain. AWS EC2 instances may use
-http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html[IAM Roles for EC2 Instances].
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html[IAM Roles for EC2 Instances].
 
 Note: The aws-java-sdk-core jar is an optional dependency. If the aws-java-sdk-core jar is not on your
 classpath, then the AWS Code Commit credential provider will not be created regardless of the git server URI.
@@ -516,15 +516,15 @@ spring:
           repos:
             team-a:
                 pattern: team-a-*
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
                 force-pull: true
             team-b:
                 pattern: team-b-*
-                uri: http://git/team-b/config-repo.git
+                uri: https://git/team-b/config-repo.git
                 force-pull: true
             team-c:
                 pattern: team-c-*
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
 ----
 
 NOTE: The default value for `force-pull` property is `false`.
@@ -532,7 +532,7 @@ NOTE: The default value for `force-pull` property is `false`.
 
 ==== Version Control Backend Filesystem Use
 
-WARNING: With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of `config-repo-`. On linux, for example it could be `/tmp/config-repo-<randomid>`. Some operating systems http://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349[routinely clean out] temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting `spring.cloud.config.server.git.basedir` or `spring.cloud.config.server.svn.basedir` to a directory that does not reside in the system temp structure.
+WARNING: With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of `config-repo-`. On linux, for example it could be `/tmp/config-repo-<randomid>`. Some operating systems https://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349[routinely clean out] temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting `spring.cloud.config.server.git.basedir` or `spring.cloud.config.server.svn.basedir` to a directory that does not reside in the system temp structure.
 
 ==== File System Backend
 
