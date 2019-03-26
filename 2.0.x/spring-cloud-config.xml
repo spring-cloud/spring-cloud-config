@@ -398,14 +398,14 @@ at startup. For example at the top level:</simpara>
             team-a:
                 pattern: team-a-*
                 cloneOnStart: true
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
             team-b:
                 pattern: team-b-*
                 cloneOnStart: false
-                uri: http://git/team-b/config-repo.git
+                uri: https://git/team-b/config-repo.git
             team-c:
                 pattern: team-c-*
-                uri: http://git/team-a/config-repo.git</programlisting>
+                uri: https://git/team-a/config-repo.git</programlisting>
 <simpara>In this example the server clones team-a&#8217;s config-repo on startup before it
 accepts any requests. All other repositories will not be cloned until
 configuration from the repository is requested.</simpara>
@@ -448,20 +448,20 @@ http.sslVerify false</literal>).</simpara>
 </section>
 <section xml:id="_authentication_with_aws_codecommit">
 <title>Authentication with AWS CodeCommit</title>
-<simpara><link xl:href="http://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">AWS CodeCommit</link> authentication can also be
+<simpara><link xl:href="https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">AWS CodeCommit</link> authentication can also be
 done. AWS CodeCommit uses an authentication helper when using Git from the command line. This helper is not
 used with the JGit library, so a JGit CredentialProvider for AWS CodeCommit will be created if the Git
 URI matches the AWS CodeCommit pattern. AWS CodeCommit URIs always look like
 <link xl:href="https://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}">https://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}</link>.</simpara>
 <simpara>If you provide a username and password with an AWS CodeCommit URI, then these must be
-the <link xl:href="http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html">AWS accessKeyId and secretAccessKey</link>
+the <link xl:href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html">AWS accessKeyId and secretAccessKey</link>
 to be used to access the repository. If you do not specify a username and password,
 then the accessKeyId and secretAccessKey will be retrieved using the
-<link xl:href="http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">AWS Default Credential Provider Chain</link>.</simpara>
+<link xl:href="https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">AWS Default Credential Provider Chain</link>.</simpara>
 <simpara>If your Git URI matches the CodeCommit URI pattern (above) then you must provide
 valid AWS credentials in the username and password, or in one of the locations supported
 by the default credential provider chain. AWS EC2 instances may use
-<link xl:href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html">IAM Roles for EC2 Instances</link>.</simpara>
+<link xl:href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html">IAM Roles for EC2 Instances</link>.</simpara>
 <simpara>Note: The aws-java-sdk-core jar is an optional dependency. If the aws-java-sdk-core jar is not on your
 classpath, then the AWS Code Commit credential provider will not be created regardless of the git server URI.</simpara>
 </section>
@@ -597,15 +597,15 @@ Example:</simpara>
           repos:
             team-a:
                 pattern: team-a-*
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
                 force-pull: true
             team-b:
                 pattern: team-b-*
-                uri: http://git/team-b/config-repo.git
+                uri: https://git/team-b/config-repo.git
                 force-pull: true
             team-c:
                 pattern: team-c-*
-                uri: http://git/team-a/config-repo.git</programlisting>
+                uri: https://git/team-a/config-repo.git</programlisting>
 <note>
 <simpara>The default value for <literal>force-pull</literal> property is <literal>false</literal>.</simpara>
 </note>
@@ -614,7 +614,7 @@ Example:</simpara>
 <section xml:id="_version_control_backend_filesystem_use">
 <title>Version Control Backend Filesystem Use</title>
 <warning>
-<simpara>With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of <literal>config-repo-</literal>. On linux, for example it could be <literal>/tmp/config-repo-&lt;randomid&gt;</literal>. Some operating systems <link xl:href="http://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349">routinely clean out</link> temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting <literal>spring.cloud.config.server.git.basedir</literal> or <literal>spring.cloud.config.server.svn.basedir</literal> to a directory that does not reside in the system temp structure.</simpara>
+<simpara>With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of <literal>config-repo-</literal>. On linux, for example it could be <literal>/tmp/config-repo-&lt;randomid&gt;</literal>. Some operating systems <link xl:href="https://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349">routinely clean out</link> temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting <literal>spring.cloud.config.server.git.basedir</literal> or <literal>spring.cloud.config.server.svn.basedir</literal> to a directory that does not reside in the system temp structure.</simpara>
 </warning>
 </section>
 <section xml:id="_file_system_backend">
