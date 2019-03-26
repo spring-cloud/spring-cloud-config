@@ -35,7 +35,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
-@DataRedisTest
+@DataRedisTest(properties = "spring.redis.port=6378")
 @ActiveProfiles("redis")
 public class RedisEnvironmentRepositoryIntegrationTests {
 
@@ -43,7 +43,7 @@ public class RedisEnvironmentRepositoryIntegrationTests {
 
 	@Before
 	public void startRedis() throws IOException {
-		redisServer = new RedisServer(6379);
+		redisServer = new RedisServer(6378);
 		redisServer.start();
 	}
 
