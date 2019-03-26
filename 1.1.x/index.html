@@ -8,7 +8,7 @@
 <title>Spring Cloud Config</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
-/* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
+/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
 /* Remove comment around @import statement below when using as a custom stylesheet */
 /*@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";*/
 article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display:block}
@@ -1016,14 +1016,14 @@ at startup. For example at the top level:</p>
             team-a:
                 pattern: team-a-*
                 cloneOnStart: true
-                uri: http://git/team-a/config-repo.git
+                uri: https://git/team-a/config-repo.git
             team-b:
                 pattern: team-b-*
                 cloneOnStart: false
-                uri: http://git/team-b/config-repo.git
+                uri: https://git/team-b/config-repo.git
             team-c:
                 pattern: team-c-*
-                uri: http://git/team-a/config-repo.git</code></pre>
+                uri: https://git/team-a/config-repo.git</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1108,7 +1108,7 @@ search).</p>
 <div class="title">Warning</div>
 </td>
 <td class="content">
-With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of <code>config-repo-</code>. On linux, for example it could be <code>/tmp/config-repo-&lt;randomid&gt;</code>. Some operating systems <a href="http://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349">routinely clean out</a> temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting <code>spring.cloud.config.server.git.basedir</code> or <code>spring.cloud.config.server.svn.basedir</code> to a directory that does not reside in the system temp structure.
+With VCS based backends (git, svn) files are checked out or cloned to the local filesystem. By default they are put in the system temporary directory with a prefix of <code>config-repo-</code>. On linux, for example it could be <code>/tmp/config-repo-&lt;randomid&gt;</code>. Some operating systems <a href="https://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349">routinely clean out</a> temporary directories. This can lead to unexpected behaviour such as missing properties. To avoid this problem, change the directory Config Server uses, by setting <code>spring.cloud.config.server.git.basedir</code> or <code>spring.cloud.config.server.svn.basedir</code> to a directory that does not reside in the system temp structure.
 </td>
 </tr>
 </table>
