@@ -3,12 +3,12 @@
   "ref": "refs/heads/master",
   "before": "70767b558d8f850eac3fead13dfc232d043646a0",
   "after": "78b77379c448caf024c73fa280ca571449224590",
-  "compare_url": "http://gitea.lawyers.corp/internal/lawsuits/compare/70767b558d8f850eac3fead13dfc232d043646a0...78b77379c448caf024c73fa280ca571449224590",
+  "compare_url": "https://gitea.lawyers.corp/internal/lawsuits/compare/70767b558d8f850eac3fead13dfc232d043646a0...78b77379c448caf024c73fa280ca571449224590",
   "commits": [
     {
       "id": "78b77379c448caf024c73fa280ca571449224590",
       "message": "SUPPORT-4765: urlencode\n",
-      "url": "http://gitea.lawyers.corp/internal/lawsuits/commit/78b77379c448caf024c73fa280ca571449224590",
+      "url": "https://gitea.lawyers.corp/internal/lawsuits/commit/78b77379c448caf024c73fa280ca571449224590",
       "author": {
         "name": "Perry Mason",
         "email": "perrym@lawyers.corp",
@@ -30,7 +30,7 @@
       "login": "internal",
       "full_name": "",
       "email": "",
-      "avatar_url": "http://gitea.lawyers.corp/avatars/dbc87f99ecd29cb0eb4447807ad73f9f",
+      "avatar_url": "https://gitea.lawyers.corp/avatars/dbc87f99ecd29cb0eb4447807ad73f9f",
       "language": "",
       "username": "internal"
     },
@@ -43,9 +43,9 @@
     "parent": null,
     "mirror": false,
     "size": 5516,
-    "html_url": "http://gitea.lawyers.corp/internal/lawsuits",
+    "html_url": "https://gitea.lawyers.corp/internal/lawsuits",
     "ssh_url": "git@localhost:internal/lawsuits.git",
-    "clone_url": "http://gitea.lawyers.corp/internal/lawsuits.git",
+    "clone_url": "https://gitea.lawyers.corp/internal/lawsuits.git",
     "website": "",
     "stars_count": 1,
     "forks_count": 20,
@@ -65,7 +65,7 @@
     "login": "perrym",
     "full_name": "Perry Mason",
     "email": "perrym@lawyers.corp",
-    "avatar_url": "http://gitea.lawyers.corp/avatars/5868737ae078a4441031bf550d16e967",
+    "avatar_url": "https://gitea.lawyers.corp/avatars/5868737ae078a4441031bf550d16e967",
     "language": "en-US",
     "username": "perrym"
   },
@@ -74,7 +74,7 @@
     "login": "perrym",
     "full_name": "Perry Mason",
     "email": "perrym@lawyers.corp",
-    "avatar_url": "http://gitea.lawyers.corp/avatars/5868737ae078a4441031bf550d16e967",
+    "avatar_url": "https://gitea.lawyers.corp/avatars/5868737ae078a4441031bf550d16e967",
     "language": "en-US",
     "username": "perrym"
   }
