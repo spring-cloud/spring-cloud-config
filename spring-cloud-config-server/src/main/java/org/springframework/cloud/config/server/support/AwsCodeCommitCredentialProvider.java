@@ -55,7 +55,7 @@ import com.amazonaws.util.ValidationUtils;
  * and secret key. These are used to calculate a signature for the git request. The
  * AWS access key is used as the codecommit username, and the calculated signature
  * is used as the password. The process for calculating this signature is documented
- * very well at http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html.
+ * very well at https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html.
  * </p>
  * 
  * @author Don Laidlaw
@@ -199,7 +199,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	/**
 	 * Calculate the AWS CodeCommit password for the provided URI and AWS secret key.
 	 * This uses the algorithm published by AWS at 
-	 * http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
+	 * https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
 	 * @param uri the codecommit repository uri
 	 * @param awsSecretKey the aws secret key
 	 * @return the password to use in the git request
