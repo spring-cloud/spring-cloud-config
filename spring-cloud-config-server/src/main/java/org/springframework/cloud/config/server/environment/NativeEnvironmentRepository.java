@@ -264,7 +264,7 @@ public class NativeEnvironmentRepository
 	private String[] getArgs(String application, String profile, String label) {
 		List<String> list = new ArrayList<String>();
 		String config = application;
-		String searchNames = this.environment.getProperty("spring.cloud.config.name");
+		String searchNames = this.environment.getProperty("spring.cloud.config.server.searchNames");
 		if (searchNames != null && !searchNames.isEmpty()) {
 			config += "," + searchNames;
 		}
