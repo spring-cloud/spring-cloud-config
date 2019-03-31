@@ -39,7 +39,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -67,7 +66,7 @@ public class ResourceControllerIntegrationTests {
 
 	@Before
 	public void init() {
-		Mockito.reset(this.repository);
+		Mockito.reset(this.repository, this.resources);
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 	}
 
@@ -99,13 +98,13 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void binaryResourceNoLabel() throws Exception {
 		Mockito.when(this.repository.findOne("foo", "default", null))
-			.thenReturn(new Environment("foo", "default", "master"));
+				.thenReturn(new Environment("foo", "default", "master"));
 		Mockito.when(this.resources.findOne("foo", "default", null, "foo.txt"))
-			.thenReturn(new ByteArrayResource("hello".getBytes()));
+				.thenReturn(new ByteArrayResource("hello".getBytes()));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
-			.param("useDefaultLabel", "")
-			.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
-			.andExpect(MockMvcResultMatchers.status().isOk());
+				.param("useDefaultLabel", "")
+				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
+				.andExpect(MockMvcResultMatchers.status().isOk());
 		Mockito.verify(this.repository).findOne("foo", "default", null);
 		Mockito.verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}

@@ -136,10 +136,9 @@ public class ResourceController {
 		return binary(request, name, profile, label, path);
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel",
-		produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binary(@PathVariable String name, @PathVariable String profile,
-		ServletWebRequest request) throws IOException {
+			ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, null);
 		return binary(request, name, profile, null, path);
 	}

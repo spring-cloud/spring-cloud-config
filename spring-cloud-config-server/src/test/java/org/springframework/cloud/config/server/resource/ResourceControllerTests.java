@@ -300,7 +300,7 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		ServletWebRequest webRequest = new ServletWebRequest(request,
-			new MockHttpServletResponse());
+				new MockHttpServletResponse());
 		request.setRequestURI("/dev/spam/bar/" + "foo.txt");
 		byte[] resource = this.controller.binary("dev/spam", "bar", webRequest);
 		assertThat(new String(resource)).isEqualToIgnoringNewLines("foo: dev_bar/spam");
