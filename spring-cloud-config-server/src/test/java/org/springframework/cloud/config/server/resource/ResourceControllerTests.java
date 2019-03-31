@@ -295,6 +295,17 @@ public class ResourceControllerTests {
 		assertThat(new String(resource)).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
+	@Test
+	public void defaultLabelForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		ServletWebRequest webRequest = new ServletWebRequest(request,
+			new MockHttpServletResponse());
+		request.setRequestURI("/dev/spam/bar/" + "foo.txt");
+		byte[] resource = this.controller.binary("dev/spam", "bar", webRequest);
+		assertThat(new String(resource)).isEqualToIgnoringNewLines("foo: dev_bar/spam");
+	}
+
 	private String replaceNewLines(String text) {
 		return text.replace("\n", "").replace("\t", "");
 	}
