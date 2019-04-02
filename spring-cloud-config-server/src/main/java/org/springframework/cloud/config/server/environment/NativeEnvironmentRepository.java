@@ -138,16 +138,17 @@ public class NativeEnvironmentRepository
 		// Explicitly set the listeners (to exclude logging listener which would change
 		// log levels in the caller)
 		builder.application()
-				.setListeners(Arrays.asList(new ConfigFileApplicationListener()));
-		ConfigurableApplicationContext context = builder.run(args);
-		environment.getPropertySources().remove("profiles");
-		try {
+			.setListeners(Arrays.asList(new ConfigFileApplicationListener()));
+
+		try (ConfigurableApplicationContext context = builder.run(args)) {
+			environment.getPropertySources().remove("profiles");
 			return clean(new PassthruEnvironmentRepository(environment).findOne(config,
-					profile, label));
+				profile, label));
+		} catch (Exception e) {
+			String fmt = String.format("Failed to create an application context for config=%s profile=%s label=%s", config, profile, label);
+			throw new InvalidContextEnvironmentException(fmt, e);
 		}
-		finally {
-			context.close();
-		}
+
 	}
 
 	@Override

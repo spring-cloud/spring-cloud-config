@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,14 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
 import javax.servlet.http.HttpServletResponse;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.nodes.Tag;
-
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.http.HttpHeaders;
@@ -46,9 +43,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
+import org.yaml.snakeyaml.DumperOptions.FlowStyle;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.Tag;
 
 /**
  * @author Dave Syer
@@ -59,7 +56,6 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  * @author Ivan Corrales Solera
  * @author Daniel Frey
  * @author Ian Bondoc
- *
  */
 @RestController
 @RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
@@ -78,14 +74,15 @@ public class EnvironmentController {
 	}
 
 	public EnvironmentController(EnvironmentRepository repository,
-			ObjectMapper objectMapper) {
+		ObjectMapper objectMapper) {
 		this.repository = repository;
 		this.objectMapper = objectMapper;
 	}
 
 	/**
-	 * Flag to indicate that YAML documents which are not a map should be stripped of the
-	 * "document" prefix that is added by Spring (to facilitate conversion to Properties).
+	 * Flag to indicate that YAML documents which are not a map should be stripped of the "document"
+	 * prefix that is added by Spring (to facilitate conversion to Properties).
+	 *
 	 * @param stripDocument the flag to set
 	 */
 	public void setStripDocumentFromYaml(boolean stripDocument) {
@@ -94,6 +91,7 @@ public class EnvironmentController {
 
 	/**
 	 * Flag to indicate that If HTTP 404 needs to be sent if Application is not Found.
+	 *
 	 * @param acceptEmpty the flag to set
 	 */
 	public void setAcceptEmpty(boolean acceptEmpty) {
@@ -102,13 +100,13 @@ public class EnvironmentController {
 
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
 	public Environment defaultLabel(@PathVariable String name,
-			@PathVariable String profiles) {
+		@PathVariable String profiles) {
 		return labelled(name, profiles, null);
 	}
 
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
-			@PathVariable String label) {
+		@PathVariable String label) {
 		if (name != null && name.contains("(_)")) {
 			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
 			// by Spring MVC
@@ -121,7 +119,7 @@ public class EnvironmentController {
 		}
 		Environment environment = this.repository.findOne(name, profiles, label);
 		if (!this.acceptEmpty
-				&& (environment == null || environment.getPropertySources().isEmpty())) {
+			&& (environment == null || environment.getPropertySources().isEmpty())) {
 			throw new EnvironmentNotFoundException("Profile Not found");
 		}
 		return environment;
@@ -129,41 +127,41 @@ public class EnvironmentController {
 
 	@RequestMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name,
-			@PathVariable String profiles,
-			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws IOException {
+		@PathVariable String profiles,
+		@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+		throws IOException {
 		return labelledProperties(name, profiles, null, resolvePlaceholders);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.properties")
 	public ResponseEntity<String> labelledProperties(@PathVariable String name,
-			@PathVariable String profiles, @PathVariable String label,
-			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws IOException {
+		@PathVariable String profiles, @PathVariable String label,
+		@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+		throws IOException {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToProperties(environment);
 		String propertiesString = getPropertiesString(properties);
 		if (resolvePlaceholders) {
 			propertiesString = resolvePlaceholders(prepareEnvironment(environment),
-					propertiesString);
+				propertiesString);
 		}
 		return getSuccess(propertiesString);
 	}
 
 	@RequestMapping("{name}-{profiles}.json")
 	public ResponseEntity<String> jsonProperties(@PathVariable String name,
-			@PathVariable String profiles,
-			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws Exception {
+		@PathVariable String profiles,
+		@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+		throws Exception {
 		return labelledJsonProperties(name, profiles, null, resolvePlaceholders);
 	}
 
 	@RequestMapping("/{label}/{name}-{profiles}.json")
 	public ResponseEntity<String> labelledJsonProperties(@PathVariable String name,
-			@PathVariable String profiles, @PathVariable String label,
-			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws Exception {
+		@PathVariable String profiles, @PathVariable String label,
+		@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+		throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToMap(environment);
@@ -186,30 +184,29 @@ public class EnvironmentController {
 		return output.toString();
 	}
 
-	@RequestMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
+	@RequestMapping({"/{name}-{profiles}.yml", "/{name}-{profiles}.yaml"})
 	public ResponseEntity<String> yaml(@PathVariable String name,
-			@PathVariable String profiles,
-			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws Exception {
+		@PathVariable String profiles,
+		@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+		throws Exception {
 		return labelledYaml(name, profiles, null, resolvePlaceholders);
 	}
 
-	@RequestMapping({ "/{label}/{name}-{profiles}.yml",
-			"/{label}/{name}-{profiles}.yaml" })
+	@RequestMapping({"/{label}/{name}-{profiles}.yml",
+		"/{label}/{name}-{profiles}.yaml"})
 	public ResponseEntity<String> labelledYaml(@PathVariable String name,
-			@PathVariable String profiles, @PathVariable String label,
-			@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws Exception {
+		@PathVariable String profiles, @PathVariable String label,
+		@RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+		throws Exception {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> result = convertToMap(environment);
 		if (this.stripDocument && result.size() == 1
-				&& result.keySet().iterator().next().equals("document")) {
+			&& result.keySet().iterator().next().equals("document")) {
 			Object value = result.get("document");
 			if (value instanceof Collection) {
 				return getSuccess(new Yaml().dumpAs(value, Tag.SEQ, FlowStyle.BLOCK));
-			}
-			else {
+			} else {
 				return getSuccess(new Yaml().dumpAs(value, Tag.STR, FlowStyle.BLOCK));
 			}
 		}
@@ -223,8 +220,9 @@ public class EnvironmentController {
 	}
 
 	/**
-	 * Method {@code convertToMap} converts an {@code Environment} to a nested Map which
-	 * represents a yml/json structure.
+	 * Method {@code convertToMap} converts an {@code Environment} to a nested Map which represents a
+	 * yml/json structure.
+	 *
 	 * @param input the environment to be converted
 	 * @return the nested map containing the environment's properties
 	 */
@@ -244,6 +242,12 @@ public class EnvironmentController {
 		return rootMap;
 	}
 
+	@ExceptionHandler(EnvironmentException.class)
+	public void badContext(HttpServletResponse response, EnvironmentException ex)
+		throws IOException {
+		response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage());
+	}
+
 	@ExceptionHandler(RepositoryException.class)
 	public void noSuchLabel(HttpServletResponse response) throws IOException {
 		response.sendError(HttpStatus.NOT_FOUND.value());
@@ -257,7 +261,7 @@ public class EnvironmentController {
 	private void validateProfiles(String profiles) {
 		if (profiles.contains("-")) {
 			throw new IllegalArgumentException(
-					"Properties output not supported for name or profiles containing hyphens");
+				"Properties output not supported for name or profiles containing hyphens");
 		}
 	}
 
@@ -269,7 +273,7 @@ public class EnvironmentController {
 
 	private ResponseEntity<String> getSuccess(String body) {
 		return new ResponseEntity<>(body, getHttpHeaders(MediaType.TEXT_PLAIN),
-				HttpStatus.OK);
+			HttpStatus.OK);
 	}
 
 	private ResponseEntity<String> getSuccess(String body, MediaType mediaType) {
@@ -295,8 +299,7 @@ public class EnvironmentController {
 					// Not an array, add unique key to the map
 					combinedMap.put(key, value.get(key));
 
-				}
-				else {
+				} else {
 
 					// An existing array might have already been added to the property map
 					// of an unequal size to the current array. Replace the array key in
@@ -324,7 +327,7 @@ public class EnvironmentController {
 	}
 
 	private void postProcessProperties(Map<String, Object> propertiesMap) {
-		for (Iterator<String> iter = propertiesMap.keySet().iterator(); iter.hasNext();) {
+		for (Iterator<String> iter = propertiesMap.keySet().iterator(); iter.hasNext(); ) {
 			String key = iter.next();
 			if (key.equals("spring.profiles")) {
 				iter.remove();
@@ -333,9 +336,9 @@ public class EnvironmentController {
 	}
 
 	/**
-	 * Class {@code PropertyNavigator} is used to navigate through the property key and
-	 * create necessary Maps and Lists making up the nested structure to finally set the
-	 * property value at the leaf node.
+	 * Class {@code PropertyNavigator} is used to navigate through the property key and create
+	 * necessary Maps and Lists making up the nested structure to finally set the property value at
+	 * the leaf node.
 	 * <p>
 	 * The following rules in yml/json are implemented: <pre>
 	 * 1. an array element can be:
@@ -372,8 +375,7 @@ public class EnvironmentController {
 					map.put(key, nestedMap);
 				}
 				setMapValue(nestedMap, value);
-			}
-			else if (NodeType.ARRAY.equals(this.valueType)) {
+			} else if (NodeType.ARRAY.equals(this.valueType)) {
 				@SuppressWarnings("unchecked")
 				List<Object> list = (List<Object>) map.get(key);
 				if (list == null) {
@@ -381,8 +383,7 @@ public class EnvironmentController {
 					map.put(key, list);
 				}
 				setListValue(list, value);
-			}
-			else {
+			} else {
 				map.put(key, value);
 			}
 		}
@@ -401,8 +402,7 @@ public class EnvironmentController {
 					list.set(index, map);
 				}
 				setMapValue(map, value);
-			}
-			else if (NodeType.ARRAY.equals(this.valueType)) {
+			} else if (NodeType.ARRAY.equals(this.valueType)) {
 				@SuppressWarnings("unchecked")
 				List<Object> nestedList = (List<Object>) list.get(index);
 				if (nestedList == null) {
@@ -410,8 +410,7 @@ public class EnvironmentController {
 					list.set(index, nestedList);
 				}
 				setListValue(nestedList, value);
-			}
-			else {
+			} else {
 				list.set(index, value);
 			}
 		}
@@ -425,34 +424,31 @@ public class EnvironmentController {
 				if (c == ']') {
 					this.currentPos = i;
 					break;
-				}
-				else if (!Character.isDigit(c)) {
+				} else if (!Character.isDigit(c)) {
 					throw new IllegalArgumentException(
-							"Invalid key: " + this.propertyKey);
+						"Invalid key: " + this.propertyKey);
 				}
 			}
 			// If no closing ] or if '[]'
 			if (this.currentPos < start || this.currentPos == start) {
 				throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
-			}
-			else {
+			} else {
 				int index = Integer
-						.parseInt(this.propertyKey.substring(start, this.currentPos));
+					.parseInt(this.propertyKey.substring(start, this.currentPos));
 				// Skip the closing ]
 				this.currentPos++;
 				if (this.currentPos == this.propertyKey.length()) {
 					this.valueType = NodeType.LEAF;
-				}
-				else {
+				} else {
 					switch (this.propertyKey.charAt(this.currentPos)) {
-					case '.':
-						this.valueType = NodeType.MAP;
-						break;
-					case '[':
-						this.valueType = NodeType.ARRAY;
-						break;
-					default:
-						throw new IllegalArgumentException(
+						case '.':
+							this.valueType = NodeType.MAP;
+							break;
+						case '[':
+							this.valueType = NodeType.ARRAY;
+							break;
+						default:
+							throw new IllegalArgumentException(
 								"Invalid key: " + this.propertyKey);
 					}
 				}
@@ -469,8 +465,7 @@ public class EnvironmentController {
 					this.valueType = NodeType.MAP;
 					this.currentPos = i;
 					break;
-				}
-				else if (currentChar == '[') {
+				} else if (currentChar == '[') {
 					this.valueType = NodeType.ARRAY;
 					this.currentPos = i;
 					break;
@@ -482,8 +477,7 @@ public class EnvironmentController {
 				this.valueType = NodeType.LEAF;
 				// Else if we encounter '..' or '.[' or start of the property is . or [
 				// then it's invalid
-			}
-			else if (this.currentPos == start) {
+			} else if (this.currentPos == start) {
 				throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
 			}
 			return this.propertyKey.substring(start, this.currentPos);
