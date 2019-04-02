@@ -18,15 +18,19 @@ package org.springframework.cloud.config.server.resource;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -34,6 +38,12 @@ import static org.junit.Assert.assertNotNull;
  *
  */
 public class GenericResourceRepositoryTests {
+
+	@Rule
+	public OutputCapture output = new OutputCapture();
+
+	@Rule
+	public ExpectedException exception = ExpectedException.none();
 
 	private GenericResourceRepository repository;
 	private ConfigurableApplicationContext context;
@@ -77,6 +87,14 @@ public class GenericResourceRepositoryTests {
 	@Test(expected=NoSuchResourceException.class)
 	public void locateMissingResource() {
 		assertNotNull(this.repository.findOne("blah", "default", "master", "foo.txt"));
+	}
+
+	@Test
+	public void invalidPath() {
+		this.exception.expect(NoSuchResourceException.class);
+		this.nativeRepository.setSearchLocations("file:./src/test/resources/test/{profile}");
+		this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql");
+		this.output.expect(containsString("Path contains \"../\" after call to StringUtils#cleanPath"));
 	}
 
 }
