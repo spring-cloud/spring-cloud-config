@@ -30,6 +30,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.context.request.ServletWebRequest;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -266,6 +267,17 @@ public class ResourceControllerTests {
 		request.setRequestURI("/foo/bar/dev/" + "spam/foo.txt");
 		byte[] resource = this.controller.binary("foo", "bar", "dev", webRequest);
 		assertEquals("foo: dev_bar/spam", new String(resource));
+	}
+
+	@Test
+	public void defaultLabelForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		ServletWebRequest webRequest = new ServletWebRequest(request,
+				new MockHttpServletResponse());
+		request.setRequestURI("/dev/spam/bar/" + "foo.txt");
+		byte[] resource = this.controller.binary("dev/spam", "bar", webRequest);
+		assertThat(new String(resource)).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
 }
