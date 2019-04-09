@@ -53,13 +53,10 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
-import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
-import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
-
 /**
  * @author Dave Syer
  * @author Mathieu Ouellet
+ * @author Kamalakar Ponaka
  *
  */
 @Order(0)
@@ -183,6 +180,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String name = properties.getName();
 		String profile = properties.getProfile();
 		String token = properties.getToken();
+		String roleId = properties.getRoleId();
+		String secretId = properties.getSecretId();
 		int noOfUrls = properties.getUri().length;
 		if (noOfUrls > 1) {
 			logger.info("Multiple Config Server Urls found listed.");
@@ -210,10 +209,14 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				HttpHeaders headers = new HttpHeaders();
 				addAuthorizationToken(properties, headers, username, password);
 				if (StringUtils.hasText(token)) {
-					headers.add(TOKEN_HEADER, token);
+					headers.add(ConfigClientProperties.TOKEN_HEADER, token);
+				}
+				if (StringUtils.hasText(roleId) && StringUtils.hasText(secretId)) {
+					headers.add(ConfigClientProperties.APP_ROLE_ID_HEADER, roleId);
+					headers.add(ConfigClientProperties.APP_SECRET_ID_HEADER, secretId);
 				}
 				if (StringUtils.hasText(state) && properties.isSendState()) {
-					headers.add(STATE_HEADER, state);
+					headers.add(ConfigClientProperties.STATE_HEADER, state);
 				}
 				headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
@@ -260,8 +263,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		requestFactory.setReadTimeout(client.getRequestReadTimeout());
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
-		if (headers.containsKey(AUTHORIZATION)) {
-			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
+		if (headers.containsKey(ConfigClientProperties.AUTHORIZATION)) {
+			headers.remove(ConfigClientProperties.AUTHORIZATION); // To avoid redundant
+																	// addition of header
 		}
 		if (!headers.isEmpty()) {
 			template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
@@ -273,7 +277,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private void addAuthorizationToken(ConfigClientProperties configClientProperties,
 			HttpHeaders httpHeaders, String username, String password) {
-		String authorization = configClientProperties.getHeaders().get(AUTHORIZATION);
+		String authorization = configClientProperties.getHeaders()
+				.get(ConfigClientProperties.AUTHORIZATION);
 
 		if (password != null && authorization != null) {
 			throw new IllegalStateException(

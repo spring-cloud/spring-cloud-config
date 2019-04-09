@@ -47,6 +47,16 @@ public class ConfigClientProperties {
 	public static final String TOKEN_HEADER = "X-Config-Token";
 
 	/**
+	 * Role Id header name.
+	 */
+	public static final String APP_ROLE_ID_HEADER = "X-Config-Role-Id";
+
+	/**
+	 * Secret id header name.
+	 */
+	public static final String APP_SECRET_ID_HEADER = "X-Config-Secret-Id";
+
+	/**
 	 * State header name.
 	 */
 	public static final String STATE_HEADER = "X-Config-State";
@@ -118,6 +128,10 @@ public class ConfigClientProperties {
 	 * Flag to indicate whether to send state. Default true.
 	 */
 	private boolean sendState = true;
+
+	private String roleId;
+
+	private String secretId;
 
 	/**
 	 * Additional headers used to create the client request.
@@ -241,6 +255,22 @@ public class ConfigClientProperties {
 
 	public void setHeaders(Map<String, String> headers) {
 		this.headers = headers;
+	}
+
+	public String getRoleId() {
+		return roleId;
+	}
+
+	public void setRoleId(String roleId) {
+		this.roleId = roleId;
+	}
+
+	public String getSecretId() {
+		return secretId;
+	}
+
+	public void setSecretId(String secretId) {
+		this.secretId = secretId;
 	}
 
 	private Credentials extractCredentials(int index) {

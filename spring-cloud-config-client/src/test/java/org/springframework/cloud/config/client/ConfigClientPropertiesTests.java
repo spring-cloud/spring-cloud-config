@@ -34,6 +34,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class ConfigClientPropertiesTests {
 
+	/**
+	 * @author Kamalakar Ponaka
+	 */
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
 

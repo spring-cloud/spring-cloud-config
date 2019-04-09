@@ -16,10 +16,17 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
+import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
+import static org.springframework.cloud.config.client.ConfigClientProperties.APP_ROLE_ID_HEADER;
+import static org.springframework.cloud.config.client.ConfigClientProperties.APP_SECRET_ID_HEADER;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,13 +40,11 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
-
-import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
-import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 
 /**
  * @author Spencer Gibb
@@ -92,6 +97,8 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private VaultKvAccessStrategy accessStrategy;
 
+	private VaultAppRoleAccessStrategy appRoleAccessStrategy;
+
 	// TODO: move to watchState:String on findOne?
 	private ObjectProvider<HttpServletRequest> request;
 
@@ -115,7 +122,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl,
 				properties.getKvVersion());
+
+		this.appRoleAccessStrategy = VaultAppRoleAccessStrategyFactory.getToken(rest, baseUrl);
 	}
+
+
 
 	/* for testing */ void setAccessStrategy(VaultKvAccessStrategy accessStrategy) {
 		this.accessStrategy = accessStrategy;
@@ -194,15 +205,30 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		HttpHeaders headers = new HttpHeaders();
 
 		String token = servletRequest.getHeader(TOKEN_HEADER);
-		if (!StringUtils.hasLength(token)) {
-			throw new IllegalArgumentException(
-					"Missing required header: " + TOKEN_HEADER);
-		}
-		headers.add(VAULT_TOKEN, token);
 		if (StringUtils.hasText(this.namespace)) {
 			headers.add(VAULT_NAMESPACE, this.namespace);
 		}
+		if (!StringUtils.hasLength(token)) {
+			String roleID = servletRequest.getHeader(APP_ROLE_ID_HEADER);
+			String secretID = servletRequest.getHeader(APP_SECRET_ID_HEADER);
+			if (StringUtils.hasLength(roleID)&&StringUtils.hasLength(secretID)) {
+				Map<String, String> params = new HashMap<String, String>();
+				params.put("role_id", roleID);
+				params.put("secret_id", secretID);
+				HttpEntity<?> requestEntity = new HttpEntity<>(params, headers);
+				token = appRoleAccessStrategy.getAuth(requestEntity);
+				if (!StringUtils.hasLength(token)) {
+					throw new IllegalArgumentException(
+							"Missing/Invalid token: " + TOKEN_HEADER);
+				}
+			} else {
+				throw new IllegalArgumentException(
+						"Missing required header/App Role: " + TOKEN_HEADER);
+			}
 
+
+		}
+		headers.add(VAULT_TOKEN, token);
 		return this.accessStrategy.getData(headers, this.backend, key);
 	}
 

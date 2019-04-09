@@ -57,6 +57,10 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.AUT
 
 public class ConfigServicePropertySourceLocatorTests {
 
+	/**
+	 * @author ubuntu
+	 *
+	 */
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
 
