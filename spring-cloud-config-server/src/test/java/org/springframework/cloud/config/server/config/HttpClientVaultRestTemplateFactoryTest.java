@@ -72,6 +72,10 @@ public class HttpClientVaultRestTemplateFactoryTest {
 		HTTPS_PROXY.setPort(8081);
 	}
 
+	/**
+	 * @author ubuntu
+	 *
+	 */
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 

@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import org.springframework.web.client.RestOperations;
-
 import com.fasterxml.jackson.databind.JsonNode;
+
+import org.springframework.web.client.RestOperations;
 
 /**
  * Factory for {@link VaultAppRoleAccessStrategy}.
@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.JsonNode;
  * @since 2.0
  */
 public final class VaultAppRoleAccessStrategyFactory {
-
 
 	private VaultAppRoleAccessStrategyFactory() {
 		throw new IllegalStateException("Can't instantiate an utility class");
@@ -40,8 +39,9 @@ public final class VaultAppRoleAccessStrategyFactory {
 	 * @param baseUrl the Vault base URL.
 	 * @return the access strategy.
 	 */
-	public static VaultAppRoleAccessStrategy getToken(RestOperations rest, String baseUrl) {
-		return new V1VaultAppRoleAccessStrategy(baseUrl,  rest);
+	public static VaultAppRoleAccessStrategy getToken(RestOperations rest,
+			String baseUrl) {
+		return new V1VaultAppRoleAccessStrategy(baseUrl, rest);
 	}
 
 	/**
@@ -53,8 +53,12 @@ public final class VaultAppRoleAccessStrategyFactory {
 			super(baseUrl, rest);
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.cloud.config.server.environment.VaultAppRoleAccessStrategySupport#extractDataFromBody(org.springframework.cloud.config.server.environment.VaultAppRoleAccessStrategy.VaultAppRoleResponse)
+		/*
+		 * (non-Javadoc)
+		 *
+		 * @see org.springframework.cloud.config.server.environment.
+		 * VaultAppRoleAccessStrategySupport#extractDataFromBody(org.springframework.cloud
+		 * .config.server.environment.VaultAppRoleAccessStrategy.VaultAppRoleResponse)
 		 */
 		@Override
 		String extractDataFromBody(VaultAppRoleResponse body) {
@@ -64,8 +68,5 @@ public final class VaultAppRoleAccessStrategyFactory {
 		}
 
 	}
-
-
-
 
 }

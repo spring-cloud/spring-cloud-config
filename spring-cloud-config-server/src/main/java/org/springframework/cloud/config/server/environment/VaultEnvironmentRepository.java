@@ -16,11 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
-import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
-import static org.springframework.cloud.config.client.ConfigClientProperties.APP_ROLE_ID_HEADER;
-import static org.springframework.cloud.config.client.ConfigClientProperties.APP_SECRET_ID_HEADER;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,6 +40,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
+
+import static org.springframework.cloud.config.client.ConfigClientProperties.APP_ROLE_ID_HEADER;
+import static org.springframework.cloud.config.client.ConfigClientProperties.APP_SECRET_ID_HEADER;
+import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
+import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 
 /**
  * @author Spencer Gibb
@@ -123,10 +123,9 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl,
 				properties.getKvVersion());
 
-		this.appRoleAccessStrategy = VaultAppRoleAccessStrategyFactory.getToken(rest, baseUrl);
+		this.appRoleAccessStrategy = VaultAppRoleAccessStrategyFactory.getToken(rest,
+				baseUrl);
 	}
-
-
 
 	/* for testing */ void setAccessStrategy(VaultKvAccessStrategy accessStrategy) {
 		this.accessStrategy = accessStrategy;
@@ -211,7 +210,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		if (!StringUtils.hasLength(token)) {
 			String roleID = servletRequest.getHeader(APP_ROLE_ID_HEADER);
 			String secretID = servletRequest.getHeader(APP_SECRET_ID_HEADER);
-			if (StringUtils.hasLength(roleID)&&StringUtils.hasLength(secretID)) {
+			if (StringUtils.hasLength(roleID) && StringUtils.hasLength(secretID)) {
 				Map<String, String> params = new HashMap<String, String>();
 				params.put("role_id", roleID);
 				params.put("secret_id", secretID);
@@ -221,11 +220,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 					throw new IllegalArgumentException(
 							"Missing/Invalid token: " + TOKEN_HEADER);
 				}
-			} else {
+			}
+			else {
 				throw new IllegalArgumentException(
 						"Missing required header/App Role: " + TOKEN_HEADER);
 			}
-
 
 		}
 		headers.add(VAULT_TOKEN, token);

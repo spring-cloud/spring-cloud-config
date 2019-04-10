@@ -45,6 +45,10 @@ import static org.junit.internal.matchers.ThrowableCauseMatcher.hasCause;
 @SpringBootTest(classes = HttpClientSupportTest.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class HttpClientSupportTest {
 
+	/**
+	 * @author ubuntu
+	 *
+	 */
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 

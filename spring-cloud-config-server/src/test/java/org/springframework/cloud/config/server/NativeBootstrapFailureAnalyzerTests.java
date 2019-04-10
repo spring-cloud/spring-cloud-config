@@ -30,8 +30,13 @@ import static org.assertj.core.api.Assertions.fail;
 /**
  * @author Ryan Baxter
  */
+
 public class NativeBootstrapFailureAnalyzerTests {
 
+	/**
+	 * @author Ryan Baxter
+	 *
+	 */
 	@Rule
 	public OutputCapture outputCapture = new OutputCapture();
 

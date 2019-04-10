@@ -37,6 +37,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class EnvironmentEncryptorEnvironmentRepositoryTests {
 
+	/**
+	 * @author ubuntu
+	 *
+	 */
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
 

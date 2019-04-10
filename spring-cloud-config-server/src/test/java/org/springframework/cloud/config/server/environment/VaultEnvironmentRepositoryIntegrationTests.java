@@ -50,6 +50,10 @@ import static org.mockito.Mockito.when;
 		"server.key-alias=ssl-test" })
 public class VaultEnvironmentRepositoryIntegrationTests {
 
+	/**
+	 * @author ubuntu
+	 *
+	 */
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 

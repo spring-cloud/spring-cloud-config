@@ -29,6 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class CompositUtilsTests {
 
+	/**
+	 * @author ubuntu
+	 *
+	 */
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 

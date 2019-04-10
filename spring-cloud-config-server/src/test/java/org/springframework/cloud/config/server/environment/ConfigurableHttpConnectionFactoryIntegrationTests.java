@@ -93,7 +93,10 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		HTTPS_PROXY.setHost("http://https.proxy");
 		HTTPS_PROXY.setPort(8081);
 	}
-
+	/**
+	 * @author ubuntu
+	 *
+	 */
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 

@@ -58,10 +58,12 @@ abstract class VaultAppRoleAccessStrategySupport implements VaultAppRoleAccessSt
 	public String getAuth(HttpEntity<?> requestEntity) {
 		try {
 
-			String urlTemplate = String.format("%s/v1/%s/%s/%s", baseUrl, "auth","approle","login");
+			String urlTemplate = String.format("%s/v1/%s/%s/%s", baseUrl, "auth",
+					"approle", "login");
 
-			ResponseEntity<VaultAppRoleResponse> response = this.rest.exchange(urlTemplate,
-					HttpMethod.POST, requestEntity, VaultAppRoleResponse.class);
+			ResponseEntity<VaultAppRoleResponse> response = this.rest.exchange(
+					urlTemplate, HttpMethod.POST, requestEntity,
+					VaultAppRoleResponse.class);
 			HttpStatus status = response.getStatusCode();
 			if (status == HttpStatus.OK) {
 				return extractDataFromBody(response.getBody());

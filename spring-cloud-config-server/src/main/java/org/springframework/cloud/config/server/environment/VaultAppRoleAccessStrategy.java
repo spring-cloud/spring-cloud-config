@@ -16,12 +16,12 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.web.client.RestClientException;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.web.client.RestClientException;
 
 /**
  * Strategy interface to obtain token from Vault's App Role.
@@ -33,21 +33,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 public interface VaultAppRoleAccessStrategy {
 
 	/**
-	 * Return token from Vault. The response is represented as JSON object marshaled to
+	 * Return secrets from Vault. The response is represented as JSON object marshaled to
 	 * {@link String}.
+	 * @param requestEntity must not be {@literal null}.
+	 * @return the marshaled JSON object or {@literal null} if the key was not found.
 	 * @throws RestClientException in case of a transport/access failure.
 	 * @see com.fasterxml.jackson.annotation.JsonRawValue
 	 */
-	String getAuth(HttpEntity<?> requestEntity)
-			throws RestClientException;
-
+	String getAuth(HttpEntity<?> requestEntity) throws RestClientException;
 
 	/**
 	 * Vault App Role response POJO.
 	 */
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	class VaultAppRoleResponse {
-
 
 		private Object auth;
 
