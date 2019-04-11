@@ -41,10 +41,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 
-import static org.springframework.cloud.config.client.ConfigClientProperties.APP_ROLE_ID_HEADER;
-import static org.springframework.cloud.config.client.ConfigClientProperties.APP_SECRET_ID_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
+import static org.springframework.cloud.config.client.ConfigServicePropertySourceLocator.APP_ROLE_ID_HEADER;
+import static org.springframework.cloud.config.client.ConfigServicePropertySourceLocator.APP_SECRET_ID_HEADER;
 
 /**
  * @author Spencer Gibb
@@ -202,7 +202,6 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	String read(HttpServletRequest servletRequest, String key) {
 
 		HttpHeaders headers = new HttpHeaders();
-
 		String token = servletRequest.getHeader(TOKEN_HEADER);
 		if (StringUtils.hasText(this.namespace)) {
 			headers.add(VAULT_NAMESPACE, this.namespace);
@@ -212,8 +211,8 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 			String secretID = servletRequest.getHeader(APP_SECRET_ID_HEADER);
 			if (StringUtils.hasLength(roleID) && StringUtils.hasLength(secretID)) {
 				Map<String, String> params = new HashMap<String, String>();
-				params.put("role_id", roleID);
-				params.put("secret_id", secretID);
+				params.put(APP_ROLE_ID_HEADER, roleID);
+				params.put(APP_SECRET_ID_HEADER, secretID);
 				HttpEntity<?> requestEntity = new HttpEntity<>(params, headers);
 				token = appRoleAccessStrategy.getAuth(requestEntity);
 				if (!StringUtils.hasLength(token)) {
