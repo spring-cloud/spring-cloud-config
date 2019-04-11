@@ -334,6 +334,17 @@ AWS EC2 instances may use https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ia
 NOTE: The `aws-java-sdk-core` jar is an optional dependency.
 If the `aws-java-sdk-core` jar is not on your classpath, the AWS Code Commit credential provider is not created, regardless of the git server URI.
 
+===== Authentication with Google Cloud Source
+
+Spring Cloud Config Server also supports authenticating against https://cloud.google.com/source-repositories/[Google Cloud Source] repositories.
+
+If your Git URI uses the `http` or `https` protocol and the domain name is `source.developers.google.com`, the Google Cloud Source credentials provider will be used. A Google Cloud Source repository URI has the format `https://source.developers.google.com/p/${GCP_PROJECT}/r/${REPO}`. To obtain the URI for your repository, click on "Clone" in the Google Cloud Source UI, and select "Manually generated credentials". Do not generate any credentials, simply copy the displayed URI.
+
+The Google Cloud Source credentials provider will use Google Cloud Platform application default credentials. See https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login[Google Cloud SDK documentation] on how to create application default credentials for a system. This approach will work for user accounts in dev environments and for service accounts in production environments.
+
+NOTE: `com.google.auth:google-auth-library-oauth2-http` is an optional dependency.
+If the `google-auth-library-oauth2-http` jar is not on your classpath, the Google Cloud Source credential provider is not created, regardless of the git server URI.
+
 ===== Git SSH configuration using properties
 
 By default, the JGit library used by Spring Cloud Config Server uses SSH configuration files such as `~/.ssh/known_hosts` and `/etc/ssh/ssh_config` when connecting to Git repositories by using an SSH URI.

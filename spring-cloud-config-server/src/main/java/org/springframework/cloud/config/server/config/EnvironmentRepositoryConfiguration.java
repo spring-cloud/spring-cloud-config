@@ -64,6 +64,8 @@ import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepo
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport;
+import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -91,7 +93,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 		VaultRepositoryConfiguration.class, CredhubConfiguration.class,
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
 		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
-		RedisRepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
+		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
+		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
@@ -137,9 +140,13 @@ public class EnvironmentRepositoryConfiguration {
 		public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
 				ConfigurableEnvironment environment, ConfigServerProperties server,
 				Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
-				Optional<TransportConfigCallback> customTransportConfigCallback) {
+				Optional<TransportConfigCallback> customTransportConfigCallback,
+				Optional<GoogleCloudSourceSupport> googleCloudSourceSupport) {
+			final TransportConfigCallbackFactory transportConfigCallbackFactory = new TransportConfigCallbackFactory(
+					customTransportConfigCallback.orElse(null),
+					googleCloudSourceSupport.orElse(null));
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server,
-					jgitHttpConnectionFactory, customTransportConfigCallback);
+					jgitHttpConnectionFactory, transportConfigCallbackFactory);
 		}
 
 	}
