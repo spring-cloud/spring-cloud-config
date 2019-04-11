@@ -62,6 +62,16 @@ import org.springframework.web.client.RestTemplate;
 @Order(0)
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
 
+	/**
+	 * Vault AppRole Role Id Header.
+	 */
+	public static final String APP_ROLE_ID_HEADER = "role-id";
+
+	/**
+	 * Vault AppRole Secret Id Header.
+	 */
+	public static final String APP_SECRET_ID_HEADER = "secret-id";
+
 	private static Log logger = LogFactory
 			.getLog(ConfigServicePropertySourceLocator.class);
 
@@ -180,8 +190,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String name = properties.getName();
 		String profile = properties.getProfile();
 		String token = properties.getToken();
-		String roleId = properties.getRoleId();
-		String secretId = properties.getSecretId();
+		String roleId = properties.getHeaders().get(APP_ROLE_ID_HEADER);
+		String secretId = properties.getHeaders().get(APP_SECRET_ID_HEADER);
 		int noOfUrls = properties.getUri().length;
 		if (noOfUrls > 1) {
 			logger.info("Multiple Config Server Urls found listed.");
@@ -212,8 +222,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					headers.add(ConfigClientProperties.TOKEN_HEADER, token);
 				}
 				if (StringUtils.hasText(roleId) && StringUtils.hasText(secretId)) {
-					headers.add(ConfigClientProperties.APP_ROLE_ID_HEADER, roleId);
-					headers.add(ConfigClientProperties.APP_SECRET_ID_HEADER, secretId);
+					headers.add(APP_ROLE_ID_HEADER, roleId);
+					headers.add(APP_SECRET_ID_HEADER, secretId);
 				}
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(ConfigClientProperties.STATE_HEADER, state);
