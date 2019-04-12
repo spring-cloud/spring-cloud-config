@@ -740,7 +740,7 @@ Sharing configuration between all applications varies according to which approac
 With file-based (git, svn, and native) repositories, resources with file names in `application*` (`application.properties`, `application.yml`, `application-*.properties`, and so on) are shared between all client applications.
 You can use resources with these file names to configure global defaults and have them be overridden by application-specific files as necessary.
 
-The #_property_overrides[property overrides] feature can also be used for setting global defaults, with placeholders applications
+The <<property-overrides,property overrides>> feature can also be used for setting global defaults, with placeholders applications
 allowed to override them locally.
 
 TIP: With the "`native`" profile (a local file system backend) , you should use an explicit search location that is not part of the server's own configuration.
@@ -986,6 +986,7 @@ To do so, your bean must implement the `EnvironmentRepository` interface.
 If you want to control the priority of your custom `EnvironmentRepository` within the composite environment, you should also implement the `Ordered` interface and override the `getOrdered` method.
 If you do not implement the `Ordered` interface, your `EnvironmentRepository` is given the lowest priority.
 
+[[property-overrides]]
 ==== Property Overrides
 
 The Config Server has an "`overrides`" feature that lets the operator provide configuration properties to all applications.
