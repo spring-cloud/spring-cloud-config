@@ -59,6 +59,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.AUT
 /**
  * @author Dave Syer
  * @author Mathieu Ouellet
+ * @author Ryan Lynch
  *
  */
 @Order(0)
@@ -69,6 +70,21 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private RestTemplate restTemplate;
 	private ConfigClientProperties defaultProperties;
+
+	/**
+	 * contains a map of etags associated to different labels this client might have seen
+	 */
+	private static final HashMap<String, String> labelEtags = new HashMap<>();
+
+	private static final String DEFAULT_LABEL = "";
+
+	public static void addLabelVersion(String label, String version) {
+		String weakETag = "W/\"" + version + '\"';
+		if(label == null) {
+			label = DEFAULT_LABEL;
+		}
+		labelEtags.put(label, weakETag);
+	}
 
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
 		this.defaultProperties = defaultProperties;
@@ -94,32 +110,42 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			String state = ConfigClientStateHolder.getState();
 			// Try all the labels until one works
 			for (String label : labels) {
-				Environment result = getRemoteEnvironment(restTemplate, properties,
+				ResponseEntity<Environment> result = getRemoteEnvironment(restTemplate, properties,
 						label.trim(), state);
 				if (result != null) {
-					log(result);
+					//handle 304 in case eTags are enabled
+					if (properties.isETagsEnabled() && result.getStatusCode() == HttpStatus.NOT_MODIFIED) {
+						//this is okay, return null which should result in nothing happening
+						logger.info("Config server indicated that the configuration has not been updated");
+						return null;
+					}
 
-					if (result.getPropertySources() != null) { // result.getPropertySources()
-																// can be null if using
-																// xml
-						for (PropertySource source : result.getPropertySources()) {
-							@SuppressWarnings("unchecked")
-							Map<String, Object> map = (Map<String, Object>) source
-									.getSource();
-							composite.addPropertySource(
-									new MapPropertySource(source.getName(), map));
+					Environment env = result.getBody();
+					if(env != null) {
+						log(env);
+
+						if (env.getPropertySources() != null) { // result.getPropertySources()
+							// can be null if using
+							// xml
+							for (PropertySource source : env.getPropertySources()) {
+								@SuppressWarnings("unchecked")
+								Map<String, Object> map = (Map<String, Object>) source
+										.getSource();
+								composite.addPropertySource(
+										new MapPropertySource(source.getName(), map));
+							}
 						}
-					}
 
-					if (StringUtils.hasText(result.getState())
-							|| StringUtils.hasText(result.getVersion())) {
-						HashMap<String, Object> map = new HashMap<>();
-						putValue(map, "config.client.state", result.getState());
-						putValue(map, "config.client.version", result.getVersion());
-						composite.addFirstPropertySource(
-								new MapPropertySource("configClient", map));
+						if (StringUtils.hasText(env.getState())
+								|| StringUtils.hasText(env.getVersion())) {
+							HashMap<String, Object> map = new HashMap<>();
+							putValue(map, "config.client.state", env.getState());
+							putValue(map, "config.client.version", env.getVersion());
+							composite.addFirstPropertySource(
+									new MapPropertySource("configClient", map));
+						}
+						return composite;
 					}
-					return composite;
 				}
 			}
 		}
@@ -155,6 +181,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					result.getLabel(), result.getVersion(), result.getState()));
 		}
 		if (logger.isDebugEnabled()) {
+
 			List<PropertySource> propertySourceList = result.getPropertySources();
 			if (propertySourceList != null) {
 				int propertyCount = 0;
@@ -176,7 +203,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 	}
 
-	private Environment getRemoteEnvironment(RestTemplate restTemplate,
+	private ResponseEntity<Environment>  getRemoteEnvironment(RestTemplate restTemplate,
 			ConfigClientProperties properties, String label, String state) {
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
@@ -195,6 +222,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			args = new String[] { name, profile, label };
 			path = path + "/{label}";
 		}
+		String eTag = labelEtags.get(label);
+
 		ResponseEntity<Environment> response = null;
 
 		for (int i = 0; i < noOfUrls; i++) {
@@ -213,6 +242,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				}
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
+				}
+				if (properties.isETagsEnabled() && StringUtils.hasText(eTag)) {
+					headers.setIfNoneMatch(eTag);
 				}
 				headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
@@ -234,12 +266,20 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					continue;
 			}
 
-			if (response == null || response.getStatusCode() != HttpStatus.OK) {
+			if(response == null) {
 				return null;
 			}
 
-			Environment result = response.getBody();
-			return result;
+			if(properties.isETagsEnabled() && response.getStatusCode() == HttpStatus.OK) {
+				//see if we got an eTag back
+				String returnedEtag = response.getHeaders().getETag();
+				if (StringUtils.hasText(returnedEtag)) {
+					//add to our map of labels to eTags
+					labelEtags.put(label, returnedEtag);
+				}
+			}
+
+			return response;
 		}
 
 		return null;
@@ -285,6 +325,19 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			httpHeaders.add("Authorization", authorization);
 		}
 
+	}
+
+	public static String getVersionFromWeakEtag(String eTagIfNoneMatch) {
+		if(StringUtils.hasText(eTagIfNoneMatch) && eTagIfNoneMatch.startsWith("W/\"") && eTagIfNoneMatch.endsWith("\"")) {
+			return eTagIfNoneMatch.substring(3, eTagIfNoneMatch.length() - 1);
+		}else {
+			//invalid eTag
+			return null;
+		}
+	}
+
+	public static String getWeakEtagFromVersion(String version) {
+		return "W/\"" + version + '\"';
 	}
 
 	public static class GenericRequestHeaderInterceptor

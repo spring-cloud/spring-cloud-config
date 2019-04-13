@@ -2,6 +2,7 @@ package org.springframework.cloud.config.client;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
@@ -265,6 +267,55 @@ public class ConfigServicePropertySourceLocatorTests {
 			assertEquals(null,
 					genericRequestHeaderInterceptor.getHeaders().get(AUTHORIZATION));
 		}
+	}
+
+	@Test
+	public void useEtag() throws Exception {
+		//run first test which will initialize
+		ConfigurableEnvironment environment = new StandardEnvironment();
+
+		RestTemplate eTagRestTemplate = Mockito.mock(RestTemplate.class);
+		ConfigClientProperties config = new ConfigClientProperties(environment);
+		config.setETagsEnabled(true);
+		ConfigServicePropertySourceLocator eTagLocator = new ConfigServicePropertySourceLocator(config);
+		eTagLocator.setRestTemplate(eTagRestTemplate);
+
+
+		Environment body = new Environment("app", "master");
+		body.setVersion("abc123");
+		HttpHeaders headers = new HttpHeaders();
+		headers.setETag("W/\"abc123\"");
+
+		this.locator.setRestTemplate(this.restTemplate);
+
+		Mockito.when(eTagRestTemplate.exchange(Mockito.any(String.class),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), anyString(), anyString()))
+				.thenReturn(new ResponseEntity<>(body, headers, HttpStatus.OK));
+		assertNotNull(eTagLocator.locate(environment));
+
+		//verify we didn't send an etag
+		HttpHeaders requestToSCCSHeadersVerify = new HttpHeaders();
+		requestToSCCSHeadersVerify.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		HttpEntity<Void> entity = new HttpEntity<>((Void) null, requestToSCCSHeadersVerify);
+		Mockito.verify(eTagRestTemplate).exchange(
+				Mockito.anyString(), Mockito.eq(HttpMethod.GET),
+				Mockito.eq(entity), Mockito.eq(Environment.class), Mockito.anyString(), Mockito.anyString());
+
+		Mockito.when(eTagRestTemplate.exchange(Mockito.any(String.class),
+				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
+				Mockito.any(Class.class), anyString(), anyString()))
+				.thenReturn(new ResponseEntity<>(null, headers, HttpStatus.NOT_MODIFIED));
+		assertNull(eTagLocator.locate(environment)); //this should be null since we sent the correct etag
+
+		//verify we did send an etag
+		requestToSCCSHeadersVerify = new HttpHeaders();
+		requestToSCCSHeadersVerify.setIfNoneMatch("W/\"abc123\"");
+		requestToSCCSHeadersVerify.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		entity = new HttpEntity<>((Void) null, requestToSCCSHeadersVerify);
+		Mockito.verify(eTagRestTemplate).exchange(
+				Mockito.anyString(), Mockito.eq(HttpMethod.GET),
+				Mockito.eq(entity), Mockito.eq(Environment.class), Mockito.anyString(), Mockito.anyString());
 	}
 
 	@SuppressWarnings("unchecked")

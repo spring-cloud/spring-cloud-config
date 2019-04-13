@@ -32,6 +32,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Dave Syer
+ * @author Ryan Lynch
  *
  */
 @ConfigurationProperties(ConfigClientProperties.PREFIX)
@@ -104,6 +105,11 @@ public class ConfigClientProperties {
 	 * Flag to indicate whether to send state. Default true.
 	 */
 	private boolean sendState = true;
+
+	/**
+	 * Enable/Disable use of eTags with configurations.
+	 */
+	private boolean eTagsEnabled = false;
 
 	/**
 	 * Additional headers used to create the client request.
@@ -227,6 +233,14 @@ public class ConfigClientProperties {
 
 	public void setHeaders(Map<String, String> headers) {
 		this.headers = headers;
+	}
+
+	public boolean isETagsEnabled() {
+		return this.eTagsEnabled;
+	}
+
+	public void setETagsEnabled(boolean eTagsEnabled) {
+		this.eTagsEnabled = eTagsEnabled;
 	}
 
 	private Credentials extractCredentials(int index) {
@@ -369,7 +383,8 @@ public class ConfigClientProperties {
 				+ ", password=" + password + ", uri=" + Arrays.toString(uri)
 				+ ", discovery=" + discovery + ", failFast=" + failFast + ", token="
 				+ token + ", requestReadTimeout=" + requestReadTimeout + ", sendState="
-				+ sendState + ", headers=" + headers + "]";
+				+ sendState + ", headers=" + headers
+				+ ", eTagsEnabled=\" + this.eTagsEnabled + \"]";
 	}
 
 	
