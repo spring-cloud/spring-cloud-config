@@ -266,7 +266,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					continue;
 			}
 
-			if(response == null) {
+			if(response == null || (response.getStatusCode() != HttpStatus.OK && response.getStatusCode() != HttpStatus.NOT_MODIFIED)) {
 				return null;
 			}
 
