@@ -98,11 +98,9 @@ public class GenericResourceRepositoryTests {
 	@Test
 	public void invalidPath() {
 		this.exception.expect(NoSuchResourceException.class);
-		this.nativeRepository
-				.setSearchLocations("file:./src/test/resources/test/{profile}");
+		this.nativeRepository.setSearchLocations("file:./src/test/resources/test/{profile}");
 		this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql");
-		this.output.expect(containsString(
-				"Path contains \"../\" after call to StringUtils#cleanPath"));
+		this.output.expect(containsString("Path contains \"../\" after call to StringUtils#cleanPath"));
 	}
 
 }
