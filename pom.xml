@@ -34,6 +34,7 @@
 		</maven-checkstyle-plugin.failsOnViolation>
 		<maven-checkstyle-plugin.includeTestSourceDirectory>true
 		</maven-checkstyle-plugin.includeTestSourceDirectory>
+		<disable.checks>true</disable.checks>
 	</properties>
 	<modules>
 		<module>spring-cloud-config-dependencies</module>
