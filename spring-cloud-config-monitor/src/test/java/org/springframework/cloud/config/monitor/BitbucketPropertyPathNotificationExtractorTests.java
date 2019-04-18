@@ -125,7 +125,7 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 	@Test
 	public void bitbucketServerSamplePullRequest() throws Exception {
 		// https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html
-		Map<String, Object> value = readPayload("pathsamples/bitbucketserver.json");
+		Map<String, Object> value = readPayload("pathsamples/bitbucketserver-prmerged.json");
 		setServerHeaders("pr:merged");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
