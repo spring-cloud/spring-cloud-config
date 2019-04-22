@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server;
 
+import org.eclipse.jgit.junit.MockSystemReader;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +54,9 @@ public class CompositeIntegrationTests {
 
 		@BeforeClass
 		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
 			ConfigServerTestUtils.prepareLocalRepo();
 			ConfigServerTestUtils.prepareLocalSvnRepo(
 					"src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
@@ -110,6 +115,9 @@ public class CompositeIntegrationTests {
 
 		@BeforeClass
 		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
 			ConfigServerTestUtils.prepareLocalRepo();
 			ConfigServerTestUtils.prepareLocalSvnRepo(
 					"src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
