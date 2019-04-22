@@ -64,7 +64,7 @@ public class GenericResourceRepository
 			String[] locations = this.service.getLocations(application, profile, label)
 					.getLocations();
 			try {
-				for (int i = locations.length; i-- > 0; ) {
+				for (int i = locations.length; i-- > 0;) {
 					String location = locations[i];
 					for (String local : getProfilePaths(profile, path)) {
 						if (!isInvalidPath(local) && !isInvalidEncodedPath(local)) {
@@ -116,7 +116,8 @@ public class GenericResourceRepository
 	private boolean isInvalidEncodedPath(String path) {
 		if (path.contains("%")) {
 			try {
-				// Use URLDecoder (vs UriUtils) to preserve potentially decoded UTF-8 chars
+				// Use URLDecoder (vs UriUtils) to preserve potentially decoded UTF-8
+				// chars
 				String decodedPath = URLDecoder.decode(path, "UTF-8");
 				if (isInvalidPath(decodedPath)) {
 					return true;
@@ -135,13 +136,13 @@ public class GenericResourceRepository
 
 	/**
 	 * Process the given resource path.
-	 * <p>The default implementation replaces:
+	 * <p>
+	 * The default implementation replaces:
 	 * <ul>
 	 * <li>Backslash with forward slash.
 	 * <li>Duplicate occurrences of slash with a single slash.
-	 * <li>Any combination of leading slash and control characters (00-1F and 7F)
-	 * with a single "/" or "". For example {@code "  / // foo/bar"}
-	 * becomes {@code "/foo/bar"}.
+	 * <li>Any combination of leading slash and control characters (00-1F and 7F) with a
+	 * single "/" or "". For example {@code "  / // foo/bar"} becomes {@code "/foo/bar"}.
 	 * </ul>
 	 * @since 3.2.12
 	 */
@@ -150,7 +151,6 @@ public class GenericResourceRepository
 		path = cleanDuplicateSlashes(path);
 		return cleanLeadingSlash(path);
 	}
-
 
 	private String cleanDuplicateSlashes(String path) {
 		StringBuilder sb = null;
@@ -175,7 +175,6 @@ public class GenericResourceRepository
 		return sb != null ? sb.toString() : path;
 	}
 
-
 	private String cleanLeadingSlash(String path) {
 		boolean slash = false;
 		for (int i = 0; i < path.length(); i++) {
@@ -192,7 +191,6 @@ public class GenericResourceRepository
 		return (slash ? "/" : "");
 	}
 
-
 	/**
 	 * Identifies invalid resource paths. By default rejects:
 	 * <ul>
@@ -202,9 +200,10 @@ public class GenericResourceRepository
 	 * <li>Paths that represent a {@link org.springframework.util.ResourceUtils#isUrl
 	 * valid URL} or would represent one after the leading slash is removed.
 	 * </ul>
-	 * <p><strong>Note:</strong> this method assumes that leading, duplicate '/'
-	 * or control characters (e.g. white space) have been trimmed so that the
-	 * path starts predictably with a single '/' or does not have one.
+	 * <p>
+	 * <strong>Note:</strong> this method assumes that leading, duplicate '/' or control
+	 * characters (e.g. white space) have been trimmed so that the path starts predictably
+	 * with a single '/' or does not have one.
 	 * @param path the path to validate
 	 * @return {@code true} if the path is invalid, {@code false} otherwise
 	 * @since 3.0.6
@@ -220,17 +219,20 @@ public class GenericResourceRepository
 			String relativePath = (path.charAt(0) == '/' ? path.substring(1) : path);
 			if (ResourceUtils.isUrl(relativePath) || relativePath.startsWith("url:")) {
 				if (logger.isWarnEnabled()) {
-					logger.warn("Path represents URL or has \"url:\" prefix: [" + path + "]");
+					logger.warn(
+							"Path represents URL or has \"url:\" prefix: [" + path + "]");
 				}
 				return true;
 			}
 		}
 		if (path.contains("..") && StringUtils.cleanPath(path).contains("../")) {
 			if (logger.isWarnEnabled()) {
-				logger.warn("Path contains \"../\" after call to StringUtils#cleanPath: [" + path + "]");
+				logger.warn("Path contains \"../\" after call to StringUtils#cleanPath: ["
+						+ path + "]");
 			}
 			return true;
 		}
 		return false;
 	}
+
 }

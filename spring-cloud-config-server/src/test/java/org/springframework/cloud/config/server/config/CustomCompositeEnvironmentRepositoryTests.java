@@ -19,6 +19,8 @@ package org.springframework.cloud.config.server.config;
 import java.util.HashMap;
 import java.util.List;
 
+import org.eclipse.jgit.junit.MockSystemReader;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,6 +66,9 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 		@BeforeClass
 		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
 			ConfigServerTestUtils.prepareLocalRepo();
 		}
 
@@ -115,6 +120,9 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 		@BeforeClass
 		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
 			ConfigServerTestUtils.prepareLocalRepo();
 		}
 
