@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server;
 
+import org.eclipse.jgit.junit.MockSystemReader;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -66,6 +68,9 @@ public class ConfigClientOnIntegrationTests {
 
 	@BeforeClass
 	public static void init() throws IOException {
+		// mock Git configuration to make tests independent of local Git configuration
+		SystemReader.setInstance(new MockSystemReader());
+
 		localRepo = ConfigServerTestUtils.prepareLocalRepo();
 	}
 

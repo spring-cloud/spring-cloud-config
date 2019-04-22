@@ -33,13 +33,16 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FileUtils;
+import org.eclipse.jgit.util.SystemReader;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -78,6 +81,12 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	private ConfigurableApplicationContext context;
 
 	private File basedir = new File("target/config");
+
+	@BeforeClass
+	public static void initClass() {
+		// mock Git configuration to make tests independent of local Git configuration
+		SystemReader.setInstance(new MockSystemReader());
+	}
 
 	@Before
 	public void init() throws Exception {
@@ -466,19 +475,19 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertEquals(fooProperty, "bar");
 	}
-	
+
 	@Test
 	/**
 	 * In this scenario there is set the refresh rate so the remote repository is not fetched for every configuration read.
-	 * 
+	 *
 	 * There is more than one label queried - test and master - but only one such branch exists - master.
-	 * 
+	 *
 	 * There is a new commit to master branch but when client loads new configuration, the "test" label is queried first.
 	 */
 	public void testNewCommitIDWithRefreshRate() throws Exception {
 		JGitConfigServerTestData testData = JGitConfigServerTestData
 				.prepareClonedGitRepository(TestConfiguration.class);
-		
+
 		// get our starting versions
 		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
 
@@ -489,7 +498,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		} catch (NoSuchLabelException ex) {
 			// OK
 		}
-		
+
 		// make sure we get the right version out of the gate
 		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
 		assertEquals(environment.getVersion(), startingRemoteVersion);
@@ -504,7 +513,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 		// Set refresh rate to 60 seconds (now it will fetch the remote repo only once)
 		testData.getRepository().setRefreshRate(60);
-		
+
 		//Ask test label configuration first
 		try {
 			testData.getRepository().findOne("bar", "staging", "test");
@@ -512,7 +521,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		} catch (NoSuchLabelException ex) {
 			// OK
 		}
-		
+
 		// do a normal request and verify we get the new version
 		environment = testData.getRepository().findOne("bar", "staging", "master");
 		assertEquals(environment.getVersion(), updatedRemoteVersion);

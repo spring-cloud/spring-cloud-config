@@ -18,7 +18,10 @@ package org.springframework.cloud.config.server.environment;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jgit.junit.MockSystemReader;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -41,6 +44,12 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	private StandardEnvironment environment = new StandardEnvironment();
 	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
 			new MultipleJGitEnvironmentProperties());
+
+	@BeforeClass
+	public static void initClass() {
+		// mock Git configuration to make tests independent of local Git configuration
+		SystemReader.setInstance(new MockSystemReader());
+	}
 
 	@Before
 	public void init() throws Exception {
