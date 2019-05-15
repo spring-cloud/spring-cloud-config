@@ -45,6 +45,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
  * @author Spencer Gibb
  * @author Mark Paluch
  * @author Haroun Pacquee
+ * @author Haytham Mohamed
  */
 @Validated
 public class VaultEnvironmentRepository implements EnvironmentRepository, Ordered {
@@ -167,8 +168,12 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 			addProfiles(keys, this.defaultKey, profiles);
 		}
 
-		keys.add(application);
-		addProfiles(keys, application, profiles);
+		// application may have comma-separated list of names
+		String[] applications = StringUtils.commaDelimitedListToStringArray(application);
+		for (String app : applications) {
+			keys.add(app);
+			addProfiles(keys, app, profiles);
+		}
 
 		Collections.reverse(keys);
 		return keys;
