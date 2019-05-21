@@ -16,23 +16,31 @@
 
 package org.springframework.cloud.config.client;
 
-import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * @author Spencer Gibb
+ * @author Ingyu Hwang
  */
-public class ConfigClientWatchTests {
+public final class ConfigClientVersionHolder {
 
-	@Test
-	public void stateChangedWorks() {
-		ConfigClientWatch watch = new ConfigClientWatch(null);
-		assertThat(watch.stateChanged(null, "1")).isTrue();
-		assertThat(watch.stateChanged("1", "2")).isTrue();
-		assertThat(watch.stateChanged("1", null)).isTrue();
-		assertThat(watch.stateChanged("1", "1")).isFalse();
-		watch.close();
+	private ConfigClientVersionHolder() {
+		throw new IllegalStateException("Can't instantiate a utility class");
+	}
+
+	private static ThreadLocal<String> version = new ThreadLocal<>();
+
+	public static void resetVersion() {
+		version.remove();
+	}
+
+	public static String getVersion() {
+		return version.get();
+	}
+
+	public static void setVersion(String newVersion) {
+		if (newVersion == null) {
+			resetVersion();
+			return;
+		}
+		version.set(newVersion);
 	}
 
 }
