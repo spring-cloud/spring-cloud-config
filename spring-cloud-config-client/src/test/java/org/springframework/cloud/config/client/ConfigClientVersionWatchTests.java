@@ -16,10 +16,22 @@
 
 package org.springframework.cloud.config.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.Test;
+
 /**
  * @author Ingyu Hwang
  */
-public interface ConfigClientWatch {
+public class ConfigClientVersionWatchTests {
 
-	void watchConfigServer();
+	@Test
+	public void versionChangedWorks() {
+		ConfigClientVersionWatch watch = new ConfigClientVersionWatch(null);
+		assertThat(watch.versionChanged(null, "1")).isTrue();
+		assertThat(watch.versionChanged("1", "2")).isTrue();
+		assertThat(watch.versionChanged("1", null)).isTrue();
+		assertThat(watch.versionChanged("1", "1")).isFalse();
+		watch.close();
+	}
 }

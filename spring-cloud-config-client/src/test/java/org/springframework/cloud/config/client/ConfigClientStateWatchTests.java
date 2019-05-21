@@ -16,10 +16,23 @@
 
 package org.springframework.cloud.config.client;
 
-/**
- * @author Ingyu Hwang
- */
-public interface ConfigClientWatch {
+import org.junit.Test;
 
-	void watchConfigServer();
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * @author Spencer Gibb
+ */
+public class ConfigClientStateWatchTests {
+
+	@Test
+	public void stateChangedWorks() {
+		ConfigClientStateWatch watch = new ConfigClientStateWatch(null);
+		assertThat(watch.stateChanged(null, "1")).isTrue();
+		assertThat(watch.stateChanged("1", "2")).isTrue();
+		assertThat(watch.stateChanged("1", null)).isTrue();
+		assertThat(watch.stateChanged("1", "1")).isFalse();
+		watch.close();
+	}
+
 }

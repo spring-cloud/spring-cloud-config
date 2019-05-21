@@ -20,11 +20,13 @@ import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 
 /**
@@ -35,6 +37,7 @@ import org.springframework.core.env.Environment;
  *
  * @author Dave Syer
  * @author Marcos Barbero
+ * @author Ingyu Hwang
  *
  */
 @Configuration
@@ -79,11 +82,35 @@ public class ConfigClientAutoConfiguration {
 	@ConditionalOnProperty("spring.cloud.config.watch.enabled")
 	protected static class ConfigClientWatchConfiguration {
 
-		@Bean
-		public ConfigClientWatch configClientWatch(ContextRefresher contextRefresher) {
-			return new ConfigClientWatch(contextRefresher);
+		@Configuration
+		@ConditionalOnMissingBean(ConfigClientWatch.class)
+		static class DefaultWatchConfiguration {
+			@Bean
+			public ConfigClientVersionWatch configClientVersionWatch(
+				ContextRefresher contextRefresher) {
+				return new ConfigClientVersionWatch(contextRefresher);
+			}
 		}
 
+		@Configuration
+		@Profile("git")
+		static class VersionWatchConfiguration {
+			@Bean
+			public ConfigClientVersionWatch configClientVersionWatch(
+				ContextRefresher contextRefresher) {
+				return new ConfigClientVersionWatch(contextRefresher);
+			}
+		}
+
+		@Configuration
+		@Profile("vault")
+		static class StateWatchConfiguration {
+			@Bean
+			public ConfigClientStateWatch configClientStateWatch(
+				ContextRefresher contextRefresher) {
+				return new ConfigClientStateWatch(contextRefresher);
+			}
+		}
 	}
 
 }
