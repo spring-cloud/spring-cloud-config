@@ -58,9 +58,11 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void withSslValidation() throws Exception {
+		ObjectProvider<HttpServletRequest> request = withRequest();
 		VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory = new VaultEnvironmentRepositoryFactory(
-				withRequest(), new EnvironmentWatch.Default(),
-				Optional.of(new HttpClientVaultRestTemplateFactory()));
+				request, new EnvironmentWatch.Default(),
+				Optional.of(new HttpClientVaultRestTemplateFactory()),
+				withTokenProvider(request));
 		VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
 				.build(withEnvironmentProperties(false));
 		this.expectedException.expectCause(instanceOf(SSLHandshakeException.class));
@@ -70,9 +72,11 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void skipSslValidation() throws Exception {
+		ObjectProvider<HttpServletRequest> request = withRequest();
 		VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory = new VaultEnvironmentRepositoryFactory(
-				withRequest(), new EnvironmentWatch.Default(),
-				Optional.of(new HttpClientVaultRestTemplateFactory()));
+				request, new EnvironmentWatch.Default(),
+				Optional.of(new HttpClientVaultRestTemplateFactory()),
+				withTokenProvider(request));
 		VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
 				.build(withEnvironmentProperties(true));
 
@@ -97,6 +101,11 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 		ObjectProvider<HttpServletRequest> requestProvider = mock(ObjectProvider.class);
 		when(requestProvider.getIfAvailable()).thenReturn(request);
 		return requestProvider;
+	}
+
+	private ConfigTokenProvider withTokenProvider(
+			ObjectProvider<HttpServletRequest> request) {
+		return new HttpRequestConfigTokenProvider(request);
 	}
 
 	@SpringBootConfiguration

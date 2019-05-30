@@ -39,13 +39,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
-import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 
 /**
  * @author Spencer Gibb
  * @author Mark Paluch
  * @author Haroun Pacquee
  * @author Haytham Mohamed
+ * @author Scott Frederick
  */
 @Validated
 public class VaultEnvironmentRepository implements EnvironmentRepository, Ordered {
@@ -53,12 +53,12 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	/**
 	 * Vault token header name.
 	 */
-	public static final String VAULT_TOKEN = "X-Vault-Token";
+	private static final String VAULT_TOKEN = "X-Vault-Token";
 
 	/**
 	 * Vault namespace header name.
 	 */
-	public static final String VAULT_NAMESPACE = "X-Vault-Namespace";
+	static final String VAULT_NAMESPACE = "X-Vault-Namespace";
 
 	/** Vault host. Defaults to 127.0.0.1. */
 	@NotEmpty
@@ -94,15 +94,25 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	private VaultKvAccessStrategy accessStrategy;
 
 	// TODO: move to watchState:String on findOne?
-	private ObjectProvider<HttpServletRequest> request;
+	private final ObjectProvider<HttpServletRequest> request;
 
-	private EnvironmentWatch watch;
+	private final EnvironmentWatch watch;
+
+	private final ConfigTokenProvider tokenProvider;
 
 	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request,
 			EnvironmentWatch watch, RestTemplate rest,
 			VaultEnvironmentProperties properties) {
+		this(request, watch, rest, properties,
+				new HttpRequestConfigTokenProvider(request));
+	}
+
+	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request,
+			EnvironmentWatch watch, RestTemplate rest,
+			VaultEnvironmentProperties properties, ConfigTokenProvider tokenProvider) {
 		this.request = request;
 		this.watch = watch;
+		this.tokenProvider = tokenProvider;
 		this.backend = properties.getBackend();
 		this.defaultKey = properties.getDefaultKey();
 		this.host = properties.getHost();
@@ -124,26 +134,17 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-
-		HttpServletRequest servletRequest = this.request.getIfAvailable();
-		if (servletRequest == null) {
-			throw new IllegalStateException("No HttpServletRequest available");
-		}
-
-		String state = servletRequest.getHeader(STATE_HEADER);
-		String newState = this.watch.watch(state);
-
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		List<String> scrubbedProfiles = scrubProfiles(profiles);
 
 		List<String> keys = findKeys(application, scrubbedProfiles);
 
 		Environment environment = new Environment(application, profiles, label, null,
-				newState);
+				getWatchState());
 
 		for (String key : keys) {
 			// read raw 'data' key from vault
-			String data = read(servletRequest, key);
+			String data = read(key);
 			if (data != null) {
 				// data is in json format of which, yaml is a superset, so parse
 				final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
@@ -157,6 +158,15 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 
 		return environment;
+	}
+
+	private String getWatchState() {
+		HttpServletRequest servletRequest = this.request.getIfAvailable();
+		if (servletRequest != null) {
+			String state = servletRequest.getHeader(STATE_HEADER);
+			return this.watch.watch(state);
+		}
+		return null;
 	}
 
 	private List<String> findKeys(String application, List<String> profiles) {
@@ -194,21 +204,23 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 	}
 
-	String read(HttpServletRequest servletRequest, String key) {
-
+	private String read(String key) {
 		HttpHeaders headers = new HttpHeaders();
-
-		String token = servletRequest.getHeader(TOKEN_HEADER);
-		if (!StringUtils.hasLength(token)) {
-			throw new IllegalArgumentException(
-					"Missing required header: " + TOKEN_HEADER);
-		}
-		headers.add(VAULT_TOKEN, token);
+		headers.add(VAULT_TOKEN, getToken());
 		if (StringUtils.hasText(this.namespace)) {
 			headers.add(VAULT_NAMESPACE, this.namespace);
 		}
 
 		return this.accessStrategy.getData(headers, this.backend, key);
+	}
+
+	private String getToken() {
+		String token = tokenProvider.getToken();
+		if (!StringUtils.hasLength(token)) {
+			throw new IllegalArgumentException(
+					"A Vault token must be supplied by a token provider");
+		}
+		return token;
 	}
 
 	public void setHost(String host) {
