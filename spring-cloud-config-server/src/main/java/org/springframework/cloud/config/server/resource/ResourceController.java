@@ -52,7 +52,8 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  *
  */
 @RestController
-@RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
+@RequestMapping(method = RequestMethod.GET,
+		path = "${spring.cloud.config.server.prefix:}")
 public class ResourceController {
 
 	private ResourceRepository resourceRepository;
@@ -129,14 +130,16 @@ public class ResourceController {
 		return retrieve(null, name, profile, label, path, resolvePlaceholders);
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@RequestMapping(value = "/{name}/{profile}/{label}/**",
+			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binary(@PathVariable String name, @PathVariable String profile,
 			@PathVariable String label, ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return binary(request, name, profile, label, path);
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel",
+			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binary(@PathVariable String name, @PathVariable String profile,
 			ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, null);

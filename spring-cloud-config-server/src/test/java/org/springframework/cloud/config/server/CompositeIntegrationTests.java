@@ -106,7 +106,8 @@ public class CompositeIntegrationTests {
 			"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
 			"spring.cloud.config.server.composite[0].type:git",
 			"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
-			"spring.cloud.config.server.composite[1].type:svn" }, webEnvironment = RANDOM_PORT)
+			"spring.cloud.config.server.composite[1].type:svn" },
+			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "composite" })
 	public static class ListTests {
 

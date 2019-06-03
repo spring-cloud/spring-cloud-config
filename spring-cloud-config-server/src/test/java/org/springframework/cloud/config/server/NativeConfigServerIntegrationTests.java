@@ -38,8 +38,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class, properties = {
-		"spring.config.name:configserver" }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class,
+		properties = { "spring.config.name:configserver" }, webEnvironment = RANDOM_PORT)
 @ActiveProfiles({ "test", "native" })
 public class NativeConfigServerIntegrationTests {
 

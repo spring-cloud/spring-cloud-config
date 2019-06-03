@@ -42,8 +42,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestApplication.class, properties = {
-		"spring.config.name:configserver" }, webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TestApplication.class,
+		properties = { "spring.config.name:configserver" },
+		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
 public class CustomEnvironmentRepositoryTests {

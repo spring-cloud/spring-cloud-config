@@ -52,7 +52,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.anyString;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestConfiguration.class, properties = "spring.cloud.config.enabled:true", webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TestConfiguration.class,
+		properties = "spring.cloud.config.enabled:true",
+		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
 public class ConfigClientOnIntegrationTests {

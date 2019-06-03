@@ -36,9 +36,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class, properties = {
-		"spring.cloud.bootstrap.name:enable-bootstrap", "encrypt.rsa.algorithm=DEFAULT",
-		"encrypt.rsa.strong=false" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class,
+		properties = { "spring.cloud.bootstrap.name:enable-bootstrap",
+				"encrypt.rsa.algorithm=DEFAULT", "encrypt.rsa.strong=false" },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({ "test", "encrypt" })
 public class BootstrapConfigServerIntegrationTests {
 

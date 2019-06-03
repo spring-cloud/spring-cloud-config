@@ -97,7 +97,8 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 		return Collections.emptySet();
 	}
 
-	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+	@RequestMapping(method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public Set<String> notifyByForm(@RequestHeader HttpHeaders headers,
 			@RequestParam("path") List<String> request) {
 		Map<String, Object> map = new HashMap<>();

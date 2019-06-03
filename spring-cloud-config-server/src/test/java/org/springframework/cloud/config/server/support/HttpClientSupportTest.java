@@ -42,7 +42,8 @@ import static org.hamcrest.Matchers.isA;
 import static org.junit.internal.matchers.ThrowableCauseMatcher.hasCause;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = HttpClientSupportTest.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = HttpClientSupportTest.TestConfiguration.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class HttpClientSupportTest {
 
 	@Rule

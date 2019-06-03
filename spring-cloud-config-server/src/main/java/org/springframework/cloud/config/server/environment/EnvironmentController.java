@@ -62,7 +62,8 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  *
  */
 @RestController
-@RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
+@RequestMapping(method = RequestMethod.GET,
+		path = "${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
 
 	private EnvironmentRepository repository;

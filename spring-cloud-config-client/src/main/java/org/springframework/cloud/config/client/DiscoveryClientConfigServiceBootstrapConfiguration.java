@@ -43,7 +43,8 @@ import org.springframework.context.event.SmartApplicationListener;
  *
  * @author Dave Syer
  */
-@ConditionalOnProperty(value = "spring.cloud.config.discovery.enabled", matchIfMissing = false)
+@ConditionalOnProperty(value = "spring.cloud.config.discovery.enabled",
+		matchIfMissing = false)
 @Configuration
 @Import({ UtilAutoConfiguration.class })
 @EnableDiscoveryClient

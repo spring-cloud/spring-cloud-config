@@ -36,6 +36,7 @@ import org.springframework.cloud.config.server.composite.CompositeEnvironmentBea
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
 import org.springframework.cloud.config.server.composite.ConditionalOnSearchPathLocator;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
 import org.springframework.cloud.config.server.environment.CredhubEnvironmentProperties;
@@ -45,6 +46,7 @@ import org.springframework.cloud.config.server.environment.EnvironmentRepository
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.HttpClientConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.HttpClientVaultRestTemplateFactory;
+import org.springframework.cloud.config.server.environment.HttpRequestConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepositoryFactory;
@@ -83,6 +85,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author Daniel Lavoie
  * @author Dylan Roberts
  * @author Alberto C. Ríos
+ * @author Scott Frederick
  */
 @Configuration
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
@@ -90,15 +93,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
 		RedisEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
-		VaultRepositoryConfiguration.class, CredhubConfiguration.class,
-		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
-		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
-		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
-		DefaultRepositoryConfiguration.class })
+		VaultConfiguration.class, VaultRepositoryConfiguration.class,
+		CredhubConfiguration.class, CredhubRepositoryConfiguration.class,
+		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
+		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class,
+		GoogleCloudSourceConfiguration.class, DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled",
+			matchIfMissing = true)
 	public ConfigServerHealthIndicator configServerHealthIndicator(
 			EnvironmentRepository repository) {
 		return new ConfigServerHealthIndicator(repository);
@@ -128,6 +132,18 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public EnvironmentWatch environmentWatch() {
 			return new EnvironmentWatch.Default();
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnMissingBean(ConfigTokenProvider.class)
+	protected static class DefaultConfigTokenProvider {
+
+		@Bean
+		public ConfigTokenProvider configTokenProvider(
+				ObjectProvider<HttpServletRequest> httpRequest) {
+			return new HttpRequestConfigTokenProvider(httpRequest);
 		}
 
 	}
@@ -180,9 +196,10 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
 				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-				Optional<VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory> vaultRestTemplateFactory) {
+				Optional<VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory> vaultRestTemplateFactory,
+				ConfigTokenProvider tokenProvider) {
 			return new VaultEnvironmentRepositoryFactory(request, watch,
-					vaultRestTemplateFactory);
+					vaultRestTemplateFactory, tokenProvider);
 		}
 
 	}
@@ -251,7 +268,8 @@ public class EnvironmentRepositoryConfiguration {
 }
 
 @Configuration
-@ConditionalOnMissingBean(value = EnvironmentRepository.class, search = SearchStrategy.CURRENT)
+@ConditionalOnMissingBean(value = EnvironmentRepository.class,
+		search = SearchStrategy.CURRENT)
 class DefaultRepositoryConfiguration {
 
 	@Bean
@@ -366,7 +384,7 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnSearchPathLocator
 	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) throws Exception {
+			List<EnvironmentRepository> environmentRepositories) {
 		return new SearchPathCompositeEnvironmentRepository(environmentRepositories);
 	}
 
@@ -374,7 +392,7 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnMissingSearchPathLocator
 	public CompositeEnvironmentRepository compositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) throws Exception {
+			List<EnvironmentRepository> environmentRepositories) {
 		return new CompositeEnvironmentRepository(environmentRepositories);
 	}
 

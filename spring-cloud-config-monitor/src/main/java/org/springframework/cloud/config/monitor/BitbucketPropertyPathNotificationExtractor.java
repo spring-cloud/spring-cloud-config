@@ -59,7 +59,7 @@ public class BitbucketPropertyPathNotificationExtractor
 			}
 		}
 		else if ("pr:merged".equals(headers.getFirst("X-Event-Key"))
-			&& StringUtils.hasText(headers.getFirst("X-Request-Id"))) {
+				&& StringUtils.hasText(headers.getFirst("X-Request-Id"))) {
 			// Bitbucket server
 			// Bitbucket doesn't tell us the files that changed so this is a
 			// broadcast to all apps

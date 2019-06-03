@@ -53,10 +53,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CustomCompositeEnvironmentRepositoryTests {
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.StaticTests.Config.class, properties = {
-			"spring.config.name:compositeconfigserver",
-			"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
-			"spring.cloud.config.server.git.order:1" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+	@SpringBootTest(
+			classes = CustomCompositeEnvironmentRepositoryTests.StaticTests.Config.class,
+			properties = { "spring.config.name:compositeconfigserver",
+					"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
+					"spring.cloud.config.server.git.order:1" },
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "git" })
 	@DirtiesContext
 	public static class StaticTests {
@@ -105,12 +107,14 @@ public class CustomCompositeEnvironmentRepositoryTests {
 	}
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.ListTests.Config.class, properties = {
-			"spring.config.name:compositeconfigserver",
-			"spring.cloud.config.server.composite[0].type:git",
-			"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
-			"spring.cloud.config.server.composite[1].type:custom",
-			"spring.cloud.config.server.composite[1].propertySourceName:p" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+	@SpringBootTest(
+			classes = CustomCompositeEnvironmentRepositoryTests.ListTests.Config.class,
+			properties = { "spring.config.name:compositeconfigserver",
+					"spring.cloud.config.server.composite[0].type:git",
+					"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+					"spring.cloud.config.server.composite[1].type:custom",
+					"spring.cloud.config.server.composite[1].propertySourceName:p" },
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "composite" })
 	@DirtiesContext
 	public static class ListTests {

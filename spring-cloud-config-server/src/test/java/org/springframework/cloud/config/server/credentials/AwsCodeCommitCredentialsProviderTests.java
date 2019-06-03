@@ -95,7 +95,7 @@ public class AwsCodeCommitCredentialsProviderTests {
 						new CredentialItem.Password(), // this is ok
 						new CredentialItem.StringType("OK To Login?", true) // this is not
 				// ok
-		})).isFalse();
+				})).isFalse();
 	}
 
 	@Test

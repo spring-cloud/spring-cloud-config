@@ -32,10 +32,11 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Alberto C. Ríos
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class, properties = {
-		"spring.profiles.active:composite",
-		"spring.cloud.config.server.composite[0].type:credhub",
-		"spring.cloud.config.server.composite[0].url:https://credhub:8844" }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class,
+		properties = { "spring.profiles.active:composite",
+				"spring.cloud.config.server.composite[0].type:credhub",
+				"spring.cloud.config.server.composite[0].url:https://credhub:8844" },
+		webEnvironment = RANDOM_PORT)
 public class CredhubCompositeConfigServerIntegrationTests extends CredhubIntegrationTest {
 
 	@LocalServerPort

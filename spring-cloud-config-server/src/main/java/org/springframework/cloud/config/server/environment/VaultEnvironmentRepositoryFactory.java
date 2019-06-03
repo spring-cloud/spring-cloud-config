@@ -25,15 +25,18 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Dylan Roberts
+ * @author Scott Frederick
  */
 public class VaultEnvironmentRepositoryFactory implements
 		EnvironmentRepositoryFactory<VaultEnvironmentRepository, VaultEnvironmentProperties> {
 
-	private ObjectProvider<HttpServletRequest> request;
+	private final ObjectProvider<HttpServletRequest> request;
 
-	private EnvironmentWatch watch;
+	private final EnvironmentWatch watch;
 
-	private Optional<VaultRestTemplateFactory> vaultRestTemplateFactory;
+	private final Optional<VaultRestTemplateFactory> vaultRestTemplateFactory;
+
+	private final ConfigTokenProvider tokenProvider;
 
 	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request,
 			EnvironmentWatch watch,
@@ -41,6 +44,17 @@ public class VaultEnvironmentRepositoryFactory implements
 		this.request = request;
 		this.watch = watch;
 		this.vaultRestTemplateFactory = vaultRestTemplateFactory;
+		this.tokenProvider = new HttpRequestConfigTokenProvider(request);
+	}
+
+	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request,
+			EnvironmentWatch watch,
+			Optional<VaultRestTemplateFactory> vaultRestTemplateFactory,
+			ConfigTokenProvider tokenProvider) {
+		this.request = request;
+		this.watch = watch;
+		this.vaultRestTemplateFactory = vaultRestTemplateFactory;
+		this.tokenProvider = tokenProvider;
 	}
 
 	@Override
@@ -50,10 +64,10 @@ public class VaultEnvironmentRepositoryFactory implements
 			RestTemplate restTemplate = this.vaultRestTemplateFactory.get()
 					.build(environmentProperties);
 			return new VaultEnvironmentRepository(this.request, this.watch, restTemplate,
-					environmentProperties);
+					environmentProperties, tokenProvider);
 		}
 		return new VaultEnvironmentRepository(this.request, this.watch,
-				new RestTemplate(), environmentProperties);
+				new RestTemplate(), environmentProperties, tokenProvider);
 	}
 
 	/**

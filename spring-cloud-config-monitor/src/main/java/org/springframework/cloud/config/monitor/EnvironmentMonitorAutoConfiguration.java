@@ -50,37 +50,46 @@ public class EnvironmentMonitorAutoConfiguration {
 	protected static class PropertyPathNotificationExtractorConfiguration {
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.github.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(
+				value = "spring.cloud.config.server.monitor.github.enabled",
+				havingValue = "true", matchIfMissing = true)
 		public GithubPropertyPathNotificationExtractor githubPropertyPathNotificationExtractor() {
 			return new GithubPropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitlab.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(
+				value = "spring.cloud.config.server.monitor.gitlab.enabled",
+				havingValue = "true", matchIfMissing = true)
 		public GitlabPropertyPathNotificationExtractor gitlabPropertyPathNotificationExtractor() {
 			return new GitlabPropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.bitbucket.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(
+				value = "spring.cloud.config.server.monitor.bitbucket.enabled",
+				havingValue = "true", matchIfMissing = true)
 		public BitbucketPropertyPathNotificationExtractor bitbucketPropertyPathNotificationExtractor() {
 			return new BitbucketPropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitea.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitea.enabled",
+				havingValue = "true", matchIfMissing = true)
 		public GiteaPropertyPathNotificationExtractor giteaPropertyPathNotificationExtractor() {
 			return new GiteaPropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitee.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitee.enabled",
+				havingValue = "true", matchIfMissing = true)
 		public GiteePropertyPathNotificationExtractor giteePropertyPathNotificationExtractor() {
 			return new GiteePropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gogs.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gogs.enabled",
+				havingValue = "true", matchIfMissing = true)
 		public GogsPropertyPathNotificationExtractor gogsPropertyPathNotificationExtractor() {
 			return new GogsPropertyPathNotificationExtractor();
 		}

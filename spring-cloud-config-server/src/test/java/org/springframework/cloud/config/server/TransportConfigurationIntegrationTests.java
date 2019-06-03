@@ -53,9 +53,10 @@ public class TransportConfigurationIntegrationTests {
 	public static class PropertyBasedCallbackTest {
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(classes = { ConfigServerApplication.class,
-				SshPropertyValidator.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-						"spring.config.name:ssh/ssh-private-key-block" })
+		@SpringBootTest(
+				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = { "spring.config.name:ssh/ssh-private-key-block" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
 
@@ -73,9 +74,10 @@ public class TransportConfigurationIntegrationTests {
 		}
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(classes = { ConfigServerApplication.class,
-				SshPropertyValidator.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-						"spring.config.name:ssh/ssh-private-key-block-list" })
+		@SpringBootTest(
+				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = { "spring.config.name:ssh/ssh-private-key-block-list" })
 		@ActiveProfiles({ "test", "composite" })
 		public static class ListTest {
 
@@ -97,9 +99,10 @@ public class TransportConfigurationIntegrationTests {
 	public static class PrivateKeyPropertyWithLineBreaks {
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(classes = { ConfigServerApplication.class,
-				SshPropertyValidator.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-						"spring.config.name:ssh/ssh-private-key-newline" })
+		@SpringBootTest(
+				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = { "spring.config.name:ssh/ssh-private-key-newline" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
 
@@ -121,9 +124,10 @@ public class TransportConfigurationIntegrationTests {
 		}
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(classes = { ConfigServerApplication.class,
-				SshPropertyValidator.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-						"spring.config.name:ssh/ssh-private-key-newline-list" })
+		@SpringBootTest(
+				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = { "spring.config.name:ssh/ssh-private-key-newline-list" })
 		@ActiveProfiles({ "test", "composite" })
 		public static class ListTest {
 
@@ -149,9 +153,10 @@ public class TransportConfigurationIntegrationTests {
 	public static class SshPropertiesWithinNestedRepo {
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(classes = { ConfigServerApplication.class,
-				SshPropertyValidator.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-						"spring.config.name:ssh/ssh-nested-settings" })
+		@SpringBootTest(
+				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = { "spring.config.name:ssh/ssh-nested-settings" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
 
@@ -179,9 +184,10 @@ public class TransportConfigurationIntegrationTests {
 		}
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(classes = { ConfigServerApplication.class,
-				SshPropertyValidator.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-						"spring.config.name:ssh/ssh-nested-settings-list" })
+		@SpringBootTest(
+				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = { "spring.config.name:ssh/ssh-nested-settings-list" })
 		@ActiveProfiles({ "test", "composite" })
 		public static class ListTest {
 
@@ -213,8 +219,10 @@ public class TransportConfigurationIntegrationTests {
 	public static class FileBasedCallbackTest {
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(classes = { ConfigServerApplication.class,
-				SshPropertyValidator.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+		@SpringBootTest(
+				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = {
 						"spring.cloud.config.server.git.uri=git@gitserver.com:team/repo.git",
 						"spring.cloud.config.server.git.ignoreLocalSshSettings=false" })
 		@ActiveProfiles({ "test", "git" })
@@ -271,9 +279,10 @@ public class TransportConfigurationIntegrationTests {
 		}
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(classes = { ConfigServerApplication.class,
-				SshPropertyValidator.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-						"spring.cloud.config.server.composite[0].type=git",
+		@SpringBootTest(
+				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = { "spring.cloud.config.server.composite[0].type=git",
 						"spring.cloud.config.server.composite[0].uri=git@gitserver.com:team/repo.git",
 						"spring.cloud.config.server.composite[0].ignoreLocalSshSettings=false" })
 		@ActiveProfiles({ "test", "composite" })
