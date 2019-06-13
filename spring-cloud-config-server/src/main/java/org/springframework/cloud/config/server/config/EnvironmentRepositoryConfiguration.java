@@ -307,8 +307,8 @@ class SvnRepositoryConfiguration {
 
 	@Bean
 	public SvnKitEnvironmentRepository svnKitEnvironmentRepository(
-			SvnKitEnvironmentProperties environmentProperties,
-			SvnEnvironmentRepositoryFactory factory) {
+			SvnEnvironmentRepositoryFactory factory,
+			SvnKitEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 
