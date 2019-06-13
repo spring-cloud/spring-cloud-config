@@ -115,6 +115,11 @@ public class ConfigClientProperties {
 	private int requestReadTimeout = (60 * 1000 * 3) + 5000;
 
 	/**
+	 * timeout on waiting to connect to the Config Server.
+	 */
+	private int requestConnectTimeout = 1000 * 10;
+
+	/**
 	 * Flag to indicate whether to send state. Default true.
 	 */
 	private boolean sendState = true;
@@ -227,6 +232,14 @@ public class ConfigClientProperties {
 		this.requestReadTimeout = requestReadTimeout;
 	}
 
+	public int getRequestConnectTimeout() {
+		return this.requestConnectTimeout;
+	}
+
+	public void setRequestConnectTimeout(int requestConnectTimeout) {
+		this.requestConnectTimeout = requestConnectTimeout;
+	}
+
 	public boolean isSendState() {
 		return this.sendState;
 	}
@@ -333,6 +346,7 @@ public class ConfigClientProperties {
 				+ ", username=" + this.username + ", password=" + this.password + ", uri="
 				+ Arrays.toString(this.uri) + ", discovery=" + this.discovery
 				+ ", failFast=" + this.failFast + ", token=" + this.token
+				+ ", requestConnectTimeout=" + this.requestConnectTimeout
 				+ ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
 				+ this.sendState + ", headers=" + this.headers + "]";
 	}

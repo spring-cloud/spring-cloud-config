@@ -1377,9 +1377,12 @@ To ensure high availability when you have multiple instances of Config Server de
 
 If you use HTTP basic security on your Config Server, it is currently possible to support per-Config Server auth credentials only if you embed the credentials in each URL you specify under the `spring.cloud.config.uri` property. If you use any other kind of security mechanism, you cannot (currently) support per-Config Server authentication and authorization.
 
-=== Configuring Read Timeouts
+=== Configuring Timeouts
 
-If you want to configure read timeout, this can be done by using the property `spring.cloud.config.request-read-timeout`.
+If you want to configure timeout thresholds:
+
+* Read timeouts can be configured by using the property `spring.cloud.config.request-read-timeout`.
+* Connection timeouts can be configured by using the property `spring.cloud.config.request-connect-timeout`.
 
 === Security
 
