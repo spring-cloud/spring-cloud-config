@@ -40,11 +40,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Gilles Robert
+ * @author Stefan Pfeiffer
  *
  */
 public class FileMonitorConfigurationTest {
 
 	private static final String SAMPLE_PATH = "resources/pathsamples";
+
+	private static final String SAMPLE_FILE_URL = "file:///test";
 
 	private FileMonitorConfiguration fileMonitorConfiguration = new FileMonitorConfiguration();
 
@@ -107,6 +110,37 @@ public class FileMonitorConfigurationTest {
 				SAMPLE_PATH);
 		AbstractScmEnvironmentRepository secondRepository = createScmEnvironmentRepository(
 				"anotherPath");
+		addScmRepository(repository);
+		addScmRepository(secondRepository);
+
+		// when
+		fileMonitorConfiguration.start();
+
+		// then
+		assertOnDirectory(2);
+	}
+
+	@Test
+	public void testStart_withOneFileUrlScmRepository() {
+		// given
+		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(
+				SAMPLE_FILE_URL);
+		addScmRepository(repository);
+
+		// when
+		fileMonitorConfiguration.start();
+
+		// then
+		assertOnDirectory(1);
+	}
+
+	@Test
+	public void testStart_withTwoMixedPathAndFileUrlScmRepositories() {
+		// given
+		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(
+				SAMPLE_PATH);
+		AbstractScmEnvironmentRepository secondRepository = createScmEnvironmentRepository(
+				SAMPLE_FILE_URL);
 		addScmRepository(repository);
 		addScmRepository(secondRepository);
 
