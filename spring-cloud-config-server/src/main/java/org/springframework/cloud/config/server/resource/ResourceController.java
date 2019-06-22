@@ -19,13 +19,20 @@ package org.springframework.cloud.config.server.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,17 +63,35 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
 		path = "${spring.cloud.config.server.prefix:}")
 public class ResourceController {
 
+	private static Log logger = LogFactory.getLog(ResourceController.class);
+
 	private ResourceRepository resourceRepository;
 
 	private EnvironmentRepository environmentRepository;
 
+	private Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
+
 	private UrlPathHelper helper = new UrlPathHelper();
 
+	private boolean encryptEnabled = false;
+
+	private boolean plainTextEncryptEnabled = false;
+
 	public ResourceController(ResourceRepository resourceRepository,
-			EnvironmentRepository environmentRepository) {
+			EnvironmentRepository environmentRepository,
+			Map<String, ResourceEncryptor> resourceEncryptorMap) {
 		this.resourceRepository = resourceRepository;
 		this.environmentRepository = environmentRepository;
+		this.resourceEncryptorMap = resourceEncryptorMap;
 		this.helper.setAlwaysUseFullPath(true);
+	}
+
+	public void setEncryptEnabled(boolean encryptEnabled) {
+		this.encryptEnabled = encryptEnabled;
+	}
+
+	public void setPlainTextEncryptEnabled(boolean plainTextEncryptEnabled) {
+		this.plainTextEncryptEnabled = plainTextEncryptEnabled;
 	}
 
 	@RequestMapping("/{name}/{profile}/{label}/**")
@@ -113,10 +138,21 @@ public class ResourceController {
 		// ensure InputStream will be closed to prevent file locks on Windows
 		try (InputStream is = resource.getInputStream()) {
 			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
+			String ext = StringUtils.getFilenameExtension(resource.getFilename())
+					.toLowerCase();
+			Environment environment = this.environmentRepository.findOne(name, profile,
+					label);
 			if (resolvePlaceholders) {
-				Environment environment = this.environmentRepository.findOne(name,
-						profile, label);
 				text = resolvePlaceholders(prepareEnvironment(environment), text);
+			}
+			if (encryptEnabled && plainTextEncryptEnabled) {
+				ResourceEncryptor re = this.resourceEncryptorMap.get(ext);
+				if (re == null) {
+					logger.warn("Cannot decrypt for extension " + ext);
+				}
+				else {
+					text = re.decrypt(text, environment);
+				}
 			}
 			return text;
 		}

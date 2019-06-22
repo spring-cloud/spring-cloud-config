@@ -1290,6 +1290,14 @@ So, if you want a profile-specific file, `/\*/development/*/logback.xml` can be 
 NOTE: If you do not want to supply the `label` and let the server use the default label, you can supply a `useDefaultLabel` request parameter.
 So, the preceding example for the `default` profile could be `/foo/default/nginx.conf?useDefaultLabel`.
 
+=== Decrpyting Plain Text
+
+By default, encrypted values in plain text files are not decrypted. In order to enable decryption for plain text files, set `spring.cloud.config.server.encrypt.enabled=true` and `spring.cloud.config.server.encrypt.plainTextEncrypt=true` in `bootstrap.[yml|properties]` 
+
+NOTE: Decrpyting plain text files is only supported for YAML, JSON, and properties file extensions. 
+
+If this feature is enabled, and an unsupported file extention is requested, any encrypted values in the file will not be decrypted.
+
 == Embedding the Config Server
 
 The Config Server runs best as a standalone application.

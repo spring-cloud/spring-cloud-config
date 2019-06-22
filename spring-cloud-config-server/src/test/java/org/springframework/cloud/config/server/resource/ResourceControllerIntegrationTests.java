@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.server.resource;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,13 +28,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentController;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.resource.ResourceControllerIntegrationTests.ControllerConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -75,7 +79,7 @@ public class ResourceControllerIntegrationTests {
 		Mockito.when(this.repository.findOne("foo", "default", "master"))
 				.thenReturn(new Environment("foo", "default"));
 		Mockito.when(this.resources.findOne("foo", "default", "master", "foo.txt"))
-				.thenReturn(new ByteArrayResource("hello".getBytes()));
+				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 		Mockito.verify(this.repository).findOne("foo", "default", "master");
@@ -87,7 +91,7 @@ public class ResourceControllerIntegrationTests {
 		Mockito.when(this.repository.findOne("foo", "default", null))
 				.thenReturn(new Environment("foo", "default", "master"));
 		Mockito.when(this.resources.findOne("foo", "default", null, "foo.txt"))
-				.thenReturn(new ByteArrayResource("hello".getBytes()));
+				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
 				.param("useDefaultLabel", ""))
 				.andExpect(MockMvcResultMatchers.status().isOk());
@@ -100,7 +104,7 @@ public class ResourceControllerIntegrationTests {
 		Mockito.when(this.repository.findOne("foo", "default", null))
 				.thenReturn(new Environment("foo", "default", "master"));
 		Mockito.when(this.resources.findOne("foo", "default", null, "foo.txt"))
-				.thenReturn(new ByteArrayResource("hello".getBytes()));
+				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
 				.param("useDefaultLabel", "")
 				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
@@ -113,6 +117,9 @@ public class ResourceControllerIntegrationTests {
 	@EnableWebMvc
 	@Import(PropertyPlaceholderAutoConfiguration.class)
 	public static class ControllerConfiguration {
+
+		@Autowired(required = false)
+		private Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
 
 		@Bean
 		public EnvironmentRepository environmentRepository() {
@@ -133,7 +140,8 @@ public class ResourceControllerIntegrationTests {
 
 		@Bean
 		public ResourceController resourceController() {
-			return new ResourceController(resourceRepository(), environmentRepository());
+			return new ResourceController(resourceRepository(), environmentRepository(),
+					resourceEncryptorMap);
 		}
 
 	}

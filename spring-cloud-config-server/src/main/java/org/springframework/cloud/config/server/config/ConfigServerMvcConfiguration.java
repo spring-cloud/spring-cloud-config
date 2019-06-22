@@ -16,12 +16,16 @@
 
 package org.springframework.cloud.config.server.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
+import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentController;
 import org.springframework.cloud.config.server.environment.EnvironmentEncryptorEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
@@ -47,6 +51,9 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 	@Autowired(required = false)
 	private ObjectMapper objectMapper = new ObjectMapper();
 
+	@Autowired(required = false)
+	private Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
+
 	@Override
 	public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
 		configurer.mediaType("properties", MediaType.valueOf("text/plain"));
@@ -69,14 +76,16 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 	public ResourceController resourceController(ResourceRepository repository,
 			EnvironmentRepository envRepository, ConfigServerProperties server) {
 		ResourceController controller = new ResourceController(repository,
-				encrypted(envRepository, server));
+				encrypted(envRepository, server), this.resourceEncryptorMap);
+		controller.setEncryptEnabled(server.getEncrypt().isEnabled());
+		controller.setPlainTextEncryptEnabled(server.getEncrypt().isPlainTextEncrypt());
 		return controller;
 	}
 
 	private EnvironmentRepository encrypted(EnvironmentRepository envRepository,
 			ConfigServerProperties server) {
 		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
-				envRepository, this.environmentEncryptor);
+				envRepository, environmentEncryptor);
 		encrypted.setOverrides(server.getOverrides());
 		return encrypted;
 	}

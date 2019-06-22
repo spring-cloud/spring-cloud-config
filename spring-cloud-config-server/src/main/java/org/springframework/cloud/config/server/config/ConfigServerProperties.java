@@ -157,12 +157,26 @@ public class ConfigServerProperties {
 		 */
 		private boolean enabled = true;
 
+		/**
+		 * Enable decryption of environment properties served by plain text endpoint
+		 * {@link org.springframework.cloud.config.server.resource.ResourceController}.
+		 */
+		private boolean plainTextEncrypt = false;
+
 		public boolean isEnabled() {
 			return this.enabled;
 		}
 
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
+		}
+
+		public boolean isPlainTextEncrypt() {
+			return plainTextEncrypt;
+		}
+
+		public void setPlainTextEncrypt(boolean plainTextEncrypt) {
+			this.plainTextEncrypt = plainTextEncrypt;
 		}
 
 	}
