@@ -44,6 +44,7 @@ import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.FileUrlResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
@@ -194,7 +195,8 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				for (AbstractScmEnvironmentRepository repository : scmRepositories) {
 					repositoryUri = repository.getUri();
 					Resource resource = this.resourceLoader.getResource(repositoryUri);
-					if (resource instanceof FileSystemResource) {
+					if (resource instanceof FileSystemResource
+							|| resource instanceof FileUrlResource) {
 						paths.add(Paths.get(resource.getURI()));
 					}
 				}

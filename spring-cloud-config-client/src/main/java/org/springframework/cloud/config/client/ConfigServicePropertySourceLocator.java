@@ -257,7 +257,11 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		if (client.getRequestReadTimeout() < 0) {
 			throw new IllegalStateException("Invalid Value for Read Timeout set.");
 		}
+		if (client.getRequestConnectTimeout() < 0) {
+			throw new IllegalStateException("Invalid Value for Connect Timeout set.");
+		}
 		requestFactory.setReadTimeout(client.getRequestReadTimeout());
+		requestFactory.setConnectTimeout(client.getRequestConnectTimeout());
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
 		if (headers.containsKey(AUTHORIZATION)) {
