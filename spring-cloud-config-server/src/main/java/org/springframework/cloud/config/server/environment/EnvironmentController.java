@@ -181,8 +181,9 @@ public class EnvironmentController {
 			if (output.length() > 0) {
 				output.append("\n");
 			}
-			String line = entry.getKey() + ": " + entry.getValue();
-			output.append(line);
+			output.append(entry.getKey())
+					.append(": ")
+					.append(entry.getValue());
 		}
 		return output.toString();
 	}
