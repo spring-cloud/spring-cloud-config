@@ -318,6 +318,19 @@ system properties (`-Dhttps.proxyHost` and `-Dhttps.proxyPort`).
 
 TIP: If you do not know where your `~/.git` directory is, use `git config --global` to manipulate the settings (for example, `git config --global http.sslVerify false`).
 
+JGit requires RSA keys in PEM format. Below is an example ssh-keygen (from openssh) command that will generate a key in the corect format:
+
+```bash
+ssh-keygen -m PEM -t rsa -b 4096 -f ~/config_server_deploy_key.rsa
+```
+
+Warning: When working with SSH keys, the expected ssh private-key must begin with ```-----BEGIN RSA PRIVATE KEY-----```. If the key starts with ```-----BEGIN OPENSSH PRIVATE KEY-----``` then the RSA key will not load when spring-cloud-config server is started. The error looks like:
+```
+- Error in object 'spring.cloud.config.server.git': codes [PrivateKeyIsValid.spring.cloud.config.server.git,PrivateKeyIsValid]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [spring.cloud.config.server.git.,]; arguments []; default message []]; default message [Property 'spring.cloud.config.server.git.privateKey' is not a valid private key]
+```
+
+To correct the above error the RSA key must be converted to PEM format. An example using openssh is provided above for generating a new key in the appropriate format.
+
 ===== Authentication with AWS CodeCommit
 
 Spring Cloud Config Server also supports https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html[AWS CodeCommit] authentication.
