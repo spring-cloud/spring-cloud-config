@@ -4,11 +4,11 @@
 <book xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Spring Cloud Config</title>
-<date>2019-06-06</date>
+<date>2019-06-28</date>
 </info>
 <preface>
 <title></title>
-<simpara><emphasis role="strong">2.1.3.BUILD-SNAPSHOT</emphasis></simpara>
+<simpara><emphasis role="strong">2.1.4.BUILD-SNAPSHOT</emphasis></simpara>
 <simpara>Spring Cloud Config provides server-side and client-side support for externalized configuration in a distributed system. With the Config Server, you have a central place to manage external properties for applications across all environments.
 The concepts on both client and server map identically to the Spring <literal>Environment</literal> and <literal>PropertySource</literal> abstractions, so they fit very well with Spring applications but can be used with any application running in any language.
 As an application moves through the deployment pipeline from dev to test and into production, you can manage the configuration between those environments and be certain that applications have everything they need to run when they migrate.
@@ -1373,9 +1373,17 @@ For instance, you might want to align the config label with your branch but make
 <simpara>To ensure high availability when you have multiple instances of Config Server deployed and expect one or more instances to be unavailable from time to time, you can either specify multiple URLs (as a comma-separated list under the <literal>spring.cloud.config.uri</literal> property) or have all your instances register in a Service Registry like Eureka ( if using Discovery-First Bootstrap mode ). Note that doing so ensures high availability only when the Config Server is not running (that is, when the application has exited) or when a connection timeout has occurred. For example, if the Config Server returns a 500 (Internal Server Error) response or the Config Client receives a 401 from the Config Server (due to bad credentials or other causes), the Config Client does not try to fetch properties from other URLs. An error of that kind indicates a user issue rather than an availability problem.</simpara>
 <simpara>If you use HTTP basic security on your Config Server, it is currently possible to support per-Config Server auth credentials only if you embed the credentials in each URL you specify under the <literal>spring.cloud.config.uri</literal> property. If you use any other kind of security mechanism, you cannot (currently) support per-Config Server authentication and authorization.</simpara>
 </section>
-<section xml:id="_configuring_read_timeouts">
-<title>Configuring Read Timeouts</title>
-<simpara>If you want to configure read timeout, this can be done by using the property <literal>spring.cloud.config.request-read-timeout</literal>.</simpara>
+<section xml:id="_configuring_timeouts">
+<title>Configuring Timeouts</title>
+<simpara>If you want to configure timeout thresholds:</simpara>
+<itemizedlist>
+<listitem>
+<simpara>Read timeouts can be configured by using the property <literal>spring.cloud.config.request-read-timeout</literal>.</simpara>
+</listitem>
+<listitem>
+<simpara>Connection timeouts can be configured by using the property <literal>spring.cloud.config.request-connect-timeout</literal>.</simpara>
+</listitem>
+</itemizedlist>
 </section>
 <section xml:id="_security_2">
 <title>Security</title>
