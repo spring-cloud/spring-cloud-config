@@ -118,7 +118,7 @@ $(addBlockSwitches);
 <li><a href="#config-client-retry">Config Client Retry</a></li>
 <li><a href="#_locating_remote_configuration_resources">Locating Remote Configuration Resources</a></li>
 <li><a href="#_specifying_multiple_urls_for_the_config_server">Specifying Multiple Urls for the Config Server</a></li>
-<li><a href="#_configuring_read_timeouts">Configuring Read Timeouts</a></li>
+<li><a href="#_configuring_timeouts">Configuring Timeouts</a></li>
 <li><a href="#_security_2">Security</a></li>
 <li><a href="#_nested_keys_in_vault">Nested Keys In Vault</a></li>
 </ul>
@@ -2491,9 +2491,19 @@ For instance, you might want to align the config label with your branch but make
 </div>
 </div>
 <div class="sect2">
-<h3 id="_configuring_read_timeouts"><a class="link" href="#_configuring_read_timeouts">Configuring Read Timeouts</a></h3>
+<h3 id="_configuring_timeouts"><a class="link" href="#_configuring_timeouts">Configuring Timeouts</a></h3>
 <div class="paragraph">
-<p>If you want to configure read timeout, this can be done by using the property <code>spring.cloud.config.request-read-timeout</code>.</p>
+<p>If you want to configure timeout thresholds:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Read timeouts can be configured by using the property <code>spring.cloud.config.request-read-timeout</code>.</p>
+</li>
+<li>
+<p>Connection timeouts can be configured by using the property <code>spring.cloud.config.request-connect-timeout</code>.</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">
