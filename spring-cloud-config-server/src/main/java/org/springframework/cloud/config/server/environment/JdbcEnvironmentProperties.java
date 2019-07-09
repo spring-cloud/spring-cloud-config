@@ -26,8 +26,7 @@ import org.springframework.core.Ordered;
 @ConfigurationProperties("spring.cloud.config.server.jdbc")
 public class JdbcEnvironmentProperties implements EnvironmentRepositoryProperties {
 
-	private static final String DEFAULT_SQL = "SELECT KEY, VALUE from PROPERTIES"
-			+ " where APPLICATION=? and PROFILE=? and LABEL=?";
+	private static final String DEFAULT_SQL = "SELECT CONFIG_KEY, CONFIG_VALUE from PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=?";
 
 	private int order = Ordered.LOWEST_PRECEDENCE - 10;
 

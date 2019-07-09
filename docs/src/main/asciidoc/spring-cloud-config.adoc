@@ -764,9 +764,12 @@ You can enable this feature by adding `spring-jdbc` to the classpath and using t
 If you include the right dependencies on the classpath (see the user guide for more details on that), Spring Boot configures a data source.
 // TODO Which user guide? When we know that, we should add a link to it.
 
-The database needs to have a table called `PROPERTIES` with columns called `APPLICATION`, `PROFILE`, and `LABEL` (with the usual `Environment` meaning), plus `KEY` and `VALUE` for the key and value pairs in `Properties` style.
+By default, the database needs to have a table called `PROPERTIES` with columns called `APPLICATION`, `PROFILE`, and `LABEL` (with the usual `Environment` meaning), plus `CONFIG_KEY` and `CONFIG_VALUE` for the key and value pairs in `Properties` style.
 All fields are of type String in Java, so you can make them `VARCHAR` of whatever length you need.
 Property values behave in the same way as they would if they came from Spring Boot properties files named `{application}-{profile}.properties`, including all the encryption and decryption, which will be applied as post-processing steps (that is, not in the repository implementation directly).
+
+TIP: If you want to use customized table name, or customized column name, or even customized table structure, you may use `spring.cloud.config.server.jdbc.sql` configuration to define a customized sql statement.
+     The default value for this sql statement is `SELECT CONFIG_KEY, CONFIG_VALUE from PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=?`.
 
 ==== Redis Backend
 
