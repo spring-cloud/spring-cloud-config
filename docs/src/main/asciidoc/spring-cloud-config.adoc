@@ -1518,6 +1518,8 @@ public class CustomConfigServiceBootstrapConfiguration {
 }
 ----
 
+NOTE: For a simplified approach to adding `Authorization` headers, the `spring.cloud.config.headers.*` property can be used instead.
+
 2. In `resources/META-INF`, create a file called
 `spring.factories` and specify your custom configuration, as shown in the following example:
 
