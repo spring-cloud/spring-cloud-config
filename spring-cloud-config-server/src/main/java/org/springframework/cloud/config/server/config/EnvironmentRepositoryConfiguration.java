@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.amazonaws.auth.AWSCredentials;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
@@ -35,6 +36,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.server.composite.CompositeEnvironmentBeanFactoryPostProcessor;
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
 import org.springframework.cloud.config.server.composite.ConditionalOnSearchPathLocator;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentProperties;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
@@ -179,6 +183,18 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration
+	@ConditionalOnClass(AWSCredentials.class)
+	static class AwsS3FactoryConfig {
+
+		@Bean
+		public AwsS3EnvironmentRepositoryFactory awsS3EnvironmentRepositoryFactory(
+				ConfigServerProperties server) {
+			return new AwsS3EnvironmentRepositoryFactory(server);
+		}
+
+	}
+
+	@Configuration
 	@ConditionalOnClass(SVNException.class)
 	static class SvnFactoryConfig {
 
@@ -298,6 +314,19 @@ class NativeRepositoryConfiguration {
 @Configuration
 @Profile("git")
 class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {
+
+}
+
+@Configuration
+@Profile("s3")
+class AwsS3RepositoryConfiguration {
+
+	@Bean
+	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(
+			AwsS3EnvironmentRepositoryFactory factory,
+			AwsS3EnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
 
 }
 
