@@ -105,6 +105,23 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 	}
 
 	@Test
+	public void urlWithPlaceholdersAtEnd() throws Exception {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri("https://localhost/v1/repos/pvvts_configs-{application}");
+		this.connectionFactory.addConfiguration(properties);
+
+		HttpConnection actualConnection = this.connectionFactory.create(
+				new URL("https://localhost/v1/repos/pvvts_configs-applicationPasswords"
+						+ "/some/path.properties"));
+
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
+				.values().stream().findFirst().get();
+		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(
+				actualConnection);
+		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+	}
+
+	@Test
 	public void composite_sameHost() throws Exception {
 		MultipleJGitEnvironmentProperties properties1 = new MultipleJGitEnvironmentProperties();
 		properties1.setUri("http://localhost/test1.git");
