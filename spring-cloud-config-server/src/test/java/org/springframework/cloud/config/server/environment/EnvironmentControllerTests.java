@@ -202,7 +202,7 @@ public class EnvironmentControllerTests {
 
 	@Test
 	public void testNameWithSlash() {
-		when(this.repository.findOne("foo/spam", "bar", "two"))
+		when(this.repository.findOne("foo/spam", "bar", "two", false))
 				.thenReturn(this.environment);
 
 		Environment returnedEnvironment = this.controller.labelled("foo(_)spam", "bar",
@@ -221,7 +221,7 @@ public class EnvironmentControllerTests {
 
 	@Test
 	public void testwithValidEnvironment() {
-		when(this.repository.findOne("foo", "bar", null))
+		when(this.repository.findOne("foo", "bar", null, false))
 				.thenReturn(this.environment);
 		Environment environment = this.controller.labelled("foo", "bar", null);
 		assertThat(environment).isNotNull();
@@ -231,7 +231,7 @@ public class EnvironmentControllerTests {
 	@Test
 	public void testLabelWithSlash() {
 
-		when(this.repository.findOne("foo", "bar", "two/spam"))
+		when(this.repository.findOne("foo", "bar", "two/spam", false))
 				.thenReturn(this.environment);
 
 		Environment returnedEnvironment = this.controller.labelled("foo", "bar",
@@ -517,7 +517,7 @@ public class EnvironmentControllerTests {
 
 	@Test
 	public void environmentMissing() throws Exception {
-		when(this.repository.findOne("foo1", "notfound", null))
+		when(this.repository.findOne("foo1", "notfound", null, false))
 				.thenThrow(new EnvironmentNotFoundException("Missing Environment"));
 		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
 		mvc.perform(MockMvcRequestBuilders.get("/foo1/notfound"))
