@@ -201,7 +201,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findLabeledObject() throws UnsupportedEncodingException {
-		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", "foo-bar-label1.yml");
+		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", "label1/foo-bar.yml");
 		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
 		s3Object.setObjectContent(new StringInputStream(yamlContent));
 		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))

@@ -74,11 +74,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 				? serverProperties.getDefaultProfile() : specifiedProfile;
 		final String label = StringUtils.isEmpty(specifiedLabel)
 				? serverProperties.getDefaultLabel() : specifiedLabel;
-		StringBuilder objectKeyPrefix = new StringBuilder(application).append("-")
-				.append(profile);
+		StringBuilder objectKeyPrefix = new StringBuilder();
 		if (!StringUtils.isEmpty(label)) {
-			objectKeyPrefix.append("-").append(label);
+			objectKeyPrefix.append(label).append("/");
 		}
+		objectKeyPrefix.append(application).append("-").append(profile);
 		final Environment environment = new Environment(application, profile);
 		environment.setLabel(label);
 		final S3ObjectIdBuilder s3ObjectIdBuilder = new S3ObjectIdBuilder()
