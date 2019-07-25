@@ -18,8 +18,6 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -87,9 +85,12 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 				objectKeyPrefix.toString());
 		if (s3ConfigFile == null) {
 			throw new NoSuchRepositoryException(
-					"No such repository: (" + s3ObjectIdBuilder
-							.withKey(objectKeyPrefix.toString() + "(.properties | .yml | .json)")
-							.build().toString() + ")");
+					"No such repository: ("
+							+ s3ObjectIdBuilder
+									.withKey(objectKeyPrefix.toString()
+											+ "(.properties | .yml | .json)")
+									.build().toString()
+							+ ")");
 		}
 		environment.setVersion(s3ConfigFile.getVersion());
 		final Map config = s3ConfigFile.read();
@@ -115,10 +116,10 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			}
 			catch (Exception eYaml) {
 				try {
-					final S3Object yaml = s3Client.getObject(new GetObjectRequest(
-						s3ObjectIdBuilder.withKey(keyPrefix + ".json").build()));
-					return new YamlS3ConfigFile(yaml.getObjectMetadata().getVersionId(),
-						yaml.getObjectContent());
+					final S3Object json = s3Client.getObject(new GetObjectRequest(
+							s3ObjectIdBuilder.withKey(keyPrefix + ".json").build()));
+					return new JsonS3ConfigFile(json.getObjectMetadata().getVersionId(),
+							json.getObjectContent());
 				}
 				catch (Exception eJson) {
 					return null;
@@ -187,6 +188,16 @@ class YamlS3ConfigFile extends S3ConfigFile {
 		catch (IOException e) {
 			throw new IllegalStateException("Cannot load environment", e);
 		}
+	}
+
+}
+
+class JsonS3ConfigFile extends YamlS3ConfigFile {
+
+	// YAML is a superset of JSON, which means you can parse JSON with a YAML parser
+
+	JsonS3ConfigFile(String version, InputStream inputStream) {
+		super(version, inputStream);
 	}
 
 }

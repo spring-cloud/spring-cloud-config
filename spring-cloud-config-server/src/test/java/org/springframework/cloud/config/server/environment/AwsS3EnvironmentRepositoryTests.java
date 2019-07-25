@@ -17,8 +17,6 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -73,24 +71,14 @@ public class AwsS3EnvironmentRepositoryTests {
 			+ "      user: 'user2'\n" + "      password: 'password2'\n"
 			+ "      api: api.sys.acc2.cf-app.com\n" + "      environment: test2\n";
 
-	final String jsonContent = "{\n"
-		+ " \"cloudfoundry\": {\n"
-		+ "  \"enabled\": true,\n"
-		+ "  \"accounts\": [{\n"
-		+ "   \"name\": \"acc1\",\n"
-		+ "   \"user\": \"user1\",\n"
-		+ "   \"password\": \"password1\",\n"
-		+ "   \"api\": \"api.sys.acc1.cf-app.com\",\n"
-		+ "   \"environment\": \"test1\"\n"
-		+ "  }, {\n"
-		+ "   \"name\": \"acc2\",\n"
-		+ "   \"user\": \"user2\",\n"
-		+ "   \"password\": \"password2\",\n"
-		+ "   \"api\": \"api.sys.acc2.cf-app.com\",\n"
-		+ "   \"environment\": \"test2\"\n"
-		+ "  }]\n"
-		+ " }\n"
-		+ "}";
+	final String jsonContent = "{\n" + " \"cloudfoundry\": {\n" + "  \"enabled\": true,\n"
+			+ "  \"accounts\": [{\n" + "   \"name\": \"acc1\",\n"
+			+ "   \"user\": \"user1\",\n" + "   \"password\": \"password1\",\n"
+			+ "   \"api\": \"api.sys.acc1.cf-app.com\",\n"
+			+ "   \"environment\": \"test1\"\n" + "  }, {\n" + "   \"name\": \"acc2\",\n"
+			+ "   \"user\": \"user2\",\n" + "   \"password\": \"password2\",\n"
+			+ "   \"api\": \"api.sys.acc2.cf-app.com\",\n"
+			+ "   \"environment\": \"test2\"\n" + "  }]\n" + " }\n" + "}";
 
 	final Properties expectedProperties = new Properties();
 
@@ -148,7 +136,7 @@ public class AwsS3EnvironmentRepositoryTests {
 		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
 		s3Object.setObjectContent(new StringInputStream(jsonContent));
 		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
-			.thenReturn(s3Object);
+				.thenReturn(s3Object);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
@@ -158,7 +146,7 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getVersion()).isEqualTo(null);
 		assertThat(env.getPropertySources().size()).isEqualTo(1);
 		assertThat(env.getPropertySources().get(0).getSource())
-			.isEqualTo(expectedProperties);
+				.isEqualTo(expectedProperties);
 	}
 
 	@Test

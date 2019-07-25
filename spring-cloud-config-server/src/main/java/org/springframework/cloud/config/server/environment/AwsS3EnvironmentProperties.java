@@ -29,7 +29,7 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 	private String region;
 
 	/**
-	 * Adds the ability to override the baseUrl of the s3 client
+	 * Adds the ability to override the baseUrl of the s3 client.
 	 */
 	private String endpoint;
 

@@ -41,8 +41,8 @@ public class AwsS3EnvironmentRepositoryFactory implements
 		if (environmentProperties.getEndpoint() != null) {
 			client.setEndpoint(environmentProperties.getEndpoint());
 		}
-		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(
-			client, environmentProperties.getBucket(), server);
+		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(client,
+				environmentProperties.getBucket(), server);
 		return repository;
 	}
 
