@@ -215,9 +215,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void testDefaultLabel() {
 		this.repository.setDefaultLabel("test");
-		assertThat(this.repository.findOne("foo", "default", null)
-				.getPropertySources().get(0).getSource().get("foo"))
-						.isEqualTo("test_bar");
+		assertThat(this.repository.findOne("foo", "default", null).getPropertySources()
+				.get(0).getSource().get("foo")).isEqualTo("test_bar");
 	}
 
 }

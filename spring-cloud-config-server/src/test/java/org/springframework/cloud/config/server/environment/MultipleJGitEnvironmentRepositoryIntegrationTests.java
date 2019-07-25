@@ -168,7 +168,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.properties(repoMapping).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("test1-svc", "staging,cloud", "master");
+		Environment environment = repository.findOne("test1-svc", "staging,cloud",
+				"master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
