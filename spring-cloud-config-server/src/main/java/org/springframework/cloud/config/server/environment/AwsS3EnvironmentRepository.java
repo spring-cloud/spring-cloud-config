@@ -88,7 +88,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		if (s3ConfigFile == null) {
 			throw new NoSuchRepositoryException(
 					"No such repository: (" + s3ObjectIdBuilder
-							.withKey(objectKeyPrefix.toString() + "(.properties | .yml)")
+							.withKey(objectKeyPrefix.toString() + "(.properties | .yml | .json)")
 							.build().toString() + ")");
 		}
 		environment.setVersion(s3ConfigFile.getVersion());
@@ -114,7 +114,15 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 						yaml.getObjectContent());
 			}
 			catch (Exception eYaml) {
-				return null;
+				try {
+					final S3Object yaml = s3Client.getObject(new GetObjectRequest(
+						s3ObjectIdBuilder.withKey(keyPrefix + ".json").build()));
+					return new YamlS3ConfigFile(yaml.getObjectMetadata().getVersionId(),
+						yaml.getObjectContent());
+				}
+				catch (Exception eJson) {
+					return null;
+				}
 			}
 		}
 	}

@@ -73,6 +73,25 @@ public class AwsS3EnvironmentRepositoryTests {
 			+ "      user: 'user2'\n" + "      password: 'password2'\n"
 			+ "      api: api.sys.acc2.cf-app.com\n" + "      environment: test2\n";
 
+	final String jsonContent = "{\n"
+		+ " \"cloudfoundry\": {\n"
+		+ "  \"enabled\": true,\n"
+		+ "  \"accounts\": [{\n"
+		+ "   \"name\": \"acc1\",\n"
+		+ "   \"user\": \"user1\",\n"
+		+ "   \"password\": \"password1\",\n"
+		+ "   \"api\": \"api.sys.acc1.cf-app.com\",\n"
+		+ "   \"environment\": \"test1\"\n"
+		+ "  }, {\n"
+		+ "   \"name\": \"acc2\",\n"
+		+ "   \"user\": \"user2\",\n"
+		+ "   \"password\": \"password2\",\n"
+		+ "   \"api\": \"api.sys.acc2.cf-app.com\",\n"
+		+ "   \"environment\": \"test2\"\n"
+		+ "  }]\n"
+		+ " }\n"
+		+ "}";
+
 	final Properties expectedProperties = new Properties();
 
 	{
@@ -98,7 +117,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		assertThat(thrown).isInstanceOf(NoSuchRepositoryException.class);
 		assertThat(thrown).hasMessage(
-				"No such repository: (bucket: bucket1, key: foo-bar(.properties | .yml), versionId: null)");
+				"No such repository: (bucket: bucket1, key: foo-bar(.properties | .yml | .json), versionId: null)");
 	}
 
 	@Test
@@ -121,6 +140,25 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().size()).isEqualTo(1);
 		assertThat(env.getPropertySources().get(0).getSource())
 				.isEqualTo(expectedProperties);
+	}
+
+	@Test
+	public void findJsonObject() throws UnsupportedEncodingException {
+		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", "foo-bar.json");
+		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
+		s3Object.setObjectContent(new StringInputStream(jsonContent));
+		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
+			.thenReturn(s3Object);
+
+		final Environment env = envRepo.findOne("foo", "bar", null);
+
+		assertThat(env.getName()).isEqualTo("foo");
+		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
+		assertThat(env.getLabel()).isEqualTo(null);
+		assertThat(env.getVersion()).isEqualTo(null);
+		assertThat(env.getPropertySources().size()).isEqualTo(1);
+		assertThat(env.getPropertySources().get(0).getSource())
+			.isEqualTo(expectedProperties);
 	}
 
 	@Test
