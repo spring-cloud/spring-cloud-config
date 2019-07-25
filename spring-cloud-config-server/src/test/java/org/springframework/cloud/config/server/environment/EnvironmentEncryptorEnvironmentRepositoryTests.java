@@ -30,6 +30,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Dave Syer
@@ -57,7 +58,7 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master", false))
+		when(this.repository.findOne("foo", "bar", "master", false))
 				.thenReturn(this.environment);
 		assertThat(this.controller.findOne("foo", "bar", "master", false)
 				.getPropertySources().get(0).getSource().toString())
@@ -70,7 +71,7 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("bar", "foo");
 		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master", false))
+		when(this.repository.findOne("foo", "bar", "master", false))
 				.thenReturn(this.environment);
 		assertThat(this.controller.findOne("foo", "bar", "master", false)
 				.getPropertySources().get(0).getSource().toString())

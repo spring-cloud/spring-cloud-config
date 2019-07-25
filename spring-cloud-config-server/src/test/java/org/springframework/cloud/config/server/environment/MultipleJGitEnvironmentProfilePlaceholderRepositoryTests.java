@@ -85,8 +85,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 
 	@Test
 	public void defaultRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", "master",
-				false);
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -96,7 +95,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	@Test
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("application",
-				"test1-config-repo", "master", false);
+				"test1-config-repo", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		String uri = getUri("*").replace("{profile}", "test1-config-repo");
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -109,7 +108,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	@Test
 	public void otherMappingRepo() {
 		Environment environment = this.repository.findOne("application",
-				"test2-config-repo", "master", false);
+				"test2-config-repo", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(getUri("*").replace("{profile}", "test2-config-repo")
@@ -142,8 +141,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	@Test
 	public void twoMappingRepos() {
 		Environment environment = this.repository.findOne("application",
-				"test1-config-repo,test2-config-repo,missing-config-repo", "master",
-				false);
+				"test1-config-repo,test2-config-repo,missing-config-repo", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(getUri("*").replace("{profile}", "test2-config-repo")

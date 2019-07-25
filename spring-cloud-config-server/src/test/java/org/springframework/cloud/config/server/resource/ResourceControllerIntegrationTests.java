@@ -43,6 +43,9 @@ import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 /**
  * @author Dave Syer
  * @author Daniel Lavoie
@@ -72,41 +75,41 @@ public class ResourceControllerIntegrationTests {
 
 	@Test
 	public void environmentNoLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "master", false))
+		when(this.repository.findOne("foo", "default", "master", false))
 				.thenReturn(new Environment("foo", "default"));
-		Mockito.when(this.resources.findOne("foo", "default", "master", "foo.txt"))
+		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
 				.thenReturn(new ByteArrayResource("hello".getBytes()));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", "master", false);
-		Mockito.verify(this.resources).findOne("foo", "default", "master", "foo.txt");
+		verify(this.repository).findOne("foo", "default", "master", false);
+		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
 	}
 
 	@Test
 	public void resourceNoLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", null, false))
+		when(this.repository.findOne("foo", "default", null, false))
 				.thenReturn(new Environment("foo", "default", "master"));
-		Mockito.when(this.resources.findOne("foo", "default", null, "foo.txt"))
+		when(this.resources.findOne("foo", "default", null, "foo.txt"))
 				.thenReturn(new ByteArrayResource("hello".getBytes()));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
 				.param("useDefaultLabel", ""))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", null, false);
-		Mockito.verify(this.resources).findOne("foo", "default", null, "foo.txt");
+		verify(this.repository).findOne("foo", "default", null, false);
+		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
 	@Test
 	public void binaryResourceNoLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", null))
+		when(this.repository.findOne("foo", "default", null, false))
 				.thenReturn(new Environment("foo", "default", "master"));
-		Mockito.when(this.resources.findOne("foo", "default", null, "foo.txt"))
+		when(this.resources.findOne("foo", "default", null, "foo.txt"))
 				.thenReturn(new ByteArrayResource("hello".getBytes()));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
 				.param("useDefaultLabel", "")
 				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", null);
-		Mockito.verify(this.resources).findOne("foo", "default", null, "foo.txt");
+		verify(this.repository).findOne("foo", "default", null, false);
+		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
 	@Configuration

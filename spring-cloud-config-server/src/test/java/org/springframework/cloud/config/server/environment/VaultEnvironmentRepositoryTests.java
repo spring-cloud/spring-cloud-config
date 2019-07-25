@@ -137,7 +137,7 @@ public class VaultEnvironmentRepositoryTests {
 				mockHttpRequest(), new EnvironmentWatch.Default(), rest, properties,
 				mockTokenProvider());
 
-		Environment e = repo.findOne("myapp", null, null, false);
+		Environment e = repo.findOne("myapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument")
 				.isEqualTo("myapp");
 		assertThat(e.getPropertySources().size()).as(
@@ -184,7 +184,7 @@ public class VaultEnvironmentRepositoryTests {
 				new VaultEnvironmentProperties(), mockTokenProvider());
 		repo.setDefaultKey("mydefaultkey");
 
-		Environment e = repo.findOne("myapp", null, null, false);
+		Environment e = repo.findOne("myapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument")
 				.isEqualTo("myapp");
 		assertThat(e.getPropertySources().size()).as(
@@ -295,7 +295,7 @@ public class VaultEnvironmentRepositoryTests {
 				new VaultEnvironmentProperties(), mockTokenProvider());
 		repo.setDefaultKey("myapp");
 
-		Environment e = repo.findOne("myapp", null, null, false);
+		Environment e = repo.findOne("myapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument")
 				.isEqualTo("myapp");
 		assertThat(e.getPropertySources().size())
@@ -318,7 +318,7 @@ public class VaultEnvironmentRepositoryTests {
 				mockHttpRequest(), new EnvironmentWatch.Default(),
 				mock(RestTemplate.class), new VaultEnvironmentProperties(),
 				tokenProvider);
-		repo.findOne("myapp", null, null, false);
+		repo.findOne("myapp", null, null);
 	}
 
 	@Test

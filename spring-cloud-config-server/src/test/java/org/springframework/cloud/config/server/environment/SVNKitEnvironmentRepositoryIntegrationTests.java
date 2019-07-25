@@ -82,7 +82,6 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "trunk", false);
 		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
@@ -96,12 +95,11 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "trunk", false);
-		Environment environment = repository.findOne("bar", "staging", "trunk", false);
+		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("bar");
 		updateRepoForUpdate(uri);
-		environment = repository.findOne("bar", "staging", "trunk", false);
+		environment = repository.findOne("bar", "staging", "trunk");
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("foo");
 	}
@@ -146,9 +144,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "unknownlabel", false);
-		Environment environment = repository.findOne("bar", "staging", "unknownlabel",
-				false);
+		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
 		assertThat(environment.getPropertySources().size()).isEqualTo(0);
 	}
 
@@ -161,8 +157,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("bar", "staging", "demobranch",
-				false);
+		Environment environment = repository.findOne("bar", "staging", "demobranch");
 		assertThat(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties")).isTrue();
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);

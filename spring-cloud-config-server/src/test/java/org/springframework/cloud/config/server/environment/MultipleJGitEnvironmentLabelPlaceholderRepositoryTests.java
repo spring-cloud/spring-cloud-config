@@ -57,8 +57,7 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 
 	@Test
 	public void defaultRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", "master",
-				false);
+		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.defaultUri + "application.yml");
@@ -68,7 +67,7 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 	@Test
 	public void missingRepo() {
 		Environment environment = this.repository.findOne("missing-config-repo",
-				"staging", "master", false);
+				"staging", "master");
 		assertThat(environment.getPropertySources().size())
 				.as("Wrong property sources: " + environment).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -78,7 +77,7 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 
 	@Test
 	public void defaultLabelRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", null, false);
+		Environment environment = this.repository.findOne("bar", "staging", null);
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.defaultUri + "application.yml");

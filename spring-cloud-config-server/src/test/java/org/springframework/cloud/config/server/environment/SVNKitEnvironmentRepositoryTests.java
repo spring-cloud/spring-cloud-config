@@ -100,7 +100,7 @@ public class SVNKitEnvironmentRepositoryTests {
 	@Test
 	public void branch() {
 		Environment environment = this.repository.findOne("bar", "staging",
-				"branches/demobranch", false);
+				"branches/demobranch");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties")).isTrue();
@@ -129,7 +129,7 @@ public class SVNKitEnvironmentRepositoryTests {
 	@Test(expected = NoSuchLabelException.class)
 	public void invalidLabel() {
 		Environment environment = this.repository.findOne("bar", "staging",
-				"unknownlabel", false);
+				"unknownlabel");
 		assertThat(environment.getPropertySources().size()).isEqualTo(0);
 	}
 
@@ -142,7 +142,7 @@ public class SVNKitEnvironmentRepositoryTests {
 	}
 
 	private Environment findOne() {
-		return this.repository.findOne("bar", "staging", "trunk", false);
+		return this.repository.findOne("bar", "staging", "trunk");
 	}
 
 	@EnableAutoConfiguration

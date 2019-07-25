@@ -52,15 +52,13 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void emptySearchLocations() {
 		this.repository.setSearchLocations((String[]) null);
-		Environment environment = this.repository.findOne("foo", "development", "master",
-				false);
+		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
 	@Test
 	public void vanilla() {
-		Environment environment = this.repository.findOne("foo", "development", "master",
-				false);
+		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getVersion()).as("version was wrong")
 				.isEqualTo("myversion");
@@ -69,7 +67,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void ignoresExistingProfile() {
 		System.setProperty("spring.profiles.active", "cloud");
-		Environment environment = this.repository.findOne("foo", "main", "master", false);
+		Environment environment = this.repository.findOne("foo", "main", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getVersion()).as("version was wrong")
 				.isEqualTo("myversion");
@@ -78,8 +76,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void prefixed() {
 		this.repository.setSearchLocations("classpath:/test");
-		Environment environment = this.repository.findOne("foo", "development", "master",
-				false);
+		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getVersion()).as("version was wrong")
 				.isEqualTo("myversion");
@@ -88,8 +85,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void prefixedWithFile() {
 		this.repository.setSearchLocations("file:./src/test/resources/test");
-		Environment environment = this.repository.findOne("foo", "development", "master",
-				false);
+		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getVersion()).as("version was wrong")
 				.isEqualTo("myversion");
@@ -112,8 +108,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersLabel() {
 		this.repository.setSearchLocations("classpath:/test/{label}/");
-		Environment environment = this.repository.findOne("foo", "development", "dev",
-				false);
+		Environment environment = this.repository.findOne("foo", "development", "dev");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("dev_bar");
@@ -122,7 +117,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersProfile() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/");
-		Environment environment = this.repository.findOne("foo", "dev", "master", false);
+		Environment environment = this.repository.findOne("foo", "dev", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("dev_bar");
@@ -131,8 +126,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersProfiles() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/");
-		Environment environment = this.repository.findOne("foo", "dev,mysql", "master",
-				false);
+		Environment environment = this.repository.findOne("foo", "dev,mysql", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("mysql");
@@ -141,7 +135,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersApplicationAndProfile() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/{application}/");
-		Environment environment = this.repository.findOne("app", "dev", "master", false);
+		Environment environment = this.repository.findOne("app", "dev", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("app");
@@ -176,8 +170,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersNoTrailingSlash() {
 		this.repository.setSearchLocations("classpath:/test/{label}");
-		Environment environment = this.repository.findOne("foo", "development", "dev",
-				false);
+		Environment environment = this.repository.findOne("foo", "development", "dev");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("dev_bar");
@@ -186,8 +179,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void locationAddLabelLocations() {
 		this.repository.setSearchLocations("classpath:/test/dev/");
-		Environment environment = this.repository.findOne("foo", "development", "ignore",
-				false);
+		Environment environment = this.repository.findOne("foo", "development", "ignore");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isNotEqualTo("dev_bar");
@@ -206,8 +198,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void locationDontAddLabelLocations() {
 		this.repository.setSearchLocations("classpath:/test/dev/");
 		this.repository.setAddLabelLocations(false);
-		Environment environment = this.repository.findOne("foo", "development", "ignore",
-				false);
+		Environment environment = this.repository.findOne("foo", "development", "ignore");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("dev_bar");
@@ -224,7 +215,7 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void testDefaultLabel() {
 		this.repository.setDefaultLabel("test");
-		assertThat(this.repository.findOne("foo", "default", null, false)
+		assertThat(this.repository.findOne("foo", "default", null)
 				.getPropertySources().get(0).getSource().get("foo"))
 						.isEqualTo("test_bar");
 	}
