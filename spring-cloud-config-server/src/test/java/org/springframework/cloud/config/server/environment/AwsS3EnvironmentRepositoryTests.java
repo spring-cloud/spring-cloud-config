@@ -20,6 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
@@ -72,10 +73,10 @@ public class AwsS3EnvironmentRepositoryTests {
 			+ "      user: 'user2'\n" + "      password: 'password2'\n"
 			+ "      api: api.sys.acc2.cf-app.com\n" + "      environment: test2\n";
 
-	final Map<String, String> expectedProperties = new HashMap<>();
+	final Properties expectedProperties = new Properties();
 
 	{
-		expectedProperties.put("cloudfoundry.enabled", "true");
+		expectedProperties.put("cloudfoundry.enabled", true);
 		expectedProperties.put("cloudfoundry.accounts[0].name", "acc1");
 		expectedProperties.put("cloudfoundry.accounts[0].user", "user1");
 		expectedProperties.put("cloudfoundry.accounts[0].password", "password1");
@@ -107,6 +108,9 @@ public class AwsS3EnvironmentRepositoryTests {
 		s3Object.setObjectContent(new StringInputStream(propertyContent));
 		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
 				.thenReturn(s3Object);
+
+		// Pulling content from a .properties file forces a boolean into a String
+		expectedProperties.put("cloudfoundry.enabled", "true");
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 

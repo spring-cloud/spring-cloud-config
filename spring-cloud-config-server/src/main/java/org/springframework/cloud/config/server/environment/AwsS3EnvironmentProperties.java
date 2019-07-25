@@ -29,6 +29,11 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 	private String region;
 
 	/**
+	 * Adds the ability to override the baseUrl of the s3 client
+	 */
+	private String endpoint;
+
+	/**
 	 * Name of the S3 bucket that contains config.
 	 */
 	private String bucket;
@@ -41,6 +46,14 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 
 	public void setRegion(String region) {
 		this.region = region;
+	}
+
+	String getEndpoint() {
+		return endpoint;
+	}
+
+	void setEndpoint(String endpoint) {
+		this.endpoint = endpoint;
 	}
 
 	public String getBucket() {

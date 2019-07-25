@@ -21,7 +21,7 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.services.s3.AmazonS3Client;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
@@ -183,7 +183,7 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass(AWSCredentials.class)
+	@ConditionalOnClass(AmazonS3Client.class)
 	static class AwsS3FactoryConfig {
 
 		@Bean
@@ -318,10 +318,12 @@ class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {
 }
 
 @Configuration
-@Profile("s3")
+@Profile("awss3")
+@ConditionalOnClass(AmazonS3Client.class)
 class AwsS3RepositoryConfiguration {
 
 	@Bean
+	@ConditionalOnBean(AmazonS3Client.class)
 	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(
 			AwsS3EnvironmentRepositoryFactory factory,
 			AwsS3EnvironmentProperties environmentProperties) {

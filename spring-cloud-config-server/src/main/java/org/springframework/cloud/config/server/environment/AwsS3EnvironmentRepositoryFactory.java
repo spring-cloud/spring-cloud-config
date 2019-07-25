@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
@@ -36,8 +37,12 @@ public class AwsS3EnvironmentRepositoryFactory implements
 		if (environmentProperties.getRegion() != null) {
 			clientBuilder.withRegion(environmentProperties.getRegion());
 		}
+		final AmazonS3 client = clientBuilder.build();
+		if (environmentProperties.getEndpoint() != null) {
+			client.setEndpoint(environmentProperties.getEndpoint());
+		}
 		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(
-				clientBuilder.build(), environmentProperties.getBucket(), server);
+			client, environmentProperties.getBucket(), server);
 		return repository;
 	}
 

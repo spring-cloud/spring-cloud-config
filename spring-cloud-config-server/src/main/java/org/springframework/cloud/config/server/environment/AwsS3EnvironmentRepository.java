@@ -27,12 +27,13 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectIdBuilder;
-import org.yaml.snakeyaml.Yaml;
 
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.util.StringUtils;
 
 /**
@@ -170,47 +171,13 @@ class YamlS3ConfigFile extends S3ConfigFile {
 
 	@Override
 	public Map<?, ?> read() {
-		final Yaml yaml = new Yaml();
-		final Map<String, String> properties = new HashMap<>();
+		final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
 		try (InputStream in = inputStream) {
-			yaml.loadAll(in).forEach((Object obj) -> this.loadValue(properties, "", obj));
-			return properties;
+			yaml.setResources(new InputStreamResource(inputStream));
+			return yaml.getObject();
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Cannot load environment", e);
-		}
-	}
-
-	private void loadMap(Map<String, String> properties, String baseKey,
-			Map<String, ?> map) {
-		map.keySet().forEach((String configKey) -> {
-			final StringBuilder currentKey = new StringBuilder(baseKey);
-			if (!StringUtils.isEmpty(baseKey)) {
-				currentKey.append(".");
-			}
-			currentKey.append(configKey);
-			loadValue(properties, currentKey.toString(), map.get(configKey));
-		});
-	}
-
-	private void loadList(Map<String, String> properties, String baseKey, List<?> list) {
-		list.forEach((Object subValue) -> {
-			final StringBuilder currentKey = new StringBuilder(baseKey)
-					.append("[" + list.indexOf(subValue) + "]");
-			loadValue(properties, currentKey.toString(), subValue);
-		});
-	}
-
-	private void loadValue(Map<String, String> properties, String currentKey,
-			Object value) {
-		if (value instanceof Map) {
-			this.loadMap(properties, currentKey, (Map) value);
-		}
-		else if (value instanceof List) {
-			this.loadList(properties, currentKey, (List) value);
-		}
-		else {
-			properties.put(currentKey, value.toString());
 		}
 	}
 
