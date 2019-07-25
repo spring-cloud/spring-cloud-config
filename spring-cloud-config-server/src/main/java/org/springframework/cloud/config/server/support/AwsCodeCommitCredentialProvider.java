@@ -47,7 +47,7 @@ import static org.springframework.util.StringUtils.hasText;
  * appropriate credentials to connect to an AWS CodeCommit repository.
  * <p>
  * From the command line, you can configure git to use AWS code commit with a credential
- * helper. However, jgit does not support credential helper commands, but it does provider
+ * helper. However, jgit does not support credential helper commands, but it does provide
  * a CredentialsProvider abstract class we can extend. Connecting to an AWS CodeCommit
  * (codecommit) repository requires an AWS access key and secret key. These are used to
  * calculate a signature for the git request. The AWS access key is used as the codecommit
