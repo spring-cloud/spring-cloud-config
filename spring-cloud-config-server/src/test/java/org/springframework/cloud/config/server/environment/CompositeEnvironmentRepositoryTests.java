@@ -167,7 +167,8 @@ public class CompositeEnvironmentRepositoryTests {
 		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		public Environment findOne(String application, String profile, String label,
+				boolean includeOrigin) {
 			return env;
 		}
 

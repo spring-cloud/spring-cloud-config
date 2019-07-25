@@ -26,9 +26,9 @@ public interface EnvironmentRepository {
 
 	Environment findOne(String application, String profile, String label);
 
-	default Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+	default Environment findOne(String application, String profile, String label,
+			boolean includeOrigin) {
 		return findOne(application, profile, label);
 	}
-
 
 }

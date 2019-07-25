@@ -64,11 +64,12 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 
 	@Override
 	public Environment findOne(String application, String env, String label) {
-	   	return findOne(application, env, label, false);
-    }
+		return findOne(application, env, label, false);
+	}
 
 	@Override
-	public Environment findOne(String application, String env, String label, boolean includeOrigin) {
+	public Environment findOne(String application, String env, String label,
+			boolean includeOrigin) {
 		Environment result = new Environment(application,
 				StringUtils.commaDelimitedListToStringArray(env), label, null, null);
 		for (org.springframework.core.env.PropertySource<?> source : this.environment
@@ -83,7 +84,8 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 
 	}
 
-	private Map<?, ?> getMap(org.springframework.core.env.PropertySource<?> source, boolean includeOrigin) {
+	private Map<?, ?> getMap(org.springframework.core.env.PropertySource<?> source,
+			boolean includeOrigin) {
 		Map<Object, Object> map = new LinkedHashMap<>();
 		Map<?, ?> input = (Map<?, ?>) source.getSource();
 		if (includeOrigin && source instanceof OriginLookup) {
@@ -93,16 +95,20 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 				String originDesc;
 				if (origin instanceof TextResourceOrigin) {
 					TextResourceOrigin tro = (TextResourceOrigin) origin;
-					originDesc = "["+tro.getResource().getFilename()+"]:"+tro.getLocation().toString();
-				} else {
+					originDesc = "[" + tro.getResource().getFilename() + "]:"
+							+ tro.getLocation().toString();
+				}
+				else {
 					originDesc = origin.toString();
 				}
 				Object value = source.getProperty(key.toString());
 				map.put(key, new PropertyValueDescriptor(value, originDesc));
 			}
-		} else {
+		}
+		else {
 			for (Object key : input.keySet()) {
-				// Spring Boot wraps the property values in an "origin" detector, so we need
+				// Spring Boot wraps the property values in an "origin" detector, so we
+				// need
 				// to extract the string values
 				map.put(key, source.getProperty(key.toString()));
 			}

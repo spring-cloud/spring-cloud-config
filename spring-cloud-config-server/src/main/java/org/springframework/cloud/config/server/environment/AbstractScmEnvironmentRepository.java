@@ -44,9 +44,10 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 	}
 
 	@Override
-	public synchronized Environment findOne(String application, String profile, String label) {
-	   	return findOne(application, profile, label, false);
-    }
+	public synchronized Environment findOne(String application, String profile,
+			String label) {
+		return findOne(application, profile, label, false);
+	}
 
 	@Override
 	public synchronized Environment findOne(String application, String profile,

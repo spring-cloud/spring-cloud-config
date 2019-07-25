@@ -209,11 +209,12 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 		@Override
 		public Environment findOne(String application, String profile, String label) {
-		    return findOne(application, profile, label, false);
-        }
+			return findOne(application, profile, label, false);
+		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		public Environment findOne(String application, String profile, String label,
+				boolean includeOrigin) {
 			Environment e = new Environment("test", new String[0], "label", "version",
 					"state");
 			PropertySource p = new PropertySource(this.properties.getPropertySourceName(),

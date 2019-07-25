@@ -70,9 +70,9 @@ public class BootstrapConfigServerIntegrationTests {
 		assertThat(value).isNotNull().isInstanceOf(Map.class);
 		Map map = (Map) value;
 		assertThat(map).containsEntry("value", "foo");
-		Object value = environment.getPropertySources().get(1).getSource().get("info.foo");
+		value = environment.getPropertySources().get(1).getSource().get("info.foo");
 		assertThat(value).isNotNull().isInstanceOf(Map.class);
-		Map map = (Map) value;
+		map = (Map) value;
 		assertThat(map).containsEntry("value", "bar");
 	}
 

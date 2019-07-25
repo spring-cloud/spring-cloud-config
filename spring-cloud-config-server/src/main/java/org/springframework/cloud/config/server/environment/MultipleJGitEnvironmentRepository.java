@@ -149,7 +149,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+	public Environment findOne(String application, String profile, String label,
+			boolean includeOrigin) {
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
 			if (repository.matches(application, profile, label)) {
 				for (JGitEnvironmentRepository candidate : getRepositories(repository,
@@ -286,7 +287,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		public Environment findOne(String application, String profile, String label,
+				boolean includeOrigin) {
 
 			if (this.pattern == null || this.pattern.length == 0) {
 				return null;

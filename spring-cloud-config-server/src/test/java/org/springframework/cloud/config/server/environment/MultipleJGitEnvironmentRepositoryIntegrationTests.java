@@ -111,7 +111,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("test1-svc", "staging", "master", false);
-		Environment environment = repository.findOne("test1-svc", "staging", "master", false);
+		Environment environment = repository.findOne("test1-svc", "staging", "master",
+				false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
@@ -153,7 +154,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("test1-svc", "staging", "master", false);
-		Environment environment = repository.findOne("test1-svc", "staging", "master", false);
+		Environment environment = repository.findOne("test1-svc", "staging", "master",
+				false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
@@ -220,7 +222,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("test1-svc", "staging", "master", false);
-		Environment environment = repository.findOne("test1-svc", "staging", "master", false);
+		Environment environment = repository.findOne("test1-svc", "staging", "master",
+				false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 

@@ -110,9 +110,11 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 																// xml
 						for (PropertySource source : result.getPropertySources()) {
 							@SuppressWarnings("unchecked")
-							Map<String, Object> map = translateOrigins((Map<String, Object>) source.getSource());
-							composite.addPropertySource(new OriginTrackedMapPropertySource(source
-									.getName(), map));
+							Map<String, Object> map = translateOrigins(
+									(Map<String, Object>) source.getSource());
+							composite.addPropertySource(
+									new OriginTrackedMapPropertySource(source.getName(),
+											map));
 						}
 					}
 
@@ -183,9 +185,11 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			if (entry.getValue() instanceof Map) {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> value = (Map<String, Object>) entry.getValue();
-				if (value.size() == 2 && value.containsKey("origin") && value.containsKey("value")) {
+				if (value.size() == 2 && value.containsKey("origin")
+						&& value.containsKey("value")) {
 					Origin origin = new ConfigServiceOrigin(value.get("origin"));
-					OriginTrackedValue trackedValue = OriginTrackedValue.of(value.get("value"), origin);
+					OriginTrackedValue trackedValue = OriginTrackedValue
+							.of(value.get("value"), origin);
 					withOrigins.put(entry.getKey(), trackedValue);
 					hasOrigin = true;
 				}
@@ -235,7 +239,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 			try {
 				HttpHeaders headers = new HttpHeaders();
-				headers.setAccept(Collections.singletonList(MediaType.parseMediaType(V2_JSON)));
+				headers.setAccept(
+						Collections.singletonList(MediaType.parseMediaType(V2_JSON)));
 				addAuthorizationToken(properties, headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
@@ -353,15 +358,16 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		private Object origin;
 
-		public ConfigServiceOrigin(Object origin) {
+		ConfigServiceOrigin(Object origin) {
 			Assert.notNull(origin, "origin may not be null");
 			this.origin = origin;
 		}
 
 		@Override
 		public String toString() {
-			return "Remote file "+this.origin.toString();
+			return "Remote file " + this.origin.toString();
 		}
+
 	}
 
 	static class OriginTrackedMapPropertySource extends MapPropertySource

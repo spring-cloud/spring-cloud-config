@@ -81,7 +81,8 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 
 	@Test
 	public void defaultRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", "master", false);
+		Environment environment = this.repository.findOne("bar", "staging", "master",
+				false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");

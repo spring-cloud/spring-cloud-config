@@ -244,7 +244,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("foo,bar", "staging", "master", false);
-		Environment environment = repository.findOne("foo,bar", "staging", "master", false);
+		Environment environment = repository.findOne("foo,bar", "staging", "master",
+				false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(3);
 	}
 
@@ -259,7 +260,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("foo,bar", "staging", "master", false);
-		Environment environment = repository.findOne("staging", "foo,bar", "master", false);
+		Environment environment = repository.findOne("staging", "foo,bar", "master",
+				false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(3);
 	}
 
@@ -483,7 +485,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				"foo");
 		assertThat("testAfterTag").isEqualTo(fooProperty);
 
-		environment = testData.getRepository().findOne("bar", "staging", "testTag", false);
+		environment = testData.getRepository().findOne("bar", "staging", "testTag",
+				false);
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties",
 				"foo");
 		assertThat("bar").isEqualTo(fooProperty);
@@ -492,7 +495,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		serverGit.tag().setName("testTag").setForceUpdate(true)
 				.setMessage("Testing a moved tag").call();
 
-		environment = testData.getRepository().findOne("bar", "staging", "testTag", false);
+		environment = testData.getRepository().findOne("bar", "staging", "testTag",
+				false);
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties",
 				"foo");
 		assertThat("testAfterTag").isEqualTo(fooProperty);

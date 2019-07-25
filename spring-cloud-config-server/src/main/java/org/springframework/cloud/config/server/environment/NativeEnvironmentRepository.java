@@ -125,11 +125,12 @@ public class NativeEnvironmentRepository
 
 	@Override
 	public Environment findOne(String config, String profile, String label) {
-	   	return findOne(config, profile, label, false);
-    }
+		return findOne(config, profile, label, false);
+	}
 
 	@Override
-	public Environment findOne(String config, String profile, String label, boolean includeOrigin) {
+	public Environment findOne(String config, String profile, String label,
+			boolean includeOrigin) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(
 				PropertyPlaceholderAutoConfiguration.class);
 		ConfigurableEnvironment environment = getEnvironment(profile);
@@ -233,7 +234,8 @@ public class NativeEnvironmentRepository
 				boolean matches = false;
 				String normal = name;
 				if (normal.startsWith("file:")) {
-					normal = StringUtils.cleanPath(new File(normal.substring("file:".length()))
+					normal = StringUtils
+							.cleanPath(new File(normal.substring("file:".length()))
 									.getAbsolutePath());
 				}
 				String profile = result.getProfiles() == null ? null
