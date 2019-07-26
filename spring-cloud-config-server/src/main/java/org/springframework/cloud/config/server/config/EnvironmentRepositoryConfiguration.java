@@ -319,11 +319,10 @@ class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {
 
 @Configuration
 @Profile("awss3")
-@ConditionalOnClass(AmazonS3Client.class)
 class AwsS3RepositoryConfiguration {
 
 	@Bean
-	@ConditionalOnBean(AmazonS3Client.class)
+	@ConditionalOnMissingBean(AwsS3EnvironmentRepository.class)
 	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(
 			AwsS3EnvironmentRepositoryFactory factory,
 			AwsS3EnvironmentProperties environmentProperties) {
