@@ -837,9 +837,12 @@ The following configuration uses the AWS S3 client to access configuration files
 spring:
   profiles:
     active: awss3
-  awss3:
-    region: us-east-1
-    bucket: bucket1
+  cloud:
+    config:
+      server:
+        awss3:
+          region: us-east-1
+          bucket: bucket1
 ----
 
 It is also possible to specify an AWS URL to link:https://aws.amazon.com/blogs/developer/using-new-regions-and-endpoints/[override the standard endpoint] of your S3 service with `spring.awss3.endpoint`. This allows support for beta regions of S3, and other S3 compatible storage APIs.

@@ -21,7 +21,7 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
@@ -183,7 +183,7 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass(AmazonS3Client.class)
+	@ConditionalOnClass(AmazonS3.class)
 	static class AwsS3FactoryConfig {
 
 		@Bean
