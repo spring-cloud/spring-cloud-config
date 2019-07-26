@@ -31,6 +31,7 @@ import org.springframework.boot.origin.Origin;
 import org.springframework.boot.origin.OriginLookup;
 import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
+import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropertySource;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -86,7 +87,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	public org.springframework.core.env.PropertySource<?> locate(
 			org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
-		CompositePropertySource composite = new CompositePropertySource("configService");
+		CompositePropertySource composite = new OriginTrackedCompositePropertySource(
+				"configService");
 		RestTemplate restTemplate = this.restTemplate == null
 				? getSecureRestTemplate(properties) : this.restTemplate;
 		Exception error = null;
@@ -105,12 +107,11 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				if (result != null) {
 					log(result);
 
-					if (result.getPropertySources() != null) { // result.getPropertySources()
-																// can be null if using
-																// xml
+					// result.getPropertySources() can be null if using xml
+					if (result.getPropertySources() != null) {
 						for (PropertySource source : result.getPropertySources()) {
 							@SuppressWarnings("unchecked")
-							Map<String, Object> map = translateOrigins(
+							Map<String, Object> map = translateOrigins(source.getName(),
 									(Map<String, Object>) source.getSource());
 							composite.addPropertySource(
 									new OriginTrackedMapPropertySource(source.getName(),
@@ -177,7 +178,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 	}
 
-	private Map<String, Object> translateOrigins(Map<String, Object> source) {
+	private Map<String, Object> translateOrigins(String name,
+			Map<String, Object> source) {
 		Map<String, Object> withOrigins = new HashMap<>();
 		for (Map.Entry<String, Object> entry : source.entrySet()) {
 			boolean hasOrigin = false;
@@ -187,7 +189,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				Map<String, Object> value = (Map<String, Object>) entry.getValue();
 				if (value.size() == 2 && value.containsKey("origin")
 						&& value.containsKey("value")) {
-					Origin origin = new ConfigServiceOrigin(value.get("origin"));
+					Origin origin = new ConfigServiceOrigin(name, value.get("origin"));
 					OriginTrackedValue trackedValue = OriginTrackedValue
 							.of(value.get("value"), origin);
 					withOrigins.put(entry.getKey(), trackedValue);
@@ -248,7 +250,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
 				}
-				headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
 				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity,
@@ -356,16 +357,20 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	static class ConfigServiceOrigin implements Origin {
 
-		private Object origin;
+		private final String remotePropertySource;
 
-		ConfigServiceOrigin(Object origin) {
+		private final Object origin;
+
+		ConfigServiceOrigin(String remotePropertySource, Object origin) {
+			this.remotePropertySource = remotePropertySource;
 			Assert.notNull(origin, "origin may not be null");
 			this.origin = origin;
+
 		}
 
 		@Override
 		public String toString() {
-			return "Remote file " + this.origin.toString();
+			return this.remotePropertySource + ":" + this.origin.toString();
 		}
 
 	}

@@ -95,8 +95,7 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 				String originDesc;
 				if (origin instanceof TextResourceOrigin) {
 					TextResourceOrigin tro = (TextResourceOrigin) origin;
-					originDesc = "[" + tro.getResource().getFilename() + "]:"
-							+ tro.getLocation().toString();
+					originDesc = tro.getLocation().toString();
 				}
 				else {
 					originDesc = origin.toString();
