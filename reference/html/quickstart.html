@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.7.1">
+<title>Client Side Usage</title>
+<link rel="stylesheet" href="css/spring.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<style>
+.hidden {
+	display: none;
+}
+
+.switch {
+	border-width: 1px 1px 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+	display: inline-block;
+}
+
+.switch--item {
+	padding: 10px;
+	background-color: #ffffff;
+	color: #7a2518;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.switch--item:not(:first-child) {
+	border-width: 0 0 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+}
+
+.switch--item.selected {
+	background-color: #7a2519;
+	color: #ffffff;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+<script type="text/javascript">
+function addBlockSwitches() {
+	$('.primary').each(function() {
+		primary = $(this);
+		createSwitchItem(primary, createBlockSwitch(primary)).item.addClass("selected");
+		primary.children('.title').remove();
+	});
+	$('.secondary').each(function(idx, node) {
+		secondary = $(node);
+		primary = findPrimary(secondary);
+		switchItem = createSwitchItem(secondary, primary.children('.switch'));
+		switchItem.content.addClass('hidden');
+		findPrimary(secondary).append(switchItem.content);
+		secondary.remove();
+	});
+}
+
+function createBlockSwitch(primary) {
+	blockSwitch = $('<div class="switch"></div>');
+	primary.prepend(blockSwitch);
+	return blockSwitch;
+}
+
+function findPrimary(secondary) {
+	candidate = secondary.prev();
+	while (!candidate.is('.primary')) {
+		candidate = candidate.prev();
+	}
+	return candidate;
+}
+
+function createSwitchItem(block, blockSwitch) {
+	blockName = block.children('.title').text();
+	content = block.children('.content').first().append(block.next('.colist'));
+	item = $('<div class="switch--item">' + blockName + '</div>');
+	item.on('click', '', content, function(e) {
+		$(this).addClass('selected');
+		$(this).siblings().removeClass('selected');
+		e.data.siblings('.content').addClass('hidden');
+		e.data.removeClass('hidden');
+	});
+	blockSwitch.append(item);
+	return {'item': item, 'content': content};
+}
+
+$(addBlockSwitches);
+</script>
+
+</head>
+<body class="book toc2 toc-left">
+<div id="header">
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel2">
+<li><a href="#_client_side_usage">Client Side Usage</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>This quick start walks through using both the server and the client of Spring Cloud Config Server.</p>
+</div>
+<div class="paragraph">
+<p>First, start the server, as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ cd spring-cloud-config-server
+$ ../mvnw spring-boot:run</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The server is a Spring Boot application, so you can run it from your IDE if you prefer to do so (the main class is <code>ConfigServerApplication</code>).</p>
+</div>
+<div class="paragraph">
+<p>Next try out a client, as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ curl localhost:8888/foo/development
+{"name":"foo","label":"master","propertySources":[
+  {"name":"https://github.com/scratches/config-repo/foo-development.properties","source":{"bar":"spam"}},
+  {"name":"https://github.com/scratches/config-repo/foo.properties","source":{"foo":"bar"}}
+]}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The default strategy for locating property sources is to clone a git repository (at <code>spring.cloud.config.server.git.uri</code>) and use it to initialize a mini <code>SpringApplication</code>.
+The mini-application&#8217;s <code>Environment</code> is used to enumerate property sources and publish them at a JSON endpoint.</p>
+</div>
+<div class="paragraph">
+<p>The HTTP service has resources in the following form:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>/{application}/{profile}[/{label}]
+/{application}-{profile}.yml
+/{label}/{application}-{profile}.yml
+/{application}-{profile}.properties
+/{label}/{application}-{profile}.properties</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where <code>application</code> is injected as the <code>spring.config.name</code> in the <code>SpringApplication</code> (what is normally <code>application</code> in a regular Spring Boot app), <code>profile</code> is an active profile (or comma-separated list of properties), and <code>label</code> is an optional git label (defaults to <code>master</code>.)</p>
+</div>
+<div class="paragraph">
+<p>Spring Cloud Config Server pulls configuration for remote clients from various sources. The following example gets configuration from a git repository (which must be provided), as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Other sources are any JDBC compatible database, Subversion, Hashicorp Vault, Credhub and local filesystems.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_client_side_usage"><a class="link" href="#_client_side_usage">Client Side Usage</a></h3>
+<div class="paragraph">
+<p>To use these features in an application, you can build it as a Spring Boot application that depends on spring-cloud-config-client (for an example, see the test cases for the config-client or the sample application).
+The most convenient way to add the dependency is with a Spring Boot starter <code>org.springframework.cloud:spring-cloud-starter-config</code>.
+There is also a parent pom and BOM (<code>spring-cloud-starter-parent</code>) for Maven users and a Spring IO version management properties file for Gradle and Spring CLI users. The following example shows a typical Maven configuration:</p>
+</div>
+<div class="listingblock">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">   &lt;parent&gt;
+       &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+       &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+       &lt;version&gt;{spring-boot-docs-version}&lt;/version&gt;
+       &lt;relativePath /&gt; &lt;!-- lookup parent from repository --&gt;
+   &lt;/parent&gt;
+
+&lt;dependencyManagement&gt;
+	&lt;dependencies&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+			&lt;version&gt;{spring-cloud-version}&lt;/version&gt;
+			&lt;type&gt;pom&lt;/type&gt;
+			&lt;scope&gt;import&lt;/scope&gt;
+		&lt;/dependency&gt;
+	&lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+&lt;dependencies&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-cloud-starter-config&lt;/artifactId&gt;
+	&lt;/dependency&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+		&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+		&lt;scope&gt;test&lt;/scope&gt;
+	&lt;/dependency&gt;
+&lt;/dependencies&gt;
+
+&lt;build&gt;
+	&lt;plugins&gt;
+           &lt;plugin&gt;
+               &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+               &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+           &lt;/plugin&gt;
+	&lt;/plugins&gt;
+&lt;/build&gt;
+
+   &lt;!-- repositories also needed for snapshots and milestones --&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you can create a standard Spring Boot application, such as the following HTTP server:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@SpringBootApplication
+@RestController
+public class Application {
+
+    @RequestMapping("/")
+    public String home() {
+        return "Hello World!";
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When this HTTP server runs, it picks up the external configuration from the default local config server (if it is running) on port 8888.
+To modify the startup behavior, you can change the location of the config server by using <code>bootstrap.properties</code> (similar to <code>application.properties</code> but for the bootstrap phase of an application context), as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring.cloud.config.uri: http://myconfigserver.com</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>By default, if no application name is set, <code>application</code> will be used. To modify the name, the following property can be added to the <code>bootstrap.properties</code> file:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>spring.application.name: myapp</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+When setting the property <code>${spring.application.name}</code> do not prefix your app name with the reserved word <code>application-</code> to prevent issues resolving the correct property source.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The bootstrap properties show up in the <code>/env</code> endpoint as a high-priority property source, as shown in the following example.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ curl localhost:8080/env
+{
+  "profiles":[],
+  "configService:https://github.com/spring-cloud-samples/config-repo/bar.properties":{"foo":"bar"},
+  "servletContextInitParams":{},
+  "systemProperties":{...},
+  ...
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A property source called <code>``configService:&lt;URL of remote repository&gt;/&lt;file name&gt;</code> contains the <code>foo</code> property with a value of <code>bar</code> and is highest priority.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The URL in the property source name is the git repository, not the config server URL.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<script type="text/javascript" src="js/tocbot/tocbot.min.js"></script>
+<script type="text/javascript" src="js/toc.js"></script>
+<link rel="stylesheet" href="js/highlight/styles/atom-one-dark-reasonable.min.css">
+<script src="js/highlight/highlight.min.js"></script>
+<script>hljs.initHighlighting()</script>
+</body>
+</html>

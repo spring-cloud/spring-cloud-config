@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.7.1">
+<title>Features</title>
+<link rel="stylesheet" href="css/spring.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<style>
+.hidden {
+	display: none;
+}
+
+.switch {
+	border-width: 1px 1px 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+	display: inline-block;
+}
+
+.switch--item {
+	padding: 10px;
+	background-color: #ffffff;
+	color: #7a2518;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.switch--item:not(:first-child) {
+	border-width: 0 0 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+}
+
+.switch--item.selected {
+	background-color: #7a2519;
+	color: #ffffff;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+<script type="text/javascript">
+function addBlockSwitches() {
+	$('.primary').each(function() {
+		primary = $(this);
+		createSwitchItem(primary, createBlockSwitch(primary)).item.addClass("selected");
+		primary.children('.title').remove();
+	});
+	$('.secondary').each(function(idx, node) {
+		secondary = $(node);
+		primary = findPrimary(secondary);
+		switchItem = createSwitchItem(secondary, primary.children('.switch'));
+		switchItem.content.addClass('hidden');
+		findPrimary(secondary).append(switchItem.content);
+		secondary.remove();
+	});
+}
+
+function createBlockSwitch(primary) {
+	blockSwitch = $('<div class="switch"></div>');
+	primary.prepend(blockSwitch);
+	return blockSwitch;
+}
+
+function findPrimary(secondary) {
+	candidate = secondary.prev();
+	while (!candidate.is('.primary')) {
+		candidate = candidate.prev();
+	}
+	return candidate;
+}
+
+function createSwitchItem(block, blockSwitch) {
+	blockName = block.children('.title').text();
+	content = block.children('.content').first().append(block.next('.colist'));
+	item = $('<div class="switch--item">' + blockName + '</div>');
+	item.on('click', '', content, function(e) {
+		$(this).addClass('selected');
+		$(this).siblings().removeClass('selected');
+		e.data.siblings('.content').addClass('hidden');
+		e.data.removeClass('hidden');
+	});
+	blockSwitch.append(item);
+	return {'item': item, 'content': content};
+}
+
+$(addBlockSwitches);
+</script>
+
+</head>
+<body class="book toc2 toc-left">
+<div id="header">
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_features">Features</a></li>
+<li><a href="#_getting_started">Getting Started</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Cloud Config provides server and client-side support for externalized configuration in a distributed system. With the Config Server you have a central place to manage external properties for applications across all environments. The concepts on both client and server map identically to the Spring <code>Environment</code> and <code>PropertySource</code> abstractions, so they fit very well with Spring applications, but can be used with any application running in any language. As an application moves through the deployment pipeline from dev to test and into production you can manage the configuration between those environments and be certain that applications have everything they need to run when they migrate. The default implementation of the server storage backend uses git so it easily supports labelled versions of configuration environments, as well as being accessible to a wide range of tooling for managing the content.  It is easy to add alternative implementations and plug them in with Spring configuration.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_features"><a class="link" href="#_features">Features</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Cloud Config Server features:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>HTTP, resource-based API for external configuration (name-value pairs, or equivalent YAML content)</p>
+</li>
+<li>
+<p>Encrypt and decrypt property values (symmetric or asymmetric)</p>
+</li>
+<li>
+<p>Embeddable easily in a Spring Boot application using <code>@EnableConfigServer</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Config Client features (for Spring applications):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Bind to the Config Server and initialize Spring <code>Environment</code> with remote property sources</p>
+</li>
+<li>
+<p>Encrypt and decrypt property values (symmetric or asymmetric)</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_getting_started"><a class="link" href="#_getting_started">Getting Started</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>As long as Spring Boot Actuator and Spring Config Client are on the
+classpath any Spring Boot application will try to contact a config
+server on <code><a href="http://localhost:8888" class="bare">http://localhost:8888</a></code>, the default value of
+<code>spring.cloud.config.uri</code>.  If you would like to change this default,
+you can set <code>spring.cloud.config.uri</code> in <code>bootstrap.[yml | properties]</code>
+or via system properties or environment variables.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
+@EnableAutoConfiguration
+@RestController
+public class Application {
+
+  @Value("${config.name}")
+  String name = "World";
+
+  @RequestMapping("/")
+  public String home() {
+    return "Hello " + name;
+  }
+
+  public static void main(String[] args) {
+    SpringApplication.run(Application.class, args);
+  }
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The value of <code>config.name</code> in the sample (or any other values you bind to in the normal Spring Boot way) can come from local configuration or from the remote Config Server. The Config Server will take precedence by default. To see this look at the <code>/env</code> endpoint in the application and see the <code>configServer</code> property sources.</p>
+</div>
+<div class="paragraph">
+<p>To run your own server use the <code>spring-cloud-config-server</code> dependency and <code>@EnableConfigServer</code>. If you set <code>spring.config.name=configserver</code> the app will run on port 8888 and serve data from a sample repository. You need a <code>spring.cloud.config.server.git.uri</code> to locate the configuration data for your own needs (by default it is the location of a git repository, and can be a local <code>file:..</code> URL).</p>
+</div>
+</div>
+</div>
+</div>
+<script type="text/javascript" src="js/tocbot/tocbot.min.js"></script>
+<script type="text/javascript" src="js/toc.js"></script>
+<link rel="stylesheet" href="js/highlight/styles/atom-one-dark-reasonable.min.css">
+<script src="js/highlight/highlight.min.js"></script>
+<script>hljs.initHighlighting()</script>
+</body>
+</html>
