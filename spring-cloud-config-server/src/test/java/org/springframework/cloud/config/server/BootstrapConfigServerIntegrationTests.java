@@ -63,8 +63,10 @@ public class BootstrapConfigServerIntegrationTests {
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate().getForObject(
 				"http://localhost:" + this.port + "/foo/development/", Environment.class);
-		assertThat(environment.getPropertySources().isEmpty()).isFalse();
-		assertThat(environment.getPropertySources().get(0).getSource().get("info.foo"))
+		assertThat(environment.getPropertySources()).hasSize(2);
+		assertThat(environment.getPropertySources().get(0).getSource().get("bar"))
+				.isEqualTo("foo");
+		assertThat(environment.getPropertySources().get(1).getSource().get("info.foo"))
 				.isEqualTo("bar");
 	}
 

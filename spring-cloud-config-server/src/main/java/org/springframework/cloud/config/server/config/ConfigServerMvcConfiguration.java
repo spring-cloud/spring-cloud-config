@@ -27,19 +27,21 @@ import org.springframework.cloud.config.server.environment.EnvironmentEncryptorE
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.resource.ResourceController;
 import org.springframework.cloud.config.server.resource.ResourceRepository;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * @author Dave Syer
  * @author Roy Clarkson
+ * @author Tim Ysewyn
  */
 @Configuration
 @ConditionalOnWebApplication
-public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
+public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 
 	@Autowired(required = false)
 	private EnvironmentEncryptor environmentEncryptor;
@@ -55,6 +57,7 @@ public class ConfigServerMvcConfiguration extends WebMvcConfigurerAdapter {
 	}
 
 	@Bean
+	@RefreshScope
 	public EnvironmentController environmentController(
 			EnvironmentRepository envRepository, ConfigServerProperties server) {
 		EnvironmentController controller = new EnvironmentController(
