@@ -97,8 +97,8 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 				new LinkedHashSet<>(Arrays.asList(profiles)));
 		Collections.reverse(applications);
 		Collections.reverse(envs);
-		for (String app : applications) {
-			for (String env : envs) {
+		for (String env : envs) {
+			for (String app : applications) {
 				Map<String, String> next = (Map<String, String>) this.jdbc.query(this.sql,
 						new Object[] { app, env, label }, this.extractor);
 				if (!next.isEmpty()) {

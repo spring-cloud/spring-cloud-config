@@ -60,8 +60,11 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c"))
 				.isEqualTo("x");
 		assertThat(env.getPropertySources().get(1).getName())
+				.isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c.d")).isEqualTo("z");
+		assertThat(env.getPropertySources().get(2).getName())
 				.isEqualTo("application-default");
-		assertThat(env.getPropertySources().get(1).getSource().get("a.b")).isEqualTo("y");
+		assertThat(env.getPropertySources().get(2).getSource().get("a.b")).isEqualTo("y");
 	}
 
 	@Test
