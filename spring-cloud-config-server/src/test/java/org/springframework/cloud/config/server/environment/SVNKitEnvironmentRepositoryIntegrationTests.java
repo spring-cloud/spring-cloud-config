@@ -17,10 +17,10 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,6 +37,7 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
@@ -84,7 +85,11 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "trunk");
 		Environment environment = repository.findOne("bar", "staging", "trunk");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				uri + "/trunk/bar-staging.properties", uri + "/trunk/bar.properties",
+				uri + "/trunk/application-staging.yml", uri + "/trunk/application.yml");
 	}
 
 	@Test
@@ -98,16 +103,22 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "trunk");
 		Environment environment = repository.findOne("bar", "staging", "trunk");
-		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
-				.isEqualTo("bar");
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				uri + "/trunk/bar-staging.properties", uri + "/trunk/bar.properties",
+				uri + "/trunk/application-staging.yml", uri + "/trunk/application.yml");
+
+		assertThat(propertySources.get(0).getSource().get("foo")).isEqualTo("bar");
+
 		updateRepoForUpdate(uri);
+
 		environment = repository.findOne("bar", "staging", "trunk");
-		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
-				.isEqualTo("foo");
+		propertySources = environment.getPropertySources();
+		assertThat(propertySources.get(0).getSource().get("foo")).isEqualTo("foo");
 	}
 
-	private void updateRepoForUpdate(String uri)
-			throws SVNException, FileNotFoundException, IOException {
+	private void updateRepoForUpdate(String uri) throws SVNException, IOException {
 		SvnOperationFactory svnFactory = new SvnOperationFactory();
 		final SvnCheckout checkout = svnFactory.createCheckout();
 		checkout.setSource(SvnTarget.fromURL(SVNURL.parseURIEncoded(uri)));
@@ -148,7 +159,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.getBean(EnvironmentRepository.class);
 		repository.findOne("bar", "staging", "unknownlabel");
 		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
-		assertThat(environment.getPropertySources().size()).isEqualTo(0);
+		assertThat(environment.getPropertySources()).isEmpty();
 	}
 
 	@Test
@@ -163,7 +174,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		Environment environment = repository.findOne("bar", "staging", "demobranch");
 		assertThat(environment.getPropertySources().get(0).getName()
 				.contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 	}
 
 	@Configuration

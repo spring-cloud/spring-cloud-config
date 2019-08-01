@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ import org.junit.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategy.VaultResponse;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -105,6 +107,62 @@ public class VaultEnvironmentRepositoryTests {
 		assertThat(e.getPropertySources().get(1).getSource()).as(
 				"Properties for default application with key 'application' should be returned in second position")
 				.isEqualTo(secondResult);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testFindOneWithProfile() {
+		RestTemplate rest = mock(RestTemplate.class);
+
+		ResponseEntity<VaultResponse> myAppStagingResp = mock(ResponseEntity.class);
+		when(myAppStagingResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse myAppStagingVaultResp = mock(VaultResponse.class);
+		when(myAppStagingVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
+		when(myAppStagingResp.getBody()).thenReturn(myAppStagingVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
+				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
+				eq("myapp,staging"))).thenReturn(myAppStagingResp);
+
+		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
+		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse myAppVaultResp = mock(VaultResponse.class);
+		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"baz\"}");
+		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
+				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
+				eq("myapp"))).thenReturn(myAppResp);
+
+		ResponseEntity<VaultResponse> appStagingResp = mock(ResponseEntity.class);
+		when(appStagingResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse appStagingVaultResp = mock(VaultResponse.class);
+		when(appStagingVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
+		when(appStagingResp.getBody()).thenReturn(appStagingVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
+				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
+				eq("application,staging"))).thenReturn(appStagingResp);
+
+		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
+		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse appVaultResp = mock(VaultResponse.class);
+		when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-baz\"}");
+		when(appResp.getBody()).thenReturn(appVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"),
+				eq(HttpMethod.GET), any(HttpEntity.class), eq(VaultResponse.class),
+				eq("application"))).thenReturn(appResp);
+
+		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(
+				mockHttpRequest(), new EnvironmentWatch.Default(), rest,
+				new VaultEnvironmentProperties(), mockTokenProvider());
+
+		Environment e = repo.findOne("myapp", "staging", null);
+		assertThat(e.getName()).as("Name should be the same as the application argument")
+				.isEqualTo("myapp");
+		List<PropertySource> propertySources = e.getPropertySources();
+		assertThat(propertySources).hasSize(4).as(
+				"Properties for specified application and default application with key 'application' and profile 'staging' should be returned");
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				"vault:myapp,staging", "vault:myapp", "vault:application,staging",
+				"vault:application");
 	}
 
 	@Test

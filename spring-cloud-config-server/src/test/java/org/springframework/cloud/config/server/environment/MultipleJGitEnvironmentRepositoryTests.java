@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
@@ -33,6 +34,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
@@ -95,7 +97,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	public void defaultRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
@@ -123,10 +125,10 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void defaultRepoNested() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
-		this.repository.setSearchPaths(new String[] { "sub" });
+		this.repository.setSearchPaths("sub");
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
@@ -135,16 +137,20 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	public void defaultRepoBranch() {
 		Environment environment = this.repository.findOne("bar", "staging", "raw");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				this.repository.getUri() + "/bar-staging.properties",
+				this.repository.getUri() + "/bar.properties",
+				this.repository.getUri() + "/application-staging.yml",
+				this.repository.getUri() + "/application.yml");
 		assertVersion(environment);
 	}
 
 	@Test
 	public void defaultRepoTag() {
 		Environment environment = this.repository.findOne("bar", "staging", "foo");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
@@ -154,7 +160,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void defaultRepoTwice() {
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
@@ -172,7 +178,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("test1-svc", "staging",
 				"master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
 		assertVersion(environment);
@@ -183,9 +189,13 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.setDefaultLabel("raw");
 		Environment environment = this.repository.findOne("bar", "staging", null);
 		assertThat(environment.getLabel()).isEqualTo("raw");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				this.repository.getUri() + "/bar-staging.properties",
+				this.repository.getUri() + "/bar.properties",
+				this.repository.getUri() + "/application-staging.yml",
+				this.repository.getUri() + "/application.yml");
 		assertVersion(environment);
 	}
 
@@ -193,7 +203,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void mappingRepoWithDefaultLabel() {
 		Environment environment = this.repository.findOne("test1-svc", "staging", null);
 		assertThat(environment.getLabel()).isEqualTo("master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
 		assertVersion(environment);

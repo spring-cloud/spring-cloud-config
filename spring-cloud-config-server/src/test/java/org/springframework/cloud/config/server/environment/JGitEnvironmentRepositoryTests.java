@@ -68,6 +68,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitSkipSslValidationCredentialsProvider;
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
@@ -124,7 +125,7 @@ public class JGitEnvironmentRepositoryTests {
 	public void vanilla() {
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
@@ -134,10 +135,10 @@ public class JGitEnvironmentRepositoryTests {
 	public void nested() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
-		this.repository.setSearchPaths(new String[] { "sub" });
+		this.repository.setSearchPaths("sub");
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
@@ -147,10 +148,10 @@ public class JGitEnvironmentRepositoryTests {
 	public void placeholderInSearchPath() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
-		this.repository.setSearchPaths(new String[] { "{application}" });
+		this.repository.setSearchPaths("{application}");
 		this.repository.findOne("sub", "staging", "master");
 		Environment environment = this.repository.findOne("sub", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
@@ -167,10 +168,10 @@ public class JGitEnvironmentRepositoryTests {
 	public void nestedPattern() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
-		this.repository.setSearchPaths(new String[] { "sub*" });
+		this.repository.setSearchPaths("sub*");
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
@@ -180,9 +181,13 @@ public class JGitEnvironmentRepositoryTests {
 	public void branch() {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.repository.findOne("bar", "staging", "raw");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				this.repository.getUri() + "/bar-staging.properties",
+				this.repository.getUri() + "/bar.properties",
+				this.repository.getUri() + "/application-staging.yml",
+				this.repository.getUri() + "/application.yml");
 		assertVersion(environment);
 	}
 
@@ -190,7 +195,7 @@ public class JGitEnvironmentRepositoryTests {
 	public void tag() {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.repository.findOne("bar", "staging", "foo");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
@@ -201,7 +206,7 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setBasedir(this.basedir);
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
@@ -214,7 +219,7 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setBasedir(this.basedir);
 		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);

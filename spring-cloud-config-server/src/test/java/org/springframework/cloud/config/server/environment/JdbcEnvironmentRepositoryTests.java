@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.List;
+
 import javax.sql.DataSource;
 
 import org.junit.Test;
@@ -25,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepositoryTests.ApplicationConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -55,13 +58,14 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default", "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
-		assertThat(env.getPropertySources()).isNotEmpty();
-		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("foo-bar");
-		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c"))
-				.isEqualTo("x");
-		assertThat(env.getPropertySources().get(1).getName())
-				.isEqualTo("application-default");
-		assertThat(env.getPropertySources().get(1).getSource().get("a.b")).isEqualTo("y");
+		List<PropertySource> propertySources = env.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				"foo-bar", "foo-default", "application-bar", "application-default");
+		assertThat(propertySources.get(0).getSource().get("a.b.c")).isEqualTo("x");
+		assertThat(propertySources.get(1).getSource().get("a.b.c")).isEqualTo("y");
+		assertThat(propertySources.get(2).getSource().get("a.b")).isEqualTo("y");
+		assertThat(propertySources.get(3).getSource().get("a.b")).isEqualTo("z");
 	}
 
 	@Test
@@ -71,8 +75,9 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getName()).isEqualTo("application");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default" });
 		assertThat(env.getLabel()).isEqualTo("master");
-		assertThat(env.getPropertySources()).isNotEmpty();
-		assertThat(env.getPropertySources().get(0).getSource().get("a.b")).isEqualTo("y");
+		List<PropertySource> propertySources = env.getPropertySources();
+		assertThat(propertySources).hasSize(1);
+		assertThat(propertySources.get(0).getSource().get("a.b")).isEqualTo("z");
 	}
 
 	@Configuration

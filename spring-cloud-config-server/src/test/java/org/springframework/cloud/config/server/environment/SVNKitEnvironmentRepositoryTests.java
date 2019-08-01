@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
@@ -26,6 +27,7 @@ import org.junit.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.annotation.Configuration;
@@ -62,22 +64,28 @@ public class SVNKitEnvironmentRepositoryTests {
 	@Test
 	public void vanilla() {
 		Environment environment = this.findOne();
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName()
-				.contains("application.yml")).isTrue();
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		String prefix = this.repository.getUri();
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				prefix + "/trunk/bar-staging.properties",
+				prefix + "/trunk/bar.properties",
+				prefix + "/trunk/application-staging.yml",
+				prefix + "/trunk/application.yml");
 	}
 
 	@Test
 	public void basedir() {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.findOne();
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName()
-				.contains("application.yml")).isTrue();
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		String prefix = this.repository.getUri();
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				prefix + "/trunk/bar-staging.properties",
+				prefix + "/trunk/bar.properties",
+				prefix + "/trunk/application-staging.yml",
+				prefix + "/trunk/application.yml");
 	}
 
 	@Test
@@ -90,11 +98,14 @@ public class SVNKitEnvironmentRepositoryTests {
 		this.repository.setBasedir(basedirWithSpace);
 
 		Environment environment = this.findOne();
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName()
-				.contains("application.yml")).isTrue();
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		String prefix = this.repository.getUri();
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				prefix + "/trunk/bar-staging.properties",
+				prefix + "/trunk/bar.properties",
+				prefix + "/trunk/application-staging.yml",
+				prefix + "/trunk/application.yml");
 	}
 
 	@Test
@@ -118,11 +129,14 @@ public class SVNKitEnvironmentRepositoryTests {
 	public void vanilla_with_update() {
 		this.findOne();
 		Environment environment = this.findOne();
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName()
-				.contains("application.yml")).isTrue();
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		String prefix = this.repository.getUri();
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				prefix + "/trunk/bar-staging.properties",
+				prefix + "/trunk/bar.properties",
+				prefix + "/trunk/application-staging.yml",
+				prefix + "/trunk/application.yml");
 	}
 
 	@Test(expected = NoSuchLabelException.class)

@@ -17,12 +17,14 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.credhub.core.credential.CredHubCredentialOperations;
 import org.springframework.credhub.support.CredentialDetails;
@@ -169,6 +171,28 @@ public class CredhubEnvironmentRepositoryTests {
 		expectedValues.put("key2", "value2");
 		assertThat(environment.getPropertySources().get(0).getSource())
 				.isEqualTo(expectedValues);
+	}
+
+	@Test
+	public void shouldRetrieveGivenProfile() {
+		stubCredentials("/my-application/production/master", "toggles", "key1", "value1");
+		stubCredentials("/my-application/default/master", "toggles", "key2", "value2");
+		stubCredentials("/application/production/master", "toggles", "key3", "value3");
+		stubCredentials("/application/default/master", "toggles", "key4", "value4");
+
+		Environment environment = this.credhubEnvironmentRepository
+				.findOne("my-application", "production", null);
+
+		assertThat(environment.getLabel()).isEqualTo("master");
+		assertThat(environment.getProfiles()).containsExactly("production");
+		assertThat(environment.getName()).isEqualTo("my-application");
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				"credhub-my-application-production", "credhub-my-application",
+				"credhub-application-production", "credhub-application");
+		assertThat(propertySources.get(0).getSource())
+				.isEqualTo(singletonMap("key1", "value1"));
 	}
 
 	private void stubCredentials(String expectedPath, String name, String key,

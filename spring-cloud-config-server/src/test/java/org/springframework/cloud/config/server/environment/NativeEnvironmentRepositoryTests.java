@@ -16,12 +16,15 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -77,7 +80,13 @@ public class NativeEnvironmentRepositoryTests {
 	public void prefixed() {
 		this.repository.setSearchLocations("classpath:/test");
 		Environment environment = this.repository.findOne("foo", "development", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				"classpath:/test/foo-development.properties",
+				"classpath:/test/foo.properties",
+				"classpath:/test/application-development.yml",
+				"classpath:/test/application.yml");
 		assertThat(environment.getVersion()).as("version was wrong")
 				.isEqualTo("myversion");
 	}
@@ -86,7 +95,13 @@ public class NativeEnvironmentRepositoryTests {
 	public void prefixedWithFile() {
 		this.repository.setSearchLocations("file:./src/test/resources/test");
 		Environment environment = this.repository.findOne("foo", "development", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		List<PropertySource> propertySources = environment.getPropertySources();
+		assertThat(propertySources).hasSize(4);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				"file:src/test/resources/test/foo-development.properties",
+				"file:src/test/resources/test/foo.properties",
+				"file:src/test/resources/test/application-development.yml",
+				"file:src/test/resources/test/application.yml");
 		assertThat(environment.getVersion()).as("version was wrong")
 				.isEqualTo("myversion");
 	}
@@ -95,11 +110,16 @@ public class NativeEnvironmentRepositoryTests {
 	public void labelled() {
 		this.repository.setSearchLocations("classpath:/test");
 		Environment environment = this.repository.findOne("foo", "development", "dev");
-		assertThat(environment.getPropertySources().size()).isEqualTo(3);
+		List<PropertySource> propertySources = environment.getPropertySources();
 		// position 1 because it has higher precedence than anything except the
 		// foo-development.properties
-		assertThat(environment.getPropertySources().get(1).getSource().get("foo"))
-				.isEqualTo("dev_bar");
+		assertThat(propertySources).hasSize(5);
+		assertThat(propertySources).extracting(PropertySource::getName).containsExactly(
+				"classpath:/test/foo-development.properties",
+				"classpath:/test/dev/foo.properties", "classpath:/test/foo.properties",
+				"classpath:/test/application-development.yml",
+				"classpath:/test/application.yml");
+		assertThat(propertySources.get(1).getSource().get("foo")).isEqualTo("dev_bar");
 		assertThat(environment.getVersion()).as("version was wrong")
 				.isEqualTo("myversion");
 	}
