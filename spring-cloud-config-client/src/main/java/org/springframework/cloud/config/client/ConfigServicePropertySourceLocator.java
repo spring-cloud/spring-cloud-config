@@ -370,7 +370,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		@Override
 		public String toString() {
-			return this.remotePropertySource + ":" + this.origin.toString();
+			return "Config Server " + this.remotePropertySource + ":"
+					+ this.origin.toString();
 		}
 
 	}
