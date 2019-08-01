@@ -78,8 +78,17 @@ public class RefreshableConfigServerIntegrationTests {
 		ConfigServerTestUtils.deleteLocalRepo(localRepo);
 	}
 
+	/*
+	 * We're emulating an application "foo" which is running with the "development" profile
+	 * and is asking for its properties using the REST endpoint. We're also calling the
+	 * /env & /refresh actuator endpoints to change the
+	 * `spring.cloud.config.server.overrides.foo` property. Since we see that we only get
+	 * the overridden "foo" property after the context refresh we are sure that the
+	 * properties have been set and the EnvironmentController bean has successfully been
+	 * recreated with the new overrides.
+	 */
 	@Test
-	public void refreshOverrides() throws Exception {
+	public void refreshOverrides() {
 		Environment environment = new TestRestTemplate().getForObject(
 				"http://localhost:" + this.port + "/foo/development/", Environment.class);
 		assertThat(environment.getPropertySources()).isEmpty();
