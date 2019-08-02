@@ -51,11 +51,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.assertOriginTrackedValue;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestConfiguration.class, properties = {
-		"spring.cloud.config.enabled=true",
-		"management.endpoints.web.exposure.include=env, refresh" }, webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TestConfiguration.class,
+		properties = { "spring.cloud.config.enabled=true",
+				"management.endpoints.web.exposure.include=env, refresh" },
+		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
 public class RefreshableConfigServerIntegrationTests {
@@ -79,9 +81,9 @@ public class RefreshableConfigServerIntegrationTests {
 	}
 
 	/*
-	 * We're emulating an application "foo" which is running with the "development" profile
-	 * and is asking for its properties using the REST endpoint. We're also calling the
-	 * /env & /refresh actuator endpoints to change the
+	 * We're emulating an application "foo" which is running with the "development"
+	 * profile and is asking for its properties using the REST endpoint. We're also
+	 * calling the /env & /refresh actuator endpoints to change the
 	 * `spring.cloud.config.server.overrides.foo` property. Since we see that we only get
 	 * the overridden "foo" property after the context refresh we are sure that the
 	 * properties have been set and the EnvironmentController bean has successfully been
@@ -110,8 +112,7 @@ public class RefreshableConfigServerIntegrationTests {
 		environment = new TestRestTemplate().getForObject(
 				"http://localhost:" + this.port + "/foo/development/", Environment.class);
 		assertThat(environment.getPropertySources()).isNotEmpty();
-		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
-				.isEqualTo("bar");
+		assertOriginTrackedValue(environment, 0, "foo", "bar");
 	}
 
 	@Configuration
@@ -124,7 +125,7 @@ public class RefreshableConfigServerIntegrationTests {
 			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
 			Environment environment = new Environment("", "");
 			given(repository.findOne(isA(String.class), isA(String.class),
-					nullable(String.class))).willReturn(environment);
+					nullable(String.class), isA(Boolean.class))).willReturn(environment);
 			return repository;
 		}
 

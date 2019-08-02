@@ -54,6 +54,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
+import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
 
 public class ConfigServicePropertySourceLocatorTests {
 
@@ -83,7 +84,7 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		HttpEntity httpEntity = argumentCaptor.getValue();
 		assertThat(httpEntity.getHeaders().getAccept())
-				.containsExactly(MediaType.APPLICATION_JSON);
+				.containsExactly(MediaType.parseMediaType(V2_JSON));
 	}
 
 	@Test

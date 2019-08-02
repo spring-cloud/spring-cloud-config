@@ -124,7 +124,6 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub" });
-		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -152,7 +151,6 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepoTwice() {
-		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())

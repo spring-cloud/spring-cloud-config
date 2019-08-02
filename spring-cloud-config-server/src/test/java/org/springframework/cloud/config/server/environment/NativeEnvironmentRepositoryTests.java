@@ -94,7 +94,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void labelled() {
 		this.repository.setSearchLocations("classpath:/test");
-		Environment environment = this.repository.findOne("foo", "development", "dev");
+		Environment environment = this.repository.findOne("foo", "development", "dev",
+				false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(3);
 		// position 1 because it has higher precedence than anything except the
 		// foo-development.properties

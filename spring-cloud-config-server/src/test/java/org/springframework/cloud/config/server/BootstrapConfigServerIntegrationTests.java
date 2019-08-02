@@ -34,6 +34,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.assertOriginTrackedValue;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ConfigServerApplication.class,
@@ -65,10 +66,8 @@ public class BootstrapConfigServerIntegrationTests {
 		Environment environment = new TestRestTemplate().getForObject(
 				"http://localhost:" + this.port + "/foo/development/", Environment.class);
 		assertThat(environment.getPropertySources()).hasSize(2);
-		assertThat(environment.getPropertySources().get(0).getSource().get("bar"))
-				.isEqualTo("foo");
-		assertThat(environment.getPropertySources().get(1).getSource().get("info.foo"))
-				.isEqualTo("bar");
+		assertOriginTrackedValue(environment, 0, "bar", "foo");
+		assertOriginTrackedValue(environment, 1, "info.foo", "bar");
 	}
 
 	@Test

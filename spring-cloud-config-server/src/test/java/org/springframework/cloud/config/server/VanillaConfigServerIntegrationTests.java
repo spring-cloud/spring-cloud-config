@@ -67,8 +67,7 @@ public class VanillaConfigServerIntegrationTests {
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("overrides");
-		assertThat(environment.getPropertySources().get(0).getSource().toString())
-				.isEqualTo("{spring.cloud.config.enabled=true}");
+		ConfigServerTestUtils.assertConfigEnabled(environment);
 	}
 
 	@Test

@@ -76,6 +76,12 @@ public class CustomEnvironmentRepositoryTests {
 				@Override
 				public Environment findOne(String application, String profile,
 						String label) {
+					return findOne(application, profile, label, false);
+				}
+
+				@Override
+				public Environment findOne(String application, String profile,
+						String label, boolean includeOrigin) {
 					return new Environment("test", new String[0], "label", "version",
 							"state");
 				}

@@ -48,6 +48,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.anyString;
 
@@ -101,7 +102,7 @@ public class ConfigClientOnIntegrationTests {
 		@Bean
 		public EnvironmentRepository environmentRepository() {
 			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
-			given(repository.findOne(anyString(), anyString(), anyString()))
+			given(repository.findOne(anyString(), anyString(), anyString(), anyBoolean()))
 					.willReturn(new Environment("", ""));
 			return repository;
 		}

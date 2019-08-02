@@ -115,7 +115,7 @@ public class ResourceController {
 			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
 			if (resolvePlaceholders) {
 				Environment environment = this.environmentRepository.findOne(name,
-						profile, label);
+						profile, label, false);
 				text = resolvePlaceholders(prepareEnvironment(environment), text);
 			}
 			return text;

@@ -27,7 +27,11 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.boot.env.OriginTrackedMapPropertySource;
+import org.springframework.boot.origin.Origin;
+import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
+import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropertySource;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -46,6 +50,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.util.Assert;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
@@ -56,6 +61,7 @@ import org.springframework.web.client.RestTemplate;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
+import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
 
 /**
  * @author Dave Syer
@@ -81,7 +87,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	public org.springframework.core.env.PropertySource<?> locate(
 			org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
-		CompositePropertySource composite = new CompositePropertySource("configService");
+		CompositePropertySource composite = new OriginTrackedCompositePropertySource(
+				"configService");
 		RestTemplate restTemplate = this.restTemplate == null
 				? getSecureRestTemplate(properties) : this.restTemplate;
 		Exception error = null;
@@ -100,15 +107,15 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				if (result != null) {
 					log(result);
 
-					if (result.getPropertySources() != null) { // result.getPropertySources()
-																// can be null if using
-																// xml
+					// result.getPropertySources() can be null if using xml
+					if (result.getPropertySources() != null) {
 						for (PropertySource source : result.getPropertySources()) {
 							@SuppressWarnings("unchecked")
-							Map<String, Object> map = (Map<String, Object>) source
-									.getSource();
+							Map<String, Object> map = translateOrigins(source.getName(),
+									(Map<String, Object>) source.getSource());
 							composite.addPropertySource(
-									new MapPropertySource(source.getName(), map));
+									new OriginTrackedMapPropertySource(source.getName(),
+											map));
 						}
 					}
 
@@ -171,6 +178,32 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 	}
 
+	private Map<String, Object> translateOrigins(String name,
+			Map<String, Object> source) {
+		Map<String, Object> withOrigins = new HashMap<>();
+		for (Map.Entry<String, Object> entry : source.entrySet()) {
+			boolean hasOrigin = false;
+
+			if (entry.getValue() instanceof Map) {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> value = (Map<String, Object>) entry.getValue();
+				if (value.size() == 2 && value.containsKey("origin")
+						&& value.containsKey("value")) {
+					Origin origin = new ConfigServiceOrigin(name, value.get("origin"));
+					OriginTrackedValue trackedValue = OriginTrackedValue
+							.of(value.get("value"), origin);
+					withOrigins.put(entry.getKey(), trackedValue);
+					hasOrigin = true;
+				}
+			}
+
+			if (!hasOrigin) {
+				withOrigins.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return withOrigins;
+	}
+
 	private void putValue(HashMap<String, Object> map, String key, String value) {
 		if (StringUtils.hasText(value)) {
 			map.put(key, value);
@@ -208,6 +241,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 			try {
 				HttpHeaders headers = new HttpHeaders();
+				headers.setAccept(
+						Collections.singletonList(MediaType.parseMediaType(V2_JSON)));
 				addAuthorizationToken(properties, headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
@@ -215,7 +250,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
 				}
-				headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
 				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity,
@@ -317,6 +351,27 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		protected Map<String, String> getHeaders() {
 			return this.headers;
+		}
+
+	}
+
+	static class ConfigServiceOrigin implements Origin {
+
+		private final String remotePropertySource;
+
+		private final Object origin;
+
+		ConfigServiceOrigin(String remotePropertySource, Object origin) {
+			this.remotePropertySource = remotePropertySource;
+			Assert.notNull(origin, "origin may not be null");
+			this.origin = origin;
+
+		}
+
+		@Override
+		public String toString() {
+			return "Config Server " + this.remotePropertySource + ":"
+					+ this.origin.toString();
 		}
 
 	}

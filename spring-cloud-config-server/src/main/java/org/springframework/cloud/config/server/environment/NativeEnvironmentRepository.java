@@ -125,6 +125,12 @@ public class NativeEnvironmentRepository
 
 	@Override
 	public Environment findOne(String config, String profile, String label) {
+		return findOne(config, profile, label, false);
+	}
+
+	@Override
+	public Environment findOne(String config, String profile, String label,
+			boolean includeOrigin) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(
 				PropertyPlaceholderAutoConfiguration.class);
 		ConfigurableEnvironment environment = getEnvironment(profile);
@@ -143,7 +149,7 @@ public class NativeEnvironmentRepository
 		environment.getPropertySources().remove("profiles");
 		try {
 			return clean(new PassthruEnvironmentRepository(environment).findOne(config,
-					profile, label));
+					profile, label, includeOrigin));
 		}
 		finally {
 			context.close();
