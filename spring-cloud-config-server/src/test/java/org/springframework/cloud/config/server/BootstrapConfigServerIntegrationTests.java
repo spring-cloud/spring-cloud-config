@@ -66,14 +66,16 @@ public class BootstrapConfigServerIntegrationTests {
 		Environment environment = new TestRestTemplate().getForObject(
 				"http://localhost:" + this.port + "/foo/development/", Environment.class);
 		assertThat(environment.getPropertySources()).hasSize(2);
-		Object value = environment.getPropertySources().get(0).getSource().get("bar");
+		assertValue(environment, 0, "bar", "foo");
+		assertValue(environment, 1, "info.foo", "bar");
+	}
+
+	@SuppressWarnings("unchecked")
+	private void assertValue(Environment environment, int index, String key, String expectedValue) {
+		Object value = environment.getPropertySources().get(index).getSource().get(key);
 		assertThat(value).isNotNull().isInstanceOf(Map.class);
 		Map map = (Map) value;
-		assertThat(map).containsEntry("value", "foo");
-		value = environment.getPropertySources().get(1).getSource().get("info.foo");
-		assertThat(value).isNotNull().isInstanceOf(Map.class);
-		map = (Map) value;
-		assertThat(map).containsEntry("value", "bar");
+		assertThat(map).containsEntry("value", expectedValue);
 	}
 
 	@Test

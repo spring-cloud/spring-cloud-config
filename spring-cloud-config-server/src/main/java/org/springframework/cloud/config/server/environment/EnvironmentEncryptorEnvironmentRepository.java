@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.environment.PropertyValueDescriptor;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 
 /**
@@ -63,9 +64,21 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 			environment = this.environmentEncryptor.decrypt(environment);
 		}
 		if (!this.overrides.isEmpty()) {
-			environment.addFirst(new PropertySource("overrides", this.overrides));
+			environment.addFirst(new PropertySource("overrides", getOverridesMap(includeOrigin)));
 		}
 		return environment;
+	}
+
+	private Map<?, ?> getOverridesMap(boolean includeOrigin) {
+		if (!includeOrigin) {
+			return this.overrides;
+		}
+		Map<Object, Object> map = new LinkedHashMap<>();
+		for (Map.Entry entry : this.overrides.entrySet()) {
+			map.put(entry.getKey(), new PropertyValueDescriptor(entry.getValue(),
+				"Config server overrides"));
+		}
+		return map;
 	}
 
 	/**
