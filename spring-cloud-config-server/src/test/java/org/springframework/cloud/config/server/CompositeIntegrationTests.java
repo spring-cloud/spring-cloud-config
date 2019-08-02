@@ -76,8 +76,7 @@ public class CompositeIntegrationTests {
 							.contains("svn-config-repo")).isTrue();
 			assertThat(environment.getPropertySources().get(2).getName()
 					.contains("svn-config-repo")).isTrue();
-			assertThat("{spring.cloud.config.enabled=true}").isEqualTo(
-					environment.getPropertySources().get(0).getSource().toString());
+			ConfigServerTestUtils.assertConfigEnabled(environment);
 		}
 
 		@Test
@@ -138,8 +137,7 @@ public class CompositeIntegrationTests {
 							.contains("svn-config-repo")).isTrue();
 			assertThat(environment.getPropertySources().get(2).getName()
 					.contains("svn-config-repo")).isTrue();
-			assertThat("{spring.cloud.config.enabled=true}").isEqualTo(
-					environment.getPropertySources().get(0).getSource().toString());
+			ConfigServerTestUtils.assertConfigEnabled(environment);
 		}
 
 		@Test

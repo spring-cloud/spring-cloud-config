@@ -64,7 +64,8 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 			environment = this.environmentEncryptor.decrypt(environment);
 		}
 		if (!this.overrides.isEmpty()) {
-			environment.addFirst(new PropertySource("overrides", getOverridesMap(includeOrigin)));
+			environment.addFirst(
+					new PropertySource("overrides", getOverridesMap(includeOrigin)));
 		}
 		return environment;
 	}
@@ -76,7 +77,7 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 		Map<Object, Object> map = new LinkedHashMap<>();
 		for (Map.Entry entry : this.overrides.entrySet()) {
 			map.put(entry.getKey(), new PropertyValueDescriptor(entry.getValue(),
-				"Config server overrides"));
+					"Config server overrides"));
 		}
 		return map;
 	}

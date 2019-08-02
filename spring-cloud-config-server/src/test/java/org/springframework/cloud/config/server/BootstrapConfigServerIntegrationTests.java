@@ -17,7 +17,6 @@
 package org.springframework.cloud.config.server;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
@@ -35,6 +34,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.assertOriginTrackedValue;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ConfigServerApplication.class,
@@ -66,16 +66,8 @@ public class BootstrapConfigServerIntegrationTests {
 		Environment environment = new TestRestTemplate().getForObject(
 				"http://localhost:" + this.port + "/foo/development/", Environment.class);
 		assertThat(environment.getPropertySources()).hasSize(2);
-		assertValue(environment, 0, "bar", "foo");
-		assertValue(environment, 1, "info.foo", "bar");
-	}
-
-	@SuppressWarnings("unchecked")
-	private void assertValue(Environment environment, int index, String key, String expectedValue) {
-		Object value = environment.getPropertySources().get(index).getSource().get(key);
-		assertThat(value).isNotNull().isInstanceOf(Map.class);
-		Map map = (Map) value;
-		assertThat(map).containsEntry("value", expectedValue);
+		assertOriginTrackedValue(environment, 0, "bar", "foo");
+		assertOriginTrackedValue(environment, 1, "info.foo", "bar");
 	}
 
 	@Test
