@@ -1,0 +1,6 @@
+spring:
+  cloud:
+    config:
+      server:
+        overrides:
+          bar: foo
