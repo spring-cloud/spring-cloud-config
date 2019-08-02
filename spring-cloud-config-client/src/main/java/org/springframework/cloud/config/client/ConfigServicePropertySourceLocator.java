@@ -27,8 +27,8 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.boot.origin.Origin;
-import org.springframework.boot.origin.OriginLookup;
 import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropertySource;
@@ -372,34 +372,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		public String toString() {
 			return "Config Server " + this.remotePropertySource + ":"
 					+ this.origin.toString();
-		}
-
-	}
-
-	static class OriginTrackedMapPropertySource extends MapPropertySource
-			implements OriginLookup<String> {
-
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		OriginTrackedMapPropertySource(String name, Map source) {
-			super(name, source);
-		}
-
-		@Override
-		public Object getProperty(String name) {
-			Object value = super.getProperty(name);
-			if (value instanceof OriginTrackedValue) {
-				return ((OriginTrackedValue) value).getValue();
-			}
-			return value;
-		}
-
-		@Override
-		public Origin getOrigin(String name) {
-			Object value = super.getProperty(name);
-			if (value instanceof OriginTrackedValue) {
-				return ((OriginTrackedValue) value).getOrigin();
-			}
-			return null;
 		}
 
 	}
