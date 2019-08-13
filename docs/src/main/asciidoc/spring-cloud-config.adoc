@@ -543,6 +543,24 @@ Thus, the default behaviour with no placeholders is the same as adding a search 
 For example, `file:/tmp/config` is the same as `file:/tmp/config,file:/tmp/config/{label}`.
 This behavior can be disabled by setting `spring.cloud.config.server.native.addLabelLocations=false`.
 
+[TIP]
+====
+If you want to combine the native profile with another profile, you have to explicitly provide a `NativeEnvironmentRepository` bean definition in your configuration:
+====
+
+.CustomConfiguration.java
+[source,java]
+----
+@Configuration
+public class CustomConfiguration {
+    @Bean
+      public NativeEnvironmentRepository nativeEnvironmentRepository(NativeEnvironmentRepositoryFactory factory,
+                                                                     NativeEnvironmentProperties environmentProperties) {
+        return factory.build(environmentProperties);
+      }
+}
+----
+
 [[vault-backend]]
 ==== Vault Backend
 
