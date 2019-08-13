@@ -171,6 +171,27 @@ public class CredhubEnvironmentRepositoryTests {
 				.isEqualTo(expectedValues);
 	}
 
+	@Test
+	public void shouldIncludeDefaultApplicationWhenOtherProvided() {
+		stubCredentials("/my-application/production/mylabel", "toggles", "key1",
+				"value1");
+		stubCredentials("/application/production/mylabel", "abs", "key2", "value2");
+
+		Environment environment = this.credhubEnvironmentRepository
+				.findOne("my-application", "production", "mylabel");
+
+		assertThat(environment.getLabel()).isEqualTo("mylabel");
+		assertThat(environment.getProfiles()).containsExactly("production");
+		assertThat(environment.getName()).isEqualTo("my-application");
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo("credhub-my-application");
+		HashMap<Object, Object> expectedValues = new HashMap<>();
+		expectedValues.put("key1", "value1");
+		expectedValues.put("key2", "value2");
+		assertThat(environment.getPropertySources().get(0).getSource())
+				.isEqualTo(expectedValues);
+	}
+
 	private void stubCredentials(String expectedPath, String name, String key,
 			String value) {
 		SimpleCredentialName credentialsName = new SimpleCredentialName(

@@ -36,6 +36,12 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository {
 
 	private CredHubOperations credHubOperations;
 
+	private static final String DEFAULT_PROFILE = "default";
+
+	private static final String DEFAULT_LABEL = "master";
+
+	private static final String DEFAULT_APPLICATION = "application";
+
 	public CredhubEnvironmentRepository(CredHubOperations credHubOperations) {
 		this.credHubOperations = credHubOperations;
 	}
@@ -43,10 +49,10 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository {
 	@Override
 	public Environment findOne(String application, String profilesList, String label) {
 		if (StringUtils.isEmpty(profilesList)) {
-			profilesList = "default";
+			profilesList = DEFAULT_PROFILE;
 		}
 		if (StringUtils.isEmpty(label)) {
-			label = "master";
+			label = DEFAULT_LABEL;
 		}
 
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profilesList);
@@ -56,7 +62,11 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository {
 		Map<Object, Object> properties = new HashMap<>();
 		for (String profile : profiles) {
 			properties.putAll(findProperties(application, profile, label));
+			if (!DEFAULT_APPLICATION.equals(application)) {
+				properties.putAll(findProperties(DEFAULT_APPLICATION, profile, label));
+			}
 		}
+
 		environment.add(new PropertySource("credhub-" + application, properties));
 
 		return environment;
