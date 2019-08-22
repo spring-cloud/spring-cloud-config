@@ -282,7 +282,6 @@ class DefaultRepositoryConfiguration {
 }
 
 @Configuration
-@ConditionalOnMissingBean(EnvironmentRepository.class)
 @Profile("native")
 class NativeRepositoryConfiguration {
 
