@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.amazonaws.services.s3.AmazonS3;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
@@ -35,6 +36,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.server.composite.CompositeEnvironmentBeanFactoryPostProcessor;
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
 import org.springframework.cloud.config.server.composite.ConditionalOnSearchPathLocator;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentProperties;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
@@ -91,13 +95,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
 		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
 		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
-		RedisEnvironmentProperties.class })
+		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
 		VaultConfiguration.class, VaultRepositoryConfiguration.class,
 		CredhubConfiguration.class, CredhubRepositoryConfiguration.class,
 		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
 		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class,
-		GoogleCloudSourceConfiguration.class, DefaultRepositoryConfiguration.class })
+		GoogleCloudSourceConfiguration.class, AwsS3RepositoryConfiguration.class,
+		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
@@ -174,6 +179,18 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public ConfigurableHttpConnectionFactory httpClientConnectionFactory() {
 			return new HttpClientConfigurableHttpConnectionFactory();
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnClass(AmazonS3.class)
+	static class AwsS3FactoryConfig {
+
+		@Bean
+		public AwsS3EnvironmentRepositoryFactory awsS3EnvironmentRepositoryFactory(
+				ConfigServerProperties server) {
+			return new AwsS3EnvironmentRepositoryFactory(server);
 		}
 
 	}
@@ -297,6 +314,20 @@ class NativeRepositoryConfiguration {
 @Configuration
 @Profile("git")
 class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {
+
+}
+
+@Configuration
+@Profile("awss3")
+class AwsS3RepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean(AwsS3EnvironmentRepository.class)
+	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(
+			AwsS3EnvironmentRepositoryFactory factory,
+			AwsS3EnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
 
 }
 

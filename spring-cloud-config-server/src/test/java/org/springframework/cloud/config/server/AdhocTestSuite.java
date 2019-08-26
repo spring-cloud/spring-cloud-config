@@ -32,6 +32,7 @@ import org.springframework.cloud.config.server.encryption.EncryptionControllerTe
 import org.springframework.cloud.config.server.encryption.EncryptionIntegrationTests;
 import org.springframework.cloud.config.server.encryption.EnvironmentPrefixHelperTests;
 import org.springframework.cloud.config.server.encryption.KeyStoreTextEncryptorLocatorTests;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.EnvironmentControllerIntegrationTests;
 import org.springframework.cloud.config.server.environment.EnvironmentControllerTests;
@@ -98,7 +99,8 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
 		ConfigServerHealthIndicatorTests.class,
 		CustomCompositeEnvironmentRepositoryTests.class,
 		CustomEnvironmentRepositoryTests.class,
-		BootstrapConfigServerIntegrationTests.class })
+		BootstrapConfigServerIntegrationTests.class,
+		AwsS3EnvironmentRepositoryTests.class })
 @Ignore
 public class AdhocTestSuite {
 
