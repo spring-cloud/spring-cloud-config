@@ -1500,6 +1500,61 @@ When no profile is specified <code>default</code> will be used.
 </div>
 </div>
 <div class="sect3">
+<h4 id="_aws_s3_backend"><a class="link" href="#_aws_s3_backend">AWS S3 Backend</a></h4>
+<div class="paragraph">
+<p>Spring Cloud Config Server supports AWS S3 as a backend for configuration properties.
+You can enable this feature by adding a dependency to the <a href="https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-s3.html">AWS Java SDK For Amazon S3</a>.</p>
+</div>
+<div class="listingblock">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependencies&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;com.amazonaws&lt;/groupId&gt;
+		&lt;artifactId&gt;aws-java-sdk-s3&lt;/artifactId&gt;
+	&lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following configuration uses the AWS S3 client to access configuration files. We can use <code>spring.awss3.*</code> properties to select the bucket where your configuration is stored.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring:
+  profiles:
+    active: awss3
+  cloud:
+    config:
+      server:
+        awss3:
+          region: us-east-1
+          bucket: bucket1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It is also possible to specify an AWS URL to <a href="https://aws.amazon.com/blogs/developer/using-new-regions-and-endpoints/">override the standard endpoint</a> of your S3 service with <code>spring.awss3.endpoint</code>. This allows support for beta regions of S3, and other S3 compatible storage APIs.</p>
+</div>
+<div class="paragraph">
+<p>Credentials are found using the <a href="https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">Default AWS Credential Provider Chain</a>. Versioned and encrypted buckets are supported without further configuration.</p>
+</div>
+<div class="paragraph">
+<p>Configuration files are stored in your bucket as <code>{application}-{profile}.properties</code>, <code>{application}-{profile}.yml</code> or <code>{application}-{profile}.json</code>. An optional label can be provided to specify a directory path to the file.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+When no profile is specified <code>default</code> will be used.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
 <h4 id="_credhub_backend"><a class="link" href="#_credhub_backend">CredHub Backend</a></h4>
 <div class="paragraph">
 <p>Spring Cloud Config Server supports <a href="https://docs.cloudfoundry.org/credhub">CredHub</a> as a backend for configuration properties.
