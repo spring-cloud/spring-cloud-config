@@ -68,11 +68,13 @@ public class CredhubEnvironmentRepositoryTests {
 		Environment environment = this.credhubEnvironmentRepository
 				.findOne("my-application", "production", "mylabel");
 
-		assertThat(environment.getLabel()).isEqualTo("mylabel");
-		assertThat(environment.getProfiles()).containsExactly("production");
 		assertThat(environment.getName()).isEqualTo("my-application");
+		assertThat(environment.getProfiles()).containsExactly("production");
+		assertThat(environment.getLabel()).isEqualTo("mylabel");
+
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application");
+				.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEmpty();
 	}
 
@@ -83,11 +85,13 @@ public class CredhubEnvironmentRepositoryTests {
 		Environment environment = this.credhubEnvironmentRepository
 				.findOne("my-application", null, null);
 
-		assertThat(environment.getLabel()).isEqualTo("master");
-		assertThat(environment.getProfiles()).containsExactly("default");
 		assertThat(environment.getName()).isEqualTo("my-application");
+		assertThat(environment.getProfiles()).containsExactly("default");
+		assertThat(environment.getLabel()).isEqualTo("master");
+
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application");
+				.isEqualTo("credhub-my-application-default-master");
 		assertThat(environment.getPropertySources().get(0).getSource())
 				.isEqualTo(singletonMap("key1", "value1"));
 	}
@@ -100,11 +104,13 @@ public class CredhubEnvironmentRepositoryTests {
 		Environment environment = this.credhubEnvironmentRepository
 				.findOne("my-application", "production", "mylabel");
 
-		assertThat(environment.getLabel()).isEqualTo("mylabel");
-		assertThat(environment.getProfiles()).containsExactly("production");
 		assertThat(environment.getName()).isEqualTo("my-application");
+		assertThat(environment.getProfiles()).containsExactly("production");
+		assertThat(environment.getLabel()).isEqualTo("mylabel");
+
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application");
+				.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource())
 				.isEqualTo(singletonMap("key1", "value1"));
 	}
@@ -118,16 +124,20 @@ public class CredhubEnvironmentRepositoryTests {
 		Environment environment = this.credhubEnvironmentRepository
 				.findOne("my-application", "production,cloud", "mylabel");
 
-		assertThat(environment.getLabel()).isEqualTo("mylabel");
-		assertThat(environment.getProfiles()).containsExactly("production", "cloud");
 		assertThat(environment.getName()).isEqualTo("my-application");
+		assertThat(environment.getProfiles()).containsExactly("production", "cloud");
+		assertThat(environment.getLabel()).isEqualTo("mylabel");
+
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application");
-		HashMap<Object, Object> expectedValues = new HashMap<>();
-		expectedValues.put("key1", "value1");
-		expectedValues.put("key2", "value2");
+				.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource())
-				.isEqualTo(expectedValues);
+				.isEqualTo(singletonMap("key1", "value1"));
+		assertThat(environment.getPropertySources().get(1).getName())
+
+				.isEqualTo("credhub-my-application-cloud-mylabel");
+		assertThat(environment.getPropertySources().get(1).getSource())
+				.isEqualTo(singletonMap("key2", "value2"));
 	}
 
 	@Test
@@ -158,17 +168,76 @@ public class CredhubEnvironmentRepositoryTests {
 		Environment environment = this.credhubEnvironmentRepository
 				.findOne("my-application", "production", "mylabel");
 
-		assertThat(environment.getLabel()).isEqualTo("mylabel");
-		assertThat(environment.getProfiles()).containsExactly("production");
 		assertThat(environment.getName()).isEqualTo("my-application");
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application");
+		assertThat(environment.getProfiles()).containsExactly("production");
+		assertThat(environment.getLabel()).isEqualTo("mylabel");
 
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo("credhub-my-application-production-mylabel");
 		HashMap<Object, Object> expectedValues = new HashMap<>();
 		expectedValues.put("key1", "value1");
 		expectedValues.put("key2", "value2");
 		assertThat(environment.getPropertySources().get(0).getSource())
 				.isEqualTo(expectedValues);
+	}
+
+	@Test
+	public void shouldIncludeDefaultApplicationWhenOtherProvided() {
+		stubCredentials("/my-application/production/mylabel", "toggles", "key1",
+				"value1");
+		stubCredentials("/application/production/mylabel", "abs", "key2", "value2");
+
+		Environment environment = this.credhubEnvironmentRepository
+				.findOne("my-application", "production", "mylabel");
+
+		assertThat(environment.getName()).isEqualTo("my-application");
+		assertThat(environment.getProfiles()).containsExactly("production");
+		assertThat(environment.getLabel()).isEqualTo("mylabel");
+
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo("credhub-my-application-production-mylabel");
+		assertThat(environment.getPropertySources().get(0).getSource())
+				.isEqualTo(singletonMap("key1", "value1"));
+		assertThat(environment.getPropertySources().get(1).getName())
+				.isEqualTo("credhub-application-production-mylabel");
+		assertThat(environment.getPropertySources().get(1).getSource())
+				.isEqualTo(singletonMap("key2", "value2"));
+	}
+
+	@Test
+	public void shouldIncludeDefaultProfileWhenOtherProvided() {
+		stubCredentials("/my-application/production/mylabel", "toggles", "key1",
+				"value1");
+		stubCredentials("/application/production/mylabel", "abs", "key2", "value2");
+		stubCredentials("/my-application/default/mylabel", "abs", "key3", "value3");
+		stubCredentials("/application/default/mylabel", "abs", "key4", "value4");
+
+		Environment environment = this.credhubEnvironmentRepository
+				.findOne("my-application", "production", "mylabel");
+
+		assertThat(environment.getName()).isEqualTo("my-application");
+		assertThat(environment.getProfiles()).contains("production");
+		assertThat(environment.getLabel()).isEqualTo("mylabel");
+
+		assertThat(environment.getPropertySources().size()).isEqualTo(4);
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isEqualTo("credhub-my-application-production-mylabel");
+		assertThat(environment.getPropertySources().get(0).getSource())
+				.isEqualTo(singletonMap("key1", "value1"));
+		assertThat(environment.getPropertySources().get(1).getName())
+				.isEqualTo("credhub-application-production-mylabel");
+		assertThat(environment.getPropertySources().get(1).getSource())
+				.isEqualTo(singletonMap("key2", "value2"));
+		assertThat(environment.getPropertySources().get(2).getName())
+				.isEqualTo("credhub-my-application-default-mylabel");
+		assertThat(environment.getPropertySources().get(2).getSource())
+				.isEqualTo(singletonMap("key3", "value3"));
+		assertThat(environment.getPropertySources().get(3).getName())
+				.isEqualTo("credhub-application-default-mylabel");
+		assertThat(environment.getPropertySources().get(3).getSource())
+				.isEqualTo(singletonMap("key4", "value4"));
 	}
 
 	private void stubCredentials(String expectedPath, String name, String key,
