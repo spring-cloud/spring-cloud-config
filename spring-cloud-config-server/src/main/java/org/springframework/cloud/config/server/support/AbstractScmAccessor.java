@@ -94,8 +94,8 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 	public AbstractScmAccessor(ConfigurableEnvironment environment,
 			AbstractScmAccessorProperties properties) {
 		this.environment = environment;
-		this.basedir = properties.getBasedir() == null ? createBaseDir()
-				: properties.getBasedir();
+		this.setBasedir(properties.getBasedir() == null ? createBaseDir()
+				: properties.getBasedir());
 		this.passphrase = properties.getPassphrase();
 		this.password = properties.getPassword();
 		this.searchPaths = properties.getSearchPaths();

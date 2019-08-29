@@ -336,6 +336,18 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.afterPropertiesSet();
 	}
 
+	@Test
+	public void exceptionNotThrownIfRelativeBasedirIsPassedByProperties()
+			throws Exception {
+		MultipleJGitEnvironmentProperties props = new MultipleJGitEnvironmentProperties();
+		props.setBasedir(new File("relative"));
+		this.repository = new MultipleJGitEnvironmentRepository(this.environment, props);
+		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+		this.repository.setUri(defaultUri);
+		this.repository.setRepos(createRepositories());
+		this.repository.afterPropertiesSet();
+	}
+
 	private String getUri(String pattern) {
 		String uri = null;
 
