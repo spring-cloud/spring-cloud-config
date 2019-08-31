@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -125,6 +125,12 @@ public class NativeEnvironmentRepository
 
 	@Override
 	public Environment findOne(String config, String profile, String label) {
+		return findOne(config, profile, label, false);
+	}
+
+	@Override
+	public Environment findOne(String config, String profile, String label,
+			boolean includeOrigin) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(
 				PropertyPlaceholderAutoConfiguration.class);
 		ConfigurableEnvironment environment = getEnvironment(profile);
@@ -147,6 +153,10 @@ public class NativeEnvironmentRepository
 		} catch (Exception e) {
 			String fmt = String.format("Failed to create an application context for config=%s profile=%s label=%s", config, profile, label);
 			throw new InvalidContextEnvironmentException(fmt, e);
+					profile, label, includeOrigin));
+		}
+		finally {
+			context.close();
 		}
 
 	}

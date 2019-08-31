@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,7 +27,7 @@ import org.springframework.cloud.test.ModifiedClassPathRunner;
 public class CompositeClasspathTests {
 
 	@RunWith(ModifiedClassPathRunner.class)
-	@ClassPathExclusions("spring-jdbc-*.jar")
+	@ClassPathExclusions({ "spring-jdbc-*.jar", "spring-data-redis-*.jar" })
 	public static class JdbcTests {
 
 		@Test
@@ -107,6 +107,25 @@ public class CompositeClasspathTests {
 							"spring.cloud.config.server.composite[0].type:svn",
 							"spring.cloud.config.server.composite[1].uri:file:./target/repos/config-repo",
 							"spring.cloud.config.server.composite[1].type:native")
+					.run(context -> {
+						CompositeUtils.getCompositeTypeList(context.getEnvironment());
+					});
+		}
+
+	}
+
+	@RunWith(ModifiedClassPathRunner.class)
+	@ClassPathExclusions("google-auth-library-oauth2-http-*.jar")
+	public static class GoogleAuthTests {
+
+		@Test
+		public void contextLoads() {
+			new WebApplicationContextRunner()
+					.withUserConfiguration(ConfigServerApplication.class)
+					.withPropertyValues("spring.profiles.active:test,composite",
+							"spring.jmx.enabled=false", "spring.config.name:configserver",
+							"spring.cloud.config.server.composite[0].uri:https://source.developers.google.com",
+							"spring.cloud.config.server.composite[0].type:git")
 					.run(context -> {
 						CompositeUtils.getCompositeTypeList(context.getEnvironment());
 					});

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,8 @@ package org.springframework.cloud.config.server;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.eclipse.jgit.junit.MockSystemReader;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,9 +42,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class, properties = {
-		"spring.config.name:configserver",
-		"spring.cloud.config.server.git.uri:file:./target/repos/config-repo" }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class,
+		properties = { "spring.config.name:configserver",
+				"spring.cloud.config.server.git.uri:file:./target/repos/config-repo" },
+		webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 public class VanillaConfigServerIntegrationTests {
 
@@ -51,6 +54,9 @@ public class VanillaConfigServerIntegrationTests {
 
 	@BeforeClass
 	public static void init() throws IOException {
+		// mock Git configuration to make tests independent of local Git configuration
+		SystemReader.setInstance(new MockSystemReader());
+
 		ConfigServerTestUtils.prepareLocalRepo();
 	}
 
@@ -61,8 +67,7 @@ public class VanillaConfigServerIntegrationTests {
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("overrides");
-		assertThat(environment.getPropertySources().get(0).getSource().toString())
-				.isEqualTo("{spring.cloud.config.enabled=true}");
+		ConfigServerTestUtils.assertConfigEnabled(environment);
 	}
 
 	@Test

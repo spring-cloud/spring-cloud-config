@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,7 +24,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
+import org.eclipse.jgit.junit.MockSystemReader;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -53,6 +56,12 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	private StandardEnvironment environment = new StandardEnvironment();
 
 	private MultipleJGitEnvironmentRepository repository;
+
+	@BeforeClass
+	public static void initClass() {
+		// mock Git configuration to make tests independent of local Git configuration
+		SystemReader.setInstance(new MockSystemReader());
+	}
 
 	@Before
 	public void init() throws Exception {
@@ -115,7 +124,6 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub" });
-		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -143,7 +151,6 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void defaultRepoTwice() {
-		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())

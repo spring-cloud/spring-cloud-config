@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,6 +54,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
+import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
 
 public class ConfigServicePropertySourceLocatorTests {
 
@@ -83,7 +84,7 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		HttpEntity httpEntity = argumentCaptor.getValue();
 		assertThat(httpEntity.getHeaders().getAccept())
-				.containsExactly(MediaType.APPLICATION_JSON);
+				.containsExactly(MediaType.parseMediaType(V2_JSON));
 	}
 
 	@Test
@@ -258,6 +259,16 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("Invalid Value for Read Timeout set.");
+		ReflectionTestUtils.invokeMethod(this.locator, "getSecureRestTemplate", defaults);
+	}
+
+	@Test
+	public void shouldThrowExceptionWhenNegativeConnectTimeoutSet() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setRequestConnectTimeout(-1);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage("Invalid Value for Connect Timeout set.");
 		ReflectionTestUtils.invokeMethod(this.locator, "getSecureRestTemplate", defaults);
 	}
 

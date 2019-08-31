@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.amazonaws.services.s3.AmazonS3;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
@@ -35,7 +36,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.server.composite.CompositeEnvironmentBeanFactoryPostProcessor;
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
 import org.springframework.cloud.config.server.composite.ConditionalOnSearchPathLocator;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentProperties;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.ConsulEnvironmentWatch;
 import org.springframework.cloud.config.server.environment.CredhubEnvironmentProperties;
@@ -45,6 +50,7 @@ import org.springframework.cloud.config.server.environment.EnvironmentRepository
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.HttpClientConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.HttpClientVaultRestTemplateFactory;
+import org.springframework.cloud.config.server.environment.HttpRequestConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepositoryFactory;
@@ -54,6 +60,9 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.RedisEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.RedisEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.RedisEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.SvnEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentProperties;
@@ -61,6 +70,8 @@ import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepo
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport;
+import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -69,6 +80,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.credhub.core.CredHubOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -77,20 +89,25 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author Daniel Lavoie
  * @author Dylan Roberts
  * @author Alberto C. Ríos
+ * @author Scott Frederick
  */
 @Configuration
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
 		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
-		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class })
+		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
+		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
-		VaultRepositoryConfiguration.class, CredhubConfiguration.class,
-		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
-		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
+		VaultConfiguration.class, VaultRepositoryConfiguration.class,
+		CredhubConfiguration.class, CredhubRepositoryConfiguration.class,
+		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
+		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class,
+		GoogleCloudSourceConfiguration.class, AwsS3RepositoryConfiguration.class,
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled",
+			matchIfMissing = true)
 	public ConfigServerHealthIndicator configServerHealthIndicator(
 			EnvironmentRepository repository) {
 		return new ConfigServerHealthIndicator(repository);
@@ -125,6 +142,18 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration
+	@ConditionalOnMissingBean(ConfigTokenProvider.class)
+	protected static class DefaultConfigTokenProvider {
+
+		@Bean
+		public ConfigTokenProvider configTokenProvider(
+				ObjectProvider<HttpServletRequest> httpRequest) {
+			return new HttpRequestConfigTokenProvider(httpRequest);
+		}
+
+	}
+
+	@Configuration
 	@ConditionalOnClass(TransportConfigCallback.class)
 	static class JGitFactoryConfig {
 
@@ -132,9 +161,13 @@ public class EnvironmentRepositoryConfiguration {
 		public MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory(
 				ConfigurableEnvironment environment, ConfigServerProperties server,
 				Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
-				Optional<TransportConfigCallback> customTransportConfigCallback) {
+				Optional<TransportConfigCallback> customTransportConfigCallback,
+				Optional<GoogleCloudSourceSupport> googleCloudSourceSupport) {
+			final TransportConfigCallbackFactory transportConfigCallbackFactory = new TransportConfigCallbackFactory(
+					customTransportConfigCallback.orElse(null),
+					googleCloudSourceSupport.orElse(null));
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server,
-					jgitHttpConnectionFactory, customTransportConfigCallback);
+					jgitHttpConnectionFactory, transportConfigCallbackFactory);
 		}
 
 	}
@@ -146,6 +179,18 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public ConfigurableHttpConnectionFactory httpClientConnectionFactory() {
 			return new HttpClientConfigurableHttpConnectionFactory();
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnClass(AmazonS3.class)
+	static class AwsS3FactoryConfig {
+
+		@Bean
+		public AwsS3EnvironmentRepositoryFactory awsS3EnvironmentRepositoryFactory(
+				ConfigServerProperties server) {
+			return new AwsS3EnvironmentRepositoryFactory(server);
 		}
 
 	}
@@ -168,9 +213,10 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
 				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-				Optional<VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory> vaultRestTemplateFactory) {
+				Optional<VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory> vaultRestTemplateFactory,
+				ConfigTokenProvider tokenProvider) {
 			return new VaultEnvironmentRepositoryFactory(request, watch,
-					vaultRestTemplateFactory);
+					vaultRestTemplateFactory, tokenProvider);
 		}
 
 	}
@@ -195,6 +241,19 @@ public class EnvironmentRepositoryConfiguration {
 		public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(
 				JdbcTemplate jdbc) {
 			return new JdbcEnvironmentRepositoryFactory(jdbc);
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnClass(StringRedisTemplate.class)
+	static class RedisFactoryConfig {
+
+		@Bean
+		@ConditionalOnBean(StringRedisTemplate.class)
+		public RedisEnvironmentRepositoryFactory redisEnvironmentRepositoryFactory(
+				StringRedisTemplate redis) {
+			return new RedisEnvironmentRepositoryFactory(redis);
 		}
 
 	}
@@ -226,7 +285,8 @@ public class EnvironmentRepositoryConfiguration {
 }
 
 @Configuration
-@ConditionalOnMissingBean(value = EnvironmentRepository.class, search = SearchStrategy.CURRENT)
+@ConditionalOnMissingBean(value = EnvironmentRepository.class,
+		search = SearchStrategy.CURRENT)
 class DefaultRepositoryConfiguration {
 
 	@Bean
@@ -239,7 +299,6 @@ class DefaultRepositoryConfiguration {
 }
 
 @Configuration
-@ConditionalOnMissingBean(EnvironmentRepository.class)
 @Profile("native")
 class NativeRepositoryConfiguration {
 
@@ -259,13 +318,27 @@ class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {
 }
 
 @Configuration
+@Profile("awss3")
+class AwsS3RepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean(AwsS3EnvironmentRepository.class)
+	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(
+			AwsS3EnvironmentRepositoryFactory factory,
+			AwsS3EnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration
 @Profile("subversion")
 class SvnRepositoryConfiguration {
 
 	@Bean
 	public SvnKitEnvironmentRepository svnKitEnvironmentRepository(
-			SvnKitEnvironmentProperties environmentProperties,
-			SvnEnvironmentRepositoryFactory factory) {
+			SvnEnvironmentRepositoryFactory factory,
+			SvnKitEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 
@@ -313,6 +386,21 @@ class JdbcRepositoryConfiguration {
 }
 
 @Configuration
+@Profile("redis")
+@ConditionalOnClass(StringRedisTemplate.class)
+class RedisRepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnBean(StringRedisTemplate.class)
+	public RedisEnvironmentRepository redisEnvironmentRepository(
+			RedisEnvironmentRepositoryFactory factory,
+			RedisEnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration
 @Profile("composite")
 class CompositeRepositoryConfiguration {
 
@@ -326,7 +414,7 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnSearchPathLocator
 	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) throws Exception {
+			List<EnvironmentRepository> environmentRepositories) {
 		return new SearchPathCompositeEnvironmentRepository(environmentRepositories);
 	}
 
@@ -334,7 +422,7 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnMissingSearchPathLocator
 	public CompositeEnvironmentRepository compositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) throws Exception {
+			List<EnvironmentRepository> environmentRepositories) {
 		return new CompositeEnvironmentRepository(environmentRepositories);
 	}
 

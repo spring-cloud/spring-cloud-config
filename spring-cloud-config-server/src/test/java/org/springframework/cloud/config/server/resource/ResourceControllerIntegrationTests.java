@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,14 +32,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Dave Syer
@@ -64,33 +69,47 @@ public class ResourceControllerIntegrationTests {
 
 	@Before
 	public void init() {
-		Mockito.reset(this.repository);
+		Mockito.reset(this.repository, this.resources);
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 	}
 
 	@Test
 	public void environmentNoLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", "master"))
+		when(this.repository.findOne("foo", "default", "master", false))
 				.thenReturn(new Environment("foo", "default"));
-		Mockito.when(this.resources.findOne("foo", "default", "master", "foo.txt"))
+		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
 				.thenReturn(new ByteArrayResource("hello".getBytes()));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", "master");
-		Mockito.verify(this.resources).findOne("foo", "default", "master", "foo.txt");
+		verify(this.repository).findOne("foo", "default", "master", false);
+		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
 	}
 
 	@Test
 	public void resourceNoLabel() throws Exception {
-		Mockito.when(this.repository.findOne("foo", "default", null))
+		when(this.repository.findOne("foo", "default", null, false))
 				.thenReturn(new Environment("foo", "default", "master"));
-		Mockito.when(this.resources.findOne("foo", "default", null, "foo.txt"))
+		when(this.resources.findOne("foo", "default", null, "foo.txt"))
 				.thenReturn(new ByteArrayResource("hello".getBytes()));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
 				.param("useDefaultLabel", ""))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		Mockito.verify(this.repository).findOne("foo", "default", null);
-		Mockito.verify(this.resources).findOne("foo", "default", null, "foo.txt");
+		verify(this.repository).findOne("foo", "default", null, false);
+		verify(this.resources).findOne("foo", "default", null, "foo.txt");
+	}
+
+	@Test
+	public void binaryResourceNoLabel() throws Exception {
+		when(this.repository.findOne("foo", "default", null, false))
+				.thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne("foo", "default", null, "foo.txt"))
+				.thenReturn(new ByteArrayResource("hello".getBytes()));
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
+				.param("useDefaultLabel", "")
+				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
+				.andExpect(MockMvcResultMatchers.status().isOk());
+		verify(this.repository).findOne("foo", "default", null, false);
+		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
 	@Configuration

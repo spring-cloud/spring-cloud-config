@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server;
 
+import org.eclipse.jgit.junit.MockSystemReader;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +54,9 @@ public class CompositeIntegrationTests {
 
 		@BeforeClass
 		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
 			ConfigServerTestUtils.prepareLocalRepo();
 			ConfigServerTestUtils.prepareLocalSvnRepo(
 					"src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
@@ -71,8 +76,7 @@ public class CompositeIntegrationTests {
 							.contains("svn-config-repo")).isTrue();
 			assertThat(environment.getPropertySources().get(2).getName()
 					.contains("svn-config-repo")).isTrue();
-			assertThat("{spring.cloud.config.enabled=true}").isEqualTo(
-					environment.getPropertySources().get(0).getSource().toString());
+			ConfigServerTestUtils.assertConfigEnabled(environment);
 		}
 
 		@Test
@@ -101,7 +105,8 @@ public class CompositeIntegrationTests {
 			"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
 			"spring.cloud.config.server.composite[0].type:git",
 			"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
-			"spring.cloud.config.server.composite[1].type:svn" }, webEnvironment = RANDOM_PORT)
+			"spring.cloud.config.server.composite[1].type:svn" },
+			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "composite" })
 	public static class ListTests {
 
@@ -110,6 +115,9 @@ public class CompositeIntegrationTests {
 
 		@BeforeClass
 		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
 			ConfigServerTestUtils.prepareLocalRepo();
 			ConfigServerTestUtils.prepareLocalSvnRepo(
 					"src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
@@ -129,8 +137,7 @@ public class CompositeIntegrationTests {
 							.contains("svn-config-repo")).isTrue();
 			assertThat(environment.getPropertySources().get(2).getName()
 					.contains("svn-config-repo")).isTrue();
-			assertThat("{spring.cloud.config.enabled=true}").isEqualTo(
-					environment.getPropertySources().get(0).getSource().toString());
+			ConfigServerTestUtils.assertConfigEnabled(environment);
 		}
 
 		@Test

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,6 @@ package org.springframework.cloud.config.server.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.server.environment.SearchPathLocator;
 import org.springframework.cloud.config.server.resource.GenericResourceRepository;
 import org.springframework.cloud.config.server.resource.ResourceRepository;
@@ -27,10 +26,9 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * @author Dave Syer
- *
+ * @author Tim Ysewyn
  */
 @Configuration
-@EnableConfigurationProperties(ConfigServerProperties.class)
 @ConditionalOnMissingBean(ResourceRepository.class)
 public class ResourceRepositoryConfiguration {
 

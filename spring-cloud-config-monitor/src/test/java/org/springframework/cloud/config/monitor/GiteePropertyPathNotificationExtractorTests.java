@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,7 +38,7 @@ public class GiteePropertyPathNotificationExtractorTests {
 
 	@Test
 	public void giteeSample() throws Exception {
-		// See http://git.mydoc.io/?t=154711
+		// See https://git.mydoc.io/?t=154711
 		Map<String, Object> value = new ObjectMapper().readValue(
 				new ClassPathResource("pathsamples/gitee.json").getInputStream(),
 				new TypeReference<Map<String, Object>>() {

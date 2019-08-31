@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,19 +46,25 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
+		return findOne(application, profile, label, false);
+	}
+
+	@Override
+	public Environment findOne(String application, String profile, String label,
+			boolean includeOrigin) {
 		Environment env = new Environment(application, new String[] { profile }, label,
 				null, null);
 		if (this.environmentRepositories.size() == 1) {
 			Environment envRepo = this.environmentRepositories.get(0).findOne(application,
-					profile, label);
+					profile, label, includeOrigin);
 			env.addAll(envRepo.getPropertySources());
 			env.setVersion(envRepo.getVersion());
 			env.setState(envRepo.getState());
 		}
 		else {
-			for (EnvironmentRepository repo : this.environmentRepositories) {
-				env.addAll(
-						repo.findOne(application, profile, label).getPropertySources());
+			for (EnvironmentRepository repo : environmentRepositories) {
+				env.addAll(repo.findOne(application, profile, label, includeOrigin)
+						.getPropertySources());
 			}
 		}
 		return env;

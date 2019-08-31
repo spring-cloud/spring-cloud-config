@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -125,7 +125,8 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 	@Test
 	public void bitbucketServerSamplePullRequest() throws Exception {
 		// https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html
-		Map<String, Object> value = readPayload("pathsamples/bitbucketserver.json");
+		Map<String, Object> value = readPayload(
+				"pathsamples/bitbucketserver-prmerged.json");
 		setServerHeaders("pr:merged");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();

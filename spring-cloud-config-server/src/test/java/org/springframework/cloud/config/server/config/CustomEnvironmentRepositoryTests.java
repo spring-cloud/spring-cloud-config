@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,8 +42,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestApplication.class, properties = {
-		"spring.config.name:configserver" }, webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TestApplication.class,
+		properties = { "spring.config.name:configserver" },
+		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
 public class CustomEnvironmentRepositoryTests {
@@ -75,6 +76,12 @@ public class CustomEnvironmentRepositoryTests {
 				@Override
 				public Environment findOne(String application, String profile,
 						String label) {
+					return findOne(application, profile, label, false);
+				}
+
+				@Override
+				public Environment findOne(String application, String profile,
+						String label, boolean includeOrigin) {
 					return new Environment("test", new String[0], "label", "version",
 							"state");
 				}

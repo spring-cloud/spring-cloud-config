@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,6 +35,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -62,7 +63,8 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  *
  */
 @RestController
-@RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
+@RequestMapping(method = RequestMethod.GET,
+		path = "${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
 
 	private EnvironmentRepository repository;
@@ -103,12 +105,31 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles:.*[^-].*}")
 	public Environment defaultLabel(@PathVariable String name,
 			@PathVariable String profiles) {
-		return labelled(name, profiles, null);
+		return getEnvironment(name, profiles, null, false);
+	}
+
+	@RequestMapping(path = "/{name}/{profiles:.*[^-].*}",
+			produces = EnvironmentMediaType.V2_JSON)
+	public Environment defaultLabelIncludeOrigin(@PathVariable String name,
+			@PathVariable String profiles) {
+		return getEnvironment(name, profiles, null, true);
 	}
 
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
+		return getEnvironment(name, profiles, label, false);
+	}
+
+	@RequestMapping(path = "/{name}/{profiles}/{label:.*}",
+			produces = EnvironmentMediaType.V2_JSON)
+	public Environment labelledIncludeOrigin(@PathVariable String name,
+			@PathVariable String profiles, @PathVariable String label) {
+		return getEnvironment(name, profiles, label, true);
+	}
+
+	public Environment getEnvironment(String name, String profiles, String label,
+			boolean includeOrigin) {
 		if (name != null && name.contains("(_)")) {
 			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
 			// by Spring MVC
@@ -119,7 +140,8 @@ public class EnvironmentController {
 			// by Spring MVC
 			label = label.replace("(_)", "/");
 		}
-		Environment environment = this.repository.findOne(name, profiles, label);
+		Environment environment = this.repository.findOne(name, profiles, label,
+				includeOrigin);
 		if (!this.acceptEmpty
 				&& (environment == null || environment.getPropertySources().isEmpty())) {
 			throw new EnvironmentNotFoundException("Profile Not found");
@@ -180,8 +202,7 @@ public class EnvironmentController {
 			if (output.length() > 0) {
 				output.append("\n");
 			}
-			String line = entry.getKey() + ": " + entry.getValue();
-			output.append(line);
+			output.append(entry.getKey()).append(": ").append(entry.getValue());
 		}
 		return output.toString();
 	}

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -113,6 +113,11 @@ public class ConfigClientProperties {
 	 * timeout on waiting to read data from the Config Server.
 	 */
 	private int requestReadTimeout = (60 * 1000 * 3) + 5000;
+
+	/**
+	 * timeout on waiting to connect to the Config Server.
+	 */
+	private int requestConnectTimeout = 1000 * 10;
 
 	/**
 	 * Flag to indicate whether to send state. Default true.
@@ -227,6 +232,14 @@ public class ConfigClientProperties {
 		this.requestReadTimeout = requestReadTimeout;
 	}
 
+	public int getRequestConnectTimeout() {
+		return this.requestConnectTimeout;
+	}
+
+	public void setRequestConnectTimeout(int requestConnectTimeout) {
+		this.requestConnectTimeout = requestConnectTimeout;
+	}
+
 	public boolean isSendState() {
 		return this.sendState;
 	}
@@ -333,6 +346,7 @@ public class ConfigClientProperties {
 				+ ", username=" + this.username + ", password=" + this.password + ", uri="
 				+ Arrays.toString(this.uri) + ", discovery=" + this.discovery
 				+ ", failFast=" + this.failFast + ", token=" + this.token
+				+ ", requestConnectTimeout=" + this.requestConnectTimeout
 				+ ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
 				+ this.sendState + ", headers=" + this.headers + "]";
 	}

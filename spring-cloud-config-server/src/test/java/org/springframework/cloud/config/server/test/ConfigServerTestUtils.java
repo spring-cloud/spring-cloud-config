@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryCache.FileKey;
@@ -28,6 +29,8 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -137,6 +140,27 @@ public final class ConfigServerTestUtils {
 			}
 		}
 		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void assertConfigEnabled(Environment environment) {
+		Object source = environment.getPropertySources().get(0).getSource();
+		assertThat(source).isNotNull().isInstanceOf(Map.class);
+		Map map = Map.class.cast(source);
+		assertThat(map).containsKeys("spring.cloud.config.enabled");
+		Object value = map.get("spring.cloud.config.enabled");
+		assertThat(value).isInstanceOf(Map.class);
+		map = Map.class.cast(value);
+		assertThat(map).containsEntry("value", "true");
+	}
+
+	@SuppressWarnings("unchecked")
+	public static void assertOriginTrackedValue(Environment environment, int index,
+			String key, String expectedValue) {
+		Object value = environment.getPropertySources().get(index).getSource().get(key);
+		assertThat(value).isNotNull().isInstanceOf(Map.class);
+		Map map = (Map) value;
+		assertThat(map).containsEntry("value", expectedValue);
 	}
 
 }

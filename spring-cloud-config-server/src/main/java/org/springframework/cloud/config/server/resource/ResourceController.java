@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,7 +52,8 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  *
  */
 @RestController
-@RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
+@RequestMapping(method = RequestMethod.GET,
+		path = "${spring.cloud.config.server.prefix:}")
 public class ResourceController {
 
 	private ResourceRepository resourceRepository;
@@ -114,7 +115,7 @@ public class ResourceController {
 			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
 			if (resolvePlaceholders) {
 				Environment environment = this.environmentRepository.findOne(name,
-						profile, label);
+						profile, label, false);
 				text = resolvePlaceholders(prepareEnvironment(environment), text);
 			}
 			return text;
@@ -129,11 +130,20 @@ public class ResourceController {
 		return retrieve(null, name, profile, label, path, resolvePlaceholders);
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@RequestMapping(value = "/{name}/{profile}/{label}/**",
+			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binary(@PathVariable String name, @PathVariable String profile,
 			@PathVariable String label, ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return binary(request, name, profile, label, path);
+	}
+
+	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel",
+			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	public byte[] binary(@PathVariable String name, @PathVariable String profile,
+			ServletWebRequest request) throws IOException {
+		String path = getFilePath(request, name, profile, null);
+		return binary(request, name, profile, null, path);
 	}
 
 	/*

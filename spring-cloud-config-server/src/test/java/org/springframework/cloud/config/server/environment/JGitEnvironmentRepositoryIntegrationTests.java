@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,12 +33,15 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FileUtils;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -72,6 +75,12 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 	private File basedir = new File("target/config");
 
+	@BeforeClass
+	public static void initClass() {
+		// mock Git configuration to make tests independent of local Git configuration
+		SystemReader.setInstance(new MockSystemReader());
+	}
+
 	@Before
 	public void init() throws Exception {
 		if (this.basedir.exists()) {
@@ -95,7 +104,6 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.properties("spring.cloud.config.server.git.uri:" + uri).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getName()).isEqualTo("bar");
@@ -112,7 +120,6 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.git.uri=" + uri);
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("bar");
@@ -203,7 +210,6 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.getBean(JGitEnvironmentRepository.class);
 		new File(repository.getUri().replaceAll("file:", ""), ".git/index.lock")
 				.createNewFile();
-		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("foo");
@@ -219,7 +225,6 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.searchPaths=sub");
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
@@ -234,7 +239,6 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.searchPaths={application}");
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("foo,bar", "staging", "master");
 		Environment environment = repository.findOne("foo,bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(3);
 	}
@@ -249,7 +253,6 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.searchPaths={profile}");
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("foo,bar", "staging", "master");
 		Environment environment = repository.findOne("staging", "foo,bar", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(3);
 	}
@@ -321,7 +324,6 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.cloneOnStart=true");
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
 				.isEqualTo("bar");
@@ -347,7 +349,6 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.cloneOnStart=true");
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}

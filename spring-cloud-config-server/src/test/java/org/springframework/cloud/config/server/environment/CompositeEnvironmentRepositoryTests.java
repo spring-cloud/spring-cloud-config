@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -78,7 +78,7 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestOrderedEnvironmentRepository(1, e2, loc3));
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(
 				repos);
-		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world");
+		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world", false);
 		List<PropertySource> propertySources = compositeEnv.getPropertySources();
 		assertThat(propertySources.size()).isEqualTo(5);
 		assertThat(propertySources.get(0).getName()).isEqualTo("p2");
@@ -127,10 +127,10 @@ public class CompositeEnvironmentRepositoryTests {
 				repos);
 		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(
 				repos2);
-		Environment env = compositeRepo.findOne("app", "dev", "label");
+		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		assertThat(env.getVersion()).isEqualTo("1");
 		assertThat(env.getState()).isEqualTo("state");
-		Environment multiEnv = multiCompositeRepo.findOne("app", "dev", "label");
+		Environment multiEnv = multiCompositeRepo.findOne("app", "dev", "label", false);
 		assertThat(multiEnv.getVersion()).isEqualTo(null);
 		assertThat(multiEnv.getState()).isEqualTo(null);
 
@@ -163,7 +163,13 @@ public class CompositeEnvironmentRepositoryTests {
 
 		@Override
 		public Environment findOne(String application, String profile, String label) {
-			return this.env;
+			return findOne(application, profile, label, false);
+		}
+
+		@Override
+		public Environment findOne(String application, String profile, String label,
+				boolean includeOrigin) {
+			return env;
 		}
 
 		@Override

@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: enable-bootstrap
   cloud:
     config:
       server:

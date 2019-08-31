@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -96,6 +96,23 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 
 		HttpConnection actualConnection = this.connectionFactory.create(
 				new URL("http://localhost/value-test.git" + "/some/path.properties"));
+
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
+				.values().stream().findFirst().get();
+		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(
+				actualConnection);
+		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+	}
+
+	@Test
+	public void urlWithPlaceholdersAtEnd() throws Exception {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri("https://localhost/v1/repos/pvvts_configs-{application}");
+		this.connectionFactory.addConfiguration(properties);
+
+		HttpConnection actualConnection = this.connectionFactory.create(
+				new URL("https://localhost/v1/repos/pvvts_configs-applicationPasswords"
+						+ "/some/path.properties"));
 
 		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
 				.values().stream().findFirst().get();

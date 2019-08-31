@@ -1,0 +1,54 @@
+{
+  "before": "fb32ef5812dc132ece716a05c50c7531c6dc1b4d",
+  "after": "ac63b9ba95191a1bf79d60bc262851a66c12cda1",
+  "ref": "refs/heads/master",
+  "user_id": 13,
+  "user_name": "123",
+  "user": {
+    "name": "123",
+    "username": "test123",
+    "url": "https://gitee.com/oschina"
+  },
+  "repository": {
+    "name": "webhook",
+    "url": "https://git.oschina.net/oschina/webhook",
+    "description": "",
+    "homepage": "https://gitee.com/oschina/webhook"
+  },
+  "commits": [{
+    "id": "ac63b9ba95191a1bf79d60bc262851a66c12cda1",
+    "message": "1234 bug fix",
+    "timestamp": "2016-12-09T17:28:02 08:00",
+    "url": "https://gitee.com/oschina/webhook/commit/ac63b9ba95191a1bf79d60bc262851a66c12cda1",
+    "author": {
+      "name": "123",
+      "email": "123@123.com",
+      "time": "2016-12-09T17:28:02 08:00"
+    },
+    "added": [
+      "d.txt"
+    ],
+    "modified": [
+      "c.txt"
+    ],
+    "removed": [
+      "b.txt"
+    ]
+  }],
+  "total_commits_count": 1,
+  "commits_more_than_ten": false,
+  "project": {
+    "name": "webhook",
+    "path": "webhook",
+    "url": "https://gitee.com/oschina/webhook",
+    "git_ssh_url": "git@gitee.com:oschina/webhook.git",
+    "git_http_url": "https://gitee.com/oschina/webhook.git",
+    "git_svn_url": "svn://gitee.com/oschina/webhook",
+    "namespace": "oschina",
+    "name_with_namespace": "oschina/webhook",
+    "path_with_namespace": "oschina/webhook",
+    "default_branch": "master"
+  },
+  "hook_name": "push_hooks",
+  "password": "pwd"
+}

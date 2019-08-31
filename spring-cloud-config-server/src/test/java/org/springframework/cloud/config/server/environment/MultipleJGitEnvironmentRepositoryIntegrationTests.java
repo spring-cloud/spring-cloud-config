@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,9 +22,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.assertj.core.api.Assertions;
+import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.FileUtils;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.internal.matchers.ThrowableMessageMatcher;
@@ -59,6 +62,12 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 
 	private File basedir = new File("target/config");
 
+	@BeforeClass
+	public static void initClass() {
+		// mock Git configuration to make tests independent of local Git configuration
+		SystemReader.setInstance(new MockSystemReader());
+	}
+
 	@Before
 	public void init() throws Exception {
 		if (this.basedir.exists()) {
@@ -82,7 +91,6 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
@@ -101,7 +109,6 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.properties(repoMapping).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
@@ -121,7 +128,6 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.properties(repoMapping).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(30).isEqualTo(((MultipleJGitEnvironmentRepository) repository)
@@ -143,7 +149,6 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.properties(repoMapping).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
@@ -163,7 +168,6 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.properties(repoMapping).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging,cloud",
 				"master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
@@ -188,7 +192,6 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.properties(repoMapping).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "cloud,staging",
 				"master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
@@ -210,7 +213,6 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 				.properties(repoMapping).run();
 		EnvironmentRepository repository = this.context
 				.getBean(EnvironmentRepository.class);
-		repository.findOne("test1-svc", "staging", "master");
 		Environment environment = repository.findOne("test1-svc", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}

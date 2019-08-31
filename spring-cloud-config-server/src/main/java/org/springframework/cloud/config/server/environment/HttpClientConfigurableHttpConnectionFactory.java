@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -117,7 +117,9 @@ public class HttpClientConfigurableHttpConnectionFactory
 	private String getUrlWithPlaceholders(URL url, String key) {
 		String spec = url.toString();
 		String[] tokens = key.split(PLACEHOLDER_PATTERN);
-		if (tokens.length > 1) {
+		// if token[0] equals url then there was no placeholder in the the url, so
+		// matching needed
+		if (tokens.length >= 1 && !tokens[0].equals(url.toString())) {
 			List<String> placeholders = getPlaceholders(key);
 			List<String> values = getValues(spec, tokens);
 			if (placeholders.size() == values.size()) {
@@ -140,6 +142,9 @@ public class HttpClientConfigurableHttpConnectionFactory
 			if (valueTokens.length > 1) {
 				spec = valueTokens[1];
 			}
+		}
+		if (tokens.length == 1 && !StringUtils.isEmpty(spec)) {
+			values.add(spec);
 		}
 		return values;
 	}

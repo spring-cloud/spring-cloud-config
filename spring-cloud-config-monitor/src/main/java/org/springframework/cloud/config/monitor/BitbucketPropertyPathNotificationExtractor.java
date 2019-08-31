@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,8 +49,7 @@ public class BitbucketPropertyPathNotificationExtractor
 				return new PropertyPathNotification("application.yml");
 			}
 		}
-		else if (("repo:refs_changed".equals(headers.getFirst("X-Event-Key"))
-				|| "pr:merged".equals(headers.getFirst("X-Event-Key")))
+		else if ("repo:refs_changed".equals(headers.getFirst("X-Event-Key"))
 				&& StringUtils.hasText(headers.getFirst("X-Request-Id"))) {
 			// Bitbucket server
 			if (request.get("changes") instanceof Collection) {
@@ -59,6 +58,14 @@ public class BitbucketPropertyPathNotificationExtractor
 				return new PropertyPathNotification("application.yml");
 			}
 		}
+		else if ("pr:merged".equals(headers.getFirst("X-Event-Key"))
+				&& StringUtils.hasText(headers.getFirst("X-Request-Id"))) {
+			// Bitbucket server
+			// Bitbucket doesn't tell us the files that changed so this is a
+			// broadcast to all apps
+			return new PropertyPathNotification("application.yml");
+		}
+
 		return null;
 	}
 

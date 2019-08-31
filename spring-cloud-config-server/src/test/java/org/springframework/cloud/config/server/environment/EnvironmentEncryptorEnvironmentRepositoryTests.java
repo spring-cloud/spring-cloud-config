@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,6 +30,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Dave Syer
@@ -57,10 +58,11 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master"))
+		when(this.repository.findOne("foo", "bar", "master", false))
 				.thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master").getPropertySources()
-				.get(0).getSource().toString()).isEqualTo("{foo=bar}");
+		assertThat(this.controller.findOne("foo", "bar", "master", false)
+				.getPropertySources().get(0).getSource().toString())
+						.isEqualTo("{foo=bar}");
 	}
 
 	@Test
@@ -69,10 +71,11 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("bar", "foo");
 		this.environment.add(new PropertySource("one", map));
-		Mockito.when(this.repository.findOne("foo", "bar", "master"))
+		when(this.repository.findOne("foo", "bar", "master", false))
 				.thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master").getPropertySources()
-				.get(0).getSource().toString()).isEqualTo("{foo=${bar}}");
+		assertThat(this.controller.findOne("foo", "bar", "master", false)
+				.getPropertySources().get(0).getSource().toString())
+						.isEqualTo("{foo=${bar}}");
 	}
 
 }

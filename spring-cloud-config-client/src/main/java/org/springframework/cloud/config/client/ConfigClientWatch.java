@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,7 +58,8 @@ public class ConfigClientWatch implements Closeable, EnvironmentAware {
 		this.running.compareAndSet(false, true);
 	}
 
-	@Scheduled(initialDelayString = "${spring.cloud.config.watch.initialDelay:180000}", fixedDelayString = "${spring.cloud.config.watch.delay:500}")
+	@Scheduled(initialDelayString = "${spring.cloud.config.watch.initialDelay:180000}",
+			fixedDelayString = "${spring.cloud.config.watch.delay:500}")
 	public void watchConfigServer() {
 		if (this.running.get()) {
 			String newState = this.environment.getProperty("config.client.state");

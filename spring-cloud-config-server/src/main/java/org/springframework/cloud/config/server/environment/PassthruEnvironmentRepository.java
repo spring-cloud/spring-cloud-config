@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,8 +22,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.boot.origin.Origin;
+import org.springframework.boot.origin.OriginLookup;
+import org.springframework.boot.origin.TextResourceOrigin;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.environment.PropertyValueDescriptor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
@@ -60,6 +64,12 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 
 	@Override
 	public Environment findOne(String application, String env, String label) {
+		return findOne(application, env, label, false);
+	}
+
+	@Override
+	public Environment findOne(String application, String env, String label,
+			boolean includeOrigin) {
 		Environment result = new Environment(application,
 				StringUtils.commaDelimitedListToStringArray(env), label, null, null);
 		for (org.springframework.core.env.PropertySource<?> source : this.environment
@@ -67,20 +77,40 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 			String name = source.getName();
 			if (!this.standardSources.contains(name)
 					&& source instanceof MapPropertySource) {
-				result.add(new PropertySource(name, getMap(source)));
+				result.add(new PropertySource(name, getMap(source, includeOrigin)));
 			}
 		}
 		return result;
 
 	}
 
-	private Map<?, ?> getMap(org.springframework.core.env.PropertySource<?> source) {
+	private Map<?, ?> getMap(org.springframework.core.env.PropertySource<?> source,
+			boolean includeOrigin) {
 		Map<Object, Object> map = new LinkedHashMap<>();
 		Map<?, ?> input = (Map<?, ?>) source.getSource();
-		for (Object key : input.keySet()) {
-			// Spring Boot wraps the property values in an "origin" detector, so we need
-			// to extract the string values
-			map.put(key, source.getProperty(key.toString()));
+		if (includeOrigin && source instanceof OriginLookup) {
+			OriginLookup<String> originLookup = (OriginLookup<String>) source;
+			for (Object key : input.keySet()) {
+				Origin origin = originLookup.getOrigin(key.toString());
+				String originDesc;
+				if (origin instanceof TextResourceOrigin) {
+					TextResourceOrigin tro = (TextResourceOrigin) origin;
+					originDesc = tro.getLocation().toString();
+				}
+				else {
+					originDesc = origin.toString();
+				}
+				Object value = source.getProperty(key.toString());
+				map.put(key, new PropertyValueDescriptor(value, originDesc));
+			}
+		}
+		else {
+			for (Object key : input.keySet()) {
+				// Spring Boot wraps the property values in an "origin" detector, so we
+				// need
+				// to extract the string values
+				map.put(key, source.getProperty(key.toString()));
+			}
 		}
 		return map;
 	}

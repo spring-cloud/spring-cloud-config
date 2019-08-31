@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,8 @@ package org.springframework.cloud.config.server.config;
 import java.util.HashMap;
 import java.util.List;
 
+import org.eclipse.jgit.junit.MockSystemReader;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,10 +53,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CustomCompositeEnvironmentRepositoryTests {
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.StaticTests.Config.class, properties = {
-			"spring.config.name:compositeconfigserver",
-			"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
-			"spring.cloud.config.server.git.order:1" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+	@SpringBootTest(
+			classes = CustomCompositeEnvironmentRepositoryTests.StaticTests.Config.class,
+			properties = { "spring.config.name:compositeconfigserver",
+					"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
+					"spring.cloud.config.server.git.order:1" },
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "git" })
 	@DirtiesContext
 	public static class StaticTests {
@@ -64,6 +68,9 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 		@BeforeClass
 		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
 			ConfigServerTestUtils.prepareLocalRepo();
 		}
 
@@ -100,12 +107,14 @@ public class CustomCompositeEnvironmentRepositoryTests {
 	}
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.ListTests.Config.class, properties = {
-			"spring.config.name:compositeconfigserver",
-			"spring.cloud.config.server.composite[0].type:git",
-			"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
-			"spring.cloud.config.server.composite[1].type:custom",
-			"spring.cloud.config.server.composite[1].propertySourceName:p" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+	@SpringBootTest(
+			classes = CustomCompositeEnvironmentRepositoryTests.ListTests.Config.class,
+			properties = { "spring.config.name:compositeconfigserver",
+					"spring.cloud.config.server.composite[0].type:git",
+					"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+					"spring.cloud.config.server.composite[1].type:custom",
+					"spring.cloud.config.server.composite[1].propertySourceName:p" },
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "composite" })
 	@DirtiesContext
 	public static class ListTests {
@@ -115,6 +124,9 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 		@BeforeClass
 		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
 			ConfigServerTestUtils.prepareLocalRepo();
 		}
 
@@ -197,6 +209,12 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 		@Override
 		public Environment findOne(String application, String profile, String label) {
+			return findOne(application, profile, label, false);
+		}
+
+		@Override
+		public Environment findOne(String application, String profile, String label,
+				boolean includeOrigin) {
 			Environment e = new Environment("test", new String[0], "label", "version",
 					"state");
 			PropertySource p = new PropertySource(this.properties.getPropertySourceName(),

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -297,6 +297,17 @@ public class ResourceControllerTests {
 
 	private String replaceNewLines(String text) {
 		return text.replace("\n", "").replace("\t", "");
+	}
+
+	@Test
+	public void defaultLabelForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		ServletWebRequest webRequest = new ServletWebRequest(request,
+				new MockHttpServletResponse());
+		request.setRequestURI("/dev/spam/bar/" + "foo.txt");
+		byte[] resource = this.controller.binary("dev/spam", "bar", webRequest);
+		assertThat(new String(resource)).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
 }

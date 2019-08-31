@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,6 +53,7 @@ import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.NotMergedException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.attributes.AttributesNodeProvider;
+import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.lib.BaseRepositoryBuilder;
 import org.eclipse.jgit.lib.ObjectDatabase;
 import org.eclipse.jgit.lib.ObjectId;
@@ -69,7 +70,9 @@ import org.eclipse.jgit.transport.TrackingRefUpdate;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
+import org.eclipse.jgit.util.SystemReader;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -98,6 +101,12 @@ public class JGitEnvironmentRepositoryTests {
 
 	private File basedir = new File("target/config");
 
+	@BeforeClass
+	public static void initClass() {
+		// mock Git configuration to make tests independent of local Git configuration
+		SystemReader.setInstance(new MockSystemReader());
+	}
+
 	@Before
 	public void init() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
@@ -111,7 +120,6 @@ public class JGitEnvironmentRepositoryTests {
 
 	@Test
 	public void vanilla() {
-		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -124,7 +132,6 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub" });
-		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -137,7 +144,6 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "{application}" });
-		this.repository.findOne("sub", "staging", "master");
 		Environment environment = this.repository.findOne("sub", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -165,7 +171,6 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub*" });
-		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -196,7 +201,6 @@ public class JGitEnvironmentRepositoryTests {
 	@Test
 	public void basedir() {
 		this.repository.setBasedir(this.basedir);
-		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -209,7 +213,6 @@ public class JGitEnvironmentRepositoryTests {
 		assertThat(this.basedir.mkdirs()).isTrue();
 		assertThat(new File(this.basedir, ".nothing").createNewFile()).isTrue();
 		this.repository.setBasedir(this.basedir);
-		this.repository.findOne("bar", "staging", "master");
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
