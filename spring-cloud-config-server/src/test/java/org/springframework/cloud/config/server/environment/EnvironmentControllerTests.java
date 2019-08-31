@@ -16,28 +16,29 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * @author Dave Syer
@@ -611,5 +612,21 @@ public class EnvironmentControllerTests {
 						.contentType(MediaType.APPLICATION_JSON));
 
 	}
+
+  @Test
+  public void handleEnvironmentException() throws Exception {
+    when(repository.findOne(eq("exception"), eq("bad-syntax.ext"), any(), eq(false)))
+        .thenThrow(new FailedToConstructEnvironmentException("Cannot construct",
+            new RuntimeException("underlier")));
+    MockMvc mvc = MockMvcBuilders
+        .standaloneSetup(controller)
+        .setControllerAdvice(controller)
+        .build();
+    MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/exception/bad-syntax.ext"))
+        .andExpect(MockMvcResultMatchers
+            .status().is(500))
+        .andReturn();
+    assertThat(result.getResponse().getErrorMessage()).isEqualTo("Cannot construct");
+  }
 
 }
