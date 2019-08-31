@@ -28,12 +28,6 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.nodes.Tag;
-
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -47,9 +41,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
+import org.yaml.snakeyaml.DumperOptions.FlowStyle;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.Tag;
 
 /**
  * @author Dave Syer
@@ -273,6 +267,12 @@ public class EnvironmentController {
 	@ExceptionHandler(IllegalArgumentException.class)
 	public void illegalArgument(HttpServletResponse response) throws IOException {
 		response.sendError(HttpStatus.BAD_REQUEST.value());
+	}
+
+	@ExceptionHandler(EnvironmentException.class)
+	public void environmentException(HttpServletResponse response, EnvironmentException e)
+			throws IOException {
+		response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
 	}
 
 	private void validateProfiles(String profiles) {
