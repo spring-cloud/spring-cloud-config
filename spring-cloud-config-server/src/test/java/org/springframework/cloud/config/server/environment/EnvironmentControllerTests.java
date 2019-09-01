@@ -616,18 +616,15 @@ public class EnvironmentControllerTests {
 
 	@Test
 	public void handleEnvironmentException() throws Exception {
-	when(repository.findOne(eq("exception"), eq("bad-syntax.ext"), any(), eq(false)))
-	.thenThrow(new FailedToConstructEnvironmentException("Cannot construct",
-		new RuntimeException("underlier")));
-	MockMvc mvc = MockMvcBuilders
-	.standaloneSetup(controller)
-	.setControllerAdvice(controller)
-	.build();
-	MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/exception/bad-syntax.ext"))
-	.andExpect(MockMvcResultMatchers
-		.status().is(500))
-	.andReturn();
-	assertThat(result.getResponse().getErrorMessage()).isEqualTo("Cannot construct");
+		when(repository.findOne(eq("exception"), eq("bad-syntax.ext"), any(), eq(false)))
+				.thenThrow(new FailedToConstructEnvironmentException("Cannot construct",
+						new RuntimeException("underlier")));
+		MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
+				.setControllerAdvice(controller).build();
+		MvcResult result = mvc
+				.perform(MockMvcRequestBuilders.get("/exception/bad-syntax.ext"))
+				.andExpect(MockMvcResultMatchers.status().is(500)).andReturn();
+		assertThat(result.getResponse().getErrorMessage()).isEqualTo("Cannot construct");
 	}
 
 }
