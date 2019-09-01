@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
-import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +28,11 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.yaml.snakeyaml.DumperOptions.FlowStyle;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.Tag;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
@@ -46,11 +48,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.nodes.Tag;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 
 /**
  * @author Dave Syer
