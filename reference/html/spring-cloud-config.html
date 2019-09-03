@@ -2132,6 +2132,24 @@ On the other hand, it can be a useful option if your config server is relatively
   -keypass changeme -keystore server.jks -storepass letmein</pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+When using JDK 11 or above you may get the following warning when using the command above.  In this case
+you probably want to make sure the <code>keypass</code> and <code>storepass</code> values match.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Warning:  Different store and key passwords not supported for PKCS12 KeyStores. Ignoring user-specified -keypass value.</pre>
+</div>
+</div>
 <div class="paragraph">
 <p>Put the <code>server.jks</code> file in the classpath (for instance) and then, in
 your <code>bootstrap.yml</code>, for the Config Server, create the following settings:</p>
