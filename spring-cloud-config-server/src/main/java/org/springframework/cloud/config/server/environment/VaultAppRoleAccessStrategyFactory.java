@@ -64,7 +64,7 @@ public final class VaultAppRoleAccessStrategyFactory {
 		String extractDataFromBody(VaultAppRoleResponse body) {
 			JsonNode nestedDataNode = body.getAuth() == null ? null
 					: ((JsonNode) body.getAuth()).get("client_token");
-			return nestedDataNode == null ? null : nestedDataNode.toString();
+			return nestedDataNode == null ? null : nestedDataNode.asText();
 		}
 
 	}
