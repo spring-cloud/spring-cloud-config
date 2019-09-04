@@ -47,10 +47,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class EnvironmentControllerTests {
 
-	/**
-	 * @author ubuntu
-	 *
-	 */
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
 

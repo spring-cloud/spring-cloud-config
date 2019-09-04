@@ -44,16 +44,14 @@ import static org.mockito.Mockito.when;
  * @author Dylan Roberts
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = VaultEnvironmentRepositoryIntegrationTests.TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-		"server.ssl.key-store=classpath:ssl-test.jks",
-		"server.ssl.key-store-password=password", "server.ssl.key-password=password",
-		"server.key-alias=ssl-test" })
+@SpringBootTest(
+		classes = VaultEnvironmentRepositoryIntegrationTests.TestApplication.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = { "server.ssl.key-store=classpath:ssl-test.jks",
+				"server.ssl.key-store-password=password",
+				"server.ssl.key-password=password", "server.key-alias=ssl-test" })
 public class VaultEnvironmentRepositoryIntegrationTests {
 
-	/**
-	 * @author ubuntu
-	 *
-	 */
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 

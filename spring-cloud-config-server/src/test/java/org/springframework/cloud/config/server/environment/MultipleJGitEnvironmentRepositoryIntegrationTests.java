@@ -52,10 +52,6 @@ import static org.hamcrest.CoreMatchers.containsString;
  */
 public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 
-	/**
-	 * @author ubuntu
-	 *
-	 */
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
 

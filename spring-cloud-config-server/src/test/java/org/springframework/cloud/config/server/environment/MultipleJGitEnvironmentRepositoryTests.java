@@ -47,10 +47,6 @@ import static org.mockito.Mockito.when;
  */
 public class MultipleJGitEnvironmentRepositoryTests {
 
-	/**
-	 * @author ubuntu
-	 *
-	 */
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
 

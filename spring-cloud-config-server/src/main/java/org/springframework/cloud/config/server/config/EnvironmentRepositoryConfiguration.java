@@ -95,7 +95,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled",
+			matchIfMissing = true)
 	public ConfigServerHealthIndicator configServerHealthIndicator(
 			EnvironmentRepository repository) {
 		return new ConfigServerHealthIndicator(repository);
@@ -244,7 +245,8 @@ public class EnvironmentRepositoryConfiguration {
 }
 
 @Configuration
-@ConditionalOnMissingBean(value = EnvironmentRepository.class, search = SearchStrategy.CURRENT)
+@ConditionalOnMissingBean(value = EnvironmentRepository.class,
+		search = SearchStrategy.CURRENT)
 class DefaultRepositoryConfiguration {
 
 	@Bean

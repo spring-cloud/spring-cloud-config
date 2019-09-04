@@ -38,9 +38,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ApplicationConfiguration.class, properties = {
-		"spring.datasource.schema=classpath:schema-jdbc.sql",
-		"spring.datasource.data=classpath:data-jdbc.sql" })
+@SpringBootTest(classes = ApplicationConfiguration.class,
+		properties = { "spring.datasource.schema=classpath:schema-jdbc.sql",
+				"spring.datasource.data=classpath:data-jdbc.sql" })
 @AutoConfigureTestDatabase
 @DirtiesContext
 public class JdbcEnvironmentRepositoryTests {

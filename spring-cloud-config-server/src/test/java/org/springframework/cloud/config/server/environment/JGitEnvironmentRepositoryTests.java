@@ -89,10 +89,6 @@ import static org.mockito.Mockito.when;
  */
 public class JGitEnvironmentRepositoryTests {
 
-	/**
-	 * @author ubuntu
-	 *
-	 */
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 

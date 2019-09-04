@@ -34,8 +34,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class EncryptionIntegrationTests {
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = {
-			ConfigServerApplication.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "encrypt.key=foobar")
+	@SpringBootTest(classes = { ConfigServerApplication.class },
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+			properties = "encrypt.key=foobar")
 	@ActiveProfiles({ "test", "native" })
 	@DirtiesContext
 	public static class ConfigSymmetricEncryptionIntegrationTests {
@@ -53,8 +54,9 @@ public class EncryptionIntegrationTests {
 	}
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = {
-			ConfigServerApplication.class }, properties = "spring.cloud.bootstrap.name:symmetric-key-bootstrap", webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+	@SpringBootTest(classes = { ConfigServerApplication.class },
+			properties = "spring.cloud.bootstrap.name:symmetric-key-bootstrap",
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "native" })
 	@DirtiesContext
 	public static class BootstrapConfigSymmetricEncryptionIntegrationTests {
@@ -72,8 +74,9 @@ public class EncryptionIntegrationTests {
 	}
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = {
-			ConfigServerApplication.class }, properties = "spring.cloud.bootstrap.name:keystore-bootstrap", webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+	@SpringBootTest(classes = { ConfigServerApplication.class },
+			properties = "spring.cloud.bootstrap.name:keystore-bootstrap",
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "native" })
 	@DirtiesContext
 	public static class KeystoreConfigurationIntegrationTests {

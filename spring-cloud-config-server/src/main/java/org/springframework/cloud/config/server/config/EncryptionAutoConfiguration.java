@@ -59,7 +59,8 @@ import org.springframework.util.StringUtils;
 public class EncryptionAutoConfiguration {
 
 	@Configuration
-	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled",
+			matchIfMissing = true)
 	protected static class EncryptorConfiguration {
 
 		@Autowired(required = false)
@@ -82,7 +83,8 @@ public class EncryptionAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(RsaSecretEncryptor.class)
-	@ConditionalOnProperty(prefix = "encrypt.key-store", value = "location", matchIfMissing = false)
+	@ConditionalOnProperty(prefix = "encrypt.key-store", value = "location",
+			matchIfMissing = false)
 	protected static class KeyStoreConfiguration {
 
 		@Autowired
