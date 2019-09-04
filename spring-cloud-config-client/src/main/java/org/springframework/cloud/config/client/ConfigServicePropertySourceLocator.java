@@ -65,12 +65,12 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	/**
 	 * Vault AppRole Role Id Header.
 	 */
-	public static final String APP_ROLE_ID_HEADER = "role-id";
+	public static final String APP_ROLE_ID_HEADER = "role_id";
 
 	/**
 	 * Vault AppRole Secret Id Header.
 	 */
-	public static final String APP_SECRET_ID_HEADER = "secret-id";
+	public static final String APP_SECRET_ID_HEADER = "secret_id";
 
 	private static Log logger = LogFactory
 			.getLog(ConfigServicePropertySourceLocator.class);

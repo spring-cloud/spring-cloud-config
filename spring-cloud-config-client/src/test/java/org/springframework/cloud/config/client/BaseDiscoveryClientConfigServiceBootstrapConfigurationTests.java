@@ -41,7 +41,6 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.Dis
 
 public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {
 
-
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
