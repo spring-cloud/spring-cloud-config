@@ -71,6 +71,16 @@ import static org.springframework.cloud.config.environment.EnvironmentMediaType.
 @Order(0)
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
 
+	/**
+	 * Vault AppRole Role Id Header.
+	 */
+	public static final String VAULT_APP_ROLE_ID_HEADER = "role_id";
+
+	/**
+	 * Vault AppRole Secret Id Header.
+	 */
+	public static final String VAULT_APP_SECRET_ID_HEADER = "secret_id";
+
 	private static Log logger = LogFactory
 			.getLog(ConfigServicePropertySourceLocator.class);
 
@@ -216,6 +226,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String name = properties.getName();
 		String profile = properties.getProfile();
 		String token = properties.getToken();
+		String roleId = properties.getHeaders().get(VAULT_APP_ROLE_ID_HEADER);
+		String secretId = properties.getHeaders().get(VAULT_APP_SECRET_ID_HEADER);
 		int noOfUrls = properties.getUri().length;
 		if (noOfUrls > 1) {
 			logger.info("Multiple Config Server Urls found listed.");
@@ -246,6 +258,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				addAuthorizationToken(properties, headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
+				}
+				if (StringUtils.hasText(roleId) && StringUtils.hasText(secretId)) {
+					headers.add(VAULT_APP_ROLE_ID_HEADER, roleId);
+					headers.add(VAULT_APP_SECRET_ID_HEADER, secretId);
 				}
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
