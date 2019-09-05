@@ -130,6 +130,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					return composite;
 				}
 			}
+			errorBody = String.format("None of labels %s found", Arrays.toString(labels));
 		}
 		catch (HttpServerErrorException e) {
 			error = e;
@@ -147,8 +148,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 							+ (errorBody == null ? "" : ": " + errorBody),
 					error);
 		}
-		logger.warn("Could not locate PropertySource: " + (errorBody == null
-				? error == null ? "label not found" : error.getMessage() : errorBody));
+		logger.warn("Could not locate PropertySource: " + (error != null ? error.getMessage() : errorBody));
 		return null;
 
 	}
