@@ -4,7 +4,7 @@
 #
 # The post-unlock hook runs after a path is unlocked.  Subversion runs
 # this hook by invoking a program (script, executable, binary, etc.)
-# named 'post-unlock' (for which this file is a template) with the 
+# named 'post-unlock' (for which this file is a template) with the
 # following ordered arguments:
 #
 #   [1] REPOS-PATH   (the path to this repository)
@@ -32,7 +32,7 @@
 # On a Windows system, you should name the hook program
 # 'post-unlock.bat' or 'post-unlock.exe',
 # but the basic idea is the same.
-# 
+#
 # Here is an example hook script, for a Unix /bin/sh interpreter:
 
 REPOS="$1"
