@@ -309,7 +309,7 @@ public class VaultEnvironmentRepositoryTests {
 				.isEqualTo(result);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = NullPointerException.class)
 	public void missingConfigToken() {
 		ConfigTokenProvider tokenProvider = mock(ConfigTokenProvider.class);
 		when(tokenProvider.getToken()).thenReturn(null);
