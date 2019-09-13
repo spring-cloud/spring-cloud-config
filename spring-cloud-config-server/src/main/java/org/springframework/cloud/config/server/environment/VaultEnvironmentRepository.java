@@ -19,7 +19,9 @@ package org.springframework.cloud.config.server.environment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,10 +31,13 @@ import javax.validation.constraints.NotEmpty;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.cloud.config.client.ConfigClientProperties;
+import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
@@ -46,6 +51,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.STA
  * @author Haroun Pacquee
  * @author Haytham Mohamed
  * @author Scott Frederick
+ * @author Kamalakar Ponaka
  */
 @Validated
 public class VaultEnvironmentRepository implements EnvironmentRepository, Ordered {
@@ -93,6 +99,8 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private VaultKvAccessStrategy accessStrategy;
 
+	private VaultAppRoleAccessStrategy appRoleAccessStrategy;
+
 	// TODO: move to watchState:String on findOne?
 	private final ObjectProvider<HttpServletRequest> request;
 
@@ -126,6 +134,9 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 
 		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl,
 				properties.getKvVersion());
+
+		this.appRoleAccessStrategy = VaultAppRoleAccessStrategyFactory.getToken(rest,
+				baseUrl);
 	}
 
 	/* for testing */ void setAccessStrategy(VaultKvAccessStrategy accessStrategy) {
@@ -142,9 +153,15 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		Environment environment = new Environment(application, profiles, label, null,
 				getWatchState());
 
+		HttpHeaders vaultHeaders = new HttpHeaders();
+		if (StringUtils.hasText(this.namespace)) {
+			vaultHeaders.add(VAULT_NAMESPACE, this.namespace);
+		}
+		vaultHeaders.add(VAULT_TOKEN, getToken(vaultHeaders));
+
 		for (String key : keys) {
 			// read raw 'data' key from vault
-			String data = read(key);
+			String data = read(key, vaultHeaders);
 			if (data != null) {
 				// data is in json format of which, yaml is a superset, so parse
 				final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
@@ -204,23 +221,40 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 	}
 
-	private String read(String key) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(VAULT_TOKEN, getToken());
-		if (StringUtils.hasText(this.namespace)) {
-			headers.add(VAULT_NAMESPACE, this.namespace);
-		}
-
-		return this.accessStrategy.getData(headers, this.backend, key);
+	private String read(String key, HttpHeaders vaultHeaders) {
+		return this.accessStrategy.getData(vaultHeaders, this.backend, key);
 	}
 
-	private String getToken() {
-		String token = tokenProvider.getToken();
-		if (!StringUtils.hasLength(token)) {
-			throw new IllegalArgumentException(
-					"A Vault token must be supplied by a token provider");
+	private String getToken(HttpHeaders vaultHeaders) {
+		String vaultToken = tokenProvider.getToken();
+		if (!StringUtils.hasLength(vaultToken)) {
+			HttpServletRequest servletRequest = this.request.getIfAvailable();
+			if (request == null) {
+				throw new IllegalStateException("No HttpServletRequest available");
+			}
+			String roleID = servletRequest
+					.getHeader(ConfigServicePropertySourceLocator.APP_ROLE_ID_HEADER);
+			String secretID = servletRequest
+					.getHeader(ConfigServicePropertySourceLocator.APP_SECRET_ID_HEADER);
+			if (StringUtils.hasLength(roleID) && StringUtils.hasLength(secretID)) {
+				Map<String, String> params = new HashMap<String, String>();
+				params.put(ConfigServicePropertySourceLocator.APP_ROLE_ID_HEADER, roleID);
+				params.put(ConfigServicePropertySourceLocator.APP_SECRET_ID_HEADER,
+						secretID);
+				HttpEntity<?> requestEntity = new HttpEntity<>(params, vaultHeaders);
+				vaultToken = appRoleAccessStrategy.getAuth(requestEntity);
+				if (!StringUtils.hasLength(vaultToken)) {
+					throw new IllegalArgumentException("Missing/Invalid token: "
+							+ ConfigClientProperties.TOKEN_HEADER);
+				}
+			}
+			else {
+				throw new IllegalArgumentException("Missing required header/App Role: "
+						+ ConfigClientProperties.TOKEN_HEADER);
+			}
+
 		}
-		return token;
+		return vaultToken;
 	}
 
 	public void setHost(String host) {
