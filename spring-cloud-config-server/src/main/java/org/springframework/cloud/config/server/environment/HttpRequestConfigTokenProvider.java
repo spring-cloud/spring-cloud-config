@@ -20,10 +20,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.client.ConfigClientProperties;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Scott Frederick
+ * @author Kamalakar Ponaka
  */
 public class HttpRequestConfigTokenProvider implements ConfigTokenProvider {
 
@@ -42,12 +42,11 @@ public class HttpRequestConfigTokenProvider implements ConfigTokenProvider {
 		}
 
 		String token = request.getHeader(ConfigClientProperties.TOKEN_HEADER);
-		if (!StringUtils.hasLength(token)) {
-			throw new IllegalArgumentException(
-					"Missing required header in HttpServletRequest: "
-							+ ConfigClientProperties.TOKEN_HEADER);
-		}
-
+		/*
+		 * if (!StringUtils.hasLength(token)) { throw new IllegalArgumentException(
+		 * "Missing required header in HttpServletRequest: " +
+		 * ConfigClientProperties.TOKEN_HEADER); }
+		 */
 		return token;
 	}
 
