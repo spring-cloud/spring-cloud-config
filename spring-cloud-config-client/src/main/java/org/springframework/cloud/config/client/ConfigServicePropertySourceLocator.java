@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.client;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,16 +72,6 @@ import static org.springframework.cloud.config.environment.EnvironmentMediaType.
  */
 @Order(0)
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
-
-	/**
-	 * Vault AppRole Role Id to be passed in headers.
-	 */
-	public static final String APP_ROLE_ID_HEADER = "role_id";
-
-	/**
-	 * Vault AppRole Secret Id to be passed in headers.
-	 */
-	public static final String APP_SECRET_ID_HEADER = "secret_id";
 
 	private static Log logger = LogFactory
 			.getLog(ConfigServicePropertySourceLocator.class);
@@ -227,8 +218,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		String name = properties.getName();
 		String profile = properties.getProfile();
 		String token = properties.getToken();
-		String roleId = properties.getHeaders().get(APP_ROLE_ID_HEADER);
-		String secretId = properties.getHeaders().get(APP_SECRET_ID_HEADER);
+		Map<String, String> clientHeaders = properties.getHeaders();
 		int noOfUrls = properties.getUri().length;
 		if (noOfUrls > 1) {
 			logger.info("Multiple Config Server Urls found listed.");
@@ -260,9 +250,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
 				}
-				if (StringUtils.hasText(roleId) && StringUtils.hasText(secretId)) {
-					headers.add(APP_ROLE_ID_HEADER, roleId);
-					headers.add(APP_SECRET_ID_HEADER, secretId);
+				// Sending the client headers to server "headers:"
+				ArrayList<String> keyList = new ArrayList<String>(clientHeaders.keySet());
+				for (String key : keyList) {
+					headers.add(key, clientHeaders.get(key));
 				}
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);

@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -49,11 +48,10 @@ public class HttpRequestConfigTokenProviderTests {
 		tokenProvider.getToken();
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void missingTokenHeader() {
-		when(httpRequestProvider.getIfAvailable())
-				.thenReturn(new MockHttpServletRequest());
-		tokenProvider.getToken();
-	}
+	/*
+	 * @Test(expected = IllegalArgumentException.class) public void missingTokenHeader() {
+	 * when(httpRequestProvider.getIfAvailable()) .thenReturn(new
+	 * MockHttpServletRequest()); tokenProvider.getToken(); }
+	 */
 
 }

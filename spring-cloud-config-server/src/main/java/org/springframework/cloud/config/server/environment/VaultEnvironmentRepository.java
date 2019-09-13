@@ -32,7 +32,6 @@ import javax.validation.constraints.NotEmpty;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.client.ConfigClientProperties;
-import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
@@ -65,6 +64,16 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	 * Vault namespace header name.
 	 */
 	static final String VAULT_NAMESPACE = "X-Vault-Namespace";
+
+	/**
+	 * Vault AppRole Role Id Header.
+	 */
+	public static final String APP_ROLE_ID_HEADER = "role_id";
+
+	/**
+	 * Vault AppRole Secret Id Header.
+	 */
+	public static final String APP_SECRET_ID_HEADER = "secret_id";
 
 	/** Vault host. Defaults to 127.0.0.1. */
 	@NotEmpty
@@ -232,15 +241,12 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 			if (request == null) {
 				throw new IllegalStateException("No HttpServletRequest available");
 			}
-			String roleID = servletRequest
-					.getHeader(ConfigServicePropertySourceLocator.APP_ROLE_ID_HEADER);
-			String secretID = servletRequest
-					.getHeader(ConfigServicePropertySourceLocator.APP_SECRET_ID_HEADER);
+			String roleID = servletRequest.getHeader(APP_ROLE_ID_HEADER);
+			String secretID = servletRequest.getHeader(APP_SECRET_ID_HEADER);
 			if (StringUtils.hasLength(roleID) && StringUtils.hasLength(secretID)) {
 				Map<String, String> params = new HashMap<String, String>();
-				params.put(ConfigServicePropertySourceLocator.APP_ROLE_ID_HEADER, roleID);
-				params.put(ConfigServicePropertySourceLocator.APP_SECRET_ID_HEADER,
-						secretID);
+				params.put(APP_ROLE_ID_HEADER, roleID);
+				params.put(APP_SECRET_ID_HEADER, secretID);
 				HttpEntity<?> requestEntity = new HttpEntity<>(params, vaultHeaders);
 				vaultToken = appRoleAccessStrategy.getAuth(requestEntity);
 				if (!StringUtils.hasLength(vaultToken)) {
