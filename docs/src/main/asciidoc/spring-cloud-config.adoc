@@ -1143,7 +1143,7 @@ TIP: If you testing with curl, then use `--data-urlencode` (instead of `-d`) or 
 
 Take the encrypted value and add the `{cipher}` prefix before you put it in the YAML or properties file and before you commit and push it to a remote (potentially insecure) store.
 
-The `/encrypt` and `/decrypt` endpoints also both accept paths in the form of `/*/{name}/{profiles}`, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.
+The `/encrypt` and `/decrypt` endpoints also both accept paths in the form of `/*/{application}/{profiles}`, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.
 
 NOTE: To control the cryptography in this granular way, you must also provide a `@Bean` of type `TextEncryptorLocator` that creates a different encryptor per name and profiles.
 The one that is provided by default does not do so (all encryptions use the same key).
@@ -1273,7 +1273,7 @@ Also, the YAML representation is not necessarily a faithful representation of th
 == Serving Plain Text
 
 Instead of using the `Environment` abstraction (or one of the alternative representations of it in YAML or properties format), your applications might need generic plain-text configuration files that are tailored to their environment.
-The Config Server provides these through an additional endpoint at `/{name}/{profile}/{label}/{path}`, where `name`, `profile`, and `label` have the same meaning as the regular environment endpoint, but `path` is a file name (such as `log.xml`).
+The Config Server provides these through an additional endpoint at `/{application}/{profile}/{label}/{path}`, where `application`, `profile`, and `label` have the same meaning as the regular environment endpoint, but `path` is a file path (such as `resources/log.xml`).
 The source files for this endpoint are located in the same way as for the environment endpoints.
 The same search path is used for properties and YAML files.
 However, instead of aggregating all matching resources, only the first one to match is returned.
@@ -1458,9 +1458,9 @@ Spring Retry has a `RetryInterceptorBuilder` that supports creating one.
 
 === Locating Remote Configuration Resources
 
-The Config Service serves property sources from `/{name}/{profile}/{label}`, where the default bindings in the client app are as follows:
+The Config Service serves property sources from `/{application}/{profile}/{label}`, where the default bindings in the client app are as follows:
 
-* "name" = `${spring.application.name}`
+* "application" = `${spring.application.name}`
 * "profile" = `${spring.profiles.active}` (actually `Environment.getActiveProfiles()`)
 * "label" = "master"
 
