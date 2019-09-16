@@ -111,10 +111,27 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void sunnyDayWithNoSuchLabel() {
 		mockRequestResponseWithLabel(
-				new ResponseEntity<Void>((Void) null, HttpStatus.NOT_FOUND),
+				new ResponseEntity<>((Void) null, HttpStatus.NOT_FOUND),
 				"nosuchlabel");
 		this.locator.setRestTemplate(this.restTemplate);
 		assertThat(this.locator.locate(this.environment)).isNull();
+	}
+
+	@Test
+	public void sunnyDayWithNoSuchLabelAndFailFast() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setFailFast(true);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		mockRequestResponseWithLabel(
+				new ResponseEntity<>((Void) null, HttpStatus.NOT_FOUND),
+				"release(_)v1.0.0");
+		this.locator.setRestTemplate(this.restTemplate);
+		TestPropertyValues.of("spring.cloud.config.label:release/v1.0.1")
+				.applyTo(this.environment);
+		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
+		this.expected.expectMessage(
+				"Could not locate PropertySource and the fail fast property is set, failing: None of labels [release/v1.0.1] found");
+		this.locator.locate(this.environment);
 	}
 
 	@Test
