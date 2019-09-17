@@ -111,8 +111,7 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void sunnyDayWithNoSuchLabel() {
 		mockRequestResponseWithLabel(
-				new ResponseEntity<>((Void) null, HttpStatus.NOT_FOUND),
-				"nosuchlabel");
+				new ResponseEntity<>((Void) null, HttpStatus.NOT_FOUND), "nosuchlabel");
 		this.locator.setRestTemplate(this.restTemplate);
 		assertThat(this.locator.locate(this.environment)).isNull();
 	}
