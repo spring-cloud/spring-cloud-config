@@ -1067,7 +1067,7 @@ mysecret</screen>
 <simpara>If you testing with curl, then use <literal>--data-urlencode</literal> (instead of <literal>-d</literal>) or set an explicit <literal>Content-Type: text/plain</literal> to make sure curl encodes the data correctly when there are special characters ('+' is particularly tricky).</simpara>
 </tip>
 <simpara>Take the encrypted value and add the <literal>{cipher}</literal> prefix before you put it in the YAML or properties file and before you commit and push it to a remote (potentially insecure) store.</simpara>
-<simpara>The <literal>/encrypt</literal> and <literal>/decrypt</literal> endpoints also both accept paths in the form of <literal>/*/{name}/{profiles}</literal>, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.</simpara>
+<simpara>The <literal>/encrypt</literal> and <literal>/decrypt</literal> endpoints also both accept paths in the form of <literal>/*/{application}/{profiles}</literal>, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.</simpara>
 <note>
 <simpara>To control the cryptography in this granular way, you must also provide a <literal>@Bean</literal> of type <literal>TextEncryptorLocator</literal> that creates a different encryptor per name and profiles.
 The one that is provided by default does not do so (all encryptions use the same key).</simpara>
@@ -1197,7 +1197,7 @@ Also, the YAML representation is not necessarily a faithful representation of th
 <chapter xml:id="_serving_plain_text">
 <title>Serving Plain Text</title>
 <simpara>Instead of using the <literal>Environment</literal> abstraction (or one of the alternative representations of it in YAML or properties format), your applications might need generic plain-text configuration files that are tailored to their environment.
-The Config Server provides these through an additional endpoint at <literal>/{name}/{profile}/{label}/{path}</literal>, where <literal>name</literal>, <literal>profile</literal>, and <literal>label</literal> have the same meaning as the regular environment endpoint, but <literal>path</literal> is a file name (such as <literal>log.xml</literal>).
+The Config Server provides these through an additional endpoint at <literal>/{application}/{profile}/{label}/{path}</literal>, where <literal>application</literal>, <literal>profile</literal>, and <literal>label</literal> have the same meaning as the regular environment endpoint, but <literal>path</literal> is a path to a file name (such as <literal>log.xml</literal>).
 The source files for this endpoint are located in the same way as for the environment endpoints.
 The same search path is used for properties and YAML files.
 However, instead of aggregating all matching resources, only the first one to match is returned.</simpara>
@@ -1284,8 +1284,8 @@ The change detection can be strategized.
 However, by default, it looks for changes in files that match the application name (for example, <literal>foo.properties</literal> is targeted at the <literal>foo</literal> application, while <literal>application.properties</literal> is targeted at all applications).
 The strategy to use when you want to override the behavior is <literal>PropertyPathNotificationExtractor</literal>, which accepts the request headers and body as parameters and returns a list of file paths that changed.</simpara>
 <simpara>The default configuration works out of the box with Github, Gitlab, Gitea, Gitee, Gogs or Bitbucket.
-In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to <literal>/monitor</literal> with form-encoded body parameters in the pattern of <literal>path={name}</literal>.
-Doing so broadcasts to applications matching the <literal>{name}</literal> pattern (which can contain wildcards).</simpara>
+In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to <literal>/monitor</literal> with form-encoded body parameters in the pattern of <literal>path={application}</literal>.
+Doing so broadcasts to applications matching the <literal>{application}</literal> pattern (which can contain wildcards).</simpara>
 <note>
 <simpara>The <literal>RefreshRemoteApplicationEvent</literal> is transmitted only if the <literal>spring-cloud-bus</literal> is activated in both the Config Server and in the client application.</simpara>
 </note>
@@ -1350,7 +1350,7 @@ Spring Retry has a <literal>RetryInterceptorBuilder</literal> that supports crea
 </section>
 <section xml:id="_locating_remote_configuration_resources">
 <title>Locating Remote Configuration Resources</title>
-<simpara>The Config Service serves property sources from <literal>/{name}/{profile}/{label}</literal>, where the default bindings in the client app are as follows:</simpara>
+<simpara>The Config Service serves property sources from <literal>/{application}/{profile}/{label}</literal>, where the default bindings in the client app are as follows:</simpara>
 <itemizedlist>
 <listitem>
 <simpara>"name" = <literal>${spring.application.name}</literal></simpara>
