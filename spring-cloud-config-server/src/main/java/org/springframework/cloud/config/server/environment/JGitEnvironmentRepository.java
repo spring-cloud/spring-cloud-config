@@ -112,7 +112,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private boolean cloneOnStart;
 
-	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitEnvironmentRepository.JGitFactory();
+	private JGitEnvironmentRepository.JGitFactory gitFactory;
 
 	private String defaultLabel;
 
@@ -157,6 +157,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.deleteUntrackedBranches = properties.isDeleteUntrackedBranches();
 		this.refreshRate = properties.getRefreshRate();
 		this.skipSslValidation = properties.isSkipSslValidation();
+		this.gitFactory = new JGitFactory(properties.isCloneSubmodules());
 	}
 
 	public boolean isCloneOnStart() {
@@ -705,13 +706,24 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	public static class JGitFactory {
 
+		private final boolean cloneSubmodules;
+
+		public JGitFactory() {
+			this(false);
+		}
+
+		public JGitFactory(boolean cloneSubmodules) {
+			this.cloneSubmodules = cloneSubmodules;
+		}
+
 		public Git getGitByOpen(File file) throws IOException {
 			Git git = Git.open(file);
 			return git;
 		}
 
 		public CloneCommand getCloneCommandByCloneRepository() {
-			CloneCommand command = Git.cloneRepository();
+			CloneCommand command = Git.cloneRepository()
+					.setCloneSubmodules(cloneSubmodules);
 			return command;
 		}
 
