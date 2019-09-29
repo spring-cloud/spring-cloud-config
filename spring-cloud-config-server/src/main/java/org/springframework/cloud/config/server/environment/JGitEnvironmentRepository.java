@@ -711,7 +711,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		}
 
 		public CloneCommand getCloneCommandByCloneRepository() {
-			CloneCommand command = Git.cloneRepository();
+			CloneCommand command = Git.cloneRepository().setCloneSubmodules(true);
 			return command;
 		}
 
