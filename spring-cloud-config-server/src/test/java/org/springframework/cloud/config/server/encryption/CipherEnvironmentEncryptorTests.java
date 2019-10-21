@@ -19,7 +19,6 @@ package org.springframework.cloud.config.server.encryption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +27,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.environment.PropertyValueDescriptor;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
@@ -43,13 +43,8 @@ public class CipherEnvironmentEncryptorTests {
 
 	public CipherEnvironmentEncryptorTests(String salt, String key) {
 		this.textEncryptor = new EncryptorFactory(salt).create(key);
-		this.encryptor = new CipherEnvironmentEncryptor(new TextEncryptorLocator() {
-
-			@Override
-			public TextEncryptor locate(Map<String, String> keys) {
-				return CipherEnvironmentEncryptorTests.this.textEncryptor;
-			}
-		});
+		this.encryptor = new CipherEnvironmentEncryptor(
+				keys -> CipherEnvironmentEncryptorTests.this.textEncryptor);
 	}
 
 	@Parameters
@@ -102,6 +97,23 @@ public class CipherEnvironmentEncryptorTests {
 		// then
 		assertThat(this.encryptor.decrypt(environment).getPropertySources().get(0)
 				.getSource().get(environment.getName())).isEqualTo(null);
+	}
+
+	@Test
+	public void shouldDecryptEnvironmentIncludeOrigin() {
+		// given
+		String secret = randomUUID().toString();
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		String encrypted = "{cipher}" + this.textEncryptor.encrypt(secret);
+		environment.add(new PropertySource("a",
+				Collections.<Object, Object>singletonMap(environment.getName(),
+						new PropertyValueDescriptor(encrypted, "encrypted value"))));
+
+		// then
+		assertThat(this.encryptor.decrypt(environment).getPropertySources().get(0)
+				.getSource().get(environment.getName())).isEqualTo(secret);
 	}
 
 }

@@ -49,4 +49,13 @@ public final class PropertyValueDescriptor {
 		this.origin = origin;
 	}
 
+	/**
+	 * Places in config server call to string expecting to get the value.
+	 * @return the value toString if not null.
+	 */
+	@Override
+	public String toString() {
+		return this.value == null ? null : this.value.toString();
+	}
+
 }
