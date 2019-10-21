@@ -73,7 +73,7 @@ public class ConfigServiceBootstrapConfigurationTest {
 		assertThat(restTemplate).isNotNull();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class ConfigServicePropertySourceLocatorOverrideConfig {
 
 		@Autowired

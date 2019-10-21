@@ -245,7 +245,7 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		Assertions.assertThat(properties.getRepos()).hasSize(1).containsOnlyKeys("admin");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })

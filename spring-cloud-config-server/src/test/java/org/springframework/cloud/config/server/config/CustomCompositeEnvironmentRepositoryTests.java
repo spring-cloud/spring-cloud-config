@@ -86,7 +86,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 			assertThat("p").isEqualTo(propertySources.get(2).getName());
 		}
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		@EnableAutoConfiguration
 		@EnableConfigServer
 		protected static class Config {
@@ -142,7 +142,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 			assertThat("p").isEqualTo(propertySources.get(2).getName());
 		}
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		@EnableAutoConfiguration
 		@EnableConfigServer
 		protected static class Config {

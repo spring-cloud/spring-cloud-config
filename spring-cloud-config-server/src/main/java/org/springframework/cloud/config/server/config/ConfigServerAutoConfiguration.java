@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Import;
 /**
  * @author Spencer Gibb
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(ConfigServerConfiguration.Marker.class)
 @EnableConfigurationProperties(ConfigServerProperties.class)
 @Import({ EnvironmentRepositoryConfiguration.class, CompositeConfiguration.class,

@@ -38,7 +38,7 @@ import org.springframework.retry.interceptor.RetryOperationsInterceptor;
  * @author Tristan Hanson
  *
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties
 public class ConfigServiceBootstrapConfiguration {
 
@@ -63,7 +63,7 @@ public class ConfigServiceBootstrapConfiguration {
 
 	@ConditionalOnProperty("spring.cloud.config.fail-fast")
 	@ConditionalOnClass({ Retryable.class, Aspect.class, AopAutoConfiguration.class })
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableRetry(proxyTargetClass = true)
 	@Import(AopAutoConfiguration.class)
 	@EnableConfigurationProperties(RetryProperties.class)

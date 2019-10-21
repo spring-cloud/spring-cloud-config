@@ -45,7 +45,7 @@ import org.springframework.context.event.SmartApplicationListener;
  */
 @ConditionalOnProperty(value = "spring.cloud.config.discovery.enabled",
 		matchIfMissing = false)
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Import({ UtilAutoConfiguration.class })
 @EnableDiscoveryClient
 public class DiscoveryClientConfigServiceBootstrapConfiguration

@@ -75,7 +75,7 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(0).getSource().get("a.b")).isEqualTo("y");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class ApplicationConfiguration {
 
 	}

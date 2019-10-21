@@ -146,7 +146,7 @@ public class SVNKitEnvironmentRepositoryTests {
 	}
 
 	@EnableAutoConfiguration
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigServer
 	protected static class TestApplication {
 

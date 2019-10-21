@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * @author Spencer Gibb
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ConfigServerConfiguration {
 
 	@Bean

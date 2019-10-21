@@ -62,7 +62,7 @@ import org.springframework.util.PatternMatchUtils;
  * @author Gilles Robert
  *
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableScheduling
 public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderAware {
 

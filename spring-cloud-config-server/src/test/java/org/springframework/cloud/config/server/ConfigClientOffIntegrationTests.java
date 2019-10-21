@@ -82,7 +82,7 @@ public class ConfigClientOffIntegrationTests {
 				ConfigServicePropertySourceLocator.class).length).isEqualTo(0);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@Import(ConfigServerApplication.class)
 	protected static class TestConfiguration {
 

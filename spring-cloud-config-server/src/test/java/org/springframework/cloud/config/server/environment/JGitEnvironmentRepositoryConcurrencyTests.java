@@ -187,7 +187,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 		assertThat(errorCount.get()).isEqualTo(0);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })

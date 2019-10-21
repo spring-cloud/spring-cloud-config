@@ -59,7 +59,7 @@ public class CustomEnvironmentRepositoryTests {
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	@EnableConfigServer
 	protected static class TestApplication {

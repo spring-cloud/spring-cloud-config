@@ -67,7 +67,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 		context.close();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class BusConfig {
 
 		@Bean
@@ -77,7 +77,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomPropertyPathNotificationExtractorConfig {
 
 		@Bean

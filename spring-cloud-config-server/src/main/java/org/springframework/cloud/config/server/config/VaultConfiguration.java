@@ -26,7 +26,7 @@ import org.springframework.core.env.Environment;
 /**
  * @author Scott Frederick
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class VaultConfiguration {
 
 	private static final String VAULT_TOKEN_PROPERTY_NAME = "spring.cloud.config.server.vault.token";

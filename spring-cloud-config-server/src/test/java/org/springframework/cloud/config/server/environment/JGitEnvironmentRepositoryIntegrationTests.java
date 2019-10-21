@@ -695,7 +695,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		testData.getRepository().findOne("bar", "staging", "branchToDelete");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })
@@ -703,7 +703,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })

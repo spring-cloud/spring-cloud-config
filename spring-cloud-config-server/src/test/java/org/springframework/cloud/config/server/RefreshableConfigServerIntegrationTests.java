@@ -115,7 +115,7 @@ public class RefreshableConfigServerIntegrationTests {
 		assertOriginTrackedValue(environment, 0, "foo", "bar");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	@EnableConfigServer
 	protected static class TestConfiguration {

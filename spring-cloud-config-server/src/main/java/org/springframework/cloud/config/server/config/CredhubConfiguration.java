@@ -26,7 +26,7 @@ import org.springframework.credhub.support.ClientOptions;
 /**
  * @author Alberto C. Ríos
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("credhub")
 public class CredhubConfiguration {
 

@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Rafal Zukowski
  *
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ConfigServerEncryptionConfiguration {
 
 	@Autowired(required = false)

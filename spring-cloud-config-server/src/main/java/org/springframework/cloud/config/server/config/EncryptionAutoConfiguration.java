@@ -52,13 +52,13 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  *
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(KeyProperties.class)
 @Import({ SingleTextEncryptorConfiguration.class,
 		DefaultTextEncryptorConfiguration.class })
 public class EncryptionAutoConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled",
 			matchIfMissing = true)
 	protected static class EncryptorConfiguration {
@@ -81,7 +81,7 @@ public class EncryptionAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(RsaSecretEncryptor.class)
 	@ConditionalOnProperty(prefix = "encrypt.key-store", value = "location",
 			matchIfMissing = false)
@@ -115,7 +115,7 @@ public class EncryptionAutoConfiguration {
 
 @ConditionalOnBean(TextEncryptor.class)
 @ConditionalOnMissingBean(TextEncryptorLocator.class)
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class SingleTextEncryptorConfiguration {
 
 	@Autowired
@@ -129,7 +129,7 @@ class SingleTextEncryptorConfiguration {
 }
 
 @ConditionalOnMissingBean(TextEncryptor.class)
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class DefaultTextEncryptorConfiguration {
 
 	@Autowired

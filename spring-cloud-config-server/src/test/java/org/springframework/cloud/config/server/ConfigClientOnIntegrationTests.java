@@ -94,7 +94,7 @@ public class ConfigClientOnIntegrationTests {
 				ConfigServicePropertySourceLocator.class).length).isEqualTo(1);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	@EnableConfigServer
 	protected static class TestConfiguration {

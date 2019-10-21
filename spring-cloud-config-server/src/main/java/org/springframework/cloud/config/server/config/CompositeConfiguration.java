@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Primary;
 /**
  * @author Ryan Baxter
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingBean(CompositeEnvironmentRepository.class)
 public class CompositeConfiguration {
 

@@ -39,7 +39,7 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @author Roy Clarkson
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty("spring.cloud.config.server.bootstrap")
 public class ConfigServerBootstrapConfiguration {
 

@@ -163,7 +163,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })

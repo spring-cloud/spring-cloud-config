@@ -285,7 +285,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		return (HttpClient) ReflectionTestUtils.getField(httpConnection, "client");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })

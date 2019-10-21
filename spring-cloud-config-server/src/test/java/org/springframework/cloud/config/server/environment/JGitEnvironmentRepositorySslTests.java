@@ -102,7 +102,7 @@ public class JGitEnvironmentRepositorySslTests {
 		repository.findOne("bar", "staging", "master");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
 	@Import({ PropertyPlaceholderAutoConfiguration.class,
 			EnvironmentRepositoryConfiguration.class })

@@ -39,7 +39,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author Roy Clarkson
  * @author Tim Ysewyn
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication
 public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 

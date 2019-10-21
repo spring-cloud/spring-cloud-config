@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Dave Syer
  * @author Tim Ysewyn
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingBean(ResourceRepository.class)
 public class ResourceRepositoryConfiguration {
 

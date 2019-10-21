@@ -91,7 +91,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author Alberto C. Ríos
  * @author Scott Frederick
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
 		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
 		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
@@ -119,7 +119,7 @@ public class EnvironmentRepositoryConfiguration {
 		return new MultipleJGitEnvironmentProperties();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty("spring.cloud.config.server.consul.watch.enabled")
 	protected static class ConsulEnvironmentWatchConfiguration {
 
@@ -130,7 +130,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingBean(EnvironmentWatch.class)
 	protected static class DefaultEnvironmentWatch {
 
@@ -141,7 +141,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingBean(ConfigTokenProvider.class)
 	protected static class DefaultConfigTokenProvider {
 
@@ -153,7 +153,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(TransportConfigCallback.class)
 	static class JGitFactoryConfig {
 
@@ -172,7 +172,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ HttpClient.class, TransportConfigCallback.class })
 	static class JGitHttpClientConfig {
 
@@ -183,7 +183,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(AmazonS3.class)
 	static class AwsS3FactoryConfig {
 
@@ -195,7 +195,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(SVNException.class)
 	static class SvnFactoryConfig {
 
@@ -207,7 +207,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class VaultFactoryConfig {
 
 		@Bean
@@ -221,7 +221,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(HttpClient.class)
 	static class VaultHttpClientConfig {
 
@@ -232,7 +232,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(JdbcTemplate.class)
 	static class JdbcFactoryConfig {
 
@@ -245,7 +245,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(StringRedisTemplate.class)
 	static class RedisFactoryConfig {
 
@@ -258,7 +258,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(CredHubOperations.class)
 	static class CredhubFactoryConfig {
 
@@ -271,7 +271,7 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class NativeFactoryConfig {
 
 		@Bean
@@ -284,7 +284,7 @@ public class EnvironmentRepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingBean(value = EnvironmentRepository.class,
 		search = SearchStrategy.CURRENT)
 class DefaultRepositoryConfiguration {
@@ -298,7 +298,7 @@ class DefaultRepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("native")
 class NativeRepositoryConfiguration {
 
@@ -311,13 +311,13 @@ class NativeRepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("git")
 class GitRepositoryConfiguration extends DefaultRepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("awss3")
 class AwsS3RepositoryConfiguration {
 
@@ -331,7 +331,7 @@ class AwsS3RepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("subversion")
 class SvnRepositoryConfiguration {
 
@@ -344,7 +344,7 @@ class SvnRepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("vault")
 class VaultRepositoryConfiguration {
 
@@ -357,7 +357,7 @@ class VaultRepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("credhub")
 class CredhubRepositoryConfiguration {
 
@@ -370,7 +370,7 @@ class CredhubRepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("jdbc")
 @ConditionalOnClass(JdbcTemplate.class)
 class JdbcRepositoryConfiguration {
@@ -385,7 +385,7 @@ class JdbcRepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("redis")
 @ConditionalOnClass(StringRedisTemplate.class)
 class RedisRepositoryConfiguration {
@@ -400,7 +400,7 @@ class RedisRepositoryConfiguration {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("composite")
 class CompositeRepositoryConfiguration {
 

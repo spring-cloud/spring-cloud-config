@@ -37,7 +37,7 @@ import org.springframework.core.env.Environment;
  * @author Marcos Barbero
  *
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ConfigClientAutoConfiguration {
 
 	@Bean
@@ -58,7 +58,7 @@ public class ConfigClientAutoConfiguration {
 		return new ConfigClientHealthProperties();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(HealthIndicator.class)
 	@ConditionalOnBean(ConfigServicePropertySourceLocator.class)
 	@ConditionalOnProperty(value = "health.config.enabled", matchIfMissing = true)
@@ -73,7 +73,7 @@ public class ConfigClientAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(ContextRefresher.class)
 	@ConditionalOnBean(ContextRefresher.class)
 	@ConditionalOnProperty("spring.cloud.config.watch.enabled")

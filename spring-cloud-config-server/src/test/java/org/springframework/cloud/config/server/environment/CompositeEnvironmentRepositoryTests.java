@@ -184,7 +184,7 @@ public class CompositeEnvironmentRepositoryTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class OverrideCompositeConfig {
 
 		@Bean

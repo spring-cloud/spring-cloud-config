@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Eduard Wirch
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnClass({ GoogleCredentials.class, TransportConfigCallback.class })
 public class GoogleCloudSourceConfiguration {
 

@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Dave Syer
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableAutoConfiguration
 @EnableConfigServer
 public class ConfigServerApplication {

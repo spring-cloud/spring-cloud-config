@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Import;
  * @author Will Boyd
  *
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication
 @Import(FileMonitorConfiguration.class)
 public class EnvironmentMonitorAutoConfiguration {
@@ -46,7 +46,7 @@ public class EnvironmentMonitorAutoConfiguration {
 				busProperties.getId());
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class PropertyPathNotificationExtractorConfiguration {
 
 		@Bean
