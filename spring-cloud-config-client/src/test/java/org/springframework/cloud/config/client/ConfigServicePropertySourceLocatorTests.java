@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.client;
 
 import java.io.ByteArrayInputStream;
+import java.net.Proxy;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,6 +57,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
 
+/**
+ * @author Jean Paul Curiñaupa Taype
+ */
 public class ConfigServicePropertySourceLocatorTests {
 
 	@Rule
@@ -304,6 +308,52 @@ public class ConfigServicePropertySourceLocatorTests {
 			assertThat(genericRequestHeaderInterceptor.getHeaders().get(AUTHORIZATION))
 					.isEqualTo(null);
 		}
+	}
+
+	@Test
+	public void shouldBuildNoProxyWhenProxyConfigurationIsNotPresent() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		Proxy proxy = ReflectionTestUtils.invokeMethod(this.locator, "buildProxy",
+				defaults);
+		assertThat(proxy).isEqualTo(Proxy.NO_PROXY);
+	}
+
+	@Test
+	public void shouldThrowExceptionWhenProxyPortIsNotPresent() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.getProxy().setHost("proxy.mycompany.com.pe");
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		this.expected.expect(IllegalStateException.class);
+		this.expected.expectMessage("You must set proxy 'port'");
+		ReflectionTestUtils.invokeMethod(this.locator, "buildProxy", defaults);
+	}
+
+	@Test
+	public void shouldBuildProxyHttpWhenTypeProxyConfigurationIsDefault() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.getProxy().setHost("proxy.mycompany.com.pe");
+		defaults.getProxy().setPort(3128);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		Proxy proxy = ReflectionTestUtils.invokeMethod(this.locator, "buildProxy",
+				defaults);
+		assertThat(proxy).isNotNull();
+		assertThat(proxy).isNotEqualTo(Proxy.NO_PROXY);
+		assertThat(proxy.type()).isEqualTo(Proxy.Type.HTTP);
+	}
+
+	@Test
+	public void shouldBuildProxySocksWhenTypeProxyConfigurationIsSocks() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.getProxy().setHost("proxy.mycompany.com.pe");
+		defaults.getProxy().setPort(3128);
+		defaults.getProxy().setType(ConfigClientProperties.ProxyProtocol.SOCKS);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		Proxy proxy = ReflectionTestUtils.invokeMethod(this.locator, "buildProxy",
+				defaults);
+		assertThat(proxy).isNotNull();
+		assertThat(proxy).isNotEqualTo(Proxy.NO_PROXY);
+		assertThat(proxy.type()).isEqualTo(Proxy.Type.SOCKS);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -1487,6 +1487,27 @@ If you want to configure timeout thresholds:
 * Read timeouts can be configured by using the property `spring.cloud.config.request-read-timeout`.
 * Connection timeouts can be configured by using the property `spring.cloud.config.request-connect-timeout`.
 
+=== Configuring Proxy Connection for Config Client
+
+If you want to configure a `proxy only for Config Client (*not for global enviroment*)` to connect Config Server.
+
+You can specify the following properties:
+
+* "host" = Proxy server host
+* "port" = Proxy server port
+* "type" = Proxy protocol: http(default) or socks
+
+.bootstrap.yml
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+     proxy:
+      host: proxy.mycompany.com
+      port: 3128
+----
+
 === Security
 
 If you use HTTP Basic security on the server, clients need to know the password (and username if it is not the default).

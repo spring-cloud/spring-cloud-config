@@ -31,7 +31,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Dave Syer
- *
+ * @author Jean Paul Curiñaupa Taype
  */
 @ConfigurationProperties(ConfigClientProperties.PREFIX)
 public class ConfigClientProperties {
@@ -128,6 +128,11 @@ public class ConfigClientProperties {
 	 * Additional headers used to create the client request.
 	 */
 	private Map<String, String> headers = new HashMap<>();
+
+	/**
+	 * Proxy configuration to connect to the Config Server (not global).
+	 */
+	private ProxyClient proxy = new ProxyClient();
 
 	private ConfigClientProperties() {
 	}
@@ -339,6 +344,14 @@ public class ConfigClientProperties {
 		return override;
 	}
 
+	public ProxyClient getProxy() {
+		return proxy;
+	}
+
+	public void setProxy(ProxyClient proxyClient) {
+		this.proxy = proxyClient;
+	}
+
 	@Override
 	public String toString() {
 		return "ConfigClientProperties [enabled=" + this.enabled + ", profile="
@@ -411,6 +424,59 @@ public class ConfigClientProperties {
 
 		public void setServiceId(String serviceId) {
 			this.serviceId = serviceId;
+		}
+
+	}
+
+	/**
+	 * Enum of protocols allowed for proxy client.
+	 */
+	public enum ProxyProtocol {
+
+		/**
+		 * Proxy HTTP .
+		 */
+		HTTP,
+		/**
+		 * Proxy SOCKS .
+		 */
+		SOCKS
+
+	}
+
+	/**
+	 * Proxy configuration just to connect to the config server (not global).
+	 */
+	public static class ProxyClient {
+
+		private String host;
+
+		private Integer port;
+
+		private ProxyProtocol type = ProxyProtocol.HTTP;
+
+		public String getHost() {
+			return host;
+		}
+
+		public void setHost(String host) {
+			this.host = host;
+		}
+
+		public Integer getPort() {
+			return port;
+		}
+
+		public void setPort(Integer port) {
+			this.port = port;
+		}
+
+		public ProxyProtocol getType() {
+			return type;
+		}
+
+		public void setType(ProxyProtocol type) {
+			this.type = type;
 		}
 
 	}
