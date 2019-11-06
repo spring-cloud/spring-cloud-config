@@ -1,0 +1,25 @@
+---
+spring:
+  profiles: encrypt
+config:
+  foo: '{cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46'
+  null-value: null
+  array:
+  - first-password: '{cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46'
+    second-password: '{cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46'
+  pipe-block-text-password: |
+    {cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46
+  greater-than-block-text-password: >
+    {cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46
+---
+spring:
+  profiles: encryptkey
+config:
+  foo: '{cipher}{key:mytestkey}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46'
+  array:
+  - first-password: '{cipher}{key:mytestkey}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46'
+    second-password: '{cipher}{key:mytestkey}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46'
+  pipe-block-text-password: |
+    '{cipher}{key:mytestkey}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46'
+  greater-than-block-text-password: >
+    '{cipher}{key:mytestkey}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46'

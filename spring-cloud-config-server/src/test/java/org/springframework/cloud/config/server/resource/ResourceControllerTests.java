@@ -16,12 +16,16 @@
 
 package org.springframework.cloud.config.server.resource;
 
+import java.util.Map;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
@@ -31,6 +35,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Dave Syer
@@ -45,6 +53,9 @@ public class ResourceControllerTests {
 	private ConfigurableApplicationContext context;
 
 	private NativeEnvironmentRepository environmentRepository;
+
+	@SuppressWarnings("unchecked")
+	private Map<String, ResourceEncryptor> resourceEncryptorMap = Mockito.mock(Map.class);
 
 	@After
 	public void close() {
@@ -63,7 +74,7 @@ public class ResourceControllerTests {
 		this.repository = new GenericResourceRepository(this.environmentRepository);
 		this.repository.setResourceLoader(this.context);
 		this.controller = new ResourceController(this.repository,
-				this.environmentRepository);
+				this.environmentRepository, this.resourceEncryptorMap);
 		this.context.close();
 	}
 
@@ -308,6 +319,46 @@ public class ResourceControllerTests {
 		request.setRequestURI("/dev/spam/bar/" + "foo.txt");
 		byte[] resource = this.controller.binary("dev/spam", "bar", webRequest);
 		assertThat(new String(resource)).isEqualToIgnoringNewLines("foo: dev_bar/spam");
+	}
+
+	@Test
+	public void whenSupportedResourceWithDecrpyt_thenSuccess() throws Exception {
+		// given
+		String decryptedStr = "{\"foo\": \"decrypted\"}";
+		ResourceEncryptor resourceEncryptor = mock(ResourceEncryptor.class);
+		when(resourceEncryptor.decrypt(anyString(), any())).thenReturn(decryptedStr);
+		when(resourceEncryptorMap.get("json")).thenReturn(resourceEncryptor);
+
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		this.controller.setEncryptEnabled(true);
+		this.controller.setPlainTextEncryptEnabled(true);
+
+		// when
+		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json",
+				false);
+
+		// then
+		assertThat(resource).isEqualTo(decryptedStr);
+	}
+
+	@Test
+	public void whenUnkownResourceWithDecrpyt_thenNothingChanged() throws Exception {
+		// given
+		String decryptedStr = "{\"foo\": \"decrypted\"}";
+		ResourceEncryptor resourceEncryptor = mock(ResourceEncryptor.class);
+		when(resourceEncryptor.decrypt(anyString(), any())).thenReturn(decryptedStr);
+		when(resourceEncryptorMap.get("json")).thenReturn(resourceEncryptor);
+
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		this.controller.setEncryptEnabled(true);
+		this.controller.setPlainTextEncryptEnabled(true);
+
+		// when
+		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt",
+				false);
+
+		// then
+		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
 }
