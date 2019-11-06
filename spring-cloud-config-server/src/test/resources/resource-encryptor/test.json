@@ -1,0 +1,11 @@
+{
+  "spring": {
+     "profiles": "encrypt"
+  },
+  "config": {
+     "foo": "{cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46",
+     "null-value": null,
+     "array": ["{cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46","{cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46"],
+     "key-password": "{cipher}{key:mytestkey}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46"
+  }
+}
