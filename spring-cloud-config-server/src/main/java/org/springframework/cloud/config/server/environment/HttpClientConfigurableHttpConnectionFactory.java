@@ -105,6 +105,14 @@ public class HttpClientConfigurableHttpConnectionFactory
 			return HttpClients.custom();
 		}
 		if (builderMap.size() > 1) {
+			List<String> keys = builderMap.keySet().stream().filter(key -> {
+				String[] tokens = key.split(PLACEHOLDER_PATTERN);
+				return tokens.length == 1;
+			}).collect(Collectors.toList());
+
+			if (keys.size() == 1) {
+				return builderMap.get(keys.get(0));
+			}
 			this.log.error(String.format(
 					"More than one git repo URL template matched URL:"
 							+ " %s, proxy and skipSslValidation config won't be applied. Matched templates: %s",
