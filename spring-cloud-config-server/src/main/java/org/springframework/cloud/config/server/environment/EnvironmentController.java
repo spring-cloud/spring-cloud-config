@@ -275,6 +275,12 @@ public class EnvironmentController {
 		response.sendError(HttpStatus.BAD_REQUEST.value());
 	}
 
+	@ExceptionHandler(EnvironmentException.class)
+	public void environmentException(HttpServletResponse response, EnvironmentException e)
+			throws IOException {
+		response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+	}
+
 	private void validateProfiles(String profiles) {
 		if (profiles.contains("-")) {
 			throw new IllegalArgumentException(

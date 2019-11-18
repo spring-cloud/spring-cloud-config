@@ -36,6 +36,7 @@ import org.springframework.boot.context.config.ConfigFileApplicationListener;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
@@ -145,14 +146,19 @@ public class NativeEnvironmentRepository
 		// log levels in the caller)
 		builder.application()
 				.setListeners(Arrays.asList(new ConfigFileApplicationListener()));
-		ConfigurableApplicationContext context = builder.run(args);
-		environment.getPropertySources().remove("profiles");
-		try {
+
+		try (ConfigurableApplicationContext context = builder.run(args)) {
+			environment.getPropertySources().remove("profiles");
 			return clean(new PassthruEnvironmentRepository(environment).findOne(config,
 					profile, label, includeOrigin));
 		}
-		finally {
-			context.close();
+		catch (Exception e) {
+			String msg = String.format(
+					"Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
+					config, profile, label, includeOrigin);
+			String completeMessage = NestedExceptionUtils.buildMessage(msg,
+					NestedExceptionUtils.getMostSpecificCause(e));
+			throw new FailedToConstructEnvironmentException(completeMessage, e);
 		}
 	}
 
