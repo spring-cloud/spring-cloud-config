@@ -105,6 +105,11 @@ public class HttpClientConfigurableHttpConnectionFactory
 			return HttpClients.custom();
 		}
 		if (builderMap.size() > 1) {
+			/*
+			 * Try to determine if there is an exact match URL or not. So if there is a placeholder in the URL, filter
+			 * it out. We should be left with only URLs which have no placeholders.
+			 * That is the one we want to use in the case there are multiple matches.
+			 */
 			List<String> keys = builderMap.keySet().stream().filter(key -> {
 				String[] tokens = key.split(PLACEHOLDER_PATTERN);
 				return tokens.length == 1;
