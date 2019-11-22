@@ -2009,7 +2009,7 @@ If you testing with curl, then use <code>--data-urlencode</code> (instead of <co
 <p>Take the encrypted value and add the <code>{cipher}</code> prefix before you put it in the YAML or properties file and before you commit and push it to a remote (potentially insecure) store.</p>
 </div>
 <div class="paragraph">
-<p>The <code>/encrypt</code> and <code>/decrypt</code> endpoints also both accept paths in the form of <code>/*/{name}/{profiles}</code>, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.</p>
+<p>The <code>/encrypt</code> and <code>/decrypt</code> endpoints also both accept paths in the form of <code>/*/{application}/{profiles}</code>, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2251,7 +2251,7 @@ Also, the YAML representation is not necessarily a faithful representation of th
 <div class="sectionbody">
 <div class="paragraph">
 <p>Instead of using the <code>Environment</code> abstraction (or one of the alternative representations of it in YAML or properties format), your applications might need generic plain-text configuration files that are tailored to their environment.
-The Config Server provides these through an additional endpoint at <code>/{name}/{profile}/{label}/{path}</code>, where <code>name</code>, <code>profile</code>, and <code>label</code> have the same meaning as the regular environment endpoint, but <code>path</code> is a file name (such as <code>log.xml</code>).
+The Config Server provides these through an additional endpoint at <code>/{application}/{profile}/{label}/{path}</code>, where <code>application</code>, <code>profile</code>, and <code>label</code> have the same meaning as the regular environment endpoint, but <code>path</code> is a path to a file name (such as <code>log.xml</code>).
 The source files for this endpoint are located in the same way as for the environment endpoints.
 The same search path is used for properties and YAML files.
 However, instead of aggregating all matching resources, only the first one to match is returned.</p>
@@ -2436,8 +2436,8 @@ The strategy to use when you want to override the behavior is <code>PropertyPath
 </div>
 <div class="paragraph">
 <p>The default configuration works out of the box with Github, Gitlab, Gitea, Gitee, Gogs or Bitbucket.
-In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to <code>/monitor</code> with form-encoded body parameters in the pattern of <code>path={name}</code>.
-Doing so broadcasts to applications matching the <code>{name}</code> pattern (which can contain wildcards).</p>
+In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to <code>/monitor</code> with form-encoded body parameters in the pattern of <code>path={application}</code>.
+Doing so broadcasts to applications matching the <code>{application}</code> pattern (which can contain wildcards).</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2549,7 +2549,7 @@ Spring Retry has a <code>RetryInterceptorBuilder</code> that supports creating o
 <div class="sect2">
 <h3 id="_locating_remote_configuration_resources"><a class="link" href="#_locating_remote_configuration_resources">Locating Remote Configuration Resources</a></h3>
 <div class="paragraph">
-<p>The Config Service serves property sources from <code>/{name}/{profile}/{label}</code>, where the default bindings in the client app are as follows:</p>
+<p>The Config Service serves property sources from <code>/{application}/{profile}/{label}</code>, where the default bindings in the client app are as follows:</p>
 </div>
 <div class="ulist">
 <ul>
