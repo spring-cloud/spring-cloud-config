@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -324,12 +323,7 @@ public class EnvironmentController {
 	}
 
 	private void postProcessProperties(Map<String, Object> propertiesMap) {
-		for (Iterator<String> iter = propertiesMap.keySet().iterator(); iter.hasNext();) {
-			String key = iter.next();
-			if (key.equals("spring.profiles")) {
-				iter.remove();
-			}
-		}
+		propertiesMap.keySet().removeIf(key -> key.equals("spring.profiles"));
 	}
 
 	/**
@@ -352,6 +346,9 @@ public class EnvironmentController {
 
 		private final String propertyKey;
 
+		// Supports keys like org.x and org.x.y like in boot logging
+		private String prefix = "";
+
 		private int currentPos;
 
 		private NodeType valueType;
@@ -362,19 +359,27 @@ public class EnvironmentController {
 			this.valueType = NodeType.MAP;
 		}
 
+		@SuppressWarnings("unchecked")
 		private void setMapValue(Map<String, Object> map, Object value) {
 			String key = getKey();
 			if (NodeType.MAP.equals(this.valueType)) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> nestedMap = (Map<String, Object>) map.get(key);
-				if (nestedMap == null) {
+				Map<String, Object> nestedMap;
+				if (map.get(key) instanceof Map) {
+					nestedMap = (Map<String, Object>) map.get(key);
+				}
+				else if (map.get(key) != null) {
+					// not an object, set prefix for later
+					prefix = key + ".";
+					nestedMap = map;
+				}
+				else {
+					// value of key is null
 					nestedMap = new LinkedHashMap<>();
 					map.put(key, nestedMap);
 				}
 				setMapValue(nestedMap, value);
 			}
 			else if (NodeType.ARRAY.equals(this.valueType)) {
-				@SuppressWarnings("unchecked")
 				List<Object> list = (List<Object>) map.get(key);
 				if (list == null) {
 					list = new ArrayList<>();
@@ -383,7 +388,8 @@ public class EnvironmentController {
 				setListValue(list, value);
 			}
 			else {
-				map.put(key, value);
+				// use compound prefix
+				map.put(prefix + key, value);
 			}
 		}
 

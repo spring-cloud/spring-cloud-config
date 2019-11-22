@@ -299,6 +299,20 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void yamlWithProperties() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("org.springframework", "WARN");
+		map.put("org.springframework.cloud", "ERROR");
+		this.environment.add(new PropertySource("abo", map));
+		when(this.repository.findOne("ay", "äzöq", null, false))
+				.thenReturn(this.environment);
+		System.out.println("this.controller = " + this.controller);
+		String yaml = this.controller.yaml("ay", "äzöq", false).getBody();
+		assertThat(yaml).isEqualTo(
+				"org:\n  springframework: WARN\n  springframework.cloud: ERROR\n");
+	}
+
+	@Test
 	public void arrayOfObjectInYaml() throws Exception {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("a.b[0].c", "d");
@@ -341,7 +355,7 @@ public class EnvironmentControllerTests {
 				"    - d: z\n" +
 				"  - - r\n" +
 				"    - s\n";
-// @formatter:on
+		// @formatter:on
 		assertThat(yaml).as("Wrong output: " + yaml).isEqualTo(expected);
 	}
 
