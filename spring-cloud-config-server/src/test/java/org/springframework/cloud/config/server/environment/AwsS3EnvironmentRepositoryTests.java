@@ -30,10 +30,10 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -49,8 +49,6 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client,
 			"bucket1", server);
-
-	final S3Object s3Object = new S3Object();
 
 	final String propertyContent = "cloudfoundry.enabled=true\n"
 			+ "cloudfoundry.accounts[0].name=acc1\n"
@@ -97,138 +95,133 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void failToFindNonexistantObject() {
-
-		Throwable thrown = catchThrowable(() -> {
-			envRepo.findOne("foo", "bar", null);
-		});
-
-		assertThat(thrown).isInstanceOf(NoSuchRepositoryException.class);
-		assertThat(thrown).hasMessage(
-				"No such repository: (bucket: bucket1, key: foo-bar(.properties | .yml | .json), versionId: null)");
+	public void failToFindNonexistentObject() {
+		Environment env = envRepo.findOne("foo", "bar", null);
+		assertThat(env.getPropertySources().size()).isEqualTo(0);
 	}
 
 	@Test
 	public void findPropertiesObject() throws UnsupportedEncodingException {
-		final S3ObjectId S3ObjectId = new S3ObjectId("bucket1", "foo-bar.properties");
-		final GetObjectRequest request = new GetObjectRequest(S3ObjectId);
-		s3Object.setObjectContent(new StringInputStream(propertyContent));
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
-				.thenReturn(s3Object);
+		setupS3("foo-bar.properties", propertyContent);
 
 		// Pulling content from a .properties file forces a boolean into a String
 		expectedProperties.put("cloudfoundry.enabled", "true");
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertThat(env.getName()).isEqualTo("foo");
-		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
-		assertThat(env.getLabel()).isEqualTo(null);
-		assertThat(env.getVersion()).isEqualTo(null);
-		assertThat(env.getPropertySources().size()).isEqualTo(1);
-		assertThat(env.getPropertySources().get(0).getSource())
-				.isEqualTo(expectedProperties);
+		assertExpectedEnvironment(env, "foo", null, null, 1, "bar");
 	}
 
 	@Test
 	public void findJsonObject() throws UnsupportedEncodingException {
-		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", "foo-bar.json");
-		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
-		s3Object.setObjectContent(new StringInputStream(jsonContent));
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
-				.thenReturn(s3Object);
+		setupS3("foo-bar.json", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertThat(env.getName()).isEqualTo("foo");
-		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
-		assertThat(env.getLabel()).isEqualTo(null);
-		assertThat(env.getVersion()).isEqualTo(null);
-		assertThat(env.getPropertySources().size()).isEqualTo(1);
-		assertThat(env.getPropertySources().get(0).getSource())
-				.isEqualTo(expectedProperties);
+		assertExpectedEnvironment(env, "foo", null, null, 1, "bar");
 	}
 
 	@Test
 	public void findYamlObject() throws UnsupportedEncodingException {
-		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", "foo-bar.yml");
-		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
-		s3Object.setObjectContent(new StringInputStream(yamlContent));
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
-				.thenReturn(s3Object);
+		setupS3("foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertThat(env.getName()).isEqualTo("foo");
-		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
-		assertThat(env.getLabel()).isEqualTo(null);
-		assertThat(env.getVersion()).isEqualTo(null);
-		assertThat(env.getPropertySources().size()).isEqualTo(1);
-		assertThat(env.getPropertySources().get(0).getSource())
-				.isEqualTo(expectedProperties);
+		assertExpectedEnvironment(env, "foo", null, null, 1, "bar");
 	}
 
 	@Test
-	public void findDefaultProfileObject() throws UnsupportedEncodingException {
-		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", "foo-default.yml");
-		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
-		s3Object.setObjectContent(new StringInputStream(yamlContent));
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
-				.thenReturn(s3Object);
+	public void findWithDefaultProfile() throws UnsupportedEncodingException {
+		setupS3("foo.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", null, null);
 
-		assertThat(env.getName()).isEqualTo("foo");
-		assertThat(env.getProfiles()).isEqualTo(new String[] { "default" });
-		assertThat(env.getLabel()).isEqualTo(null);
-		assertThat(env.getVersion()).isEqualTo(null);
-		assertThat(env.getPropertySources().size()).isEqualTo(1);
-		assertThat(env.getPropertySources().get(0).getSource())
-				.isEqualTo(expectedProperties);
+		assertExpectedEnvironment(env, "foo", null, null, 1, "default", null);
 	}
 
 	@Test
-	public void findLabeledObject() throws UnsupportedEncodingException {
-		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", "label1/foo-bar.yml");
-		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
-		s3Object.setObjectContent(new StringInputStream(yamlContent));
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
-				.thenReturn(s3Object);
+	public void findWithDefaultProfileUsingSuffix() throws UnsupportedEncodingException {
+		setupS3("foo-default.yml", yamlContent);
+
+		final Environment env = envRepo.findOne("foo", null, null);
+
+		assertExpectedEnvironment(env, "foo", null, null, 1, "default", null);
+	}
+
+	@Test
+	public void findWithMultipleProfilesAllFound() throws UnsupportedEncodingException {
+		setupS3("foo-profile1.yml", yamlContent);
+		setupS3("foo-profile2.yml", jsonContent);
+
+		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
+
+		assertExpectedEnvironment(env, "foo", null, null, 2, "profile1", "profile2");
+	}
+
+	@Test
+	public void findWithMultipleProfilesOneFound() throws UnsupportedEncodingException {
+		setupS3("foo-profile2.yml", jsonContent);
+
+		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
+
+		assertExpectedEnvironment(env, "foo", null, null, 1, "profile1", "profile2");
+	}
+
+	@Test
+	public void findWithLabel() throws UnsupportedEncodingException {
+		setupS3("label1/foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", "label1");
 
-		assertThat(env.getName()).isEqualTo("foo");
-		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
-		assertThat(env.getLabel()).isEqualTo("label1");
-		assertThat(env.getVersion()).isEqualTo(null);
-		assertThat(env.getPropertySources().size()).isEqualTo(1);
-		assertThat(env.getPropertySources().get(0).getSource())
-				.isEqualTo(expectedProperties);
+		assertExpectedEnvironment(env, "foo", "label1", null, 1, "bar");
 	}
 
 	@Test
-	public void findVersionedObject() throws UnsupportedEncodingException {
-		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", "foo-bar.yml");
-		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
-		s3Object.setObjectContent(new StringInputStream(yamlContent));
-		final ObjectMetadata metadata = new ObjectMetadata();
-		metadata.setHeader("x-amz-version-id", "v1");
-		s3Object.setObjectMetadata(metadata);
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
-				.thenReturn(s3Object);
+	public void findWithVersion() throws UnsupportedEncodingException {
+		setupS3("foo-bar.yml", "v1", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertThat(env.getName()).isEqualTo("foo");
-		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
-		assertThat(env.getLabel()).isEqualTo(null);
-		assertThat(env.getVersion()).isEqualTo("v1");
-		assertThat(env.getPropertySources().size()).isEqualTo(1);
-		assertThat(env.getPropertySources().get(0).getSource())
-				.isEqualTo(expectedProperties);
+		assertExpectedEnvironment(env, "foo", null, "v1", 1, "bar");
 	}
 
-	private class GetObjectRequestMatcher implements ArgumentMatcher<GetObjectRequest> {
+	private void setupS3(String fileName, String propertyContent)
+			throws UnsupportedEncodingException {
+		setupS3(fileName, null, propertyContent);
+	}
+
+	private void setupS3(String fileName, String version, String propertyContent)
+			throws UnsupportedEncodingException {
+		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", fileName);
+		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
+
+		final S3Object s3Object = new S3Object();
+		s3Object.setObjectContent(new StringInputStream(propertyContent));
+
+		if (version != null) {
+			final ObjectMetadata metadata = new ObjectMetadata();
+			metadata.setHeader("x-amz-version-id", version);
+			s3Object.setObjectMetadata(metadata);
+		}
+
+		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
+				.thenReturn(s3Object);
+	}
+
+	private void assertExpectedEnvironment(Environment env, String applicationName,
+			String label, String version, int propertySourceCount, String... profiles) {
+		assertThat(env.getName()).isEqualTo(applicationName);
+		assertThat(env.getProfiles()).isEqualTo(profiles);
+		assertThat(env.getLabel()).isEqualTo(label);
+		assertThat(env.getVersion()).isEqualTo(version);
+		assertThat(env.getPropertySources().size()).isEqualTo(propertySourceCount);
+		for (PropertySource ps : env.getPropertySources()) {
+			assertThat(ps.getSource()).isEqualTo(expectedProperties);
+		}
+	}
+
+	private static class GetObjectRequestMatcher
+			implements ArgumentMatcher<GetObjectRequest> {
 
 		private final GetObjectRequest expected;
 
@@ -238,7 +231,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		@Override
 		public boolean matches(GetObjectRequest actual) {
-			if (!(actual instanceof GetObjectRequest)) {
+			if (actual == null) {
 				return false;
 			}
 			return Objects.equals(actual.getBucketName(), expected.getBucketName())
