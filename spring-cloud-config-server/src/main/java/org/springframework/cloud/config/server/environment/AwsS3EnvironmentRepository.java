@@ -35,8 +35,13 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Clay McCoy
+ * @author Scott Frederick
  */
-public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordered {
+public class AwsS3EnvironmentRepository
+		implements EnvironmentRepository, Ordered, SearchPathLocator {
+
+	private static final String AWS_S3_RESOURCE_SCHEME = "s3://";
+	private static final String PATH_SEPARATOR = "/";
 
 	private final AmazonS3 s3Client;
 
@@ -84,11 +89,13 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 				final Properties config = s3ConfigFile.read();
 				config.putAll(serverProperties.getOverrides());
-				StringBuilder propertySourceName = new StringBuilder().append("s3:").append(application);
+				StringBuilder propertySourceName = new StringBuilder().append("s3:")
+						.append(application);
 				if (profile != null) {
 					propertySourceName.append("-").append(profile);
 				}
-				environment.add(new PropertySource(propertySourceName.toString(), config));
+				environment
+						.add(new PropertySource(propertySourceName.toString(), config));
 			}
 		}
 
@@ -97,12 +104,13 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private String[] parseProfiles(String profiles) {
 		if (profiles.equals(serverProperties.getDefaultProfile())) {
-			return new String[]{ profiles, null };
+			return new String[] { profiles, null };
 		}
 		return StringUtils.commaDelimitedListToStringArray(profiles);
 	}
 
-	private S3ConfigFile getS3ConfigFile(String application, String profile, String label) {
+	private S3ConfigFile getS3ConfigFile(String application, String profile,
+			String label) {
 		String objectKeyPrefix = buildObjectKeyPrefix(application, profile, label);
 
 		final S3ObjectIdBuilder s3ObjectIdBuilder = new S3ObjectIdBuilder()
@@ -111,10 +119,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		return getS3ConfigFile(s3ObjectIdBuilder, objectKeyPrefix);
 	}
 
-	private String buildObjectKeyPrefix(String application, String profile, String label) {
+	private String buildObjectKeyPrefix(String application, String profile,
+			String label) {
 		StringBuilder objectKeyPrefix = new StringBuilder();
 		if (!StringUtils.isEmpty(label)) {
-			objectKeyPrefix.append(label).append("/");
+			objectKeyPrefix.append(label).append(PATH_SEPARATOR);
 		}
 		objectKeyPrefix.append(application);
 		if (!StringUtils.isEmpty(profile)) {
@@ -151,6 +160,16 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			}
 		}
 	}
+
+	@Override
+	public Locations getLocations(String application, String profiles, String label) {
+		String baseLocation = AWS_S3_RESOURCE_SCHEME + bucketName + PATH_SEPARATOR
+				+ application;
+
+		return new Locations(application, profiles, label, null,
+				new String[] { baseLocation });
+	}
+
 }
 
 abstract class S3ConfigFile {
