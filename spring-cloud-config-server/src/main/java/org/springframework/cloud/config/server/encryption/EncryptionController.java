@@ -32,6 +32,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
+import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -143,7 +144,7 @@ public class EncryptionController {
 	@RequestMapping(value = "/decrypt/{name}/{profiles}", method = RequestMethod.POST)
 	public String decrypt(@PathVariable String name, @PathVariable String profiles,
 			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
-		checkEncryptorInstalled(name, profiles);
+		checkDecryptionPossible(name, profiles);
 		try {
 			String input = stripFormData(this.helper.stripPrefix(data), type, true);
 			Map<String, String> encryptorKeys = this.helper.getEncryptorKeys(name,
@@ -162,6 +163,22 @@ public class EncryptionController {
 	private void checkEncryptorInstalled(String name, String profiles) {
 		if (this.encryptor == null) {
 			throw new KeyNotInstalledException();
+		}
+		if (this.encryptor.locate(this.helper.getEncryptorKeys(name, profiles, ""))
+				.encrypt("FOO").equals("FOO")) {
+			throw new EncryptionTooWeakException();
+		}
+	}
+
+	private void checkDecryptionPossible(String name, String profiles) {
+		if (this.encryptor == null) {
+			throw new KeyNotInstalledException();
+		}
+		TextEncryptor textEncryptor = this.encryptor
+				.locate(this.helper.getEncryptorKeys(name, profiles, ""));
+		if (textEncryptor instanceof RsaSecretEncryptor
+				&& !((RsaSecretEncryptor) textEncryptor).canDecrypt()) {
+			throw new DecryptionNotSupportedException();
 		}
 		if (this.encryptor.locate(this.helper.getEncryptorKeys(name, profiles, ""))
 				.encrypt("FOO").equals("FOO")) {
@@ -209,6 +226,14 @@ public class EncryptionController {
 
 	}
 
+	@ExceptionHandler(DecryptionNotSupportedException.class)
+	public ResponseEntity<Map<String, Object>> decryptionDisabled() {
+		Map<String, Object> body = new HashMap<>();
+		body.put("status", "BAD_REQUEST");
+		body.put("description", "Server-side decryption is not supported");
+		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+	}
+
 	@ExceptionHandler(KeyNotInstalledException.class)
 	public ResponseEntity<Map<String, Object>> notInstalled() {
 		Map<String, Object> body = new HashMap<>();
@@ -252,5 +277,10 @@ class EncryptionTooWeakException extends RuntimeException {
 
 @SuppressWarnings("serial")
 class InvalidCipherException extends RuntimeException {
+
+}
+
+@SuppressWarnings("serial")
+class DecryptionNotSupportedException extends RuntimeException {
 
 }
