@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author Dave Syer
+ * @author Tim Ysewyn
  *
  */
 @RestController
@@ -52,7 +53,7 @@ public class EncryptionController {
 
 	private static Log logger = LogFactory.getLog(EncryptionController.class);
 
-	volatile private TextEncryptorLocator encryptor;
+	volatile private TextEncryptorLocator encryptorLocator;
 
 	private EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
 
@@ -60,8 +61,8 @@ public class EncryptionController {
 
 	private String defaultProfile = "default";
 
-	public EncryptionController(TextEncryptorLocator encryptor) {
-		this.encryptor = encryptor;
+	public EncryptionController(TextEncryptorLocator encryptorLocator) {
+		this.encryptorLocator = encryptorLocator;
 	}
 
 	public void setDefaultApplicationName(String defaultApplicationName) {
@@ -74,62 +75,42 @@ public class EncryptionController {
 
 	@RequestMapping(value = "/key", method = RequestMethod.GET)
 	public String getPublicKey() {
-		TextEncryptor encryptor = this.encryptor
-				.locate(this.helper.getEncryptorKeys("application", "default", ""));
-		if (!(encryptor instanceof RsaKeyHolder)) {
-			throw new KeyNotAvailableException();
-		}
-		return ((RsaKeyHolder) encryptor).getPublicKey();
+		return getPublicKey(defaultApplicationName, defaultProfile);
 	}
 
 	@RequestMapping(value = "/key/{name}/{profiles}", method = RequestMethod.GET)
 	public String getPublicKey(@PathVariable String name, @PathVariable String profiles) {
-		TextEncryptor encryptor = this.encryptor
-				.locate(this.helper.getEncryptorKeys(name, profiles, ""));
+		TextEncryptor encryptor = getEncryptor(name, profiles, "");
 		if (!(encryptor instanceof RsaKeyHolder)) {
 			throw new KeyNotAvailableException();
 		}
 		return ((RsaKeyHolder) encryptor).getPublicKey();
 	}
 
-	@ExceptionHandler(KeyFormatException.class)
-	public ResponseEntity<Map<String, Object>> keyFormat() {
-		Map<String, Object> body = new HashMap<>();
-		body.put("status", "BAD_REQUEST");
-		body.put("description", "Key data not in correct format (PEM or jks keystore)");
-		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-	}
-
-	@ExceptionHandler(KeyNotAvailableException.class)
-	public ResponseEntity<Map<String, Object>> keyUnavailable() {
-		Map<String, Object> body = new HashMap<>();
-		body.put("status", "NOT_FOUND");
-		body.put("description", "No public key available");
-		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
-	}
-
 	@RequestMapping(value = "encrypt/status", method = RequestMethod.GET)
 	public Map<String, Object> status() {
-		checkEncryptorInstalled("application", "default");
+		TextEncryptor encryptor = getEncryptor(defaultApplicationName, defaultProfile,
+				"");
+		validateEncryptionWeakness(encryptor);
 		return Collections.singletonMap("status", "OK");
 	}
 
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
 	public String encrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
-
-		return encrypt(this.defaultApplicationName, this.defaultProfile, data, type);
+		return encrypt(defaultApplicationName, defaultProfile, data, type);
 	}
 
 	@RequestMapping(value = "/encrypt/{name}/{profiles}", method = RequestMethod.POST)
 	public String encrypt(@PathVariable String name, @PathVariable String profiles,
 			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
-		checkEncryptorInstalled(name, profiles);
+		TextEncryptor encryptor = getEncryptor(name, profiles, "");
+		validateEncryptionWeakness(encryptor);
 		String input = stripFormData(data, type, false);
-		Map<String, String> keys = this.helper.getEncryptorKeys(name, profiles, input);
-		String textToEncrypt = this.helper.stripPrefix(input);
-		String encrypted = this.helper.addPrefix(keys,
-				this.encryptor.locate(keys).encrypt(textToEncrypt));
+		Map<String, String> keys = helper.getEncryptorKeys(name, profiles, input);
+		String textToEncrypt = helper.stripPrefix(input);
+		String encrypted = helper.addPrefix(keys,
+				encryptorLocator.locate(keys).encrypt(textToEncrypt));
 		logger.info("Encrypted data");
 		return encrypted;
 	}
@@ -137,19 +118,18 @@ public class EncryptionController {
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
 	public String decrypt(@RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
-
-		return decrypt(this.defaultApplicationName, this.defaultProfile, data, type);
+		return decrypt(defaultApplicationName, defaultProfile, data, type);
 	}
 
 	@RequestMapping(value = "/decrypt/{name}/{profiles}", method = RequestMethod.POST)
 	public String decrypt(@PathVariable String name, @PathVariable String profiles,
 			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
-		checkDecryptionPossible(name, profiles);
+		TextEncryptor encryptor = getEncryptor(name, profiles, "");
+		checkDecryptionPossible(encryptor);
+		validateEncryptionWeakness(encryptor);
 		try {
-			String input = stripFormData(this.helper.stripPrefix(data), type, true);
-			Map<String, String> encryptorKeys = this.helper.getEncryptorKeys(name,
-					profiles, data);
-			TextEncryptor encryptor = this.encryptor.locate(encryptorKeys);
+			encryptor = getEncryptor(name, profiles, data);
+			String input = stripFormData(helper.stripPrefix(data), type, true);
 			String decrypted = encryptor.decrypt(input);
 			logger.info("Decrypted cipher data");
 			return decrypted;
@@ -160,29 +140,28 @@ public class EncryptionController {
 		}
 	}
 
-	private void checkEncryptorInstalled(String name, String profiles) {
-		if (this.encryptor == null) {
+	private TextEncryptor getEncryptor(String name, String profiles, String data) {
+		if (encryptorLocator == null) {
 			throw new KeyNotInstalledException();
 		}
-		if (this.encryptor.locate(this.helper.getEncryptorKeys(name, profiles, ""))
-				.encrypt("FOO").equals("FOO")) {
+		TextEncryptor encryptor = encryptorLocator
+				.locate(helper.getEncryptorKeys(name, profiles, data));
+		if (encryptor == null) {
+			throw new KeyNotInstalledException();
+		}
+		return encryptor;
+	}
+
+	private void validateEncryptionWeakness(TextEncryptor textEncryptor) {
+		if (textEncryptor.encrypt("FOO").equals("FOO")) {
 			throw new EncryptionTooWeakException();
 		}
 	}
 
-	private void checkDecryptionPossible(String name, String profiles) {
-		if (this.encryptor == null) {
-			throw new KeyNotInstalledException();
-		}
-		TextEncryptor textEncryptor = this.encryptor
-				.locate(this.helper.getEncryptorKeys(name, profiles, ""));
+	private void checkDecryptionPossible(TextEncryptor textEncryptor) {
 		if (textEncryptor instanceof RsaSecretEncryptor
 				&& !((RsaSecretEncryptor) textEncryptor).canDecrypt()) {
 			throw new DecryptionNotSupportedException();
-		}
-		if (this.encryptor.locate(this.helper.getEncryptorKeys(name, profiles, ""))
-				.encrypt("FOO").equals("FOO")) {
-			throw new EncryptionTooWeakException();
 		}
 	}
 
@@ -224,6 +203,22 @@ public class EncryptionController {
 
 		return data;
 
+	}
+
+	@ExceptionHandler(KeyFormatException.class)
+	public ResponseEntity<Map<String, Object>> keyFormat() {
+		Map<String, Object> body = new HashMap<>();
+		body.put("status", "BAD_REQUEST");
+		body.put("description", "Key data not in correct format (PEM or jks keystore)");
+		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(KeyNotAvailableException.class)
+	public ResponseEntity<Map<String, Object>> keyUnavailable() {
+		Map<String, Object> body = new HashMap<>();
+		body.put("status", "NOT_FOUND");
+		body.put("description", "No public key available");
+		return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(DecryptionNotSupportedException.class)
