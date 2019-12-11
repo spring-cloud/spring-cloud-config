@@ -99,10 +99,11 @@ public class EncryptionIntegrationTests {
 	}
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = { ConfigServerApplication.class }, properties = {
-			"spring.cloud.bootstrap.name:keystore-bootstrap",
-			"spring.cloud.config.server.encrypt.enabled=false",
-			"encrypt.keyStore.alias=myencryptionkey" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+	@SpringBootTest(classes = { ConfigServerApplication.class },
+			properties = { "spring.cloud.bootstrap.name:keystore-bootstrap",
+					"spring.cloud.config.server.encrypt.enabled=false",
+					"encrypt.keyStore.alias=myencryptionkey" },
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "git" })
 	@DirtiesContext
 	public static class KeystoreConfigurationEncryptionOnlyIntegrationTests {

@@ -26,7 +26,10 @@ import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.FileUtils;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
 
@@ -161,6 +164,12 @@ public final class ConfigServerTestUtils {
 		assertThat(value).isNotNull().isInstanceOf(Map.class);
 		Map map = (Map) value;
 		assertThat(map).containsEntry("value", expectedValue);
+	}
+
+	public static HttpEntity getV2AcceptEntity() {
+		HttpHeaders headers = new HttpHeaders();
+		headers.set(HttpHeaders.ACCEPT, EnvironmentMediaType.V2_JSON);
+		return new HttpEntity(headers);
 	}
 
 }

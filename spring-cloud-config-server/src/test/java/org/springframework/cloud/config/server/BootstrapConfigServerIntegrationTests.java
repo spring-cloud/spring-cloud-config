@@ -30,11 +30,14 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.assertOriginTrackedValue;
+import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ConfigServerApplication.class,
@@ -63,8 +66,10 @@ public class BootstrapConfigServerIntegrationTests {
 
 	@Test
 	public void contextLoads() {
-		Environment environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
+				getV2AcceptEntity(), Environment.class);
+		Environment environment = response.getBody();
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertOriginTrackedValue(environment, 0, "bar", "foo");
 		assertOriginTrackedValue(environment, 1, "info.foo", "bar");

@@ -41,6 +41,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
@@ -52,6 +53,7 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.assertOriginTrackedValue;
+import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class,
@@ -91,8 +93,10 @@ public class RefreshableConfigServerIntegrationTests {
 	 */
 	@Test
 	public void refreshOverrides() {
-		Environment environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		ResponseEntity<Environment> entity = new TestRestTemplate().exchange(
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
+				getV2AcceptEntity(), Environment.class);
+		Environment environment = entity.getBody();
 		assertThat(environment.getPropertySources()).isEmpty();
 
 		String actuatorEndpoint = "http://localhost:" + this.port + "/actuator";
@@ -109,8 +113,10 @@ public class RefreshableConfigServerIntegrationTests {
 				null, Void.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-		environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		entity = new TestRestTemplate().exchange(
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
+				getV2AcceptEntity(), Environment.class);
+		environment = entity.getBody();
 		assertThat(environment.getPropertySources()).isNotEmpty();
 		assertOriginTrackedValue(environment, 0, "foo", "bar");
 	}

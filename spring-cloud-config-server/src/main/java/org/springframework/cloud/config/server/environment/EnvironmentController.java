@@ -102,7 +102,8 @@ public class EnvironmentController {
 		this.acceptEmpty = acceptEmpty;
 	}
 
-	@RequestMapping("/{name}/{profiles:.*[^-].*}")
+	@RequestMapping(path = "/{name}/{profiles:.*[^-].*}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	public Environment defaultLabel(@PathVariable String name,
 			@PathVariable String profiles) {
 		return getEnvironment(name, profiles, null, false);
@@ -115,7 +116,8 @@ public class EnvironmentController {
 		return getEnvironment(name, profiles, null, true);
 	}
 
-	@RequestMapping("/{name}/{profiles}/{label:.*}")
+	@RequestMapping(path = "/{name}/{profiles}/{label:.*}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
 		return getEnvironment(name, profiles, label, false);
