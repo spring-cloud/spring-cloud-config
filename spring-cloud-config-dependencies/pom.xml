@@ -16,6 +16,7 @@
 	<description>Spring Cloud Config Dependencies</description>
 	<properties>
 		<jgit.version>5.1.3.201810200350-r</jgit.version>
+		<spring-vault.version>2.2.0.RELEASE</spring-vault.version>
 		<spring-credhub.version>2.0.0.RELEASE</spring-credhub.version>
 	</properties>
 	<dependencyManagement>
@@ -39,6 +40,11 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-config-monitor</artifactId>
 				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.vault</groupId>
+				<artifactId>spring-vault-core</artifactId>
+				<version>${spring-vault.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.credhub</groupId>

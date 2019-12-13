@@ -26,6 +26,11 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author Dylan Roberts
  * @author Scott Frederick
+ * @deprecated Prefer
+ * {@link org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository}
+ * instead of this environment repository implementation. The alternative implementation
+ * supports additional features including more authentication options, support for several
+ * underlying HTTP client libraries, and better SSL configuration.
  */
 public class VaultEnvironmentRepositoryFactory implements
 		EnvironmentRepositoryFactory<VaultEnvironmentRepository, VaultEnvironmentProperties> {

@@ -30,6 +30,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -70,6 +71,8 @@ import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepo
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport;
 import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
 import org.springframework.context.annotation.Bean;
@@ -82,6 +85,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.vault.core.VaultTemplate;
 
 /**
  * @author Dave Syer
@@ -98,11 +102,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
 		VaultConfiguration.class, VaultRepositoryConfiguration.class,
-		CredhubConfiguration.class, CredhubRepositoryConfiguration.class,
-		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
-		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class,
-		GoogleCloudSourceConfiguration.class, AwsS3RepositoryConfiguration.class,
-		DefaultRepositoryConfiguration.class })
+		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
+		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
+		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
+		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
+		AwsS3RepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
@@ -208,6 +212,8 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnMissingClass("org.springframework.vault.core.VaultTemplate")
+	@SuppressWarnings("deprecation")
 	static class VaultFactoryConfig {
 
 		@Bean
@@ -223,11 +229,27 @@ public class EnvironmentRepositoryConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(HttpClient.class)
+	@ConditionalOnMissingClass("org.springframework.vault.core.VaultTemplate")
+	@SuppressWarnings("deprecation")
 	static class VaultHttpClientConfig {
 
 		@Bean
 		public VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory vaultRestTemplateFactory() {
 			return new HttpClientVaultRestTemplateFactory();
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(VaultTemplate.class)
+	static class SpringVaultFactoryConfig {
+
+		@Bean
+		public SpringVaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
+				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+				ConfigTokenProvider tokenProvider) {
+			return new SpringVaultEnvironmentRepositoryFactory(request, watch,
+					tokenProvider);
 		}
 
 	}
@@ -345,13 +367,29 @@ class SvnRepositoryConfiguration {
 }
 
 @Configuration(proxyBeanMethods = false)
+@ConditionalOnMissingClass("org.springframework.vault.core.VaultTemplate")
 @Profile("vault")
+@SuppressWarnings("deprecation")
 class VaultRepositoryConfiguration {
 
 	@Bean
 	public VaultEnvironmentRepository vaultEnvironmentRepository(
 			VaultEnvironmentRepositoryFactory factory,
 			VaultEnvironmentProperties environmentProperties) throws Exception {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration(proxyBeanMethods = false)
+@ConditionalOnClass(VaultTemplate.class)
+@Profile("vault")
+class SpringVaultRepositoryConfiguration {
+
+	@Bean
+	public SpringVaultEnvironmentRepository vaultEnvironmentRepository(
+			SpringVaultEnvironmentRepositoryFactory factory,
+			VaultEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 
