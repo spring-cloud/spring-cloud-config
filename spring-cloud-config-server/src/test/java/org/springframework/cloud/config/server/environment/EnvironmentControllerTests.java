@@ -308,7 +308,7 @@ public class EnvironmentControllerTests {
 		map.put("org.springframework", "WARN");
 		map.put("org.springframework.cloud", "ERROR");
 		this.environment.add(new PropertySource("abo", map));
-		Mockito.when(this.repository.findOne("ay", "äzöq", null))
+		when(this.repository.findOne("ay", "äzöq", null, false))
 				.thenReturn(this.environment);
 		System.out.println("this.controller = " + this.controller);
 		String yaml = this.controller.yaml("ay", "äzöq", false).getBody();
