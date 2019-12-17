@@ -18,6 +18,7 @@ package org.springframework.cloud.config.client;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -144,6 +145,13 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				? error == null ? "label not found" : error.getMessage() : errorBody));
 		return null;
 
+	}
+
+	@Override
+	@Retryable(interceptor = "configServerRetryInterceptor")
+	public Collection<org.springframework.core.env.PropertySource<?>> locateCollection(
+			org.springframework.core.env.Environment environment) {
+		return PropertySourceLocator.locateCollection(this, environment);
 	}
 
 	private void log(Environment result) {
