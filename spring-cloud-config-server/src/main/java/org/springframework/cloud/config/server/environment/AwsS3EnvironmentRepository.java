@@ -41,6 +41,7 @@ public class AwsS3EnvironmentRepository
 		implements EnvironmentRepository, Ordered, SearchPathLocator {
 
 	private static final String AWS_S3_RESOURCE_SCHEME = "s3://";
+
 	private static final String PATH_SEPARATOR = "/";
 
 	private final AmazonS3 s3Client;
