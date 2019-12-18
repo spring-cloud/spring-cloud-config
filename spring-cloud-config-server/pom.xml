@@ -100,6 +100,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-iam</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>com.google.auth</groupId>
 			<artifactId>google-auth-library-oauth2-http</artifactId>
 			<optional>true</optional>

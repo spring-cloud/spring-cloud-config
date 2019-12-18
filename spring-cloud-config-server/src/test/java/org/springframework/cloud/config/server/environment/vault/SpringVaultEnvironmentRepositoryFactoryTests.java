@@ -21,11 +21,13 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
+import org.springframework.vault.authentication.TokenAuthentication;
+import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.core.VaultKeyValueOperations;
 import org.springframework.vault.core.VaultKeyValueOperationsSupport;
+import org.springframework.vault.core.VaultTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -41,8 +43,8 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
 
 		SpringVaultEnvironmentRepository environmentRepository = new SpringVaultEnvironmentRepositoryFactory(
-				mockHttpRequest(), new EnvironmentWatch.Default(), mockTokenProvider())
-						.build(properties);
+				mockHttpRequest(), new EnvironmentWatch.Default(),
+				mockClientConfiguration()).build(properties);
 
 		VaultKeyValueOperations keyValueTemplate = environmentRepository
 				.getKeyValueTemplate();
@@ -56,8 +58,8 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 		properties.setKvVersion(2);
 
 		SpringVaultEnvironmentRepository environmentRepository = new SpringVaultEnvironmentRepositoryFactory(
-				mockHttpRequest(), new EnvironmentWatch.Default(), mockTokenProvider())
-						.build(properties);
+				mockHttpRequest(), new EnvironmentWatch.Default(),
+				mockClientConfiguration()).build(properties);
 
 		VaultKeyValueOperations keyValueTemplate = environmentRepository
 				.getKeyValueTemplate();
@@ -65,10 +67,16 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 				.isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
 	}
 
-	private ConfigTokenProvider mockTokenProvider() {
-		ConfigTokenProvider tokenProvider = mock(ConfigTokenProvider.class);
-		when(tokenProvider.getToken()).thenReturn("token");
-		return tokenProvider;
+	private SpringVaultClientConfiguration mockClientConfiguration() {
+		VaultTemplate vaultTemplate = new VaultTemplate(
+				VaultEndpoint.create("localhost", 8200),
+				new TokenAuthentication("token"));
+
+		SpringVaultClientConfiguration clientConfiguration = mock(
+				SpringVaultClientConfiguration.class);
+		when(clientConfiguration.vaultTemplate()).thenReturn(vaultTemplate);
+
+		return clientConfiguration;
 	}
 
 	@SuppressWarnings("unchecked")
