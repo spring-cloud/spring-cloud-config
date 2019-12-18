@@ -1290,24 +1290,48 @@ However, instead of aggregating all matching resources, only the first one to ma
 
 After a resource is located, placeholders in the normal format (`${...}`) are resolved by using the effective `Environment` for the supplied application name, profile, and label.
 In this way, the resource endpoint is tightly integrated with the environment endpoints.
-Consider the following example for a GIT or SVN repository:
 
+NOTE: As with the source files for environment configuration, the `profile` is used to resolve the file name.
+So, if you want a profile-specific file, `/\*/development/*/logback.xml` can be resolved by a file called `logback-development.xml` (in preference to `logback.xml`).
+
+NOTE: If you do not want to supply the `label` and let the server use the default label, you can supply a `useDefaultLabel` request parameter.
+Consequently, the preceding example for the `default` profile could be `/sample/default/nginx.conf?useDefaultLabel`.
+
+At present, Spring Cloud Config can serve plaintext for git, SVN, native backends, and AWS S3.
+The support for git, SVN, and native backends is identical. AWS S3 works a bit differently.
+The following sections show how each one works:
+
+* <<spring-cloud-config-serving-plain-text-git-svn-native-backends>>
+* <<spring-cloud-config-serving-plain-text-aws-s3>>
+
+[[spring-cloud-config-serving-plain-text-git-svn-native-backends]]
+=== Git, SVN, and Native Backends
+
+Consider the following example for a GIT or SVN repository or a native backend:
+
+====
+[source]
 ----
 application.yml
 nginx.conf
 ----
+====
 
-where `nginx.conf` looks like this:
+The `nginx.conf` might resemble the following listing:
 
+====
+[source]
 ----
 server {
     listen              80;
     server_name         ${nginx.server.name};
 }
 ----
+====
 
-and `application.yml` like this:
+`application.yml` might resemble the following listing:
 
+====
 [source,yaml]
 ----
 nginx:
@@ -1320,30 +1344,40 @@ nginx:
   server:
     name: develop.com
 ----
+====
 
-The `/foo/default/master/nginx.conf` resource might be as follows:
+The `/sample/default/master/nginx.conf` resource might be as follows:
 
+====
+[source]
 ----
 server {
     listen              80;
     server_name         example.com;
 }
 ----
+====
 
-and `/foo/development/master/nginx.conf` like this:
+`/sample/development/master/nginx.conf` might be as follows:
 
+====
+[source]
 ----
 server {
     listen              80;
     server_name         develop.com;
 }
 ----
+====
 
-NOTE: As with the source files for environment configuration, the `profile` is used to resolve the file name.
-So, if you want a profile-specific file, `/\*/development/*/logback.xml` can be resolved by a file called `logback-development.xml` (in preference to `logback.xml`).
+[[spring-cloud-config-serving-plain-text-aws-s3]]
+=== AWS S3
 
-NOTE: If you do not want to supply the `label` and let the server use the default label, you can supply a `useDefaultLabel` request parameter.
-So, the preceding example for the `default` profile could be `/foo/default/nginx.conf?useDefaultLabel`.
+To enable serving plain text for AWS s3, the Config Server application needs to include a dependency on Spring Cloud AWS.
+For details on how to set up that dependency, see the
+https://cloud.spring.io/spring-cloud-static/spring-cloud-aws/2.1.3.RELEASE/single/spring-cloud-aws.html#_spring_cloud_aws_maven_dependency_management[Spring Cloud AWS Reference Guide].
+Then you need to configure Spring Cloud AWS, as described in the
+https://cloud.spring.io/spring-cloud-static/spring-cloud-aws/2.1.3.RELEASE/single/spring-cloud-aws.html#_configuring_credentials[Spring Cloud AWS Reference Guide].
 
 === Decrypting Plain Text
 
