@@ -666,9 +666,11 @@ You should see a response similar to the following:
 The default way for a client to provide the necessary authentication to let Config Server talk to Vault is to set the X-Config-Token header.
 However, you can instead omit the header and configure the authentication in the server, by setting the same configuration properties as Spring Cloud Vault.
 The property to set is `spring.cloud.config.server.vault.authentication`.
+It should be set to one of the supported authentication methods.
+You may also need to set other properties specific to the authentication method you use, by using the same property names as documented for `spring.cloud.vault` but instead using the `spring.cloud.config.server.vault` prefix.
 See the https://cloud.spring.io/spring-cloud-vault/reference/html/#vault.config.authentication[Spring Cloud Vault Reference Guide] for more detail.
 
-IMPORTANT: If you omit the X-Config-Token header and use a server property to set the authentication, the Config Server application needs an additional dependency on Spring Vault (not Spring Cloud Vault) to enable the additional authentication options.
+IMPORTANT: If you omit the X-Config-Token header and use a server property to set the authentication, the Config Server application needs an additional dependency on Spring Vault to enable the additional authentication options.
 See the https://docs.spring.io/spring-vault/docs/current/reference/html/#dependencies[Spring Vault Reference Guide] for how to add that dependency.
 
 ===== Multiple Properties Sources
