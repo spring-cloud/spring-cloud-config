@@ -71,6 +71,7 @@ import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepo
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.vault.SpringVaultClientConfiguration;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport;
@@ -245,11 +246,18 @@ public class EnvironmentRepositoryConfiguration {
 	static class SpringVaultFactoryConfig {
 
 		@Bean
+		public SpringVaultClientConfiguration vaultClientConfiguration(
+				VaultEnvironmentProperties vaultProperties,
+				ConfigTokenProvider tokenProvider) {
+			return new SpringVaultClientConfiguration(vaultProperties, tokenProvider);
+		}
+
+		@Bean
 		public SpringVaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
 				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-				ConfigTokenProvider tokenProvider) {
+				SpringVaultClientConfiguration vaultClientConfiguration) {
 			return new SpringVaultEnvironmentRepositoryFactory(request, watch,
-					tokenProvider);
+					vaultClientConfiguration);
 		}
 
 	}
