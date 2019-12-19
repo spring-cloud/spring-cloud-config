@@ -16,12 +16,25 @@
 
 package org.springframework.cloud.config.server.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentConfigTokenProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.AppRoleClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.AwsEc2ClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.AwsIamClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.AzureMsiClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.CertificateClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.CubbyholeClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.GcpGceClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.GcpIamClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.KubernetesClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.PcfClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.TokenClientAuthenticationProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.vault.core.VaultTemplate;
 
 /**
  * @author Scott Frederick
@@ -35,6 +48,67 @@ public class VaultConfiguration {
 	@ConditionalOnProperty(VAULT_TOKEN_PROPERTY_NAME)
 	public ConfigTokenProvider configTokenProvider(Environment environment) {
 		return new EnvironmentConfigTokenProvider(environment, VAULT_TOKEN_PROPERTY_NAME);
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(VaultTemplate.class)
+	public static class VaultClientAuthenticationProviderConfiguration {
+
+		@Bean
+		public AppRoleClientAuthenticationProvider appRoleClientAuthenticationProvider() {
+			return new AppRoleClientAuthenticationProvider();
+		}
+
+		@Bean
+		public AwsEc2ClientAuthenticationProvider awsEc2ClientAuthenticationProvider() {
+			return new AwsEc2ClientAuthenticationProvider();
+		}
+
+		@Bean
+		public AwsIamClientAuthenticationProvider awsIamClientAuthenticationProvider() {
+			return new AwsIamClientAuthenticationProvider();
+		}
+
+		@Bean
+		public AzureMsiClientAuthenticationProvider azureMsiClientAuthenticationProvider() {
+			return new AzureMsiClientAuthenticationProvider();
+		}
+
+		@Bean
+		public CertificateClientAuthenticationProvider certificateClientAuthenticationProvider() {
+			return new CertificateClientAuthenticationProvider();
+		}
+
+		@Bean
+		public CubbyholeClientAuthenticationProvider cubbyholeClientAuthenticationProvider() {
+			return new CubbyholeClientAuthenticationProvider();
+		}
+
+		@Bean
+		public GcpGceClientAuthenticationProvider gcpGceClientAuthenticationProvider() {
+			return new GcpGceClientAuthenticationProvider();
+		}
+
+		@Bean
+		public GcpIamClientAuthenticationProvider gcpIamClientAuthenticationProvider() {
+			return new GcpIamClientAuthenticationProvider();
+		}
+
+		@Bean
+		public KubernetesClientAuthenticationProvider kubernetesClientAuthenticationProvider() {
+			return new KubernetesClientAuthenticationProvider();
+		}
+
+		@Bean
+		public PcfClientAuthenticationProvider pcfClientAuthenticationProvider() {
+			return new PcfClientAuthenticationProvider();
+		}
+
+		@Bean
+		public TokenClientAuthenticationProvider tokenClientAuthenticationProvider() {
+			return new TokenClientAuthenticationProvider();
+		}
+
 	}
 
 }
