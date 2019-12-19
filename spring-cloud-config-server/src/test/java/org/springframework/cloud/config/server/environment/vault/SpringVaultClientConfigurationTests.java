@@ -19,17 +19,28 @@ package org.springframework.cloud.config.server.environment.vault;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
-import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientConfiguration.ConfigTokenProviderAuthentication;
+import org.springframework.cloud.config.server.environment.vault.authentication.AppRoleClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.AwsEc2ClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.AwsIamClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.AzureMsiClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.CertificateClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.CubbyholeClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.GcpGceClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.GcpIamClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.KubernetesClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.PcfClientAuthenticationProvider;
+import org.springframework.cloud.config.server.environment.vault.authentication.TokenClientAuthenticationProvider;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.vault.authentication.AppRoleAuthenticationOptions;
-import org.springframework.vault.authentication.AppRoleAuthenticationOptions.RoleId;
-import org.springframework.vault.authentication.AppRoleAuthenticationOptions.SecretId;
+import org.springframework.vault.authentication.AppRoleAuthentication;
 import org.springframework.vault.authentication.AwsEc2Authentication;
 import org.springframework.vault.authentication.AwsIamAuthentication;
 import org.springframework.vault.authentication.AzureMsiAuthentication;
@@ -43,10 +54,9 @@ import org.springframework.vault.authentication.PcfAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.support.SslConfiguration;
 import org.springframework.vault.support.SslConfiguration.KeyStoreConfiguration;
-import org.springframework.vault.support.VaultToken;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.APPROLE;
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.AWS_EC2;
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.AWS_IAM;
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.AZURE_MSI;
@@ -60,146 +70,42 @@ import static org.springframework.cloud.config.server.environment.VaultEnvironme
 
 class SpringVaultClientConfigurationTests {
 
-	@Test
-	public void appRoleRoleIdProvidedSecretIdProvided() {
+	private VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
 
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.getAppRole().setRoleId("foo");
-		properties.getAppRole().setSecretId("bar");
+	private List<SpringVaultClientAuthenticationProvider> authProviders;
 
-		AppRoleAuthenticationOptions options = SpringVaultClientConfiguration
-				.getAppRoleAuthenticationOptions(properties);
-
-		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.provided("bar").getClass());
-	}
-
-	@Test
-	public void appRoleRoleIdProvidedSecretIdAbsent() {
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.getAppRole().setRoleId("foo");
-
-		AppRoleAuthenticationOptions options = SpringVaultClientConfiguration
-				.getAppRoleAuthenticationOptions(properties);
-
-		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
-		assertThat(options.getSecretId()).isInstanceOf(SecretId.absent().getClass());
-	}
-
-	@Test
-	public void appRoleRoleIdProvidedSecretIdPull() {
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.setToken("token");
-		properties.getAppRole().setRoleId("foo");
-		properties.getAppRole().setRole("my-role");
-
-		AppRoleAuthenticationOptions options = SpringVaultClientConfiguration
-				.getAppRoleAuthenticationOptions(properties);
-
-		assertThat(options.getAppRole()).isEqualTo("my-role");
-		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.pull(VaultToken.of("token")).getClass());
-	}
-
-	@Test
-	public void appRoleWithFullPull() {
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.setToken("token");
-		properties.getAppRole().setRole("my-role");
-
-		AppRoleAuthenticationOptions options = SpringVaultClientConfiguration
-				.getAppRoleAuthenticationOptions(properties);
-
-		assertThat(options.getAppRole()).isEqualTo("my-role");
-		assertThat(options.getRoleId())
-				.isInstanceOf(RoleId.pull(VaultToken.of("token")).getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.pull(VaultToken.of("token")).getClass());
-	}
-
-	@Test
-	public void appRoleFullWrapped() {
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.setToken("token");
-
-		AppRoleAuthenticationOptions options = SpringVaultClientConfiguration
-				.getAppRoleAuthenticationOptions(properties);
-
-		assertThat(options.getRoleId())
-				.isInstanceOf(RoleId.wrapped(VaultToken.of("token")).getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.wrapped(VaultToken.of("token")).getClass());
-	}
-
-	@Test
-	public void appRoleRoleIdWrappedSecretIdProvided() {
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.setToken("token");
-		properties.getAppRole().setSecretId("bar");
-
-		AppRoleAuthenticationOptions options = SpringVaultClientConfiguration
-				.getAppRoleAuthenticationOptions(properties);
-
-		assertThat(options.getRoleId())
-				.isInstanceOf(RoleId.wrapped(VaultToken.of("token")).getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.provided("bar").getClass());
-	}
-
-	@Test
-	public void appRoleRoleIdProvidedSecretIdWrapped() {
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.setToken("token");
-		properties.getAppRole().setRoleId("foo");
-
-		AppRoleAuthenticationOptions options = SpringVaultClientConfiguration
-				.getAppRoleAuthenticationOptions(properties);
-
-		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.wrapped(VaultToken.of("token")).getClass());
-	}
-
-	@Test
-	public void appRoleWithUnconfiguredRoleId() {
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-
-		assertThatThrownBy(() -> SpringVaultClientConfiguration
-				.getAppRoleAuthenticationOptions(properties))
-						.isInstanceOf(IllegalArgumentException.class);
-	}
-
-	@Test
-	public void appRoleWithUnconfiguredRoleIdIfRoleNameSet() {
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.getAppRole().setRole("my-role");
-
-		assertThatThrownBy(() -> SpringVaultClientConfiguration
-				.getAppRoleAuthenticationOptions(properties))
-						.isInstanceOf(IllegalArgumentException.class);
+	@BeforeEach
+	public void setUp() {
+		authProviders = Arrays.asList(new AppRoleClientAuthenticationProvider(),
+				new AwsEc2ClientAuthenticationProvider(),
+				new AwsIamClientAuthenticationProvider(),
+				new AzureMsiClientAuthenticationProvider(),
+				new CertificateClientAuthenticationProvider(),
+				new CubbyholeClientAuthenticationProvider(),
+				new GcpGceClientAuthenticationProvider(),
+				new GcpIamClientAuthenticationProvider(),
+				new KubernetesClientAuthenticationProvider(),
+				new PcfClientAuthenticationProvider(),
+				new TokenClientAuthenticationProvider());
 	}
 
 	@Test
 	public void defaultAuthentication() {
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-
 		assertClientAuthenticationOfType(properties,
 				ConfigTokenProviderAuthentication.class);
 	}
 
 	@Test
+	public void appRoleAuthentication() {
+		properties.setAuthentication(APPROLE);
+		properties.getAppRole().setRoleId("role-id");
+
+		assertClientAuthenticationOfType(properties, AppRoleAuthentication.class);
+	}
+
+	@Test
 	public void awsEc2Authentication() {
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(AWS_EC2);
+		properties.setAuthentication(AWS_EC2);
 		properties.getAwsEc2().setRole("server");
 		properties.getAwsEc2().setAwsEc2Path("aws-ec2");
 
@@ -211,7 +117,7 @@ class SpringVaultClientConfigurationTests {
 		System.setProperty("aws.accessKeyId", "access-key-id");
 		System.setProperty("aws.secretKey", "secret-key");
 
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(AWS_IAM);
+		properties.setAuthentication(AWS_IAM);
 		properties.getAwsIam().setRole("server");
 		properties.getAwsIam().setAwsPath("aws-iam");
 
@@ -220,7 +126,7 @@ class SpringVaultClientConfigurationTests {
 
 	@Test
 	public void azureMsiAuthentication() {
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(AZURE_MSI);
+		properties.setAuthentication(AZURE_MSI);
 		properties.getAzureMsi().setRole("server");
 		properties.getAzureMsi().setAzurePath("azure-msi");
 
@@ -229,7 +135,7 @@ class SpringVaultClientConfigurationTests {
 
 	@Test
 	public void clientCertificateAuthentication() {
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(CERT);
+		properties.setAuthentication(CERT);
 
 		assertClientAuthenticationOfType(properties,
 				ClientCertificateAuthentication.class);
@@ -237,7 +143,7 @@ class SpringVaultClientConfigurationTests {
 
 	@Test
 	public void cubbyholeAuthentication() {
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(CUBBYHOLE);
+		properties.setAuthentication(CUBBYHOLE);
 		properties.setToken("token");
 
 		assertClientAuthenticationOfType(properties, CubbyholeAuthentication.class);
@@ -245,7 +151,7 @@ class SpringVaultClientConfigurationTests {
 
 	@Test
 	public void gcpComputeAuthentication() {
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(GCP_GCE);
+		properties.setAuthentication(GCP_GCE);
 		properties.getGcpGce().setRole("server");
 		properties.getGcpGce().setServiceAccount("service-account");
 
@@ -292,7 +198,7 @@ class SpringVaultClientConfigurationTests {
 				+ "  \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/toolsmiths-pcf-sa%40cf-spinnaker.iam.gserviceaccount.com\""
 				+ "}";
 
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(GCP_IAM);
+		properties.setAuthentication(GCP_IAM);
 		properties.getGcpIam().setRole("server");
 		properties.getGcpIam().setProjectId("project");
 		properties.getGcpIam().setServiceAccountId("service-account");
@@ -305,7 +211,7 @@ class SpringVaultClientConfigurationTests {
 	public void kuberneteAuthentication() throws IOException {
 		Files.write(Paths.get("target", "token"), "token".getBytes());
 
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(KUBERNETES);
+		properties.setAuthentication(KUBERNETES);
 		properties.getKubernetes().setRole("server");
 		properties.getKubernetes().setServiceAccountTokenFile("target/token");
 
@@ -314,7 +220,7 @@ class SpringVaultClientConfigurationTests {
 
 	@Test
 	public void pcfAuthentication() {
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(PCF);
+		properties.setAuthentication(PCF);
 		properties.getPcf().setRole("my-role");
 		properties.getPcf()
 				.setInstanceKey(new ClassPathResource("configserver-test.yml"));
@@ -326,7 +232,7 @@ class SpringVaultClientConfigurationTests {
 
 	@Test
 	public void tokenAuthentication() {
-		VaultEnvironmentProperties properties = getPropertiesForAuthMethod(TOKEN);
+		properties.setAuthentication(TOKEN);
 		properties.setToken("token");
 
 		assertClientAuthenticationOfType(properties, TokenAuthentication.class);
@@ -368,13 +274,6 @@ class SpringVaultClientConfigurationTests {
 				.isEqualTo("password");
 	}
 
-	private VaultEnvironmentProperties getPropertiesForAuthMethod(
-			AuthenticationMethod authMethod) {
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		properties.setAuthentication(authMethod);
-		return properties;
-	}
-
 	private void assertClientAuthenticationOfType(VaultEnvironmentProperties properties,
 			Class<? extends ClientAuthentication> type) {
 		ClientAuthentication clientAuthentication = getConfiguration(properties)
@@ -385,7 +284,7 @@ class SpringVaultClientConfigurationTests {
 
 	private SpringVaultClientConfiguration getConfiguration(
 			VaultEnvironmentProperties properties) {
-		return new SpringVaultClientConfiguration(properties, () -> null);
+		return new SpringVaultClientConfiguration(properties, () -> null, authProviders);
 	}
 
 	private String base64(String value) {
