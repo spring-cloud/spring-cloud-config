@@ -1232,8 +1232,17 @@ All of the properties in the preceding table must be prefixed with <code>spring.
 <div class="paragraph">
 <p>All configurable properties can be found in <code>org.springframework.cloud.config.server.environment.VaultEnvironmentProperties</code>.</p>
 </div>
-<div class="paragraph">
-<p>Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a <code>data/</code> between the mount path and the actual context path and wraps secrets in a <code>data</code> object. Setting <code>kvVersion=2</code> will take this into account.</p>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a <code>data/</code> between the mount path and the actual context path and wraps secrets in a <code>data</code> object. Setting <code>spring.cloud.config.server.vault.kv-version=2</code> will take this into account.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Optionally, there is support for the Vault Enterprise <code>X-Vault-Namespace</code> header. To have it sent to Vault set the <code>namespace</code> property.</p>
