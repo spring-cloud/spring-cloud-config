@@ -178,6 +178,24 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 	}
 
 	@Test
+	public void multipleMatchesWithPlaceholderAtEnd() throws Exception {
+		MultipleJGitEnvironmentProperties properties1 = new MultipleJGitEnvironmentProperties();
+		properties1.setUri("https://github.com/marnee01/mderider-{application}");
+		MultipleJGitEnvironmentProperties properties2 = new MultipleJGitEnvironmentProperties();
+		properties2.setUri("https://github.com/marnee01/mderider-MultiApps.git");
+		this.connectionFactory.addConfiguration(properties1);
+		this.connectionFactory.addConfiguration(properties2);
+
+		HttpConnection actualConnection = this.connectionFactory.create(new URL(
+				"https://github.com/marnee01/mderider-MultiApps.git/info/refs?service=git-upload-pack"));
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
+				.get(properties2.getUri());
+		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(
+				actualConnection);
+		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+	}
+
+	@Test
 	public void composite_urlsWithPlaceholders() throws Exception {
 		MultipleJGitEnvironmentProperties properties1 = new MultipleJGitEnvironmentProperties();
 		properties1.setUri("http://localhost/path/{placeholder3}/more/test.git");
