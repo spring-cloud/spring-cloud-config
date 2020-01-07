@@ -18,8 +18,10 @@ package org.springframework.cloud.config.client;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hamcrest.core.IsInstanceOf;
@@ -27,12 +29,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.http.HttpEntity;
@@ -77,7 +80,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		ArgumentCaptor<HttpEntity> argumentCaptor = ArgumentCaptor
 				.forClass(HttpEntity.class);
 
-		assertThat(this.locator.locate(this.environment)).isNotNull();
+		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
 
 		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
 				argumentCaptor.capture(), any(Class.class), anyString(), anyString());
@@ -94,7 +97,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator.setRestTemplate(this.restTemplate);
 		TestPropertyValues.of("spring.cloud.config.label:v1.0.0")
 				.applyTo(this.environment);
-		assertThat(this.locator.locate(this.environment)).isNotNull();
+		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
 	}
 
 	@Test
@@ -105,7 +108,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.locator.setRestTemplate(this.restTemplate);
 		TestPropertyValues.of("spring.cloud.config.label:release/v1.0.0")
 				.applyTo(this.environment);
-		assertThat(this.locator.locate(this.environment)).isNotNull();
+		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
 	}
 
 	@Test
@@ -113,7 +116,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithLabel(
 				new ResponseEntity<>((Void) null, HttpStatus.NOT_FOUND), "nosuchlabel");
 		this.locator.setRestTemplate(this.restTemplate);
-		assertThat(this.locator.locate(this.environment)).isNull();
+		assertThat(this.locator.locateCollection(this.environment)).isEmpty();
 	}
 
 	@Test
@@ -130,7 +133,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
 		this.expected.expectMessage(
 				"Could not locate PropertySource and the fail fast property is set, failing: None of labels [release/v1.0.1] found");
-		this.locator.locate(this.environment);
+		this.locator.locateCollection(this.environment);
 	}
 
 	@Test
@@ -138,7 +141,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithoutLabel(
 				new ResponseEntity<>("Wah!", HttpStatus.INTERNAL_SERVER_ERROR));
 		this.locator.setRestTemplate(this.restTemplate);
-		assertThat(this.locator.locate(this.environment)).isNull();
+		assertThat(this.locator.locateCollection(this.environment)).isEmpty();
 	}
 
 	@Test
@@ -166,7 +169,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.expected
 				.expectCause(IsInstanceOf.instanceOf(IllegalArgumentException.class));
 		this.expected.expectMessage("fail fast property is set");
-		this.locator.locate(this.environment);
+		this.locator.locateCollection(this.environment);
 	}
 
 	@Test
@@ -193,7 +196,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.expected
 				.expectCause(IsInstanceOf.instanceOf(IllegalArgumentException.class));
 		this.expected.expectMessage("fail fast property is set");
-		this.locator.locate(this.environment);
+		this.locator.locateCollection(this.environment);
 	}
 
 	@Test
@@ -212,7 +215,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage(
 				"Could not locate PropertySource and the fail fast property is set, failing");
-		this.locator.locate(this.environment);
+		this.locator.locateCollection(this.environment);
 	}
 
 	@Test
@@ -306,12 +309,66 @@ public class ConfigServicePropertySourceLocatorTests {
 		}
 	}
 
+	@SuppressWarnings({ "unchecked", "raw" })
+	@Test
+	public void shouldPreserveOrder() {
+		Environment body = new Environment("app", "master");
+		LinkedHashMap<Object, Object> properties = new LinkedHashMap<>();
+		properties.put("zuul.routes.specificproduct.path",
+				originValue("/v1/product/electronics/**",
+						"Config Server /config-repo/zuul-service/zuul-service.yml:5:13"));
+
+		properties.put("zuul.routes.specificproduct.service-id",
+				originValue("electronic-product-service",
+						"Config Server /config-repo/zuul-service/zuul-service.yml:6:19"));
+
+		properties.put("zuul.routes.specificproduct.strip-prefix", originValue("false",
+				"Config Server /config-repo/zuul-service/zuul-service.yml:7:21"));
+
+		properties.put("zuul.routes.specificproduct.sensitiveHeaders", originValue("",
+				"Config Server /config-repo/zuul-service/zuul-service.yml:8:24"));
+
+		properties.put("zuul.routes.genericproduct.path", originValue("/v1/product/**",
+				"Config Server /config-repo/zuul-service/zuul-service.yml:10:13"));
+
+		properties.put("zuul.routes.genericproduct.service-id", originValue(
+				"product-service",
+				"Config Server /config-repo/zuul-service/zuul-service.yml:11:19"));
+
+		properties.put("zuul.routes.genericproduct.strip-prefix", originValue("false",
+				"Config Server /config-repo/zuul-service/zuul-service.yml:12:21"));
+
+		properties.put("zuul.routes.genericproduct.sensitiveHeaders", originValue("",
+				"Config Server /config-repo/zuul-service/zuul-service.yml:13:24"));
+		body.add(new PropertySource("source1", properties));
+		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
+		this.locator.setRestTemplate(this.restTemplate);
+
+		Collection<org.springframework.core.env.PropertySource<?>> propertySources = this.locator
+				.locateCollection(this.environment);
+		assertThat(propertySources).hasSize(1);
+		org.springframework.core.env.PropertySource<?> propertySource = propertySources
+				.iterator().next();
+		Map source = (Map) propertySource.getSource();
+		Iterator iterator = source.keySet().iterator();
+		assertThat(iterator.next()).isEqualTo("zuul.routes.specificproduct.path");
+		assertThat(iterator.next()).isEqualTo("zuul.routes.specificproduct.service-id");
+		assertThat(source).isInstanceOf(LinkedHashMap.class);
+	}
+
+	private Map<String, Object> originValue(String value, String origin) {
+		HashMap<String, Object> map = new HashMap<>();
+		map.put("value", value);
+		map.put("origin", origin);
+		return map;
+	}
+
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
 				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
-				Mockito.any(Class.class), anyString(), anyString(), Matchers.eq(label)))
-				.thenReturn(response);
+				Mockito.any(Class.class), anyString(), anyString(),
+				ArgumentMatchers.eq(label))).thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -326,7 +383,7 @@ public class ConfigServicePropertySourceLocatorTests {
 			ResponseEntity<?> response, String expectedName) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class),
 				Mockito.any(HttpMethod.class), Mockito.any(HttpEntity.class),
-				Mockito.any(Class.class), Matchers.eq(expectedName), anyString()))
+				Mockito.any(Class.class), ArgumentMatchers.eq(expectedName), anyString()))
 				.thenReturn(response);
 	}
 
