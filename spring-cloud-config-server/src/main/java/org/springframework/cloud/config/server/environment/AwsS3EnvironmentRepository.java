@@ -18,7 +18,6 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Properties;
 
 import com.amazonaws.services.s3.AmazonS3;
@@ -36,8 +35,14 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Clay McCoy
+ * @author Scott Frederick
  */
-public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordered {
+public class AwsS3EnvironmentRepository
+		implements EnvironmentRepository, Ordered, SearchPathLocator {
+
+	private static final String AWS_S3_RESOURCE_SCHEME = "s3://";
+
+	private static final String PATH_SEPARATOR = "/";
 
 	private final AmazonS3 s3Client;
 
@@ -64,39 +69,68 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	@Override
-	public Environment findOne(String specifiedApplication, String specifiedProfile,
+	public Environment findOne(String specifiedApplication, String specifiedProfiles,
 			String specifiedLabel) {
 		final String application = StringUtils.isEmpty(specifiedApplication)
 				? serverProperties.getDefaultApplicationName() : specifiedApplication;
-		final String profile = StringUtils.isEmpty(specifiedProfile)
-				? serverProperties.getDefaultProfile() : specifiedProfile;
+		final String profiles = StringUtils.isEmpty(specifiedProfiles)
+				? serverProperties.getDefaultProfile() : specifiedProfiles;
 		final String label = StringUtils.isEmpty(specifiedLabel)
 				? serverProperties.getDefaultLabel() : specifiedLabel;
-		StringBuilder objectKeyPrefix = new StringBuilder();
-		if (!StringUtils.isEmpty(label)) {
-			objectKeyPrefix.append(label).append("/");
-		}
-		objectKeyPrefix.append(application).append("-").append(profile);
-		final Environment environment = new Environment(application, profile);
+
+		String[] profileArray = parseProfiles(profiles);
+
+		final Environment environment = new Environment(application, profileArray);
 		environment.setLabel(label);
+
+		for (String profile : profileArray) {
+			S3ConfigFile s3ConfigFile = getS3ConfigFile(application, profile, label);
+			if (s3ConfigFile != null) {
+				environment.setVersion(s3ConfigFile.getVersion());
+
+				final Properties config = s3ConfigFile.read();
+				config.putAll(serverProperties.getOverrides());
+				StringBuilder propertySourceName = new StringBuilder().append("s3:")
+						.append(application);
+				if (profile != null) {
+					propertySourceName.append("-").append(profile);
+				}
+				environment
+						.add(new PropertySource(propertySourceName.toString(), config));
+			}
+		}
+
+		return environment;
+	}
+
+	private String[] parseProfiles(String profiles) {
+		if (profiles.equals(serverProperties.getDefaultProfile())) {
+			return new String[] { profiles, null };
+		}
+		return StringUtils.commaDelimitedListToStringArray(profiles);
+	}
+
+	private S3ConfigFile getS3ConfigFile(String application, String profile,
+			String label) {
+		String objectKeyPrefix = buildObjectKeyPrefix(application, profile, label);
+
 		final S3ObjectIdBuilder s3ObjectIdBuilder = new S3ObjectIdBuilder()
 				.withBucket(bucketName);
-		S3ConfigFile s3ConfigFile = getS3ConfigFile(s3ObjectIdBuilder,
-				objectKeyPrefix.toString());
-		if (s3ConfigFile == null) {
-			throw new NoSuchRepositoryException(
-					"No such repository: ("
-							+ s3ObjectIdBuilder
-									.withKey(objectKeyPrefix.toString()
-											+ "(.properties | .yml | .json)")
-									.build().toString()
-							+ ")");
+
+		return getS3ConfigFile(s3ObjectIdBuilder, objectKeyPrefix);
+	}
+
+	private String buildObjectKeyPrefix(String application, String profile,
+			String label) {
+		StringBuilder objectKeyPrefix = new StringBuilder();
+		if (!StringUtils.isEmpty(label)) {
+			objectKeyPrefix.append(label).append(PATH_SEPARATOR);
 		}
-		environment.setVersion(s3ConfigFile.getVersion());
-		final Map config = s3ConfigFile.read();
-		config.putAll(serverProperties.getOverrides());
-		environment.add(new PropertySource(application, config));
-		return environment;
+		objectKeyPrefix.append(application);
+		if (!StringUtils.isEmpty(profile)) {
+			objectKeyPrefix.append("-").append(profile);
+		}
+		return objectKeyPrefix.toString();
 	}
 
 	private S3ConfigFile getS3ConfigFile(S3ObjectIdBuilder s3ObjectIdBuilder,
@@ -128,6 +162,15 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 	}
 
+	@Override
+	public Locations getLocations(String application, String profiles, String label) {
+		String baseLocation = AWS_S3_RESOURCE_SCHEME + bucketName + PATH_SEPARATOR
+				+ application;
+
+		return new Locations(application, profiles, label, null,
+				new String[] { baseLocation });
+	}
+
 }
 
 abstract class S3ConfigFile {
@@ -142,7 +185,7 @@ abstract class S3ConfigFile {
 		return version;
 	}
 
-	abstract Map<?, ?> read();
+	abstract Properties read();
 
 }
 
@@ -156,7 +199,7 @@ class PropertyS3ConfigFile extends S3ConfigFile {
 	}
 
 	@Override
-	public Map<?, ?> read() {
+	public Properties read() {
 		Properties props = new Properties();
 		try (InputStream in = inputStream) {
 			props.load(in);
@@ -179,10 +222,10 @@ class YamlS3ConfigFile extends S3ConfigFile {
 	}
 
 	@Override
-	public Map<?, ?> read() {
+	public Properties read() {
 		final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
 		try (InputStream in = inputStream) {
-			yaml.setResources(new InputStreamResource(inputStream));
+			yaml.setResources(new InputStreamResource(in));
 			return yaml.getObject();
 		}
 		catch (IOException e) {

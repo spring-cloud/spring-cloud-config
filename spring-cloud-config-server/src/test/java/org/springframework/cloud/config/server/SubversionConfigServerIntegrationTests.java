@@ -31,12 +31,15 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.REPO_PREFIX;
+import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 /**
  * @author Michael Prankl
@@ -65,8 +68,10 @@ public class SubversionConfigServerIntegrationTests {
 
 	@Test
 	public void contextLoads() {
-		Environment environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		ResponseEntity<Environment> exchange = new TestRestTemplate().exchange(
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
+				getV2AcceptEntity(), Environment.class);
+		Environment environment = exchange.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("overrides");

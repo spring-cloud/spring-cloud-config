@@ -26,6 +26,7 @@ import org.springframework.cloud.config.server.environment.SearchPathLocator.Loc
 import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 /**
  * @author Dave Syer
@@ -217,6 +218,19 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setDefaultLabel("test");
 		assertThat(this.repository.findOne("foo", "default", null).getPropertySources()
 				.get(0).getSource().get("foo")).isEqualTo("test_bar");
+	}
+
+	@Test
+	public void duplicateYamlKeys() {
+		this.repository.setSearchLocations("classpath:/test/bad-syntax");
+		NativeEnvironmentRepository repo = this.repository;
+		assertThatExceptionOfType(FailedToConstructEnvironmentException.class)
+				.isThrownBy(() -> repo.findOne("foo", "master", "default")).withMessage(
+						"Could not construct context for config=foo profile=master label=default includeOrigin=false; nested exception is while constructing a mapping\n"
+								+ " in 'reader', line 1, column 1:\n" + "    key: value\n"
+								+ "    ^\n" + "found duplicate key key\n"
+								+ " in 'reader', line 2, column 1:\n" + "    key: value\n"
+								+ "    ^\n");
 	}
 
 }

@@ -19,3 +19,4 @@ _site/
 .idea
 .factorypath
 .vscode/
+.flattened-pom.xml

@@ -16,29 +16,16 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
-import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.core.Ordered;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
-
-import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 
 /**
  * @author Spencer Gibb
@@ -46,9 +33,14 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.STA
  * @author Haroun Pacquee
  * @author Haytham Mohamed
  * @author Scott Frederick
+ * @deprecated Prefer
+ * {@link org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository}
+ * instead of this environment repository implementation. The alternative implementation
+ * supports additional features including more authentication options, support for several
+ * underlying HTTP client libraries, and better SSL configuration.
  */
 @Validated
-public class VaultEnvironmentRepository implements EnvironmentRepository, Ordered {
+public class VaultEnvironmentRepository extends AbstractVaultEnvironmentRepository {
 
 	/**
 	 * Vault token header name.
@@ -76,27 +68,10 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	@NotEmpty
 	private String backend;
 
-	/**
-	 * The key in vault shared by all applications. Defaults to application. Set to empty
-	 * to disable.
-	 */
-	private String defaultKey;
-
 	/** Vault Namespace header value. */
 	private String namespace;
 
-	/** Vault profile separator. Defaults to comma. */
-	@NotEmpty
-	private String profileSeparator;
-
-	private int order;
-
 	private VaultKvAccessStrategy accessStrategy;
-
-	// TODO: move to watchState:String on findOne?
-	private final ObjectProvider<HttpServletRequest> request;
-
-	private final EnvironmentWatch watch;
 
 	private final ConfigTokenProvider tokenProvider;
 
@@ -110,15 +85,11 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request,
 			EnvironmentWatch watch, RestTemplate rest,
 			VaultEnvironmentProperties properties, ConfigTokenProvider tokenProvider) {
-		this.request = request;
-		this.watch = watch;
+		super(request, watch, properties);
 		this.tokenProvider = tokenProvider;
 		this.backend = properties.getBackend();
-		this.defaultKey = properties.getDefaultKey();
 		this.host = properties.getHost();
-		this.order = properties.getOrder();
 		this.port = properties.getPort();
-		this.profileSeparator = properties.getProfileSeparator();
 		this.scheme = properties.getScheme();
 		this.namespace = properties.getNamespace();
 
@@ -133,78 +104,7 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
-		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
-		List<String> scrubbedProfiles = scrubProfiles(profiles);
-
-		List<String> keys = findKeys(application, scrubbedProfiles);
-
-		Environment environment = new Environment(application, profiles, label, null,
-				getWatchState());
-
-		for (String key : keys) {
-			// read raw 'data' key from vault
-			String data = read(key);
-			if (data != null) {
-				// data is in json format of which, yaml is a superset, so parse
-				final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
-				yaml.setResources(new ByteArrayResource(data.getBytes()));
-				Properties properties = yaml.getObject();
-
-				if (!properties.isEmpty()) {
-					environment.add(new PropertySource("vault:" + key, properties));
-				}
-			}
-		}
-
-		return environment;
-	}
-
-	private String getWatchState() {
-		HttpServletRequest servletRequest = this.request.getIfAvailable();
-		if (servletRequest != null) {
-			String state = servletRequest.getHeader(STATE_HEADER);
-			return this.watch.watch(state);
-		}
-		return null;
-	}
-
-	private List<String> findKeys(String application, List<String> profiles) {
-		List<String> keys = new ArrayList<>();
-
-		if (StringUtils.hasText(this.defaultKey)
-				&& !this.defaultKey.equals(application)) {
-			keys.add(this.defaultKey);
-			addProfiles(keys, this.defaultKey, profiles);
-		}
-
-		// application may have comma-separated list of names
-		String[] applications = StringUtils.commaDelimitedListToStringArray(application);
-		for (String app : applications) {
-			keys.add(app);
-			addProfiles(keys, app, profiles);
-		}
-
-		Collections.reverse(keys);
-		return keys;
-	}
-
-	private List<String> scrubProfiles(String[] profiles) {
-		List<String> scrubbedProfiles = new ArrayList<>(Arrays.asList(profiles));
-		if (scrubbedProfiles.contains("default")) {
-			scrubbedProfiles.remove("default");
-		}
-		return scrubbedProfiles;
-	}
-
-	private void addProfiles(List<String> contexts, String baseContext,
-			List<String> profiles) {
-		for (String profile : profiles) {
-			contexts.add(baseContext + this.profileSeparator + profile);
-		}
-	}
-
-	private String read(String key) {
+	protected String read(String key) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(VAULT_TOKEN, getToken());
 		if (StringUtils.hasText(this.namespace)) {
@@ -239,25 +139,8 @@ public class VaultEnvironmentRepository implements EnvironmentRepository, Ordere
 		this.backend = backend;
 	}
 
-	public void setDefaultKey(String defaultKey) {
-		this.defaultKey = defaultKey;
-	}
-
-	public void setProfileSeparator(String profileSeparator) {
-		this.profileSeparator = profileSeparator;
-	}
-
 	public void setNamespace(String namespace) {
 		this.namespace = namespace;
-	}
-
-	@Override
-	public int getOrder() {
-		return this.order;
-	}
-
-	public void setOrder(int order) {
-		this.order = order;
 	}
 
 }

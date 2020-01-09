@@ -29,6 +29,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -36,6 +37,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ConfigServerApplication.class,
@@ -56,8 +58,10 @@ public class NativeConfigServerIntegrationTests {
 
 	@Test
 	public void contextLoads() {
-		Environment environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
+				getV2AcceptEntity(), Environment.class);
+		Environment environment = response.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("overrides");

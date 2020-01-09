@@ -31,11 +31,14 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -300,6 +303,20 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void yamlWithProperties() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("org.springframework", "WARN");
+		map.put("org.springframework.cloud", "ERROR");
+		this.environment.add(new PropertySource("abo", map));
+		when(this.repository.findOne("ay", "äzöq", null, false))
+				.thenReturn(this.environment);
+		System.out.println("this.controller = " + this.controller);
+		String yaml = this.controller.yaml("ay", "äzöq", false).getBody();
+		assertThat(yaml).isEqualTo(
+				"org:\n  springframework: WARN\n  springframework.cloud: ERROR\n");
+	}
+
+	@Test
 	public void arrayOfObjectInYaml() throws Exception {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("a.b[0].c", "d");
@@ -342,7 +359,7 @@ public class EnvironmentControllerTests {
 				"    - d: z\n" +
 				"  - - r\n" +
 				"    - s\n";
-// @formatter:on
+		// @formatter:on
 		assertThat(yaml).as("Wrong output: " + yaml).isEqualTo(expected);
 	}
 
@@ -610,6 +627,19 @@ public class EnvironmentControllerTests {
 				.andExpect(MockMvcResultMatchers.content()
 						.contentType(MediaType.APPLICATION_JSON));
 
+	}
+
+	@Test
+	public void handleEnvironmentException() throws Exception {
+		when(repository.findOne(eq("exception"), eq("bad-syntax.ext"), any(), eq(false)))
+				.thenThrow(new FailedToConstructEnvironmentException("Cannot construct",
+						new RuntimeException("underlier")));
+		MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
+				.setControllerAdvice(controller).build();
+		MvcResult result = mvc
+				.perform(MockMvcRequestBuilders.get("/exception/bad-syntax.ext"))
+				.andExpect(MockMvcResultMatchers.status().is(500)).andReturn();
+		assertThat(result.getResponse().getErrorMessage()).isEqualTo("Cannot construct");
 	}
 
 }

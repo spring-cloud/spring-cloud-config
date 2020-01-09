@@ -20,8 +20,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -157,6 +159,13 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	}
 
+	@Override
+	@Retryable(interceptor = "configServerRetryInterceptor")
+	public Collection<org.springframework.core.env.PropertySource<?>> locateCollection(
+			org.springframework.core.env.Environment environment) {
+		return PropertySourceLocator.locateCollection(this, environment);
+	}
+
 	private void log(Environment result) {
 		if (logger.isInfoEnabled()) {
 			logger.info(String.format(
@@ -184,7 +193,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private Map<String, Object> translateOrigins(String name,
 			Map<String, Object> source) {
-		Map<String, Object> withOrigins = new HashMap<>();
+		Map<String, Object> withOrigins = new LinkedHashMap<>();
 		for (Map.Entry<String, Object> entry : source.entrySet()) {
 			boolean hasOrigin = false;
 
