@@ -47,7 +47,10 @@ import static java.util.stream.Collectors.toMap;
 public class HttpClientConfigurableHttpConnectionFactory
 		implements ConfigurableHttpConnectionFactory {
 
-	private static final String PLACEHOLDER_PATTERN = "\\{(\\w+)}";
+	private static final String PLACEHOLDER_PATTERN_STRING = "\\{(\\w+)}";
+
+	private static final Pattern PLACEHOLDER_PATTERN = Pattern
+			.compile(PLACEHOLDER_PATTERN_STRING);
 
 	Log log = LogFactory.getLog(getClass());
 
@@ -111,10 +114,9 @@ public class HttpClientConfigurableHttpConnectionFactory
 			 * which have no placeholders. That is the one we want to use in the case
 			 * there are multiple matches.
 			 */
-			List<String> keys = builderMap.keySet().stream().filter(key -> {
-				String[] tokens = key.split(PLACEHOLDER_PATTERN);
-				return tokens.length == 1;
-			}).collect(Collectors.toList());
+			List<String> keys = builderMap.keySet().stream()
+					.filter(key -> !PLACEHOLDER_PATTERN.matcher(key).find())
+					.collect(Collectors.toList());
 
 			if (keys.size() == 1) {
 				return builderMap.get(keys.get(0));
@@ -130,7 +132,7 @@ public class HttpClientConfigurableHttpConnectionFactory
 
 	private String getUrlWithPlaceholders(URL url, String key) {
 		String spec = url.toString();
-		String[] tokens = key.split(PLACEHOLDER_PATTERN);
+		String[] tokens = key.split(PLACEHOLDER_PATTERN_STRING);
 		// if token[0] equals url then there was no placeholder in the the url, so
 		// matching needed
 		if (tokens.length >= 1 && !tokens[0].equals(url.toString())) {
@@ -164,7 +166,7 @@ public class HttpClientConfigurableHttpConnectionFactory
 	}
 
 	private List<String> getPlaceholders(String key) {
-		Pattern pattern = Pattern.compile(PLACEHOLDER_PATTERN);
+		Pattern pattern = Pattern.compile(PLACEHOLDER_PATTERN_STRING);
 		Matcher matcher = pattern.matcher(key);
 		List<String> placeholders = new LinkedList<>();
 		while (matcher.find()) {

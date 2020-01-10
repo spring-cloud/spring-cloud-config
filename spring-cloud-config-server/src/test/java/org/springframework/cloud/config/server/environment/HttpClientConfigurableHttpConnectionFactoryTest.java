@@ -162,14 +162,17 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 	@Test
 	public void multipleMatchesWithPlaceholder() throws Exception {
 		MultipleJGitEnvironmentProperties properties1 = new MultipleJGitEnvironmentProperties();
-		properties1.setUri("https://github.com/marnee01/mderider-{application}.git");
+		properties1.setUri("https://github.com/user/user-{application}.git");
 		MultipleJGitEnvironmentProperties properties2 = new MultipleJGitEnvironmentProperties();
-		properties2.setUri("https://github.com/marnee01/mderider-MultiApps.git");
+		properties2.setUri("https://github.com/user/user-MultiApps.git");
+		MultipleJGitEnvironmentProperties properties3 = new MultipleJGitEnvironmentProperties();
+		properties1.setUri("https://github.com/user/user-{application}");
 		this.connectionFactory.addConfiguration(properties1);
 		this.connectionFactory.addConfiguration(properties2);
+		this.connectionFactory.addConfiguration(properties3);
 
 		HttpConnection actualConnection = this.connectionFactory.create(new URL(
-				"https://github.com/marnee01/mderider-MultiApps.git/info/refs?service=git-upload-pack"));
+				"https://github.com/user/user-MultiApps.git/info/refs?service=git-upload-pack"));
 		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
 				.get(properties2.getUri());
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(
