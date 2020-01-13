@@ -45,6 +45,8 @@ public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 
 	private String defaultAlias;
 
+	private RsaSecretEncryptor defaultEncryptor;
+
 	private SecretLocator secretLocator = new PassthruSecretLocator();
 
 	private RsaAlgorithm rsaAlgorithm = RsaAlgorithm.DEFAULT;
@@ -83,9 +85,20 @@ public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 	public TextEncryptor locate(Map<String, String> keys) {
 		String alias = keys.containsKey(KEY) ? keys.get(KEY) : this.defaultAlias;
 		String secret = keys.containsKey(SECRET) ? keys.get(SECRET) : this.defaultSecret;
-		return new RsaSecretEncryptor(
-				this.keys.getKeyPair(alias, this.secretLocator.locate(secret)),
-				this.rsaAlgorithm, this.salt, this.strong);
+		if (alias.equals(this.defaultAlias) && secret.equals(this.defaultSecret)) {
+			if (this.defaultEncryptor == null) {
+				this.defaultEncryptor = rsaSecretEncryptor(alias, secret);
+			}
+			return this.defaultEncryptor;
+		}
+		else {
+			return rsaSecretEncryptor(alias, secret);
+		}
 	}
 
+	private RsaSecretEncryptor rsaSecretEncryptor(String alias, String secret) {
+		return new RsaSecretEncryptor(
+			this.keys.getKeyPair(alias, this.secretLocator.locate(secret)),
+			this.rsaAlgorithm, this.salt, this.strong);
+	}
 }

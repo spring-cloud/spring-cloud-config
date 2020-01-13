@@ -71,4 +71,10 @@ public class KeyStoreTextEncryptorLocatorTests {
 		assertThat(encryptor.decrypt(encryptor.encrypt("foo"))).isEqualTo("foo");
 	}
 
+	@Test
+	public void testDefaultEncryptor() {
+		TextEncryptor encryptor1 = this.locator.locate(Collections.<String, String>emptyMap());
+		TextEncryptor encryptor2 = this.locator.locate(Collections.<String, String>emptyMap());
+		assertThat(encryptor1).isEqualTo(encryptor2);
+	}
 }
