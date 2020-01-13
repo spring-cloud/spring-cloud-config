@@ -767,6 +767,23 @@ For example, if you run the following Vault command, all applications using the 
 $ vault write secret/application foo=bar baz=bam
 ----
 
+===== CredHub Server
+
+When using CredHub as a backend, you can share configuration with all applications by placing configuration in `/application/` or by placing it in the `default` profile for the application.
+For example, if you run the following CredHub command, all applications using the config server will have the properties `shared.color1` and `shared.color2` available to them:
+
+[source,sh]
+----
+credhub set --name "/application/profile/master/shared" --type=json
+value: {"shared.color1": "blue", "shared.color": "red"}
+----
+
+[source,sh]
+----
+credhub set --name "/my-app/default/master/more-shared" --type=json
+value: {"shared.word1": "hello", "shared.word2": "world"}
+----
+
 ==== JDBC Backend
 
 Spring Cloud Config Server supports JDBC (relational database) as a backend for configuration properties.
@@ -917,6 +934,7 @@ All client applications with the name `spring.cloud.config.name=demo-app` will h
 ----
 
 NOTE: When no profile is specified `default` will be used and when no label is specified `master` will be used as a default value.
+NOTE: Values added to `application` will be shared by all the applications.
 
 ===== OAuth 2.0
 You can authenticate with link:https://oauth.net/2/[OAuth 2.0] using link:https://docs.cloudfoundry.org/concepts/architecture/uaa.html[UAA] as a provider.

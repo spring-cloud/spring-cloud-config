@@ -50,7 +50,7 @@ public class CredhubCompositeConfigServerIntegrationTests extends CredhubIntegra
 
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-myapp");
+				.isEqualTo("credhub-myapp-master-default");
 		assertThat(environment.getPropertySources().get(0).getSource().toString())
 				.isEqualTo("{key=value}");
 	}
