@@ -1457,6 +1457,25 @@ For example, if you run the following Vault command, all applications using the 
 </div>
 </div>
 </div>
+<div class="sect4">
+<h5 id="_credhub_server"><a class="link" href="#_credhub_server">CredHub Server</a></h5>
+<div class="paragraph">
+<p>When using CredHub as a backend, you can share configuration with all applications by placing configuration in <code>/application/</code> or by placing it in the <code>default</code> profile for the application.
+For example, if you run the following CredHub command, all applications using the config server will have the properties <code>shared.color1</code> and <code>shared.color2</code> available to them:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">credhub set --name "/application/profile/master/shared" --type=json
+value: {"shared.color1": "blue", "shared.color": "red"}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">credhub set --name "/my-app/default/master/more-shared" --type=json
+value: {"shared.word1": "hello", "shared.word2": "world"}</code></pre>
+</div>
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_jdbc_backend"><a class="link" href="#_jdbc_backend">JDBC Backend</a></h4>
@@ -1658,6 +1677,7 @@ value: {"marketing.enabled": true, "external.enabled": false}</code></pre>
 </td>
 <td class="content">
 When no profile is specified <code>default</code> will be used and when no label is specified <code>master</code> will be used as a default value.
+NOTE: Values added to <code>application</code> will be shared by all the applications.
 </td>
 </tr>
 </table>
