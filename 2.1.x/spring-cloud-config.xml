@@ -811,6 +811,15 @@ Otherwise, the <literal>application*</literal> resources in the default search l
 For example, if you run the following Vault command, all applications using the config server will have the properties <literal>foo</literal> and <literal>baz</literal> available to them:</simpara>
 <programlisting language="sh" linenumbering="unnumbered">$ vault write secret/application foo=bar baz=bam</programlisting>
 </section>
+<section xml:id="_credhub_server">
+<title>CredHub Server</title>
+<simpara>When using CredHub as a backend, you can share configuration with all applications by placing configuration in <literal>/application/</literal> or by placing it in the <literal>default</literal> profile for the application.
+For example, if you run the following CredHub command, all applications using the config server will have the properties <literal>shared.color1</literal> and <literal>shared.color2</literal> available to them:</simpara>
+<programlisting language="sh" linenumbering="unnumbered">credhub set --name "/application/profile/master/shared" --type=json
+value: {"shared.color1": "blue", "shared.color": "red"}</programlisting>
+<programlisting language="sh" linenumbering="unnumbered">credhub set --name "/my-app/default/master/more-shared" --type=json
+value: {"shared.word1": "hello", "shared.word2": "world"}</programlisting>
+</section>
 </section>
 <section xml:id="_jdbc_backend">
 <title>JDBC Backend</title>
@@ -858,7 +867,8 @@ value: {"marketing.enabled": true, "external.enabled": false}</programlisting>
     external.enabled: false
 }</screen>
 <note>
-<simpara>When no profile is specified <literal>default</literal> will be used and when no label is specified <literal>master</literal> will be used as a default value.</simpara>
+<simpara>When no profile is specified <literal>default</literal> will be used and when no label is specified <literal>master</literal> will be used as a default value.
+NOTE: Values added to <literal>application</literal> will be shared by all the applications.</simpara>
 </note>
 <section xml:id="_oauth_2_0">
 <title>OAuth 2.0</title>
