@@ -98,7 +98,8 @@ public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 
 	private RsaSecretEncryptor rsaSecretEncryptor(String alias, String secret) {
 		return new RsaSecretEncryptor(
-			this.keys.getKeyPair(alias, this.secretLocator.locate(secret)),
-			this.rsaAlgorithm, this.salt, this.strong);
+				this.keys.getKeyPair(alias, this.secretLocator.locate(secret)),
+				this.rsaAlgorithm, this.salt, this.strong);
 	}
+
 }
