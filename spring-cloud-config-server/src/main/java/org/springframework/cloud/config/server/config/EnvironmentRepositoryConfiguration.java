@@ -125,6 +125,13 @@ public class EnvironmentRepositoryConfiguration {
 		return new MultipleJGitEnvironmentProperties();
 	}
 
+	@Bean
+	@ConditionalOnMissingBean(ConfigTokenProvider.class)
+	public ConfigTokenProvider configTokenProvider(
+			ObjectProvider<HttpServletRequest> httpRequest) {
+		return new HttpRequestConfigTokenProvider(httpRequest);
+	}
+
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty("spring.cloud.config.server.consul.watch.enabled")
 	protected static class ConsulEnvironmentWatchConfiguration {
@@ -143,18 +150,6 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public EnvironmentWatch environmentWatch() {
 			return new EnvironmentWatch.Default();
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnMissingBean(ConfigTokenProvider.class)
-	protected static class DefaultConfigTokenProvider {
-
-		@Bean
-		public ConfigTokenProvider configTokenProvider(
-				ObjectProvider<HttpServletRequest> httpRequest) {
-			return new HttpRequestConfigTokenProvider(httpRequest);
 		}
 
 	}
