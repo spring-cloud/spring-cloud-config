@@ -72,7 +72,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 
 	@Test
 	public void secureWhenRequested() throws Exception {
-		this.info = new DefaultServiceInstance("app", "foo", 443, true);
+		this.info = new DefaultServiceInstance("app:443", "app", "foo", 443, true);
 		givenDiscoveryClientReturnsInfo();
 
 		setup("spring.cloud.config.discovery.enabled=true");
@@ -85,10 +85,10 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 
 	@Test
 	public void multipleInstancesReturnedFromDiscovery() {
-		ServiceInstance info1 = new DefaultServiceInstance("app", "localhost", 8888,
-				true);
-		ServiceInstance info2 = new DefaultServiceInstance("app", "localhost1", 8888,
-				false);
+		ServiceInstance info1 = new DefaultServiceInstance("app1:8888", "app",
+				"localhost", 8888, true);
+		ServiceInstance info2 = new DefaultServiceInstance("app2:8888", "app",
+				"localhost1", 8888, false);
 		givenDiscoveryClientReturnsInfoForMultipleInstances(info1, info2);
 
 		setup("spring.cloud.config.discovery.enabled=true");

@@ -77,8 +77,8 @@ public class CompositeEnvironmentBeanFactoryPostProcessor
 		Binder binder = Binder.get(environment);
 		String environmentConfigurationPropertyName = String
 				.format("spring.cloud.config.server.composite[%d]", index);
-		P properties = binder.bind(environmentConfigurationPropertyName, propertiesClass)
-				.orElseCreate(propertiesClass);
+		P properties = binder.bindOrCreate(environmentConfigurationPropertyName,
+				propertiesClass);
 		properties.setOrder(index + 1);
 		return properties;
 	}

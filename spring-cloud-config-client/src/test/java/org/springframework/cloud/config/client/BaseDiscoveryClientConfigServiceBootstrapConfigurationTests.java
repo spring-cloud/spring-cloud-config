@@ -48,8 +48,8 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 
 	protected DiscoveryClient client = Mockito.mock(DiscoveryClient.class);
 
-	protected ServiceInstance info = new DefaultServiceInstance("app", "foo", 8877,
-			false);
+	protected ServiceInstance info = new DefaultServiceInstance("app:8877", "app", "foo",
+			8877, false);
 
 	@After
 	public void close() {

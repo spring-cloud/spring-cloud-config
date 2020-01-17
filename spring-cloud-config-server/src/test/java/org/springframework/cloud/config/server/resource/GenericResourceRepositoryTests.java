@@ -24,7 +24,7 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.test.rule.OutputCapture;
+import org.springframework.boot.test.system.OutputCaptureRule;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
@@ -40,7 +40,7 @@ import static org.hamcrest.Matchers.containsString;
 public class GenericResourceRepositoryTests {
 
 	@Rule
-	public OutputCapture output = new OutputCapture();
+	public OutputCaptureRule output = new OutputCaptureRule();
 
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
