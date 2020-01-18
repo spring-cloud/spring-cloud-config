@@ -132,7 +132,7 @@ public class EnvironmentRepositoryConfiguration {
 	protected static class DefaultConfigTokenProvider {
 
 		@Bean
-		public ConfigTokenProvider configTokenProvider(
+		public ConfigTokenProvider defaultConfigTokenProvider(
 				ObjectProvider<HttpServletRequest> httpRequest) {
 			return new HttpRequestConfigTokenProvider(httpRequest);
 		}
