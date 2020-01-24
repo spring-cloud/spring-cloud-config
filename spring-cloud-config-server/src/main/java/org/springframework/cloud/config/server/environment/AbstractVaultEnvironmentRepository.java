@@ -41,9 +41,12 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.STA
  * @author Haroun Pacquee
  * @author Haytham Mohamed
  * @author Scott Frederick
+ * @author Craig Walls
  */
 public abstract class AbstractVaultEnvironmentRepository
 		implements EnvironmentRepository, Ordered {
+
+	private static final String MISSING_TOKEN_MESSAGE = " (empty because X-Config-Token is missing)";
 
 	// TODO: move to watchState:String on findOne?
 	protected final ObjectProvider<HttpServletRequest> request;
@@ -85,16 +88,22 @@ public abstract class AbstractVaultEnvironmentRepository
 
 		for (String key : keys) {
 			// read raw 'data' key from vault
-			String data = read(key);
-			if (data != null) {
-				// data is in json format of which, yaml is a superset, so parse
-				final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
-				yaml.setResources(new ByteArrayResource(data.getBytes()));
-				Properties properties = yaml.getObject();
+			try {
+				String data = read(key);
+				if (data != null) {
+					// data is in json format of which, yaml is a superset, so parse
+					final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
+					yaml.setResources(new ByteArrayResource(data.getBytes()));
+					Properties properties = yaml.getObject();
 
-				if (!properties.isEmpty()) {
-					environment.add(new PropertySource("vault:" + key, properties));
+					if (!properties.isEmpty()) {
+						environment.add(new PropertySource("vault:" + key, properties));
+					}
 				}
+			}
+			catch (IllegalArgumentException e) {
+				environment.add(new PropertySource("vault:" + key + MISSING_TOKEN_MESSAGE,
+						new Properties()));
 			}
 		}
 

@@ -33,6 +33,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Haroun Pacquee
  * @author Haytham Mohamed
  * @author Scott Frederick
+ * @author Craig Walls
  * @deprecated Prefer
  * {@link org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository}
  * instead of this environment repository implementation. The alternative implementation
@@ -41,6 +42,11 @@ import org.springframework.web.client.RestTemplate;
  */
 @Validated
 public class VaultEnvironmentRepository extends AbstractVaultEnvironmentRepository {
+
+	/**
+	 * Empty configuration to return if the Vault token isn't available.
+	 */
+	private static final String EMPTY_CONFIG = "{}";
 
 	/**
 	 * Vault token header name.

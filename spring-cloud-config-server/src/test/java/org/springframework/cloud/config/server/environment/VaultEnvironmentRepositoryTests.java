@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ import org.junit.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategy.VaultResponse;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -51,6 +53,7 @@ import static org.mockito.Mockito.when;
  * @author Mark Paluch
  * @author Haytham Mohamed
  * @author Scott Frederick
+ * @author Craig Walls
  */
 public class VaultEnvironmentRepositoryTests {
 
@@ -309,7 +312,7 @@ public class VaultEnvironmentRepositoryTests {
 				.isEqualTo(result);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void missingConfigToken() {
 		ConfigTokenProvider tokenProvider = mock(ConfigTokenProvider.class);
 		when(tokenProvider.getToken()).thenReturn(null);
@@ -318,7 +321,18 @@ public class VaultEnvironmentRepositoryTests {
 				mockHttpRequest(), new EnvironmentWatch.Default(),
 				mock(RestTemplate.class), new VaultEnvironmentProperties(),
 				tokenProvider);
-		repo.findOne("myapp", null, null);
+		Environment e = repo.findOne("myapp", null, null);
+		assertThat(e.getName()).as("Name should be the same as the application argument")
+				.isEqualTo("myapp");
+		assertThat(e.getPropertySources().size())
+				.as("No properties should be returned if no token given").isEqualTo(2);
+		List<PropertySource> propertySources = e.getPropertySources();
+		assertThat(e.getPropertySources()).anyMatch(ps -> ps.getName()
+				.equals("vault:myapp (empty because X-Config-Token is missing)")
+				&& ps.getSource().size() == 0);
+		assertThat(e.getPropertySources()).anyMatch(ps -> ps.getName()
+				.equals("vault:application (empty because X-Config-Token is missing)")
+				&& ps.getSource().size() == 0);
 	}
 
 	@Test
