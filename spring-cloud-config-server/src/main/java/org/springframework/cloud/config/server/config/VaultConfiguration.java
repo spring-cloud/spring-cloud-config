@@ -46,7 +46,7 @@ public class VaultConfiguration {
 
 	@Bean
 	@ConditionalOnProperty(VAULT_TOKEN_PROPERTY_NAME)
-	public ConfigTokenProvider configTokenProvider(Environment environment) {
+	public ConfigTokenProvider vaultConfigTokenProvider(Environment environment) {
 		return new EnvironmentConfigTokenProvider(environment, VAULT_TOKEN_PROPERTY_NAME);
 	}
 
