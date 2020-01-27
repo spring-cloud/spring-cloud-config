@@ -17,7 +17,7 @@
 package org.springframework.cloud.config.monitor;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +35,7 @@ public abstract class BasePropertyPathNotificationExtractor
 			Map<String, Object> request) {
 		if (requestBelongsToGitRepoManager(headers)) {
 			if (request.get("commits") instanceof Collection) {
-				Set<String> paths = new HashSet<>();
+				Set<String> paths = new LinkedHashSet<>();
 				@SuppressWarnings("unchecked")
 				Collection<Map<String, Object>> commits = (Collection<Map<String, Object>>) request
 						.get("commits");
