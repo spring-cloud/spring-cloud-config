@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.cloud.config.server.encryption.CipherResourceJsonEncryptor;
 import org.springframework.cloud.config.server.encryption.CipherResourcePropertiesEncryptor;
@@ -39,7 +40,8 @@ import org.springframework.context.annotation.Configuration;
  * @author Sean Stiglitz
  */
 @Configuration
-@ConditionalOnExpression("${spring.cloud.config.server.encrypt.enabled:true} && ${spring.cloud.config.server.encrypt.plainTextEncrypt:false}")
+@ConditionalOnExpression("${spring.cloud.config.server.encrypt.enabled:true} && ${spring.cloud.config.server.encrypt.plainTextEncrypt:true}")
+@ConditionalOnBean(TextEncryptorLocator.class)
 public class ResourceEncryptorConfiguration {
 
 	@Autowired
