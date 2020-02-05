@@ -777,6 +777,25 @@ If you do not know where your <code>~/.git</code> directory is, use <code>git co
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>JGit requires RSA keys in PEM format. Below is an example ssh-keygen (from openssh) command that will generate a key in the corect format:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ssh-keygen -m PEM -t rsa -b 4096 -f ~/config_server_deploy_key.rsa</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Warning: When working with SSH keys, the expected ssh private-key must begin with <code><code>-----BEGIN RSA PRIVATE KEY-----</code></code>. If the key starts with <code><code>-----BEGIN OPENSSH PRIVATE KEY-----</code></code> then the RSA key will not load when spring-cloud-config server is started. The error looks like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>- Error in object 'spring.cloud.config.server.git': codes [PrivateKeyIsValid.spring.cloud.config.server.git,PrivateKeyIsValid]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [spring.cloud.config.server.git.,]; arguments []; default message []]; default message [Property 'spring.cloud.config.server.git.privateKey' is not a valid private key]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To correct the above error the RSA key must be converted to PEM format. An example using openssh is provided above for generating a new key in the appropriate format.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_authentication_with_aws_codecommit"><a class="link" href="#_authentication_with_aws_codecommit">Authentication with AWS CodeCommit</a></h5>
