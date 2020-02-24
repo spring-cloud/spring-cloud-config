@@ -176,6 +176,13 @@ public class ResourceControllerTests {
 	}
 
 	@Test
+	public void resourceWithoutFileExtension() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test");
+		String resource = this.controller.retrieve("foo", "bar", "dev", "foo", true);
+		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar");
+	}
+
+	@Test
 	public void resourceWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt",
