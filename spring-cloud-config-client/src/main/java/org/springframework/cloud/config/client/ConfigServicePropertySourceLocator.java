@@ -198,9 +198,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		Object[] args = new String[] { name, profile };
 		if (StringUtils.hasText(label)) {
-			if (label.contains("/")) {
-				label = label.replace("/", "(_)");
-			}
+			// workaround for Spring MVC matching / in paths
+			label = Environment.denormalize(label);
 			args = new String[] { name, profile, label };
 			path = path + "/{label}";
 		}

@@ -100,9 +100,31 @@ public class GenericResourceRepositoryTests {
 		this.exception.expect(NoSuchResourceException.class);
 		this.nativeRepository
 				.setSearchLocations("file:./src/test/resources/test/{profile}");
-		this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql");
 		this.output.expect(containsString(
 				"Path contains \"../\" after call to StringUtils#cleanPath"));
+		this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql");
+	}
+
+	@Test
+	public void invalidPathWithPreviousDirectory() {
+		testInvalidPath("../");
+	}
+
+	@Test
+	public void invalidPathWithPreviousDirectoryEncodedSlash() {
+		testInvalidPath("..%2F");
+	}
+
+	@Test
+	public void invalidPathWithPreviousDirectoryAllEncoded() {
+		testInvalidPath("%2E%2E%2F");
+	}
+
+	private void testInvalidPath(String label) {
+		this.exception.expect(NoSuchResourceException.class);
+		this.nativeRepository.setSearchLocations("file:./src/test/resources/test/local");
+		this.output.expect(containsString("Location contains \"..\""));
+		this.repository.findOne("blah", "local", label, "foo.properties");
 	}
 
 }
