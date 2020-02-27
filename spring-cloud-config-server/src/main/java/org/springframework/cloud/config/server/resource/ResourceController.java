@@ -145,14 +145,16 @@ public class ResourceController {
 		// ensure InputStream will be closed to prevent file locks on Windows
 		try (InputStream is = resource.getInputStream()) {
 			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
-			String ext = StringUtils.getFilenameExtension(resource.getFilename())
-					.toLowerCase();
+			String ext = StringUtils.getFilenameExtension(resource.getFilename());
+			if (ext != null) {
+				ext = ext.toLowerCase();
+			}
 			Environment environment = this.environmentRepository.findOne(name, profile,
 					label, false);
 			if (resolvePlaceholders) {
 				text = resolvePlaceholders(prepareEnvironment(environment), text);
 			}
-			if (encryptEnabled && plainTextEncryptEnabled) {
+			if (ext != null && encryptEnabled && plainTextEncryptEnabled) {
 				ResourceEncryptor re = this.resourceEncryptorMap.get(ext);
 				if (re == null) {
 					logger.warn("Cannot decrypt for extension " + ext);
