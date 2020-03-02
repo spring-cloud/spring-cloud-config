@@ -66,6 +66,9 @@ public class GenericResourceRepository
 			try {
 				for (int i = locations.length; i-- > 0;) {
 					String location = locations[i];
+					if (isInvalidEncodedLocation(location)) {
+						continue;
+					}
 					for (String local : getProfilePaths(profile, path)) {
 						if (!isInvalidPath(local) && !isInvalidEncodedPath(local)) {
 							Resource file = this.resourceLoader.getResource(location)
@@ -83,6 +86,41 @@ public class GenericResourceRepository
 			}
 		}
 		throw new NoSuchResourceException("Not found: " + path);
+	}
+
+	/**
+	 * Check whether the given location contains invalid escape sequences.
+	 * @param location the location to validate
+	 * @return {@code true} if the path is invalid, {@code false} otherwise
+	 */
+	private boolean isInvalidEncodedLocation(String location) {
+		if (location.contains("%")) {
+			try {
+				// Use URLDecoder (vs UriUtils) to preserve potentially decoded UTF-8
+				// chars
+				String decodedPath = URLDecoder.decode(location, "UTF-8");
+				if (isInvalidLocation(decodedPath)) {
+					return true;
+				}
+				decodedPath = processPath(decodedPath);
+				if (isInvalidLocation(decodedPath)) {
+					return true;
+				}
+			}
+			catch (IllegalArgumentException | UnsupportedEncodingException ex) {
+				// Should never happen...
+			}
+		}
+		return isInvalidLocation(location);
+	}
+
+	private boolean isInvalidLocation(String location) {
+		boolean isInvalid = location.contains("..");
+
+		if (isInvalid && logger.isWarnEnabled()) {
+			logger.warn("Location contains \"..\"");
+		}
+		return isInvalid;
 	}
 
 	private Collection<String> getProfilePaths(String profiles, String path) {
