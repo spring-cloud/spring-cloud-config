@@ -34,6 +34,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class Environment {
 
+	/**
+	 * "(_)" is uncommon in a git repo name, but "/" cannot be matched by Spring MVC.
+	 */
+	public static final String SLASH_PLACEHOLDER = "(_)";
+
 	private String name;
 
 	private String[] profiles = new String[0];
@@ -70,6 +75,32 @@ public class Environment {
 		this.label = label;
 		this.version = version;
 		this.state = state;
+	}
+
+	/**
+	 * Utility method for normalizing names and labels.
+	 * @param s String to normalize.
+	 * @return if s contains (_), replace with slash.
+	 */
+	public static String normalize(String s) {
+		if (s != null && s.contains(SLASH_PLACEHOLDER)) {
+			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
+			// by Spring MVC
+			return s.replace(SLASH_PLACEHOLDER, "/");
+		}
+		return s;
+	}
+
+	/**
+	 * Utility method for denormalizing names and labels.
+	 * @param s String to denormalize.
+	 * @return if s contains slash, replace with (_).
+	 */
+	public static String denormalize(String s) {
+		if (s != null && s.contains("/")) {
+			return s.replace("/", SLASH_PLACEHOLDER);
+		}
+		return s;
 	}
 
 	public void add(PropertySource propertySource) {

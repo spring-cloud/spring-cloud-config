@@ -135,8 +135,8 @@ public class ResourceController {
 
 	synchronized String retrieve(ServletWebRequest request, String name, String profile,
 			String label, String path, boolean resolvePlaceholders) throws IOException {
-		name = resolveName(name);
-		label = resolveLabel(label);
+		name = Environment.normalize(name);
+		label = Environment.normalize(label);
 		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
 		if (checkNotModified(request, resource)) {
 			// Content was not modified. Just return.
@@ -201,8 +201,8 @@ public class ResourceController {
 
 	private synchronized byte[] binary(ServletWebRequest request, String name,
 			String profile, String label, String path) throws IOException {
-		name = resolveName(name);
-		label = resolveLabel(label);
+		name = Environment.normalize(name);
+		label = Environment.normalize(label);
 		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
 		if (checkNotModified(request, resource)) {
 			// Content was not modified. Just return.
@@ -223,24 +223,6 @@ public class ResourceController {
 			// Ignore the exception since caching is optional.
 		}
 		return false;
-	}
-
-	private String resolveName(String name) {
-		if (name != null && name.contains("(_)")) {
-			// "(_)" is uncommon in a git repo name, but "/" cannot be matched
-			// by Spring MVC
-			name = name.replace("(_)", "/");
-		}
-		return name;
-	}
-
-	private String resolveLabel(String label) {
-		if (label != null && label.contains("(_)")) {
-			// "(_)" is uncommon in a git branch name, but "/" cannot be matched
-			// by Spring MVC
-			label = label.replace("(_)", "/");
-		}
-		return label;
 	}
 
 	@ExceptionHandler(NoSuchResourceException.class)
