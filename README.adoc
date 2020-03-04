@@ -190,7 +190,7 @@ $ curl localhost:8080/env
 }
 ----
 
-A property source called `configService:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar` and is the highest priority.
+A property source called ```configService:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar` and is highest priority.
 
 NOTE: The URL in the property source name is the git repository, not the config server URL.
 
