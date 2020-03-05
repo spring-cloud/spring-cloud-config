@@ -158,15 +158,8 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 
 		for (SpringVaultClientAuthenticationProvider authProvider : this.authProviders) {
 			if (authProvider.supports(this.vaultProperties)) {
-
-				RestTemplate restOperations = (RestTemplate)restOperations();
-				if (vaultProperties.getNamespace() != null) {
-					restOperations.getInterceptors().add(VaultClients
-						.createNamespaceInterceptor(vaultProperties.getNamespace()));
-				}
-
 				return authProvider.getClientAuthentication(this.vaultProperties,
-					restOperations, this.externalRestOperations);
+						restOperations(), this.externalRestOperations);
 			}
 		}
 
@@ -194,4 +187,15 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 
 	}
 
+	@Override
+	public RestOperations restOperations() {
+		RestTemplate restOperations = (RestTemplate)super.restOperations();
+
+		if (vaultProperties.getNamespace() != null) {
+			restOperations.getInterceptors().add(VaultClients
+				.createNamespaceInterceptor(vaultProperties.getNamespace()));
+		}
+
+		return restOperations;
+	}
 }
