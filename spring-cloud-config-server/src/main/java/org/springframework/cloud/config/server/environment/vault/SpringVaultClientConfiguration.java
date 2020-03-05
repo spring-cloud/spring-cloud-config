@@ -125,6 +125,18 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 		return new SslConfiguration(keyStoreConfiguration, trustStoreConfiguration);
 	}
 
+	@Override
+	public RestOperations restOperations() {
+		RestTemplate restOperations = (RestTemplate) super.restOperations();
+
+		if (vaultProperties.getNamespace() != null) {
+			restOperations.getInterceptors().add(VaultClients
+				.createNamespaceInterceptor(vaultProperties.getNamespace()));
+		}
+
+		return restOperations;
+	}
+
 	private SslConfiguration.KeyStoreConfiguration getKeyStoreConfiguration(
 			Resource resourceProperty, String passwordProperty) {
 
@@ -184,18 +196,5 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 			}
 			return VaultToken.of(token);
 		}
-
-	}
-
-	@Override
-	public RestOperations restOperations() {
-		RestTemplate restOperations = (RestTemplate)super.restOperations();
-
-		if (vaultProperties.getNamespace() != null) {
-			restOperations.getInterceptors().add(VaultClients
-				.createNamespaceInterceptor(vaultProperties.getNamespace()));
-		}
-
-		return restOperations;
 	}
 }
