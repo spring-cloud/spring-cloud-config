@@ -96,9 +96,7 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 				endpointProvider, requestFactory);
 
 		if (vaultProperties.getNamespace() != null) {
-			restTemplateBuilder.customizers(
-					restTemplate -> restTemplate.getInterceptors().add(VaultClients
-							.createNamespaceInterceptor(vaultProperties.getNamespace())));
+			restTemplateBuilder.customizers(this::applyNamespaceInterceptor);
 		}
 
 		return restTemplateBuilder;
@@ -128,13 +126,17 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 	@Override
 	public RestOperations restOperations() {
 		RestTemplate restOperations = (RestTemplate) super.restOperations();
+		applyNamespaceInterceptor(restOperations);
+		return restOperations;
+	}
 
+	private RestOperations applyNamespaceInterceptor(RestTemplate restTemplate) {
 		if (vaultProperties.getNamespace() != null) {
-			restOperations.getInterceptors().add(VaultClients
+			restTemplate.getInterceptors().add(VaultClients
 				.createNamespaceInterceptor(vaultProperties.getNamespace()));
 		}
 
-		return restOperations;
+		return restTemplate;
 	}
 
 	private SslConfiguration.KeyStoreConfiguration getKeyStoreConfiguration(
