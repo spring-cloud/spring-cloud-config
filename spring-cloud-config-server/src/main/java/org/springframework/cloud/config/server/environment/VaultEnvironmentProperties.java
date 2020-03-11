@@ -525,8 +525,23 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 		 */
 		private String role = "";
 
+		/**
+		 * URI to the Azure MSI IdentityService.
+		 */
+		private String identityTokenService = "";
+
+		private String metadataService = "";
+
 		public String getAzurePath() {
 			return this.azurePath;
+		}
+
+		public String getIdentityTokenService() {
+			return identityTokenService;
+		}
+
+		public String getMetadataService() {
+			return metadataService;
 		}
 
 		public String getRole() {
@@ -535,6 +550,14 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 		public void setAzurePath(String azurePath) {
 			this.azurePath = azurePath;
+		}
+
+		public void setIdentityTokenService(String identityTokenService) {
+			this.identityTokenService = identityTokenService;
+		}
+
+		public void setMetadataService(String metadataService) {
+			this.metadataService = metadataService;
 		}
 
 		public void setRole(String role) {
