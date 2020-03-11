@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.environment.vault.authentication;
 
+import java.net.URI;
+
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientAuthenticationProvider;
@@ -44,10 +46,22 @@ public class AzureMsiClientAuthenticationProvider
 				AuthenticationMethod.AZURE_MSI));
 
 		AzureMsiAuthenticationOptions options = AzureMsiAuthenticationOptions.builder()
-				.role(azureMsi.getRole()).build();
+				.role(azureMsi.getRole()).path(azureMsi.getAzurePath())
+				.instanceMetadataUri(getUri(azureMsi.getMetadataService(),
+						AzureMsiAuthenticationOptions.DEFAULT_INSTANCE_METADATA_SERVICE_URI))
+				.identityTokenServiceUri(getUri(azureMsi.getIdentityTokenService(),
+						AzureMsiAuthenticationOptions.DEFAULT_IDENTITY_TOKEN_SERVICE_URI))
+				.build();
 
 		return new AzureMsiAuthentication(options, vaultRestOperations,
 				externalRestOperations);
+	}
+
+	private URI getUri(String uriString, URI defaultUri) {
+		if (uriString == null || uriString.isEmpty()) {
+			return defaultUri;
+		}
+		return URI.create(uriString);
 	}
 
 }

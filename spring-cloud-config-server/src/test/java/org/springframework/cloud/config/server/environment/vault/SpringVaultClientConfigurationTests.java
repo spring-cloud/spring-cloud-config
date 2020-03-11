@@ -50,11 +50,13 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.mock.http.client.MockClientHttpRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.ClassUtils;
 import org.springframework.vault.authentication.AppRoleAuthentication;
 import org.springframework.vault.authentication.AwsEc2Authentication;
 import org.springframework.vault.authentication.AwsIamAuthentication;
 import org.springframework.vault.authentication.AzureMsiAuthentication;
+import org.springframework.vault.authentication.AzureMsiAuthenticationOptions;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.ClientCertificateAuthentication;
 import org.springframework.vault.authentication.CubbyholeAuthentication;
@@ -81,6 +83,8 @@ import static org.springframework.cloud.config.server.environment.VaultEnvironme
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.KUBERNETES;
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.PCF;
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.TOKEN;
+import static org.springframework.vault.authentication.AzureMsiAuthenticationOptions.DEFAULT_IDENTITY_TOKEN_SERVICE_URI;
+import static org.springframework.vault.authentication.AzureMsiAuthenticationOptions.DEFAULT_INSTANCE_METADATA_SERVICE_URI;
 
 class SpringVaultClientConfigurationTests {
 
@@ -145,6 +149,14 @@ class SpringVaultClientConfigurationTests {
 		properties.getAzureMsi().setAzurePath("azure-msi");
 
 		assertClientAuthenticationOfType(properties, AzureMsiAuthentication.class);
+
+		AzureMsiAuthentication clientAuthentication = (AzureMsiAuthentication) getConfiguration(properties)
+			.clientAuthentication();
+		AzureMsiAuthenticationOptions options = (AzureMsiAuthenticationOptions) ReflectionTestUtils
+			.getField(clientAuthentication, "options");
+
+		assertThat(options.getIdentityTokenServiceUri()).isEqualTo(DEFAULT_IDENTITY_TOKEN_SERVICE_URI);
+		assertThat(options.getInstanceMetadataServiceUri()).isEqualTo(DEFAULT_INSTANCE_METADATA_SERVICE_URI);
 	}
 
 	@Test
