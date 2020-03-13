@@ -20,4 +20,5 @@ _site/
 .factorypath
 .vscode/
 .flattened-pom.xml
+IntelliJ_Spring_Boot_Java_Conventions.xml
 .sdkmanrc
