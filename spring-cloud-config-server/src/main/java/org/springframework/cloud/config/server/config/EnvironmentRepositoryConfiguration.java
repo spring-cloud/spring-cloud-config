@@ -22,6 +22,7 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
@@ -49,6 +50,9 @@ import org.springframework.cloud.config.server.environment.CredhubEnvironmentRep
 import org.springframework.cloud.config.server.environment.CredhubEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
+import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.HttpClientConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.HttpClientVaultRestTemplateFactory;
 import org.springframework.cloud.config.server.environment.HttpRequestConfigTokenProvider;
@@ -101,14 +105,16 @@ import org.springframework.vault.core.VaultTemplate;
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
 		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
 		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
-		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class })
+		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
+		GoogleSecretManagerEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
 		VaultConfiguration.class, VaultRepositoryConfiguration.class,
 		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
 		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
 		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
-		AwsS3RepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
+		AwsS3RepositoryConfiguration.class, DefaultRepositoryConfiguration.class,
+		GoogleSecretManagerRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
@@ -220,6 +226,18 @@ public class EnvironmentRepositoryConfiguration {
 				ConfigTokenProvider tokenProvider) {
 			return new VaultEnvironmentRepositoryFactory(request, watch,
 					vaultRestTemplateFactory, tokenProvider);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(SecretManagerServiceClient.class)
+	static class GoogleSecretManagerFactoryConfig {
+
+		@Bean
+		public GoogleSecretManagerEnvironmentRepositoryFactory googleSecretManagerEnvironmentRepositoryFactory(
+				ObjectProvider<HttpServletRequest> request) {
+			return new GoogleSecretManagerEnvironmentRepositoryFactory(request);
 		}
 
 	}
@@ -468,6 +486,21 @@ class CompositeRepositoryConfiguration {
 	public CompositeEnvironmentRepository compositeEnvironmentRepository(
 			List<EnvironmentRepository> environmentRepositories) {
 		return new CompositeEnvironmentRepository(environmentRepositories);
+	}
+
+}
+
+@Configuration(proxyBeanMethods = false)
+@Profile("secret-manager")
+@ConditionalOnClass(SecretManagerServiceClient.class)
+class GoogleSecretManagerRepositoryConfiguration {
+
+	@Bean
+	public GoogleSecretManagerEnvironmentRepository googleSecretManagerEnvironmentRepository(
+			GoogleSecretManagerEnvironmentRepositoryFactory factory,
+			GoogleSecretManagerEnvironmentProperties environmentProperties)
+			throws Exception {
+		return factory.build(environmentProperties);
 	}
 
 }
