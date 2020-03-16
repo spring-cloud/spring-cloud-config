@@ -33,11 +33,9 @@ import static java.util.stream.Collectors.toMap;
 
 /**
  * Provides credentials for Google Cloud Source repositories by adding a
- * {@code Authenticate} http header.
- * <p/>
- * It does so by acting as a transport configurer. If a transport instance targets a
- * Google Cloud Source repository, this implementation retrieves Google Cloud application
- * default credentials and adds them as a http header.
+ * {@code Authenticate} http header. It does so by acting as a transport configurer. If a
+ * transport instance targets a Google Cloud Source repository, this implementation
+ * retrieves Google Cloud application default credentials and adds them as a http header.
  *
  * @author Eduard Wirch
  * @see <a href=
