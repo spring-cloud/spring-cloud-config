@@ -46,7 +46,6 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 
 	/**
 	 * {@inheritDoc}
-	 * @return
 	 */
 	@Override
 	public boolean isInteractive() {
@@ -55,7 +54,6 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 
 	/**
 	 * {@inheritDoc}
-	 * @return
 	 */
 	@Override
 	public boolean supports(CredentialItem... items) {

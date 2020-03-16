@@ -26,9 +26,10 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.stereotype.Component;
 
 /**
- * @{link org.springframework.cloud.config.server.encryption.ResourceEncryptor}
+ * {@link org.springframework.cloud.config.server.encryption.ResourceEncryptor}
  * implementation that can decrypt property values prefixed with {cipher} marker in a YAML
  * file.
+ *
  * @author Sean Stiglitz
  */
 @Component
