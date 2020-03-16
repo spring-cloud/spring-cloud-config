@@ -27,8 +27,6 @@ import org.springframework.context.annotation.Import;
 
 /**
  * @author Dave Syer
- * @author
- *
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
