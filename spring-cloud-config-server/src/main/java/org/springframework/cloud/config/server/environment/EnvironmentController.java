@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import org.yaml.snakeyaml.nodes.Tag;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.PathUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -108,14 +109,21 @@ public class EnvironmentController {
 	@RequestMapping("/{name}/{profiles}/{label:.*}")
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
-		name = Environment.normalize(name);
-		label = Environment.normalize(label);
+		name = normalize(name);
+		label = normalize(label);
 		Environment environment = this.repository.findOne(name, profiles, label);
 		if (!this.acceptEmpty
 				&& (environment == null || environment.getPropertySources().isEmpty())) {
 			throw new EnvironmentNotFoundException("Profile Not found");
 		}
 		return environment;
+	}
+
+	private String normalize(String part) {
+		if (PathUtils.isInvalidEncodedLocation(part)) {
+			throw new InvalidEnvironmentRequestException("Invalid request");
+		}
+		return Environment.normalize(part);
 	}
 
 	@RequestMapping("/{name}-{profiles}.properties")

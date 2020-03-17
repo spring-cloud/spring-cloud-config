@@ -625,4 +625,34 @@ public class EnvironmentControllerTests {
 
 	}
 
+	@Test
+	public void labelWithPreviousDirectory() {
+		expected.expect(InvalidEnvironmentRequestException.class);
+		this.controller.labelled("foo", "bar", "..(_)..");
+	}
+
+	@Test
+	public void labelWithPreviousDirectoryEncodedParenthesis() {
+		expected.expect(InvalidEnvironmentRequestException.class);
+		this.controller.labelled("foo", "bar", "..%28_%29..");
+	}
+
+	@Test
+	public void labelWithPreviousDirectoryAllEncoded() {
+		expected.expect(InvalidEnvironmentRequestException.class);
+		this.controller.labelled("foo", "bar", "%2E%2E%28%5F%29%2E%2E");
+	}
+
+	@Test
+	public void nameWithPound() {
+		expected.expect(InvalidEnvironmentRequestException.class);
+		this.controller.labelled("foo#", "bar", "mylabel");
+	}
+
+	@Test
+	public void nameWithPoundEncoded() {
+		expected.expect(InvalidEnvironmentRequestException.class);
+		this.controller.labelled("foo%23", "bar", "mylabel");
+	}
+
 }
