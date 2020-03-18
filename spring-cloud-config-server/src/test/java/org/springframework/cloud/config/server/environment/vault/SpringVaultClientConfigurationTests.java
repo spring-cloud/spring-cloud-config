@@ -26,6 +26,11 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.context.annotation.UserConfigurations;
+import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
+import org.springframework.cloud.config.server.config.ConfigServerAutoConfiguration;
+import org.springframework.cloud.config.server.config.ConfigServerConfiguration;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientConfiguration.ConfigTokenProviderAuthentication;
 import org.springframework.cloud.config.server.environment.vault.authentication.AppRoleClientAuthenticationProvider;
@@ -40,6 +45,7 @@ import org.springframework.cloud.config.server.environment.vault.authentication.
 import org.springframework.cloud.config.server.environment.vault.authentication.PcfClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.authentication.TokenClientAuthenticationProvider;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.ClassUtils;
 import org.springframework.vault.authentication.AppRoleAuthentication;
 import org.springframework.vault.authentication.AwsEc2Authentication;
 import org.springframework.vault.authentication.AwsIamAuthentication;
@@ -284,11 +290,31 @@ class SpringVaultClientConfigurationTests {
 
 	private SpringVaultClientConfiguration getConfiguration(
 			VaultEnvironmentProperties properties) {
-		return new SpringVaultClientConfiguration(properties, () -> null, authProviders);
+		SpringVaultClientConfiguration configuration = new SpringVaultClientConfiguration(
+				properties, () -> null, authProviders);
+		configuration.afterPropertiesSet();
+		return configuration;
 	}
 
 	private String base64(String value) {
 		return new String(Base64.getEncoder().encode(value.getBytes()));
+	}
+
+	@Test
+	@SuppressWarnings("deprecation")
+	public void springVaultClientConfigurationIsAProxy() {
+		new WebApplicationContextRunner()
+				.withPropertyValues("spring.profiles.active=vault")
+				.withConfiguration(UserConfigurations.of(ConfigServerConfiguration.class))
+				.withConfiguration(
+						AutoConfigurations.of(ConfigServerAutoConfiguration.class))
+				.run(context -> {
+					assertThat(context).getBean(SpringVaultClientConfiguration.class)
+							.isNotNull()
+							.matches(svcc -> ClassUtils
+									.isCglibProxyClassName(svcc.getClass().getName()),
+									"is a proxy");
+				});
 	}
 
 }
