@@ -63,4 +63,5 @@ public class AzureMsiClientAuthenticationProvider
 		}
 		return URI.create(uriString);
 	}
+
 }
