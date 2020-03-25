@@ -5,3 +5,6 @@ org.springframework.cloud.config.client.ConfigClientAutoConfiguration
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
 org.springframework.cloud.config.client.ConfigServiceBootstrapConfiguration,\
 org.springframework.cloud.config.client.DiscoveryClientConfigServiceBootstrapConfiguration
+# Failure analyzers
+org.springframework.boot.diagnostics.FailureAnalyzer=\
+org.springframework.cloud.config.client.diagnostics.analyzer.InvalidApplicationNameExceptionFailureAnalyzer
