@@ -33,6 +33,8 @@ public class GoogleSecretManagerEnvironmentProperties
 
 	private String profileLabel = "profile";
 
+	private Integer version = 1;
+
 	/**
 	 * The metadata URL to get the project ID from.
 	 */
@@ -63,4 +65,11 @@ public class GoogleSecretManagerEnvironmentProperties
 		this.profileLabel = profileLabel;
 	}
 
+	public Integer getVersion() {
+		return version;
+	}
+
+	public void setVersion(Integer version) {
+		this.version = version;
+	}
 }
