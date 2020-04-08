@@ -150,13 +150,15 @@ class SpringVaultClientConfigurationTests {
 
 		assertClientAuthenticationOfType(properties, AzureMsiAuthentication.class);
 
-		AzureMsiAuthentication clientAuthentication = (AzureMsiAuthentication) getConfiguration(properties)
-			.clientAuthentication();
+		AzureMsiAuthentication clientAuthentication = (AzureMsiAuthentication) getConfiguration(
+				properties).clientAuthentication();
 		AzureMsiAuthenticationOptions options = (AzureMsiAuthenticationOptions) ReflectionTestUtils
-			.getField(clientAuthentication, "options");
+				.getField(clientAuthentication, "options");
 
-		assertThat(options.getIdentityTokenServiceUri()).isEqualTo(DEFAULT_IDENTITY_TOKEN_SERVICE_URI);
-		assertThat(options.getInstanceMetadataServiceUri()).isEqualTo(DEFAULT_INSTANCE_METADATA_SERVICE_URI);
+		assertThat(options.getIdentityTokenServiceUri())
+				.isEqualTo(DEFAULT_IDENTITY_TOKEN_SERVICE_URI);
+		assertThat(options.getInstanceMetadataServiceUri())
+				.isEqualTo(DEFAULT_INSTANCE_METADATA_SERVICE_URI);
 	}
 
 	@Test
