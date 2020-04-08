@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.context.annotation.UserConfigurations;
@@ -45,11 +46,17 @@ import org.springframework.cloud.config.server.environment.vault.authentication.
 import org.springframework.cloud.config.server.environment.vault.authentication.PcfClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.authentication.TokenClientAuthenticationProvider;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.mock.http.client.MockClientHttpRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.ClassUtils;
 import org.springframework.vault.authentication.AppRoleAuthentication;
 import org.springframework.vault.authentication.AwsEc2Authentication;
 import org.springframework.vault.authentication.AwsIamAuthentication;
 import org.springframework.vault.authentication.AzureMsiAuthentication;
+import org.springframework.vault.authentication.AzureMsiAuthenticationOptions;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.ClientCertificateAuthentication;
 import org.springframework.vault.authentication.CubbyholeAuthentication;
@@ -58,8 +65,11 @@ import org.springframework.vault.authentication.GcpIamAuthentication;
 import org.springframework.vault.authentication.KubernetesAuthentication;
 import org.springframework.vault.authentication.PcfAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
+import org.springframework.vault.client.VaultHttpHeaders;
 import org.springframework.vault.support.SslConfiguration;
 import org.springframework.vault.support.SslConfiguration.KeyStoreConfiguration;
+import org.springframework.web.client.RestOperations;
+import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.APPROLE;
@@ -73,6 +83,8 @@ import static org.springframework.cloud.config.server.environment.VaultEnvironme
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.KUBERNETES;
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.PCF;
 import static org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod.TOKEN;
+import static org.springframework.vault.authentication.AzureMsiAuthenticationOptions.DEFAULT_IDENTITY_TOKEN_SERVICE_URI;
+import static org.springframework.vault.authentication.AzureMsiAuthenticationOptions.DEFAULT_INSTANCE_METADATA_SERVICE_URI;
 
 class SpringVaultClientConfigurationTests {
 
@@ -137,6 +149,16 @@ class SpringVaultClientConfigurationTests {
 		properties.getAzureMsi().setAzurePath("azure-msi");
 
 		assertClientAuthenticationOfType(properties, AzureMsiAuthentication.class);
+
+		AzureMsiAuthentication clientAuthentication = (AzureMsiAuthentication) getConfiguration(
+				properties).clientAuthentication();
+		AzureMsiAuthenticationOptions options = (AzureMsiAuthenticationOptions) ReflectionTestUtils
+				.getField(clientAuthentication, "options");
+
+		assertThat(options.getIdentityTokenServiceUri())
+				.isEqualTo(DEFAULT_IDENTITY_TOKEN_SERVICE_URI);
+		assertThat(options.getInstanceMetadataServiceUri())
+				.isEqualTo(DEFAULT_INSTANCE_METADATA_SERVICE_URI);
 	}
 
 	@Test
@@ -278,6 +300,42 @@ class SpringVaultClientConfigurationTests {
 		assertThat(trustStoreConfiguration.isPresent()).isTrue();
 		assertThat(new String(trustStoreConfiguration.getStorePassword()))
 				.isEqualTo("password");
+	}
+
+	@Test
+	public void namespaceHeaderNotAddedWhenNamespaceNotConfigured() throws IOException {
+		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+
+		SpringVaultClientConfiguration configuration = getConfiguration(properties);
+		HttpRequest request = invokeInterceptors(configuration.restOperations());
+		assertThat(request.getHeaders().getFirst(VaultHttpHeaders.VAULT_NAMESPACE))
+				.isNull();
+	}
+
+	@Test
+	public void namespaceInterceptorAddedWhenNamespaceConfigured() throws IOException {
+		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		properties.setNamespace("test-namespace");
+
+		SpringVaultClientConfiguration configuration = getConfiguration(properties);
+		HttpRequest request = invokeInterceptors(configuration.restOperations());
+		assertThat(request.getHeaders().getFirst(VaultHttpHeaders.VAULT_NAMESPACE))
+				.isEqualTo("test-namespace");
+	}
+
+	private HttpRequest invokeInterceptors(RestOperations restOperations)
+			throws IOException {
+		assertThat(restOperations).isInstanceOf(RestTemplate.class);
+		RestTemplate restTemplate = (RestTemplate) restOperations;
+
+		MockClientHttpRequest request = new MockClientHttpRequest();
+		ClientHttpRequestExecution execution = Mockito
+				.mock(ClientHttpRequestExecution.class);
+		byte[] body = new byte[] {};
+		for (ClientHttpRequestInterceptor interceptor : restTemplate.getInterceptors()) {
+			interceptor.intercept(request, body, execution);
+		}
+		return request;
 	}
 
 	private void assertClientAuthenticationOfType(VaultEnvironmentProperties properties,

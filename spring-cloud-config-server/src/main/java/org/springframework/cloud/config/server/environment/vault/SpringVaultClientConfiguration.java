@@ -103,9 +103,7 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 				endpointProvider, requestFactory);
 
 		if (vaultProperties.getNamespace() != null) {
-			restTemplateBuilder.customizers(
-					restTemplate -> restTemplate.getInterceptors().add(VaultClients
-							.createNamespaceInterceptor(vaultProperties.getNamespace())));
+			restTemplateBuilder.customizers(this::applyNamespaceInterceptor);
 		}
 
 		return restTemplateBuilder;
@@ -132,6 +130,19 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 		return new SslConfiguration(keyStoreConfiguration, trustStoreConfiguration);
 	}
 
+	/**
+	 * This method is a work-around for the Spring Vault issue documented in
+	 * https://github.com/spring-projects/spring-vault/issues/546. The method should be
+	 * removed when Spring Cloud Config is upgraded to the version of Spring Vault that
+	 * includes the fix for the issue.
+	 * @return the {@link RestOperations} to be used for Vault access
+	 */
+	@Override
+	public RestOperations restOperations() {
+		return restTemplateBuilder(vaultEndpointProvider(),
+				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory()).build();
+	}
+
 	private SslConfiguration.KeyStoreConfiguration getKeyStoreConfiguration(
 			Resource resourceProperty, String passwordProperty) {
 
@@ -145,6 +156,15 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 		}
 
 		return SslConfiguration.KeyStoreConfiguration.of(resourceProperty);
+	}
+
+	private RestOperations applyNamespaceInterceptor(RestTemplate restTemplate) {
+		if (vaultProperties.getNamespace() != null) {
+			restTemplate.getInterceptors().add(VaultClients
+					.createNamespaceInterceptor(vaultProperties.getNamespace()));
+		}
+
+		return restTemplate;
 	}
 
 	/**
