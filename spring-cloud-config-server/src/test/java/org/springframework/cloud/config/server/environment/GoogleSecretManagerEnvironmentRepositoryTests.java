@@ -36,49 +36,54 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testSupportedStrategy() {
-		assertThat(GoogleSecretManagerAccessStrategyFactory
-			.forVersion(null, null, 1) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
+		assertThat(GoogleSecretManagerAccessStrategyFactory.forVersion(null, null,
+				null) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testGetUnsupportedStrategy() {
-		GoogleSecretManagerAccessStrategyFactory.forVersion(null, null, 0);
+		GoogleSecretManagerAccessStrategyFactory.forVersion(null, null, null);
 	}
 
-//	@Test
-//	@SuppressWarnings("unchecked")
-//	public void testListSecrets() throws IOException {
-//		RestTemplate rest = mock(RestTemplate.class);
-//		HttpHeaders headers = new HttpHeaders();
-//		headers.set("Metadata-Flavor", "Google");
-//		HttpEntity<String> entity = new HttpEntity<String>("parameters",
-//			headers);
-//		ResponseEntity<String> responseEntity = ResponseEntity.of(Optional.of("test-project"));
-//		when(rest
-//			.exchange(GoogleSecretManagerEnvironmentProperties.GOOGLE_METADATA_PROJECT_URL, HttpMethod.GET, entity, String.class))
-//			.thenReturn(responseEntity);
-//		GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
-//		//when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER)).thenReturn("test-project");
-//		//SecretManagerServiceClient client = SecretManagerServiceClient.create();
-//		SecretManagerServiceClient mock = PowerMockito.mock(SecretManagerServiceClient.class);
-//		SecretManagerServiceClient.ListSecretsPagedResponse response = mock(SecretManagerServiceClient.ListSecretsPagedResponse.class);
-//		Secret secret = Secret.newBuilder().setName("projects/111111/secrets/test").build();
-//		List<Secret> secrets = new ArrayList<Secret>();
-//		secrets.add(secret);
-//		when(response.iterateAll()).thenReturn(secrets);
-//		//Mockito.doReturn(response).when(spyClient).listSecrets(any(ListSecretsRequest.class));
-//		when(mock.listSecrets(any(ListSecretsRequest.class))).thenReturn(response);
-//		GoogleSecretManagerV1AccessStrategy strategy = new GoogleSecretManagerV1AccessStrategy(rest, provider, mock);
-//		assertThat(strategy.getSecrets().size()).isEqualTo(1);
-//		assertThat(strategy.getSecrets().get(0).getName()).isEqualTo("projects/111111/secrets/test");
-//	}
-//
-//	@SuppressWarnings("unchecked")
-//	private ObjectProvider<HttpServletRequest> mockHttpRequest() {
-//		ObjectProvider<HttpServletRequest> objectProvider = mock(ObjectProvider.class);
-//		when(objectProvider.getIfAvailable()).thenReturn(null);
-//		return objectProvider;
-//	}
-
+	// @Test
+	// @SuppressWarnings("unchecked")
+	// public void testListSecrets() throws IOException {
+	// RestTemplate rest = mock(RestTemplate.class);
+	// HttpHeaders headers = new HttpHeaders();
+	// headers.set("Metadata-Flavor", "Google");
+	// HttpEntity<String> entity = new HttpEntity<String>("parameters",
+	// headers);
+	// ResponseEntity<String> responseEntity =
+	// ResponseEntity.of(Optional.of("test-project"));
+	// when(rest
+	// .exchange(GoogleSecretManagerEnvironmentProperties.GOOGLE_METADATA_PROJECT_URL,
+	// HttpMethod.GET, entity, String.class))
+	// .thenReturn(responseEntity);
+	// GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
+	// //when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER)).thenReturn("test-project");
+	// //SecretManagerServiceClient client = SecretManagerServiceClient.create();
+	// SecretManagerServiceClient mock =
+	// PowerMockito.mock(SecretManagerServiceClient.class);
+	// SecretManagerServiceClient.ListSecretsPagedResponse response =
+	// mock(SecretManagerServiceClient.ListSecretsPagedResponse.class);
+	// Secret secret =
+	// Secret.newBuilder().setName("projects/111111/secrets/test").build();
+	// List<Secret> secrets = new ArrayList<Secret>();
+	// secrets.add(secret);
+	// when(response.iterateAll()).thenReturn(secrets);
+	// //Mockito.doReturn(response).when(spyClient).listSecrets(any(ListSecretsRequest.class));
+	// when(mock.listSecrets(any(ListSecretsRequest.class))).thenReturn(response);
+	// GoogleSecretManagerV1AccessStrategy strategy = new
+	// GoogleSecretManagerV1AccessStrategy(rest, provider, mock);
+	// assertThat(strategy.getSecrets().size()).isEqualTo(1);
+	// assertThat(strategy.getSecrets().get(0).getName()).isEqualTo("projects/111111/secrets/test");
+	// }
+	//
+	// @SuppressWarnings("unchecked")
+	// private ObjectProvider<HttpServletRequest> mockHttpRequest() {
+	// ObjectProvider<HttpServletRequest> objectProvider = mock(ObjectProvider.class);
+	// when(objectProvider.getIfAvailable()).thenReturn(null);
+	// return objectProvider;
+	// }
 
 }

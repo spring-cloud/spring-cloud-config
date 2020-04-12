@@ -92,6 +92,11 @@
 				<artifactId>google-cloud-secretmanager</artifactId>
 				<version>0.3.0</version>
 			</dependency>
+			<dependency>
+				<groupId>com.google.apis</groupId>
+				<artifactId>google-api-services-cloudresourcemanager</artifactId>
+				<version>v1-rev20200210-1.30.9</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<profiles>

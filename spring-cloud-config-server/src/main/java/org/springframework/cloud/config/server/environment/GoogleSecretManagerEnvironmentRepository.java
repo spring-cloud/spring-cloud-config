@@ -22,8 +22,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import com.google.cloud.secretmanager.v1.Secret;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
@@ -46,16 +44,13 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 
 	private GoogleSecretManagerAccessStrategy accessStrategy;
 
-	private static Log logger = LogFactory
-		.getLog(GoogleSecretManagerEnvironmentRepository.class);
-
 	public GoogleSecretManagerEnvironmentRepository(
-		ObjectProvider<HttpServletRequest> request, RestTemplate rest,
-		GoogleSecretManagerEnvironmentProperties properties) {
+			ObjectProvider<HttpServletRequest> request, RestTemplate rest,
+			GoogleSecretManagerEnvironmentProperties properties) {
 		this.applicationLabel = properties.getApplicationLabel();
 		this.profileLabel = properties.getProfileLabel();
-		this.accessStrategy = GoogleSecretManagerAccessStrategyFactory
-			.forVersion(rest, new HttpHeaderGoogleConfigProvider(request), properties.getVersion());
+		this.accessStrategy = GoogleSecretManagerAccessStrategyFactory.forVersion(rest,
+				new HttpHeaderGoogleConfigProvider(request), properties);
 	}
 
 	@Override
@@ -71,11 +66,13 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 		}
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		Environment result = new Environment(application, profile, label, null, null);
-		for (String profileUnit : profiles) {
-			Map<?, ?> secrets = getSecrets(application, profileUnit);
-			if (!secrets.isEmpty()) {
-				result.add(new PropertySource("gsm:" + application + "-" + profileUnit,
-					secrets));
+		if (accessStrategy.checkRemotePermissions()) {
+			for (String profileUnit : profiles) {
+				Map<?, ?> secrets = getSecrets(application, profileUnit);
+				if (!secrets.isEmpty()) {
+					result.add(new PropertySource(
+							"gsm:" + application + "-" + profileUnit, secrets));
+				}
 			}
 		}
 		return result;
@@ -90,14 +87,15 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 		Map<String, String> result = new HashMap<>();
 		for (Secret secret : accessStrategy.getSecrets()) {
 			if (secret.getLabelsOrDefault(applicationLabel, "application")
-				.equalsIgnoreCase(application)
-				&& secret.getLabelsOrDefault(profileLabel, "profile")
-				.equalsIgnoreCase(profile)) {
+					.equalsIgnoreCase(application)
+					&& secret.getLabelsOrDefault(profileLabel, "profile")
+							.equalsIgnoreCase(profile)) {
 				result.put(accessStrategy.getSecretName(secret), accessStrategy
-					.getSecretValue(secret, new GoogleSecretComparatorByVersion()));
+						.getSecretValue(secret, new GoogleSecretComparatorByVersion()));
 			}
 
 		}
 		return result;
 	}
+
 }

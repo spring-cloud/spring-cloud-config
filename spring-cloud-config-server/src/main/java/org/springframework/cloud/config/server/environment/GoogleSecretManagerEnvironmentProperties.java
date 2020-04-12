@@ -33,6 +33,8 @@ public class GoogleSecretManagerEnvironmentProperties
 
 	private String profileLabel = "profile";
 
+	private String serviceAccount = null;
+
 	private Integer version = 1;
 
 	/**
@@ -72,4 +74,13 @@ public class GoogleSecretManagerEnvironmentProperties
 	public void setVersion(Integer version) {
 		this.version = version;
 	}
+
+	public String getServiceAccount() {
+		return serviceAccount;
+	}
+
+	public void setServiceAccount(String serviceAccount) {
+		this.serviceAccount = serviceAccount;
+	}
+
 }

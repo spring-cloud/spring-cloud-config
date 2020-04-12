@@ -29,6 +29,11 @@ public class HttpHeaderGoogleConfigProvider implements GoogleConfigProvider {
 	 */
 	public static final String PROJECT_ID_HEADER = "X-Project-ID";
 
+	/**
+	 * The Config Token ID Header admited to get the access token from the client.
+	 */
+	public static final String ACCESS_TOKEN_HEADER = "X-Config-Token";
+
 	private ObjectProvider<HttpServletRequest> httpRequest;
 
 	public HttpHeaderGoogleConfigProvider(ObjectProvider<HttpServletRequest> request) {
