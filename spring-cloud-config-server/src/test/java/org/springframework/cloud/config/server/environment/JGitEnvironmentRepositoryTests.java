@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.DeleteBranchCommand;
@@ -39,6 +40,7 @@ import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NotMergedException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.attributes.AttributesNodeProvider;
@@ -328,6 +330,137 @@ public class JGitEnvironmentRepositoryTests {
 		boolean shouldPull = repo.shouldPull(git);
 
 		assertThat(shouldPull).as("shouldPull was true").isFalse();
+	}
+
+	@Test
+	public void shouldPullTruncatedIndexForcePull() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		ResetCommand resetCommand = mock(ResetCommand.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
+		when(statusCommand.call())
+				.thenThrow(new JGitInternalException("Short read of block."))
+				.thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+		when(git.reset()).thenReturn(resetCommand);
+		when(resetCommand.setMode(any())).thenReturn(resetCommand);
+		when(resetCommand.setRef(any())).thenReturn(resetCommand);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+		repo.setUri("");
+		repo.setForcePull(true);
+
+		boolean shouldPull = repo.shouldPull(git);
+
+		assertThat(shouldPull).as("shouldPull was false").isTrue();
+	}
+
+	@Test
+	public void shouldPullTruncatedIndexNotForcePull() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
+		when(statusCommand.call())
+				.thenThrow(new JGitInternalException("Short read of block."));
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+		repo.setForcePull(false);
+
+		try {
+			final boolean shouldPull = repo.shouldPull(git);
+			assertThat(shouldPull).as("shouldPull did not fail").isFalse();
+		}
+		catch (JGitInternalException e) {
+			assertThat(e.getMessage()).as("shouldPull did not fail as expected")
+					.isEqualTo("Short read of block.");
+		}
+	}
+
+	@Test
+	public void shouldPullTruncatedIndexResetFail() throws Exception {
+		final String mockThrownMessage = "__mock_thrown__";
+
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		ResetCommand resetCommand = mock(ResetCommand.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
+		when(statusCommand.call()).thenThrow(new JGitInternalException(mockThrownMessage))
+				.thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+		when(git.reset()).thenReturn(resetCommand);
+		when(resetCommand.call()).thenThrow(new GitAPIException("") {
+		});
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+
+		try {
+			repo.shouldPull(git);
+			Assertions.fail("shouldPull did not fail");
+		}
+		catch (JGitInternalException e) {
+			assertThat(e.getMessage()).as("shouldPull did not fail as expected")
+					.isEqualTo(mockThrownMessage);
+		}
+	}
+
+	@Test
+	public void shouldPullStatusFail() throws Exception {
+		final String mockThrownMessage = "__mock_thrown__";
+
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
+		when(statusCommand.call())
+				.thenThrow(new JGitInternalException(mockThrownMessage));
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+
+		try {
+			repo.shouldPull(git);
+			Assertions.fail("shouldPull did not fail");
+		}
+		catch (JGitInternalException e) {
+			assertThat(e.getMessage()).as("shouldPull did not fail as expected")
+					.isEqualTo(mockThrownMessage);
+		}
 	}
 
 	@Test
