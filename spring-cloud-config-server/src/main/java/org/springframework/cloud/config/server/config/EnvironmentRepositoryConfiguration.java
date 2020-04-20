@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
@@ -37,6 +38,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.server.composite.CompositeEnvironmentBeanFactoryPostProcessor;
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
 import org.springframework.cloud.config.server.composite.ConditionalOnSearchPathLocator;
+import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentProperties;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepositoryFactory;
@@ -95,19 +99,23 @@ import org.springframework.vault.core.VaultTemplate;
  * @author Dylan Roberts
  * @author Alberto C. Ríos
  * @author Scott Frederick
+ * @author Iulian Antohe
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
 		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
 		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
-		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class })
+		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
+		AwsParameterStoreEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
 		VaultConfiguration.class, VaultRepositoryConfiguration.class,
 		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
 		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
 		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
-		AwsS3RepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
+		AwsS3RepositoryConfiguration.class,
+		AwsParameterStoreRepositoryConfiguration.class,
+		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
@@ -191,6 +199,18 @@ public class EnvironmentRepositoryConfiguration {
 		public AwsS3EnvironmentRepositoryFactory awsS3EnvironmentRepositoryFactory(
 				ConfigServerProperties server) {
 			return new AwsS3EnvironmentRepositoryFactory(server);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(AWSSimpleSystemsManagement.class)
+	static class AwsParameterStoreFactoryConfig {
+
+		@Bean
+		public AwsParameterStoreEnvironmentRepositoryFactory awsParameterStoreEnvironmentRepositoryFactory(
+				ConfigServerProperties server) {
+			return new AwsParameterStoreEnvironmentRepositoryFactory(server);
 		}
 
 	}
@@ -345,6 +365,21 @@ class AwsS3RepositoryConfiguration {
 	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(
 			AwsS3EnvironmentRepositoryFactory factory,
 			AwsS3EnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration(proxyBeanMethods = false)
+@Profile("awsparamstore")
+class AwsParameterStoreRepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean(AwsParameterStoreEnvironmentRepository.class)
+	public AwsParameterStoreEnvironmentRepository awsParameterStoreEnvironmentRepository(
+			AwsParameterStoreEnvironmentRepositoryFactory factory,
+			AwsParameterStoreEnvironmentProperties environmentProperties)
+			throws Exception {
 		return factory.build(environmentProperties);
 	}
 
