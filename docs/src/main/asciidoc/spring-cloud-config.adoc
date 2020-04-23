@@ -797,6 +797,18 @@ credhub set --name "/my-app/default/master/more-shared" --type=json
 value: {"shared.word1": "hello", "shared.word2": "world"}
 ----
 
+===== AWS Parameter Store
+
+When using AWS Parameter Store as a backend, you can share configuration with all applications by placing properties within the `/application` hierarchy.
+
+For example, if you add parameters with the following names, all applications using the config server will have the properties `foo.bar` and `fred.baz` available to them:
+
+[source]
+----
+/config/application/foo.bar
+/config/application-default/fred.baz
+----
+
 ==== JDBC Backend
 
 Spring Cloud Config Server supports JDBC (relational database) as a backend for configuration properties.
@@ -892,6 +904,99 @@ Credentials are found using the link:https://docs.aws.amazon.com/sdk-for-java/v1
 Configuration files are stored in your bucket as `{application}-{profile}.properties`, `{application}-{profile}.yml` or `{application}-{profile}.json`. An optional label can be provided to specify a directory path to the file.
 
 NOTE: When no profile is specified `default` will be used.
+
+==== AWS Parameter Store Backend
+
+Spring Cloud Config Server supports AWS Parameter Store as a backend for configuration properties. You can enable this feature by adding a dependency to the link:https://github.com/aws/aws-sdk-java/tree/master/aws-java-sdk-ssm[AWS Java SDK for SSM].
+
+[source,xml,indent=0]
+.pom.xml
+----
+    <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-java-sdk-ssm</artifactId>
+    </dependency>
+----
+
+The following configuration uses the AWS SSM client to access parameters.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: awsparamstore
+  cloud:
+    config:
+      server:
+        awsparamstore:
+          region: eu-west-2
+          endpoint: https://ssm.eu-west-2.amazonaws.com
+          origin: aws:parameter:
+          prefix: /config/service
+          profileSeparator: _
+          recursive: true
+          decryptValues: true
+          maxResults: 5
+----
+
+The following table describes the AWS Parameter Store configuration properties.
+
+.AWS Parameter Store Configuration Properties
+|===
+|Property Name |Required |Default Value |Remarks
+
+|*region*
+|no
+|
+|The region to be used by the AWS Parameter Store client. If it's not explicitly set, the SDK tries to determine the region to use by using the link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/java-dg-region-selection.html#default-region-provider-chain[Default Region Provider Chain].
+
+|*endpoint*
+|no
+|
+|The URL of the entry point for the AWS SSM client. This can be used to specify an alternate endpoint for the API requests.
+
+|*origin*
+|no
+|`aws:ssm:parameter:`
+|The prefix that is added to the property source's name to show their provenance.
+
+|*prefix*
+|no
+|`/config`
+|Prefix indicating L1 level in the parameter hierarchy for every property loaded from the AWS Parameter Store.
+
+|*profileSeparator*
+|no
+|`-`
+|String that separates an appended profile from the context name.
+
+|*recursive*
+|no
+|`true`
+|Flag to indicate the retrieval of all AWS parameters within a hierarchy.
+
+|*decryptValues*
+|no
+|`true`
+|Flag to indicate the retrieval of all AWS parameters with their value decrypted.
+
+|*maxResults*
+|no
+|`10`
+|The maximum number of items to return for an AWS Parameter Store API call.
+
+|===
+
+AWS Parameter Store API credentials are determined using the link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default[Default Credential Provider Chain].
+Versioned parameters are already supported with the default behaviour of returning the latest version.
+
+[NOTE]
+====
+- When no application is specified `application` is the default, and when no profile is specified `default` is used.
+- Valid values for `awsparamstore.prefix` must start with a forward slash followed by one or more valid path segments or be empty.
+- Valid values for `awsparamstore.profileSeparator` can only contain dots, dashes and underscores.
+- Valid values for `awsparamstore.maxResults` must be within the *[1, 10]* range.
+====
 
 ==== CredHub Backend
 
