@@ -378,8 +378,7 @@ class AwsParameterStoreRepositoryConfiguration {
 	@ConditionalOnMissingBean(AwsParameterStoreEnvironmentRepository.class)
 	public AwsParameterStoreEnvironmentRepository awsParameterStoreEnvironmentRepository(
 			AwsParameterStoreEnvironmentRepositoryFactory factory,
-			AwsParameterStoreEnvironmentProperties environmentProperties)
-			throws Exception {
+			AwsParameterStoreEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 

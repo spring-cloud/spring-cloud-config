@@ -16,7 +16,13 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
+
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Iulian Antohe
@@ -24,15 +30,40 @@ import org.springframework.cloud.config.server.config.ConfigServerProperties;
 public class AwsParameterStoreEnvironmentRepositoryFactory implements
 		EnvironmentRepositoryFactory<AwsParameterStoreEnvironmentRepository, AwsParameterStoreEnvironmentProperties> {
 
+	private final ConfigServerProperties configServerProperties;
+
 	public AwsParameterStoreEnvironmentRepositoryFactory(
 			ConfigServerProperties configServerProperties) {
+		this.configServerProperties = configServerProperties;
 	}
 
 	@Override
 	public AwsParameterStoreEnvironmentRepository build(
-			AwsParameterStoreEnvironmentProperties environmentProperties)
-			throws Exception {
-		return null;
+			AwsParameterStoreEnvironmentProperties environmentProperties) {
+		AWSSimpleSystemsManagementClientBuilder clientBuilder = AWSSimpleSystemsManagementClientBuilder
+				.standard();
+
+		String region = environmentProperties.getRegion();
+
+		if (!StringUtils.isEmpty(region)) {
+			Regions awsRegion = Regions.fromName(region);
+
+			clientBuilder.withRegion(awsRegion);
+
+			String endpoint = environmentProperties.getEndpoint();
+
+			if (!StringUtils.isEmpty(endpoint)) {
+				AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
+						endpoint, awsRegion.getName());
+
+				clientBuilder.withEndpointConfiguration(endpointConfiguration);
+			}
+		}
+
+		AWSSimpleSystemsManagement client = clientBuilder.build();
+
+		return new AwsParameterStoreEnvironmentRepository(client, configServerProperties,
+				environmentProperties);
 	}
 
 }
