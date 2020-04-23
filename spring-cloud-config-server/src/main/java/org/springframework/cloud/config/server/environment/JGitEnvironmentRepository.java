@@ -339,8 +339,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 			// Check if git points to valid repository and default label is not empty or
 			// null.
-			if (null != git && git.getRepository() != null
-					&& !StringUtils.isEmpty(getDefaultLabel())) {
+			if (null != git && git.getRepository() != null && !StringUtils.isEmpty(getDefaultLabel())) {
 				// Checkout the default branch set for repo in git. This may not always be
 				// master. It depends on the
 				// admin and organization settings.

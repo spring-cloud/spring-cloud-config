@@ -185,6 +185,16 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertExpectedEnvironment(env, "foo,bar", null, null, 2, "profile1");
 	}
 
+	@Test
+	public void factoryCustomizable() {
+		AwsS3EnvironmentRepositoryFactory factory = new AwsS3EnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsS3EnvironmentProperties properties = new AwsS3EnvironmentProperties();
+		properties.setRegion("us-east-1");
+		properties.setEndpoint("https://myawsendpoint/");
+		AwsS3EnvironmentRepository repository = factory.build(properties);
+		assertThat(repository).isNotNull();
+	}
+
 	private void setupS3(String fileName, String propertyContent) throws UnsupportedEncodingException {
 		setupS3(fileName, null, propertyContent);
 	}
