@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -81,6 +82,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -227,21 +229,47 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchCalled()
+	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchNotCalled_onExistedGitDir()
 			throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		File baseDir = Files.createTempDirectory("tempBaseDir").toFile();
+		MockGitFactory gitFactory = spy(new MockGitFactory(mockGit, mockCloneCommand));
+		new File(baseDir, ".git").mkdirs();
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
+
+		envRepository.setBasedir(baseDir);
+		envRepository.setGitFactory(gitFactory);
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setCloneOnStart(true);
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, never()).call();
+		verify(gitFactory, times(1)).getGitByOpen(any(File.class));
+	}
+
+	@Test
+	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchCalled_onNotExistedGitDir()
+			throws Exception {
+		Git mockGit = mock(Git.class);
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		MockGitFactory gitFactory = spy(new MockGitFactory(mockGit, mockCloneCommand));
+		File baseDir = Files.createTempDirectory("tempBaseDir").toFile();
 
 		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
 		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
 
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
 				this.environment, new JGitEnvironmentProperties());
-		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+
+		envRepository.setBasedir(baseDir);
+		envRepository.setGitFactory(gitFactory);
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 		verify(mockCloneCommand, times(1)).call();
+		verify(gitFactory, times(1)).getGitByOpen(any(File.class));
 	}
 
 	@Test
