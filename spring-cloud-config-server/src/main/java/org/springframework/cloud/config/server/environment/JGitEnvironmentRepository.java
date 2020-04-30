@@ -336,17 +336,19 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private void initClonedRepository() throws GitAPIException, IOException {
 		if (!getUri().startsWith(FILE_URI_PREFIX)) {
-			deleteBaseDirIfExists();
-			Git git = cloneToBasedir();
-			if (git != null) {
-				git.close();
+			Git git;
+			if (!isGitDirectoryInitialized()) {
+				deleteBaseDirIfExists();
+				git = cloneToBasedir();
+				if (git != null) {
+					git.close();
+				}
 			}
 			git = openGitRepository();
 			if (git != null) {
 				git.close();
 			}
 		}
-
 	}
 
 	/**
@@ -540,7 +542,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			this.logger.info("Deleting stale JGit lock file at " + lock);
 			lock.delete();
 		}
-		if (new File(getWorkingDirectory(), ".git").exists()) {
+		if (isGitDirectoryInitialized()) {
 			return openGitRepository();
 		}
 		else {
@@ -667,6 +669,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private boolean isLocalBranch(Git git, String label) throws GitAPIException {
 		return containsBranch(git, label, null);
+	}
+
+	private boolean isGitDirectoryInitialized() {
+		return new File(getWorkingDirectory(), ".git").exists();
 	}
 
 	private boolean containsBranch(Git git, String label, ListMode listMode)
