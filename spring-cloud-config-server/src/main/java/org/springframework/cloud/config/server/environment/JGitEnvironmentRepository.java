@@ -330,9 +330,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	/**
-	 * Clones the remote repository and then opens a connection to it.
-	 * Checks out to the defaultLabel if specified.
-	 *
+	 * Clones the remote repository and then opens a connection to it. Checks out to the
+	 * defaultLabel if specified.
 	 * @throws GitAPIException when cloning fails
 	 * @throws IOException when repo opening fails
 	 */
@@ -344,12 +343,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				git.close();
 			}
 			git = openGitRepository();
-			
+
 			// checkout the default label
 			if (null != git && null != getDefaultLabel()) {
 				checkout(git, getDefaultLabel());
 			}
-			
+
 			if (git != null) {
 				git.close();
 			}

@@ -1099,16 +1099,14 @@ public class JGitEnvironmentRepositoryTests {
 		verify(deleteBranchCommand).setForce(true);
 		verify(deleteBranchCommand).call();
 	}
-	
-	
+
 	/**
 	 * Test case to set if the default-label is checked out.
-	 *
-	 * @throws Exception
+	 * @throws Exception should throw any runtime exception.
 	 */
 	@Test
 	public void afterPropertiesSet_CloneOnStartTrue_DefaultLabelSet_CloneAndCheckoutCalled()
-		throws Exception {
+			throws Exception {
 		Git mockGit = mock(Git.class);
 		final String LABEL_TO_CHECKOUT = "release";
 		// Mock the clone command
@@ -1124,8 +1122,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockGit.checkout()).thenReturn(mockCheckoutCommand);
 		when(mockGit.branchList()).thenReturn(mockListBranchCommand);
 
-
-		//Add 2 branches on mock repo {master, release}
+		// Add 2 branches on mock repo {master, release}
 		List<Ref> repositoryRefsList = new ArrayList<>();
 
 		// Mock master branch
@@ -1143,7 +1140,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockCheckoutCommand.call()).thenReturn(mockReleaseRef);
 
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-			this.environment, new JGitEnvironmentProperties());
+				this.environment, new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setCloneOnStart(true);
