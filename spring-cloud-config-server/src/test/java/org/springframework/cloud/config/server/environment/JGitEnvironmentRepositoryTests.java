@@ -1099,6 +1099,63 @@ public class JGitEnvironmentRepositoryTests {
 		verify(deleteBranchCommand).setForce(true);
 		verify(deleteBranchCommand).call();
 	}
+	
+	
+	/**
+	 * Test case to set if the default-label is checked out.
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	public void afterPropertiesSet_CloneOnStartTrue_DefaultLabelSet_CloneAndCheckoutCalled()
+		throws Exception {
+		Git mockGit = mock(Git.class);
+		final String LABEL_TO_CHECKOUT = "release";
+		// Mock the clone command
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+
+		// Mocking the commands to checkout to label.
+		ListBranchCommand mockListBranchCommand = mock(ListBranchCommand.class);
+		CheckoutCommand mockCheckoutCommand = mock(CheckoutCommand.class);
+
+		// Return the mocked checkout and ListBranchCommand.
+		when(mockGit.checkout()).thenReturn(mockCheckoutCommand);
+		when(mockGit.branchList()).thenReturn(mockListBranchCommand);
+
+
+		//Add 2 branches on mock repo {master, release}
+		List<Ref> repositoryRefsList = new ArrayList<>();
+
+		// Mock master branch
+		Ref mockMasterRef = mock(Ref.class);
+		repositoryRefsList.add(mockMasterRef);
+		when(mockMasterRef.getName()).thenReturn("/master");
+
+		// Mock release branch.
+		Ref mockReleaseRef = mock(Ref.class);
+		repositoryRefsList.add(mockReleaseRef);
+		when(mockReleaseRef.getName()).thenReturn("/release");
+
+		// Mock calls on list and checkout commands
+		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
+		when(mockCheckoutCommand.call()).thenReturn(mockReleaseRef);
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+			this.environment, new JGitEnvironmentProperties());
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setCloneOnStart(true);
+
+		// Set the label to checkout. should be different from master
+		envRepository.setDefaultLabel(LABEL_TO_CHECKOUT);
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, times(1)).call();
+		verify(mockCheckoutCommand, times(1)).call();
+		verify(mockListBranchCommand, times(2)).call();
+		verify(mockCheckoutCommand, times(1)).setName(anyString());
+	}
 
 	class MockCloneCommand extends CloneCommand {
 
