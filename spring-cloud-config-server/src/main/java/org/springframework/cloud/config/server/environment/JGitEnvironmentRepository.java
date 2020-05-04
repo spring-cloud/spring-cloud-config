@@ -346,7 +346,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			git = openGitRepository();
 			
 			// checkout the default label
-			if (null != getDefaultLabel()) {
+			if (null != git && null != getDefaultLabel()) {
 				checkout(git, getDefaultLabel());
 			}
 			
