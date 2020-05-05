@@ -344,9 +344,20 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			}
 			git = openGitRepository();
 
-			// checkout the default label
-			if (null != git && null != getDefaultLabel()) {
-				checkout(git, getDefaultLabel());
+			// Check if git points to valid repository and default label is not empty or
+			// null.
+			if (null != git && git.getRepository() != null
+					&& !StringUtils.isEmpty(getDefaultLabel())) {
+				// Checkout the default branch set for repo in git. This may not always be
+				// master. It depends on the
+				// admin and organization settings.
+				String defaultBranchInGit = git.getRepository().getBranch();
+				// If default branch is not empty and NOT equal to defaultLabel, then
+				// checkout the branch/tag/commit-id.
+				if (!StringUtils.isEmpty(defaultBranchInGit)
+						&& !getDefaultLabel().equalsIgnoreCase(defaultBranchInGit)) {
+					checkout(git, getDefaultLabel());
+				}
 			}
 
 			if (git != null) {

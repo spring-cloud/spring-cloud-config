@@ -1107,8 +1107,14 @@ public class JGitEnvironmentRepositoryTests {
 	@Test
 	public void afterPropertiesSet_CloneOnStartTrue_DefaultLabelSet_CloneAndCheckoutCalled()
 			throws Exception {
-		Git mockGit = mock(Git.class);
 		final String LABEL_TO_CHECKOUT = "release";
+		// Set the default branch of repository as master
+		Repository mockRepository = mock(Repository.class);
+		when(mockRepository.getBranch()).thenReturn("master");
+
+		Git mockGit = mock(Git.class);
+		when(mockGit.getRepository()).thenReturn(mockRepository);
+
 		// Mock the clone command
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
 		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
@@ -1152,6 +1158,67 @@ public class JGitEnvironmentRepositoryTests {
 		verify(mockCheckoutCommand, times(1)).call();
 		verify(mockListBranchCommand, times(2)).call();
 		verify(mockCheckoutCommand, times(1)).setName(anyString());
+	}
+
+	/**
+	 * Test case to validate that check out is not called when the default branch for repo
+	 * is same as default label.
+	 * @throws Exception should throw any runtime exception.
+	 */
+	@Test
+	public void afterPropertiesSet_CloneOnStartTrue_DefaultLabelSameAsDefaultBranch_CheckoutNotCalled()
+			throws Exception {
+		final String LABEL_TO_CHECKOUT = "master";
+		// Set the default branch of repository as master
+		Repository mockRepository = mock(Repository.class);
+		when(mockRepository.getBranch()).thenReturn("master");
+
+		Git mockGit = mock(Git.class);
+		when(mockGit.getRepository()).thenReturn(mockRepository);
+
+		// Mock the clone command
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+
+		// Mocking the commands to checkout to label.
+		ListBranchCommand mockListBranchCommand = mock(ListBranchCommand.class);
+		CheckoutCommand mockCheckoutCommand = mock(CheckoutCommand.class);
+
+		// Return the mocked checkout and ListBranchCommand.
+		when(mockGit.checkout()).thenReturn(mockCheckoutCommand);
+		when(mockGit.branchList()).thenReturn(mockListBranchCommand);
+
+		// Add 2 branches on mock repo {master, release}
+		List<Ref> repositoryRefsList = new ArrayList<>();
+
+		// Mock master branch
+		Ref mockMasterRef = mock(Ref.class);
+		repositoryRefsList.add(mockMasterRef);
+		when(mockMasterRef.getName()).thenReturn("/master");
+
+		// Mock release branch.
+		Ref mockReleaseRef = mock(Ref.class);
+		repositoryRefsList.add(mockReleaseRef);
+		when(mockReleaseRef.getName()).thenReturn("/release");
+
+		// Mock calls on list and checkout commands
+		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
+		when(mockCheckoutCommand.call()).thenReturn(mockReleaseRef);
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
+				this.environment, new JGitEnvironmentProperties());
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setCloneOnStart(true);
+
+		// Set the label to checkout. should be different from master
+		envRepository.setDefaultLabel(LABEL_TO_CHECKOUT);
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, times(1)).call();
+		verify(mockCheckoutCommand, times(0)).call();
+		verify(mockListBranchCommand, times(0)).call();
+		verify(mockCheckoutCommand, times(0)).setName(anyString());
 	}
 
 	class MockCloneCommand extends CloneCommand {
