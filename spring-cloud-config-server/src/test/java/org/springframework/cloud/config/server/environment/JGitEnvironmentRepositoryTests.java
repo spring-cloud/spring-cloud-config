@@ -1216,6 +1216,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setDefaultLabel(LABEL_TO_CHECKOUT);
 		envRepository.afterPropertiesSet();
 		verify(mockCloneCommand, times(1)).call();
+		// Checkout/List Branch/Checkout setName should not be called
 		verify(mockCheckoutCommand, times(0)).call();
 		verify(mockListBranchCommand, times(0)).call();
 		verify(mockCheckoutCommand, times(0)).setName(anyString());
