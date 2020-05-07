@@ -16,16 +16,22 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.yaml.snakeyaml.Yaml;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -37,6 +43,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -116,14 +123,26 @@ public class EnvironmentControllerTests {
 	public void placeholdersResolvedInYaml() throws Exception {
 		whenPlaceholders();
 		String yaml = this.controller.yaml("foo", "bar", true).getBody();
-		assertThat(yaml).isEqualTo("a:\n  b:\n    c: bar\nfoo: bar\n");
+		Map<String, Object> map = new Yaml().load(yaml);
+		assertThat(map).containsOnlyKeys("a", "foo");
+		assertThat(map).containsEntry("foo", "bar");
+		Map<String, Object> a = (Map<String, Object>) map.get("a");
+		assertThat(a).containsOnlyKeys("b");
+		Map<String, Object> b = (Map<String, Object>) a.get("b");
+		assertThat(b).containsOnlyKeys("c").containsEntry("c", "bar");
 	}
 
 	@Test
 	public void placeholdersNotResolvedInYaml() throws Exception {
 		whenPlaceholders();
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
-		assertThat(yaml).isEqualTo("a:\n  b:\n    c: ${foo}\nfoo: bar\n");
+		Map<String, Object> map = new Yaml().load(yaml);
+		assertThat(map).containsOnlyKeys("a", "foo");
+		assertThat(map).containsEntry("foo", "bar");
+		Map<String, Object> a = (Map<String, Object>) map.get("a");
+		assertThat(a).containsOnlyKeys("b");
+		Map<String, Object> b = (Map<String, Object>) a.get("b");
+		assertThat(b).containsOnlyKeys("c").containsEntry("c", "${foo}");
 	}
 
 	@Test
@@ -345,22 +364,33 @@ public class EnvironmentControllerTests {
 		when(this.repository.findOne("foo", "bar", null, false))
 				.thenReturn(this.environment);
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
-		String expected = // @formatter:off
-				"a:\n" +
-				"  b:\n" +
-				"  - c: x\n" +
-				"    d:\n" +
-				"    - xx\n" +
-				"    - null\n" +
-				"    - yy\n" +
-				"  - null\n" +
-				"  - c: y\n" +
-				"    e:\n" +
-				"    - d: z\n" +
-				"  - - r\n" +
-				"    - s\n";
-		// @formatter:on
-		assertThat(yaml).as("Wrong output: " + yaml).isEqualTo(expected);
+
+		Map<String, Object> level1 = new Yaml().load(yaml);
+		assertThat(level1).containsOnlyKeys("a");
+
+		Map<String, Object> level2 = (Map<String, Object>) level1.get("a");
+		assertThat(level2).containsOnlyKeys("b");
+
+		List<Object> level3 = (List<Object>) level2.get("b");
+		assertThat(level3).hasSize(4);
+		assertThat(level3.get(1)).isNull();
+
+		Map<String, Object> item0 = (Map<String, Object>) level3.get(0);
+		assertThat(item0).containsOnlyKeys("c", "d");
+		assertThat(item0).containsEntry("c", "x");
+		List<Object> itemd = (List<Object>) item0.get("d");
+		assertThat(itemd).containsExactly("xx", null, "yy");
+
+		Map<String, Object> item2 = (Map<String, Object>) level3.get(2);
+		assertThat(item2).containsOnlyKeys("c", "e");
+		assertThat(item2).containsEntry("c", "y");
+		List<Object> iteme = (List<Object>) item2.get("e");
+		assertThat(iteme).hasSize(1);
+		Map<String, Object> item_e0 = (Map<String, Object>) iteme.get(0);
+		assertThat(item_e0).containsExactly(entry("d", "z"));
+
+		List<Object> item3 = (List<Object>) level3.get(3);
+		assertThat(item3).containsExactly("r", "s");
 	}
 
 	@Test
@@ -407,14 +437,20 @@ public class EnvironmentControllerTests {
 	public void placeholdersResolvedInProperties() throws Exception {
 		whenPlaceholders();
 		String text = this.controller.properties("foo", "bar", true).getBody();
-		assertThat(text).isEqualTo("a.b.c: bar\nfoo: bar");
+		Properties properties = new Properties();
+		properties.load(new StringReader(text));
+		assertThat(properties).containsExactly(entry("a.b.c", "bar"),
+				entry("foo", "bar"));
 	}
 
 	@Test
 	public void placeholdersNotResolvedInProperties() throws Exception {
 		whenPlaceholders();
 		String text = this.controller.properties("foo", "bar", false).getBody();
-		assertThat(text).isEqualTo("a.b.c: ${foo}\nfoo: bar");
+		Properties properties = new Properties();
+		properties.load(new StringReader(text));
+		assertThat(properties).containsExactly(entry("a.b.c", "${foo}"),
+				entry("foo", "bar"));
 	}
 
 	@Test
@@ -445,14 +481,16 @@ public class EnvironmentControllerTests {
 	public void placeholdersResolvedInJson() throws Exception {
 		whenPlaceholders();
 		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
-		assertThat(json).isEqualTo("{\"a\":{\"b\":{\"c\":\"bar\"}},\"foo\":\"bar\"}");
+		JSONAssert.assertEquals("{\"a\":{\"b\":{\"c\":\"bar\"}},\"foo\":\"bar\"}", json,
+				JSONCompareMode.STRICT);
 	}
 
 	@Test
 	public void placeholdersNotResolvedInJson() throws Exception {
 		whenPlaceholders();
 		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
-		assertThat(json).isEqualTo("{\"a\":{\"b\":{\"c\":\"${foo}\"}},\"foo\":\"bar\"}");
+		JSONAssert.assertEquals("{\"a\":{\"b\":{\"c\":\"${foo}\"}},\"foo\":\"bar\"}",
+				json, JSONCompareMode.STRICT);
 	}
 
 	@Test

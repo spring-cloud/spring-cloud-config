@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -303,7 +302,7 @@ public class EnvironmentController {
 		Map<String, Map<String, Object>> map = new LinkedHashMap<>();
 		List<PropertySource> sources = new ArrayList<>(profiles.getPropertySources());
 		Collections.reverse(sources);
-		Map<String, Object> combinedMap = new TreeMap<>();
+		Map<String, Object> combinedMap = new LinkedHashMap<>();
 		for (PropertySource source : sources) {
 
 			@SuppressWarnings("unchecked")
@@ -322,7 +321,7 @@ public class EnvironmentController {
 					// of an unequal size to the current array. Replace the array key in
 					// the current map.
 					key = key.substring(0, key.indexOf("["));
-					Map<String, Object> filtered = new TreeMap<>();
+					Map<String, Object> filtered = new LinkedHashMap<>();
 					for (String index : value.keySet()) {
 						if (index.startsWith(key + "[")) {
 							filtered.put(index, value.get(index));
