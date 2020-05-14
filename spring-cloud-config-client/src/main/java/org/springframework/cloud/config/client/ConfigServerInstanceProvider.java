@@ -34,16 +34,20 @@ public class ConfigServerInstanceProvider {
 
 	private static Log logger = LogFactory.getLog(ConfigServerInstanceProvider.class);
 
-	private final DiscoveryClient client;
+	private final Function function;
 
 	public ConfigServerInstanceProvider(DiscoveryClient client) {
-		this.client = client;
+		this.function = client::getInstances;
+	}
+
+	public ConfigServerInstanceProvider(Function function) {
+		this.function = function;
 	}
 
 	@Retryable(interceptor = "configServerRetryInterceptor")
 	public List<ServiceInstance> getConfigServerInstances(String serviceId) {
 		logger.debug("Locating configserver (" + serviceId + ") via discovery");
-		List<ServiceInstance> instances = this.client.getInstances(serviceId);
+		List<ServiceInstance> instances = this.function.apply(serviceId);
 		if (instances.isEmpty()) {
 			throw new IllegalStateException(
 					"No instances found of configserver (" + serviceId + ")");
@@ -51,6 +55,13 @@ public class ConfigServerInstanceProvider {
 		logger.debug("Located configserver (" + serviceId
 				+ ") via discovery. No of instances found: " + instances.size());
 		return instances;
+	}
+
+	@FunctionalInterface
+	public interface Function {
+
+		List<ServiceInstance> apply(String serviceId);
+
 	}
 
 }

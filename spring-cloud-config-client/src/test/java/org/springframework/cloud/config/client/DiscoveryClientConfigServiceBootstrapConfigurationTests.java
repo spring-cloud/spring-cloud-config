@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.Collections;
+
 import org.junit.Test;
 
 import org.springframework.cloud.client.DefaultServiceInstance;
@@ -26,6 +28,10 @@ import org.springframework.cloud.config.client.ConfigClientProperties.Credential
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
 
 /**
  * @author Dave Syer
@@ -53,6 +59,23 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		verifyDiscoveryClientCalledOnce();
+		expectConfigClientPropertiesHasConfigurationFromEureka();
+	}
+
+	@Test
+	public void configServerInstanceProviderFunction() {
+		ConfigServerInstanceProvider.Function function = mock(
+				ConfigServerInstanceProvider.Function.class);
+		given(function.apply(DEFAULT_CONFIG_SERVER))
+				.willReturn(Collections.singletonList(this.info));
+
+		setup(false, false, "spring.cloud.config.discovery.enabled=true");
+		this.context.getDefaultListableBeanFactory().registerSingleton("myFunction",
+				function);
+		this.context.refresh();
+
+		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
+		verify(function).apply(DEFAULT_CONFIG_SERVER);
 		expectConfigClientPropertiesHasConfigurationFromEureka();
 	}
 

@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
@@ -48,100 +49,119 @@ import org.springframework.context.event.SmartApplicationListener;
 @Configuration(proxyBeanMethods = false)
 @Import({ UtilAutoConfiguration.class })
 @EnableDiscoveryClient
-public class DiscoveryClientConfigServiceBootstrapConfiguration
-		implements SmartApplicationListener {
+public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
 	private static Log logger = LogFactory
 			.getLog(DiscoveryClientConfigServiceBootstrapConfiguration.class);
 
-	@Autowired
-	private ConfigClientProperties config;
-
-	@Autowired
-	private ConfigServerInstanceProvider instanceProvider;
-
-	private HeartbeatMonitor monitor = new HeartbeatMonitor();
-
 	@Bean
 	public ConfigServerInstanceProvider configServerInstanceProvider(
-			DiscoveryClient discoveryClient) {
-		return new ConfigServerInstanceProvider(discoveryClient);
-	}
-
-	@Override
-	public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
-		return ContextRefreshedEvent.class.isAssignableFrom(eventType)
-				|| HeartbeatEvent.class.isAssignableFrom(eventType);
-	}
-
-	@Override
-	public void onApplicationEvent(ApplicationEvent event) {
-		if (event instanceof ContextRefreshedEvent) {
-			startup((ContextRefreshedEvent) event);
+			ObjectProvider<ConfigServerInstanceProvider.Function> function,
+			ObjectProvider<DiscoveryClient> discoveryClient) {
+		ConfigServerInstanceProvider.Function fn = function.getIfAvailable();
+		if (fn != null) {
+			return new ConfigServerInstanceProvider(fn);
 		}
-		else if (event instanceof HeartbeatEvent) {
-			heartbeat((HeartbeatEvent) event);
+		DiscoveryClient client = discoveryClient.getIfAvailable();
+		if (client == null) {
+			throw new IllegalStateException(
+					"ConfigServerInstanceProvider reqiures a DiscoveryClient or Function");
 		}
+		return new ConfigServerInstanceProvider(client);
 	}
 
-	public void startup(ContextRefreshedEvent event) {
-		refresh();
+	@Bean
+	public SmartApplicationListener heartbeatListener(
+			ConfigServerInstanceProvider provider) {
+		return new HeartbeatListener();
 	}
 
-	public void heartbeat(HeartbeatEvent event) {
-		if (this.monitor.update(event.getValue())) {
+	private static class HeartbeatListener implements SmartApplicationListener {
+
+		@Autowired
+		private ConfigClientProperties config;
+
+		@Autowired
+		private ConfigServerInstanceProvider instanceProvider;
+
+		private HeartbeatMonitor monitor = new HeartbeatMonitor();
+
+		@Override
+		public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+			return ContextRefreshedEvent.class.isAssignableFrom(eventType)
+					|| HeartbeatEvent.class.isAssignableFrom(eventType);
+		}
+
+		@Override
+		public void onApplicationEvent(ApplicationEvent event) {
+			if (event instanceof ContextRefreshedEvent) {
+				startup((ContextRefreshedEvent) event);
+			}
+			else if (event instanceof HeartbeatEvent) {
+				heartbeat((HeartbeatEvent) event);
+			}
+		}
+
+		public void startup(ContextRefreshedEvent event) {
 			refresh();
 		}
-	}
 
-	private void refresh() {
-		try {
-			String serviceId = this.config.getDiscovery().getServiceId();
-			List<String> listOfUrls = new ArrayList<>();
-			List<ServiceInstance> serviceInstances = this.instanceProvider
-					.getConfigServerInstances(serviceId);
+		public void heartbeat(HeartbeatEvent event) {
+			if (this.monitor.update(event.getValue())) {
+				refresh();
+			}
+		}
 
-			for (int i = 0; i < serviceInstances.size(); i++) {
+		private void refresh() {
+			try {
+				String serviceId = this.config.getDiscovery().getServiceId();
+				List<String> listOfUrls = new ArrayList<>();
+				List<ServiceInstance> serviceInstances = this.instanceProvider
+						.getConfigServerInstances(serviceId);
 
-				ServiceInstance server = serviceInstances.get(i);
-				String url = getHomePage(server);
+				for (int i = 0; i < serviceInstances.size(); i++) {
 
-				if (server.getMetadata().containsKey("password")) {
-					String user = server.getMetadata().get("user");
-					user = user == null ? "user" : user;
-					this.config.setUsername(user);
-					String password = server.getMetadata().get("password");
-					this.config.setPassword(password);
-				}
+					ServiceInstance server = serviceInstances.get(i);
+					String url = getHomePage(server);
 
-				if (server.getMetadata().containsKey("configPath")) {
-					String path = server.getMetadata().get("configPath");
-					if (url.endsWith("/") && path.startsWith("/")) {
-						url = url.substring(0, url.length() - 1);
+					if (server.getMetadata().containsKey("password")) {
+						String user = server.getMetadata().get("user");
+						user = user == null ? "user" : user;
+						this.config.setUsername(user);
+						String password = server.getMetadata().get("password");
+						this.config.setPassword(password);
 					}
-					url = url + path;
+
+					if (server.getMetadata().containsKey("configPath")) {
+						String path = server.getMetadata().get("configPath");
+						if (url.endsWith("/") && path.startsWith("/")) {
+							url = url.substring(0, url.length() - 1);
+						}
+						url = url + path;
+					}
+
+					listOfUrls.add(url);
 				}
 
-				listOfUrls.add(url);
-			}
+				String[] uri = new String[listOfUrls.size()];
+				uri = listOfUrls.toArray(uri);
+				this.config.setUri(uri);
 
-			String[] uri = new String[listOfUrls.size()];
-			uri = listOfUrls.toArray(uri);
-			this.config.setUri(uri);
-
-		}
-		catch (Exception ex) {
-			if (this.config.isFailFast()) {
-				throw ex;
 			}
-			else {
-				logger.warn("Could not locate configserver via discovery", ex);
+			catch (Exception ex) {
+				if (this.config.isFailFast()) {
+					throw ex;
+				}
+				else {
+					logger.warn("Could not locate configserver via discovery", ex);
+				}
 			}
 		}
-	}
 
-	private String getHomePage(ServiceInstance server) {
-		return server.getUri().toString() + "/";
+		private String getHomePage(ServiceInstance server) {
+			return server.getUri().toString() + "/";
+		}
+
 	}
 
 }
