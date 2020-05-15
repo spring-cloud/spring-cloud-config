@@ -113,6 +113,8 @@ public abstract class PathUtils {
 	 * <li>Any combination of leading slash and control characters (00-1F and 7F) with a
 	 * single "/" or "". For example {@code "  / // foo/bar"} becomes {@code "/foo/bar"}.
 	 * </ul>
+	 * @param path path to process
+	 * @return the processed path
 	 * @since 3.2.12
 	 */
 	protected static String processPath(String path) {
