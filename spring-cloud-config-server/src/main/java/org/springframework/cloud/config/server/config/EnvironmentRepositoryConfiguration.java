@@ -253,6 +253,8 @@ public class EnvironmentRepositoryConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(JdbcTemplate.class)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.jdbc.enabled",
+			matchIfMissing = true)
 	static class JdbcFactoryConfig {
 
 		@Bean
@@ -408,6 +410,8 @@ class CredhubRepositoryConfiguration {
 @Configuration(proxyBeanMethods = false)
 @Profile("jdbc")
 @ConditionalOnClass(JdbcTemplate.class)
+@ConditionalOnProperty(value = "spring.cloud.config.server.jdbc.enabled",
+		matchIfMissing = true)
 class JdbcRepositoryConfiguration {
 
 	@Bean
