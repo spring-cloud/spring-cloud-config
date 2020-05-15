@@ -22,6 +22,7 @@ import org.springframework.core.Ordered;
 
 /**
  * @author Dylan Roberts
+ * @author Thomas Vitale
  */
 @ConfigurationProperties("spring.cloud.config.server.jdbc")
 public class JdbcEnvironmentProperties implements EnvironmentRepositoryProperties {
@@ -29,10 +30,23 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	private static final String DEFAULT_SQL = "SELECT KEY, VALUE from PROPERTIES"
 			+ " where APPLICATION=? and PROFILE=? and LABEL=?";
 
+	/**
+	 * Flag to indicate that JDBC environment repository configuration is enabled.
+	 */
+	private boolean enabled = true;
+
 	private int order = Ordered.LOWEST_PRECEDENCE - 10;
 
 	/** SQL used to query database for keys and values. */
 	private String sql = DEFAULT_SQL;
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 
 	public int getOrder() {
 		return this.order;
