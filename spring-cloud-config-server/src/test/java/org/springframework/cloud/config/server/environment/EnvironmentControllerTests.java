@@ -439,7 +439,7 @@ public class EnvironmentControllerTests {
 		String text = this.controller.properties("foo", "bar", true).getBody();
 		Properties properties = new Properties();
 		properties.load(new StringReader(text));
-		assertThat(properties).containsExactly(entry("a.b.c", "bar"),
+		assertThat(properties).containsOnly(entry("a.b.c", "bar"),
 				entry("foo", "bar"));
 	}
 
@@ -449,7 +449,7 @@ public class EnvironmentControllerTests {
 		String text = this.controller.properties("foo", "bar", false).getBody();
 		Properties properties = new Properties();
 		properties.load(new StringReader(text));
-		assertThat(properties).containsExactly(entry("a.b.c", "${foo}"),
+		assertThat(properties).containsOnly(entry("a.b.c", "${foo}"),
 				entry("foo", "bar"));
 	}
 
