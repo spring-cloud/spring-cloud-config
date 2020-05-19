@@ -439,8 +439,7 @@ public class EnvironmentControllerTests {
 		String text = this.controller.properties("foo", "bar", true).getBody();
 		Properties properties = new Properties();
 		properties.load(new StringReader(text));
-		assertThat(properties).containsOnly(entry("a.b.c", "bar"),
-				entry("foo", "bar"));
+		assertThat(properties).containsOnly(entry("a.b.c", "bar"), entry("foo", "bar"));
 	}
 
 	@Test
