@@ -44,6 +44,8 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 
 	private GoogleSecretManagerAccessStrategy accessStrategy;
 
+	private Boolean tokenMandatory;
+
 	public GoogleSecretManagerEnvironmentRepository(
 			ObjectProvider<HttpServletRequest> request, RestTemplate rest,
 			GoogleSecretManagerEnvironmentProperties properties) {
@@ -66,16 +68,26 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 		}
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		Environment result = new Environment(application, profile, label, null, null);
-		if (accessStrategy.checkRemotePermissions()) {
-			for (String profileUnit : profiles) {
-				Map<?, ?> secrets = getSecrets(application, profileUnit);
-				if (!secrets.isEmpty()) {
-					result.add(new PropertySource(
-							"gsm:" + application + "-" + profileUnit, secrets));
-				}
+		if (tokenMandatory) {
+			if (accessStrategy.checkRemotePermissions()) {
+				addPropertySource(application, profiles, result);
 			}
 		}
+		else {
+			addPropertySource(application, profiles, result);
+		}
 		return result;
+	}
+
+	private void addPropertySource(String application, String[] profiles,
+			Environment result) {
+		for (String profileUnit : profiles) {
+			Map<?, ?> secrets = getSecrets(application, profileUnit);
+			if (!secrets.isEmpty()) {
+				result.add(new PropertySource("gsm:" + application + "-" + profileUnit,
+						secrets));
+			}
+		}
 	}
 
 	/**

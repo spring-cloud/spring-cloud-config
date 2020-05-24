@@ -90,7 +90,7 @@
 			<dependency>
 				<groupId>com.google.cloud</groupId>
 				<artifactId>google-cloud-secretmanager</artifactId>
-				<version>0.3.0</version>
+				<version>1.0.1</version>
 			</dependency>
 			<dependency>
 				<groupId>com.google.apis</groupId>

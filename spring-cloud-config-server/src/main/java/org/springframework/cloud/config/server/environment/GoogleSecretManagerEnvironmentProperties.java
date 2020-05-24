@@ -35,6 +35,8 @@ public class GoogleSecretManagerEnvironmentProperties
 
 	private String serviceAccount = null;
 
+	private Boolean tokenMandatory = true;
+
 	private Integer version = 1;
 
 	/**
@@ -49,6 +51,14 @@ public class GoogleSecretManagerEnvironmentProperties
 
 	public int getOrder() {
 		return order;
+	}
+
+	public Boolean getTokenMandatory() {
+		return tokenMandatory;
+	}
+
+	public void setTokenMandatory(Boolean tokenMandatory) {
+		this.tokenMandatory = tokenMandatory;
 	}
 
 	public String getApplicationLabel() {

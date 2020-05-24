@@ -1,5 +1,9 @@
 info:
   component: Config Server
+
+encrypt:
+  key: {ENCRYPT_KEY}
+
 spring:
   application:
     name: configserver
@@ -10,10 +14,12 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/spring-cloud-samples/config-repo
-          repos:
-            - patterns: multi-repo-demo-*
-              uri: https://github.com/spring-cloud-samples/config-repo
+          uri: https://github.com/adeo/{application}-config.git
+          username: svc-lmes-devops
+          password: ${GIT_SVC_PASSWORD}
+        secret-manager:
+          applicationLabel: application
+          profileLabel: profile
 
 server:
   port: 8888
