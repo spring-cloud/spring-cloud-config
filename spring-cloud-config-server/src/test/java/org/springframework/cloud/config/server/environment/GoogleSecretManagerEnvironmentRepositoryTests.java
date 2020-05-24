@@ -70,8 +70,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
 		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER))
 				.thenReturn("test-project");
-		SecretManagerServiceClient client = SecretManagerServiceClient.create();
-		SecretManagerServiceClient mock = Mockito.spy(client);
+		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		SecretManagerServiceClient.ListSecretsPagedResponse response = mock(
 				SecretManagerServiceClient.ListSecretsPagedResponse.class);
 		Secret secret = Secret.newBuilder().setName("projects/test-project/secrets/test")
@@ -92,8 +91,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
 		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER))
 				.thenReturn("test-project");
-		SecretManagerServiceClient client = SecretManagerServiceClient.create();
-		SecretManagerServiceClient mock = Mockito.spy(client);
+		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		SecretManagerServiceClient.ListSecretVersionsPagedResponse response = mock(
 				SecretManagerServiceClient.ListSecretVersionsPagedResponse.class);
 		SecretVersion secret1 = SecretVersion.newBuilder()
