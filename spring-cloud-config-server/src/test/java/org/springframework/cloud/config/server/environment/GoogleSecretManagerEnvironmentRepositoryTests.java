@@ -36,7 +36,6 @@ import org.mockito.Mockito;
 
 import org.springframework.cloud.config.server.environment.secretManager.GoogleConfigProvider;
 import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretComparatorByVersion;
-import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretManagerAccessStrategy;
 import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretManagerAccessStrategyFactory;
 import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretManagerV1AccessStrategy;
 import org.springframework.cloud.config.server.environment.secretManager.HttpHeaderGoogleConfigProvider;
@@ -54,7 +53,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		GoogleSecretManagerEnvironmentProperties properties = new GoogleSecretManagerEnvironmentProperties();
 		properties.setVersion(1);
 		assertThat(GoogleSecretManagerAccessStrategyFactory.forVersion(null, null,
-			properties) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
+				properties) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -69,19 +68,20 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 	public void testGetSecrets() throws IOException {
 		RestTemplate rest = mock(RestTemplate.class);
 		GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
-		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER)).thenReturn("test-project");
+		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER))
+				.thenReturn("test-project");
 		SecretManagerServiceClient client = SecretManagerServiceClient.create();
 		SecretManagerServiceClient mock = Mockito.spy(client);
-		SecretManagerServiceClient.ListSecretsPagedResponse response =
-			mock(SecretManagerServiceClient.ListSecretsPagedResponse.class);
-		Secret secret =
-			Secret.newBuilder().setName("projects/test-project/secrets/test").build();
+		SecretManagerServiceClient.ListSecretsPagedResponse response = mock(
+				SecretManagerServiceClient.ListSecretsPagedResponse.class);
+		Secret secret = Secret.newBuilder().setName("projects/test-project/secrets/test")
+				.build();
 		List<Secret> secrets = new ArrayList<Secret>();
 		secrets.add(secret);
 		when(response.iterateAll()).thenReturn(secrets);
 		Mockito.doReturn(response).when(mock).listSecrets(any(ListSecretsRequest.class));
-		GoogleSecretManagerV1AccessStrategy strategy = new
-			GoogleSecretManagerV1AccessStrategy(rest, provider, mock);
+		GoogleSecretManagerV1AccessStrategy strategy = new GoogleSecretManagerV1AccessStrategy(
+				rest, provider, mock);
 		assertThat(strategy.getSecrets().size()).isEqualTo(1);
 	}
 
@@ -90,25 +90,28 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 	public void testGetSecretValues() throws IOException {
 		RestTemplate rest = mock(RestTemplate.class);
 		GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
-		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER)).thenReturn("test-project");
+		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER))
+				.thenReturn("test-project");
 		SecretManagerServiceClient client = SecretManagerServiceClient.create();
 		SecretManagerServiceClient mock = Mockito.spy(client);
-		SecretManagerServiceClient.ListSecretVersionsPagedResponse response =
-			mock(SecretManagerServiceClient.ListSecretVersionsPagedResponse.class);
-		SecretVersion secret1 =
-			SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/1")
+		SecretManagerServiceClient.ListSecretVersionsPagedResponse response = mock(
+				SecretManagerServiceClient.ListSecretVersionsPagedResponse.class);
+		SecretVersion secret1 = SecretVersion.newBuilder()
+				.setName("projects/test-project/secrets/test/versions/1")
 				.setState(SecretVersion.State.ENABLED).build();
-		SecretVersion secret2 =
-			SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/2")
+		SecretVersion secret2 = SecretVersion.newBuilder()
+				.setName("projects/test-project/secrets/test/versions/2")
 				.setState(SecretVersion.State.DISABLED).build();
 		List<SecretVersion> secrets = new ArrayList<SecretVersion>();
 		secrets.add(secret1);
 		secrets.add(secret2);
 		when(response.iterateAll()).thenReturn(secrets);
-		Mockito.doReturn(response).when(mock).listSecretVersions(any(ListSecretVersionsRequest.class));
-		GoogleSecretManagerV1AccessStrategy strategy = new
-			GoogleSecretManagerV1AccessStrategy(rest, provider, mock);
-		AccessSecretVersionResponse accessSecretVersionResponse = mock(AccessSecretVersionResponse.class);
+		Mockito.doReturn(response).when(mock)
+				.listSecretVersions(any(ListSecretVersionsRequest.class));
+		GoogleSecretManagerV1AccessStrategy strategy = new GoogleSecretManagerV1AccessStrategy(
+				rest, provider, mock);
+		AccessSecretVersionResponse accessSecretVersionResponse = mock(
+				AccessSecretVersionResponse.class);
 		SecretPayload payload = mock(SecretPayload.class);
 		ByteString data = mock(ByteString.class);
 		when(accessSecretVersionResponse.getPayload()).thenReturn(payload);
@@ -116,17 +119,20 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		when(data.toStringUtf8()).thenReturn("test-value");
 		ArgumentMatcher<AccessSecretVersionRequest> matcher = new ArgumentMatcher<AccessSecretVersionRequest>() {
 			@Override
-			public boolean matches(AccessSecretVersionRequest accessSecretVersionRequest) {
-				if (accessSecretVersionRequest.getName().equals("projects/test-project/secrets/test/versions/1")) {
+			public boolean matches(
+					AccessSecretVersionRequest accessSecretVersionRequest) {
+				if (accessSecretVersionRequest.getName()
+						.equals("projects/test-project/secrets/test/versions/1")) {
 					return true;
 				}
-				else {
-					return false;
-				}
+				return false;
 			}
 		};
-		Mockito.doReturn(accessSecretVersionResponse).when(mock).accessSecretVersion(ArgumentMatchers.argThat(matcher));
-		assertThat(strategy.getSecretValue(Secret.newBuilder().setName("projects/test-project/secrets/test")
-			.build(), new GoogleSecretComparatorByVersion())).isEqualTo("test-value");
+		Mockito.doReturn(accessSecretVersionResponse).when(mock)
+				.accessSecretVersion(ArgumentMatchers.argThat(matcher));
+		assertThat(strategy.getSecretValue(
+				Secret.newBuilder().setName("projects/test-project/secrets/test").build(),
+				new GoogleSecretComparatorByVersion())).isEqualTo("test-value");
 	}
+
 }
