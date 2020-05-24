@@ -48,7 +48,7 @@ import static org.mockito.Mockito.when;
 
 public class GoogleSecretManagerEnvironmentRepositoryTests {
 
-	@Test
+	@Test(expected = java.io.IOException.class)
 	public void testSupportedStrategy() {
 		GoogleSecretManagerEnvironmentProperties properties = new GoogleSecretManagerEnvironmentProperties();
 		properties.setVersion(1);
