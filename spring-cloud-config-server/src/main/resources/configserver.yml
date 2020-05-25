@@ -14,13 +14,10 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/adeo/{application}-config.git
-          username: svc-lmes-devops
-          password: ${GIT_SVC_PASSWORD}
-        secret-manager:
-          applicationLabel: application
-          profileLabel: profile
-
+          uri: https://github.com/spring-cloud-samples/config-repo
+          repos:
+            - patterns: multi-repo-demo-*
+              uri: https://github.com/spring-cloud-samples/config-repo
 server:
   port: 8888
 management:
