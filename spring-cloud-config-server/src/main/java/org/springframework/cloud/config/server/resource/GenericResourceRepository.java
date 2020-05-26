@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.resource;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -56,18 +57,22 @@ public class GenericResourceRepository
 		if (StringUtils.hasText(path)) {
 			String[] locations = this.service.getLocations(application, profile, label)
 					.getLocations();
+			ArrayList<Resource> locationResources = new ArrayList<>();
+			for (int i = locations.length; i-- > 0;) {
+				String location = locations[i];
+				if (!PathUtils.isInvalidEncodedLocation(location)) {
+					locationResources.add(this.resourceLoader.getResource(location));
+				}
+			}
+
 			try {
-				for (int i = locations.length; i-- > 0;) {
-					String location = locations[i];
-					if (PathUtils.isInvalidEncodedLocation(location)) {
-						continue;
-					}
+				for (Resource location : locationResources) {
 					for (String local : getProfilePaths(profile, path)) {
 						if (!PathUtils.isInvalidPath(local)
 								&& !PathUtils.isInvalidEncodedPath(local)) {
-							Resource file = this.resourceLoader.getResource(location)
-									.createRelative(local);
-							if (file.exists() && file.isReadable()) {
+							Resource file = location.createRelative(local);
+							if (file.exists() && file.isReadable() && PathUtils
+									.checkResource(file, location, locationResources)) {
 								return file;
 							}
 						}
