@@ -22,6 +22,7 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
@@ -40,6 +41,9 @@ import org.springframework.cloud.config.server.composite.ConditionalOnSearchPath
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentProperties;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
@@ -100,14 +104,16 @@ import org.springframework.vault.core.VaultTemplate;
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
 		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
 		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
-		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class })
+		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
+	    AwsSecretsManagerEnvironmentProperties.class})
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
 		VaultConfiguration.class, VaultRepositoryConfiguration.class,
 		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
 		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
 		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
-		AwsS3RepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
+		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
+		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
@@ -191,6 +197,18 @@ public class EnvironmentRepositoryConfiguration {
 		public AwsS3EnvironmentRepositoryFactory awsS3EnvironmentRepositoryFactory(
 				ConfigServerProperties server) {
 			return new AwsS3EnvironmentRepositoryFactory(server);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(AWSSecretsManager.class)
+	static class AwsSecretsManagerFactoryConfig {
+
+		@Bean
+		public AwsSecretsManagerEnvironmentRepositoryFactory awsSecretsManagerEnvironmentRepositoryFactory(
+			ConfigServerProperties configServerProperties) {
+			return new AwsSecretsManagerEnvironmentRepositoryFactory(configServerProperties);
 		}
 
 	}
@@ -345,6 +363,20 @@ class AwsS3RepositoryConfiguration {
 	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(
 			AwsS3EnvironmentRepositoryFactory factory,
 			AwsS3EnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration(proxyBeanMethods = false)
+@Profile("awssecretsmanager")
+class AwsSecretsManagerRepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean(AwsSecretsManagerEnvironmentRepository.class)
+	public AwsSecretsManagerEnvironmentRepository awsSecretsManagerEnvironmentRepository(
+		AwsSecretsManagerEnvironmentRepositoryFactory factory,
+		AwsSecretsManagerEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 
