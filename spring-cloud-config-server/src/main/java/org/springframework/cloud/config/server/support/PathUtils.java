@@ -16,12 +16,17 @@
 
 package org.springframework.cloud.config.server.support;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -201,6 +206,73 @@ public abstract class PathUtils {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Perform additional checks on a resolved resource beyond checking whether the
+	 * resources exists and is readable. The default implementation also verifies the
+	 * resource is either under the location relative to which it was found or is under
+	 * one of the {@link #setAllowedLocations allowed locations}.
+	 * @param resource the resource to check
+	 * @param location the location relative to which the resource was found
+	 * @param allowedLocations set of allowed locations
+	 * @return "true" if resource is in a valid location, "false" otherwise.
+	 * @throws IOException if Resource URLS fail to parse.
+	 * @since 4.1.2
+	 */
+	public static boolean checkResource(Resource resource, Resource location,
+			List<Resource> allowedLocations) throws IOException {
+		if (isResourceUnderLocation(resource, location)) {
+			return true;
+		}
+		if (allowedLocations != null) {
+			for (Resource current : allowedLocations) {
+				if (isResourceUnderLocation(resource, current)) {
+					return true;
+				}
+			}
+		}
+		if (logger.isWarnEnabled()) {
+			logger.warn("Resource path \"" + location.getURI()
+					+ "\" was successfully resolved " + "but resource \""
+					+ resource.getURL() + "\" is neither under the "
+					+ "current location \"" + location.getURL()
+					+ "\" nor under any of the " + "allowed locations "
+					+ (allowedLocations != null ? allowedLocations : "[]"));
+		}
+		return false;
+	}
+
+	private static boolean isResourceUnderLocation(Resource resource, Resource location)
+			throws IOException {
+		if (resource.getClass() != location.getClass()) {
+			return false;
+		}
+
+		String resourcePath;
+		String locationPath;
+
+		if (resource instanceof UrlResource) {
+			resourcePath = resource.getURL().toExternalForm();
+			locationPath = StringUtils.cleanPath(location.getURL().toString());
+		}
+		else if (resource instanceof ClassPathResource) {
+			resourcePath = ((ClassPathResource) resource).getPath();
+			locationPath = StringUtils
+					.cleanPath(((ClassPathResource) location).getPath());
+		}
+		else {
+			resourcePath = resource.getURL().getPath();
+			locationPath = StringUtils.cleanPath(location.getURL().getPath());
+		}
+
+		if (locationPath.equals(resourcePath)) {
+			return true;
+		}
+		locationPath = (locationPath.endsWith("/") || locationPath.isEmpty()
+				? locationPath : locationPath + "/");
+		return (resourcePath.startsWith(locationPath)
+				&& !isInvalidEncodedPath(resourcePath));
 	}
 
 }

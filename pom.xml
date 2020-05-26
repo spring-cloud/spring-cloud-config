@@ -27,7 +27,7 @@
 	</scm>
 	<properties>
 		<bintray.package>config</bintray.package>
-		<spring-cloud-commons.version>2.1.7.BUILD-SNAPSHOT</spring-cloud-commons.version>
+		<spring-cloud-commons.version>2.1.6.BUILD-SNAPSHOT</spring-cloud-commons.version>
 
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failsOnViolation>true
