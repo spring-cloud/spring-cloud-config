@@ -120,6 +120,17 @@ public class GenericResourceRepositoryTests {
 		testInvalidPath("%2E%2E%2F");
 	}
 
+	@Test
+	public void invalidPathEncodedSlash() {
+		String file = System.getProperty("user.dir");
+		file = file.replaceFirst("\\/", "%2f");
+		file += "/src/test/resources/ssh/key";
+		this.exception.expect(NoSuchResourceException.class);
+		this.nativeRepository.setSearchLocations("file:./");
+		this.output.expect(containsString("is neither under the current location"));
+		this.repository.findOne("blah", "local", "master", file);
+	}
+
 	private void testInvalidPath(String label) {
 		this.exception.expect(NoSuchResourceException.class);
 		this.nativeRepository.setSearchLocations("file:./src/test/resources/test/local");
