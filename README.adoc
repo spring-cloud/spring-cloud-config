@@ -190,7 +190,7 @@ $ curl localhost:8080/env
 }
 ----
 
-A property source called `configService:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar` and is the highest priority.
+A property source called ```configService:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar` and is highest priority.
 
 NOTE: The URL in the property source name is the git repository, not the config server URL.
 
@@ -283,11 +283,6 @@ https://www.springsource.com/developer/sts[Spring Tools Suite] or
 https://eclipse.org[Eclipse] when working with the code. We use the
 https://eclipse.org/m2e/[m2eclipse] eclipse plugin for maven support. Other IDEs and tools
 should also work without issue as long as they use Maven 3.3.3 or better.
-
-==== Activate the Spring Maven profile
-Spring Cloud projects require the 'spring' Maven profile to be activated to resolve
-the spring milestone and snapshot repositories. Use your preferred IDE to set this
-profile to be active, or you may experience build errors.
 
 ==== Importing into eclipse with m2eclipse
 We recommend the https://eclipse.org/m2e/[m2eclipse] eclipse plugin when working with
