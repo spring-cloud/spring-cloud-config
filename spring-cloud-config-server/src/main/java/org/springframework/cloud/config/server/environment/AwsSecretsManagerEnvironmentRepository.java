@@ -17,9 +17,8 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
@@ -34,7 +33,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import static org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
@@ -62,65 +60,72 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 
 	@Override
-	public Environment findOne(String application, String profiles, String label) {
+	public Environment findOne(String application, String profileList, String label) {
+		final String defaultApplication = configServerProperties.getDefaultApplicationName();
+		final String defaultProfile = configServerProperties.getDefaultProfile();
+
 		if(StringUtils.isEmpty(application)) {
-			application = configServerProperties.getDefaultApplicationName();
+			application = defaultApplication;
 		}
 
-		if(StringUtils.isEmpty(profiles)) {
-			profiles = configServerProperties.getDefaultProfile();
+		if(StringUtils.isEmpty(profileList)) {
+			profileList = defaultProfile;
 		}
 
-		String[] profileArray = StringUtils.commaDelimitedListToStringArray(profiles);
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(profileList);
 		Environment environment = new Environment(application, profiles, label, null, null);
-		List<PropertySource> propertySources = new ArrayList<>();
-
-		for(String profile: profileArray) {
-			PropertySource source = getSecretPropertySource(application, profile, label);
-			propertySources.add(source);
-		}
 
 		Map<String, String> overrides = configServerProperties.getOverrides();
 		if(!overrides.isEmpty()) {
-			propertySources.add(0, new PropertySource("overrides", overrides));
+			environment.add(new PropertySource("overrides", overrides));
 		}
 
-		environment.addAll(propertySources);
+		for(String profile: profiles) {
+			addPropertySource(environment, application, profile);
+			if(!defaultApplication.equals(application)) {
+				addPropertySource(environment, defaultApplication, profile);
+			}
+		}
+
+		if(!Arrays.asList(profiles).contains(defaultProfile)) {
+			addPropertySource(environment, application, defaultProfile);
+		}
+
+		if(!Arrays.asList(profiles).contains(defaultProfile) && !defaultApplication.equals(application)) {
+			addPropertySource(environment, defaultApplication, defaultProfile);
+		}
+
+		if(!defaultApplication.equals(application)) {
+			addPropertySource(environment, application, null);
+		}
+
+		addPropertySource(environment, defaultApplication, null);
+
 		return environment;
 	}
 
-	private PropertySource getSecretPropertySource(String application, String profile, String label) {
-		String path = buildSecretPath(application, profile);
+	private void addPropertySource(Environment environment, String application, String profile) {
+		String path = buildPath(application, profile);
 
-		try {
-			Map<String, Object> source = getPropertiesBySecretPath(path);
-
-			if(!source.isEmpty()) {
-				String propertySourceName =  environmentProperties.getOrigin() + path;
-				return new PropertySource(propertySourceName, source);
-			}
+		Map<Object, Object> properties = findProperties(path);
+		if(!properties.isEmpty()) {
+			environment.add(new PropertySource(environmentProperties.getOrigin() + path, properties));
 		}
-		catch (Exception e) {
-			if(environmentProperties.isFailFast()) {
-				log.error("FailFast is set to True. Error encountered while retrieving configuration from AWS Secrets Manager:\n"
-					+ e.getMessage());
-				ReflectionUtils.rethrowRuntimeException(e);
-			} else {
-				log.warn("Unable to load configuration from AWS Secrets Manager for " + path, e);
-			}
-		}
-		return null; //TODO: change this!!!
 	}
 
-	private String buildSecretPath(String application, String profile) {
+	private String buildPath(String application, String profile) {
 		String prefix = environmentProperties.getPrefix();
 		String profileSeparator = environmentProperties.getProfileSeparator();
 
-		return prefix + DEFAULT_PATH_SEPARATOR + application + profileSeparator + profile + DEFAULT_PATH_SEPARATOR;
+		if(profile == null || profile.isEmpty()) {
+			return prefix + DEFAULT_PATH_SEPARATOR + application + DEFAULT_PATH_SEPARATOR;
+		} else {
+			return prefix + DEFAULT_PATH_SEPARATOR + application + profileSeparator + profile + DEFAULT_PATH_SEPARATOR;
+		}
 	}
 
-	private Map<String, Object> getPropertiesBySecretPath(String path) throws Exception {
-		Map<String, Object> properties = new HashMap();
+	private Map<Object, Object> findProperties(String path) {
+		Map<Object, Object> properties = new HashMap<>();
 
 		GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(path);
 		try {
@@ -134,9 +139,8 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 					properties.put(secretEntry.getKey(), secretEntry.getValue());
 				}
 			}
-		} catch (ResourceNotFoundException e) {
-			throw new RuntimeException(e);
-		} catch (IOException e) {
+		} catch (ResourceNotFoundException | IOException e) {
+			log.warn("Unable to load secrets from AWS Secrets Manager for " + path, e);
 			throw new RuntimeException(e);
 		}
 
