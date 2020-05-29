@@ -32,9 +32,7 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 
 	private static final String DEFAULT_PROFILE_SEPARATOR = "-";
 
-	private static final boolean DEFAULT_FAIL_FAST = true;
-
-	private static final String DEFAULT_ORIGIN = "aws:secret:";
+	private static final String DEFAULT_ORIGIN = "aws:secrets:";
 
 	/**
 	 * The region to be used by AWS Secrets Manager client
@@ -66,10 +64,8 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 	@Pattern(regexp = "[a-zA-Z0-9.\\-_]+")
 	private String profileSeparator = DEFAULT_PROFILE_SEPARATOR;
 
-	private boolean failFast = DEFAULT_FAIL_FAST;
-
 	/**
-	 * Prefix which indicates the origin of the property. Defaults to "aws:secret:"
+	 * Prefix which indicates the origin of the property. Defaults to "aws:secrets:"
 	 */
 	@NotNull
 	private String origin = DEFAULT_ORIGIN;
@@ -113,14 +109,6 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 
 	public void setProfileSeparator(String profileSeparator) {
 		this.profileSeparator = profileSeparator;
-	}
-
-	public boolean isFailFast() {
-		return failFast;
-	}
-
-	public void setFailFast(boolean failFast) {
-		this.failFast = failFast;
 	}
 
 	String getOrigin() {
