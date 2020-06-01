@@ -28,32 +28,37 @@ import org.springframework.util.StringUtils;
  * @author Tejas Pandilwar
  */
 public class AwsSecretsManagerEnvironmentRepositoryFactory implements
-	EnvironmentRepositoryFactory<AwsSecretsManagerEnvironmentRepository, AwsSecretsManagerEnvironmentProperties>{
+		EnvironmentRepositoryFactory<AwsSecretsManagerEnvironmentRepository, AwsSecretsManagerEnvironmentProperties> {
 
 	private final ConfigServerProperties configServerProperties;
 
-	public AwsSecretsManagerEnvironmentRepositoryFactory(ConfigServerProperties configServerProperties) {
+	public AwsSecretsManagerEnvironmentRepositoryFactory(
+			ConfigServerProperties configServerProperties) {
 		this.configServerProperties = configServerProperties;
 	}
 
 	@Override
-	public AwsSecretsManagerEnvironmentRepository build(AwsSecretsManagerEnvironmentProperties environmentProperties) {
-		AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder.standard();
+	public AwsSecretsManagerEnvironmentRepository build(
+			AwsSecretsManagerEnvironmentProperties environmentProperties) {
+		AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder
+				.standard();
 		String region = environmentProperties.getRegion();
 
-		if(!StringUtils.isEmpty(region)) {
+		if (!StringUtils.isEmpty(region)) {
 			Regions awsRegion = Regions.fromName(region);
 			clientBuilder.withRegion(awsRegion);
 
 			String endpoint = environmentProperties.getEndpoint();
-			if(!StringUtils.isEmpty(endpoint)) {
-				AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.
-					EndpointConfiguration(endpoint, awsRegion.getName());
+			if (!StringUtils.isEmpty(endpoint)) {
+				AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
+						endpoint, awsRegion.getName());
 				clientBuilder.withEndpointConfiguration(endpointConfiguration);
 			}
 		}
 
 		AWSSecretsManager client = clientBuilder.build();
-		return new AwsSecretsManagerEnvironmentRepository(client, configServerProperties, environmentProperties);
+		return new AwsSecretsManagerEnvironmentRepository(client, configServerProperties,
+				environmentProperties);
 	}
+
 }
