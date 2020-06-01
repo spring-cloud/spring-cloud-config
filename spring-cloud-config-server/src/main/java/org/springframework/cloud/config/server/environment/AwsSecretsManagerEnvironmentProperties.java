@@ -23,6 +23,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
 import org.springframework.core.Ordered;
 
+/**
+ * @author Tejas Pandilwar
+ */
 @ConfigurationProperties("spring.cloud.config.server.awssecretsmanager")
 public class AwsSecretsManagerEnvironmentProperties implements EnvironmentRepositoryProperties {
 
@@ -111,11 +114,11 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 		this.profileSeparator = profileSeparator;
 	}
 
-	String getOrigin() {
+	public String getOrigin() {
 		return origin;
 	}
 
-	void setOrigin(String origin) {
+	public void setOrigin(String origin) {
 		this.origin = origin;
 	}
 }
