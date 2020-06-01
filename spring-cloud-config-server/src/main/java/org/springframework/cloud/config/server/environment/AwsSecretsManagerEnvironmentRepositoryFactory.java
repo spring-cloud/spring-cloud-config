@@ -24,6 +24,9 @@ import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.util.StringUtils;
 
+/**
+ * @author Tejas Pandilwar
+ */
 public class AwsSecretsManagerEnvironmentRepositoryFactory implements
 	EnvironmentRepositoryFactory<AwsSecretsManagerEnvironmentRepository, AwsSecretsManagerEnvironmentProperties>{
 

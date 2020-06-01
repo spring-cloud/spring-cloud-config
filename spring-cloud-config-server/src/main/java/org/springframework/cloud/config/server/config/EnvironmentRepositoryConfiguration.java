@@ -99,6 +99,7 @@ import org.springframework.vault.core.VaultTemplate;
  * @author Dylan Roberts
  * @author Alberto C. Ríos
  * @author Scott Frederick
+ * @author Tejas Pandilwar
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
