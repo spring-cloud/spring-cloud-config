@@ -40,9 +40,10 @@ import static org.springframework.cloud.config.server.environment.AwsSecretsMana
 /**
  * @author Tejas Pandilwar
  */
-public class AwsSecretsManagerEnvironmentRepository implements EnvironmentRepository{
+public class AwsSecretsManagerEnvironmentRepository implements EnvironmentRepository {
 
-	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
+	private static final Log log = LogFactory
+			.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
 	private final ObjectMapper objectMapper;
 
@@ -53,8 +54,8 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 	private final AwsSecretsManagerEnvironmentProperties environmentProperties;
 
 	public AwsSecretsManagerEnvironmentRepository(AWSSecretsManager awsSmClient,
-				ConfigServerProperties configServerProperties,
-				AwsSecretsManagerEnvironmentProperties environmentProperties) {
+			ConfigServerProperties configServerProperties,
+			AwsSecretsManagerEnvironmentProperties environmentProperties) {
 		this.awsSmClient = awsSmClient;
 		this.configServerProperties = configServerProperties;
 		this.environmentProperties = environmentProperties;
@@ -63,41 +64,44 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 	@Override
 	public Environment findOne(String application, String profileList, String label) {
-		final String defaultApplication = configServerProperties.getDefaultApplicationName();
+		final String defaultApplication = configServerProperties
+				.getDefaultApplicationName();
 		final String defaultProfile = configServerProperties.getDefaultProfile();
 
-		if(StringUtils.isEmpty(application)) {
+		if (StringUtils.isEmpty(application)) {
 			application = defaultApplication;
 		}
 
-		if(StringUtils.isEmpty(profileList)) {
+		if (StringUtils.isEmpty(profileList)) {
 			profileList = defaultProfile;
 		}
 
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profileList);
-		Environment environment = new Environment(application, profiles, label, null, null);
+		Environment environment = new Environment(application, profiles, label, null,
+				null);
 
 		Map<String, String> overrides = configServerProperties.getOverrides();
-		if(!overrides.isEmpty()) {
+		if (!overrides.isEmpty()) {
 			environment.add(new PropertySource("overrides", overrides));
 		}
 
-		for(String profile: profiles) {
+		for (String profile : profiles) {
 			addPropertySource(environment, application, profile);
-			if(!defaultApplication.equals(application)) {
+			if (!defaultApplication.equals(application)) {
 				addPropertySource(environment, defaultApplication, profile);
 			}
 		}
 
-		if(!Arrays.asList(profiles).contains(defaultProfile)) {
+		if (!Arrays.asList(profiles).contains(defaultProfile)) {
 			addPropertySource(environment, application, defaultProfile);
 		}
 
-		if(!Arrays.asList(profiles).contains(defaultProfile) && !defaultApplication.equals(application)) {
+		if (!Arrays.asList(profiles).contains(defaultProfile)
+				&& !defaultApplication.equals(application)) {
 			addPropertySource(environment, defaultApplication, defaultProfile);
 		}
 
-		if(!defaultApplication.equals(application)) {
+		if (!defaultApplication.equals(application)) {
 			addPropertySource(environment, application, null);
 		}
 
@@ -106,12 +110,14 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		return environment;
 	}
 
-	private void addPropertySource(Environment environment, String application, String profile) {
+	private void addPropertySource(Environment environment, String application,
+			String profile) {
 		String path = buildPath(application, profile);
 
 		Map<Object, Object> properties = findProperties(path);
-		if(!properties.isEmpty()) {
-			environment.add(new PropertySource(environmentProperties.getOrigin() + path, properties));
+		if (!properties.isEmpty()) {
+			environment.add(new PropertySource(environmentProperties.getOrigin() + path,
+					properties));
 		}
 	}
 
@@ -119,10 +125,12 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		String prefix = environmentProperties.getPrefix();
 		String profileSeparator = environmentProperties.getProfileSeparator();
 
-		if(profile == null || profile.isEmpty()) {
+		if (profile == null || profile.isEmpty()) {
 			return prefix + DEFAULT_PATH_SEPARATOR + application + DEFAULT_PATH_SEPARATOR;
-		} else {
-			return prefix + DEFAULT_PATH_SEPARATOR + application + profileSeparator + profile + DEFAULT_PATH_SEPARATOR;
+		}
+		else {
+			return prefix + DEFAULT_PATH_SEPARATOR + application + profileSeparator
+					+ profile + DEFAULT_PATH_SEPARATOR;
 		}
 	}
 
@@ -133,15 +141,18 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		try {
 			GetSecretValueResult response = awsSmClient.getSecretValue(request);
 
-			if(response != null) {
+			if (response != null) {
 				Map<String, Object> secretMap = objectMapper.readValue(
-					response.getSecretString(), new TypeReference<Map<String, Object>>() {});
+						response.getSecretString(),
+						new TypeReference<Map<String, Object>>() {
+						});
 
-				for(Map.Entry<String, Object> secretEntry : secretMap.entrySet()) {
+				for (Map.Entry<String, Object> secretEntry : secretMap.entrySet()) {
 					properties.put(secretEntry.getKey(), secretEntry.getValue());
 				}
 			}
-		} catch (ResourceNotFoundException | IOException e) {
+		}
+		catch (ResourceNotFoundException | IOException e) {
 			log.warn("Unable to load secrets from AWS Secrets Manager for " + path, e);
 			throw new RuntimeException(e);
 		}

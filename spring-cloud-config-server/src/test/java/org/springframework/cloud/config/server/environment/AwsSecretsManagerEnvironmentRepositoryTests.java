@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.config.server.environment;
 
 import java.util.Arrays;
@@ -31,7 +47,8 @@ import static org.mockito.Mockito.when;
  */
 public class AwsSecretsManagerEnvironmentRepositoryTests {
 
-	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
+	private static final Log log = LogFactory
+			.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
 	private static final Map<String, String> APPLICATION_PROPERTIES = new HashMap<String, String>() {
 		{
@@ -54,47 +71,53 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		}
 	};
 
-	private static final Map<String, String>  APPLICATION_EAST_PROPERTIES = new HashMap<String, String>() {
+	private static final Map<String, String> APPLICATION_EAST_PROPERTIES = new HashMap<String, String>() {
 		{
 			put("s3.accessKey", "application-east-s3");
 			put("s3.secretKey", "236e01a7-623b-40f4-88c1-eb4d89229dd6");
 		}
 	};
 
-	private static final Map<String, String>  FOO_PROPERTIES = new HashMap<String, String>() {
+	private static final Map<String, String> FOO_PROPERTIES = new HashMap<String, String>() {
 		{
 			put("s3.accessKey", "foo-s3");
 			put("s3.secretKey", "ce945da2-740a-4915-a090-2978428dad05");
 		}
 	};
 
-	private static final Map<String, String>  FOO_DEFAULT_PROPERTIES = new HashMap<String, String>() {
+	private static final Map<String, String> FOO_DEFAULT_PROPERTIES = new HashMap<String, String>() {
 		{
 			put("s3.accessKey", "foo-default-s3");
 			put("s3.secretKey", "8c3c58c9-daef-4d21-96b0-c2b68a7a8234");
 		}
 	};
 
-	private static final Map<String, String>  FOO_PROD_PROPERTIES = new HashMap<String, String>() {
+	private static final Map<String, String> FOO_PROD_PROPERTIES = new HashMap<String, String>() {
 		{
 			put("s3.accessKey", "foo-prod-s3");
 			put("s3.secretKey", "42ca062d-8e4b-435e-9e4a-d058835817c0");
 		}
 	};
 
-	private static final Map<String, String>  FOO_EAST_PROPERTIES = new HashMap<String, String>() {
+	private static final Map<String, String> FOO_EAST_PROPERTIES = new HashMap<String, String>() {
 		{
 			put("s3.accessKey", "foo-east-s3");
 			put("s3.secretKey", "657f6ac5-2e1c-487d-9d61-1df109b29edf");
 		}
 	};
 
-	private final AWSSecretsManager awsSmClientMock = mock(AWSSecretsManager.class, "aws-sm-client-mock");
+	private final AWSSecretsManager awsSmClientMock = mock(AWSSecretsManager.class,
+			"aws-sm-client-mock");
+
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
+
 	private final AwsSecretsManagerEnvironmentProperties environmentProperties = new AwsSecretsManagerEnvironmentProperties();
+
 	private final AwsSecretsManagerEnvironmentRepository repository = new AwsSecretsManagerEnvironmentRepository(
-		awsSmClientMock,configServerProperties, environmentProperties);
-	private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
+			awsSmClientMock, configServerProperties, environmentProperties);
+
+	private final ObjectMapper objectMapper = new ObjectMapper()
+			.configure(SerializationFeature.INDENT_OUTPUT, true);
 
 	@Test
 	public void testFindOneWithNullApplicationAndNullProfile() {
@@ -105,42 +128,52 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(defaultApplication, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(defaultApplication, profiles, null,
+				null, null);
+		expectedEnv.addAll(
+				Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
 	public void testFindOneWithNullApplicationAndNonExistingProfile() {
 		String application = null;
-		String profile = randomAlphabetic(RandomUtils.nextInt(3,25));
+		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
 		String defaultApplication = configServerProperties.getDefaultApplicationName();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(defaultApplication, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(defaultApplication, profiles, null,
+				null, null);
+		expectedEnv.addAll(
+				Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -151,19 +184,24 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(defaultApplication, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(defaultApplication, profiles, null,
+				null, null);
+		expectedEnv.addAll(
+				Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -174,22 +212,28 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+		PropertySource applicationProdProperties = new PropertySource(
+				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(defaultApplication, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(defaultApplication, profiles, null,
+				null, null);
+		expectedEnv.addAll(Arrays.asList(applicationProdProperties,
+				applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -200,19 +244,24 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(
+				Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -222,19 +271,24 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(
+				Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -244,19 +298,24 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(
+				Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -266,22 +325,28 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+		PropertySource applicationProdProperties = new PropertySource(
+				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(applicationProdProperties,
+				applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -292,19 +357,24 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(
+				Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -314,19 +384,24 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(
+				Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -336,19 +411,24 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(
+				Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -358,22 +438,28 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+		PropertySource applicationProdProperties = new PropertySource(
+				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(applicationProdProperties,
+				applicationDefaultProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -384,25 +470,32 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName, FOO_PROPERTIES);
+		PropertySource fooProperties = new PropertySource(fooPropertiesName,
+				FOO_PROPERTIES);
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, FOO_DEFAULT_PROPERTIES);
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
+				FOO_DEFAULT_PROPERTIES);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(fooDefaultProperties,
+				applicationDefaultProperties, fooProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -412,25 +505,32 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName, FOO_PROPERTIES);
+		PropertySource fooProperties = new PropertySource(fooPropertiesName,
+				FOO_PROPERTIES);
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, FOO_DEFAULT_PROPERTIES);
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
+				FOO_DEFAULT_PROPERTIES);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(fooDefaultProperties,
+				applicationDefaultProperties, fooProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -440,25 +540,32 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName, FOO_PROPERTIES);
+		PropertySource fooProperties = new PropertySource(fooPropertiesName,
+				FOO_PROPERTIES);
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, FOO_DEFAULT_PROPERTIES);
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
+				FOO_DEFAULT_PROPERTIES);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(fooDefaultProperties,
+				applicationDefaultProperties, fooProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -468,19 +575,23 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName, FOO_PROPERTIES);
+		PropertySource fooProperties = new PropertySource(fooPropertiesName,
+				FOO_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
 		expectedEnv.addAll(Arrays.asList(fooProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -490,22 +601,28 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName, FOO_PROPERTIES);
+		PropertySource fooProperties = new PropertySource(fooPropertiesName,
+				FOO_PROPERTIES);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, fooProperties,
+				applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -515,32 +632,41 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
-		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName, FOO_PROD_PROPERTIES);
+		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
+				FOO_PROD_PROPERTIES);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName, FOO_PROPERTIES);
+		PropertySource fooProperties = new PropertySource(fooPropertiesName,
+				FOO_PROPERTIES);
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, FOO_DEFAULT_PROPERTIES);
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
+				FOO_DEFAULT_PROPERTIES);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+		PropertySource applicationProdProperties = new PropertySource(
+				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooDefaultProperties,
-			applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties,
+				fooDefaultProperties, applicationDefaultProperties, fooProperties,
+				applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -550,25 +676,32 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
-		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName, FOO_PROD_PROPERTIES);
+		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
+				FOO_PROD_PROPERTIES);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName, FOO_PROPERTIES);
+		PropertySource fooProperties = new PropertySource(fooPropertiesName,
+				FOO_PROPERTIES);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+		PropertySource applicationProdProperties = new PropertySource(
+				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties,
+				fooProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -578,38 +711,49 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
-		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName, FOO_PROD_PROPERTIES);
+		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
+				FOO_PROD_PROPERTIES);
 
 		String fooEastPropertiesName = "aws:secrets:/secret/foo-east/";
-		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName, FOO_EAST_PROPERTIES);
+		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName,
+				FOO_EAST_PROPERTIES);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName, FOO_PROPERTIES);
+		PropertySource fooProperties = new PropertySource(fooPropertiesName,
+				FOO_PROPERTIES);
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, FOO_DEFAULT_PROPERTIES);
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
+				FOO_DEFAULT_PROPERTIES);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+		PropertySource applicationProdProperties = new PropertySource(
+				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
 		String applicationEastPropertiesName = "aws:secrets:/secret/application-east/";
-		PropertySource applicationEastProperties = new PropertySource(applicationEastPropertiesName, APPLICATION_EAST_PROPERTIES);
+		PropertySource applicationEastProperties = new PropertySource(
+				applicationEastPropertiesName, APPLICATION_EAST_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties, applicationEastProperties,
-			fooDefaultProperties, applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties,
+				fooEastProperties, applicationEastProperties, fooDefaultProperties,
+				applicationDefaultProperties, fooProperties, applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -619,32 +763,41 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
-		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName, FOO_PROD_PROPERTIES);
+		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
+				FOO_PROD_PROPERTIES);
 
 		String fooEastPropertiesName = "aws:secrets:/secret/foo-east/";
-		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName, FOO_EAST_PROPERTIES);
+		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName,
+				FOO_EAST_PROPERTIES);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName, FOO_PROPERTIES);
+		PropertySource fooProperties = new PropertySource(fooPropertiesName,
+				FOO_PROPERTIES);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+		PropertySource applicationProdProperties = new PropertySource(
+				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
 		String applicationEastPropertiesName = "aws:secrets:/secret/application-east/";
-		PropertySource applicationEastProperties = new PropertySource(applicationEastPropertiesName, APPLICATION_EAST_PROPERTIES);
+		PropertySource applicationEastProperties = new PropertySource(
+				applicationEastPropertiesName, APPLICATION_EAST_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-			applicationEastProperties, fooProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties,
+				fooEastProperties, applicationEastProperties, fooProperties,
+				applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -664,19 +817,24 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource overrideProperties = new PropertySource("overrides", overrides);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+		PropertySource applicationDefaultProperties = new PropertySource(
+				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, APPLICATION_PROPERTIES);
+		PropertySource applicationProperties = new PropertySource(
+				applicationPropertiesName, APPLICATION_PROPERTIES);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(overrideProperties, applicationDefaultProperties, applicationProperties));
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
+		expectedEnv.addAll(Arrays.asList(overrideProperties, applicationDefaultProperties,
+				applicationProperties));
 
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	@Test
@@ -685,21 +843,26 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String profile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
+		Environment expectedEnv = new Environment(application, profiles, null, null,
+				null);
 		setupAwsSmClientMocks(expectedEnv);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expectedEnv);
 	}
 
 	private void setupAwsSmClientMocks(Environment environment) {
-		for(PropertySource ps : environment.getPropertySources()) {
-			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
-			GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(path);
+		for (PropertySource ps : environment.getPropertySources()) {
+			String path = StringUtils.delete(ps.getName(),
+					environmentProperties.getOrigin());
+			GetSecretValueRequest request = new GetSecretValueRequest()
+					.withSecretId(path);
 
 			String secrets = getSecrets(ps);
-			GetSecretValueResult response = new GetSecretValueResult().withSecretString(secrets);
+			GetSecretValueResult response = new GetSecretValueResult()
+					.withSecretString(secrets);
 
 			when(awsSmClientMock.getSecretValue(eq(request))).thenReturn(response);
 		}

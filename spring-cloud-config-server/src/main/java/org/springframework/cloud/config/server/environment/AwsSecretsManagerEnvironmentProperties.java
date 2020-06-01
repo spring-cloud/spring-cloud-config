@@ -27,7 +27,8 @@ import org.springframework.core.Ordered;
  * @author Tejas Pandilwar
  */
 @ConfigurationProperties("spring.cloud.config.server.awssecretsmanager")
-public class AwsSecretsManagerEnvironmentProperties implements EnvironmentRepositoryProperties {
+public class AwsSecretsManagerEnvironmentProperties
+		implements EnvironmentRepositoryProperties {
 
 	static final String DEFAULT_PATH_SEPARATOR = "/";
 
@@ -38,23 +39,24 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 	private static final String DEFAULT_ORIGIN = "aws:secrets:";
 
 	/**
-	 * The region to be used by AWS Secrets Manager client
+	 * The region to be used by AWS Secrets Manager client.
 	 */
 	private String region;
 
 	/**
-	 * The endpoint to be used by AWS Secrets Manager client
+	 * The endpoint to be used by AWS Secrets Manager client.
 	 */
 	private String endpoint;
 
 	/**
-	 * The order of the environment repository
+	 * The order of the environment repository.
 	 */
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
 	/**
-	 * Prefix indicating first level for every property loaded from AWS Secrets Manager. Value must start with a forward
-	 * slash followed by a valid path segment or be empty. Defaults to "/secret".
+	 * Prefix indicating first level for every property loaded from AWS Secrets Manager.
+	 * Value must start with a forward slash followed by a valid path segment or be empty.
+	 * Defaults to "/secret".
 	 */
 	@NotNull
 	@Pattern(regexp = "(/[a-zA-Z0-9.\\-_]+)*")
@@ -68,7 +70,7 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 	private String profileSeparator = DEFAULT_PROFILE_SEPARATOR;
 
 	/**
-	 * Prefix which indicates the origin of the property. Defaults to "aws:secrets:"
+	 * Prefix which indicates the origin of the property. Defaults to "aws:secrets:".
 	 */
 	@NotNull
 	private String origin = DEFAULT_ORIGIN;
@@ -121,4 +123,5 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 	public void setOrigin(String origin) {
 		this.origin = origin;
 	}
+
 }
