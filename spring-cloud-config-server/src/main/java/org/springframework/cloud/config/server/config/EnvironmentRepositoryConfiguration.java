@@ -106,14 +106,15 @@ import org.springframework.vault.core.VaultTemplate;
 		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
 		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
 		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
-	    AwsSecretsManagerEnvironmentProperties.class})
+		AwsSecretsManagerEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
 		VaultConfiguration.class, VaultRepositoryConfiguration.class,
 		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
 		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
 		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
-		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
+		AwsS3RepositoryConfiguration.class,
+		AwsSecretsManagerRepositoryConfiguration.class,
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
@@ -208,8 +209,9 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public AwsSecretsManagerEnvironmentRepositoryFactory awsSecretsManagerEnvironmentRepositoryFactory(
-			ConfigServerProperties configServerProperties) {
-			return new AwsSecretsManagerEnvironmentRepositoryFactory(configServerProperties);
+				ConfigServerProperties configServerProperties) {
+			return new AwsSecretsManagerEnvironmentRepositoryFactory(
+					configServerProperties);
 		}
 
 	}
@@ -378,8 +380,8 @@ class AwsSecretsManagerRepositoryConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(AwsSecretsManagerEnvironmentRepository.class)
 	public AwsSecretsManagerEnvironmentRepository awsSecretsManagerEnvironmentRepository(
-		AwsSecretsManagerEnvironmentRepositoryFactory factory,
-		AwsSecretsManagerEnvironmentProperties environmentProperties) {
+			AwsSecretsManagerEnvironmentRepositoryFactory factory,
+			AwsSecretsManagerEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 
