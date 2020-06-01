@@ -37,6 +37,9 @@ import org.springframework.util.StringUtils;
 
 import static org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
 
+/**
+ * @author Tejas Pandilwar
+ */
 public class AwsSecretsManagerEnvironmentRepository implements EnvironmentRepository{
 
 	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
@@ -57,7 +60,6 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		this.environmentProperties = environmentProperties;
 		this.objectMapper = new ObjectMapper();
 	}
-
 
 	@Override
 	public Environment findOne(String application, String profileList, String label) {
