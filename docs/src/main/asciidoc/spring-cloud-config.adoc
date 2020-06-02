@@ -797,6 +797,16 @@ credhub set --name "/my-app/default/master/more-shared" --type=json
 value: {"shared.word1": "hello", "shared.word2": "world"}
 ----
 
+==== AWS Secrets Manager
+When using AWS Secrets Manager as a backend, you can share configuration with all applications by placing configuration in `/application/` or by placing it in the `default` profile for the application.
+For example, if you add secrets with the following keys, all application using the config server will have the properties `shared.foo` and `shared.bar` available to them:
+
+[source]
+----
+/secret/application-default/shared.foo
+/secret/application/shared.bar
+----
+
 ==== JDBC Backend
 
 Spring Cloud Config Server supports JDBC (relational database) as a backend for configuration properties.
@@ -894,6 +904,46 @@ Credentials are found using the link:https://docs.aws.amazon.com/sdk-for-java/v1
 Configuration files are stored in your bucket as `{application}-{profile}.properties`, `{application}-{profile}.yml` or `{application}-{profile}.json`. An optional label can be provided to specify a directory path to the file.
 
 NOTE: When no profile is specified `default` will be used.
+
+==== AWS Secrets Manager Backend
+
+Spring Cloud Config Server supports link:https://aws.amazon.com/secrets-manager/[AWS Secrets Manager] as a backend for configuration properties.
+You can enable this feature by adding a dependency to link:https://github.com/aws/aws-sdk-java/tree/master/aws-java-sdk-secretsmanager[AWS Java SDK for Secrets Manager].
+
+[source,xml,indent=0]
+.pom.xml
+----
+<dependency>
+    <groupId>com.amazonaws</groupId>
+    <artifactId>aws-java-sdk-secretsmanager</artifactId>
+</dependency>
+----
+
+The following configuration uses the AWS Secrets Manager client to access secrets.
+
+[source,yaml]
+----
+spring:
+  profiles:
+  	active: awssecretsmanager
+  cloud:
+    config:
+      server:
+        awssecretsmanager:
+          region: us-east-1
+          endpoint: https://amazonaws.com
+          origin: asw:secrets:
+          prefix: /secret/foo
+          profileSeparator: _
+
+----
+
+AWS Secrets Manager API credentials are determined using link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default[Default Credential Provider Chain].
+
+[NOTE]
+====
+- When no application is specified `application` is the default, and when no profile is specified `default` is used.
+====
 
 ==== CredHub Backend
 
