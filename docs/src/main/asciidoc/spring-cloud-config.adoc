@@ -1165,24 +1165,21 @@ The server also exposes `/encrypt` and `/decrypt` endpoints (on the assumption t
 If you edit a remote config file, you can use the Config Server to encrypt values by POSTing to the `/encrypt` endpoint, as shown in the following example:
 
 ----
-$ curl localhost:8888/encrypt -d mysecret
+$ curl localhost:8888/encrypt -s -d mysecret
 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
 ----
 
-NOTE: If the value you encrypt has characters in it that need to be URL encoded, you should use the `--data-urlencode` option to `curl` to make sure they are encoded properly.
+TIP: If you are testing with curl, then use `--data-urlencode` (instead of `-d`) and prefix the value to encrypt with `=` (curl requires this) or set an explicit `Content-Type: text/plain` to make sure curl encodes the data correctly when there are special characters ('+' is particularly tricky).
 
-TIP: Be sure not to include any of the curl command statistics in the encrypted value.
-Outputting the value to a file can help avoid this problem.
+TIP: Be sure not to include any of the curl command statistics in the encrypted value, this is why the examples use the `-s` option to silence them. Outputting the value to a file can help avoid this problem.
 
 The inverse operation is also available through `/decrypt` (provided the server is
 configured with a symmetric key or a full key pair), as shown in the following example:
 
 ----
-$ curl localhost:8888/decrypt -d 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+$ curl localhost:8888/decrypt -s -d 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
 mysecret
 ----
-
-TIP: If you testing with curl, then use `--data-urlencode` (instead of `-d`) or set an explicit `Content-Type: text/plain` to make sure curl encodes the data correctly when there are special characters ('+' is particularly tricky).
 
 Take the encrypted value and add the `{cipher}` prefix before you put it in the YAML or properties file and before you commit and push it to a remote (potentially insecure) store.
 
