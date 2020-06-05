@@ -44,7 +44,8 @@ public class AwsSecretsManagerEnvironmentProperties
 	private String region;
 
 	/**
-	 * The endpoint to be used by AWS Secrets Manager client.
+	 * The endpoint to be used by AWS Secrets Manager client. This can be used to specify
+	 * an alternate endpoint for the API requests.
 	 */
 	private String endpoint;
 
