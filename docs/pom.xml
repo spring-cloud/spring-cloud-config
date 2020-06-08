@@ -12,7 +12,7 @@
 		<relativePath>..</relativePath>
 	</parent>
 
-	<packaging>pom</packaging>
+	<packaging>jar</packaging>
 	<name>Spring Cloud Config Docs</name>
 	<description>Spring Cloud Docs</description>
 	<properties>
