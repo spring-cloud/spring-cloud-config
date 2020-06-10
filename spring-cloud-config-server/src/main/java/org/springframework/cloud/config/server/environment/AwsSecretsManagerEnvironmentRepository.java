@@ -153,7 +153,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 			}
 		}
 		catch (ResourceNotFoundException | IOException e) {
-			log.warn(String.format("Unable to load secrets from AWS Secrets Manager for secretId=%s", path), e);
+			log.debug(String.format("Skip adding propertySource. Unable to load secrets from AWS Secrets Manager for secretId=%s", path), e);
 		}
 
 		return properties;
