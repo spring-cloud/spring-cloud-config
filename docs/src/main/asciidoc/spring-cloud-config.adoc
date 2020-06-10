@@ -931,8 +931,8 @@ spring:
       server:
         awssecretsmanager:
           region: us-east-1
-          endpoint: https://amazonaws.com
-          origin: asw:secrets:
+          endpoint: https://us-east-1.console.aws.amazon.com/
+          origin: aws:secrets:
           prefix: /secret/foo
           profileSeparator: _
 
