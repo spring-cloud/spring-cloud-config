@@ -37,6 +37,7 @@ public class AwsS3EnvironmentRepositoryFactory implements
 		if (environmentProperties.getRegion() != null) {
 			clientBuilder.withRegion(environmentProperties.getRegion());
 		}
+		clientBuilder.withClientConfiguration()
 		final AmazonS3 client = clientBuilder.build();
 		if (environmentProperties.getEndpoint() != null) {
 			client.setEndpoint(environmentProperties.getEndpoint());
