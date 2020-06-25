@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -71,20 +70,24 @@ public class DiscoveryClientConfigServiceBootstrapConfiguration {
 	}
 
 	@Bean
-	public SmartApplicationListener heartbeatListener(
+	public SmartApplicationListener heartbeatListener(ConfigClientProperties properties,
 			ConfigServerInstanceProvider provider) {
-		return new HeartbeatListener();
+		return new HeartbeatListener(properties, provider);
 	}
 
-	private static class HeartbeatListener implements SmartApplicationListener {
+	private final static class HeartbeatListener implements SmartApplicationListener {
 
-		@Autowired
-		private ConfigClientProperties config;
+		private final ConfigClientProperties config;
 
-		@Autowired
-		private ConfigServerInstanceProvider instanceProvider;
+		private final ConfigServerInstanceProvider instanceProvider;
 
-		private HeartbeatMonitor monitor = new HeartbeatMonitor();
+		private final HeartbeatMonitor monitor = new HeartbeatMonitor();
+
+		private HeartbeatListener(ConfigClientProperties config,
+				ConfigServerInstanceProvider instanceProvider) {
+			this.config = config;
+			this.instanceProvider = instanceProvider;
+		}
 
 		@Override
 		public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {

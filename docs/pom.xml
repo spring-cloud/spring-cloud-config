@@ -19,7 +19,14 @@
 		<docs.main>spring-cloud-config</docs.main>
 		<main.basedir>${basedir}/..</main.basedir>
 		<upload-docs-zip.phase>deploy</upload-docs-zip.phase>
-	</properties>	
+		<configprops.inclusionPattern>spring.cloud.config.*</configprops.inclusionPattern>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
+	</dependencies>
 	<build>
 		<sourceDirectory>src/main/asciidoc</sourceDirectory>
 	</build>
@@ -33,23 +40,20 @@
 						<artifactId>git-commit-id-plugin</artifactId>
 					</plugin>
 					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>exec-maven-plugin</artifactId>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-dependency-plugin</artifactId>
 					</plugin>
 					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-resources-plugin</artifactId>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
 					</plugin>
 					<plugin>
 						<groupId>org.asciidoctor</groupId>
 						<artifactId>asciidoctor-maven-plugin</artifactId>
 					</plugin>
 					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-antrun-plugin</artifactId>
 					</plugin>
 					<plugin>
