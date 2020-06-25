@@ -20,23 +20,27 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentController;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.resource.ResourceControllerIntegrationTests.ControllerConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,10 +49,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 /**
  * @author Dave Syer
@@ -56,7 +61,7 @@ import static org.mockito.Mockito.when;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ControllerConfiguration.class, properties = "trace")
+@SpringBootTest(classes = ControllerConfiguration.class, webEnvironment = RANDOM_PORT)
 @DirtiesContext
 public class ResourceControllerIntegrationTests {
 
@@ -70,6 +75,9 @@ public class ResourceControllerIntegrationTests {
 
 	@Autowired
 	private ResourceRepository resources;
+
+	@LocalServerPort
+	int port;
 
 	@Before
 	public void init() {
@@ -90,6 +98,33 @@ public class ResourceControllerIntegrationTests {
 	}
 
 	@Test
+	public void resource() throws Exception {
+		when(this.repository.findOne("foo", "default", "master", false))
+			.thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
+			.andExpect(MockMvcResultMatchers.status().isOk());
+		verify(this.repository).findOne("foo", "default", "master", false);
+		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
+	}
+
+	@Test
+	public void resourceHttp() throws Exception {
+		when(this.repository.findOne("foo", "default", "master", false))
+			.thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+
+		ResponseEntity<String> response = new TestRestTemplate()
+			.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		verify(this.repository).findOne("foo", "default", "master", false);
+		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
+	}
+
+	@Ignore
+	@Test
 	public void resourceNoLabel() throws Exception {
 		when(this.repository.findOne("foo", "default", null, false))
 				.thenReturn(new Environment("foo", "default", "master"));
@@ -102,6 +137,22 @@ public class ResourceControllerIntegrationTests {
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
+	@Ignore
+	@Test
+	public void resourceNoLabelHttp() throws Exception {
+		when(this.repository.findOne("foo", "default", null, false))
+			.thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne("foo", "default", null, "foo.txt"))
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+
+		ResponseEntity<String> response = new TestRestTemplate()
+			.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		verify(this.repository).findOne("foo", "default", null, false);
+		verify(this.resources).findOne("foo", "default", null, "foo.txt");
+	}
+
+	@Ignore
 	@Test
 	public void binaryResourceNoLabel() throws Exception {
 		when(this.repository.findOne("foo", "default", null, false))
@@ -116,9 +167,8 @@ public class ResourceControllerIntegrationTests {
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
-	@Configuration
-	@EnableWebMvc
-	@Import(PropertyPlaceholderAutoConfiguration.class)
+	@SpringBootConfiguration
+	@EnableAutoConfiguration
 	public static class ControllerConfiguration {
 
 		@Autowired(required = false)
