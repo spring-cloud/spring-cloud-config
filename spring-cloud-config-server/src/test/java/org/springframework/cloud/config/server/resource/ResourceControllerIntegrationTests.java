@@ -100,11 +100,11 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void resource() throws Exception {
 		when(this.repository.findOne("foo", "default", "master", false))
-			.thenReturn(new Environment("foo", "default", "master"));
+				.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
-			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
-			.andExpect(MockMvcResultMatchers.status().isOk());
+				.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", "master", false);
 		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
 	}
@@ -112,12 +112,12 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void resourceHttp() throws Exception {
 		when(this.repository.findOne("foo", "default", "master", false))
-			.thenReturn(new Environment("foo", "default", "master"));
+				.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
-			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 
-		ResponseEntity<String> response = new TestRestTemplate()
-			.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
+		ResponseEntity<String> response = new TestRestTemplate().getForEntity(
+				"http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		verify(this.repository).findOne("foo", "default", "master", false);
 		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
@@ -141,12 +141,12 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void resourceNoLabelHttp() throws Exception {
 		when(this.repository.findOne("foo", "default", null, false))
-			.thenReturn(new Environment("foo", "default", "master"));
+				.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
-			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 
-		ResponseEntity<String> response = new TestRestTemplate()
-			.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
+		ResponseEntity<String> response = new TestRestTemplate().getForEntity(
+				"http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		verify(this.repository).findOne("foo", "default", null, false);
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
