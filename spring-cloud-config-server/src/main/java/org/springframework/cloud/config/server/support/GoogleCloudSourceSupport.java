@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.support;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -112,7 +113,7 @@ public final class GoogleCloudSourceSupport {
 
 	}
 
-	interface CredentialsProvider {
+	public interface CredentialsProvider {
 
 		Map<String, String> getAuthorizationHeaders();
 
@@ -124,8 +125,10 @@ public final class GoogleCloudSourceSupport {
 		@Override
 		public Map<String, String> getAuthorizationHeaders() {
 			try {
-				return GoogleCredentials.getApplicationDefault().getRequestMetadata()
-						.entrySet().stream()
+				return GoogleCredentials.getApplicationDefault()
+						.createScoped(Collections.singleton(
+								"https://www.googleapis.com/auth/cloud-platform"))
+						.getRequestMetadata().entrySet().stream()
 						.collect(toMap(Entry::getKey, this::joinValues));
 			}
 			catch (IOException ex) {
