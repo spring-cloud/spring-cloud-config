@@ -137,7 +137,7 @@ public class ResourceControllerIntegrationTests {
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
-	//@Ignore
+	@Ignore
 	@Test
 	public void resourceNoLabelHttp() throws Exception {
 		when(this.repository.findOne("foo", "default", null, false))
