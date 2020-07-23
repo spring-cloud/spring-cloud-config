@@ -198,8 +198,8 @@ public class GoogleSecretManagerV1AccessStrategy
 	}
 
 	private String getAccessToken() {
-		return configProvider
-				.getValue(HttpHeaderGoogleConfigProvider.ACCESS_TOKEN_HEADER);
+		return configProvider.getValue(HttpHeaderGoogleConfigProvider.ACCESS_TOKEN_HEADER,
+				true);
 	}
 
 	/**
@@ -209,7 +209,7 @@ public class GoogleSecretManagerV1AccessStrategy
 		String result = null;
 		try {
 			result = configProvider
-					.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER);
+					.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER, true);
 		}
 		catch (Exception e) {
 			// not in GCP

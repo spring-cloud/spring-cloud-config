@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.config.server.environment.secretManager;
 
-import java.io.IOException;
-
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.RepositoryException;
 import org.springframework.web.client.RestTemplate;
@@ -38,7 +36,7 @@ public final class GoogleSecretManagerAccessStrategyFactory {
 				return new GoogleSecretManagerV1AccessStrategy(rest, configProvider,
 						properties.getServiceAccount());
 			}
-			catch (IOException e) {
+			catch (Exception e) {
 				throw new RepositoryException("Cannot create service client", e);
 			}
 		default:

@@ -18,6 +18,6 @@ package org.springframework.cloud.config.server.environment.secretManager;
 
 public interface GoogleConfigProvider {
 
-	String getValue(String key);
+	String getValue(String key, Boolean mandatory);
 
 }

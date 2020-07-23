@@ -34,6 +34,11 @@ public class HttpHeaderGoogleConfigProvider implements GoogleConfigProvider {
 	 */
 	public static final String ACCESS_TOKEN_HEADER = "X-Config-Token";
 
+	/**
+	 * The prefix we should search for in secrets to take them into account.
+	 */
+	public static final String PREFIX_HEADER = "X-Secret-Prefix";
+
 	private ObjectProvider<HttpServletRequest> httpRequest;
 
 	public HttpHeaderGoogleConfigProvider(ObjectProvider<HttpServletRequest> request) {
@@ -41,13 +46,13 @@ public class HttpHeaderGoogleConfigProvider implements GoogleConfigProvider {
 	}
 
 	@Override
-	public String getValue(String key) {
+	public String getValue(String key, Boolean mandatory) {
 		HttpServletRequest request = httpRequest.getIfAvailable();
 		if (request == null) {
 			throw new IllegalStateException("No HttpServletRequest available");
 		}
 		String value = request.getHeader(key);
-		if (!StringUtils.hasLength(value)) {
+		if (!StringUtils.hasLength(value) && mandatory) {
 			throw new IllegalArgumentException(
 					"Missing required header in HttpServletRequest: " + key);
 		}

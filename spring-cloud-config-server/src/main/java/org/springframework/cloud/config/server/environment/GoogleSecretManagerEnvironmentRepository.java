@@ -22,15 +22,16 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import com.google.cloud.secretmanager.v1.Secret;
+import org.apache.commons.lang3.StringUtils;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.environment.secretManager.GoogleConfigProvider;
 import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretComparatorByVersion;
 import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretManagerAccessStrategy;
 import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretManagerAccessStrategyFactory;
 import org.springframework.cloud.config.server.environment.secretManager.HttpHeaderGoogleConfigProvider;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -46,13 +47,16 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 
 	private Boolean tokenMandatory;
 
+	private GoogleConfigProvider configProvider;
+
 	public GoogleSecretManagerEnvironmentRepository(
 			ObjectProvider<HttpServletRequest> request, RestTemplate rest,
 			GoogleSecretManagerEnvironmentProperties properties) {
 		this.applicationLabel = properties.getApplicationLabel();
 		this.profileLabel = properties.getProfileLabel();
+		this.configProvider = new HttpHeaderGoogleConfigProvider(request);
 		this.accessStrategy = GoogleSecretManagerAccessStrategyFactory.forVersion(rest,
-				new HttpHeaderGoogleConfigProvider(request), properties);
+				configProvider, properties);
 	}
 
 	@Override
@@ -66,7 +70,8 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 		if (!profile.startsWith("default")) {
 			profile = "default," + profile;
 		}
-		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+		String[] profiles = org.springframework.util.StringUtils
+				.commaDelimitedListToStringArray(profile);
 		Environment result = new Environment(application, profile, label, null, null);
 		if (tokenMandatory) {
 			if (accessStrategy.checkRemotePermissions()) {
@@ -97,6 +102,8 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 	 */
 	private Map<?, ?> getSecrets(String application, String profile) {
 		Map<String, String> result = new HashMap<>();
+		String prefix = configProvider
+				.getValue(HttpHeaderGoogleConfigProvider.PREFIX_HEADER, false);
 		for (Secret secret : accessStrategy.getSecrets()) {
 			if (secret.getLabelsOrDefault(applicationLabel, "application")
 					.equalsIgnoreCase(application)
@@ -105,7 +112,14 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 				result.put(accessStrategy.getSecretName(secret), accessStrategy
 						.getSecretValue(secret, new GoogleSecretComparatorByVersion()));
 			}
-
+			else if (StringUtils.isNotBlank(prefix)
+					&& accessStrategy.getSecretName(secret).startsWith(prefix)) {
+				result.put(
+						StringUtils.removeStart(accessStrategy.getSecretName(secret),
+								prefix),
+						accessStrategy.getSecretValue(secret,
+								new GoogleSecretComparatorByVersion()));
+			}
 		}
 		return result;
 	}
