@@ -35,6 +35,7 @@ import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropertySource;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
+import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.annotation.Order;
@@ -61,6 +62,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
+import static org.springframework.cloud.config.client.ConfigClientProperties.NAME_PLACEHOLDER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
@@ -89,6 +91,20 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	public org.springframework.core.env.PropertySource<?> locate(
 			org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
+
+		if (StringUtils.startsWithIgnoreCase(properties.getName(), "application-")) {
+			InvalidApplicationNameException exception = new InvalidApplicationNameException(
+					properties.getName());
+			if (properties.isFailFast()) {
+				throw exception;
+			}
+			else {
+				logger.warn(NAME_PLACEHOLDER + " resolved to " + properties.getName()
+						+ ", not going to load remote properties. Ensure application name doesn't start with 'application-'");
+				return null;
+			}
+		}
+
 		CompositePropertySource composite = new OriginTrackedCompositePropertySource(
 				"configService");
 		RestTemplate restTemplate = this.restTemplate == null
