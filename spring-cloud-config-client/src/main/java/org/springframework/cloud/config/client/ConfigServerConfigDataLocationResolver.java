@@ -30,14 +30,16 @@ import org.springframework.boot.context.config.ConfigDataLocationResolverContext
 import org.springframework.boot.context.config.Profiles;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.core.Ordered;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 public class ConfigServerConfigDataLocationResolver
-		implements ConfigDataLocationResolver<ConfigServerConfigDataLocation> {
+		implements ConfigDataLocationResolver<ConfigServerConfigDataLocation>, Ordered {
 
 	protected static final String PREFIX = "configserver:";
 
@@ -45,6 +47,11 @@ public class ConfigServerConfigDataLocationResolver
 
 	public ConfigServerConfigDataLocationResolver(Log log) {
 		this.log = log;
+	}
+
+	@Override
+	public int getOrder() {
+		return -1;
 	}
 
 	protected ConfigClientProperties loadProperties(Binder binder) {
@@ -104,6 +111,14 @@ public class ConfigServerConfigDataLocationResolver
 			Profiles profiles) {
 
 		ConfigClientProperties properties = loadProperties(context.getBinder());
+
+		String uris = (location.startsWith(PREFIX)) ? location.substring(PREFIX.length())
+				: location;
+
+		if (StringUtils.hasText(uris)) {
+			String[] uri = StringUtils.commaDelimitedListToStringArray(uris);
+			properties.setUri(uri);
+		}
 
 		RestTemplate restTemplate = createRestTemplate(properties);
 
