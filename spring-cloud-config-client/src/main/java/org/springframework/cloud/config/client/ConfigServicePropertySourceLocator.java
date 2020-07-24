@@ -17,6 +17,8 @@
 package org.springframework.cloud.config.client;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -68,6 +70,7 @@ import static org.springframework.cloud.config.environment.EnvironmentMediaType.
 /**
  * @author Dave Syer
  * @author Mathieu Ouellet
+ * @author Jean Paul Curiñaupa Taype
  *
  */
 @Order(0)
@@ -91,7 +94,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		CompositePropertySource composite = new OriginTrackedCompositePropertySource(
 				"configService");
-		RestTemplate restTemplate = this.restTemplate == null
+		RestTemplate restTemplateFetch = this.restTemplate == null
 				? getSecureRestTemplate(properties) : this.restTemplate;
 		Exception error = null;
 		String errorBody = null;
@@ -104,7 +107,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			String state = ConfigClientStateHolder.getState();
 			// Try all the labels until one works
 			for (String label : labels) {
-				Environment result = getRemoteEnvironment(restTemplate, properties,
+				Environment result = getRemoteEnvironment(restTemplateFetch, properties,
 						label.trim(), state);
 				if (result != null) {
 					log(result);
@@ -284,8 +287,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				return null;
 			}
 
-			Environment result = response.getBody();
-			return result;
+			return response.getBody();
 		}
 
 		return null;
@@ -293,6 +295,24 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	public void setRestTemplate(RestTemplate restTemplate) {
 		this.restTemplate = restTemplate;
+	}
+
+	private Proxy buildProxy(ConfigClientProperties client) {
+		ConfigClientProperties.ProxyClient proxyClient = client.getProxy();
+		if (StringUtils.isEmpty(proxyClient.getHost())) {
+			return Proxy.NO_PROXY;
+		}
+		if (proxyClient.getPort() == null) {
+			throw new IllegalStateException("You must set proxy 'port'");
+		}
+		logger.info(String.format(
+				"Setting up proxy connection: protocol=%s, host='%s', port=%d ",
+				proxyClient.getType(), proxyClient.getHost(), proxyClient.getPort()));
+		Proxy.Type typeProxy = proxyClient
+				.getType() == ConfigClientProperties.ProxyProtocol.SOCKS
+						? Proxy.Type.SOCKS : Proxy.Type.HTTP;
+		return new Proxy(typeProxy,
+				new InetSocketAddress(proxyClient.getHost(), proxyClient.getPort()));
 	}
 
 	private RestTemplate getSecureRestTemplate(ConfigClientProperties client) {
@@ -305,6 +325,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		requestFactory.setReadTimeout(client.getRequestReadTimeout());
 		requestFactory.setConnectTimeout(client.getRequestConnectTimeout());
+		requestFactory.setProxy(buildProxy(client));
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
 		if (headers.containsKey(AUTHORIZATION)) {
