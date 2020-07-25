@@ -31,7 +31,6 @@ public class BaseCertTest {
     
     protected static File caCert;
     protected static File wrongCaCert;
-    protected static File trustStore;
     
     protected static File serverCert;
     protected static File clientCert;
@@ -46,7 +45,6 @@ public class BaseCertTest {
         KeyAndCert client = ca.sign("client");
         
         caCert = saveCert(ca);
-        trustStore = saveTrustStore(ca);
         serverCert = saveKeyAndCert(server);
         clientCert = saveKeyAndCert(client);
         
@@ -56,8 +54,8 @@ public class BaseCertTest {
         wrongCaCert = saveCert(wrongCa);
         wrongClientCert = saveKeyAndCert(wrongClient);
         
-        System.setProperty("javax.net.ssl.trustStore", trustStore.getAbsolutePath());
-        System.setProperty("javax.net.ssl.trustStoreType", "JKS");
+        System.setProperty("javax.net.ssl.trustStore", caCert.getAbsolutePath());
+        System.setProperty("javax.net.ssl.trustStorePassword", KEY_STORE_PASSWORD);
     }
     
     private static File saveKeyAndCert(KeyAndCert keyCert) throws Exception {
@@ -75,15 +73,6 @@ public class BaseCertTest {
         try (OutputStream output = new FileOutputStream(result)) {
             KeyStore store = func.createKeyStore();
             store.store(output, KEY_STORE_PASSWORD.toCharArray());
-        }
-        return result;
-    }
-    
-    private static File saveTrustStore(KeyAndCert keyCert) throws Exception {
-    	File result = File.createTempFile(keyCert.subject(), "jks");
-        try (OutputStream output = new FileOutputStream(result)) {
-            KeyStore store = keyCert.storeCert("JKS");
-            store.store(output, new char [0]);
         }
         return result;
     }
