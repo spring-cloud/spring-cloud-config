@@ -24,68 +24,71 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 public class KeyAndCert {
-    
-    private KeyPair keyPair;
-    private X509Certificate certificate;
-    
-    public KeyAndCert(KeyPair keyPair, X509Certificate certificate) {
-        this.keyPair = keyPair;
-        this.certificate = certificate;
-    }
-    
-    public KeyPair keyPair() {
-        return keyPair;
-    }
-    
-    public PublicKey publicKey() {
-        return keyPair.getPublic();
-    }
-    
-    public PrivateKey privateKey() {
-        return keyPair.getPrivate();
-    }
-    
-    public X509Certificate certificate() {
-        return certificate;
-    }
-    
-    public String subject() {
-        String dn = certificate.getSubjectDN().getName();
-        int index = dn.indexOf('=');
-        return dn.substring(index + 1);
-    }
-    
-    public KeyAndCert sign(String subject) throws Exception {
-        KeyTool tool = new KeyTool();
-        return tool.signCertificate(subject, this);
-    }
-    
-    public KeyAndCert sign(KeyPair keyPair, String subject) throws Exception {
-        KeyTool tool = new KeyTool();
-        return tool.signCertificate(keyPair, subject, this);
-    }
-    
-    public KeyStore storeKeyAndCert(String keyPassword) throws Exception {
-        KeyStore result = KeyStore.getInstance("PKCS12");
-        result.load(null);
-                
-        result.setKeyEntry(subject(), keyPair.getPrivate(), keyPassword.toCharArray(), certChain());
-        return result;
-    }
-    
-    private Certificate [] certChain() {
-        return new Certificate [] {certificate()};
-    }
-    
-    public KeyStore storeCert() throws Exception {
-        return storeCert("PKCS12");
-    }
-    
-    public KeyStore storeCert(String storeType) throws Exception {
-        KeyStore result = KeyStore.getInstance(storeType);
-        result.load(null);
-        
-        result.setCertificateEntry(subject(), certificate());
-        return result;
-    }
+
+	private KeyPair keyPair;
+
+	private X509Certificate certificate;
+
+	public KeyAndCert(KeyPair keyPair, X509Certificate certificate) {
+		this.keyPair = keyPair;
+		this.certificate = certificate;
+	}
+
+	public KeyPair keyPair() {
+		return keyPair;
+	}
+
+	public PublicKey publicKey() {
+		return keyPair.getPublic();
+	}
+
+	public PrivateKey privateKey() {
+		return keyPair.getPrivate();
+	}
+
+	public X509Certificate certificate() {
+		return certificate;
+	}
+
+	public String subject() {
+		String dn = certificate.getSubjectDN().getName();
+		int index = dn.indexOf('=');
+		return dn.substring(index + 1);
+	}
+
+	public KeyAndCert sign(String subject) throws Exception {
+		KeyTool tool = new KeyTool();
+		return tool.signCertificate(subject, this);
+	}
+
+	public KeyAndCert sign(KeyPair keyPair, String subject) throws Exception {
+		KeyTool tool = new KeyTool();
+		return tool.signCertificate(keyPair, subject, this);
+	}
+
+	public KeyStore storeKeyAndCert(String keyPassword) throws Exception {
+		KeyStore result = KeyStore.getInstance("PKCS12");
+		result.load(null);
+
+		result.setKeyEntry(subject(), keyPair.getPrivate(), keyPassword.toCharArray(),
+				certChain());
+		return result;
+	}
+
+	private Certificate[] certChain() {
+		return new Certificate[] { certificate() };
+	}
+
+	public KeyStore storeCert() throws Exception {
+		return storeCert("PKCS12");
+	}
+
+	public KeyStore storeCert(String storeType) throws Exception {
+		KeyStore result = KeyStore.getInstance(storeType);
+		result.load(null);
+
+		result.setCertificateEntry(subject(), certificate());
+		return result;
+	}
+
 }

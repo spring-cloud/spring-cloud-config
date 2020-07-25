@@ -33,6 +33,7 @@ import javax.annotation.PostConstruct;
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.ssl.SSLContextBuilder;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -110,9 +111,9 @@ public class ConfigClientProperties {
 	 * Discovery properties.
 	 */
 	private Discovery discovery = new Discovery();
-	
+
 	/**
-	 * TLS properties
+	 * TLS properties.
 	 */
 	private TLS tls = new TLS();
 
@@ -232,7 +233,7 @@ public class ConfigClientProperties {
 	public void setTls(TLS tls) {
 		this.tls = tls;
 	}
-	
+
 	@PostConstruct
 	public void checkTlsStoreType() {
 		tls.checkStoreType();
@@ -444,37 +445,43 @@ public class ConfigClientProperties {
 		}
 
 	}
-	
+
 	/**
-	 * TLS properties
+	 * TLS properties.
 	 */
 	public static class TLS {
-		
-	    private static final String DEFAULT_STORE_TYPE = "PKCS12";
-	    private static final Map<String, String> EXTENSION_STORE_TYPES = extTypes();
-	    
-	    private boolean enabled;
+
+		private static final String DEFAULT_STORE_TYPE = "PKCS12";
+
+		private static final Map<String, String> EXTENSION_STORE_TYPES = extTypes();
+
+		private boolean enabled;
 
 		private Resource keyStore;
-	    private String keyStoreType;
-	    private String keyStorePassword = "";
-	    private String keyPassword = "";
 
-	    private Resource trustStore;
-	    private String trustStoreType;
-	    private String trustStorePassword = "";
-	    
-	    private static Map<String, String> extTypes() {
-	        Map<String, String> result = new HashMap<>();
+		private String keyStoreType;
 
-	        result.put("p12", "PKCS12");
-	        result.put("pfx", "PKCS12");
-	        result.put("jks", "JKS");
+		private String keyStorePassword = "";
 
-	        return Collections.unmodifiableMap(result);
-	    }
-	    
-	    public boolean isEnabled() {
+		private String keyPassword = "";
+
+		private Resource trustStore;
+
+		private String trustStoreType;
+
+		private String trustStorePassword = "";
+
+		private static Map<String, String> extTypes() {
+			Map<String, String> result = new HashMap<>();
+
+			result.put("p12", "PKCS12");
+			result.put("pfx", "PKCS12");
+			result.put("jks", "JKS");
+
+			return Collections.unmodifiableMap(result);
+		}
+
+		public boolean isEnabled() {
 			return enabled;
 		}
 
@@ -537,113 +544,120 @@ public class ConfigClientProperties {
 		public void setTrustStorePassword(String trustStorePassword) {
 			this.trustStorePassword = trustStorePassword;
 		}
-	    
-	    public char[] keyStorePassword() {
-	        return keyStorePassword.toCharArray();
-	    }
-		
-	    public char[] keyPassword() {
-	        return keyPassword.toCharArray();
-	    }
-	    
+
+		public char[] keyStorePassword() {
+			return keyStorePassword.toCharArray();
+		}
+
+		public char[] keyPassword() {
+			return keyPassword.toCharArray();
+		}
+
 		public char[] trustStorePassword() {
-	        return trustStorePassword.toCharArray();
-	    }
-	    
-	    public void checkStoreType() {
-	        if (keyStore != null && keyStoreType == null) {
-	            keyStoreType = storeTypeOf(keyStore);
-	        }
-	        if (trustStore != null && trustStoreType == null) {
-	            trustStoreType = storeTypeOf(trustStore);
-	        }
-	    }
+			return trustStorePassword.toCharArray();
+		}
 
-	    private String storeTypeOf(Resource resource) {
-	        String extension = fileExtensionOf(resource);
-	        String type = EXTENSION_STORE_TYPES.get(extension);
+		public void checkStoreType() {
+			if (keyStore != null && keyStoreType == null) {
+				keyStoreType = storeTypeOf(keyStore);
+			}
+			if (trustStore != null && trustStoreType == null) {
+				trustStoreType = storeTypeOf(trustStore);
+			}
+		}
 
-	        return (type == null) ? DEFAULT_STORE_TYPE : type;
-	    }
+		private String storeTypeOf(Resource resource) {
+			String extension = fileExtensionOf(resource);
+			String type = EXTENSION_STORE_TYPES.get(extension);
 
-	    private String fileExtensionOf(Resource resource) {
-	        String name = resource.getFilename();
-	        int index = name.lastIndexOf('.');
+			return (type == null) ? DEFAULT_STORE_TYPE : type;
+		}
 
-	        return index < 0 ? "" : name.substring(index + 1).toLowerCase();
-	    }
-	    
-	    public SSLContext createSSLContext() throws GeneralSecurityException, IOException {
-	        SSLContextBuilder builder = new SSLContextBuilder();
-	        char[] keyPassword = keyPassword();
-	        KeyStore keyStore = createKeyStore();
+		private String fileExtensionOf(Resource resource) {
+			String name = resource.getFilename();
+			int index = name.lastIndexOf('.');
 
-	        try {
-	            builder.loadKeyMaterial(keyStore, keyPassword);
-	        } catch (UnrecoverableKeyException e) {
-	            if (keyPassword.length == 0) {
-	                // Retry if empty password, see https://rt.openssl.org/Ticket/Display.html?id=1497&user=guest&pass=guest
-	                builder.loadKeyMaterial(keyStore, new char[]{'\0'});
-	            } else {
-	                throw e;
-	            }
-	        }
+			return index < 0 ? "" : name.substring(index + 1).toLowerCase();
+		}
 
-	        KeyStore trust = createTrustStore();
-	        if (trust != null) {
-	            builder.loadTrustMaterial(trust, null);
-	        }
+		public SSLContext createSSLContext()
+				throws GeneralSecurityException, IOException {
+			SSLContextBuilder builder = new SSLContextBuilder();
+			char[] keyPassword = keyPassword();
+			KeyStore keyStore = createKeyStore();
 
-	        return builder.build();
-	    }
+			try {
+				builder.loadKeyMaterial(keyStore, keyPassword);
+			}
+			catch (UnrecoverableKeyException e) {
+				if (keyPassword.length == 0) {
+					// Retry if empty password, see
+					// https://rt.openssl.org/Ticket/Display.html?id=1497&user=guest&pass=guest
+					builder.loadKeyMaterial(keyStore, new char[] { '\0' });
+				}
+				else {
+					throw e;
+				}
+			}
 
-	    private KeyStore createKeyStore() throws GeneralSecurityException, IOException {
-	        if (keyStore == null) {
-	            throw new KeyStoreException("Keystore not specified.");
-	        }
-	        if (!keyStore.exists()) {
-	            throw new KeyStoreException("Keystore not exists: " + keyStore);
-	        }
+			KeyStore trust = createTrustStore();
+			if (trust != null) {
+				builder.loadTrustMaterial(trust, null);
+			}
 
-	        KeyStore result = KeyStore.getInstance(keyStoreType);
-	        char[] keyStorePassword = keyStorePassword();
+			return builder.build();
+		}
 
-	        try {
-	            loadKeyStore(result, keyStore, keyStorePassword);
-	        } catch (IOException e) {
-	            // Retry if empty password, see https://rt.openssl.org/Ticket/Display.html?id=1497&user=guest&pass=guest
-	            if (keyStorePassword.length == 0) {
-	                loadKeyStore(result, keyStore, new char[]{'\0'});
-	            } else {
-	                throw e;
-	            }
-	        }
+		private KeyStore createKeyStore() throws GeneralSecurityException, IOException {
+			if (keyStore == null) {
+				throw new KeyStoreException("Keystore not specified.");
+			}
+			if (!keyStore.exists()) {
+				throw new KeyStoreException("Keystore not exists: " + keyStore);
+			}
 
-	        return result;
-	    }
+			KeyStore result = KeyStore.getInstance(keyStoreType);
+			char[] keyStorePassword = keyStorePassword();
 
-	    private static void loadKeyStore(KeyStore keyStore, Resource keyStoreResource, char[] keyStorePassword)
-	            throws IOException, GeneralSecurityException 
-	    {
-	        try (InputStream inputStream = keyStoreResource.getInputStream()) {
-	            keyStore.load(inputStream, keyStorePassword);
-	        }
-	    }
+			try {
+				loadKeyStore(result, keyStore, keyStorePassword);
+			}
+			catch (IOException e) {
+				// Retry if empty password, see
+				// https://rt.openssl.org/Ticket/Display.html?id=1497&user=guest&pass=guest
+				if (keyStorePassword.length == 0) {
+					loadKeyStore(result, keyStore, new char[] { '\0' });
+				}
+				else {
+					throw e;
+				}
+			}
 
-	    private KeyStore createTrustStore() throws GeneralSecurityException, IOException {
-	        if (trustStore == null) {
-	            return null;
-	        }
-	        if (!trustStore.exists()) {
-	            throw new KeyStoreException("KeyStore not exists: " + trustStore);
-	        }
+			return result;
+		}
 
-	        KeyStore result = KeyStore.getInstance(trustStoreType);
-	        try (InputStream input = trustStore.getInputStream()) {
-	            result.load(input, trustStorePassword());
-	        }
-	        return result;
-	    }
+		private static void loadKeyStore(KeyStore keyStore, Resource keyStoreResource,
+				char[] keyStorePassword) throws IOException, GeneralSecurityException {
+			try (InputStream inputStream = keyStoreResource.getInputStream()) {
+				keyStore.load(inputStream, keyStorePassword);
+			}
+		}
+
+		private KeyStore createTrustStore() throws GeneralSecurityException, IOException {
+			if (trustStore == null) {
+				return null;
+			}
+			if (!trustStore.exists()) {
+				throw new KeyStoreException("KeyStore not exists: " + trustStore);
+			}
+
+			KeyStore result = KeyStore.getInstance(trustStoreType);
+			try (InputStream input = trustStore.getInputStream()) {
+				result.load(input, trustStorePassword());
+			}
+			return result;
+		}
+
 	}
 
 }

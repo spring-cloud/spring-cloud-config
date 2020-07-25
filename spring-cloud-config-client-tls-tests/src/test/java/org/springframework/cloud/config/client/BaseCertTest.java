@@ -24,61 +24,70 @@ import java.security.KeyStore;
 import org.junit.BeforeClass;
 
 public class BaseCertTest {
-    
-    protected static final String KEY_STORE_PASSWORD = "test-key-store-password";
-    protected static final String KEY_PASSWORD = "test-key-password";
-    protected static final String WRONG_PASSWORD = "test-wrong-password";
-    
-    protected static File caCert;
-    protected static File wrongCaCert;
-    
-    protected static File serverCert;
-    protected static File clientCert;
-    protected static File wrongClientCert;
-    
-    @BeforeClass
-    public static void createCertificates() throws Exception {
-        KeyTool tool = new KeyTool();
-        
-        KeyAndCert ca = tool.createCA("MyCA");
-        KeyAndCert server = ca.sign("server");
-        KeyAndCert client = ca.sign("client");
-        
-        caCert = saveCert(ca);
-        serverCert = saveKeyAndCert(server);
-        clientCert = saveKeyAndCert(client);
-        
-        KeyAndCert wrongCa = tool.createCA("WrongCA");
-        KeyAndCert wrongClient = wrongCa.sign("client");
-        
-        wrongCaCert = saveCert(wrongCa);
-        wrongClientCert = saveKeyAndCert(wrongClient);
-        
-        System.setProperty("javax.net.ssl.trustStore", caCert.getAbsolutePath());
-        System.setProperty("javax.net.ssl.trustStorePassword", KEY_STORE_PASSWORD);
-    }
-    
-    private static File saveKeyAndCert(KeyAndCert keyCert) throws Exception {
-        return saveKeyStore(keyCert.subject(), () -> keyCert.storeKeyAndCert(KEY_PASSWORD));
-    }
-    
-    private static File saveCert(KeyAndCert keyCert) throws Exception {
-        return saveKeyStore(keyCert.subject(), () -> keyCert.storeCert());
-    }
-    
-    private static File saveKeyStore(String prefix, KeyStoreSupplier func) throws Exception {
-        File result = File.createTempFile(prefix, ".p12");
-        result.deleteOnExit();
-        
-        try (OutputStream output = new FileOutputStream(result)) {
-            KeyStore store = func.createKeyStore();
-            store.store(output, KEY_STORE_PASSWORD.toCharArray());
-        }
-        return result;
-    }
-    
-    interface KeyStoreSupplier {
-        
-        public KeyStore createKeyStore() throws Exception;
-    }
+
+	protected static final String KEY_STORE_PASSWORD = "test-key-store-password";
+
+	protected static final String KEY_PASSWORD = "test-key-password";
+
+	protected static final String WRONG_PASSWORD = "test-wrong-password";
+
+	protected static File caCert;
+
+	protected static File wrongCaCert;
+
+	protected static File serverCert;
+
+	protected static File clientCert;
+
+	protected static File wrongClientCert;
+
+	@BeforeClass
+	public static void createCertificates() throws Exception {
+		KeyTool tool = new KeyTool();
+
+		KeyAndCert ca = tool.createCA("MyCA");
+		KeyAndCert server = ca.sign("server");
+		KeyAndCert client = ca.sign("client");
+
+		caCert = saveCert(ca);
+		serverCert = saveKeyAndCert(server);
+		clientCert = saveKeyAndCert(client);
+
+		KeyAndCert wrongCa = tool.createCA("WrongCA");
+		KeyAndCert wrongClient = wrongCa.sign("client");
+
+		wrongCaCert = saveCert(wrongCa);
+		wrongClientCert = saveKeyAndCert(wrongClient);
+
+		System.setProperty("javax.net.ssl.trustStore", caCert.getAbsolutePath());
+		System.setProperty("javax.net.ssl.trustStorePassword", KEY_STORE_PASSWORD);
+	}
+
+	private static File saveKeyAndCert(KeyAndCert keyCert) throws Exception {
+		return saveKeyStore(keyCert.subject(),
+				() -> keyCert.storeKeyAndCert(KEY_PASSWORD));
+	}
+
+	private static File saveCert(KeyAndCert keyCert) throws Exception {
+		return saveKeyStore(keyCert.subject(), () -> keyCert.storeCert());
+	}
+
+	private static File saveKeyStore(String prefix, KeyStoreSupplier func)
+			throws Exception {
+		File result = File.createTempFile(prefix, ".p12");
+		result.deleteOnExit();
+
+		try (OutputStream output = new FileOutputStream(result)) {
+			KeyStore store = func.createKeyStore();
+			store.store(output, KEY_STORE_PASSWORD.toCharArray());
+		}
+		return result;
+	}
+
+	interface KeyStoreSupplier {
+
+		KeyStore createKeyStore() throws Exception;
+
+	}
+
 }
