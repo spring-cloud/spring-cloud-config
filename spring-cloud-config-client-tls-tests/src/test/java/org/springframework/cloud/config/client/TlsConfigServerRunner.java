@@ -20,32 +20,35 @@ import java.io.File;
 
 public class TlsConfigServerRunner extends AppRunner {
 
-    public TlsConfigServerRunner(Class<?> appClass) {
-        super(appClass);
-        property("spring.profiles.active", "native");
-        property("spring.cloud.config.server.native.search-locations", "classpath:/test/config");
-    }
-    
-    public void enableTls() {
-        property("server.ssl.enabled", "true");
-        property("server.ssl.client-auth", "need");
-    }
-    
-    public void setKeyStore(File keyStore, String keyStorePassword, String key, String keyPassword) {
-        property("server.ssl.key-store", pathOf(keyStore));
-        property("server.ssl.key-store-type", "PKCS12");
-        property("server.ssl.key-store-password", keyStorePassword);
-        property("server.ssl.key-alias", key);
-        property("server.ssl.key-password", keyPassword);
-    }
-    
-    public void setTrustStore(File trustStore, String password) {
-        property("server.ssl.trust-store", pathOf(trustStore));
-        property("server.ssl.trust-store-type", "PKCS12");
-        property("server.ssl.trust-store-password", password);
-    }
-    
-    private String pathOf(File file) {
-        return String.format("file:%s", file.getAbsolutePath());
-    }
+	public TlsConfigServerRunner(Class<?> appClass) {
+		super(appClass);
+		property("spring.profiles.active", "native");
+		property("spring.cloud.config.server.native.search-locations",
+				"classpath:/test/config");
+	}
+
+	public void enableTls() {
+		property("server.ssl.enabled", "true");
+		property("server.ssl.client-auth", "need");
+	}
+
+	public void setKeyStore(File keyStore, String keyStorePassword, String key,
+			String keyPassword) {
+		property("server.ssl.key-store", pathOf(keyStore));
+		property("server.ssl.key-store-type", "PKCS12");
+		property("server.ssl.key-store-password", keyStorePassword);
+		property("server.ssl.key-alias", key);
+		property("server.ssl.key-password", keyPassword);
+	}
+
+	public void setTrustStore(File trustStore, String password) {
+		property("server.ssl.trust-store", pathOf(trustStore));
+		property("server.ssl.trust-store-type", "PKCS12");
+		property("server.ssl.trust-store-password", password);
+	}
+
+	private String pathOf(File file) {
+		return String.format("file:%s", file.getAbsolutePath());
+	}
+
 }

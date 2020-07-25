@@ -20,41 +20,42 @@ import java.io.File;
 
 public class TlsConfigClientRunner extends AppRunner {
 
-    public TlsConfigClientRunner(Class<?> appClass, AppRunner server) {
-        super(appClass);
-        
-        property("spring.cloud.config.uri", server.root());
-        property("spring.cloud.config.enabled", "true");
-    }
-    
-    public void enableTls() {
-        property("spring.cloud.config.tls.enabled", "true");
-    }
-    
-    public void disableTls() {
-        property("spring.cloud.config.tls.enabled", "false");
-    }
-    
-    public void setKeyStore(File keyStore, String keyStorePassword, String keyPassword) {
-        property("spring.cloud.config.tls.key-store", pathOf(keyStore));
-        property("spring.cloud.config.tls.key-store-password", keyStorePassword);
-        property("spring.cloud.config.tls.key-password", keyPassword);
-    }
-    
-    public void setKeyStore(File keyStore) {
-        property("spring.cloud.config.tls.key-store", pathOf(keyStore));
-    }
-    
-    public void setTrustStore(File trustStore, String password) {
-        property("spring.cloud.config.tls.trust-store", pathOf(trustStore));
-        property("spring.cloud.config.tls.trust-store-password", password);
-    }
-    
-    public void setTrustStore(File trustStore) {
-        property("spring.cloud.config.tls.trust-store", pathOf(trustStore));
-    }
-    
-    private String pathOf(File file) {
-        return String.format("file:%s", file.getAbsolutePath());
-    }
+	public TlsConfigClientRunner(Class<?> appClass, AppRunner server) {
+		super(appClass);
+
+		property("spring.cloud.config.uri", server.root());
+		property("spring.cloud.config.enabled", "true");
+	}
+
+	public void enableTls() {
+		property("spring.cloud.config.tls.enabled", "true");
+	}
+
+	public void disableTls() {
+		property("spring.cloud.config.tls.enabled", "false");
+	}
+
+	public void setKeyStore(File keyStore, String keyStorePassword, String keyPassword) {
+		property("spring.cloud.config.tls.key-store", pathOf(keyStore));
+		property("spring.cloud.config.tls.key-store-password", keyStorePassword);
+		property("spring.cloud.config.tls.key-password", keyPassword);
+	}
+
+	public void setKeyStore(File keyStore) {
+		property("spring.cloud.config.tls.key-store", pathOf(keyStore));
+	}
+
+	public void setTrustStore(File trustStore, String password) {
+		property("spring.cloud.config.tls.trust-store", pathOf(trustStore));
+		property("spring.cloud.config.tls.trust-store-password", password);
+	}
+
+	public void setTrustStore(File trustStore) {
+		property("spring.cloud.config.tls.trust-store", pathOf(trustStore));
+	}
+
+	private String pathOf(File file) {
+		return String.format("file:%s", file.getAbsolutePath());
+	}
+
 }

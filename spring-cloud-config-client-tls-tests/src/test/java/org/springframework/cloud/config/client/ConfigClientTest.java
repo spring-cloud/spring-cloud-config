@@ -16,134 +16,130 @@
 
 package org.springframework.cloud.config.client;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.config.server.EnableConfigServer;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class ConfigClientTest extends BaseCertTest {
-    
-    private static TlsConfigServerRunner server;
-    
-    @BeforeClass
-    public static void setupAll() throws Exception {
-        startConfigServer();
-    }
-    
-    @AfterClass
-    public static void tearDownAll() {
-        stopConfigServer();
-    }
-    
-    private static void startConfigServer() {
-        server = new TlsConfigServerRunner(TestConfigServer.class);
-        server.enableTls();
-        server.setKeyStore(serverCert, KEY_STORE_PASSWORD, "server", KEY_PASSWORD);
-        server.setTrustStore(caCert, KEY_STORE_PASSWORD);
-        
-        server.start();
-    }
-    
-    private static void stopConfigServer() {
-        server.stop();
-    }
-    
-    @Test
-    public void clientCertCanWork() {        
-        try (TlsConfigClientRunner client = createConfigClient()) {
-            enableTlsClient(client);
-            client.start();
-            assertEquals("dumb-value", client.getProperty("dumb.key"));
-        }
-    }
-    
-    @Test
-    public void tlsClientCanBeDisabled() {
-        try (TlsConfigClientRunner client = createConfigClient()) {
-            enableTlsClient(client);
-            client.property("spring.cloud.config.enabled", "false");
-            client.start();
-            assertNull(client.getProperty("dumb.key"));
-        }
-    }
-    
-    @Test
-    public void noCertCannotWork() {        
-        try (TlsConfigClientRunner client = createConfigClient()) {
-            client.disableTls();
-            client.start();
-            assertNull(client.getProperty("dumb.key"));
-        }
-    }
-    
-    @Test
-    public void wrongCertCannotWork() {
-        try (TlsConfigClientRunner client = createConfigClient()) {
-            enableTlsClient(client);
-            client.setKeyStore(wrongClientCert);
-            client.start();
-            assertNull(client.getProperty("dumb.key"));
-        }
-    }
-    
-    @Test(expected = IllegalStateException.class)
-    public void wrongPasswordCauseFailure() {
-    	TlsConfigClientRunner client = createConfigClient();
-        enableTlsClient(client);
-        client.setKeyStore(clientCert, WRONG_PASSWORD, WRONG_PASSWORD);
-        client.start();
-    }
-    
-    @Test(expected = IllegalStateException.class)
-    public void nonExistKeyStoreCauseFailure() {
-    	TlsConfigClientRunner client = createConfigClient();
-        enableTlsClient(client);
-        client.setKeyStore(new File("nonExistFile"));
-        client.start();
-    }
-    
-    @Test
-    public void wrongTrustStoreCannotWork() {
-        try (TlsConfigClientRunner client = createConfigClient()) {
-            enableTlsClient(client);
-            client.setTrustStore(wrongCaCert);
-            client.start();
-            assertNull(client.getProperty("dumb.key"));
-        }
-    }
-    
-    @Test
-    public void onlyOneLocator() {
-        try (TlsConfigClientRunner client = createConfigClient()) {
-            enableTlsClient(client);
-            client.start();
-            
-            assertEquals(1, client.getParentBeans(ConfigServicePropertySourceLocator.class).size());
-        }
-    }
-    
-    private TlsConfigClientRunner createConfigClient() {
-        return new TlsConfigClientRunner(TestApp.class, server);
-    }
-    
-    private void enableTlsClient(TlsConfigClientRunner runner) {
-        runner.enableTls();
-        runner.setKeyStore(clientCert, KEY_STORE_PASSWORD, KEY_PASSWORD);
-        runner.setTrustStore(caCert, KEY_STORE_PASSWORD);
-    }
-    
-    @SpringBootConfiguration
-    @EnableAutoConfiguration
-    public static class TestApp {}
-    
-    @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @EnableConfigServer
-    public static class TestConfigServer {}
+
+	private static TlsConfigServerRunner server;
+
+	@BeforeClass
+	public static void setupAll() throws Exception {
+		startConfigServer();
+	}
+
+	@AfterClass
+	public static void tearDownAll() {
+		stopConfigServer();
+	}
+
+	private static void startConfigServer() {
+		server = new TlsConfigServerRunner(TestConfigServer.class);
+		server.enableTls();
+		server.setKeyStore(serverCert, KEY_STORE_PASSWORD, "server", KEY_PASSWORD);
+		server.setTrustStore(caCert, KEY_STORE_PASSWORD);
+
+		server.start();
+	}
+
+	private static void stopConfigServer() {
+		server.stop();
+	}
+
+	@Test
+	public void clientCertCanWork() {
+		try (TlsConfigClientRunner client = createConfigClient()) {
+			enableTlsClient(client);
+			client.start();
+			assertThat(client.getProperty("dumb.key")).isEqualTo("dumb-value");
+		}
+	}
+
+	@Test
+	public void tlsClientCanBeDisabled() {
+		try (TlsConfigClientRunner client = createConfigClient()) {
+			enableTlsClient(client);
+			client.property("spring.cloud.config.enabled", "false");
+			client.start();
+			assertThat(client.getProperty("dumb.key")).isNull();
+		}
+	}
+
+	@Test
+	public void noCertCannotWork() {
+		try (TlsConfigClientRunner client = createConfigClient()) {
+			client.disableTls();
+			client.start();
+			assertThat(client.getProperty("dumb.key")).isNull();
+		}
+	}
+
+	@Test
+	public void wrongCertCannotWork() {
+		try (TlsConfigClientRunner client = createConfigClient()) {
+			enableTlsClient(client);
+			client.setKeyStore(wrongClientCert);
+			client.start();
+			assertThat(client.getProperty("dumb.key")).isNull();
+		}
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void wrongPasswordCauseFailure() {
+		TlsConfigClientRunner client = createConfigClient();
+		enableTlsClient(client);
+		client.setKeyStore(clientCert, WRONG_PASSWORD, WRONG_PASSWORD);
+		client.start();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void nonExistKeyStoreCauseFailure() {
+		TlsConfigClientRunner client = createConfigClient();
+		enableTlsClient(client);
+		client.setKeyStore(new File("nonExistFile"));
+		client.start();
+	}
+
+	@Test
+	public void wrongTrustStoreCannotWork() {
+		try (TlsConfigClientRunner client = createConfigClient()) {
+			enableTlsClient(client);
+			client.setTrustStore(wrongCaCert);
+			client.start();
+			assertThat(client.getProperty("dumb.key")).isNull();
+		}
+	}
+
+	private TlsConfigClientRunner createConfigClient() {
+		return new TlsConfigClientRunner(TestApp.class, server);
+	}
+
+	private void enableTlsClient(TlsConfigClientRunner runner) {
+		runner.enableTls();
+		runner.setKeyStore(clientCert, KEY_STORE_PASSWORD, KEY_PASSWORD);
+		runner.setTrustStore(caCert, KEY_STORE_PASSWORD);
+	}
+
+	@SpringBootConfiguration
+	@EnableAutoConfiguration
+	public static class TestApp {
+
+	}
+
+	@SpringBootConfiguration
+	@EnableAutoConfiguration
+	@EnableConfigServer
+	public static class TestConfigServer {
+
+	}
+
 }

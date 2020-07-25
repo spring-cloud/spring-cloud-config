@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClients;
+
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.boot.origin.Origin;
 import org.springframework.boot.origin.OriginTrackedValue;
@@ -308,7 +309,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		if (client.getRequestConnectTimeout() < 0) {
 			throw new IllegalStateException("Invalid Value for Connect Timeout set.");
 		}
-		
+
 		ClientHttpRequestFactory requestFactory = createHttpRquestFactory(client);
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
@@ -322,28 +323,33 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		return template;
 	}
-	
-	private ClientHttpRequestFactory createHttpRquestFactory(ConfigClientProperties client) {
+
+	private ClientHttpRequestFactory createHttpRquestFactory(
+			ConfigClientProperties client) {
 		if (client.getTls().isEnabled()) {
 			try {
-		        SSLContext sslContext = client.getTls().createSSLContext();
-		        HttpClient httpClient = HttpClients.custom().setSSLContext(sslContext).build();
-		        HttpComponentsClientHttpRequestFactory result = new HttpComponentsClientHttpRequestFactory(httpClient);
-		        
-		        result.setReadTimeout(client.getRequestReadTimeout());
-		        result.setConnectTimeout(client.getRequestConnectTimeout());
-		        return result;
-			
-			} catch (GeneralSecurityException | IOException ex) {
+				SSLContext sslContext = client.getTls().createSSLContext();
+				HttpClient httpClient = HttpClients.custom().setSSLContext(sslContext)
+						.build();
+				HttpComponentsClientHttpRequestFactory result = new HttpComponentsClientHttpRequestFactory(
+						httpClient);
+
+				result.setReadTimeout(client.getRequestReadTimeout());
+				result.setConnectTimeout(client.getRequestConnectTimeout());
+				return result;
+
+			}
+			catch (GeneralSecurityException | IOException ex) {
 				logger.error(ex);
-				throw new IllegalStateException("Failed to create config client with TLS.", ex);
+				throw new IllegalStateException(
+						"Failed to create config client with TLS.", ex);
 			}
 		}
-		
+
 		SimpleClientHttpRequestFactory result = new SimpleClientHttpRequestFactory();
-        result.setReadTimeout(client.getRequestReadTimeout());
-        result.setConnectTimeout(client.getRequestConnectTimeout());
-        return result;
+		result.setReadTimeout(client.getRequestReadTimeout());
+		result.setConnectTimeout(client.getRequestConnectTimeout());
+		return result;
 	}
 
 	private void addAuthorizationToken(ConfigClientProperties configClientProperties,
