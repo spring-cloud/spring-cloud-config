@@ -93,7 +93,7 @@
 				<groupId>org.bouncycastle</groupId>
 				<artifactId>bcpkix-jdk15on</artifactId>
 				<version>${bouncycastle.version}</version>
-		</dependency>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<profiles>
