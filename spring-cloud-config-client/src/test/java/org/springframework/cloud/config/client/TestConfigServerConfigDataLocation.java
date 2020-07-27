@@ -16,24 +16,14 @@
 
 package org.springframework.cloud.config.client;
 
-import org.apache.commons.logging.Log;
-
-import org.springframework.boot.context.config.ConfigDataLocationResolver;
 import org.springframework.boot.context.config.Profiles;
 import org.springframework.web.client.RestTemplate;
 
-public class ConfigServerConfigDataLocationResolver
-		extends AbstractConfigDataLocationResolver<ConfigServerConfigDataLocation>
-		implements ConfigDataLocationResolver<ConfigServerConfigDataLocation> {
+public class TestConfigServerConfigDataLocation extends AbstractConfigDataLocation {
 
-	public ConfigServerConfigDataLocationResolver(Log log) {
-		super(log);
-	}
-
-	@Override
-	protected ConfigServerConfigDataLocation createConfigDataLocation(Profiles profiles,
-			ConfigClientProperties properties, RestTemplate restTemplate) {
-		return new ConfigServerConfigDataLocation(restTemplate, properties, profiles);
+	public TestConfigServerConfigDataLocation(RestTemplate restTemplate,
+			ConfigClientProperties properties, Profiles profiles) {
+		super(restTemplate, properties, profiles);
 	}
 
 }
