@@ -17,30 +17,26 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.boot.Banner.Mode;
-import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.config.ConfigFileApplicationListener;
+import org.springframework.boot.context.config.ConfigDataEnvironment;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.util.StringUtils;
 
 /**
@@ -59,6 +55,9 @@ public class NativeEnvironmentRepository
 
 	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/",
 			"classpath:/config/", "file:./", "file:./config/" };
+
+	private static final Pattern RESOURCE_PATTERN = Pattern
+		.compile("Resource config '(.*?)' imported via location \".*\"");
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
@@ -132,23 +131,16 @@ public class NativeEnvironmentRepository
 	@Override
 	public Environment findOne(String config, String profile, String label,
 			boolean includeOrigin) {
-		SpringApplicationBuilder builder = new SpringApplicationBuilder(
-				PropertyPlaceholderAutoConfiguration.class);
-		ConfigurableEnvironment environment = getEnvironment(profile);
-		builder.environment(environment);
-		builder.web(WebApplicationType.NONE).bannerMode(Mode.OFF);
-		if (!logger.isDebugEnabled()) {
-			// Make the mini-application startup less verbose
-			builder.logStartupInfo(false);
-		}
-		String[] args = getArgs(config, profile, label);
-		// Explicitly set the listeners (to exclude logging listener which would change
-		// log levels in the caller)
-		builder.application()
-				.setListeners(Arrays.asList(new ConfigFileApplicationListener()));
 
-		try (ConfigurableApplicationContext context = builder.run(args)) {
-			environment.getPropertySources().remove("profiles");
+		try {
+			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
+			DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
+			ConfigDataEnvironment configDataEnvironment = new ConfigDataEnvironment(
+					Supplier::get, environment, resourceLoader,
+					StringUtils.commaDelimitedListToSet(profile));
+			configDataEnvironment.processAndApply();
+
+			environment.getPropertySources().remove("config-data-setup");
 			return clean(new PassthruEnvironmentRepository(environment).findOne(config,
 					profile, label, includeOrigin));
 		}
@@ -217,12 +209,21 @@ public class NativeEnvironmentRepository
 				output.toArray(new String[0]));
 	}
 
-	private ConfigurableEnvironment getEnvironment(String profile) {
+	private ConfigurableEnvironment getEnvironment(String application, String profile,
+			String label) {
 		ConfigurableEnvironment environment = new StandardEnvironment();
 		Map<String, Object> map = new HashMap<>();
 		map.put("spring.profiles.active", profile);
-		map.put("spring.main.web-application-type", "none");
-		environment.getPropertySources().addFirst(new MapPropertySource("profiles", map));
+		String config = application;
+		if (!config.startsWith("application")) {
+			config = "application," + config;
+		}
+		map.put("spring.config.name", config);
+		// map.put("encrypt.failOnError=" + this.failOnError);
+		map.put("spring.config.location", StringUtils.arrayToCommaDelimitedString(
+				getLocations(application, profile, label).getLocations()));
+		environment.getPropertySources()
+				.addFirst(new MapPropertySource("config-data-setup", map));
 		return environment;
 	}
 
@@ -234,6 +235,11 @@ public class NativeEnvironmentRepository
 			if (this.environment.getPropertySources().contains(name)) {
 				continue;
 			}
+			Matcher matcher = RESOURCE_PATTERN.matcher(name);
+			if (matcher.find()) {
+				name = matcher.group(1);
+			}
+			// TODO: needed anymore?
 			name = name.replace("applicationConfig: [", "");
 			name = name.replace("]", "");
 			if (this.searchLocations != null) {
@@ -279,20 +285,6 @@ public class NativeEnvironmentRepository
 			result.add(new PropertySource(name, source.getSource()));
 		}
 		return result;
-	}
-
-	private String[] getArgs(String application, String profile, String label) {
-		List<String> list = new ArrayList<String>();
-		String config = application;
-		if (!config.startsWith("application")) {
-			config = "application," + config;
-		}
-		list.add("--spring.config.name=" + config);
-		list.add("--spring.cloud.bootstrap.enabled=false");
-		list.add("--encrypt.failOnError=" + this.failOnError);
-		list.add("--spring.config.location=" + StringUtils.arrayToCommaDelimitedString(
-				getLocations(application, profile, label).getLocations()));
-		return list.toArray(new String[0]);
 	}
 
 	public String[] getSearchLocations() {
