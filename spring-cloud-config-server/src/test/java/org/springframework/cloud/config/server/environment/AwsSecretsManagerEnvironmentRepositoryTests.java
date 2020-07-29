@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,62 +50,6 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	private static final Log log = LogFactory
 			.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
-	private static final Map<String, String> APPLICATION_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("s3.accessKey", "application-shared-s3");
-			put("s3.secretKey", "25300773-eb3b-4ace-b6fc-500c87331da7");
-		}
-	};
-
-	private static final Map<String, String> APPLICATION_DEFAULT_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("s3.accessKey", "application-shared-default-s3");
-			put("s3.secretKey", "691972aa-68d2-4e55-8d9b-eedd4c63a998");
-		}
-	};
-
-	private static final Map<String, String> APPLICATION_PROD_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("s3.accessKey", "application-shared-prod-s3");
-			put("s3.secretKey", "90c1dd88-5b20-41fa-a4e9-e1d638188732");
-		}
-	};
-
-	private static final Map<String, String> APPLICATION_EAST_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("s3.accessKey", "application-east-s3");
-			put("s3.secretKey", "236e01a7-623b-40f4-88c1-eb4d89229dd6");
-		}
-	};
-
-	private static final Map<String, String> FOO_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("s3.accessKey", "foo-s3");
-			put("s3.secretKey", "ce945da2-740a-4915-a090-2978428dad05");
-		}
-	};
-
-	private static final Map<String, String> FOO_DEFAULT_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("s3.accessKey", "foo-default-s3");
-			put("s3.secretKey", "8c3c58c9-daef-4d21-96b0-c2b68a7a8234");
-		}
-	};
-
-	private static final Map<String, String> FOO_PROD_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("s3.accessKey", "foo-prod-s3");
-			put("s3.secretKey", "42ca062d-8e4b-435e-9e4a-d058835817c0");
-		}
-	};
-
-	private static final Map<String, String> FOO_EAST_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("s3.accessKey", "foo-east-s3");
-			put("s3.secretKey", "657f6ac5-2e1c-487d-9d61-1df109b29edf");
-		}
-	};
-
 	private final AWSSecretsManager awsSmClientMock = mock(AWSSecretsManager.class,
 			"aws-sm-client-mock");
 
@@ -129,11 +73,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(defaultApplication, profiles, null,
 				null, null);
@@ -157,11 +101,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(defaultApplication, profiles, null,
 				null, null);
@@ -185,11 +129,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(defaultApplication, profiles, null,
 				null, null);
@@ -213,15 +157,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
 		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+				applicationProdPropertiesName, getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(defaultApplication, profiles, null,
 				null, null);
@@ -245,11 +189,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -272,11 +216,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -299,11 +243,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -326,15 +270,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
 		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+				applicationProdPropertiesName, getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -358,11 +302,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -385,11 +329,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -412,11 +356,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -439,15 +383,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
 		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+				applicationProdPropertiesName, getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -471,19 +415,19 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
 		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				FOO_PROPERTIES);
+				getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
 		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				FOO_DEFAULT_PROPERTIES);
+				getFooDefaultProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -506,19 +450,19 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
 		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				FOO_PROPERTIES);
+				getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
 		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				FOO_DEFAULT_PROPERTIES);
+				getFooDefaultProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -541,19 +485,19 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
 		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				FOO_PROPERTIES);
+				getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
 		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				FOO_DEFAULT_PROPERTIES);
+				getFooDefaultProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -576,11 +520,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
 		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				FOO_PROPERTIES);
+				getFooProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -602,15 +546,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
 		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				FOO_PROPERTIES);
+				getFooProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -633,27 +577,27 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
 		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
-				FOO_PROD_PROPERTIES);
+				getFooProdProperties());
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
 		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				FOO_PROPERTIES);
+				getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
 		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				FOO_DEFAULT_PROPERTIES);
+				getFooDefaultProperties());
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
 		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+				applicationProdPropertiesName, getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -677,19 +621,19 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
 		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
-				FOO_PROD_PROPERTIES);
+				getFooProdProperties());
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
 		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				FOO_PROPERTIES);
+				getFooProperties());
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
 		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+				applicationProdPropertiesName, getApplicationProdProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -712,35 +656,35 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
 		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
-				FOO_PROD_PROPERTIES);
+				getFooProdProperties());
 
 		String fooEastPropertiesName = "aws:secrets:/secret/foo-east/";
 		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName,
-				FOO_EAST_PROPERTIES);
+				getFooEastProperties());
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
 		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				FOO_PROPERTIES);
+				getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
 		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				FOO_DEFAULT_PROPERTIES);
+				getFooDefaultProperties());
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
 		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+				applicationProdPropertiesName, getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		String applicationEastPropertiesName = "aws:secrets:/secret/application-east/";
 		PropertySource applicationEastProperties = new PropertySource(
-				applicationEastPropertiesName, APPLICATION_EAST_PROPERTIES);
+				applicationEastPropertiesName, getApplicationEastProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -764,27 +708,27 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
 		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
-				FOO_PROD_PROPERTIES);
+				getFooProdProperties());
 
 		String fooEastPropertiesName = "aws:secrets:/secret/foo-east/";
 		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName,
-				FOO_EAST_PROPERTIES);
+				getFooEastProperties());
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
 		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				FOO_PROPERTIES);
+				getFooProperties());
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
 		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, APPLICATION_PROD_PROPERTIES);
+				applicationProdPropertiesName, getApplicationProdProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		String applicationEastPropertiesName = "aws:secrets:/secret/application-east/";
 		PropertySource applicationEastProperties = new PropertySource(
-				applicationEastPropertiesName, APPLICATION_EAST_PROPERTIES);
+				applicationEastPropertiesName, getApplicationEastProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -818,11 +762,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, APPLICATION_DEFAULT_PROPERTIES);
+				applicationDefaultPropertiesName, getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, APPLICATION_PROPERTIES);
+				applicationPropertiesName, getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null,
 				null);
@@ -879,4 +823,75 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		return new String();
 	}
 
+	private static Map<String, String> getApplicationProperties() {
+		return new HashMap<String, String>() {
+			{
+				put("s3.accessKey", "application-shared-s3");
+				put("s3.secretKey", "25300773-eb3b-4ace-b6fc-500c87331da7");
+			}
+		};
+	}
+
+	private static Map<String, String> getApplicationDefaultProperties() {
+		return new HashMap<String, String>() {
+			{
+				put("s3.accessKey", "application-shared-default-s3");
+				put("s3.secretKey", "691972aa-68d2-4e55-8d9b-eedd4c63a998");
+			}
+		};
+	}
+
+	private static Map<String, String> getApplicationProdProperties() {
+		return new HashMap<String, String>() {
+			{
+				put("s3.accessKey", "application-shared-prod-s3");
+				put("s3.secretKey", "90c1dd88-5b20-41fa-a4e9-e1d638188732");
+			}
+		};
+	}
+
+	private static Map<String, String> getApplicationEastProperties() {
+		return new HashMap<String, String>() {
+			{
+				put("s3.accessKey", "application-east-s3");
+				put("s3.secretKey", "236e01a7-623b-40f4-88c1-eb4d89229dd6");
+			}
+		};
+	}
+
+	private static Map<String, String> getFooProperties() {
+		return new HashMap<String, String>() {
+			{
+				put("s3.accessKey", "foo-s3");
+				put("s3.secretKey", "ce945da2-740a-4915-a090-2978428dad05");
+			}
+		};
+	}
+
+	private static Map<String, String> getFooDefaultProperties() {
+		return new HashMap<String, String>() {
+			{
+				put("s3.accessKey", "foo-default-s3");
+				put("s3.secretKey", "8c3c58c9-daef-4d21-96b0-c2b68a7a8234");
+			}
+		};
+	}
+
+	private static Map<String, String> getFooProdProperties() {
+		return new HashMap<String, String>() {
+			{
+				put("s3.accessKey", "foo-prod-s3");
+				put("s3.secretKey", "42ca062d-8e4b-435e-9e4a-d058835817c0");
+			}
+		};
+	}
+
+	private static Map<String, String> getFooEastProperties() {
+		return new HashMap<String, String>() {
+			{
+				put("s3.accessKey", "foo-east-s3");
+				put("s3.secretKey", "657f6ac5-2e1c-487d-9d61-1df109b29edf");
+			}
+		};
+	}
 }

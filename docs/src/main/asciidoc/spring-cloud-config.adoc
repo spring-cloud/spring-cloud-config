@@ -925,11 +925,11 @@ The following configuration uses the AWS Secrets Manager client to access secret
 ----
 spring:
   profiles:
-  	active: awssecretsmanager
+  	active: aws-secretsmanager
   cloud:
     config:
       server:
-        awssecretsmanager:
+        aws-secretsmanager:
           region: us-east-1
           endpoint: https://us-east-1.console.aws.amazon.com/
           origin: aws:secrets:
