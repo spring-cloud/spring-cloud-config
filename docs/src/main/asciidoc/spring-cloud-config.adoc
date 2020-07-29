@@ -925,7 +925,7 @@ The following configuration uses the AWS Secrets Manager client to access secret
 ----
 spring:
   profiles:
-  	active: awssecretsmanager
+  	active: aws-secretsmanager
   cloud:
     config:
       server:
