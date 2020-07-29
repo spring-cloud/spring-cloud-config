@@ -374,7 +374,7 @@ class AwsS3RepositoryConfiguration {
 }
 
 @Configuration(proxyBeanMethods = false)
-@Profile("aws-secretsmanager")
+@Profile("awssecretsmanager")
 class AwsSecretsManagerRepositoryConfiguration {
 
 	@Bean
