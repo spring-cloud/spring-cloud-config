@@ -23,10 +23,8 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
@@ -35,18 +33,15 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @author Bartosz Wojtkiewicz
  * @author Rafal Zukowski
- *
  */
-@Component
 public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 
-	private static Log logger = LogFactory.getLog(CipherEnvironmentEncryptor.class);
+	private static final Log logger = LogFactory.getLog(CipherEnvironmentEncryptor.class);
 
 	private final TextEncryptorLocator encryptor;
 
-	private EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
+	private final EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
 
-	@Autowired
 	public CipherEnvironmentEncryptor(TextEncryptorLocator encryptor) {
 		this.encryptor = encryptor;
 	}

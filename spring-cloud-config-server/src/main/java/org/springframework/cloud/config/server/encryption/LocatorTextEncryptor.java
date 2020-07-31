@@ -26,9 +26,9 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
  */
 public class LocatorTextEncryptor implements TextEncryptor {
 
-	private EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
+	private final EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
 
-	private TextEncryptorLocator locator;
+	private final TextEncryptorLocator locator;
 
 	public LocatorTextEncryptor(TextEncryptorLocator locator) {
 		this.locator = locator;

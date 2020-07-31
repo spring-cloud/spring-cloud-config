@@ -35,9 +35,9 @@ import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
  */
 public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 
-	private final static String KEY = "key";
+	private static final String KEY = "key";
 
-	private final static String SECRET = "secret";
+	private static final String SECRET = "secret";
 
 	private KeyStoreKeyFactory keys;
 

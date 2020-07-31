@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -34,9 +35,9 @@ import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
  */
 public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRepository {
 
-	private EnvironmentRepository delegate;
+	private final EnvironmentRepository delegate;
 
-	private EnvironmentEncryptor environmentEncryptor;
+	private final List<EnvironmentEncryptor> environmentEncryptors;
 
 	private Map<String, String> overrides = new LinkedHashMap<>();
 
@@ -45,9 +46,9 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 	}
 
 	public EnvironmentEncryptorEnvironmentRepository(EnvironmentRepository delegate,
-			EnvironmentEncryptor environmentEncryptor) {
+			List<EnvironmentEncryptor> environmentEncryptors) {
 		this.delegate = delegate;
-		this.environmentEncryptor = environmentEncryptor;
+		this.environmentEncryptors = environmentEncryptors;
 	}
 
 	@Override
@@ -60,8 +61,10 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 			boolean includeOrigin) {
 		Environment environment = this.delegate.findOne(name, profiles, label,
 				includeOrigin);
-		if (this.environmentEncryptor != null) {
-			environment = this.environmentEncryptor.decrypt(environment);
+		if (environmentEncryptors != null) {
+			for (EnvironmentEncryptor environmentEncryptor : environmentEncryptors) {
+				environment = environmentEncryptor.decrypt(environment);
+			}
 		}
 		if (!this.overrides.isEmpty()) {
 			environment.addFirst(

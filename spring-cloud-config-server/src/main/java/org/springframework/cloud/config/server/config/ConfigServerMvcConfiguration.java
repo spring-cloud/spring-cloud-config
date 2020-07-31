@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.config;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,7 +49,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 
 	@Autowired(required = false)
-	private EnvironmentEncryptor environmentEncryptor;
+	private List<EnvironmentEncryptor> environmentEncryptors;
 
 	@Autowired(required = false)
 	private ObjectMapper objectMapper = new ObjectMapper();
@@ -88,7 +89,7 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 	private EnvironmentRepository encrypted(EnvironmentRepository envRepository,
 			ConfigServerProperties server) {
 		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
-				envRepository, environmentEncryptor);
+				envRepository, environmentEncryptors);
 		encrypted.setOverrides(server.getOverrides());
 		return encrypted;
 	}

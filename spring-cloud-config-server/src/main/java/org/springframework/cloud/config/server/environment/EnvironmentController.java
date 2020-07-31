@@ -66,9 +66,9 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
 		path = "${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
 
-	private EnvironmentRepository repository;
+	private final EnvironmentRepository repository;
 
-	private ObjectMapper objectMapper;
+	private final ObjectMapper objectMapper;
 
 	private boolean stripDocument = true;
 

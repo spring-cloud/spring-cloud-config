@@ -56,12 +56,12 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(KeyProperties.class)
 @Import({ SingleTextEncryptorConfiguration.class,
 		DefaultTextEncryptorConfiguration.class })
+@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled",
+		matchIfMissing = true)
 public class EncryptionAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled",
-			matchIfMissing = true)
-	protected static class EncryptorConfiguration {
+	protected static class CipherEncryptorConfiguration {
 
 		@Autowired(required = false)
 		private TextEncryptorLocator locator;

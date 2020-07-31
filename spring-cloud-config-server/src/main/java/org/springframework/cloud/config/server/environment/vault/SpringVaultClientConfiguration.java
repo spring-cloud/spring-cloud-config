@@ -86,7 +86,6 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 
 	@Override
 	public VaultEndpoint vaultEndpoint() {
-
 		URI baseUrl = UriComponentsBuilder.newInstance()
 				.scheme(vaultProperties.getScheme()).host(vaultProperties.getHost())
 				.port(vaultProperties.getPort()).build().toUri();
