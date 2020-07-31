@@ -28,6 +28,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
+import org.springframework.util.StringUtils;
 import org.springframework.vault.core.VaultKeyValueOperations;
 import org.springframework.vault.support.VaultResponse;
 
@@ -75,6 +76,16 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 						}
 
 						String[] parts = value.split("#");
+
+						if (parts.length == 1) {
+							throw new RuntimeException("Wrong format");
+						}
+
+						if (StringUtils.isEmpty(parts[0])
+								|| StringUtils.isEmpty(parts[1])) {
+							throw new RuntimeException("Wrong format");
+						}
+
 						String vaultKey = parts[0];
 						String vaultParamName = parts[1];
 
