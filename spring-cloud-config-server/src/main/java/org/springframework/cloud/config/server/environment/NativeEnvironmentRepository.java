@@ -21,14 +21,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.boot.context.config.ConfigDataEnvironment;
+import org.springframework.boot.context.config.ConfigDataAccessor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.NestedExceptionUtils;
@@ -57,7 +56,7 @@ public class NativeEnvironmentRepository
 			"classpath:/config/", "file:./", "file:./config/" };
 
 	private static final Pattern RESOURCE_PATTERN = Pattern
-		.compile("Resource config '(.*?)' imported via location \".*\"");
+			.compile("Resource config '(.*?)' imported via location \".*\"");
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
@@ -135,10 +134,9 @@ public class NativeEnvironmentRepository
 		try {
 			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
 			DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
-			ConfigDataEnvironment configDataEnvironment = new ConfigDataEnvironment(
-					Supplier::get, environment, resourceLoader,
-					StringUtils.commaDelimitedListToSet(profile));
-			configDataEnvironment.processAndApply();
+			ConfigDataAccessor configDataEnvironment = new ConfigDataAccessor(environment,
+					resourceLoader, StringUtils.commaDelimitedListToStringArray(profile));
+			configDataEnvironment.applyToEnvironment();
 
 			environment.getPropertySources().remove("config-data-setup");
 			return clean(new PassthruEnvironmentRepository(environment).findOne(config,
