@@ -42,10 +42,9 @@ import org.springframework.util.CollectionUtils;
 @ConfigurationProperties("spring.cloud.config.server.health")
 public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
-	private static final Log logger = LogFactory
-			.getLog(ConfigServerHealthIndicator.class);
+	private static Log logger = LogFactory.getLog(ConfigServerHealthIndicator.class);
 
-	private final EnvironmentRepository environmentRepository;
+	private EnvironmentRepository environmentRepository;
 
 	private Map<String, Repository> repositories = new LinkedHashMap<>();
 
