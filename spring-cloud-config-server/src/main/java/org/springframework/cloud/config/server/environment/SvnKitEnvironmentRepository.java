@@ -47,8 +47,7 @@ import static org.springframework.util.StringUtils.hasText;
 public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, InitializingBean {
 
-	private static final Log logger = LogFactory
-			.getLog(SvnKitEnvironmentRepository.class);
+	private static Log logger = LogFactory.getLog(SvnKitEnvironmentRepository.class);
 
 	/**
 	 * The default label for environment properties requests.

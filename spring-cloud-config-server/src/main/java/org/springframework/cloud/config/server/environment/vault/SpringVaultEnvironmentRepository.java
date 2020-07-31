@@ -35,7 +35,7 @@ import org.springframework.vault.support.VaultResponse;
 @Validated
 public class SpringVaultEnvironmentRepository extends AbstractVaultEnvironmentRepository {
 
-	private final VaultKeyValueOperations keyValueTemplate;
+	private VaultKeyValueOperations keyValueTemplate;
 
 	private final ObjectMapper objectMapper;
 

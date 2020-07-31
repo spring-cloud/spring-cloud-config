@@ -23,6 +23,7 @@ import java.util.List;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link org.springframework.cloud.config.server.encryption.ResourceEncryptor}
@@ -31,6 +32,7 @@ import org.springframework.cloud.config.environment.Environment;
  *
  * @author Sean Stiglitz
  */
+@Component
 public class CipherResourceYamlEncryptor extends AbstractCipherResourceEncryptor
 		implements ResourceEncryptor {
 

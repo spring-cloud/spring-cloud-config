@@ -26,6 +26,7 @@ import org.eclipse.jgit.transport.URIish;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
+import org.springframework.stereotype.Component;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -34,6 +35,7 @@ import static org.springframework.util.StringUtils.hasText;
  *
  * @author Ollie Hughes
  */
+@Component
 @EnableConfigurationProperties(MultipleJGitEnvironmentProperties.class)
 public class SshPropertyValidator {
 

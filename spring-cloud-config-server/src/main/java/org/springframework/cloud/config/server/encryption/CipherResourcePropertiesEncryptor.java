@@ -25,6 +25,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link org.springframework.cloud.config.server.encryption.ResourceEncryptor}
@@ -33,6 +34,7 @@ import org.springframework.cloud.config.environment.Environment;
  *
  * @author Sean Stiglitz
  */
+@Component
 public class CipherResourcePropertiesEncryptor extends AbstractCipherResourceEncryptor
 		implements ResourceEncryptor {
 

@@ -41,7 +41,7 @@ abstract class AbstractCipherResourceEncryptor implements ResourceEncryptor {
 
 	private final TextEncryptorLocator encryptor;
 
-	private final EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
+	private EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
 
 	AbstractCipherResourceEncryptor(TextEncryptorLocator encryptor) {
 		this.encryptor = encryptor;

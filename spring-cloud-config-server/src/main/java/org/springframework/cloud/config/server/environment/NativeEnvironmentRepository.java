@@ -60,8 +60,7 @@ public class NativeEnvironmentRepository
 	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/",
 			"classpath:/config/", "file:./", "file:./config/" };
 
-	private static final Log logger = LogFactory
-			.getLog(NativeEnvironmentRepository.class);
+	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
 	private String defaultLabel;
 

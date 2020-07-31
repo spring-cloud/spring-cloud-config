@@ -28,7 +28,7 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
  */
 public class SingleTextEncryptorLocator implements TextEncryptorLocator {
 
-	private final TextEncryptor encryptor;
+	private TextEncryptor encryptor;
 
 	public SingleTextEncryptorLocator(TextEncryptor encryptor) {
 		this.encryptor = encryptor == null ? Encryptors.noOpText() : encryptor;

@@ -51,11 +51,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "${spring.cloud.config.server.prefix:}")
 public class EncryptionController {
 
-	private static final Log logger = LogFactory.getLog(EncryptionController.class);
+	private static Log logger = LogFactory.getLog(EncryptionController.class);
 
 	volatile private TextEncryptorLocator encryptorLocator;
 
-	private final EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
+	private EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
 
 	private String defaultApplicationName = "application";
 

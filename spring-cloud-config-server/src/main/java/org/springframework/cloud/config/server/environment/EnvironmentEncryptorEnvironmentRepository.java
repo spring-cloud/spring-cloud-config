@@ -35,7 +35,7 @@ import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
  */
 public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRepository {
 
-	private final EnvironmentRepository delegate;
+	private EnvironmentRepository delegate;
 
 	private final List<EnvironmentEncryptor> environmentEncryptors;
 

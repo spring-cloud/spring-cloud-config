@@ -63,15 +63,15 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
 		path = "${spring.cloud.config.server.prefix:}")
 public class ResourceController {
 
-	private static final Log logger = LogFactory.getLog(ResourceController.class);
+	private static Log logger = LogFactory.getLog(ResourceController.class);
 
-	private final ResourceRepository resourceRepository;
+	private ResourceRepository resourceRepository;
 
-	private final EnvironmentRepository environmentRepository;
+	private EnvironmentRepository environmentRepository;
 
 	private Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
 
-	private final UrlPathHelper helper = new UrlPathHelper();
+	private UrlPathHelper helper = new UrlPathHelper();
 
 	private boolean encryptEnabled = false;
 
