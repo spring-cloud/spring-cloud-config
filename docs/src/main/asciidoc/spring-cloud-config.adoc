@@ -1631,7 +1631,7 @@ spring:
         trust-store-password: <trust-store-password>
 ----
 
-The `spring.cloud.config.tls.enabled` needs to be true to enable config client side TLS. When `spring.cloud.config.tls.trust-store` is omitted, a JVM default trust store is used. The default value for `spring.cloud.config.tls.key-store-type` and `spring.cloud.config.tls.trust-store-type` is PKCS12. When password properties are omitted, an empty password is assumed.
+The `spring.cloud.config.tls.enabled` needs to be true to enable config client side TLS. When `spring.cloud.config.tls.trust-store` is omitted, a JVM default trust store is used. The default value for `spring.cloud.config.tls.key-store-type` and `spring.cloud.config.tls.trust-store-type` is PKCS12. When password properties are omitted, empty password is assumed.
 
 If you use another form of security, you might need to <<custom-rest-template,provide a `RestTemplate`>> to the `ConfigServicePropertySourceLocator` (for example, by grabbing it in the bootstrap context and injecting it).
 
