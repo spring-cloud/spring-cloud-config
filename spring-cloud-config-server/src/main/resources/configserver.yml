@@ -1,9 +1,6 @@
 info:
   component: Config Server
 
-encrypt:
-  key: {ENCRYPT_KEY}
-
 spring:
   application:
     name: configserver

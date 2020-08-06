@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.springframework.core.Ordered;
 /**
  * @author Jose Maria Alvarez
  */
-@ConfigurationProperties("spring.cloud.config.server.secret-manager")
+@ConfigurationProperties("spring.cloud.config.server.gcp-secret-manager")
 public class GoogleSecretManagerEnvironmentProperties
 		implements EnvironmentRepositoryProperties {
 
@@ -35,7 +35,7 @@ public class GoogleSecretManagerEnvironmentProperties
 
 	private String serviceAccount = null;
 
-	private Boolean tokenMandatory = true;
+	private boolean tokenMandatory = true;
 
 	private Integer version = 1;
 
