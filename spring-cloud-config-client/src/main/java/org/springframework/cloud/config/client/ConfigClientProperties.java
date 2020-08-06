@@ -129,7 +129,7 @@ public class ConfigClientProperties {
 	 */
 	private Map<String, String> headers = new HashMap<>();
 
-	private ConfigClientProperties() {
+	ConfigClientProperties() {
 	}
 
 	public ConfigClientProperties(Environment environment) {

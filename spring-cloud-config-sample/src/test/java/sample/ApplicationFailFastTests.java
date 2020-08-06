@@ -25,11 +25,13 @@ import static org.assertj.core.api.Assertions.fail;
 
 public class ApplicationFailFastTests {
 
+	// FIXME: configdata failfast works.
 	@Test
 	public void contextFails() {
 		try {
 			new SpringApplicationBuilder().sources(Application.class).run(
-					"--server.port=0", "--spring.cloud.config.enabled=true",
+					"--spring.config.use-legacy-processing=true", "--server.port=0",
+					"--spring.cloud.config.enabled=true",
 					"--spring.cloud.config.fail-fast=true",
 					"--spring.cloud.config.uri=http://serverhostdoesnotexist:1234");
 			fail("failFast option did not produce an exception");

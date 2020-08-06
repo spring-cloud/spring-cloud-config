@@ -52,6 +52,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		// config
 		// server on the classpath we need to set it explicitly
 		properties = { "spring.cloud.config.enabled:true", "",
+				"spring.config.use-legacy-processing=true",
 				"management.security.enabled=false",
 				"management.endpoints.web.exposure.include=*" },
 		webEnvironment = RANDOM_PORT)
@@ -76,6 +77,8 @@ public class ApplicationBootstrapTests {
 		System.setProperty("repo1", repo);
 		server = SpringApplication.run(
 				org.springframework.cloud.config.server.ConfigServerApplication.class,
+				// FIXME: configdata why is use legacy needed here and above?
+				"--spring.config.use-legacy-processing=true",
 				"--server.port=" + configPort, "--spring.config.name=compositeserver",
 				"--repo1=" + repo);
 		System.setProperty("config.port", "" + configPort);
