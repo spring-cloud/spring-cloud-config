@@ -43,6 +43,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		// config
 		// server on the classpath we need to set it explicitly
 		properties = { "spring.cloud.config.enabled:true",
+				// FIXME: configdata why is this needed here?
+				"spring.config.use-legacy-processing=true",
 				"management.security.enabled=false",
 				"management.endpoints.web.exposure.include=*" },
 		webEnvironment = RANDOM_PORT)

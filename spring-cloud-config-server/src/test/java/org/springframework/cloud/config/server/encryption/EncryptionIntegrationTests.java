@@ -40,8 +40,8 @@ public class EncryptionIntegrationTests {
 
 	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = { ConfigServerApplication.class },
-			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-			properties = "encrypt.key=foobar")
+			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+					"spring.config.use-legacy-processing=true", "encrypt.key=foobar" })
 	@ActiveProfiles({ "test", "native" })
 	@DirtiesContext
 	public static class ConfigSymmetricEncryptionIntegrationTests {
@@ -60,7 +60,8 @@ public class EncryptionIntegrationTests {
 
 	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = { ConfigServerApplication.class },
-			properties = "spring.cloud.bootstrap.name:symmetric-key-bootstrap",
+			properties = { "spring.config.use-legacy-processing=true",
+					"spring.cloud.bootstrap.name:symmetric-key-bootstrap" },
 			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "native" })
 	@DirtiesContext
@@ -80,7 +81,8 @@ public class EncryptionIntegrationTests {
 
 	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = { ConfigServerApplication.class },
-			properties = "spring.cloud.bootstrap.name:keystore-bootstrap",
+			properties = { "spring.config.use-legacy-processing=true",
+					"spring.cloud.bootstrap.name:keystore-bootstrap" },
 			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "native" })
 	@DirtiesContext
@@ -100,7 +102,8 @@ public class EncryptionIntegrationTests {
 
 	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = { ConfigServerApplication.class },
-			properties = { "spring.cloud.bootstrap.name:keystore-bootstrap",
+			properties = { "spring.config.use-legacy-processing=true",
+					"spring.cloud.bootstrap.name:keystore-bootstrap",
 					"spring.cloud.config.server.encrypt.enabled=false",
 					"encrypt.keyStore.alias=myencryptionkey" },
 			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
