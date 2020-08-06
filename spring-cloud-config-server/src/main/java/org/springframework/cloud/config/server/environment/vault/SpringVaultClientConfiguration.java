@@ -22,9 +22,11 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
@@ -51,7 +53,9 @@ import org.springframework.web.util.UriComponentsBuilder;
  *
  * @author Scott Frederick
  */
-public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
+@Configuration
+public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
+		implements InitializingBean {
 
 	private static final String VAULT_PROPERTIES_PREFIX = "spring.cloud.config.server.vault.";
 
@@ -59,7 +63,7 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 
 	private final ConfigTokenProvider configTokenProvider;
 
-	private final RestOperations externalRestOperations;
+	private RestOperations externalRestOperations;
 
 	private final Log log = LogFactory.getLog(getClass());
 
@@ -72,7 +76,10 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 		this.vaultProperties = vaultProperties;
 		this.configTokenProvider = configTokenProvider;
 		this.authProviders = authProviders;
+	}
 
+	@Override
+	public void afterPropertiesSet() {
 		this.externalRestOperations = new RestTemplate(
 				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory());
 	}
@@ -96,9 +103,7 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 				endpointProvider, requestFactory);
 
 		if (vaultProperties.getNamespace() != null) {
-			restTemplateBuilder.customizers(
-					restTemplate -> restTemplate.getInterceptors().add(VaultClients
-							.createNamespaceInterceptor(vaultProperties.getNamespace())));
+			restTemplateBuilder.customizers(this::applyNamespaceInterceptor);
 		}
 
 		return restTemplateBuilder;
@@ -125,6 +130,19 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 		return new SslConfiguration(keyStoreConfiguration, trustStoreConfiguration);
 	}
 
+	/**
+	 * This method is a work-around for the Spring Vault issue documented in
+	 * https://github.com/spring-projects/spring-vault/issues/546. The method should be
+	 * removed when Spring Cloud Config is upgraded to the version of Spring Vault that
+	 * includes the fix for the issue.
+	 * @return the {@link RestOperations} to be used for Vault access
+	 */
+	@Override
+	public RestOperations restOperations() {
+		return restTemplateBuilder(vaultEndpointProvider(),
+				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory()).build();
+	}
+
 	private SslConfiguration.KeyStoreConfiguration getKeyStoreConfiguration(
 			Resource resourceProperty, String passwordProperty) {
 
@@ -138,6 +156,15 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 		}
 
 		return SslConfiguration.KeyStoreConfiguration.of(resourceProperty);
+	}
+
+	private RestOperations applyNamespaceInterceptor(RestTemplate restTemplate) {
+		if (vaultProperties.getNamespace() != null) {
+			restTemplate.getInterceptors().add(VaultClients
+					.createNamespaceInterceptor(vaultProperties.getNamespace()));
+		}
+
+		return restTemplate;
 	}
 
 	/**

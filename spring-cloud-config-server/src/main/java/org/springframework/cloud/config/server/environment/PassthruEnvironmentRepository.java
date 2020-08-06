@@ -63,15 +63,15 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 	}
 
 	@Override
-	public Environment findOne(String application, String env, String label) {
-		return findOne(application, env, label, false);
+	public Environment findOne(String application, String profile, String label) {
+		return findOne(application, profile, label, false);
 	}
 
 	@Override
-	public Environment findOne(String application, String env, String label,
+	public Environment findOne(String application, String profile, String label,
 			boolean includeOrigin) {
 		Environment result = new Environment(application,
-				StringUtils.commaDelimitedListToStringArray(env), label, null, null);
+				StringUtils.commaDelimitedListToStringArray(profile), label, null, null);
 		for (org.springframework.core.env.PropertySource<?> source : this.environment
 				.getPropertySources()) {
 			String name = source.getName();
@@ -92,6 +92,10 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 			OriginLookup<String> originLookup = (OriginLookup<String>) source;
 			for (Object key : input.keySet()) {
 				Origin origin = originLookup.getOrigin(key.toString());
+				if (origin == null) {
+					map.put(key, source.getProperty(key.toString()));
+					continue;
+				}
 				String originDesc;
 				if (origin instanceof TextResourceOrigin) {
 					TextResourceOrigin tro = (TextResourceOrigin) origin;

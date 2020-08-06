@@ -1,0 +1,27 @@
+|===
+|Name | Default | Description
+
+|spring.cloud.config.allow-override | true | Flag to indicate that {@link #isOverrideSystemProperties() systemPropertiesOverride} can be used. Set to false to prevent users from changing the default accidentally. Default true.
+|spring.cloud.config.discovery.enabled | false | Flag to indicate that config server discovery is enabled (config server URL will be looked up via discovery).
+|spring.cloud.config.discovery.service-id | configserver | Service id to locate config server.
+|spring.cloud.config.enabled | true | Flag to say that remote configuration is enabled. Default true;
+|spring.cloud.config.fail-fast | false | Flag to indicate that failure to connect to the server is fatal (default false).
+|spring.cloud.config.headers |  | Additional headers used to create the client request.
+|spring.cloud.config.label |  | The label name to use to pull remote configuration properties. The default is set on the server (generally "master" for a git based server).
+|spring.cloud.config.name |  | Name of application used to fetch remote properties.
+|spring.cloud.config.override-none | false | Flag to indicate that when {@link #setAllowOverride(boolean) allowOverride} is true, external properties should take lowest priority and should not override any existing property sources (including local config files). Default false.
+|spring.cloud.config.override-system-properties | true | Flag to indicate that the external properties should override system properties. Default true.
+|spring.cloud.config.password |  | The password to use (HTTP Basic) when contacting the remote server.
+|spring.cloud.config.profile | default | The default profile to use when fetching remote configuration (comma-separated). Default is "default".
+|spring.cloud.config.request-connect-timeout | 0 | timeout on waiting to connect to the Config Server.
+|spring.cloud.config.request-read-timeout | 0 | timeout on waiting to read data from the Config Server.
+|spring.cloud.config.retry.initial-interval | 1000 | Initial retry interval in milliseconds.
+|spring.cloud.config.retry.max-attempts | 6 | Maximum number of attempts.
+|spring.cloud.config.retry.max-interval | 2000 | Maximum interval for backoff.
+|spring.cloud.config.retry.multiplier | 1.1 | Multiplier for next interval.
+|spring.cloud.config.send-state | true | Flag to indicate whether to send state. Default true.
+|spring.cloud.config.token |  | Security Token passed thru to underlying environment repository.
+|spring.cloud.config.uri | [http://localhost:8888] | The URI of the remote server (default http://localhost:8888).
+|spring.cloud.config.username |  | The username to use (HTTP Basic) when contacting the remote server.
+
+|===

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,6 +35,7 @@ import org.yaml.snakeyaml.nodes.Tag;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.PathUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -131,8 +131,8 @@ public class EnvironmentController {
 
 	public Environment getEnvironment(String name, String profiles, String label,
 			boolean includeOrigin) {
-		name = Environment.normalize(name);
-		label = Environment.normalize(label);
+		name = normalize(name);
+		label = normalize(label);
 		Environment environment = this.repository.findOne(name, profiles, label,
 				includeOrigin);
 		if (!this.acceptEmpty
@@ -140,6 +140,13 @@ public class EnvironmentController {
 			throw new EnvironmentNotFoundException("Profile Not found");
 		}
 		return environment;
+	}
+
+	private String normalize(String part) {
+		if (PathUtils.isInvalidEncodedLocation(part)) {
+			throw new InvalidEnvironmentRequestException("Invalid request");
+		}
+		return Environment.normalize(part);
 	}
 
 	@RequestMapping("/{name}-{profiles}.properties")
@@ -303,7 +310,7 @@ public class EnvironmentController {
 		Map<String, Map<String, Object>> map = new LinkedHashMap<>();
 		List<PropertySource> sources = new ArrayList<>(profiles.getPropertySources());
 		Collections.reverse(sources);
-		Map<String, Object> combinedMap = new TreeMap<>();
+		Map<String, Object> combinedMap = new LinkedHashMap<>();
 		for (PropertySource source : sources) {
 
 			@SuppressWarnings("unchecked")
@@ -322,7 +329,7 @@ public class EnvironmentController {
 					// of an unequal size to the current array. Replace the array key in
 					// the current map.
 					key = key.substring(0, key.indexOf("["));
-					Map<String, Object> filtered = new TreeMap<>();
+					Map<String, Object> filtered = new LinkedHashMap<>();
 					for (String index : value.keySet()) {
 						if (index.startsWith(key + "[")) {
 							filtered.put(index, value.get(index));

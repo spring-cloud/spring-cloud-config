@@ -65,7 +65,7 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 
 	void givenDiscoveryClientReturnsInfo() {
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
-				.willReturn(Arrays.asList(this.info));
+				.willReturn(Collections.singletonList(this.info));
 	}
 
 	void givenDiscoveryClientReturnsInfoForMultipleInstances(ServiceInstance info1,
@@ -78,7 +78,7 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
 				.willReturn(Collections.<ServiceInstance>emptyList())
 				.willReturn(Collections.<ServiceInstance>emptyList())
-				.willReturn(Arrays.asList(this.info));
+				.willReturn(Collections.singletonList(this.info));
 	}
 
 	void expectNoInstancesOfConfigServerException() {
@@ -128,16 +128,24 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 	}
 
 	void setup(String... env) {
+		setup(true, true, env);
+	}
+
+	void setup(boolean refresh, boolean registerDiscoveryClient, String... env) {
 		this.context = new AnnotationConfigApplicationContext();
 		TestPropertyValues.of(env).applyTo(this.context);
 		TestPropertyValues.of("eureka.client.enabled=false").applyTo(this.context);
-		this.context.getDefaultListableBeanFactory().registerSingleton("discoveryClient",
-				this.client);
+		if (registerDiscoveryClient) {
+			this.context.getDefaultListableBeanFactory()
+					.registerSingleton("discoveryClient", this.client);
+		}
 		this.context.register(UtilAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class,
 				DiscoveryClientConfigServiceBootstrapConfiguration.class,
 				ConfigServiceBootstrapConfiguration.class, ConfigClientProperties.class);
-		this.context.refresh();
+		if (refresh) {
+			this.context.refresh();
+		}
 	}
 
 }

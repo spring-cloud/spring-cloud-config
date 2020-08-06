@@ -75,7 +75,6 @@ import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepo
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
-import org.springframework.cloud.config.server.environment.vault.SpringVaultClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientConfiguration;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepositoryFactory;
@@ -257,16 +256,8 @@ public class EnvironmentRepositoryConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(VaultTemplate.class)
+	@Import(SpringVaultClientConfiguration.class)
 	static class SpringVaultFactoryConfig {
-
-		@Bean
-		public SpringVaultClientConfiguration vaultClientConfiguration(
-				VaultEnvironmentProperties vaultProperties,
-				ConfigTokenProvider tokenProvider,
-				List<SpringVaultClientAuthenticationProvider> authProviders) {
-			return new SpringVaultClientConfiguration(vaultProperties, tokenProvider,
-					authProviders);
-		}
 
 		@Bean
 		public SpringVaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
@@ -280,6 +271,8 @@ public class EnvironmentRepositoryConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(JdbcTemplate.class)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.jdbc.enabled",
+			matchIfMissing = true)
 	static class JdbcFactoryConfig {
 
 		@Bean
@@ -435,6 +428,8 @@ class CredhubRepositoryConfiguration {
 @Configuration(proxyBeanMethods = false)
 @Profile("jdbc")
 @ConditionalOnClass(JdbcTemplate.class)
+@ConditionalOnProperty(value = "spring.cloud.config.server.jdbc.enabled",
+		matchIfMissing = true)
 class JdbcRepositoryConfiguration {
 
 	@Bean
