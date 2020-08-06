@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.server.environment.secretManager;
+package org.springframework.cloud.config.server.environment.secretmanager;
 
-import java.util.Comparator;
+public interface GoogleConfigProvider {
 
-import com.google.cloud.secretmanager.v1.Secret;
-import com.google.cloud.secretmanager.v1.SecretVersion;
-
-public interface GoogleSecretManagerAccessStrategy {
-
-	Iterable<Secret> getSecrets();
-
-	String getSecretValue(Secret secret, Comparator<SecretVersion> comparator);
-
-	String getSecretName(Secret secret);
-
-	Boolean checkRemotePermissions();
+	String getValue(String key, Boolean mandatory);
 
 }

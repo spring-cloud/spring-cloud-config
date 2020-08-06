@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.server.environment.secretManager;
+package org.springframework.cloud.config.server.environment.secretmanager;
 
 import javax.servlet.http.HttpServletRequest;
 

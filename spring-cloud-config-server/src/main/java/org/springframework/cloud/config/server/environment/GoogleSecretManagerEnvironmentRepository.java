@@ -27,11 +27,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.cloud.config.server.environment.secretManager.GoogleConfigProvider;
-import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretComparatorByVersion;
-import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretManagerAccessStrategy;
-import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretManagerAccessStrategyFactory;
-import org.springframework.cloud.config.server.environment.secretManager.HttpHeaderGoogleConfigProvider;
+import org.springframework.cloud.config.server.environment.secretmanager.GoogleConfigProvider;
+import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretComparatorByVersion;
+import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerAccessStrategy;
+import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerAccessStrategyFactory;
+import org.springframework.cloud.config.server.environment.secretmanager.HttpHeaderGoogleConfigProvider;
 import org.springframework.web.client.RestTemplate;
 
 /**

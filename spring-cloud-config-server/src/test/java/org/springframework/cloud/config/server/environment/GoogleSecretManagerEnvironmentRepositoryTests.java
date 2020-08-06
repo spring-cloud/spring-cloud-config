@@ -34,11 +34,11 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
-import org.springframework.cloud.config.server.environment.secretManager.GoogleConfigProvider;
-import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretComparatorByVersion;
-import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretManagerAccessStrategyFactory;
-import org.springframework.cloud.config.server.environment.secretManager.GoogleSecretManagerV1AccessStrategy;
-import org.springframework.cloud.config.server.environment.secretManager.HttpHeaderGoogleConfigProvider;
+import org.springframework.cloud.config.server.environment.secretmanager.GoogleConfigProvider;
+import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretComparatorByVersion;
+import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerAccessStrategyFactory;
+import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerV1AccessStrategy;
+import org.springframework.cloud.config.server.environment.secretmanager.HttpHeaderGoogleConfigProvider;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
