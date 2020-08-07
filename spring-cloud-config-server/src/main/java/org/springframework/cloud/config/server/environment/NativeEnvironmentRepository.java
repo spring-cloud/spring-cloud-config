@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.boot.context.config.ConfigDataAccessor;
+import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.NestedExceptionUtils;
@@ -134,9 +134,8 @@ public class NativeEnvironmentRepository
 		try {
 			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
 			DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
-			ConfigDataAccessor configDataEnvironment = new ConfigDataAccessor(environment,
-					resourceLoader, StringUtils.commaDelimitedListToStringArray(profile));
-			configDataEnvironment.applyToEnvironment();
+			ConfigDataEnvironmentPostProcessor.applyTo(environment, resourceLoader,
+					StringUtils.commaDelimitedListToStringArray(profile));
 
 			environment.getPropertySources().remove("config-data-setup");
 			return clean(new PassthruEnvironmentRepository(environment).findOne(config,
