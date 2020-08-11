@@ -213,7 +213,7 @@ $ curl localhost:8080/env/sample
 mytest
 $ vi target/config/mytest.properties
 .. change value of "sample", optionally commit
-$ curl localhost:8080/refresh
+$ curl -X POST localhost:8080/refresh
 ["sample"]
 $ curl localhost:8080/env/sample
 sampleValue
