@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 
 import org.springframework.boot.context.config.ConfigData;
 import org.springframework.boot.context.config.ConfigDataLoader;
+import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.boot.origin.Origin;
 import org.springframework.boot.origin.OriginTrackedValue;
@@ -68,8 +69,10 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 		return -1;
 	}
 
+	@Override
 	// TODO: retry
-	public ConfigData load(L location) throws IOException {
+	public ConfigData load(ConfigDataLoaderContext context, L location)
+			throws IOException {
 		ConfigClientProperties properties = location.getProperties();
 		// ConfigClientProperties properties =
 		// this.defaultProperties.override(environment);

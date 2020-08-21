@@ -25,6 +25,7 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.config.ConfigData;
+import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.util.ReflectionUtils;
 
 public class TestConfigServerConfigDataLoader
@@ -40,12 +41,12 @@ public class TestConfigServerConfigDataLoader
 	}
 
 	@Override
-	public ConfigData load(TestConfigServerConfigDataLocation location)
-			throws IOException {
+	public ConfigData load(ConfigDataLoaderContext context,
+			TestConfigServerConfigDataLocation location) throws IOException {
 		// This could be a RetryTemplate
 		Function<TestConfigServerConfigDataLocation, ConfigData> fn = dataLocation -> {
 			try {
-				return super.load(dataLocation);
+				return super.load(context, dataLocation);
 			}
 			catch (IOException e) {
 				ReflectionUtils.rethrowRuntimeException(e);

@@ -134,7 +134,7 @@ public class NativeEnvironmentRepository
 		try {
 			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
 			DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
-			ConfigDataEnvironmentPostProcessor.applyTo(environment, resourceLoader,
+			ConfigDataEnvironmentPostProcessor.applyTo(environment, resourceLoader, null,
 					StringUtils.commaDelimitedListToStringArray(profile));
 
 			environment.getPropertySources().remove("config-data-setup");
