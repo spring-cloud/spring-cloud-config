@@ -42,6 +42,7 @@ import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropert
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.MapPropertySource;
@@ -328,7 +329,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			ConfigClientProperties client) {
 		if (client.getTls().isEnabled()) {
 			try {
-				SSLContext sslContext = client.getTls().createSSLContext();
+				SSLContextFactory factory = new SSLContextFactory(client.getTls());
+				SSLContext sslContext = factory.createSSLContext();
 				HttpClient httpClient = HttpClients.custom().setSSLContext(sslContext)
 						.build();
 				HttpComponentsClientHttpRequestFactory result = new HttpComponentsClientHttpRequestFactory(
