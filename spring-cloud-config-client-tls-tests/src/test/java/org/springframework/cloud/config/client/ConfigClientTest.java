@@ -68,7 +68,7 @@ public class ConfigClientTest extends BaseCertTest {
 	public void tlsClientCanBeDisabled() {
 		try (TlsConfigClientRunner client = createConfigClient()) {
 			enableTlsClient(client);
-			client.property("spring.cloud.config.enabled", "false");
+			client.property("spring.cloud.config.tls.enabled", "false");
 			client.start();
 			assertThat(client.getProperty("dumb.key")).isNull();
 		}
