@@ -30,7 +30,6 @@
 		<spring-cloud-commons.version>2.2.5.BUILD-SNAPSHOT</spring-cloud-commons.version>
 		<aws-java-sdk.version>1.11.52</aws-java-sdk.version>
 		<google-api-services-iam.version>v1-rev20191010-1.30.3</google-api-services-iam.version>
-		<bouncycastle.version>1.64</bouncycastle.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failsOnViolation>true
 		</maven-checkstyle-plugin.failsOnViolation>
@@ -88,11 +87,6 @@
 				<groupId>com.google.auth</groupId>
 				<artifactId>google-auth-library-oauth2-http</artifactId>
 				<version>0.15.0</version>
-			</dependency>
-			<dependency>
-				<groupId>org.bouncycastle</groupId>
-				<artifactId>bcpkix-jdk15on</artifactId>
-				<version>${bouncycastle.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
