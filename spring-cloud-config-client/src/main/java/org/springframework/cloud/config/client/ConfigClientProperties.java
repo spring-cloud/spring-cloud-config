@@ -22,9 +22,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.configuration.TlsProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -98,6 +101,11 @@ public class ConfigClientProperties {
 	 * Discovery properties.
 	 */
 	private Discovery discovery = new Discovery();
+
+	/**
+	 * TLS properties.
+	 */
+	private TlsProperties tls = new TlsProperties();
 
 	/**
 	 * Flag to indicate that failure to connect to the server is fatal (default false).
@@ -206,6 +214,19 @@ public class ConfigClientProperties {
 
 	public void setDiscovery(Discovery discovery) {
 		this.discovery = discovery;
+	}
+
+	public TlsProperties getTls() {
+		return tls;
+	}
+
+	public void setTls(TlsProperties tls) {
+		this.tls = tls;
+	}
+
+	@PostConstruct
+	public void checkTlsStoreType() {
+		tls.postConstruct();
 	}
 
 	public boolean isFailFast() {
