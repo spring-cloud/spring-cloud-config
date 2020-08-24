@@ -25,6 +25,7 @@ public class TlsConfigClientRunner extends AppRunner {
 
 		property("spring.cloud.config.uri", server.root());
 		property("spring.cloud.config.enabled", "true");
+		property("spring.config.use-legacy-processing", "true");
 	}
 
 	public void enableTls() {
