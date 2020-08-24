@@ -43,6 +43,7 @@
 		<module>spring-cloud-config-monitor</module>
 		<module>spring-cloud-config-sample</module>
 		<module>spring-cloud-starter-config</module>
+		<module>spring-cloud-config-client-tls-tests</module>
 		<module>docs</module>
 	</modules>
 	<dependencyManagement>

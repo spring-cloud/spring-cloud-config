@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.client;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,8 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.net.ssl.SSLContext;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.boot.origin.Origin;
@@ -37,6 +42,7 @@ import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropert
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.MapPropertySource;
@@ -48,8 +54,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.Assert;
@@ -296,15 +304,14 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 	private RestTemplate getSecureRestTemplate(ConfigClientProperties client) {
-		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 		if (client.getRequestReadTimeout() < 0) {
 			throw new IllegalStateException("Invalid Value for Read Timeout set.");
 		}
 		if (client.getRequestConnectTimeout() < 0) {
 			throw new IllegalStateException("Invalid Value for Connect Timeout set.");
 		}
-		requestFactory.setReadTimeout(client.getRequestReadTimeout());
-		requestFactory.setConnectTimeout(client.getRequestConnectTimeout());
+
+		ClientHttpRequestFactory requestFactory = createHttpRquestFactory(client);
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(client.getHeaders());
 		if (headers.containsKey(AUTHORIZATION)) {
@@ -316,6 +323,35 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 
 		return template;
+	}
+
+	private ClientHttpRequestFactory createHttpRquestFactory(
+			ConfigClientProperties client) {
+		if (client.getTls().isEnabled()) {
+			try {
+				SSLContextFactory factory = new SSLContextFactory(client.getTls());
+				SSLContext sslContext = factory.createSSLContext();
+				HttpClient httpClient = HttpClients.custom().setSSLContext(sslContext)
+						.build();
+				HttpComponentsClientHttpRequestFactory result = new HttpComponentsClientHttpRequestFactory(
+						httpClient);
+
+				result.setReadTimeout(client.getRequestReadTimeout());
+				result.setConnectTimeout(client.getRequestConnectTimeout());
+				return result;
+
+			}
+			catch (GeneralSecurityException | IOException ex) {
+				logger.error(ex);
+				throw new IllegalStateException(
+						"Failed to create config client with TLS.", ex);
+			}
+		}
+
+		SimpleClientHttpRequestFactory result = new SimpleClientHttpRequestFactory();
+		result.setReadTimeout(client.getRequestReadTimeout());
+		result.setConnectTimeout(client.getRequestConnectTimeout());
+		return result;
 	}
 
 	private void addAuthorizationToken(ConfigClientProperties configClientProperties,
