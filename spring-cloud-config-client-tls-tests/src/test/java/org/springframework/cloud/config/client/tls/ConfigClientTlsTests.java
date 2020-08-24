@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.client;
+package org.springframework.cloud.config.client.tls;
 
 import java.io.File;
 
@@ -28,7 +28,7 @@ import org.springframework.cloud.config.server.EnableConfigServer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ConfigClientTest extends BaseCertTest {
+public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	private static TlsConfigServerRunner server;
 
