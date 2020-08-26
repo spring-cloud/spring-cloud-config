@@ -22,8 +22,8 @@ import org.springframework.web.client.RestTemplate;
 public class TestConfigServerConfigDataLocation extends AbstractConfigDataLocation {
 
 	public TestConfigServerConfigDataLocation(RestTemplate restTemplate,
-			ConfigClientProperties properties, Profiles profiles) {
-		super(restTemplate, properties, profiles);
+			ConfigClientProperties properties, boolean optional, Profiles profiles) {
+		super(restTemplate, properties, optional, profiles);
 	}
 
 }

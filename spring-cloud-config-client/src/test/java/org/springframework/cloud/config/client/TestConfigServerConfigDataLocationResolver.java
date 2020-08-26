@@ -53,9 +53,10 @@ public class TestConfigServerConfigDataLocationResolver
 
 	@Override
 	protected TestConfigServerConfigDataLocation createConfigDataLocation(
-			Profiles profiles, ConfigClientProperties properties,
+			boolean optional, Profiles profiles, ConfigClientProperties properties,
 			RestTemplate restTemplate) {
-		return new TestConfigServerConfigDataLocation(restTemplate, properties, profiles);
+		return new TestConfigServerConfigDataLocation(restTemplate, properties, optional,
+				profiles);
 	}
 
 }

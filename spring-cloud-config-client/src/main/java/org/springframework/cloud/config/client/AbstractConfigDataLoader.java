@@ -125,10 +125,16 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 		catch (Exception e) {
 			error = e;
 		}
-		if (properties.isFailFast()) {
-			throw new IllegalStateException(
-					"Could not locate PropertySource and the fail fast property is set, failing"
-							+ (errorBody == null ? "" : ": " + errorBody),
+		if (properties.isFailFast() || !location.isOptional()) {
+			String reason;
+			if (properties.isFailFast()) {
+				reason = "the fail fast property is set";
+			}
+			else {
+				reason = "the location is not optional";
+			}
+			throw new IllegalStateException("Could not locate PropertySource and "
+					+ reason + ", failing" + (errorBody == null ? "" : ": " + errorBody),
 					error);
 		}
 		logger.warn("Could not locate PropertySource: "

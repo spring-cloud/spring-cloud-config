@@ -31,9 +31,11 @@ public class ConfigServerConfigDataLocationResolver
 	}
 
 	@Override
-	protected ConfigServerConfigDataLocation createConfigDataLocation(Profiles profiles,
-			ConfigClientProperties properties, RestTemplate restTemplate) {
-		return new ConfigServerConfigDataLocation(restTemplate, properties, profiles);
+	protected ConfigServerConfigDataLocation createConfigDataLocation(boolean optional,
+			Profiles profiles, ConfigClientProperties properties,
+			RestTemplate restTemplate) {
+		return new ConfigServerConfigDataLocation(restTemplate, properties, optional,
+				profiles);
 	}
 
 }

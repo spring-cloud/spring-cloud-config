@@ -103,12 +103,13 @@ public abstract class AbstractConfigDataLocationResolver<L extends AbstractConfi
 		return PREFIX;
 	}
 
-	public List<L> resolve(ConfigDataLocationResolverContext context, String location) {
+	public List<L> resolve(ConfigDataLocationResolverContext context, String location,
+			boolean optional) {
 		return Collections.emptyList();
 	}
 
 	public List<L> resolveProfileSpecific(ConfigDataLocationResolverContext context,
-			String location, Profiles profiles) {
+			String location, boolean optional, Profiles profiles) {
 
 		ConfigClientProperties properties = loadProperties(context.getBinder());
 
@@ -123,12 +124,13 @@ public abstract class AbstractConfigDataLocationResolver<L extends AbstractConfi
 		RestTemplate restTemplate = createRestTemplate(properties);
 
 		List<L> locations = new ArrayList<>();
-		locations.add(createConfigDataLocation(profiles, properties, restTemplate));
+		locations.add(
+				createConfigDataLocation(optional, profiles, properties, restTemplate));
 
 		return locations;
 	}
 
-	protected abstract L createConfigDataLocation(Profiles profiles,
+	protected abstract L createConfigDataLocation(boolean optional, Profiles profiles,
 			ConfigClientProperties properties, RestTemplate restTemplate);
 
 }
