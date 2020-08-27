@@ -219,6 +219,7 @@ public class NativeEnvironmentRepository
 		// map.put("encrypt.failOnError=" + this.failOnError);
 		map.put("spring.config.location", StringUtils.arrayToCommaDelimitedString(
 				getLocations(application, profile, label).getLocations()));
+		map.put("spring.config.all-locations-optional", true);
 		environment.getPropertySources()
 				.addFirst(new MapPropertySource("config-data-setup", map));
 		return environment;
