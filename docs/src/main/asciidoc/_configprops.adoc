@@ -20,7 +20,6 @@
 |spring.cloud.config.retry.max-interval | 2000 | Maximum interval for backoff.
 |spring.cloud.config.retry.multiplier | 1.1 | Multiplier for next interval.
 |spring.cloud.config.send-state | true | Flag to indicate whether to send state. Default true.
-|spring.cloud.config.tls |  | TLS properties.
 |spring.cloud.config.token |  | Security Token passed thru to underlying environment repository.
 |spring.cloud.config.uri | [http://localhost:8888] | The URI of the remote server (default http://localhost:8888).
 |spring.cloud.config.username |  | The username to use (HTTP Basic) when contacting the remote server.
