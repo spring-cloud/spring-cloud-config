@@ -219,7 +219,9 @@ public class NativeEnvironmentRepository
 		// map.put("encrypt.failOnError=" + this.failOnError);
 		map.put("spring.config.location", StringUtils.arrayToCommaDelimitedString(
 				getLocations(application, profile, label).getLocations()));
-		map.put("spring.config.all-locations-optional", true);
+		// globally ignore config files that are not found
+		map.put("spring.config.all-locations-optional", true); //TODO: remove old property
+		map.put("spring.config.on-location-not-found", "ignore");
 		environment.getPropertySources()
 				.addFirst(new MapPropertySource("config-data-setup", map));
 		return environment;
