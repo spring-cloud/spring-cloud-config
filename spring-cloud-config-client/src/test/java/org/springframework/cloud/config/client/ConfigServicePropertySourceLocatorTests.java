@@ -19,7 +19,6 @@ package org.springframework.cloud.config.client;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
