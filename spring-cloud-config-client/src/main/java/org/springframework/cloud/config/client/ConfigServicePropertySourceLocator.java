@@ -129,14 +129,17 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 						}
 					}
 
-					if (StringUtils.hasText(result.getState())
-							|| StringUtils.hasText(result.getVersion())) {
-						HashMap<String, Object> map = new HashMap<>();
+					HashMap<String, Object> map = new HashMap<>();
+					if (StringUtils.hasText(result.getState())) {
 						putValue(map, "config.client.state", result.getState());
-						putValue(map, "config.client.version", result.getVersion());
-						composite.addFirstPropertySource(
-								new MapPropertySource("configClient", map));
 					}
+					if (StringUtils.hasText(result.getVersion())) {
+						putValue(map, "config.client.version", result.getVersion());
+					}
+					// the existence of this property source confirms a successful
+					// response from config server
+					composite.addFirstPropertySource(
+							new MapPropertySource("configClient", map));
 					return composite;
 				}
 			}

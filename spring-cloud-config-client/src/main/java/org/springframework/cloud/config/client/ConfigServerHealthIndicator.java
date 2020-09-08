@@ -22,7 +22,8 @@ import java.util.List;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health.Builder;
 import org.springframework.core.env.CompositePropertySource;
-import org.springframework.core.env.Environment;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
 /**
@@ -31,25 +32,22 @@ import org.springframework.core.env.PropertySource;
  */
 public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
-	private ConfigServicePropertySourceLocator locator;
-
 	private ConfigClientHealthProperties properties;
 
-	private Environment environment;
+	private ConfigurableEnvironment environment;
 
 	private long lastAccess = 0;
 
 	private PropertySource<?> cached;
 
-	public ConfigServerHealthIndicator(ConfigServicePropertySourceLocator locator,
-			Environment environment, ConfigClientHealthProperties properties) {
+	public ConfigServerHealthIndicator(ConfigurableEnvironment environment,
+			ConfigClientHealthProperties properties) {
 		this.environment = environment;
-		this.locator = locator;
 		this.properties = properties;
 	}
 
 	@Override
-	protected void doHealthCheck(Builder builder) throws Exception {
+	protected void doHealthCheck(Builder builder) {
 		PropertySource<?> propertySource = getPropertySource();
 		builder.up();
 		if (propertySource instanceof CompositePropertySource) {
@@ -72,7 +70,9 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 		long accessTime = System.currentTimeMillis();
 		if (isCacheStale(accessTime)) {
 			this.lastAccess = accessTime;
-			this.cached = this.locator.locate(this.environment);
+			MutablePropertySources propertySources = this.environment
+					.getPropertySources();
+			this.cached = propertySources.get("configClient");
 		}
 		return this.cached;
 	}
@@ -81,7 +81,8 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 		if (this.cached == null) {
 			return true;
 		}
-		return (accessTime - this.lastAccess) >= this.properties.getTimeToLive();
+		return (accessTime - this.lastAccess) >= this.properties.getTimeToLive()
+				.toMillis();
 	}
 
 }

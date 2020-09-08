@@ -103,13 +103,16 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 						}
 					}
 
-					if (StringUtils.hasText(result.getState())
-							|| StringUtils.hasText(result.getVersion())) {
-						HashMap<String, Object> map = new HashMap<>();
+					HashMap<String, Object> map = new HashMap<>();
+					if (StringUtils.hasText(result.getState())) {
 						putValue(map, "config.client.state", result.getState());
-						putValue(map, "config.client.version", result.getVersion());
-						composite.add(0, new MapPropertySource("configClient", map));
 					}
+					if (StringUtils.hasText(result.getVersion())) {
+						putValue(map, "config.client.version", result.getVersion());
+					}
+					// the existence of this property source confirms a successful
+					// response from config server
+					composite.add(0, new MapPropertySource("configClient", map));
 					return new ConfigData(composite);
 				}
 			}
