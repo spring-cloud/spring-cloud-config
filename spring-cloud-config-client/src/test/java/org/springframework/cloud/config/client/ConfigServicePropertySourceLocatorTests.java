@@ -18,10 +18,12 @@ package org.springframework.cloud.config.client;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.core.IsInstanceOf;
@@ -344,11 +346,10 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
 		this.locator.setRestTemplate(this.restTemplate);
 
-		Collection<org.springframework.core.env.PropertySource<?>> propertySources = this.locator
-				.locateCollection(this.environment);
-		assertThat(propertySources).hasSize(1);
-		org.springframework.core.env.PropertySource<?> propertySource = propertySources
-				.iterator().next();
+		List<org.springframework.core.env.PropertySource<?>> propertySources = new ArrayList<>(this.locator
+				.locateCollection(this.environment));
+		assertThat(propertySources).hasSize(2);
+		org.springframework.core.env.PropertySource<?> propertySource = propertySources.get(1);
 		Map source = (Map) propertySource.getSource();
 		Iterator iterator = source.keySet().iterator();
 		assertThat(iterator.next()).isEqualTo("zuul.routes.specificproduct.path");
