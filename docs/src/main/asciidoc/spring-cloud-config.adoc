@@ -1121,7 +1121,7 @@ spring:
               profiles: development
 ----
 
-You can disable the Health Indicator by setting `spring.cloud.config.server.health.enabled=false`.
+You can disable the Health Indicator by setting `health.config.enabled=false`.
 
 === Security
 
