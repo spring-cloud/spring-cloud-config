@@ -345,10 +345,11 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
 		this.locator.setRestTemplate(this.restTemplate);
 
-		List<org.springframework.core.env.PropertySource<?>> propertySources = new ArrayList<>(this.locator
-				.locateCollection(this.environment));
+		List<org.springframework.core.env.PropertySource<?>> propertySources = new ArrayList<>(
+				this.locator.locateCollection(this.environment));
 		assertThat(propertySources).hasSize(2);
-		org.springframework.core.env.PropertySource<?> propertySource = propertySources.get(1);
+		org.springframework.core.env.PropertySource<?> propertySource = propertySources
+				.get(1);
 		Map source = (Map) propertySource.getSource();
 		Iterator iterator = source.keySet().iterator();
 		assertThat(iterator.next()).isEqualTo("zuul.routes.specificproduct.path");
