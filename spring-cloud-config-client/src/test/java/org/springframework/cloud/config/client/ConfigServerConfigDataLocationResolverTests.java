@@ -26,6 +26,7 @@ import org.springframework.mock.env.MockEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ConfigServerConfigDataLocationResolverTests {
 
@@ -43,6 +44,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 		this.environment = new MockEnvironment();
 		this.environmentBinder = Binder.get(this.environment);
 		this.resolver = new ConfigServerConfigDataLocationResolver(new DeferredLog());
+		when(context.getBinder()).thenReturn(environmentBinder);
 	}
 
 	@Test
@@ -53,6 +55,12 @@ public class ConfigServerConfigDataLocationResolverTests {
 	@Test
 	void isResolvableReturnsTrueWithCorrectPrefix() {
 		assertThat(this.resolver.isResolvable(this.context, "configserver:")).isTrue();
+	}
+
+	@Test
+	void isResolvableReturnsFalseWhenDisabled() {
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".enabled", "false");
+		assertThat(this.resolver.isResolvable(this.context, "configserver:")).isFalse();
 	}
 
 }

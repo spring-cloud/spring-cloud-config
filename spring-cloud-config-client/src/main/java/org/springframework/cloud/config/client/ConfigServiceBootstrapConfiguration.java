@@ -53,7 +53,8 @@ public class ConfigServiceBootstrapConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(ConfigServicePropertySourceLocator.class)
-	@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(name = ConfigClientProperties.PREFIX + ".enabled",
+			matchIfMissing = true)
 	public ConfigServicePropertySourceLocator configServicePropertySource(
 			ConfigClientProperties properties) {
 		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
@@ -61,7 +62,7 @@ public class ConfigServiceBootstrapConfiguration {
 		return locator;
 	}
 
-	@ConditionalOnProperty("spring.cloud.config.fail-fast")
+	@ConditionalOnProperty(ConfigClientProperties.PREFIX + ".fail-fast")
 	@ConditionalOnClass({ Retryable.class, Aspect.class, AopAutoConfiguration.class })
 	@Configuration(proxyBeanMethods = false)
 	@EnableRetry(proxyTargetClass = true)

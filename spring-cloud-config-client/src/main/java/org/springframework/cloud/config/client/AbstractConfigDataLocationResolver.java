@@ -96,7 +96,12 @@ public abstract class AbstractConfigDataLocationResolver<L extends AbstractConfi
 
 	public boolean isResolvable(ConfigDataLocationResolverContext context,
 			String location) {
-		return location.startsWith(getPrefix());
+		if (!location.startsWith(getPrefix())) {
+			return false;
+		}
+		return context.getBinder()
+				.bind(ConfigClientProperties.PREFIX + ".enabled", Boolean.class)
+				.orElse(true);
 	}
 
 	protected String getPrefix() {
