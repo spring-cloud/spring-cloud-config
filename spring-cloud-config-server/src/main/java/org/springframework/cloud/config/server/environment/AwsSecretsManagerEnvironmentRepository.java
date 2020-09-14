@@ -76,7 +76,8 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 			profileList = defaultProfile;
 		}
 
-		String[] profiles = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(profileList));
+		String[] profiles = StringUtils.trimArrayElements(
+				StringUtils.commaDelimitedListToStringArray(profileList));
 		Environment environment = new Environment(application, profiles, label, null,
 				null);
 
@@ -153,7 +154,9 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 			}
 		}
 		catch (ResourceNotFoundException | IOException e) {
-			log.debug(String.format("Skip adding propertySource. Unable to load secrets from AWS Secrets Manager for secretId=%s", path), e);
+			log.debug(String.format(
+					"Skip adding propertySource. Unable to load secrets from AWS Secrets Manager for secretId=%s",
+					path), e);
 		}
 
 		return properties;

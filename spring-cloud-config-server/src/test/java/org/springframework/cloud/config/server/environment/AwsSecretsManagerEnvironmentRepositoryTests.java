@@ -820,7 +820,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		catch (JsonProcessingException e) {
 			log.error("Unable to generate secret string", e);
 		}
-		return new String();
+		return "";
 	}
 
 	private static Map<String, String> getApplicationProperties() {
