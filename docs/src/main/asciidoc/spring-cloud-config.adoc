@@ -803,8 +803,30 @@ For example, if you add secrets with the following keys, all application using t
 
 [source]
 ----
-/secret/application-default/shared.foo
-/secret/application/shared.bar
+secret name = /secret/application-default/
+----
+[source,json]
+----
+secret value =
+{
+ shared.foo: foo,
+ shared.bar: bar
+}
+----
+or
+[source]
+----
+secret name = /secret/application/
+----
+[source,json]
+----
+secret value =
+{
+ shared.foo: foo,
+ shared.bar: bar
+}
+----
+
 ----
 
 ==== JDBC Backend
