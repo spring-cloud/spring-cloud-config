@@ -46,6 +46,7 @@ public class ConfigServiceBootstrapConfiguration {
 	private ConfigurableEnvironment environment;
 
 	@Bean
+	@ConditionalOnMissingBean
 	public ConfigClientProperties configClientProperties() {
 		ConfigClientProperties client = new ConfigClientProperties(this.environment);
 		return client;

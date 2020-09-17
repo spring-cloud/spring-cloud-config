@@ -16,14 +16,61 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.Objects;
+
+import org.springframework.boot.context.config.ConfigDataLocation;
 import org.springframework.boot.context.config.Profiles;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.core.style.ToStringCreator;
 
-public class ConfigServerConfigDataLocation extends AbstractConfigDataLocation {
+public class ConfigServerConfigDataLocation extends ConfigDataLocation {
 
-	public ConfigServerConfigDataLocation(RestTemplate restTemplate, ConfigClientProperties properties,
-			boolean optional, Profiles profiles) {
-		super(restTemplate, properties, optional, profiles);
+	private final ConfigClientProperties properties;
+
+	private final boolean optional;
+
+	private final Profiles profiles;
+
+	public ConfigServerConfigDataLocation(ConfigClientProperties properties, boolean optional, Profiles profiles) {
+		this.properties = properties;
+		this.optional = optional;
+		this.profiles = profiles;
+	}
+
+	public ConfigClientProperties getProperties() {
+		return this.properties;
+	}
+
+	public boolean isOptional() {
+		return this.optional;
+	}
+
+	public Profiles getProfiles() {
+		return this.profiles;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		ConfigServerConfigDataLocation that = (ConfigServerConfigDataLocation) o;
+		return Objects.equals(this.properties, that.properties) && Objects.equals(this.optional, that.optional)
+				&& Objects.equals(this.profiles, that.profiles);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.properties, this.optional, this.profiles);
+	}
+
+	@Override
+	public String toString() {
+		return new ToStringCreator(this).append("uris", properties.getUri()).append("optional", optional)
+				.append("profiles", profiles.getAccepted()).toString();
+
 	}
 
 }
