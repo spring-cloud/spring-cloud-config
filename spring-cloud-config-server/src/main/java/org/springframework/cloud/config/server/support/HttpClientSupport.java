@@ -41,8 +41,7 @@ public final class HttpClientSupport {
 		throw new IllegalStateException("Can't instantiate a utility class");
 	}
 
-	public static HttpClientBuilder builder(
-			HttpEnvironmentRepositoryProperties environmentProperties)
+	public static HttpClientBuilder builder(HttpEnvironmentRepositoryProperties environmentProperties)
 			throws GeneralSecurityException {
 		SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 		HttpClientBuilder httpClientBuilder = HttpClients.custom();
@@ -58,22 +57,17 @@ public final class HttpClientSupport {
 			ProxyHostProperties httpProxy = environmentProperties.getProxy()
 					.get(ProxyHostProperties.ProxyForScheme.HTTP);
 
-			httpClientBuilder
-					.setRoutePlanner(new SchemeBasedRoutePlanner(httpsProxy, httpProxy));
-			httpClientBuilder.setDefaultCredentialsProvider(
-					new ProxyHostCredentialsProvider(httpProxy, httpsProxy));
+			httpClientBuilder.setRoutePlanner(new SchemeBasedRoutePlanner(httpsProxy, httpProxy));
+			httpClientBuilder.setDefaultCredentialsProvider(new ProxyHostCredentialsProvider(httpProxy, httpsProxy));
 		}
 		else {
-			httpClientBuilder.setRoutePlanner(
-					new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
-			httpClientBuilder.setDefaultCredentialsProvider(
-					new SystemDefaultCredentialsProvider());
+			httpClientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
+			httpClientBuilder.setDefaultCredentialsProvider(new SystemDefaultCredentialsProvider());
 		}
 
 		int timeout = environmentProperties.getTimeout() * 1000;
-		return httpClientBuilder.setSSLContext(sslContextBuilder.build())
-				.setDefaultRequestConfig(RequestConfig.custom().setSocketTimeout(timeout)
-						.setConnectTimeout(timeout).build());
+		return httpClientBuilder.setSSLContext(sslContextBuilder.build()).setDefaultRequestConfig(
+				RequestConfig.custom().setSocketTimeout(timeout).setConnectTimeout(timeout).build());
 	}
 
 }

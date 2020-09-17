@@ -295,8 +295,7 @@ public class ConfigClientProperties {
 			if (StringUtils.isEmpty(userInfo) || ":".equals(userInfo)) {
 				return result;
 			}
-			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build()
-					.toUriString();
+			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build().toUriString();
 			result.uri = bare;
 
 			// if userInfo does not contain a :, then append a : to it
@@ -342,34 +341,28 @@ public class ConfigClientProperties {
 		return credentials;
 	}
 
-	public ConfigClientProperties override(
-			org.springframework.core.env.Environment environment) {
+	public ConfigClientProperties override(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties override = new ConfigClientProperties();
 		BeanUtils.copyProperties(this, override);
-		override.setName(
-				environment.resolvePlaceholders("${" + ConfigClientProperties.PREFIX
-						+ ".name:${spring.application.name:application}}"));
+		override.setName(environment.resolvePlaceholders(
+				"${" + ConfigClientProperties.PREFIX + ".name:${spring.application.name:application}}"));
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
-			override.setProfile(
-					environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
+			override.setProfile(environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
 		}
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".label")) {
-			override.setLabel(
-					environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
+			override.setLabel(environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
 		}
 		return override;
 	}
 
 	@Override
 	public String toString() {
-		return "ConfigClientProperties [enabled=" + this.enabled + ", profile="
-				+ this.profile + ", name=" + this.name + ", label=" + this.label
-				+ ", username=" + this.username + ", password=" + this.password + ", uri="
-				+ Arrays.toString(this.uri) + ", discovery=" + this.discovery
-				+ ", failFast=" + this.failFast + ", token=" + this.token
-				+ ", requestConnectTimeout=" + this.requestConnectTimeout
-				+ ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
-				+ this.sendState + ", headers=" + this.headers + "]";
+		return "ConfigClientProperties [enabled=" + this.enabled + ", profile=" + this.profile + ", name=" + this.name
+				+ ", label=" + this.label + ", username=" + this.username + ", password=" + this.password + ", uri="
+				+ Arrays.toString(this.uri) + ", discovery=" + this.discovery + ", failFast=" + this.failFast
+				+ ", token=" + this.token + ", requestConnectTimeout=" + this.requestConnectTimeout
+				+ ", requestReadTimeout=" + this.requestReadTimeout + ", sendState=" + this.sendState + ", headers="
+				+ this.headers + "]";
 	}
 
 	/**

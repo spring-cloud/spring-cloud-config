@@ -91,11 +91,9 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 		this.basedir = createBaseDir();
 	}
 
-	public AbstractScmAccessor(ConfigurableEnvironment environment,
-			AbstractScmAccessorProperties properties) {
+	public AbstractScmAccessor(ConfigurableEnvironment environment, AbstractScmAccessorProperties properties) {
 		this.environment = environment;
-		this.setBasedir(properties.getBasedir() == null ? createBaseDir()
-				: properties.getBasedir());
+		this.setBasedir(properties.getBasedir() == null ? createBaseDir() : properties.getBasedir());
 		this.passphrase = properties.getPassphrase();
 		this.password = properties.getPassword();
 		this.searchPaths = properties.getSearchPaths();
@@ -119,8 +117,7 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 						FileSystemUtils.deleteRecursively(basedir);
 					}
 					catch (IOException e) {
-						AbstractScmAccessor.this.logger.warn(
-								"Failed to delete temporary directory on exit: " + e);
+						AbstractScmAccessor.this.logger.warn("Failed to delete temporary directory on exit: " + e);
 					}
 				}
 			});
@@ -209,22 +206,19 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 				return new UrlResource(StringUtils.cleanPath(this.uri)).getFile();
 			}
 			catch (Exception e) {
-				throw new IllegalStateException(
-						"Cannot convert uri to file: " + this.uri);
+				throw new IllegalStateException("Cannot convert uri to file: " + this.uri);
 			}
 		}
 		return this.basedir;
 	}
 
-	protected String[] getSearchLocations(File dir, String application, String profile,
-			String label) {
+	protected String[] getSearchLocations(File dir, String application, String profile, String label) {
 		String[] locations = this.searchPaths;
 		if (locations == null || locations.length == 0) {
 			locations = AbstractScmAccessorProperties.DEFAULT_LOCATIONS;
 		}
 		else if (locations != AbstractScmAccessorProperties.DEFAULT_LOCATIONS) {
-			locations = StringUtils.concatenateStringArrays(
-					AbstractScmAccessorProperties.DEFAULT_LOCATIONS, locations);
+			locations = StringUtils.concatenateStringArrays(AbstractScmAccessorProperties.DEFAULT_LOCATIONS, locations);
 		}
 		Collection<String> output = new LinkedHashSet<String>();
 		for (String location : locations) {
@@ -261,8 +255,7 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 	private List<String> matchingDirectories(File dir, String value) {
 		List<String> output = new ArrayList<String>();
 		try {
-			PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(
-					this.resourceLoader);
+			PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(this.resourceLoader);
 			String path = new File(dir, value).toURI().toString();
 			for (Resource resource : resolver.getResources(path)) {
 				if (resource.getFile().isDirectory()) {

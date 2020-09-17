@@ -87,8 +87,7 @@ public class ResourceControllerIntegrationTests {
 
 	@Test
 	public void environmentNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", "master", false))
-				.thenReturn(new Environment("foo", "default"));
+		when(this.repository.findOne("foo", "default", "master", false)).thenReturn(new Environment("foo", "default"));
 		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
 				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
@@ -116,8 +115,8 @@ public class ResourceControllerIntegrationTests {
 		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
 				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 
-		ResponseEntity<String> response = new TestRestTemplate().getForEntity(
-				"http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
+		ResponseEntity<String> response = new TestRestTemplate()
+				.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		verify(this.repository).findOne("foo", "default", "master", false);
 		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
@@ -130,8 +129,7 @@ public class ResourceControllerIntegrationTests {
 				.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
 				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
-				.param("useDefaultLabel", ""))
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt").param("useDefaultLabel", ""))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", null, false);
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
@@ -145,8 +143,8 @@ public class ResourceControllerIntegrationTests {
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
 				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 
-		ResponseEntity<String> response = new TestRestTemplate().getForEntity(
-				"http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
+		ResponseEntity<String> response = new TestRestTemplate()
+				.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		verify(this.repository).findOne("foo", "default", null, false);
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
@@ -159,8 +157,7 @@ public class ResourceControllerIntegrationTests {
 				.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
 				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
-				.param("useDefaultLabel", "")
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt").param("useDefaultLabel", "")
 				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", null, false);
@@ -193,8 +190,7 @@ public class ResourceControllerIntegrationTests {
 
 		@Bean
 		public ResourceController resourceController() {
-			return new ResourceController(resourceRepository(), environmentRepository(),
-					resourceEncryptorMap);
+			return new ResourceController(resourceRepository(), environmentRepository(), resourceEncryptorMap);
 		}
 
 	}

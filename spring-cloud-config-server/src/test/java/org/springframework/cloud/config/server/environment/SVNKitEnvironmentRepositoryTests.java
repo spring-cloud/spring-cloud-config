@@ -43,15 +43,14 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
 
-	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(
-			this.environment, new SvnKitEnvironmentProperties());
+	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment,
+			new SvnKitEnvironmentProperties());
 
 	private File basedir = new File("target/config");
 
 	@Before
 	public void init() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
-				"src/test/resources/" + REPOSITORY_NAME,
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/" + REPOSITORY_NAME,
 				"target/repos/" + REPOSITORY_NAME);
 		this.repository.setUri(uri);
 		if (this.basedir.exists()) {
@@ -63,10 +62,8 @@ public class SVNKitEnvironmentRepositoryTests {
 	public void vanilla() {
 		Environment environment = this.findOne();
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName()
-				.contains("application.yml")).isTrue();
+		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(1).getName().contains("application.yml")).isTrue();
 	}
 
 	@Test
@@ -74,10 +71,8 @@ public class SVNKitEnvironmentRepositoryTests {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.findOne();
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName()
-				.contains("application.yml")).isTrue();
+		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(1).getName().contains("application.yml")).isTrue();
 	}
 
 	@Test
@@ -91,28 +86,22 @@ public class SVNKitEnvironmentRepositoryTests {
 
 		Environment environment = this.findOne();
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName()
-				.contains("application.yml")).isTrue();
+		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(1).getName().contains("application.yml")).isTrue();
 	}
 
 	@Test
 	public void branch() {
-		Environment environment = this.repository.findOne("bar", "staging",
-				"branches/demobranch");
+		Environment environment = this.repository.findOne("bar", "staging", "branches/demobranch");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
 	}
 
 	@Test
 	public void branch_no_folder() {
-		Environment environment = this.repository.findOne("bar", "staging", "demobranch",
-				false);
+		Environment environment = this.repository.findOne("bar", "staging", "demobranch", false);
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
 	}
 
 	@Test
@@ -120,16 +109,13 @@ public class SVNKitEnvironmentRepositoryTests {
 		this.findOne();
 		Environment environment = this.findOne();
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName()
-				.contains("application.yml")).isTrue();
+		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(1).getName().contains("application.yml")).isTrue();
 	}
 
 	@Test(expected = NoSuchLabelException.class)
 	public void invalidLabel() {
-		Environment environment = this.repository.findOne("bar", "staging",
-				"unknownlabel");
+		Environment environment = this.repository.findOne("bar", "staging", "unknownlabel");
 		assertThat(environment.getPropertySources().size()).isEqualTo(0);
 	}
 
@@ -152,16 +138,13 @@ public class SVNKitEnvironmentRepositoryTests {
 
 		public static void main(String[] args) throws Exception {
 			File basedir = new File("target/config");
-			String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
-					"src/test/resources/" + REPOSITORY_NAME,
+			String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/" + REPOSITORY_NAME,
 					"target/repos/" + REPOSITORY_NAME);
 			if (basedir.exists()) {
 				FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 			}
 			new SpringApplicationBuilder(TestApplication.class).profiles("subversion")
-					.properties("server.port=8888",
-							"spring.cloud.config.server.svn.uri:" + uri)
-					.run(args);
+					.properties("server.port=8888", "spring.cloud.config.server.svn.uri:" + uri).run(args);
 		}
 
 	}

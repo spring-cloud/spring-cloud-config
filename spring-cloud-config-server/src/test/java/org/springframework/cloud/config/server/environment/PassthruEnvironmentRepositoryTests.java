@@ -35,13 +35,10 @@ public class PassthruEnvironmentRepositoryTests {
 	public void originTrackedPropertySourceWithoutOriginWorks() {
 		MockEnvironment mockEnvironment = new MockEnvironment();
 		mockEnvironment.setProperty("normalKey", "normalValue");
-		mockEnvironment.getPropertySources()
-				.addFirst(new OriginTrackedMapPropertySource("myorigintrackedsource",
-						Collections.singletonMap("keyNoOrigin", "valueNoOrigin")));
-		PassthruEnvironmentRepository repository = new PassthruEnvironmentRepository(
-				mockEnvironment);
-		Environment environment = repository.findOne("testapp", "default", "master",
-				true);
+		mockEnvironment.getPropertySources().addFirst(new OriginTrackedMapPropertySource("myorigintrackedsource",
+				Collections.singletonMap("keyNoOrigin", "valueNoOrigin")));
+		PassthruEnvironmentRepository repository = new PassthruEnvironmentRepository(mockEnvironment);
+		Environment environment = repository.findOne("testapp", "default", "master", true);
 		assertThat(environment).isNotNull();
 		List<PropertySource> propertySources = environment.getPropertySources();
 		assertThat(propertySources).hasSize(2);

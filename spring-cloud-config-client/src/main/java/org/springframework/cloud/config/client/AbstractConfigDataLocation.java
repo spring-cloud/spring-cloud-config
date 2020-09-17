@@ -33,8 +33,8 @@ public abstract class AbstractConfigDataLocation extends ConfigDataLocation {
 
 	private final Profiles profiles;
 
-	public AbstractConfigDataLocation(RestTemplate restTemplate,
-			ConfigClientProperties properties, boolean optional, Profiles profiles) {
+	public AbstractConfigDataLocation(RestTemplate restTemplate, ConfigClientProperties properties, boolean optional,
+			Profiles profiles) {
 		this.restTemplate = restTemplate;
 		this.properties = properties;
 		this.optional = optional;
@@ -66,23 +66,19 @@ public abstract class AbstractConfigDataLocation extends ConfigDataLocation {
 			return false;
 		}
 		AbstractConfigDataLocation that = (AbstractConfigDataLocation) o;
-		return Objects.equals(this.restTemplate, that.restTemplate)
-				&& Objects.equals(this.properties, that.properties)
-				&& Objects.equals(this.optional, that.optional)
-				&& Objects.equals(this.profiles, that.profiles);
+		return Objects.equals(this.restTemplate, that.restTemplate) && Objects.equals(this.properties, that.properties)
+				&& Objects.equals(this.optional, that.optional) && Objects.equals(this.profiles, that.profiles);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.restTemplate, this.properties, this.optional,
-				this.profiles);
+		return Objects.hash(this.restTemplate, this.properties, this.optional, this.profiles);
 	}
 
 	@Override
 	public String toString() {
-		return new ToStringCreator(this).append("uris", properties.getUri())
-				.append("optional", optional).append("profiles", profiles.getAccepted())
-				.toString();
+		return new ToStringCreator(this).append("uris", properties.getUri()).append("optional", optional)
+				.append("profiles", profiles.getAccepted()).toString();
 
 	}
 

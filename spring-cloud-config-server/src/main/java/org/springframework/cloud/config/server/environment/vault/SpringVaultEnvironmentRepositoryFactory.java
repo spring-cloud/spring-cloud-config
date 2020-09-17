@@ -30,8 +30,8 @@ import org.springframework.vault.core.VaultTemplate;
  * @author Dylan Roberts
  * @author Scott Frederick
  */
-public class SpringVaultEnvironmentRepositoryFactory implements
-		EnvironmentRepositoryFactory<SpringVaultEnvironmentRepository, VaultEnvironmentProperties> {
+public class SpringVaultEnvironmentRepositoryFactory
+		implements EnvironmentRepositoryFactory<SpringVaultEnvironmentRepository, VaultEnvironmentProperties> {
 
 	private final ObjectProvider<HttpServletRequest> request;
 
@@ -39,8 +39,7 @@ public class SpringVaultEnvironmentRepositoryFactory implements
 
 	private final SpringVaultClientConfiguration clientConfiguration;
 
-	public SpringVaultEnvironmentRepositoryFactory(
-			ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+	public SpringVaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
 			SpringVaultClientConfiguration clientConfiguration) {
 		this.request = request;
 		this.watch = watch;
@@ -48,32 +47,26 @@ public class SpringVaultEnvironmentRepositoryFactory implements
 	}
 
 	@Override
-	public SpringVaultEnvironmentRepository build(
-			VaultEnvironmentProperties vaultProperties) {
+	public SpringVaultEnvironmentRepository build(VaultEnvironmentProperties vaultProperties) {
 		VaultTemplate vaultTemplate = clientConfiguration.vaultTemplate();
 
-		VaultKeyValueOperations accessStrategy = buildVaultAccessStrategy(vaultProperties,
-				vaultTemplate);
+		VaultKeyValueOperations accessStrategy = buildVaultAccessStrategy(vaultProperties, vaultTemplate);
 
-		return new SpringVaultEnvironmentRepository(this.request, this.watch,
-				vaultProperties, accessStrategy);
+		return new SpringVaultEnvironmentRepository(this.request, this.watch, vaultProperties, accessStrategy);
 	}
 
-	private VaultKeyValueOperations buildVaultAccessStrategy(
-			VaultEnvironmentProperties vaultProperties, VaultTemplate vaultTemplate) {
+	private VaultKeyValueOperations buildVaultAccessStrategy(VaultEnvironmentProperties vaultProperties,
+			VaultTemplate vaultTemplate) {
 		String backend = vaultProperties.getBackend();
 		int version = vaultProperties.getKvVersion();
 
 		switch (version) {
 		case 1:
-			return vaultTemplate.opsForKeyValue(backend,
-					VaultKeyValueOperationsSupport.KeyValueBackend.KV_1);
+			return vaultTemplate.opsForKeyValue(backend, VaultKeyValueOperationsSupport.KeyValueBackend.KV_1);
 		case 2:
-			return vaultTemplate.opsForKeyValue(backend,
-					VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
+			return vaultTemplate.opsForKeyValue(backend, VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
 		default:
-			throw new IllegalArgumentException(
-					"No support for given Vault k/v backend version " + version);
+			throw new IllegalArgumentException("No support for given Vault k/v backend version " + version);
 		}
 	}
 

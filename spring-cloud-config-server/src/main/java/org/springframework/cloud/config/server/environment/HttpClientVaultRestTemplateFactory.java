@@ -27,12 +27,10 @@ import org.springframework.web.client.RestTemplate;
 /**
  * @author Dylan Roberts
  */
-public class HttpClientVaultRestTemplateFactory
-		implements VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory {
+public class HttpClientVaultRestTemplateFactory implements VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory {
 
 	@Override
-	public RestTemplate build(VaultEnvironmentProperties environmentProperties)
-			throws GeneralSecurityException {
+	public RestTemplate build(VaultEnvironmentProperties environmentProperties) throws GeneralSecurityException {
 		HttpClient httpClient = HttpClientSupport.builder(environmentProperties).build();
 		return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
 	}

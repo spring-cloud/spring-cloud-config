@@ -65,10 +65,10 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 
 	@Bean
 	@RefreshScope
-	public EnvironmentController environmentController(
-			EnvironmentRepository envRepository, ConfigServerProperties server) {
-		EnvironmentController controller = new EnvironmentController(
-				encrypted(envRepository, server), this.objectMapper);
+	public EnvironmentController environmentController(EnvironmentRepository envRepository,
+			ConfigServerProperties server) {
+		EnvironmentController controller = new EnvironmentController(encrypted(envRepository, server),
+				this.objectMapper);
 		controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
 		controller.setAcceptEmpty(server.isAcceptEmpty());
 		return controller;
@@ -76,17 +76,16 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 
 	@Bean
 	@ConditionalOnBean(ResourceRepository.class)
-	public ResourceController resourceController(ResourceRepository repository,
-			EnvironmentRepository envRepository, ConfigServerProperties server) {
-		ResourceController controller = new ResourceController(repository,
-				encrypted(envRepository, server), this.resourceEncryptorMap);
+	public ResourceController resourceController(ResourceRepository repository, EnvironmentRepository envRepository,
+			ConfigServerProperties server) {
+		ResourceController controller = new ResourceController(repository, encrypted(envRepository, server),
+				this.resourceEncryptorMap);
 		controller.setEncryptEnabled(server.getEncrypt().isEnabled());
 		controller.setPlainTextEncryptEnabled(server.getEncrypt().isPlainTextEncrypt());
 		return controller;
 	}
 
-	private EnvironmentRepository encrypted(EnvironmentRepository envRepository,
-			ConfigServerProperties server) {
+	private EnvironmentRepository encrypted(EnvironmentRepository envRepository, ConfigServerProperties server) {
 		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
 				envRepository, environmentEncryptor);
 		encrypted.setOverrides(server.getOverrides());

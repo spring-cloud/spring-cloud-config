@@ -32,8 +32,8 @@ import org.springframework.web.client.RestTemplate;
  * supports additional features including more authentication options, support for several
  * underlying HTTP client libraries, and better SSL configuration.
  */
-public class VaultEnvironmentRepositoryFactory implements
-		EnvironmentRepositoryFactory<VaultEnvironmentRepository, VaultEnvironmentProperties> {
+public class VaultEnvironmentRepositoryFactory
+		implements EnvironmentRepositoryFactory<VaultEnvironmentRepository, VaultEnvironmentProperties> {
 
 	private final ObjectProvider<HttpServletRequest> request;
 
@@ -43,8 +43,7 @@ public class VaultEnvironmentRepositoryFactory implements
 
 	private final ConfigTokenProvider tokenProvider;
 
-	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request,
-			EnvironmentWatch watch,
+	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
 			Optional<VaultRestTemplateFactory> vaultRestTemplateFactory) {
 		this.request = request;
 		this.watch = watch;
@@ -52,10 +51,8 @@ public class VaultEnvironmentRepositoryFactory implements
 		this.tokenProvider = new HttpRequestConfigTokenProvider(request);
 	}
 
-	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request,
-			EnvironmentWatch watch,
-			Optional<VaultRestTemplateFactory> vaultRestTemplateFactory,
-			ConfigTokenProvider tokenProvider) {
+	public VaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+			Optional<VaultRestTemplateFactory> vaultRestTemplateFactory, ConfigTokenProvider tokenProvider) {
 		this.request = request;
 		this.watch = watch;
 		this.vaultRestTemplateFactory = vaultRestTemplateFactory;
@@ -63,16 +60,14 @@ public class VaultEnvironmentRepositoryFactory implements
 	}
 
 	@Override
-	public VaultEnvironmentRepository build(
-			VaultEnvironmentProperties environmentProperties) throws Exception {
+	public VaultEnvironmentRepository build(VaultEnvironmentProperties environmentProperties) throws Exception {
 		if (this.vaultRestTemplateFactory.isPresent()) {
-			RestTemplate restTemplate = this.vaultRestTemplateFactory.get()
-					.build(environmentProperties);
-			return new VaultEnvironmentRepository(this.request, this.watch, restTemplate,
-					environmentProperties, tokenProvider);
+			RestTemplate restTemplate = this.vaultRestTemplateFactory.get().build(environmentProperties);
+			return new VaultEnvironmentRepository(this.request, this.watch, restTemplate, environmentProperties,
+					tokenProvider);
 		}
-		return new VaultEnvironmentRepository(this.request, this.watch,
-				new RestTemplate(), environmentProperties, tokenProvider);
+		return new VaultEnvironmentRepository(this.request, this.watch, new RestTemplate(), environmentProperties,
+				tokenProvider);
 	}
 
 	/**
@@ -80,8 +75,7 @@ public class VaultEnvironmentRepositoryFactory implements
 	 */
 	public interface VaultRestTemplateFactory {
 
-		RestTemplate build(VaultEnvironmentProperties environmentProperties)
-				throws Exception;
+		RestTemplate build(VaultEnvironmentProperties environmentProperties) throws Exception;
 
 	}
 

@@ -25,12 +25,10 @@ import org.springframework.util.MultiValueMap;
  *
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 300)
-public class GithubPropertyPathNotificationExtractor
-		extends BasePropertyPathNotificationExtractor {
+public class GithubPropertyPathNotificationExtractor extends BasePropertyPathNotificationExtractor {
 
 	@Override
-	protected boolean requestBelongsToGitRepoManager(
-			MultiValueMap<String, String> headers) {
+	protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
 		return "push".equals(headers.getFirst("X-Github-Event"));
 	}
 

@@ -42,8 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestApplication.class,
-		properties = { "spring.config.name:configserver" },
+@SpringBootTest(classes = TestApplication.class, properties = { "spring.config.name:configserver" },
 		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
@@ -54,8 +53,8 @@ public class CustomEnvironmentRepositoryTests {
 
 	@Test
 	public void contextLoads() {
-		Environment environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		Environment environment = new TestRestTemplate()
+				.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 	}
 
@@ -65,8 +64,7 @@ public class CustomEnvironmentRepositoryTests {
 	protected static class TestApplication {
 
 		public static void main(String[] args) throws Exception {
-			SpringApplication.run(CustomEnvironmentRepositoryTests.TestApplication.class,
-					args);
+			SpringApplication.run(CustomEnvironmentRepositoryTests.TestApplication.class, args);
 		}
 
 		@Bean
@@ -74,16 +72,13 @@ public class CustomEnvironmentRepositoryTests {
 			return new EnvironmentRepository() {
 
 				@Override
-				public Environment findOne(String application, String profile,
-						String label) {
+				public Environment findOne(String application, String profile, String label) {
 					return findOne(application, profile, label, false);
 				}
 
 				@Override
-				public Environment findOne(String application, String profile,
-						String label, boolean includeOrigin) {
-					return new Environment("test", new String[0], "label", "version",
-							"state");
+				public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+					return new Environment("test", new String[0], "label", "version", "state");
 				}
 			};
 		}

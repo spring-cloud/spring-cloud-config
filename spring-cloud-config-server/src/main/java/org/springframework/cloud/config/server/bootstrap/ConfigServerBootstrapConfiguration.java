@@ -58,8 +58,8 @@ public class ConfigServerBootstrapConfiguration {
 
 		@Bean
 		public EnvironmentRepositoryPropertySourceLocator environmentRepositoryPropertySourceLocator() {
-			return new EnvironmentRepositoryPropertySourceLocator(this.repository,
-					this.client.getName(), this.client.getProfile(), getDefaultLabel());
+			return new EnvironmentRepositoryPropertySourceLocator(this.repository, this.client.getName(),
+					this.client.getProfile(), getDefaultLabel());
 		}
 
 		private String getDefaultLabel() {

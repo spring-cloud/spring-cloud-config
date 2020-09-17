@@ -33,13 +33,11 @@ import org.springframework.util.MultiValueMap;
  * @author Dave Syer
  *
  */
-public class CompositePropertyPathNotificationExtractor
-		implements PropertyPathNotificationExtractor {
+public class CompositePropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
 	private List<PropertyPathNotificationExtractor> extractors;
 
-	public CompositePropertyPathNotificationExtractor(
-			List<PropertyPathNotificationExtractor> extractors) {
+	public CompositePropertyPathNotificationExtractor(List<PropertyPathNotificationExtractor> extractors) {
 		this.extractors = new ArrayList<>();
 		if (extractors != null) {
 			this.extractors.addAll(extractors);
@@ -49,8 +47,7 @@ public class CompositePropertyPathNotificationExtractor
 	}
 
 	@Override
-	public PropertyPathNotification extract(MultiValueMap<String, String> headers,
-			Map<String, Object> request) {
+	public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> request) {
 		for (PropertyPathNotificationExtractor extractor : this.extractors) {
 			PropertyPathNotification result = extractor.extract(headers, request);
 			if (result != null) {
@@ -61,12 +58,10 @@ public class CompositePropertyPathNotificationExtractor
 	}
 
 	@Order(Ordered.LOWEST_PRECEDENCE - 200)
-	private static class SimplePropertyPathNotificationExtractor
-			implements PropertyPathNotificationExtractor {
+	private static class SimplePropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
 		@Override
-		public PropertyPathNotification extract(MultiValueMap<String, String> headers,
-				Map<String, Object> request) {
+		public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> request) {
 			Object object = request.get("path");
 			if (object instanceof String) {
 				return new PropertyPathNotification((String) object);

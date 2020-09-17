@@ -43,13 +43,10 @@ import org.springframework.core.env.Environment;
 public class ConfigClientAutoConfiguration {
 
 	@Bean
-	public ConfigClientProperties configClientProperties(Environment environment,
-			ApplicationContext context) {
-		if (context.getParent() != null
-				&& BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
-						context.getParent(), ConfigClientProperties.class).length > 0) {
-			return BeanFactoryUtils.beanOfTypeIncludingAncestors(context.getParent(),
-					ConfigClientProperties.class);
+	public ConfigClientProperties configClientProperties(Environment environment, ApplicationContext context) {
+		if (context.getParent() != null && BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context.getParent(),
+				ConfigClientProperties.class).length > 0) {
+			return BeanFactoryUtils.beanOfTypeIncludingAncestors(context.getParent(), ConfigClientProperties.class);
 		}
 		ConfigClientProperties client = new ConfigClientProperties(environment);
 		return client;
@@ -66,8 +63,7 @@ public class ConfigClientAutoConfiguration {
 		}
 
 		@Bean
-		public ConfigServerHealthIndicator clientConfigServerHealthIndicator(
-				ConfigClientHealthProperties properties,
+		public ConfigServerHealthIndicator clientConfigServerHealthIndicator(ConfigClientHealthProperties properties,
 				ConfigurableEnvironment environment) {
 			return new ConfigServerHealthIndicator(environment, properties);
 		}

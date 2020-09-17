@@ -36,8 +36,7 @@ public class VaultKvAccessStrategyTest {
 	private ObjectMapper objectMapper = new ObjectMapper();
 
 	private static VaultKvAccessStrategySupport getStrategy(int version) {
-		return (VaultKvAccessStrategySupport) VaultKvAccessStrategyFactory
-				.forVersion(null, "foo", version);
+		return (VaultKvAccessStrategySupport) VaultKvAccessStrategyFactory.forVersion(null, "foo", version);
 	}
 
 	@Test

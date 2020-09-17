@@ -57,11 +57,9 @@ public abstract class AbstractConfigDataLocationResolver<L extends AbstractConfi
 
 	protected ConfigClientProperties loadProperties(Binder binder) {
 		ConfigClientProperties configClientProperties = binder
-				.bind(ConfigClientProperties.PREFIX,
-						Bindable.of(ConfigClientProperties.class))
+				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class))
 				.orElse(new ConfigClientProperties());
-		String applicationName = binder.bind("spring.application.name", String.class)
-				.orElse("application");
+		String applicationName = binder.bind("spring.application.name", String.class).orElse("application");
 		configClientProperties.setName(applicationName);
 		return configClientProperties;
 	}
@@ -82,9 +80,8 @@ public abstract class AbstractConfigDataLocationResolver<L extends AbstractConfi
 			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
 		}
 		if (!headers.isEmpty()) {
-			template.setInterceptors(Collections.singletonList(
-					new ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor(
-							headers)));
+			template.setInterceptors(Collections
+					.singletonList(new ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor(headers)));
 		}
 
 		return template;
@@ -94,32 +91,27 @@ public abstract class AbstractConfigDataLocationResolver<L extends AbstractConfi
 		return this.log;
 	}
 
-	public boolean isResolvable(ConfigDataLocationResolverContext context,
-			String location) {
+	public boolean isResolvable(ConfigDataLocationResolverContext context, String location) {
 		if (!location.startsWith(getPrefix())) {
 			return false;
 		}
-		return context.getBinder()
-				.bind(ConfigClientProperties.PREFIX + ".enabled", Boolean.class)
-				.orElse(true);
+		return context.getBinder().bind(ConfigClientProperties.PREFIX + ".enabled", Boolean.class).orElse(true);
 	}
 
 	protected String getPrefix() {
 		return PREFIX;
 	}
 
-	public List<L> resolve(ConfigDataLocationResolverContext context, String location,
-			boolean optional) {
+	public List<L> resolve(ConfigDataLocationResolverContext context, String location, boolean optional) {
 		return Collections.emptyList();
 	}
 
-	public List<L> resolveProfileSpecific(ConfigDataLocationResolverContext context,
-			String location, boolean optional, Profiles profiles) {
+	public List<L> resolveProfileSpecific(ConfigDataLocationResolverContext context, String location, boolean optional,
+			Profiles profiles) {
 
 		ConfigClientProperties properties = loadProperties(context.getBinder());
 
-		String uris = (location.startsWith(getPrefix()))
-				? location.substring(getPrefix().length()) : location;
+		String uris = (location.startsWith(getPrefix())) ? location.substring(getPrefix().length()) : location;
 
 		if (StringUtils.hasText(uris)) {
 			String[] uri = StringUtils.commaDelimitedListToStringArray(uris);
@@ -129,8 +121,7 @@ public abstract class AbstractConfigDataLocationResolver<L extends AbstractConfi
 		RestTemplate restTemplate = createRestTemplate(properties);
 
 		List<L> locations = new ArrayList<>();
-		locations.add(
-				createConfigDataLocation(optional, profiles, properties, restTemplate));
+		locations.add(createConfigDataLocation(optional, profiles, properties, restTemplate));
 
 		return locations;
 	}

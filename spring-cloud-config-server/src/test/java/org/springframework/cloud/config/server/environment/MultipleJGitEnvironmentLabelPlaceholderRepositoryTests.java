@@ -37,8 +37,8 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 
 	private StandardEnvironment environment = new StandardEnvironment();
 
-	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(
-			this.environment, new MultipleJGitEnvironmentProperties());
+	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
+			new MultipleJGitEnvironmentProperties());
 
 	private String defaultUri;
 
@@ -50,8 +50,7 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 
 	@Before
 	public void init() throws Exception {
-		this.defaultUri = ConfigServerTestUtils
-				.prepareLocalRepo("master-labeltest-config-repo");
+		this.defaultUri = ConfigServerTestUtils.prepareLocalRepo("master-labeltest-config-repo");
 		this.repository.setUri(this.defaultUri.replace("master-", "{label}-"));
 	}
 
@@ -59,19 +58,15 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 	public void defaultRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.defaultUri + "application.yml");
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo(this.defaultUri + "application.yml");
 		assertVersion(environment);
 	}
 
 	@Test
 	public void missingRepo() {
-		Environment environment = this.repository.findOne("missing-config-repo",
-				"staging", "master");
-		assertThat(environment.getPropertySources().size())
-				.as("Wrong property sources: " + environment).isEqualTo(1);
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.defaultUri + "application.yml");
+		Environment environment = this.repository.findOne("missing-config-repo", "staging", "master");
+		assertThat(environment.getPropertySources().size()).as("Wrong property sources: " + environment).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo(this.defaultUri + "application.yml");
 		assertVersion(environment);
 	}
 
@@ -79,16 +74,14 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 	public void defaultLabelRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", null);
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.defaultUri + "application.yml");
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo(this.defaultUri + "application.yml");
 		assertVersion(environment);
 	}
 
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
 		assertThat(version).as("version was null").isNotNull();
-		assertThat(version.length() >= 40 && version.length() <= 64)
-				.as("version length was wrong").isTrue();
+		assertThat(version.length() >= 40 && version.length() <= 64).as("version length was wrong").isTrue();
 	}
 
 }

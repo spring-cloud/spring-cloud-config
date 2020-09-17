@@ -36,8 +36,8 @@ import static java.lang.String.format;
  *
  * @author Edgars Jasmans
  */
-public class KnownHostsFileValidator implements
-		ConstraintValidator<KnownHostsFileIsValid, MultipleJGitEnvironmentProperties> {
+public class KnownHostsFileValidator
+		implements ConstraintValidator<KnownHostsFileIsValid, MultipleJGitEnvironmentProperties> {
 
 	@Override
 	public void initialize(KnownHostsFileIsValid knownHostsFileIsValid) {
@@ -45,8 +45,7 @@ public class KnownHostsFileValidator implements
 	}
 
 	@Override
-	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties,
-			ConstraintValidatorContext context) {
+	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
 		String knownHostsFile = sshUriProperties.getKnownHostsFile();
 		if (knownHostsFile != null && !new File(knownHostsFile).exists()) {
 			context.disableDefaultConstraintViolation();

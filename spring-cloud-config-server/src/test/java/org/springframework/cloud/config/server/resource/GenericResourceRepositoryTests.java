@@ -60,11 +60,10 @@ public class GenericResourceRepositoryTests {
 
 	@Before
 	public void init() {
-		this.context = new SpringApplicationBuilder(
-				NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
-						.run();
-		this.nativeRepository = new NativeEnvironmentRepository(
-				this.context.getEnvironment(), new NativeEnvironmentProperties());
+		this.context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
+				.run();
+		this.nativeRepository = new NativeEnvironmentRepository(this.context.getEnvironment(),
+				new NativeEnvironmentProperties());
 		this.repository = new GenericResourceRepository(this.nativeRepository);
 		this.repository.setResourceLoader(this.context);
 		this.context.close();
@@ -72,36 +71,30 @@ public class GenericResourceRepositoryTests {
 
 	@Test
 	public void locateResource() {
-		assertThat(this.repository.findOne("blah", "default", "master", "foo.properties"))
-				.isNotNull();
+		assertThat(this.repository.findOne("blah", "default", "master", "foo.properties")).isNotNull();
 	}
 
 	@Test
 	public void locateProfiledResource() {
-		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt"))
-				.isNotNull();
+		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt")).isNotNull();
 	}
 
 	@Test
 	public void locateProfiledResourceWithPlaceholder() {
 		this.nativeRepository.setSearchLocations("classpath:/test/{profile}");
-		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt"))
-				.isNotNull();
+		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt")).isNotNull();
 	}
 
 	@Test(expected = NoSuchResourceException.class)
 	public void locateMissingResource() {
-		assertThat(this.repository.findOne("blah", "default", "master", "foo.txt"))
-				.isNotNull();
+		assertThat(this.repository.findOne("blah", "default", "master", "foo.txt")).isNotNull();
 	}
 
 	@Test
 	public void invalidPath() {
 		this.exception.expect(NoSuchResourceException.class);
-		this.nativeRepository
-				.setSearchLocations("file:./src/test/resources/test/{profile}");
-		this.output.expect(containsString(
-				"Path contains \"../\" after call to StringUtils#cleanPath"));
+		this.nativeRepository.setSearchLocations("file:./src/test/resources/test/{profile}");
+		this.output.expect(containsString("Path contains \"../\" after call to StringUtils#cleanPath"));
 		this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql");
 	}
 

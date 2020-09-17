@@ -84,20 +84,17 @@ public class HttpClientVaultRestTemplateFactoryTest {
 
 	@Test
 	public void authenticatedHttpsProxy() throws Exception {
-		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null,
-				AUTHENTICATED_HTTPS_PROXY);
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null, AUTHENTICATED_HTTPS_PROXY);
 		RestTemplate restTemplate = this.factory.build(properties);
-		this.expectedException.expectCause(
-				allOf(instanceOf(UnknownHostException.class), hasProperty("message",
-						containsString(AUTHENTICATED_HTTPS_PROXY.getHost()))));
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+				hasProperty("message", containsString(AUTHENTICATED_HTTPS_PROXY.getHost()))));
 
 		restTemplate.getForObject("https://somehost", String.class);
 	}
 
 	@Test
 	public void httpsProxy() throws Exception {
-		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null,
-				HTTPS_PROXY);
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null, HTTPS_PROXY);
 		RestTemplate restTemplate = this.factory.build(properties);
 		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
 				hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
@@ -107,31 +104,27 @@ public class HttpClientVaultRestTemplateFactoryTest {
 
 	@Test
 	public void httpsProxy_notCalled() throws Exception {
-		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null,
-				HTTPS_PROXY);
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(null, HTTPS_PROXY);
 		RestTemplate restTemplate = this.factory.build(properties);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString("somehost"))));
+		this.expectedException.expectCause(
+				allOf(instanceOf(UnknownHostException.class), hasProperty("message", containsString("somehost"))));
 
 		restTemplate.getForObject("http://somehost", String.class);
 	}
 
 	@Test
 	public void authenticatedHttpProxy() throws Exception {
-		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(
-				AUTHENTICATED_HTTP_PROXY, null);
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(AUTHENTICATED_HTTP_PROXY, null);
 		RestTemplate restTemplate = this.factory.build(properties);
-		this.expectedException.expectCause(
-				allOf(instanceOf(UnknownHostException.class), hasProperty("message",
-						containsString(AUTHENTICATED_HTTP_PROXY.getHost()))));
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+				hasProperty("message", containsString(AUTHENTICATED_HTTP_PROXY.getHost()))));
 
 		restTemplate.getForObject("http://somehost", String.class);
 	}
 
 	@Test
 	public void httpProxy() throws Exception {
-		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(HTTP_PROXY,
-				null);
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(HTTP_PROXY, null);
 		RestTemplate restTemplate = this.factory.build(properties);
 		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
 				hasProperty("message", containsString(HTTP_PROXY.getHost()))));
@@ -141,17 +134,16 @@ public class HttpClientVaultRestTemplateFactoryTest {
 
 	@Test
 	public void httpProxy_notCalled() throws Exception {
-		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(HTTP_PROXY,
-				null);
+		VaultEnvironmentProperties properties = getVaultEnvironmentProperties(HTTP_PROXY, null);
 		RestTemplate restTemplate = this.factory.build(properties);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString("somehost"))));
+		this.expectedException.expectCause(
+				allOf(instanceOf(UnknownHostException.class), hasProperty("message", containsString("somehost"))));
 
 		restTemplate.getForObject("https://somehost", String.class);
 	}
 
-	private VaultEnvironmentProperties getVaultEnvironmentProperties(
-			ProxyHostProperties httpProxy, ProxyHostProperties httpsProxy) {
+	private VaultEnvironmentProperties getVaultEnvironmentProperties(ProxyHostProperties httpProxy,
+			ProxyHostProperties httpsProxy) {
 		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxyMap = new HashMap<>();
 		proxyMap.put(ProxyHostProperties.ProxyForScheme.HTTP, httpProxy);
 		proxyMap.put(ProxyHostProperties.ProxyForScheme.HTTPS, httpsProxy);

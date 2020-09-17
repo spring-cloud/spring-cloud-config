@@ -194,16 +194,14 @@ public abstract class PathUtils {
 			String relativePath = (path.charAt(0) == '/' ? path.substring(1) : path);
 			if (ResourceUtils.isUrl(relativePath) || relativePath.startsWith("url:")) {
 				if (logger.isWarnEnabled()) {
-					logger.warn(
-							"Path represents URL or has \"url:\" prefix: [" + path + "]");
+					logger.warn("Path represents URL or has \"url:\" prefix: [" + path + "]");
 				}
 				return true;
 			}
 		}
 		if (path.contains("..") && StringUtils.cleanPath(path).contains("../")) {
 			if (logger.isWarnEnabled()) {
-				logger.warn("Path contains \"../\" after call to StringUtils#cleanPath: ["
-						+ path + "]");
+				logger.warn("Path contains \"../\" after call to StringUtils#cleanPath: [" + path + "]");
 			}
 			return true;
 		}
@@ -222,8 +220,8 @@ public abstract class PathUtils {
 	 * @throws IOException if Resource URLS fail to parse.
 	 * @since 4.1.2
 	 */
-	public static boolean checkResource(Resource resource, Resource location,
-			List<Resource> allowedLocations) throws IOException {
+	public static boolean checkResource(Resource resource, Resource location, List<Resource> allowedLocations)
+			throws IOException {
 		if (isResourceUnderLocation(resource, location)) {
 			return true;
 		}
@@ -235,18 +233,15 @@ public abstract class PathUtils {
 			}
 		}
 		if (logger.isWarnEnabled()) {
-			logger.warn("Resource path \"" + location.getURI()
-					+ "\" was successfully resolved " + "but resource \""
-					+ resource.getURL() + "\" is neither under the "
-					+ "current location \"" + location.getURL()
+			logger.warn("Resource path \"" + location.getURI() + "\" was successfully resolved " + "but resource \""
+					+ resource.getURL() + "\" is neither under the " + "current location \"" + location.getURL()
 					+ "\" nor under any of the " + "allowed locations "
 					+ (allowedLocations != null ? allowedLocations : "[]"));
 		}
 		return false;
 	}
 
-	private static boolean isResourceUnderLocation(Resource resource, Resource location)
-			throws IOException {
+	private static boolean isResourceUnderLocation(Resource resource, Resource location) throws IOException {
 		if (resource.getClass() != location.getClass()) {
 			return false;
 		}
@@ -260,8 +255,7 @@ public abstract class PathUtils {
 		}
 		else if (resource instanceof ClassPathResource) {
 			resourcePath = ((ClassPathResource) resource).getPath();
-			locationPath = StringUtils
-					.cleanPath(((ClassPathResource) location).getPath());
+			locationPath = StringUtils.cleanPath(((ClassPathResource) location).getPath());
 		}
 		else {
 			resourcePath = resource.getURL().getPath();
@@ -271,10 +265,8 @@ public abstract class PathUtils {
 		if (locationPath.equals(resourcePath)) {
 			return true;
 		}
-		locationPath = (locationPath.endsWith("/") || locationPath.isEmpty()
-				? locationPath : locationPath + "/");
-		return (resourcePath.startsWith(locationPath)
-				&& !isInvalidEncodedPath(resourcePath));
+		locationPath = (locationPath.endsWith("/") || locationPath.isEmpty() ? locationPath : locationPath + "/");
+		return (resourcePath.startsWith(locationPath) && !isInvalidEncodedPath(resourcePath));
 	}
 
 }

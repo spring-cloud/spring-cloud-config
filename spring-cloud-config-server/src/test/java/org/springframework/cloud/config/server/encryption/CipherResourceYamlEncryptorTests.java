@@ -40,13 +40,12 @@ public class CipherResourceYamlEncryptorTests {
 
 	private TextEncryptor textEncryptor = new EncryptorFactory(salt).create(key);
 
-	private CipherResourceYamlEncryptor encryptor = new CipherResourceYamlEncryptor(
-			new TextEncryptorLocator() {
-				@Override
-				public TextEncryptor locate(Map<String, String> keys) {
-					return CipherResourceYamlEncryptorTests.this.textEncryptor;
-				}
-			});
+	private CipherResourceYamlEncryptor encryptor = new CipherResourceYamlEncryptor(new TextEncryptorLocator() {
+		@Override
+		public TextEncryptor locate(Map<String, String> keys) {
+			return CipherResourceYamlEncryptorTests.this.textEncryptor;
+		}
+	});
 
 	@Test
 	public void whenDecryptResource_thenAllEncryptedValuesDecrypted() throws Exception {

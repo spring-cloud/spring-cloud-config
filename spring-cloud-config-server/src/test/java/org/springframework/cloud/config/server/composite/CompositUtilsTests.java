@@ -34,18 +34,15 @@ public class CompositUtilsTests {
 
 	@Test
 	public void getCompositeTypeListWorks() {
-		new WebApplicationContextRunner()
-				.withUserConfiguration(ConfigServerApplication.class)
-				.withPropertyValues("spring.profiles.active:test,composite",
-						"spring.config.name:compositeconfigserver",
+		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+				.withPropertyValues("spring.profiles.active:test,composite", "spring.config.name:compositeconfigserver",
 						"spring.jmx.enabled=false",
 						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
 						"spring.cloud.config.server.composite[0].type:git",
 						"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
 						"spring.cloud.config.server.composite[1].type:svn")
 				.run(context -> {
-					List<String> types = CompositeUtils
-							.getCompositeTypeList(context.getEnvironment());
+					List<String> types = CompositeUtils.getCompositeTypeList(context.getEnvironment());
 					assertThat(types).containsExactly("git", "svn");
 				});
 	}
@@ -54,10 +51,8 @@ public class CompositUtilsTests {
 	public void getCompositeTypeListFails() {
 		this.thrown.expect(IllegalStateException.class);
 
-		new WebApplicationContextRunner()
-				.withUserConfiguration(ConfigServerApplication.class)
-				.withPropertyValues("spring.profiles.active:test,composite",
-						"spring.config.name:compositeconfigserver",
+		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+				.withPropertyValues("spring.profiles.active:test,composite", "spring.config.name:compositeconfigserver",
 						"spring.jmx.enabled=false",
 						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
 						"spring.cloud.config.server.composite[0].type:git",

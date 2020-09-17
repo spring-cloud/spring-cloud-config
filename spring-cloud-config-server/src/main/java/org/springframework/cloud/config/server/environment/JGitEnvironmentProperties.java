@@ -232,8 +232,7 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 		return this.proxy;
 	}
 
-	public void setProxy(
-			Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy) {
+	public void setProxy(Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy) {
 		this.proxy = proxy;
 	}
 

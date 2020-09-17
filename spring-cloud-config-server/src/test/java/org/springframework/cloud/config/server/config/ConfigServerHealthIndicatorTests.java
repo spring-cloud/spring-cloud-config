@@ -57,18 +57,16 @@ public class ConfigServerHealthIndicatorTests {
 
 	@Test
 	public void defaultStatusWorks() {
-		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(),
-				anyBoolean())).thenReturn(this.environment);
-		assertThat(this.indicator.health().getStatus()).as("wrong default status")
-				.isEqualTo(Status.UP);
+		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
+				.thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);
 	}
 
 	@Test
 	public void exceptionStatusIsDown() {
-		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(),
-				anyBoolean())).thenThrow(new RuntimeException());
-		assertThat(this.indicator.health().getStatus()).as("wrong exception status")
-				.isEqualTo(Status.DOWN);
+		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
+				.thenThrow(new RuntimeException());
+		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(Status.DOWN);
 	}
 
 	@Test
@@ -78,10 +76,8 @@ public class ConfigServerHealthIndicatorTests {
 		repo.setProfiles("myprofile");
 		repo.setLabel("mylabel");
 		this.indicator.setRepositories(Collections.singletonMap("myname", repo));
-		when(this.repository.findOne("myname", "myprofile", "mylabel", false))
-				.thenReturn(this.environment);
-		assertThat(this.indicator.health().getStatus()).as("wrong default status")
-				.isEqualTo(Status.UP);
+		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);
 	}
 
 }

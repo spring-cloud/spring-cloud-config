@@ -49,11 +49,10 @@ import org.springframework.util.StringUtils;
  * @author Venil Noronha
  * @author Daniel Lavoie
  */
-public class NativeEnvironmentRepository
-		implements EnvironmentRepository, SearchPathLocator, Ordered {
+public class NativeEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
 
-	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/",
-			"classpath:/config/", "file:./", "file:./config/" };
+	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/", "classpath:/config/", "file:./",
+			"file:./config/" };
 
 	private static final Pattern RESOURCE_PATTERN = Pattern
 			.compile("Resource config '(.*?)' imported via location \".*\"");
@@ -87,8 +86,7 @@ public class NativeEnvironmentRepository
 
 	private int order;
 
-	public NativeEnvironmentRepository(ConfigurableEnvironment environment,
-			NativeEnvironmentProperties properties) {
+	public NativeEnvironmentRepository(ConfigurableEnvironment environment, NativeEnvironmentProperties properties) {
 		this.environment = environment;
 		this.addLabelLocations = properties.getAddLabelLocations();
 		this.defaultLabel = properties.getDefaultLabel();
@@ -128,8 +126,7 @@ public class NativeEnvironmentRepository
 	}
 
 	@Override
-	public Environment findOne(String config, String profile, String label,
-			boolean includeOrigin) {
+	public Environment findOne(String config, String profile, String label, boolean includeOrigin) {
 
 		try {
 			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
@@ -138,12 +135,10 @@ public class NativeEnvironmentRepository
 					StringUtils.commaDelimitedListToStringArray(profile));
 
 			environment.getPropertySources().remove("config-data-setup");
-			return clean(new PassthruEnvironmentRepository(environment).findOne(config,
-					profile, label, includeOrigin));
+			return clean(new PassthruEnvironmentRepository(environment).findOne(config, profile, label, includeOrigin));
 		}
 		catch (Exception e) {
-			String msg = String.format(
-					"Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
+			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
 					config, profile, label, includeOrigin);
 			String completeMessage = NestedExceptionUtils.buildMessage(msg,
 					NestedExceptionUtils.getMostSpecificCause(e));
@@ -202,12 +197,10 @@ public class NativeEnvironmentRepository
 				}
 			}
 		}
-		return new Locations(application, profile, label, this.version,
-				output.toArray(new String[0]));
+		return new Locations(application, profile, label, this.version, output.toArray(new String[0]));
 	}
 
-	private ConfigurableEnvironment getEnvironment(String application, String profile,
-			String label) {
+	private ConfigurableEnvironment getEnvironment(String application, String profile, String label) {
 		ConfigurableEnvironment environment = new StandardEnvironment();
 		Map<String, Object> map = new HashMap<>();
 		map.put("spring.profiles.active", profile);
@@ -217,18 +210,17 @@ public class NativeEnvironmentRepository
 		}
 		map.put("spring.config.name", config);
 		// map.put("encrypt.failOnError=" + this.failOnError);
-		map.put("spring.config.location", StringUtils.arrayToCommaDelimitedString(
-				getLocations(application, profile, label).getLocations()));
+		map.put("spring.config.location",
+				StringUtils.arrayToCommaDelimitedString(getLocations(application, profile, label).getLocations()));
 		// globally ignore config files that are not found
 		map.put("spring.config.on-location-not-found", "ignore");
-		environment.getPropertySources()
-				.addFirst(new MapPropertySource("config-data-setup", map));
+		environment.getPropertySources().addFirst(new MapPropertySource("config-data-setup", map));
 		return environment;
 	}
 
 	protected Environment clean(Environment value) {
-		Environment result = new Environment(value.getName(), value.getProfiles(),
-				value.getLabel(), this.version, value.getState());
+		Environment result = new Environment(value.getName(), value.getProfiles(), value.getLabel(), this.version,
+				value.getState());
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName();
 			if (this.environment.getPropertySources().contains(name)) {
@@ -245,29 +237,22 @@ public class NativeEnvironmentRepository
 				boolean matches = false;
 				String normal = name;
 				if (normal.startsWith("file:")) {
-					normal = StringUtils
-							.cleanPath(new File(normal.substring("file:".length()))
-									.getAbsolutePath());
+					normal = StringUtils.cleanPath(new File(normal.substring("file:".length())).getAbsolutePath());
 				}
 				String profile = result.getProfiles() == null ? null
 						: StringUtils.arrayToCommaDelimitedString(result.getProfiles());
-				for (String pattern : getLocations(result.getName(), profile,
-						result.getLabel()).getLocations()) {
+				for (String pattern : getLocations(result.getName(), profile, result.getLabel()).getLocations()) {
 					if (!pattern.contains(":")) {
 						pattern = "file:" + pattern;
 					}
 					if (pattern.startsWith("file:")) {
-						pattern = StringUtils
-								.cleanPath(new File(pattern.substring("file:".length()))
-										.getAbsolutePath())
+						pattern = StringUtils.cleanPath(new File(pattern.substring("file:".length())).getAbsolutePath())
 								+ "/";
 					}
 					if (logger.isTraceEnabled()) {
-						logger.trace("Testing pattern: " + pattern
-								+ " with property source: " + name);
+						logger.trace("Testing pattern: " + pattern + " with property source: " + name);
 					}
-					if (normal.startsWith(pattern)
-							&& !normal.substring(pattern.length()).contains("/")) {
+					if (normal.startsWith(pattern) && !normal.substring(pattern.length()).contains("/")) {
 						matches = true;
 						break;
 					}
@@ -312,8 +297,8 @@ public class NativeEnvironmentRepository
 	}
 
 	private boolean isDirectory(String location) {
-		return !location.contains("{") && !location.endsWith(".properties")
-				&& !location.endsWith(".yml") && !location.endsWith(".yaml");
+		return !location.contains("{") && !location.endsWith(".properties") && !location.endsWith(".yml")
+				&& !location.endsWith(".yaml");
 	}
 
 	@Override

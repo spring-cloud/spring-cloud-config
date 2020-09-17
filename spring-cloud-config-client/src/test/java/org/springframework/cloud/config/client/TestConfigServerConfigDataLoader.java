@@ -28,8 +28,7 @@ import org.springframework.boot.context.config.ConfigData;
 import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.util.ReflectionUtils;
 
-public class TestConfigServerConfigDataLoader
-		extends AbstractConfigDataLoader<TestConfigServerConfigDataLocation> {
+public class TestConfigServerConfigDataLoader extends AbstractConfigDataLoader<TestConfigServerConfigDataLocation> {
 
 	public TestConfigServerConfigDataLoader(Log logger) {
 		super(logger);
@@ -41,8 +40,8 @@ public class TestConfigServerConfigDataLoader
 	}
 
 	@Override
-	public ConfigData load(ConfigDataLoaderContext context,
-			TestConfigServerConfigDataLocation location) throws IOException {
+	public ConfigData load(ConfigDataLoaderContext context, TestConfigServerConfigDataLocation location)
+			throws IOException {
 		// This could be a RetryTemplate
 		Function<TestConfigServerConfigDataLocation, ConfigData> fn = dataLocation -> {
 			try {
@@ -57,11 +56,8 @@ public class TestConfigServerConfigDataLoader
 	}
 
 	public static void main(String[] args) {
-		new SpringApplicationBuilder(TestConfig.class)
-				.properties("spring.config.testconfigdata.enabled=true",
-						"spring.application.name=foo",
-						"spring.config.import=configserver:")
-				.run(args);
+		new SpringApplicationBuilder(TestConfig.class).properties("spring.config.testconfigdata.enabled=true",
+				"spring.application.name=foo", "spring.config.import=configserver:").run(args);
 	}
 
 	@SpringBootConfiguration

@@ -51,10 +51,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
 		// config
 		// server on the classpath we need to set it explicitly
-		properties = { "spring.cloud.config.enabled:true", "",
-				"spring.config.use-legacy-processing=true",
-				"management.security.enabled=false",
-				"management.endpoints.web.exposure.include=*" },
+		properties = { "spring.cloud.config.enabled:true", "", "spring.config.use-legacy-processing=true",
+				"management.security.enabled=false", "management.endpoints.web.exposure.include=*" },
 		webEnvironment = RANDOM_PORT)
 public class ApplicationBootstrapTests {
 
@@ -70,17 +68,13 @@ public class ApplicationBootstrapTests {
 	@BeforeClass
 	public static void startConfigServer() throws IOException {
 		System.setProperty("spring.cloud.bootstrap.name", "bootstrapservercomposite");
-		String baseDir = ConfigServerTestUtils
-				.getBaseDirectory("spring-cloud-config-sample");
-		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos",
-				"config-repo", "target/config");
+		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
+		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
 		System.setProperty("repo1", repo);
-		server = SpringApplication.run(
-				org.springframework.cloud.config.server.ConfigServerApplication.class,
+		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
 				// FIXME: configdata why is use legacy needed here and above?
-				"--spring.config.use-legacy-processing=true",
-				"--server.port=" + configPort, "--spring.config.name=compositeserver",
-				"--repo1=" + repo);
+				"--spring.config.use-legacy-processing=true", "--server.port=" + configPort,
+				"--spring.config.name=compositeserver", "--repo1=" + repo);
 		System.setProperty("config.port", "" + configPort);
 	}
 
@@ -103,8 +97,8 @@ public class ApplicationBootstrapTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void contextLoads() {
-		Map res = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + BASE_PATH + "/env/info.foo", Map.class);
+		Map res = new TestRestTemplate().getForObject("http://localhost:" + this.port + BASE_PATH + "/env/info.foo",
+				Map.class);
 		assertThat(res).containsKey("propertySources");
 		Map<String, Object> property = (Map<String, Object>) res.get("property");
 		assertThat(property).containsEntry("value", "bar");

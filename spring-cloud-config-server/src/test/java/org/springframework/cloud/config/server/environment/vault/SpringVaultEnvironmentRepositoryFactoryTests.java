@@ -43,13 +43,10 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
 
 		SpringVaultEnvironmentRepository environmentRepository = new SpringVaultEnvironmentRepositoryFactory(
-				mockHttpRequest(), new EnvironmentWatch.Default(),
-				mockClientConfiguration()).build(properties);
+				mockHttpRequest(), new EnvironmentWatch.Default(), mockClientConfiguration()).build(properties);
 
-		VaultKeyValueOperations keyValueTemplate = environmentRepository
-				.getKeyValueTemplate();
-		assertThat(keyValueTemplate.getApiVersion())
-				.isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_1);
+		VaultKeyValueOperations keyValueTemplate = environmentRepository.getKeyValueTemplate();
+		assertThat(keyValueTemplate.getApiVersion()).isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_1);
 	}
 
 	@Test
@@ -58,22 +55,17 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 		properties.setKvVersion(2);
 
 		SpringVaultEnvironmentRepository environmentRepository = new SpringVaultEnvironmentRepositoryFactory(
-				mockHttpRequest(), new EnvironmentWatch.Default(),
-				mockClientConfiguration()).build(properties);
+				mockHttpRequest(), new EnvironmentWatch.Default(), mockClientConfiguration()).build(properties);
 
-		VaultKeyValueOperations keyValueTemplate = environmentRepository
-				.getKeyValueTemplate();
-		assertThat(keyValueTemplate.getApiVersion())
-				.isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
+		VaultKeyValueOperations keyValueTemplate = environmentRepository.getKeyValueTemplate();
+		assertThat(keyValueTemplate.getApiVersion()).isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
 	}
 
 	private SpringVaultClientConfiguration mockClientConfiguration() {
-		VaultTemplate vaultTemplate = new VaultTemplate(
-				VaultEndpoint.create("localhost", 8200),
+		VaultTemplate vaultTemplate = new VaultTemplate(VaultEndpoint.create("localhost", 8200),
 				new TokenAuthentication("token"));
 
-		SpringVaultClientConfiguration clientConfiguration = mock(
-				SpringVaultClientConfiguration.class);
+		SpringVaultClientConfiguration clientConfiguration = mock(SpringVaultClientConfiguration.class);
 		when(clientConfiguration.vaultTemplate()).thenReturn(vaultTemplate);
 
 		return clientConfiguration;

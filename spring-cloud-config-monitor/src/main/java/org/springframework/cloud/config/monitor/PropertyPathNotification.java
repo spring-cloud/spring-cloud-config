@@ -70,8 +70,7 @@ public class PropertyPathNotification {
 	}
 
 	public String toString() {
-		return "PropertyPathNotification(paths="
-				+ java.util.Arrays.deepToString(this.getPaths()) + ")";
+		return "PropertyPathNotification(paths=" + java.util.Arrays.deepToString(this.getPaths()) + ")";
 	}
 
 }

@@ -40,8 +40,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	private PropertySource<?> cached;
 
-	public ConfigServerHealthIndicator(ConfigurableEnvironment environment,
-			ConfigClientHealthProperties properties) {
+	public ConfigServerHealthIndicator(ConfigurableEnvironment environment, ConfigClientHealthProperties properties) {
 		this.environment = environment;
 		this.properties = properties;
 	}
@@ -52,8 +51,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 		builder.up();
 		if (propertySource instanceof CompositePropertySource) {
 			List<String> sources = new ArrayList<>();
-			for (PropertySource<?> ps : ((CompositePropertySource) propertySource)
-					.getPropertySources()) {
+			for (PropertySource<?> ps : ((CompositePropertySource) propertySource).getPropertySources()) {
 				sources.add(ps.getName());
 			}
 			builder.withDetail("propertySources", sources);
@@ -70,8 +68,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 		long accessTime = System.currentTimeMillis();
 		if (isCacheStale(accessTime)) {
 			this.lastAccess = accessTime;
-			MutablePropertySources propertySources = this.environment
-					.getPropertySources();
+			MutablePropertySources propertySources = this.environment.getPropertySources();
 			this.cached = propertySources.get("configClient");
 		}
 		return this.cached;
@@ -81,8 +78,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 		if (this.cached == null) {
 			return true;
 		}
-		return (accessTime - this.lastAccess) >= this.properties.getTimeToLive()
-				.toMillis();
+		return (accessTime - this.lastAccess) >= this.properties.getTimeToLive().toMillis();
 	}
 
 }

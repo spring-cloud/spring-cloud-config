@@ -35,8 +35,7 @@ import org.springframework.stereotype.Component;
  * @author Sean Stiglitz
  */
 @Component
-public class CipherResourcePropertiesEncryptor extends AbstractCipherResourceEncryptor
-		implements ResourceEncryptor {
+public class CipherResourcePropertiesEncryptor extends AbstractCipherResourceEncryptor implements ResourceEncryptor {
 
 	private static final List<String> SUPPORTED_EXTENSIONS = Arrays.asList("properties");
 
@@ -64,8 +63,8 @@ public class CipherResourcePropertiesEncryptor extends AbstractCipherResourceEnc
 		}
 
 		for (String value : valsToDecrpyt) {
-			String decryptedValue = decryptValue(value.replace(CIPHER_MARKER, ""),
-					environment.getName(), environment.getProfiles());
+			String decryptedValue = decryptValue(value.replace(CIPHER_MARKER, ""), environment.getName(),
+					environment.getProfiles());
 			text = text.replace(value, decryptedValue);
 		}
 
