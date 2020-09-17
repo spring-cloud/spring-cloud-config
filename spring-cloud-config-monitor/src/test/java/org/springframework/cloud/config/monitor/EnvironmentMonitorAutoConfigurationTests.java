@@ -40,30 +40,24 @@ public class EnvironmentMonitorAutoConfigurationTests {
 
 	@Test
 	public void testExtractorsCount() {
-		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				BusConfig.class, EnvironmentMonitorAutoConfiguration.class,
-				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
-				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
-						.run();
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
+				EnvironmentMonitorAutoConfiguration.class, ServletWebServerFactoryAutoConfiguration.class,
+				ServerProperties.class, PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1").run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
-		assertThat(((Collection<?>) ReflectionTestUtils.getField(
-				ReflectionTestUtils.getField(endpoint, "extractor"), "extractors"))
-						.size()).isEqualTo(7);
+		assertThat(((Collection<?>) ReflectionTestUtils.getField(ReflectionTestUtils.getField(endpoint, "extractor"),
+				"extractors")).size()).isEqualTo(7);
 		context.close();
 	}
 
 	@Test
 	public void testCanAddCustomPropertyPathNotificationExtractor() {
-		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				BusConfig.class, CustomPropertyPathNotificationExtractorConfig.class,
-				EnvironmentMonitorAutoConfiguration.class,
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
+				CustomPropertyPathNotificationExtractorConfig.class, EnvironmentMonitorAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
-				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1")
-						.run();
+				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1").run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
-		assertThat(((Collection<?>) ReflectionTestUtils.getField(
-				ReflectionTestUtils.getField(endpoint, "extractor"), "extractors"))
-						.size()).isEqualTo(8);
+		assertThat(((Collection<?>) ReflectionTestUtils.getField(ReflectionTestUtils.getField(endpoint, "extractor"),
+				"extractors")).size()).isEqualTo(8);
 		context.close();
 	}
 

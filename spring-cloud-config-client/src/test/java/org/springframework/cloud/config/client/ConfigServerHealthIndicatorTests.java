@@ -43,8 +43,8 @@ public class ConfigServerHealthIndicatorTests {
 
 	private ConfigurableEnvironment environment = mock(ConfigurableEnvironment.class);
 
-	private ConfigServerHealthIndicator indicator = new ConfigServerHealthIndicator(
-			this.environment, new ConfigClientHealthProperties());
+	private ConfigServerHealthIndicator indicator = new ConfigServerHealthIndicator(this.environment,
+			new ConfigClientHealthProperties());
 
 	@Test
 	public void testDefaultStatus() {
@@ -66,8 +66,7 @@ public class ConfigServerHealthIndicatorTests {
 	}
 
 	protected void setupPropertySources() {
-		PropertySource<?> source = new MapPropertySource("configClient",
-				Collections.emptyMap());
+		PropertySource<?> source = new MapPropertySource("configClient", Collections.emptyMap());
 		MutablePropertySources sources = new MutablePropertySources();
 		sources.addFirst(source);
 		doReturn(sources).when(this.environment).getPropertySources();

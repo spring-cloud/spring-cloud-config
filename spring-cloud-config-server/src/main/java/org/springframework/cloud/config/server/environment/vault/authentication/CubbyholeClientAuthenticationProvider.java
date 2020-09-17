@@ -26,22 +26,19 @@ import org.springframework.vault.authentication.CubbyholeAuthenticationOptions;
 import org.springframework.vault.support.VaultToken;
 import org.springframework.web.client.RestOperations;
 
-public class CubbyholeClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class CubbyholeClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public CubbyholeClientAuthenticationProvider() {
 		super(AuthenticationMethod.CUBBYHOLE);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
 		String token = vaultProperties.getToken();
 
-		Assert.hasText(token,
-				missingPropertyForAuthMethod("token", AuthenticationMethod.CUBBYHOLE));
+		Assert.hasText(token, missingPropertyForAuthMethod("token", AuthenticationMethod.CUBBYHOLE));
 
 		CubbyholeAuthenticationOptions options = CubbyholeAuthenticationOptions.builder() //
 				.wrapped() //

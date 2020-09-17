@@ -43,8 +43,7 @@ public interface VaultKvAccessStrategy {
 	 * @throws RestClientException in case of a transport/access failure.
 	 * @see com.fasterxml.jackson.annotation.JsonRawValue
 	 */
-	String getData(HttpHeaders headers, String backend, String key)
-			throws RestClientException;
+	String getData(HttpHeaders headers, String backend, String key) throws RestClientException;
 
 	/**
 	 * Vault response POJO.

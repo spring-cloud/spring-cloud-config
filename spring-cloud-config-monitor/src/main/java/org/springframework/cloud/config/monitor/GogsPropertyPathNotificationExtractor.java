@@ -25,16 +25,14 @@ import org.springframework.util.MultiValueMap;
  *
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
-public class GogsPropertyPathNotificationExtractor
-		extends BasePropertyPathNotificationExtractor {
+public class GogsPropertyPathNotificationExtractor extends BasePropertyPathNotificationExtractor {
 
 	private static final String HEADERS_KEY = "X-Gogs-Event";
 
 	private static final String HEADERS_VALUE = "push";
 
 	@Override
-	protected boolean requestBelongsToGitRepoManager(
-			MultiValueMap<String, String> headers) {
+	protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
 		return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
 	}
 

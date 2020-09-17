@@ -75,16 +75,13 @@ public class VaultEnvironmentRepository extends AbstractVaultEnvironmentReposito
 
 	private final ConfigTokenProvider tokenProvider;
 
-	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request,
-			EnvironmentWatch watch, RestTemplate rest,
-			VaultEnvironmentProperties properties) {
-		this(request, watch, rest, properties,
-				new HttpRequestConfigTokenProvider(request));
+	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+			RestTemplate rest, VaultEnvironmentProperties properties) {
+		this(request, watch, rest, properties, new HttpRequestConfigTokenProvider(request));
 	}
 
-	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request,
-			EnvironmentWatch watch, RestTemplate rest,
-			VaultEnvironmentProperties properties, ConfigTokenProvider tokenProvider) {
+	public VaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+			RestTemplate rest, VaultEnvironmentProperties properties, ConfigTokenProvider tokenProvider) {
 		super(request, watch, properties);
 		this.tokenProvider = tokenProvider;
 		this.backend = properties.getBackend();
@@ -95,8 +92,7 @@ public class VaultEnvironmentRepository extends AbstractVaultEnvironmentReposito
 
 		String baseUrl = String.format("%s://%s:%s", this.scheme, this.host, this.port);
 
-		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl,
-				properties.getKvVersion());
+		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl, properties.getKvVersion());
 	}
 
 	/* for testing */ void setAccessStrategy(VaultKvAccessStrategy accessStrategy) {
@@ -117,8 +113,7 @@ public class VaultEnvironmentRepository extends AbstractVaultEnvironmentReposito
 	private String getToken() {
 		String token = tokenProvider.getToken();
 		if (!StringUtils.hasLength(token)) {
-			throw new IllegalArgumentException(
-					"A Vault token must be supplied by a token provider");
+			throw new IllegalArgumentException("A Vault token must be supplied by a token provider");
 		}
 		return token;
 	}

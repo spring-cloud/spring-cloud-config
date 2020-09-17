@@ -32,21 +32,19 @@ public class NativeEnvironmentRepositoryFactoryTest {
 	public void testDefaultLabel() {
 		ConfigServerProperties props = new ConfigServerProperties();
 		props.setDefaultLabel("mylabel");
-		NativeEnvironmentRepositoryFactory factory = new NativeEnvironmentRepositoryFactory(
-				new StandardEnvironment(), props);
+		NativeEnvironmentRepositoryFactory factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(),
+				props);
 		NativeEnvironmentProperties environmentProperties = new NativeEnvironmentProperties();
 		NativeEnvironmentRepository repo = factory.build(environmentProperties);
 		assertThat(repo.getDefaultLabel()).isEqualTo("mylabel");
 
-		factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(),
-				props);
+		factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(), props);
 		environmentProperties = new NativeEnvironmentProperties();
 		environmentProperties.setDefaultLabel("mynewlabel");
 		repo = factory.build(environmentProperties);
 		assertThat(repo.getDefaultLabel()).isEqualTo("mylabel");
 
-		factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(),
-				new ConfigServerProperties());
+		factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(), new ConfigServerProperties());
 		environmentProperties = new NativeEnvironmentProperties();
 		environmentProperties.setDefaultLabel("mynewlabel");
 		repo = factory.build(environmentProperties);

@@ -66,11 +66,10 @@ abstract class VaultKvAccessStrategySupport implements VaultKvAccessStrategy {
 	public String getData(HttpHeaders headers, String backend, String key) {
 		try {
 
-			String urlTemplate = String.format("%s/v1/%s/%s", this.baseUrl, backend,
-					getPath());
+			String urlTemplate = String.format("%s/v1/%s/%s", this.baseUrl, backend, getPath());
 
-			ResponseEntity<VaultResponse> response = this.rest.exchange(urlTemplate,
-					HttpMethod.GET, new HttpEntity<>(headers), VaultResponse.class, key);
+			ResponseEntity<VaultResponse> response = this.rest.exchange(urlTemplate, HttpMethod.GET,
+					new HttpEntity<>(headers), VaultResponse.class, key);
 			HttpStatus status = response.getStatusCode();
 			if (status == HttpStatus.OK) {
 				return extractDataFromBody(response.getBody());

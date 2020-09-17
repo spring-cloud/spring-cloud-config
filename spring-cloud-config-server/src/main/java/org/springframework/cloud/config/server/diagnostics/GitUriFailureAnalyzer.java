@@ -23,8 +23,7 @@ import org.springframework.cloud.config.server.environment.JGitEnvironmentReposi
 /**
  * @author Ryan Baxter
  */
-public class GitUriFailureAnalyzer
-		extends AbstractFailureAnalyzer<IllegalStateException> {
+public class GitUriFailureAnalyzer extends AbstractFailureAnalyzer<IllegalStateException> {
 
 	/**
 	 * Description of the failure.
@@ -39,8 +38,7 @@ public class GitUriFailureAnalyzer
 			+ "you need to use a composite configuration.";
 
 	@Override
-	protected FailureAnalysis analyze(Throwable rootFailure,
-			IllegalStateException cause) {
+	protected FailureAnalysis analyze(Throwable rootFailure, IllegalStateException cause) {
 		if (JGitEnvironmentRepository.MESSAGE.equalsIgnoreCase(cause.getMessage())) {
 			return new FailureAnalysis(DESCRIPTION, ACTION, cause);
 		}

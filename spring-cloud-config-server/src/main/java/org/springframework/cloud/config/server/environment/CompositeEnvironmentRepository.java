@@ -37,8 +37,7 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	 * @param environmentRepositories The list of {@link EnvironmentRepository}s to create
 	 * the composite from.
 	 */
-	public CompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) {
+	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories) {
 		// Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
 		this.environmentRepositories = environmentRepositories;
@@ -50,21 +49,18 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label,
-			boolean includeOrigin) {
-		Environment env = new Environment(application, new String[] { profile }, label,
-				null, null);
+	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		Environment env = new Environment(application, new String[] { profile }, label, null, null);
 		if (this.environmentRepositories.size() == 1) {
-			Environment envRepo = this.environmentRepositories.get(0).findOne(application,
-					profile, label, includeOrigin);
+			Environment envRepo = this.environmentRepositories.get(0).findOne(application, profile, label,
+					includeOrigin);
 			env.addAll(envRepo.getPropertySources());
 			env.setVersion(envRepo.getVersion());
 			env.setState(envRepo.getState());
 		}
 		else {
 			for (EnvironmentRepository repo : environmentRepositories) {
-				env.addAll(repo.findOne(application, profile, label, includeOrigin)
-						.getPropertySources());
+				env.addAll(repo.findOne(application, profile, label, includeOrigin).getPropertySources());
 			}
 		}
 		return env;

@@ -102,8 +102,8 @@ public class ConsulEnvironmentWatch implements EnvironmentWatch {
 				headers.add(CONSUL_TOKEN, this.token);
 			}
 			HttpEntity<Object> request = new HttpEntity<>(headers);
-			ResponseEntity<List<String>> response = this.restTemplate.exchange(WATCH_URL,
-					HttpMethod.GET, request, RESPONSE_TYPE, params.toArray());
+			ResponseEntity<List<String>> response = this.restTemplate.exchange(WATCH_URL, HttpMethod.GET, request,
+					RESPONSE_TYPE, params.toArray());
 
 			if (response.getStatusCode().is2xxSuccessful()) {
 				String consulIndex = response.getHeaders().getFirst(CONSUL_INDEX);

@@ -71,8 +71,7 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 
 	@Override
 	// TODO: retry
-	public ConfigData load(ConfigDataLoaderContext context, L location)
-			throws IOException {
+	public ConfigData load(ConfigDataLoaderContext context, L location) throws IOException {
 		ConfigClientProperties properties = location.getProperties();
 		// ConfigClientProperties properties =
 		// this.defaultProperties.override(environment);
@@ -82,8 +81,7 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 		try {
 			String[] labels = new String[] { "" };
 			if (StringUtils.hasText(properties.getLabel())) {
-				labels = StringUtils
-						.commaDelimitedListToStringArray(properties.getLabel());
+				labels = StringUtils.commaDelimitedListToStringArray(properties.getLabel());
 			}
 			String state = ConfigClientStateHolder.getState();
 			// Try all the labels until one works
@@ -98,8 +96,8 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 							@SuppressWarnings("unchecked")
 							Map<String, Object> map = translateOrigins(source.getName(),
 									(Map<String, Object>) source.getSource());
-							composite.add(0, new OriginTrackedMapPropertySource(
-									"configserver:" + source.getName(), map));
+							composite.add(0,
+									new OriginTrackedMapPropertySource("configserver:" + source.getName(), map));
 						}
 					}
 
@@ -120,8 +118,7 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 		}
 		catch (HttpServerErrorException e) {
 			error = e;
-			if (MediaType.APPLICATION_JSON
-					.includes(e.getResponseHeaders().getContentType())) {
+			if (MediaType.APPLICATION_JSON.includes(e.getResponseHeaders().getContentType())) {
 				errorBody = e.getResponseBodyAsString();
 			}
 		}
@@ -136,23 +133,18 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 			else {
 				reason = "the location is not optional";
 			}
-			throw new IllegalStateException("Could not locate PropertySource and "
-					+ reason + ", failing" + (errorBody == null ? "" : ": " + errorBody),
-					error);
+			throw new IllegalStateException("Could not locate PropertySource and " + reason + ", failing"
+					+ (errorBody == null ? "" : ": " + errorBody), error);
 		}
-		logger.warn("Could not locate PropertySource: "
-				+ (error != null ? error.getMessage() : errorBody));
+		logger.warn("Could not locate PropertySource: " + (error != null ? error.getMessage() : errorBody));
 		return null;
 
 	}
 
 	protected void log(Environment result) {
 		if (logger.isInfoEnabled()) {
-			logger.info(String.format(
-					"Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
-					result.getName(),
-					result.getProfiles() == null ? ""
-							: Arrays.asList(result.getProfiles()),
+			logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
+					result.getName(), result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
 					result.getLabel(), result.getVersion(), result.getState()));
 		}
 		if (logger.isDebugEnabled()) {
@@ -162,17 +154,14 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 				for (PropertySource propertySource : propertySourceList) {
 					propertyCount += propertySource.getSource().size();
 				}
-				logger.debug(String.format(
-						"Environment %s has %d property sources with %d properties.",
-						result.getName(), result.getPropertySources().size(),
-						propertyCount));
+				logger.debug(String.format("Environment %s has %d property sources with %d properties.",
+						result.getName(), result.getPropertySources().size(), propertyCount));
 			}
 
 		}
 	}
 
-	protected Map<String, Object> translateOrigins(String name,
-			Map<String, Object> source) {
+	protected Map<String, Object> translateOrigins(String name, Map<String, Object> source) {
 		Map<String, Object> withOrigins = new LinkedHashMap<>();
 		for (Map.Entry<String, Object> entry : source.entrySet()) {
 			boolean hasOrigin = false;
@@ -180,12 +169,10 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 			if (entry.getValue() instanceof Map) {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> value = (Map<String, Object>) entry.getValue();
-				if (value.size() == 2 && value.containsKey("origin")
-						&& value.containsKey("value")) {
-					Origin origin = new ConfigServicePropertySourceLocator.ConfigServiceOrigin(
-							name, value.get("origin"));
-					OriginTrackedValue trackedValue = OriginTrackedValue
-							.of(value.get("value"), origin);
+				if (value.size() == 2 && value.containsKey("origin") && value.containsKey("value")) {
+					Origin origin = new ConfigServicePropertySourceLocator.ConfigServiceOrigin(name,
+							value.get("origin"));
+					OriginTrackedValue trackedValue = OriginTrackedValue.of(value.get("value"), origin);
 					withOrigins.put(entry.getKey(), trackedValue);
 					hasOrigin = true;
 				}
@@ -210,8 +197,7 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
-		String profile = StringUtils
-				.collectionToCommaDelimitedString(location.getProfiles().getAccepted());
+		String profile = StringUtils.collectionToCommaDelimitedString(location.getProfiles().getAccepted());
 		String token = properties.getToken();
 		int noOfUrls = properties.getUri().length;
 		if (noOfUrls > 1) {
@@ -237,8 +223,7 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 
 			try {
 				HttpHeaders headers = new HttpHeaders();
-				headers.setAccept(
-						Collections.singletonList(MediaType.parseMediaType(V2_JSON)));
+				headers.setAccept(Collections.singletonList(MediaType.parseMediaType(V2_JSON)));
 				addAuthorizationToken(properties, headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
@@ -248,8 +233,7 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 				}
 
 				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
-				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity,
-						Environment.class, args);
+				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity, Environment.class, args);
 			}
 			catch (HttpClientErrorException e) {
 				if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
@@ -257,8 +241,7 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 				}
 			}
 			catch (ResourceAccessException e) {
-				logger.info("Connect Timeout Exception on Url - " + uri
-						+ ". Will be trying the next url if available");
+				logger.info("Connect Timeout Exception on Url - " + uri + ". Will be trying the next url if available");
 				if (i == noOfUrls - 1) {
 					throw e;
 				}
@@ -278,13 +261,12 @@ public abstract class AbstractConfigDataLoader<L extends AbstractConfigDataLocat
 		return null;
 	}
 
-	protected void addAuthorizationToken(ConfigClientProperties configClientProperties,
-			HttpHeaders httpHeaders, String username, String password) {
+	protected void addAuthorizationToken(ConfigClientProperties configClientProperties, HttpHeaders httpHeaders,
+			String username, String password) {
 		String authorization = configClientProperties.getHeaders().get(AUTHORIZATION);
 
 		if (password != null && authorization != null) {
-			throw new IllegalStateException(
-					"You must set either 'password' or 'authorization'");
+			throw new IllegalStateException("You must set either 'password' or 'authorization'");
 		}
 
 		if (password != null) {

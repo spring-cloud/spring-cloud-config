@@ -47,36 +47,26 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	final AmazonS3 s3Client = mock(AmazonS3.class, "config");
 
-	final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client,
-			"bucket1", server);
+	final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
 
-	final String propertyContent = "cloudfoundry.enabled=true\n"
-			+ "cloudfoundry.accounts[0].name=acc1\n"
-			+ "cloudfoundry.accounts[0].user=user1\n"
-			+ "cloudfoundry.accounts[0].password=password1\n"
-			+ "cloudfoundry.accounts[0].api=api.sys.acc1.cf-app.com\n"
-			+ "cloudfoundry.accounts[0].environment=test1\n"
-			+ "cloudfoundry.accounts[1].name=acc2\n"
-			+ "cloudfoundry.accounts[1].user=user2\n"
-			+ "cloudfoundry.accounts[1].password=password2\n"
-			+ "cloudfoundry.accounts[1].api=api.sys.acc2.cf-app.com\n"
+	final String propertyContent = "cloudfoundry.enabled=true\n" + "cloudfoundry.accounts[0].name=acc1\n"
+			+ "cloudfoundry.accounts[0].user=user1\n" + "cloudfoundry.accounts[0].password=password1\n"
+			+ "cloudfoundry.accounts[0].api=api.sys.acc1.cf-app.com\n" + "cloudfoundry.accounts[0].environment=test1\n"
+			+ "cloudfoundry.accounts[1].name=acc2\n" + "cloudfoundry.accounts[1].user=user2\n"
+			+ "cloudfoundry.accounts[1].password=password2\n" + "cloudfoundry.accounts[1].api=api.sys.acc2.cf-app.com\n"
 			+ "cloudfoundry.accounts[1].environment=test2\n";
 
-	final String yamlContent = "cloudfoundry:\n" + "  enabled: true\n" + "  accounts:\n"
-			+ "    - name: acc1\n" + "      user: 'user1'\n"
-			+ "      password: 'password1'\n" + "      api: api.sys.acc1.cf-app.com\n"
-			+ "      environment: test1\n" + "    - name: acc2\n"
-			+ "      user: 'user2'\n" + "      password: 'password2'\n"
-			+ "      api: api.sys.acc2.cf-app.com\n" + "      environment: test2\n";
+	final String yamlContent = "cloudfoundry:\n" + "  enabled: true\n" + "  accounts:\n" + "    - name: acc1\n"
+			+ "      user: 'user1'\n" + "      password: 'password1'\n" + "      api: api.sys.acc1.cf-app.com\n"
+			+ "      environment: test1\n" + "    - name: acc2\n" + "      user: 'user2'\n"
+			+ "      password: 'password2'\n" + "      api: api.sys.acc2.cf-app.com\n" + "      environment: test2\n";
 
-	final String jsonContent = "{\n" + " \"cloudfoundry\": {\n" + "  \"enabled\": true,\n"
-			+ "  \"accounts\": [{\n" + "   \"name\": \"acc1\",\n"
-			+ "   \"user\": \"user1\",\n" + "   \"password\": \"password1\",\n"
-			+ "   \"api\": \"api.sys.acc1.cf-app.com\",\n"
-			+ "   \"environment\": \"test1\"\n" + "  }, {\n" + "   \"name\": \"acc2\",\n"
-			+ "   \"user\": \"user2\",\n" + "   \"password\": \"password2\",\n"
-			+ "   \"api\": \"api.sys.acc2.cf-app.com\",\n"
-			+ "   \"environment\": \"test2\"\n" + "  }]\n" + " }\n" + "}";
+	final String jsonContent = "{\n" + " \"cloudfoundry\": {\n" + "  \"enabled\": true,\n" + "  \"accounts\": [{\n"
+			+ "   \"name\": \"acc1\",\n" + "   \"user\": \"user1\",\n" + "   \"password\": \"password1\",\n"
+			+ "   \"api\": \"api.sys.acc1.cf-app.com\",\n" + "   \"environment\": \"test1\"\n" + "  }, {\n"
+			+ "   \"name\": \"acc2\",\n" + "   \"user\": \"user2\",\n" + "   \"password\": \"password2\",\n"
+			+ "   \"api\": \"api.sys.acc2.cf-app.com\",\n" + "   \"environment\": \"test2\"\n" + "  }]\n" + " }\n"
+			+ "}";
 
 	final Properties expectedProperties = new Properties();
 
@@ -185,13 +175,11 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertExpectedEnvironment(env, "foo", null, "v1", 1, "bar");
 	}
 
-	private void setupS3(String fileName, String propertyContent)
-			throws UnsupportedEncodingException {
+	private void setupS3(String fileName, String propertyContent) throws UnsupportedEncodingException {
 		setupS3(fileName, null, propertyContent);
 	}
 
-	private void setupS3(String fileName, String version, String propertyContent)
-			throws UnsupportedEncodingException {
+	private void setupS3(String fileName, String version, String propertyContent) throws UnsupportedEncodingException {
 		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", fileName);
 		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
 
@@ -204,12 +192,11 @@ public class AwsS3EnvironmentRepositoryTests {
 			s3Object.setObjectMetadata(metadata);
 		}
 
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request))))
-				.thenReturn(s3Object);
+		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request)))).thenReturn(s3Object);
 	}
 
-	private void assertExpectedEnvironment(Environment env, String applicationName,
-			String label, String version, int propertySourceCount, String... profiles) {
+	private void assertExpectedEnvironment(Environment env, String applicationName, String label, String version,
+			int propertySourceCount, String... profiles) {
 		assertThat(env.getName()).isEqualTo(applicationName);
 		assertThat(env.getProfiles()).isEqualTo(profiles);
 		assertThat(env.getLabel()).isEqualTo(label);
@@ -220,8 +207,7 @@ public class AwsS3EnvironmentRepositoryTests {
 		}
 	}
 
-	private static class GetObjectRequestMatcher
-			implements ArgumentMatcher<GetObjectRequest> {
+	private static class GetObjectRequestMatcher implements ArgumentMatcher<GetObjectRequest> {
 
 		private final GetObjectRequest expected;
 

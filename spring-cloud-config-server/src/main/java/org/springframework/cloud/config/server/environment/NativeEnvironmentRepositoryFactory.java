@@ -22,24 +22,22 @@ import org.springframework.core.env.ConfigurableEnvironment;
 /**
  * @author Dylan Roberts
  */
-public class NativeEnvironmentRepositoryFactory implements
-		EnvironmentRepositoryFactory<NativeEnvironmentRepository, NativeEnvironmentProperties> {
+public class NativeEnvironmentRepositoryFactory
+		implements EnvironmentRepositoryFactory<NativeEnvironmentRepository, NativeEnvironmentProperties> {
 
 	private ConfigurableEnvironment environment;
 
 	private ConfigServerProperties properties;
 
-	public NativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-			ConfigServerProperties properties) {
+	public NativeEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties properties) {
 		this.environment = environment;
 		this.properties = properties;
 	}
 
 	@Override
-	public NativeEnvironmentRepository build(
-			NativeEnvironmentProperties environmentProperties) {
-		NativeEnvironmentRepository repository = new NativeEnvironmentRepository(
-				this.environment, environmentProperties);
+	public NativeEnvironmentRepository build(NativeEnvironmentProperties environmentProperties) {
+		NativeEnvironmentRepository repository = new NativeEnvironmentRepository(this.environment,
+				environmentProperties);
 		if (this.properties.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.properties.getDefaultLabel());
 		}

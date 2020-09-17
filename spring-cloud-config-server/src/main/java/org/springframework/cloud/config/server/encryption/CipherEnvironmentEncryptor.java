@@ -53,36 +53,31 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 
 	@Override
 	public Environment decrypt(Environment environment) {
-		return this.encryptor != null ? decrypt(environment, this.encryptor)
-				: environment;
+		return this.encryptor != null ? decrypt(environment, this.encryptor) : environment;
 	}
 
 	private Environment decrypt(Environment environment, TextEncryptorLocator encryptor) {
 		Environment result = new Environment(environment);
 		for (PropertySource source : environment.getPropertySources()) {
-			Map<Object, Object> map = new LinkedHashMap<Object, Object>(
-					source.getSource());
+			Map<Object, Object> map = new LinkedHashMap<Object, Object>(source.getSource());
 			for (Map.Entry<Object, Object> entry : new LinkedHashSet<>(map.entrySet())) {
 				Object key = entry.getKey();
 				String name = key.toString();
-				if (entry.getValue() != null
-						&& entry.getValue().toString().startsWith("{cipher}")) {
+				if (entry.getValue() != null && entry.getValue().toString().startsWith("{cipher}")) {
 					String value = entry.getValue().toString();
 					map.remove(key);
 					try {
 						value = value.substring("{cipher}".length());
 						value = encryptor
 								.locate(this.helper.getEncryptorKeys(name,
-										StringUtils.arrayToCommaDelimitedString(
-												environment.getProfiles()),
-										value))
+										StringUtils.arrayToCommaDelimitedString(environment.getProfiles()), value))
 								.decrypt(this.helper.stripPrefix(value));
 					}
 					catch (Exception e) {
 						value = "<n/a>";
 						name = "invalid." + name;
-						String message = "Cannot decrypt key: " + key + " ("
-								+ e.getClass() + ": " + e.getMessage() + ")";
+						String message = "Cannot decrypt key: " + key + " (" + e.getClass() + ": " + e.getMessage()
+								+ ")";
 						if (logger.isDebugEnabled()) {
 							logger.debug(message, e);
 						}

@@ -35,14 +35,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class KeyStoreTextEncryptorLocatorTests {
 
 	private KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(
-			new KeyStoreKeyFactory(new ClassPathResource("server.jks"),
-					"letmein".toCharArray()),
-			"changeme", "mytestkey");
+			new KeyStoreKeyFactory(new ClassPathResource("server.jks"), "letmein".toCharArray()), "changeme",
+			"mytestkey");
 
 	@Test
 	public void testDefaults() {
-		TextEncryptor encryptor = this.locator
-				.locate(Collections.<String, String>emptyMap());
+		TextEncryptor encryptor = this.locator.locate(Collections.<String, String>emptyMap());
 		assertThat(encryptor.decrypt(encryptor.encrypt("foo"))).isEqualTo("foo");
 	}
 
@@ -57,8 +55,7 @@ public class KeyStoreTextEncryptorLocatorTests {
 				return "letmein".toCharArray();
 			}
 		});
-		TextEncryptor encryptor = this.locator
-				.locate(Collections.<String, String>singletonMap("key", "mykey"));
+		TextEncryptor encryptor = this.locator.locate(Collections.<String, String>singletonMap("key", "mykey"));
 		assertThat(encryptor.decrypt(encryptor.encrypt("foo"))).isEqualTo("foo");
 	}
 
@@ -73,10 +70,8 @@ public class KeyStoreTextEncryptorLocatorTests {
 
 	@Test
 	public void testDefaultEncryptor() {
-		TextEncryptor encryptor1 = this.locator
-				.locate(Collections.<String, String>emptyMap());
-		TextEncryptor encryptor2 = this.locator
-				.locate(Collections.<String, String>emptyMap());
+		TextEncryptor encryptor1 = this.locator.locate(Collections.<String, String>emptyMap());
+		TextEncryptor encryptor2 = this.locator.locate(Collections.<String, String>emptyMap());
 		assertThat(encryptor1).isEqualTo(encryptor2);
 	}
 

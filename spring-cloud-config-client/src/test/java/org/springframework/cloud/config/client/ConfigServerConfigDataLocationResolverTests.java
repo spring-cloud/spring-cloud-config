@@ -32,8 +32,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 
 	private ConfigServerConfigDataLocationResolver resolver;
 
-	private ConfigDataLocationResolverContext context = mock(
-			ConfigDataLocationResolverContext.class);
+	private ConfigDataLocationResolverContext context = mock(ConfigDataLocationResolverContext.class);
 
 	private MockEnvironment environment;
 

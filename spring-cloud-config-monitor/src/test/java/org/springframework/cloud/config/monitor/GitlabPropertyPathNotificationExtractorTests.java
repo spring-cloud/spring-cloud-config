@@ -48,8 +48,7 @@ public class GitlabPropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		String[] paths = extracted.getPaths();
-		assertThat(paths).as("paths was wrong").contains("oldapp.yml",
-				"newapp.properties", "application.yml");
+		assertThat(paths).as("paths was wrong").contains("oldapp.yml", "newapp.properties", "application.yml");
 	}
 
 	@Test

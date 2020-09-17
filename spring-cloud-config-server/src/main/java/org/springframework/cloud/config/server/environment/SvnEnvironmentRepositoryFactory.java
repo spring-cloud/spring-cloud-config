@@ -22,24 +22,22 @@ import org.springframework.core.env.ConfigurableEnvironment;
 /**
  * @author Dylan Roberts
  */
-public class SvnEnvironmentRepositoryFactory implements
-		EnvironmentRepositoryFactory<SvnKitEnvironmentRepository, SvnKitEnvironmentProperties> {
+public class SvnEnvironmentRepositoryFactory
+		implements EnvironmentRepositoryFactory<SvnKitEnvironmentRepository, SvnKitEnvironmentProperties> {
 
 	private ConfigurableEnvironment environment;
 
 	private ConfigServerProperties server;
 
-	public SvnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-			ConfigServerProperties server) {
+	public SvnEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server) {
 		this.environment = environment;
 		this.server = server;
 	}
 
 	@Override
-	public SvnKitEnvironmentRepository build(
-			SvnKitEnvironmentProperties environmentProperties) {
-		SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(
-				this.environment, environmentProperties);
+	public SvnKitEnvironmentRepository build(SvnKitEnvironmentProperties environmentProperties) {
+		SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment,
+				environmentProperties);
 		if (this.server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.server.getDefaultLabel());
 		}

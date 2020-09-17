@@ -26,37 +26,31 @@ import org.springframework.vault.authentication.PcfAuthenticationOptions;
 import org.springframework.vault.authentication.ResourceCredentialSupplier;
 import org.springframework.web.client.RestOperations;
 
-public class PcfClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class PcfClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public PcfClientAuthenticationProvider() {
 		super(AuthenticationMethod.PCF);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
 		VaultEnvironmentProperties.PcfProperties pcfProperties = vaultProperties.getPcf();
 
 		assertClassPresent("org.bouncycastle.crypto.signers.PSSSigner",
-				missingClassForAuthMethod("BouncyCastle", "bcpkix-jdk15on",
-						AuthenticationMethod.PCF));
-		Assert.hasText(pcfProperties.getRole(),
-				missingPropertyForAuthMethod("pcf.role", AuthenticationMethod.PCF));
+				missingClassForAuthMethod("BouncyCastle", "bcpkix-jdk15on", AuthenticationMethod.PCF));
+		Assert.hasText(pcfProperties.getRole(), missingPropertyForAuthMethod("pcf.role", AuthenticationMethod.PCF));
 
-		PcfAuthenticationOptions.PcfAuthenticationOptionsBuilder builder = PcfAuthenticationOptions
-				.builder().role(pcfProperties.getRole()).path(pcfProperties.getPcfPath());
+		PcfAuthenticationOptions.PcfAuthenticationOptionsBuilder builder = PcfAuthenticationOptions.builder()
+				.role(pcfProperties.getRole()).path(pcfProperties.getPcfPath());
 
 		if (pcfProperties.getInstanceCertificate() != null) {
-			builder.instanceCertificate(new ResourceCredentialSupplier(
-					pcfProperties.getInstanceCertificate()));
+			builder.instanceCertificate(new ResourceCredentialSupplier(pcfProperties.getInstanceCertificate()));
 		}
 
 		if (pcfProperties.getInstanceKey() != null) {
-			builder.instanceKey(
-					new ResourceCredentialSupplier(pcfProperties.getInstanceKey()));
+			builder.instanceKey(new ResourceCredentialSupplier(pcfProperties.getInstanceKey()));
 		}
 
 		return new PcfAuthentication(builder.build(), vaultRestOperations);

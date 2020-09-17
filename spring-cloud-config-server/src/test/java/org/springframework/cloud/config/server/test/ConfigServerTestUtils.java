@@ -72,8 +72,8 @@ public final class ConfigServerTestUtils {
 		return prepareLocalRepo("./", "target/repos", repoPath, "target/config");
 	}
 
-	public static String prepareLocalRepo(String baseDir, String buildDir,
-			String repoPath, String checkoutDir) throws IOException {
+	public static String prepareLocalRepo(String baseDir, String buildDir, String repoPath, String checkoutDir)
+			throws IOException {
 		buildDir = baseDir + buildDir;
 		new File(buildDir).mkdirs();
 		if (!repoPath.startsWith("/")) {
@@ -106,8 +106,7 @@ public final class ConfigServerTestUtils {
 		return "file:" + buildDir + repoPath;
 	}
 
-	public static String prepareLocalSvnRepo(String sourceDir, String checkoutDir)
-			throws Exception {
+	public static String prepareLocalSvnRepo(String sourceDir, String checkoutDir) throws Exception {
 		File sourceDirFile = new File(sourceDir);
 		sourceDirFile.mkdirs();
 		File local = new File(checkoutDir);
@@ -135,8 +134,7 @@ public final class ConfigServerTestUtils {
 		return FileSystemUtils.deleteRecursively(dest);
 	}
 
-	public static Object getProperty(Environment env, String sourceNameEndsWith,
-			String property) {
+	public static Object getProperty(Environment env, String sourceNameEndsWith, String property) {
 		for (PropertySource source : env.getPropertySources()) {
 			if (source.getName().endsWith(sourceNameEndsWith)) {
 				return source.getSource().get(property);
@@ -158,8 +156,7 @@ public final class ConfigServerTestUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void assertOriginTrackedValue(Environment environment, int index,
-			String key, String expectedValue) {
+	public static void assertOriginTrackedValue(Environment environment, int index, String key, String expectedValue) {
 		Object value = environment.getPropertySources().get(index).getSource().get(key);
 		assertThat(value).isNotNull().isInstanceOf(Map.class);
 		Map map = (Map) value;

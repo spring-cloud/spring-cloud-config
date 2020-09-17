@@ -35,8 +35,7 @@ public class FileBasedSshTransportConfigCallback implements TransportConfigCallb
 
 	private MultipleJGitEnvironmentProperties sshUriProperties;
 
-	public FileBasedSshTransportConfigCallback(
-			MultipleJGitEnvironmentProperties sshUriProperties) {
+	public FileBasedSshTransportConfigCallback(MultipleJGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
 	}
 
@@ -50,8 +49,8 @@ public class FileBasedSshTransportConfigCallback implements TransportConfigCallb
 			@Override
 			protected void configure(OpenSshConfig.Host hc, Session session) {
 				session.setConfig("StrictHostKeyChecking",
-						FileBasedSshTransportConfigCallback.this.sshUriProperties
-								.isStrictHostKeyChecking() ? "yes" : "no");
+						FileBasedSshTransportConfigCallback.this.sshUriProperties.isStrictHostKeyChecking() ? "yes"
+								: "no");
 			}
 		});
 	}

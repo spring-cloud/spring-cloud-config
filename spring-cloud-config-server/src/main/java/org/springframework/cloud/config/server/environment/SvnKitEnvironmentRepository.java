@@ -54,8 +54,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	 */
 	private String defaultLabel;
 
-	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment,
-			SvnKitEnvironmentProperties properties) {
+	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment, SvnKitEnvironmentProperties properties) {
 		super(environment, properties);
 		this.defaultLabel = properties.getDefaultLabel();
 	}
@@ -69,16 +68,14 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	@Override
-	public synchronized Locations getLocations(String application, String profile,
-			String label) {
+	public synchronized Locations getLocations(String application, String profile, String label) {
 		if (label == null) {
 			label = this.defaultLabel;
 		}
 		SvnOperationFactory svnOperationFactory = new SvnOperationFactory();
 		if (hasText(getUsername())) {
-			svnOperationFactory
-					.setAuthenticationManager(new DefaultSVNAuthenticationManager(null,
-							false, getUsername(), getPassword()));
+			svnOperationFactory.setAuthenticationManager(
+					new DefaultSVNAuthenticationManager(null, false, getUsername(), getPassword()));
 		}
 		try {
 			String version;
@@ -88,8 +85,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 			else {
 				version = checkout(svnOperationFactory);
 			}
-			return new Locations(application, profile, label, version,
-					getPaths(application, profile, label));
+			return new Locations(application, profile, label, version, getPaths(application, profile, label));
 		}
 		catch (SVNException e) {
 			throw new IllegalStateException("Cannot checkout repository", e);
@@ -100,8 +96,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	private String[] getPaths(String application, String profile, String label) {
-		String[] locations = getSearchLocations(getSvnPath(getWorkingDirectory(), label),
-				application, profile, label);
+		String[] locations = getSearchLocations(getSvnPath(getWorkingDirectory(), label), application, profile, label);
 		boolean exists = false;
 		for (String location : locations) {
 			location = StringUtils.cleanPath(location);
@@ -118,8 +113,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	private String checkout(SvnOperationFactory svnOperationFactory) throws SVNException {
-		logger.debug("Checking out " + getUri() + " to: "
-				+ getWorkingDirectory().getAbsolutePath());
+		logger.debug("Checking out " + getUri() + " to: " + getWorkingDirectory().getAbsolutePath());
 		final SvnCheckout checkout = svnOperationFactory.createCheckout();
 		checkout.setSource(SvnTarget.fromURL(SVNURL.parseURIEncoded(getUri())));
 		checkout.setSingleTarget(SvnTarget.fromFile(getWorkingDirectory()));
@@ -130,8 +124,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		return id.toString();
 	}
 
-	private String update(SvnOperationFactory svnOperationFactory, String label)
-			throws SVNException {
+	private String update(SvnOperationFactory svnOperationFactory, String label) throws SVNException {
 		logger.debug("Repo already checked out - updating instead.");
 
 		try {
@@ -149,8 +142,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		}
 		catch (Exception e) {
 			String message = "Could not update remote for " + label + " (current local="
-					+ getWorkingDirectory().getPath() + "), remote: " + this.getUri()
-					+ ")";
+					+ getWorkingDirectory().getPath() + "), remote: " + this.getUri() + ")";
 			if (logger.isDebugEnabled()) {
 				logger.debug(message, e);
 			}
@@ -159,8 +151,8 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 			}
 		}
 
-		final SVNStatus status = SVNClientManager.newInstance().getStatusClient()
-				.doStatus(getWorkingDirectory(), false);
+		final SVNStatus status = SVNClientManager.newInstance().getStatusClient().doStatus(getWorkingDirectory(),
+				false);
 		return status != null ? status.getRevision().toString() : null;
 	}
 

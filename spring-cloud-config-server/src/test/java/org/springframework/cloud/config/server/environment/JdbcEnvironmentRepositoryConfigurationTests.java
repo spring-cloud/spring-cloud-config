@@ -37,13 +37,10 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 
 	@Test
 	public void jdbcEnvironmentRepositoryBeansConfiguredWhenDefault() throws IOException {
-		new WebApplicationContextRunner()
-				.withUserConfiguration(ConfigServerApplication.class)
-				.withPropertyValues("spring.profiles.active=test,jdbc",
-						"spring.main.web-application-type=none")
+		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
 				.run(context -> {
-					assertThat(context)
-							.hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
+					assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
 					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
 				});
 	}
@@ -57,26 +54,22 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 	}
 
 	@Test
-	public void jdbcEnvironmentRepositoryFactoryNotConfiguredWhenDisabled()
-			throws IOException {
-		getApplicationContextWithJdbcEnabled(false, context -> assertThat(context)
-				.doesNotHaveBean(JdbcEnvironmentRepositoryFactory.class));
+	public void jdbcEnvironmentRepositoryFactoryNotConfiguredWhenDisabled() throws IOException {
+		getApplicationContextWithJdbcEnabled(false,
+				context -> assertThat(context).doesNotHaveBean(JdbcEnvironmentRepositoryFactory.class));
 	}
 
 	@Test
 	public void jdbcEnvironmentRepositoryNotConfiguredWhenDisabled() throws IOException {
-		getApplicationContextWithJdbcEnabled(false, context -> assertThat(context)
-				.doesNotHaveBean(JdbcEnvironmentRepository.class));
+		getApplicationContextWithJdbcEnabled(false,
+				context -> assertThat(context).doesNotHaveBean(JdbcEnvironmentRepository.class));
 	}
 
 	private void getApplicationContextWithJdbcEnabled(boolean jdbcEnabled,
-			ContextConsumer<? super AssertableWebApplicationContext> consumer)
-			throws IOException {
+			ContextConsumer<? super AssertableWebApplicationContext> consumer) throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
-		new WebApplicationContextRunner()
-				.withUserConfiguration(ConfigServerApplication.class)
-				.withPropertyValues("spring.profiles.active=test,jdbc",
-						"spring.main.web-application-type=none",
+		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none",
 						"spring.cloud.config.server.git.uri:" + uri,
 						"spring.cloud.config.server.jdbc.enabled:" + jdbcEnabled)
 				.run(consumer);

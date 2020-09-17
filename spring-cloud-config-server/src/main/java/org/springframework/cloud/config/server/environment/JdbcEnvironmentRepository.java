@@ -58,8 +58,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private String sql;
 
-	public JdbcEnvironmentRepository(JdbcTemplate jdbc,
-			JdbcEnvironmentProperties properties) {
+	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
 		this.jdbc = jdbc;
 		this.order = properties.getOrder();
 		this.sql = properties.getSql();
@@ -86,15 +85,13 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 			profile = "default," + profile;
 		}
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
-		Environment environment = new Environment(application, profiles, label, null,
-				null);
+		Environment environment = new Environment(application, profiles, label, null, null);
 		if (!config.startsWith("application")) {
 			config = "application," + config;
 		}
-		List<String> applications = new ArrayList<String>(new LinkedHashSet<>(
-				Arrays.asList(StringUtils.commaDelimitedListToStringArray(config))));
-		List<String> envs = new ArrayList<String>(
-				new LinkedHashSet<>(Arrays.asList(profiles)));
+		List<String> applications = new ArrayList<String>(
+				new LinkedHashSet<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(config))));
+		List<String> envs = new ArrayList<String>(new LinkedHashSet<>(Arrays.asList(profiles)));
 		Collections.reverse(applications);
 		Collections.reverse(envs);
 		for (String app : applications) {
@@ -123,8 +120,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 class PropertiesResultSetExtractor implements ResultSetExtractor<Map<String, String>> {
 
 	@Override
-	public Map<String, String> extractData(ResultSet rs)
-			throws SQLException, DataAccessException {
+	public Map<String, String> extractData(ResultSet rs) throws SQLException, DataAccessException {
 		Map<String, String> map = new LinkedHashMap<>();
 		while (rs.next()) {
 			map.put(rs.getString(1), rs.getString(2));

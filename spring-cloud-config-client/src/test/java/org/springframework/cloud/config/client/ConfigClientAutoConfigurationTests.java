@@ -32,18 +32,17 @@ public class ConfigClientAutoConfigurationTests {
 	public void sunnyDay() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				ConfigClientAutoConfiguration.class);
-		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context,
-				ConfigClientProperties.class).length).isEqualTo(1);
+		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context, ConfigClientProperties.class).length)
+				.isEqualTo(1);
 		context.close();
 	}
 
 	@Test
 	public void withParent() {
-		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				ConfigClientAutoConfiguration.class).child(Object.class)
-						.web(WebApplicationType.NONE).run();
-		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context,
-				ConfigClientProperties.class).length).isEqualTo(1);
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(ConfigClientAutoConfiguration.class)
+				.child(Object.class).web(WebApplicationType.NONE).run();
+		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context, ConfigClientProperties.class).length)
+				.isEqualTo(1);
 		context.close();
 	}
 

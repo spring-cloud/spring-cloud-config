@@ -45,8 +45,7 @@ import static org.springframework.util.StringUtils.hasText;
  *
  * @author Ollie Hughes
  */
-public class PrivateKeyValidator implements
-		ConstraintValidator<PrivateKeyIsValid, MultipleJGitEnvironmentProperties> {
+public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsValid, MultipleJGitEnvironmentProperties> {
 
 	private static final String GIT_PROPERTY_PREFIX = "spring.cloud.config.server.git.";
 
@@ -58,16 +57,14 @@ public class PrivateKeyValidator implements
 	}
 
 	@Override
-	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties,
-			ConstraintValidatorContext context) {
+	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
 		context.disableDefaultConstraintViolation();
 		Set<Boolean> validationResults = new HashSet<>();
 		List<JGitEnvironmentProperties> extractedProperties = this.sshPropertyValidator
 				.extractRepoProperties(sshUriProperties);
 
 		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
-			if (extractedProperty.isIgnoreLocalSshSettings()
-					&& isSshUri(extractedProperty.getUri())) {
+			if (extractedProperty.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
 				validationResults.add(isPrivateKeyPresent(extractedProperty, context)
 						&& isPrivateKeyFormatCorrect(extractedProperty, context));
 			}
@@ -79,9 +76,10 @@ public class PrivateKeyValidator implements
 	private boolean isPrivateKeyPresent(JGitEnvironmentProperties sshUriProperties,
 			ConstraintValidatorContext context) {
 		if (!hasText(sshUriProperties.getPrivateKey())) {
-			context.buildConstraintViolationWithTemplate(format(
-					"Property '%sprivateKey' must be set when '%signoreLocalSshSettings' is specified",
-					GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX)).addConstraintViolation();
+			context.buildConstraintViolationWithTemplate(
+					format("Property '%sprivateKey' must be set when '%signoreLocalSshSettings' is specified",
+							GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
+					.addConstraintViolation();
 			return false;
 		}
 		return true;
@@ -95,8 +93,7 @@ public class PrivateKeyValidator implements
 		}
 		catch (JSchException e) {
 			context.buildConstraintViolationWithTemplate(
-					format("Property '%sprivateKey' is not a valid private key",
-							GIT_PROPERTY_PREFIX))
+					format("Property '%sprivateKey' is not a valid private key", GIT_PROPERTY_PREFIX))
 					.addConstraintViolation();
 			return false;
 		}

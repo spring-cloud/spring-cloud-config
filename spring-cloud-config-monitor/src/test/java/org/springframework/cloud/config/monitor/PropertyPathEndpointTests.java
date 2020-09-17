@@ -35,8 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PropertyPathEndpointTests {
 
 	private PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
-			new CompositePropertyPathNotificationExtractor(Collections.emptyList()),
-			"abc1");
+			new CompositePropertyPathNotificationExtractor(Collections.emptyList()), "abc1");
 
 	@Before
 	public void init() {
@@ -52,9 +51,7 @@ public class PropertyPathEndpointTests {
 
 	@Test
 	public void testNotifyByForm() {
-		assertThat(
-				this.endpoint.notifyByForm(new HttpHeaders(), new ArrayList<>()).size())
-						.isEqualTo(0);
+		assertThat(this.endpoint.notifyByForm(new HttpHeaders(), new ArrayList<>()).size()).isEqualTo(0);
 	}
 
 	@Test
@@ -62,59 +59,46 @@ public class PropertyPathEndpointTests {
 		List<String> request = new ArrayList<>();
 		request.add("/foo/bar.properties");
 		request.add("/application.properties");
-		assertThat(this.endpoint.notifyByForm(new HttpHeaders(), request).toString())
-				.isEqualTo("[bar, *]");
+		assertThat(this.endpoint.notifyByForm(new HttpHeaders(), request).toString()).isEqualTo("[bar, *]");
 	}
 
 	@Test
 	public void testNotifyAll() {
-		assertThat(
-				this.endpoint
-						.notifyByPath(new HttpHeaders(),
-								Collections.singletonMap("path", "application.yml"))
-						.toString()).isEqualTo("[*]");
+		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "application.yml"))
+				.toString()).isEqualTo("[*]");
 	}
 
 	@Test
 	public void testNotifyAllWithProfile() {
 		assertThat(this.endpoint
-				.notifyByPath(new HttpHeaders(),
-						Collections.singletonMap("path", "application-local.yml"))
-				.toString()).isEqualTo("[*:local]");
+				.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "application-local.yml")).toString())
+						.isEqualTo("[*:local]");
 	}
 
 	@Test
 	public void testNotifyOne() {
-		assertThat(this.endpoint.notifyByPath(new HttpHeaders(),
-				Collections.singletonMap("path", "foo.yml")).toString())
+		assertThat(
+				this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo.yml")).toString())
 						.isEqualTo("[foo]");
 	}
 
 	@Test
 	public void testNotifyOneWithWindowsPath() {
 		assertThat(this.endpoint
-				.notifyByPath(new HttpHeaders(),
-						Collections.singletonMap("path", "C:\\config\\foo.yml"))
-				.toString()).isEqualTo("[foo]");
+				.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "C:\\config\\foo.yml")).toString())
+						.isEqualTo("[foo]");
 	}
 
 	@Test
 	public void testNotifyOneWithProfile() {
-		assertThat(
-				this.endpoint
-						.notifyByPath(new HttpHeaders(),
-								Collections.singletonMap("path", "foo-local.yml"))
-						.toString()).isEqualTo("[foo:local, foo-local]");
+		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo-local.yml"))
+				.toString()).isEqualTo("[foo:local, foo-local]");
 	}
 
 	@Test
 	public void testNotifyMultiDash() {
-		assertThat(
-				this.endpoint
-						.notifyByPath(new HttpHeaders(),
-								Collections.singletonMap("path", "foo-local-dev.yml"))
-						.toString()).isEqualTo(
-								"[foo:local-dev, foo-local:dev, foo-local-dev]");
+		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo-local-dev.yml"))
+				.toString()).isEqualTo("[foo:local-dev, foo-local:dev, foo-local-dev]");
 	}
 
 }

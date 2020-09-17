@@ -40,23 +40,18 @@ public class TestConfigServerConfigDataLocationResolver
 	}
 
 	@Override
-	public boolean isResolvable(ConfigDataLocationResolverContext context,
-			String location) {
+	public boolean isResolvable(ConfigDataLocationResolverContext context, String location) {
 		if (!location.startsWith(getPrefix())) {
 			return false;
 		}
-		Boolean enabled = context.getBinder()
-				.bind("spring.config.testconfigdata.enabled", Boolean.class)
-				.orElse(false);
+		Boolean enabled = context.getBinder().bind("spring.config.testconfigdata.enabled", Boolean.class).orElse(false);
 		return enabled;
 	}
 
 	@Override
-	protected TestConfigServerConfigDataLocation createConfigDataLocation(
-			boolean optional, Profiles profiles, ConfigClientProperties properties,
-			RestTemplate restTemplate) {
-		return new TestConfigServerConfigDataLocation(restTemplate, properties, optional,
-				profiles);
+	protected TestConfigServerConfigDataLocation createConfigDataLocation(boolean optional, Profiles profiles,
+			ConfigClientProperties properties, RestTemplate restTemplate) {
+		return new TestConfigServerConfigDataLocation(restTemplate, properties, optional, profiles);
 	}
 
 }

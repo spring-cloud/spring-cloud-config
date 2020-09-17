@@ -18,8 +18,7 @@ package org.springframework.cloud.config.client;
 
 import org.apache.commons.logging.Log;
 
-public class ConfigServerConfigDataLoader
-		extends AbstractConfigDataLoader<ConfigServerConfigDataLocation> {
+public class ConfigServerConfigDataLoader extends AbstractConfigDataLoader<ConfigServerConfigDataLocation> {
 
 	public ConfigServerConfigDataLoader(Log logger) {
 		super(logger);

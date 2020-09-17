@@ -44,13 +44,11 @@ import static java.util.stream.Collectors.toMap;
 /**
  * @author Dylan Roberts
  */
-public class HttpClientConfigurableHttpConnectionFactory
-		implements ConfigurableHttpConnectionFactory {
+public class HttpClientConfigurableHttpConnectionFactory implements ConfigurableHttpConnectionFactory {
 
 	private static final String PLACEHOLDER_PATTERN_STRING = "\\{(\\w+)}";
 
-	private static final Pattern PLACEHOLDER_PATTERN = Pattern
-			.compile(PLACEHOLDER_PATTERN_STRING);
+	private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile(PLACEHOLDER_PATTERN_STRING);
 
 	Log log = LogFactory.getLog(getClass());
 
@@ -72,36 +70,32 @@ public class HttpClientConfigurableHttpConnectionFactory
 
 	@Override
 	public HttpConnection create(URL url, Proxy proxy) throws IOException {
-		return new HttpClientConnection(url.toString(), null,
-				lookupHttpClientBuilder(url).build());
+		return new HttpClientConnection(url.toString(), null, lookupHttpClientBuilder(url).build());
 	}
 
-	private void addHttpClient(JGitEnvironmentProperties properties)
-			throws GeneralSecurityException {
+	private void addHttpClient(JGitEnvironmentProperties properties) throws GeneralSecurityException {
 		if (properties.getUri() != null && properties.getUri().startsWith("http")) {
-			this.httpClientBuildersByUri.put(properties.getUri(),
-					HttpClientSupport.builder(properties));
+			this.httpClientBuildersByUri.put(properties.getUri(), HttpClientSupport.builder(properties));
 		}
 	}
 
 	private HttpClientBuilder lookupHttpClientBuilder(final URL url) {
-		Map<String, HttpClientBuilder> builderMap = this.httpClientBuildersByUri
-				.entrySet().stream().filter(entry -> {
-					String key = entry.getKey();
-					String spec = getUrlWithPlaceholders(url, key);
-					if (spec.equals(key)) {
-						return true;
-					}
-					int index = spec.lastIndexOf("/");
-					while (index != -1) {
-						spec = spec.substring(0, index);
-						if (spec.equals(key)) {
-							return true;
-						}
-						index = spec.lastIndexOf("/");
-					}
-					return false;
-				}).collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+		Map<String, HttpClientBuilder> builderMap = this.httpClientBuildersByUri.entrySet().stream().filter(entry -> {
+			String key = entry.getKey();
+			String spec = getUrlWithPlaceholders(url, key);
+			if (spec.equals(key)) {
+				return true;
+			}
+			int index = spec.lastIndexOf("/");
+			while (index != -1) {
+				spec = spec.substring(0, index);
+				if (spec.equals(key)) {
+					return true;
+				}
+				index = spec.lastIndexOf("/");
+			}
+			return false;
+		}).collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 		if (builderMap.isEmpty()) {
 			this.log.warn(String.format("No custom http config found for URL: %s", url));
@@ -114,8 +108,7 @@ public class HttpClientConfigurableHttpConnectionFactory
 			 * which have no placeholders. That is the one we want to use in the case
 			 * there are multiple matches.
 			 */
-			List<String> keys = builderMap.keySet().stream()
-					.filter(key -> !PLACEHOLDER_PATTERN.matcher(key).find())
+			List<String> keys = builderMap.keySet().stream().filter(key -> !PLACEHOLDER_PATTERN.matcher(key).find())
 					.collect(Collectors.toList());
 
 			if (keys.size() == 1) {
@@ -140,8 +133,7 @@ public class HttpClientConfigurableHttpConnectionFactory
 			List<String> values = getValues(spec, tokens);
 			if (placeholders.size() == values.size()) {
 				for (int i = 0; i < values.size(); i++) {
-					spec = spec.replace(values.get(i),
-							String.format("{%s}", placeholders.get(i)));
+					spec = spec.replace(values.get(i), String.format("{%s}", placeholders.get(i)));
 				}
 			}
 		}

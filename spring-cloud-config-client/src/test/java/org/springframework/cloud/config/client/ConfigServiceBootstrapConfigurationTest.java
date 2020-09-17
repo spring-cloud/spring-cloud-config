@@ -60,15 +60,12 @@ public class ConfigServiceBootstrapConfigurationTest {
 		this.context.register(ConfigServiceBootstrapConfiguration.class);
 		this.context.refresh();
 
-		ConfigServicePropertySourceLocator locator = this.context
-				.getBean(ConfigServicePropertySourceLocator.class);
+		ConfigServicePropertySourceLocator locator = this.context.getBean(ConfigServicePropertySourceLocator.class);
 
-		Field restTemplateField = ReflectionUtils
-				.findField(ConfigServicePropertySourceLocator.class, "restTemplate");
+		Field restTemplateField = ReflectionUtils.findField(ConfigServicePropertySourceLocator.class, "restTemplate");
 		restTemplateField.setAccessible(true);
 
-		RestTemplate restTemplate = (RestTemplate) ReflectionUtils
-				.getField(restTemplateField, locator);
+		RestTemplate restTemplate = (RestTemplate) ReflectionUtils.getField(restTemplateField, locator);
 
 		assertThat(restTemplate).isNotNull();
 	}

@@ -23,8 +23,7 @@ public class TlsConfigServerRunner extends AppRunner {
 	public TlsConfigServerRunner(Class<?> appClass) {
 		super(appClass);
 		property("spring.profiles.active", "native");
-		property("spring.cloud.config.server.native.search-locations",
-				"classpath:/test/config");
+		property("spring.cloud.config.server.native.search-locations", "classpath:/test/config");
 	}
 
 	public void enableTls() {
@@ -32,8 +31,7 @@ public class TlsConfigServerRunner extends AppRunner {
 		property("server.ssl.client-auth", "need");
 	}
 
-	public void setKeyStore(File keyStore, String keyStorePassword, String key,
-			String keyPassword) {
+	public void setKeyStore(File keyStore, String keyStorePassword, String key, String keyPassword) {
 		property("server.ssl.key-store", pathOf(keyStore));
 		property("server.ssl.key-store-type", "PKCS12");
 		property("server.ssl.key-store-password", keyStorePassword);

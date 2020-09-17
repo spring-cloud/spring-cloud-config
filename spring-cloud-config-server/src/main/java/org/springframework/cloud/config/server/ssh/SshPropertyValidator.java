@@ -44,8 +44,7 @@ public class SshPropertyValidator {
 			try {
 				URIish urIish = new URIish(uri.toString());
 				String scheme = urIish.getScheme();
-				if (scheme == null && hasText(urIish.getHost())
-						&& hasText(urIish.getUser())) {
+				if (scheme == null && hasText(urIish.getHost()) && hasText(urIish.getUser())) {
 					// JGit returns null if using SCP URI but user and host will be
 					// populated
 					return true;

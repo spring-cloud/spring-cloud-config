@@ -49,11 +49,10 @@ public class ConfigServerInstanceProvider {
 		logger.debug("Locating configserver (" + serviceId + ") via discovery");
 		List<ServiceInstance> instances = this.function.apply(serviceId);
 		if (instances.isEmpty()) {
-			throw new IllegalStateException(
-					"No instances found of configserver (" + serviceId + ")");
+			throw new IllegalStateException("No instances found of configserver (" + serviceId + ")");
 		}
-		logger.debug("Located configserver (" + serviceId
-				+ ") via discovery. No of instances found: " + instances.size());
+		logger.debug(
+				"Located configserver (" + serviceId + ") via discovery. No of instances found: " + instances.size());
 		return instances;
 	}
 

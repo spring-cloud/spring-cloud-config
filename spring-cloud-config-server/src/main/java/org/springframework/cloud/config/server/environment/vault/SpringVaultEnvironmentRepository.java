@@ -39,9 +39,8 @@ public class SpringVaultEnvironmentRepository extends AbstractVaultEnvironmentRe
 
 	private final ObjectMapper objectMapper;
 
-	public SpringVaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request,
-			EnvironmentWatch watch, VaultEnvironmentProperties properties,
-			VaultKeyValueOperations keyValueTemplate) {
+	public SpringVaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+			VaultEnvironmentProperties properties, VaultKeyValueOperations keyValueTemplate) {
 		super(request, watch, properties);
 		this.keyValueTemplate = keyValueTemplate;
 		this.objectMapper = new ObjectMapper();

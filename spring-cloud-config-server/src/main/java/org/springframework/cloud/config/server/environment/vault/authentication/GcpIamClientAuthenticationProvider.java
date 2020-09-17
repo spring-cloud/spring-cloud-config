@@ -32,31 +32,25 @@ import org.springframework.vault.authentication.GcpIamAuthentication;
 import org.springframework.vault.authentication.GcpIamAuthenticationOptions;
 import org.springframework.web.client.RestOperations;
 
-public class GcpIamClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class GcpIamClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public GcpIamClientAuthenticationProvider() {
 		super(AuthenticationMethod.GCP_IAM);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
-		assertClassPresent(
-				"com.google.api.client.googleapis.auth.oauth2.GoogleCredential",
-				missingClassForAuthMethod("GoogleCredential", "google-api-client",
-						AuthenticationMethod.GCP_IAM));
+		assertClassPresent("com.google.api.client.googleapis.auth.oauth2.GoogleCredential",
+				missingClassForAuthMethod("GoogleCredential", "google-api-client", AuthenticationMethod.GCP_IAM));
 
 		VaultEnvironmentProperties.GcpIamProperties gcp = vaultProperties.getGcpIam();
 
-		Assert.hasText(gcp.getRole(), missingPropertyForAuthMethod("gcp-iam.role",
-				AuthenticationMethod.GCP_IAM));
+		Assert.hasText(gcp.getRole(), missingPropertyForAuthMethod("gcp-iam.role", AuthenticationMethod.GCP_IAM));
 
-		GcpIamAuthenticationOptions.GcpIamAuthenticationOptionsBuilder builder = GcpIamAuthenticationOptions
-				.builder().path(gcp.getGcpPath()).role(gcp.getRole())
-				.jwtValidity(gcp.getJwtValidity());
+		GcpIamAuthenticationOptions.GcpIamAuthenticationOptionsBuilder builder = GcpIamAuthenticationOptions.builder()
+				.path(gcp.getGcpPath()).role(gcp.getRole()).jwtValidity(gcp.getJwtValidity());
 
 		if (StringUtils.hasText(gcp.getProjectId())) {
 			builder.projectId(gcp.getProjectId());
@@ -77,20 +71,17 @@ public class GcpIamClientAuthenticationProvider
 	@SuppressWarnings("deprecation")
 	private static class GcpCredentialProvider {
 
-		public static GcpCredentialSupplier getGoogleCredential(
-				VaultEnvironmentProperties.GcpIamProperties gcp) {
+		public static GcpCredentialSupplier getGoogleCredential(VaultEnvironmentProperties.GcpIamProperties gcp) {
 			return () -> {
 
-				VaultEnvironmentProperties.GcpCredentials credentialProperties = gcp
-						.getCredentials();
+				VaultEnvironmentProperties.GcpCredentials credentialProperties = gcp.getCredentials();
 				if (credentialProperties.getLocation() != null) {
-					return GoogleCredential.fromStream(
-							credentialProperties.getLocation().getInputStream());
+					return GoogleCredential.fromStream(credentialProperties.getLocation().getInputStream());
 				}
 
 				if (StringUtils.hasText(credentialProperties.getEncodedKey())) {
-					return GoogleCredential.fromStream(new ByteArrayInputStream(Base64
-							.getDecoder().decode(credentialProperties.getEncodedKey())));
+					return GoogleCredential.fromStream(
+							new ByteArrayInputStream(Base64.getDecoder().decode(credentialProperties.getEncodedKey())));
 				}
 
 				return GoogleCredential.getApplicationDefault();

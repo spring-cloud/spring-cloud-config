@@ -23,16 +23,14 @@ import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.ClientCertificateAuthentication;
 import org.springframework.web.client.RestOperations;
 
-public class CertificateClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class CertificateClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public CertificateClientAuthenticationProvider() {
 		super(AuthenticationMethod.CERT);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
 		return new ClientCertificateAuthentication(vaultRestOperations);

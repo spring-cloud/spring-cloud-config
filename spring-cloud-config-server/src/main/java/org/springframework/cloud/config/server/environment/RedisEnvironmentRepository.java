@@ -36,8 +36,7 @@ public class RedisEnvironmentRepository implements EnvironmentRepository {
 
 	private final RedisEnvironmentProperties properties;
 
-	public RedisEnvironmentRepository(StringRedisTemplate redis,
-			RedisEnvironmentProperties properties) {
+	public RedisEnvironmentRepository(StringRedisTemplate redis, RedisEnvironmentProperties properties) {
 		this.redis = redis;
 		this.properties = properties;
 	}
@@ -45,8 +44,7 @@ public class RedisEnvironmentRepository implements EnvironmentRepository {
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
-		Environment environment = new Environment(application, profiles, label, null,
-				null);
+		Environment environment = new Environment(application, profiles, label, null, null);
 		final List<String> keys = addKeys(application, Arrays.asList(profiles));
 		keys.forEach(it -> {
 			Map<?, ?> m = redis.opsForHash().entries(it);

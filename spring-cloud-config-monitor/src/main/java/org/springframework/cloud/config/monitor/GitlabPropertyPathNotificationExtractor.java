@@ -25,12 +25,10 @@ import org.springframework.util.MultiValueMap;
  *
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
-public class GitlabPropertyPathNotificationExtractor
-		extends BasePropertyPathNotificationExtractor {
+public class GitlabPropertyPathNotificationExtractor extends BasePropertyPathNotificationExtractor {
 
 	@Override
-	protected boolean requestBelongsToGitRepoManager(
-			MultiValueMap<String, String> headers) {
+	protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
 		return "Push Hook".equals(headers.getFirst("X-Gitlab-Event"));
 	}
 

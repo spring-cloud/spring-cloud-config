@@ -47,10 +47,11 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
  * @author Roy Clarkson
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class, properties = {
-		"spring.config.name:configserver",
-		"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
-		"logging.level.org.springframework.cloud=DEBUG" }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class,
+		properties = { "spring.config.name:configserver",
+				"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
+				"logging.level.org.springframework.cloud=DEBUG" },
+		webEnvironment = RANDOM_PORT)
 @ActiveProfiles("subversion")
 public class SubversionConfigServerIntegrationTests {
 
@@ -62,26 +63,23 @@ public class SubversionConfigServerIntegrationTests {
 
 	@BeforeClass
 	public static void init() throws Exception {
-		ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
-				"target/repos/svn-config-repo");
+		ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
 	}
 
 	@Test
 	public void contextLoads() {
 		ResponseEntity<Environment> exchange = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
-				getV2AcceptEntity(), Environment.class);
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				Environment.class);
 		Environment environment = exchange.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("overrides");
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("overrides");
 		ConfigServerTestUtils.assertConfigEnabled(environment);
 	}
 
 	@Test
 	public void defaultLabel() throws Exception {
-		SvnKitEnvironmentRepository repository = this.context
-				.getBean(SvnKitEnvironmentRepository.class);
+		SvnKitEnvironmentRepository repository = this.context.getBean(SvnKitEnvironmentRepository.class);
 		assertThat(repository.getDefaultLabel()).isEqualTo("trunk");
 	}
 

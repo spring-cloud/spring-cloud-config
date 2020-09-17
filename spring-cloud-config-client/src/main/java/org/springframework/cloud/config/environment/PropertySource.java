@@ -35,8 +35,7 @@ public class PropertySource {
 	private Map<?, ?> source;
 
 	@JsonCreator
-	public PropertySource(@JsonProperty("name") String name,
-			@JsonProperty("source") Map<?, ?> source) {
+	public PropertySource(@JsonProperty("name") String name, @JsonProperty("source") Map<?, ?> source) {
 		this.name = name;
 		this.source = source;
 	}
