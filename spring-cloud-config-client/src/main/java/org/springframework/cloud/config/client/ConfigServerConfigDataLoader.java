@@ -73,6 +73,10 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 	@Override
 	// TODO: implement retry LoaderInterceptor
 	public ConfigData load(ConfigDataLoaderContext context, ConfigServerConfigDataLocation location) {
+		if (context.getBootstrapContext().isRegistered(ConfigServerInstanceMonitor.class)) {
+			// force initialization if needed
+			context.getBootstrapContext().get(ConfigServerInstanceMonitor.class);
+		}
 		if (context.getBootstrapContext().isRegistered(LoaderInterceptor.class)) {
 			LoaderInterceptor interceptor = context.getBootstrapContext().get(LoaderInterceptor.class);
 			Binder binder = context.getBootstrapContext().get(Binder.class);

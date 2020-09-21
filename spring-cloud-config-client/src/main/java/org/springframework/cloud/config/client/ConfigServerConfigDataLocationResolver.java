@@ -37,6 +37,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
+import static org.springframework.cloud.config.client.ConfigClientProperties.CONFIG_DISCOVERY_ENABLED;
 
 public class ConfigServerConfigDataLocationResolver
 		implements ConfigDataLocationResolver<ConfigServerConfigDataLocation>, Ordered {
@@ -109,10 +110,10 @@ public class ConfigServerConfigDataLocationResolver
 		return Collections.emptyList();
 	}
 
-	public List<ConfigServerConfigDataLocation> resolveProfileSpecific(ConfigDataLocationResolverContext context,
-			String location, boolean optional, Profiles profiles) {
+	public List<ConfigServerConfigDataLocation> resolveProfileSpecific(
+			ConfigDataLocationResolverContext resolverContext, String location, boolean optional, Profiles profiles) {
 
-		ConfigClientProperties properties = loadProperties(context.getBinder());
+		ConfigClientProperties properties = loadProperties(resolverContext.getBinder());
 
 		String uris = (location.startsWith(getPrefix())) ? location.substring(getPrefix().length()) : location;
 
@@ -121,15 +122,41 @@ public class ConfigServerConfigDataLocationResolver
 			properties.setUri(uri);
 		}
 
-		ConfigurableBootstrapContext bootstrapContext = context.getBootstrapContext();
+		ConfigurableBootstrapContext bootstrapContext = resolverContext.getBootstrapContext();
 		bootstrapContext.registerIfAbsent(ConfigClientProperties.class, InstanceSupplier.of(properties));
 		bootstrapContext.addCloseListener(event -> event.getApplicationContext().getBeanFactory().registerSingleton(
 				"configDataConfigClientProperties", event.getBootstrapContext().get(ConfigClientProperties.class)));
 
-		bootstrapContext.registerIfAbsent(RestTemplate.class, InstanceSupplier.from(() -> {
-			ConfigClientProperties props = bootstrapContext.get(ConfigClientProperties.class);
+		bootstrapContext.registerIfAbsent(RestTemplate.class, context -> {
+			ConfigClientProperties props = context.get(ConfigClientProperties.class);
 			return createRestTemplate(props);
-		}));
+		});
+
+		boolean discoveryEnabled = resolverContext.getBinder().bind(CONFIG_DISCOVERY_ENABLED, Boolean.class)
+				.orElse(false);
+
+		if (discoveryEnabled) {
+			// register ConfigServerInstanceMonitor
+			bootstrapContext.registerIfAbsent(ConfigServerInstanceMonitor.class, context -> {
+				ConfigServerInstanceProvider.Function function = context
+						.get(ConfigServerInstanceProvider.Function.class);
+				ConfigServerInstanceProvider instanceProvider = new ConfigServerInstanceProvider(function);
+				instanceProvider.setLog(log);
+				ConfigClientProperties clientProperties = context.get(ConfigClientProperties.class);
+				ConfigServerInstanceMonitor instanceMonitor = new ConfigServerInstanceMonitor(log, clientProperties,
+						instanceProvider);
+				instanceMonitor.setRefreshOnStartup(false);
+				instanceMonitor.refresh();
+				return instanceMonitor;
+			});
+			// promote ConfigServerInstanceMonitor to bean so updates can be made to config client uri
+			bootstrapContext.addCloseListener(event -> {
+				ConfigServerInstanceMonitor configServerInstanceMonitor = event.getBootstrapContext()
+						.get(ConfigServerInstanceMonitor.class);
+				event.getApplicationContext().getBeanFactory().registerSingleton("configServerInstanceMonitor",
+						configServerInstanceMonitor);
+			});
+		}
 
 		List<ConfigServerConfigDataLocation> locations = new ArrayList<>();
 		locations.add(new ConfigServerConfigDataLocation(properties, optional, profiles));

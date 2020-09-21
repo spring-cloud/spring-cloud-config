@@ -45,6 +45,11 @@ public class ConfigClientProperties {
 	public static final String PREFIX = "spring.cloud.config";
 
 	/**
+	 * Name of config discovery enabled property.
+	 */
+	public static final String CONFIG_DISCOVERY_ENABLED = PREFIX + ".discovery.enabled";
+
+	/**
 	 * Token header name.
 	 */
 	public static final String TOKEN_HEADER = "X-Config-Token";

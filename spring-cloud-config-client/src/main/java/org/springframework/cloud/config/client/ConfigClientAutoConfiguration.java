@@ -21,6 +21,7 @@ import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnable
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.context.ApplicationContext;
@@ -43,6 +44,7 @@ import org.springframework.core.env.Environment;
 public class ConfigClientAutoConfiguration {
 
 	@Bean
+	@ConditionalOnMissingBean
 	public ConfigClientProperties configClientProperties(Environment environment, ApplicationContext context) {
 		if (context.getParent() != null && BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context.getParent(),
 				ConfigClientProperties.class).length > 0) {
