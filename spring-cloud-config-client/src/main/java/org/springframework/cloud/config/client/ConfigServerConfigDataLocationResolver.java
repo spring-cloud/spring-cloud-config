@@ -149,7 +149,8 @@ public class ConfigServerConfigDataLocationResolver
 				instanceMonitor.refresh();
 				return instanceMonitor;
 			});
-			// promote ConfigServerInstanceMonitor to bean so updates can be made to config client uri
+			// promote ConfigServerInstanceMonitor to bean so updates can be made to
+			// config client uri
 			bootstrapContext.addCloseListener(event -> {
 				ConfigServerInstanceMonitor configServerInstanceMonitor = event.getBootstrapContext()
 						.get(ConfigServerInstanceMonitor.class);

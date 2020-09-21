@@ -59,8 +59,8 @@ public class ConfigServerInstanceProvider {
 			throw new IllegalStateException("No instances found of configserver (" + serviceId + ")");
 		}
 		if (log.isDebugEnabled()) {
-			log.debug("Located configserver (" + serviceId + ") via discovery. No of instances found: " + instances
-				.size());
+			log.debug("Located configserver (" + serviceId + ") via discovery. No of instances found: "
+					+ instances.size());
 		}
 		return instances;
 	}
