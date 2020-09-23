@@ -33,9 +33,9 @@ public class SearchPathCompositeEnvironmentRepository
 	 * @param environmentRepositories The {@link EnvironmentRepository}s to create this
 	 * composite from.
 	 */
-	public SearchPathCompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) {
-		super(environmentRepositories);
+	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
+			boolean failOnError) {
+		super(environmentRepositories, failOnError);
 	}
 
 	@Override

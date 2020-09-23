@@ -19,6 +19,9 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.OrderComparator;
 
@@ -30,18 +33,22 @@ import org.springframework.core.OrderComparator;
  */
 public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
+	Log log = LogFactory.getLog(getClass());
+
 	protected List<EnvironmentRepository> environmentRepositories;
+
+	private boolean failOnError;
 
 	/**
 	 * Creates a new {@link CompositeEnvironmentRepository}.
 	 * @param environmentRepositories The list of {@link EnvironmentRepository}s to create
 	 * the composite from.
 	 */
-	public CompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) {
+	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
 		// Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
 		this.environmentRepositories = environmentRepositories;
+		this.failOnError = failOnError;
 	}
 
 	@Override
@@ -63,8 +70,17 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 		}
 		else {
 			for (EnvironmentRepository repo : environmentRepositories) {
-				env.addAll(repo.findOne(application, profile, label, includeOrigin)
-						.getPropertySources());
+				try {
+					env.addAll(repo.findOne(application, profile, label, includeOrigin).getPropertySources());
+				}
+				catch (Exception e) {
+					if (failOnError) {
+						throw e;
+					}
+					else {
+						log.info("Error adding environment for " + repo);
+					}
+				}
 			}
 		}
 		return env;
