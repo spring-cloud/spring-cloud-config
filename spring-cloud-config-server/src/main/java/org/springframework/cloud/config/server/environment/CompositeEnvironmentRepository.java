@@ -19,8 +19,8 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Collections;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.OrderComparator;
@@ -33,7 +33,7 @@ import org.springframework.core.OrderComparator;
  */
 public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
-	private static final Logger logger = LoggerFactory.getLogger(CompositeEnvironmentRepository.class);
+	Log log = LogFactory.getLog(getClass());
 
 	protected List<EnvironmentRepository> environmentRepositories;
 
@@ -69,7 +69,7 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 					env.addAll(repo.findOne(application, profile, label, includeOrigin).getPropertySources());
 				}
 				catch (Exception e) {
-					logger.info("Error adding environment for " + repo);
+					log.info("Error adding environment for " + repo);
 				}
 			}
 		}
