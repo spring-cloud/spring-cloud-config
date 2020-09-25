@@ -37,15 +37,18 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
 	protected List<EnvironmentRepository> environmentRepositories;
 
+	private boolean failOnError;
+
 	/**
 	 * Creates a new {@link CompositeEnvironmentRepository}.
 	 * @param environmentRepositories The list of {@link EnvironmentRepository}s to create
 	 * the composite from.
 	 */
-	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories) {
+	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
 		// Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
 		this.environmentRepositories = environmentRepositories;
+		this.failOnError = failOnError;
 	}
 
 	@Override
@@ -69,7 +72,12 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 					env.addAll(repo.findOne(application, profile, label, includeOrigin).getPropertySources());
 				}
 				catch (Exception e) {
-					log.info("Error adding environment for " + repo);
+					if (failOnError) {
+						throw e;
+					}
+					else {
+						log.info("Error adding environment for " + repo);
+					}
 				}
 			}
 		}

@@ -76,7 +76,8 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		repos.add(new TestOrderedEnvironmentRepository(2, e3, loc2));
 		repos.add(new TestOrderedEnvironmentRepository(1, e2, loc3));
-		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos);
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				true);
 		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world", false);
 		List<PropertySource> propertySources = compositeEnv.getPropertySources();
 		assertThat(propertySources.size()).isEqualTo(5);
@@ -121,9 +122,10 @@ public class CompositeEnvironmentRepositoryTests {
 		List<EnvironmentRepository> repos2 = new ArrayList<EnvironmentRepository>();
 		repos2.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		repos2.add(new TestOrderedEnvironmentRepository(3, e2, loc2));
-		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos);
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				true);
 		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(
-				repos2);
+				repos2, true);
 		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		assertThat(env.getVersion()).isEqualTo("1");
 		assertThat(env.getState()).isEqualTo("state");
@@ -165,7 +167,8 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestOrderedEnvironmentRepository(2, e1, loc1));
 		repos.add(new TestFailingEnvironmentRepository(1, e2, loc2));
 
-		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos);
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				false);
 		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		List<PropertySource> propertySources = env.getPropertySources();
 		assertThat(propertySources.size()).isEqualTo(1);
@@ -233,7 +236,7 @@ public class CompositeEnvironmentRepositoryTests {
 		@Primary
 		CompositeEnvironmentRepository customCompositeEnvironmentRepository() {
 			return new CompositeEnvironmentRepository(Arrays.<EnvironmentRepository>asList(
-					new TestOrderedEnvironmentRepository(1, new Environment("app", "dev"), null)));
+					new TestOrderedEnvironmentRepository(1, new Environment("app", "dev"), null)), true);
 		}
 
 	}
