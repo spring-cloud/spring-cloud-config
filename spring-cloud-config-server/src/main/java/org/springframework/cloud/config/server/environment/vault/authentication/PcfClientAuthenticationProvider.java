@@ -50,16 +50,31 @@ public class PcfClientAuthenticationProvider
 				.builder().role(pcfProperties.getRole()).path(pcfProperties.getPcfPath());
 
 		if (pcfProperties.getInstanceCertificate() != null) {
-			builder.instanceCertificate(new ResourceCredentialSupplier(
-					pcfProperties.getInstanceCertificate()));
+			builder.instanceCertificate(new ResourceCredentialSupplier(pcfProperties.getInstanceCertificate()));
 		}
+		else {
+			builder.instanceCertificate(new ResourceCredentialSupplier(resolveEnvVariable("CF_INSTANCE_CERT")));
+		}		
 
 		if (pcfProperties.getInstanceKey() != null) {
-			builder.instanceKey(
-					new ResourceCredentialSupplier(pcfProperties.getInstanceKey()));
+			builder.instanceKey(new ResourceCredentialSupplier(pcfProperties.getInstanceKey()));
+		}
+		else {
+			builder.instanceKey(new ResourceCredentialSupplier(resolveEnvVariable("CF_INSTANCE_KEY")));
 		}
 
 		return new PcfAuthentication(builder.build(), vaultRestOperations);
 	}
+	
+	private static String resolveEnvVariable(String name) {
+
+		String value = System.getenv(name);
+
+		if (StringUtils.isEmpty(value)) {
+			throw new IllegalStateException(String.format("Environment variable %s not set", name));
+		}
+
+		return value;
+	}	
 
 }
