@@ -43,8 +43,10 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	 * Creates a new {@link CompositeEnvironmentRepository}.
 	 * @param environmentRepositories The list of {@link EnvironmentRepository}s to create
 	 * the composite from.
+	 * @param failOnError whether to throw an exception if there is an error.
 	 */
-	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
+	public CompositeEnvironmentRepository(
+			List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
 		// Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
 		this.environmentRepositories = environmentRepositories;
@@ -71,7 +73,8 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 		else {
 			for (EnvironmentRepository repo : environmentRepositories) {
 				try {
-					env.addAll(repo.findOne(application, profile, label, includeOrigin).getPropertySources());
+					env.addAll(repo.findOne(application, profile, label, includeOrigin)
+							.getPropertySources());
 				}
 				catch (Exception e) {
 					if (failOnError) {

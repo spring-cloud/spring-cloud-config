@@ -117,7 +117,9 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 				catch (DataAccessException e) {
 					if (!failOnError) {
 						if (logger.isDebugEnabled()) {
-							logger.debug("Failed to retrieve configuration from JDBC Repository", e);
+							logger.debug(
+									"Failed to retrieve configuration from JDBC Repository",
+									e);
 						}
 					}
 					else {
