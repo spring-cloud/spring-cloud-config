@@ -45,16 +45,14 @@ public class CompositeConfiguration {
 	@Primary
 	@ConditionalOnBean(SearchPathLocator.class)
 	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository() {
-		return new SearchPathCompositeEnvironmentRepository(this.environmentRepos,
-				properties.isFailOnCompositeError());
+		return new SearchPathCompositeEnvironmentRepository(this.environmentRepos, properties.isFailOnCompositeError());
 	}
 
 	@Bean
 	@Primary
 	@ConditionalOnMissingBean(SearchPathLocator.class)
 	public CompositeEnvironmentRepository compositeEnvironmentRepository() {
-		return new CompositeEnvironmentRepository(this.environmentRepos,
-				properties.isFailOnCompositeError());
+		return new CompositeEnvironmentRepository(this.environmentRepos, properties.isFailOnCompositeError());
 	}
 
 	@Autowired

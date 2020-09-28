@@ -34,7 +34,8 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 	 * composite from.
 	 * @param failOnError whether to throw an exception if there is an error.
 	 */
-	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
+	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
+			boolean failOnError) {
 		super(environmentRepositories, failOnError);
 	}
 

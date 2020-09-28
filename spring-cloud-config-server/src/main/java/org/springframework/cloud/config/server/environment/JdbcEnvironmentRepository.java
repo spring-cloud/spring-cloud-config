@@ -105,8 +105,8 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		for (String app : applications) {
 			for (String env : envs) {
 				try {
-					Map<String, String> next = (Map<String, String>) this.jdbc.query(
-							this.sql, new Object[] { app, env, label }, this.extractor);
+					Map<String, String> next = (Map<String, String>) this.jdbc.query(this.sql,
+							new Object[] { app, env, label }, this.extractor);
 					if (!next.isEmpty()) {
 						environment.add(new PropertySource(app + "-" + env, next));
 					}
@@ -114,9 +114,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 				catch (DataAccessException e) {
 					if (!failOnError) {
 						if (logger.isDebugEnabled()) {
-							logger.debug(
-									"Failed to retrieve configuration from JDBC Repository",
-									e);
+							logger.debug("Failed to retrieve configuration from JDBC Repository", e);
 						}
 					}
 					else {

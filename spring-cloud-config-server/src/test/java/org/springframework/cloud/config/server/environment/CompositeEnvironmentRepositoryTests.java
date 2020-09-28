@@ -76,7 +76,8 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		repos.add(new TestOrderedEnvironmentRepository(2, e3, loc2));
 		repos.add(new TestOrderedEnvironmentRepository(1, e2, loc3));
-		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos, true);
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				true);
 		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world", false);
 		List<PropertySource> propertySources = compositeEnv.getPropertySources();
 		assertThat(propertySources.size()).isEqualTo(5);
@@ -121,7 +122,8 @@ public class CompositeEnvironmentRepositoryTests {
 		List<EnvironmentRepository> repos2 = new ArrayList<EnvironmentRepository>();
 		repos2.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		repos2.add(new TestOrderedEnvironmentRepository(3, e2, loc2));
-		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos, true);
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				true);
 		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(
 				repos2, true);
 		Environment env = compositeRepo.findOne("app", "dev", "label", false);
@@ -157,16 +159,16 @@ public class CompositeEnvironmentRepositoryTests {
 		e2.add(p2);
 		e2.setVersion("2");
 		e2.setState("state2");
-		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev",
-				"label", "version", new String[] { sLoc1 });
-		SearchPathLocator.Locations loc2 = new SearchPathLocator.Locations("app", "dev",
-				"label", "version", new String[] { sLoc1, sLoc2 });
+		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev", "label", "version",
+				new String[] { sLoc1 });
+		SearchPathLocator.Locations loc2 = new SearchPathLocator.Locations("app", "dev", "label", "version",
+				new String[] { sLoc1, sLoc2 });
 		List<EnvironmentRepository> repos = new ArrayList<EnvironmentRepository>();
 		repos.add(new TestOrderedEnvironmentRepository(2, e1, loc1));
 		repos.add(new TestFailingEnvironmentRepository(1, e2, loc2));
 
-		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(
-				repos, false);
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				false);
 		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		List<PropertySource> propertySources = env.getPropertySources();
 		assertThat(propertySources.size()).isEqualTo(1);
@@ -209,17 +211,14 @@ public class CompositeEnvironmentRepositoryTests {
 
 	}
 
-	private static class TestFailingEnvironmentRepository
-			extends TestOrderedEnvironmentRepository {
+	private static class TestFailingEnvironmentRepository extends TestOrderedEnvironmentRepository {
 
-		TestFailingEnvironmentRepository(int order, Environment env,
-				Locations locations) {
+		TestFailingEnvironmentRepository(int order, Environment env, Locations locations) {
 			super(order, env, locations);
 		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label,
-				boolean includeOrigin) {
+		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
 			throw new IllegalArgumentException("Failing for some reason");
 		}
 
