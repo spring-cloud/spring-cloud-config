@@ -844,7 +844,7 @@ The properties should be stored as fields in a hash. The name of hash should be 
 HMSET sample-app server.port "8100" sample.topic.name "test" test.property1 "property1"
 ----
 
-After executing the command visible above a hash should contain the following keys with values:
+After running the command visible above a hash should contain the following keys with values:
 ----
 HGETALL sample-app
 {
