@@ -69,7 +69,8 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 		}
 		else {
 			for (EnvironmentRepository repo : environmentRepositories) {
-				env.addAll(repo.findOne(application, profile, label, includeOrigin).getPropertySources());
+				try {
+					env.addAll(repo.findOne(application, profile, label, includeOrigin).getPropertySources());
 				}
 				catch (Exception e) {
 					if (failOnError) {
