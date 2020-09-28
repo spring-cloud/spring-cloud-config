@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
@@ -50,6 +53,8 @@ import org.springframework.util.StringUtils;
  */
 public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered {
 
+	private static Log logger = LogFactory.getLog(JdbcEnvironmentRepository.class);
+
 	private final JdbcTemplate jdbc;
 
 	private final PropertiesResultSetExtractor extractor = new PropertiesResultSetExtractor();
@@ -58,10 +63,13 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private String sql;
 
+	private boolean failOnError;
+
 	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
 		this.jdbc = jdbc;
 		this.order = properties.getOrder();
 		this.sql = properties.getSql();
+		this.failOnError = properties.isFailOnError();
 	}
 
 	public String getSql() {
@@ -96,10 +104,24 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		Collections.reverse(envs);
 		for (String app : applications) {
 			for (String env : envs) {
-				Map<String, String> next = (Map<String, String>) this.jdbc.query(this.sql,
-						new Object[] { app, env, label }, this.extractor);
-				if (!next.isEmpty()) {
-					environment.add(new PropertySource(app + "-" + env, next));
+				try {
+					Map<String, String> next = (Map<String, String>) this.jdbc.query(
+							this.sql, new Object[] { app, env, label }, this.extractor);
+					if (!next.isEmpty()) {
+						environment.add(new PropertySource(app + "-" + env, next));
+					}
+				}
+				catch (DataAccessException e) {
+					if (!failOnError) {
+						if (logger.isDebugEnabled()) {
+							logger.debug(
+									"Failed to retrieve configuration from JDBC Repository",
+									e);
+						}
+					}
+					else {
+						throw e;
+					}
 				}
 			}
 		}
@@ -113,6 +135,14 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	public void setOrder(int order) {
 		this.order = order;
+	}
+
+	public boolean isFailOnError() {
+		return failOnError;
+	}
+
+	public void setFailOnError(boolean failOnError) {
+		this.failOnError = failOnError;
 	}
 
 }

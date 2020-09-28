@@ -429,16 +429,20 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnSearchPathLocator
 	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) {
-		return new SearchPathCompositeEnvironmentRepository(environmentRepositories);
+			List<EnvironmentRepository> environmentRepositories,
+			ConfigServerProperties properties) {
+		return new SearchPathCompositeEnvironmentRepository(environmentRepositories,
+				properties.isFailOnCompositeError());
 	}
 
 	@Primary
 	@Bean
 	@ConditionalOnMissingSearchPathLocator
 	public CompositeEnvironmentRepository compositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) {
-		return new CompositeEnvironmentRepository(environmentRepositories);
+			List<EnvironmentRepository> environmentRepositories,
+			ConfigServerProperties properties) {
+		return new CompositeEnvironmentRepository(environmentRepositories,
+				properties.isFailOnCompositeError());
 	}
 
 }
