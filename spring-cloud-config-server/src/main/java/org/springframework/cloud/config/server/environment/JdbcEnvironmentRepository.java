@@ -53,7 +53,7 @@ import org.springframework.util.StringUtils;
  */
 public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered {
 
-	private static Log logger = LogFactory.getLog(JdbcEnvironmentRepository.class);
+	private static final Log logger = LogFactory.getLog(JdbcEnvironmentRepository.class);
 
 	private final JdbcTemplate jdbc;
 
@@ -97,17 +97,16 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		if (!config.startsWith("application")) {
 			config = "application," + config;
 		}
-		List<String> applications = new ArrayList<String>(
+		List<String> applications = new ArrayList<>(
 				new LinkedHashSet<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(config))));
-		List<String> envs = new ArrayList<String>(new LinkedHashSet<>(Arrays.asList(profiles)));
+		List<String> envs = new ArrayList<>(new LinkedHashSet<>(Arrays.asList(profiles)));
 		Collections.reverse(applications);
 		Collections.reverse(envs);
 		for (String app : applications) {
 			for (String env : envs) {
 				try {
-					Map<String, String> next = (Map<String, String>) this.jdbc.query(this.sql,
-							new Object[] { app, env, label }, this.extractor);
-					if (!next.isEmpty()) {
+					Map<String, String> next = this.jdbc.query(this.sql, this.extractor, app, env, label);
+					if (next != null && !next.isEmpty()) {
 						environment.add(new PropertySource(app + "-" + env, next));
 					}
 				}
@@ -143,17 +142,17 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		this.failOnError = failOnError;
 	}
 
-}
+	public static class PropertiesResultSetExtractor implements ResultSetExtractor<Map<String, String>> {
 
-class PropertiesResultSetExtractor implements ResultSetExtractor<Map<String, String>> {
-
-	@Override
-	public Map<String, String> extractData(ResultSet rs) throws SQLException, DataAccessException {
-		Map<String, String> map = new LinkedHashMap<>();
-		while (rs.next()) {
-			map.put(rs.getString(1), rs.getString(2));
+		@Override
+		public Map<String, String> extractData(ResultSet rs) throws SQLException, DataAccessException {
+			Map<String, String> map = new LinkedHashMap<>();
+			while (rs.next()) {
+				map.put(rs.getString(1), rs.getString(2));
+			}
+			return map;
 		}
-		return map;
+
 	}
 
 }
