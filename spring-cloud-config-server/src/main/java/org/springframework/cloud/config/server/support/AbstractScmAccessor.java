@@ -217,7 +217,7 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 		if (locations == null || locations.length == 0) {
 			locations = AbstractScmAccessorProperties.DEFAULT_LOCATIONS;
 		}
-		else if (locations != AbstractScmAccessorProperties.DEFAULT_LOCATIONS) {
+		else if (!Arrays.equals(locations, AbstractScmAccessorProperties.DEFAULT_LOCATIONS)) {
 			locations = StringUtils.concatenateStringArrays(AbstractScmAccessorProperties.DEFAULT_LOCATIONS, locations);
 		}
 		Collection<String> output = new LinkedHashSet<String>();
