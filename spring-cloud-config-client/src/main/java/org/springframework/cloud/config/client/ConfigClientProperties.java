@@ -378,10 +378,10 @@ public class ConfigClientProperties {
 	public String toString() {
 		return "ConfigClientProperties [enabled=" + this.enabled + ", profile=" + this.profile + ", name=" + this.name
 				+ ", label=" + this.label + ", username=" + this.username + ", password=" + this.password + ", uri="
-				+ Arrays.toString(this.uri) + ", mediaType=" + this.mediaType + ", discovery=" + this.discovery + ", failFast=" + this.failFast
-				+ ", token=" + this.token + ", requestConnectTimeout=" + this.requestConnectTimeout
-				+ ", requestReadTimeout=" + this.requestReadTimeout + ", sendState=" + this.sendState + ", headers="
-				+ this.headers + "]";
+				+ Arrays.toString(this.uri) + ", mediaType=" + this.mediaType + ", discovery=" + this.discovery
+				+ ", failFast=" + this.failFast + ", token=" + this.token + ", requestConnectTimeout="
+				+ this.requestConnectTimeout + ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
+				+ this.sendState + ", headers=" + this.headers + "]";
 	}
 
 	/**

@@ -95,21 +95,18 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
 		ConfigClientProperties properties = new ConfigClientProperties(this.environment);
 		properties.setMediaType("application/json");
-		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
-				properties);
+		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(properties);
 		locator.setRestTemplate(this.restTemplate);
 
-		ArgumentCaptor<HttpEntity> argumentCaptor = ArgumentCaptor
-				.forClass(HttpEntity.class);
+		ArgumentCaptor<HttpEntity> argumentCaptor = ArgumentCaptor.forClass(HttpEntity.class);
 
 		assertThat(locator.locateCollection(this.environment)).isNotNull();
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
-				argumentCaptor.capture(), any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(),
+				any(Class.class), anyString(), anyString());
 
 		HttpEntity httpEntity = argumentCaptor.getValue();
-		assertThat(httpEntity.getHeaders().getAccept())
-				.containsExactly(MediaType.parseMediaType("application/json"));
+		assertThat(httpEntity.getHeaders().getAccept()).containsExactly(MediaType.parseMediaType("application/json"));
 	}
 
 	@Test
