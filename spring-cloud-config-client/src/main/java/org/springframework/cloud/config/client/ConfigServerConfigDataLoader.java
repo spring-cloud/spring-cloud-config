@@ -55,7 +55,6 @@ import org.springframework.web.client.RestTemplate;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
-import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
 
 public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServerConfigDataLocation>, Ordered {
 
@@ -226,6 +225,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 			path = path + "/{label}";
 		}
 		ResponseEntity<Environment> response = null;
+		List<MediaType> acceptHeader = Collections.singletonList(MediaType.parseMediaType(properties.getMediaType()));
 
 		for (int i = 0; i < noOfUrls; i++) {
 			ConfigClientProperties.Credentials credentials = properties.getCredentials(i);
@@ -237,7 +237,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 
 			try {
 				HttpHeaders headers = new HttpHeaders();
-				headers.setAccept(Collections.singletonList(MediaType.parseMediaType(V2_JSON)));
+				headers.setAccept(acceptHeader);
 				addAuthorizationToken(properties, headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
