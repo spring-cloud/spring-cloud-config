@@ -27,6 +27,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.configuration.TlsProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
@@ -101,6 +102,11 @@ public class ConfigClientProperties {
 	 * The URI of the remote server (default http://localhost:8888).
 	 */
 	private String[] uri = { "http://localhost:8888" };
+
+	/**
+	 * The Accept header media type to send to config server.
+	 */
+	private String mediaType = EnvironmentMediaType.V2_JSON;
 
 	/**
 	 * Discovery properties.
@@ -211,6 +217,14 @@ public class ConfigClientProperties {
 
 	public Credentials getCredentials(int index) {
 		return extractCredentials(index);
+	}
+
+	public String getMediaType() {
+		return this.mediaType;
+	}
+
+	public void setMediaType(String mediaType) {
+		this.mediaType = mediaType;
 	}
 
 	public Discovery getDiscovery() {
@@ -364,7 +378,7 @@ public class ConfigClientProperties {
 	public String toString() {
 		return "ConfigClientProperties [enabled=" + this.enabled + ", profile=" + this.profile + ", name=" + this.name
 				+ ", label=" + this.label + ", username=" + this.username + ", password=" + this.password + ", uri="
-				+ Arrays.toString(this.uri) + ", discovery=" + this.discovery + ", failFast=" + this.failFast
+				+ Arrays.toString(this.uri) + ", mediaType=" + this.mediaType + ", discovery=" + this.discovery + ", failFast=" + this.failFast
 				+ ", token=" + this.token + ", requestConnectTimeout=" + this.requestConnectTimeout
 				+ ", requestReadTimeout=" + this.requestReadTimeout + ", sendState=" + this.sendState + ", headers="
 				+ this.headers + "]";
