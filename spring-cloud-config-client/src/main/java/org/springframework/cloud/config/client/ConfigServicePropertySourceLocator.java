@@ -71,7 +71,6 @@ import org.springframework.web.client.RestTemplate;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
-import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
 
 /**
  * @author Dave Syer
@@ -258,8 +257,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 			try {
 				HttpHeaders headers = new HttpHeaders();
-				headers.setAccept(
-						Collections.singletonList(MediaType.parseMediaType(V2_JSON)));
+				headers.setAccept(Collections.singletonList(
+						MediaType.parseMediaType(properties.getMediaType())));
 				addAuthorizationToken(properties, headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
