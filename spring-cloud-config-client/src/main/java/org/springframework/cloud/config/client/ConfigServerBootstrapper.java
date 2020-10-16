@@ -75,20 +75,20 @@ public class ConfigServerBootstrapper implements Bootstrapper {
 
 		private final ConfigDataLoaderContext loaderContext;
 
-		private final ConfigServerConfigDataResource location;
+		private final ConfigServerConfigDataResource resource;
 
 		private final Binder binder;
 
 		private final LoaderInvocation invocation;
 
-		LoadContext(ConfigDataLoaderContext loaderContext, ConfigServerConfigDataResource location, Binder binder,
+		LoadContext(ConfigDataLoaderContext loaderContext, ConfigServerConfigDataResource resource, Binder binder,
 				LoaderInvocation invocation) {
 			Assert.notNull(loaderContext, "loaderContext may not be null");
-			Assert.notNull(location, "location may not be null");
+			Assert.notNull(resource, "resource may not be null");
 			Assert.notNull(binder, "binder may not be null");
 			Assert.notNull(invocation, "invocation may not be null");
 			this.loaderContext = loaderContext;
-			this.location = location;
+			this.resource = resource;
 			this.binder = binder;
 			this.invocation = invocation;
 		}
@@ -97,8 +97,8 @@ public class ConfigServerBootstrapper implements Bootstrapper {
 			return this.loaderContext;
 		}
 
-		public ConfigServerConfigDataResource getLocation() {
-			return this.location;
+		public ConfigServerConfigDataResource getResource() {
+			return this.resource;
 		}
 
 		public Binder getBinder() {

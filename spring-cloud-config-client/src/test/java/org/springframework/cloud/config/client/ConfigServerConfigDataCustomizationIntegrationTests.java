@@ -90,7 +90,7 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 		public ConfigData apply(ConfigServerBootstrapper.LoadContext context) {
 			applied = true;
 			hasBinder = context.getBinder() != null;
-			return context.getInvocation().apply(context.getLoaderContext(), context.getLocation());
+			return context.getInvocation().apply(context.getLoaderContext(), context.getResource());
 		}
 
 	}
