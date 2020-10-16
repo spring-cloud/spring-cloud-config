@@ -26,8 +26,11 @@ import org.apache.commons.logging.Log;
 
 import org.springframework.boot.BootstrapRegistry.InstanceSupplier;
 import org.springframework.boot.ConfigurableBootstrapContext;
+import org.springframework.boot.context.config.ConfigDataLocation;
+import org.springframework.boot.context.config.ConfigDataLocationNotFoundException;
 import org.springframework.boot.context.config.ConfigDataLocationResolver;
 import org.springframework.boot.context.config.ConfigDataLocationResolverContext;
+import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.boot.context.config.Profiles;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -40,7 +43,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.AUT
 import static org.springframework.cloud.config.client.ConfigClientProperties.CONFIG_DISCOVERY_ENABLED;
 
 public class ConfigServerConfigDataLocationResolver
-		implements ConfigDataLocationResolver<ConfigServerConfigDataLocation>, Ordered {
+		implements ConfigDataLocationResolver<ConfigServerConfigDataResource>, Ordered {
 
 	/**
 	 * Prefix for Config Server imports.
@@ -94,8 +97,9 @@ public class ConfigServerConfigDataLocationResolver
 		return this.log;
 	}
 
-	public boolean isResolvable(ConfigDataLocationResolverContext context, String location) {
-		if (!location.startsWith(getPrefix())) {
+	@Override
+	public boolean isResolvable(ConfigDataLocationResolverContext context, ConfigDataLocation location) {
+		if (!location.hasPrefix(getPrefix())) {
 			return false;
 		}
 		return context.getBinder().bind(ConfigClientProperties.PREFIX + ".enabled", Boolean.class).orElse(true);
@@ -105,17 +109,20 @@ public class ConfigServerConfigDataLocationResolver
 		return PREFIX;
 	}
 
-	public List<ConfigServerConfigDataLocation> resolve(ConfigDataLocationResolverContext context, String location,
-			boolean optional) {
+	@Override
+	public List<ConfigServerConfigDataResource> resolve(ConfigDataLocationResolverContext context,
+			ConfigDataLocation location)
+			throws ConfigDataLocationNotFoundException, ConfigDataResourceNotFoundException {
 		return Collections.emptyList();
 	}
 
-	public List<ConfigServerConfigDataLocation> resolveProfileSpecific(
-			ConfigDataLocationResolverContext resolverContext, String location, boolean optional, Profiles profiles) {
-
+	@Override
+	public List<ConfigServerConfigDataResource> resolveProfileSpecific(
+			ConfigDataLocationResolverContext resolverContext, ConfigDataLocation location, Profiles profiles)
+			throws ConfigDataLocationNotFoundException {
 		ConfigClientProperties properties = loadProperties(resolverContext.getBinder());
 
-		String uris = (location.startsWith(getPrefix())) ? location.substring(getPrefix().length()) : location;
+		String uris = location.getNonPrefixedValue(getPrefix());
 
 		if (StringUtils.hasText(uris)) {
 			String[] uri = StringUtils.commaDelimitedListToStringArray(uris);
@@ -159,8 +166,8 @@ public class ConfigServerConfigDataLocationResolver
 			});
 		}
 
-		List<ConfigServerConfigDataLocation> locations = new ArrayList<>();
-		locations.add(new ConfigServerConfigDataLocation(properties, optional, profiles));
+		List<ConfigServerConfigDataResource> locations = new ArrayList<>();
+		locations.add(new ConfigServerConfigDataResource(properties, location.isOptional(), profiles));
 
 		return locations;
 	}

@@ -56,7 +56,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.AUT
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 
-public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServerConfigDataLocation>, Ordered {
+public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServerConfigDataResource>, Ordered {
 
 	protected final Log logger;
 
@@ -71,7 +71,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 
 	@Override
 	// TODO: implement retry LoaderInterceptor
-	public ConfigData load(ConfigDataLoaderContext context, ConfigServerConfigDataLocation location) {
+	public ConfigData load(ConfigDataLoaderContext context, ConfigServerConfigDataResource resource) {
 		if (context.getBootstrapContext().isRegistered(ConfigServerInstanceMonitor.class)) {
 			// force initialization if needed
 			context.getBootstrapContext().get(ConfigServerInstanceMonitor.class);
@@ -79,13 +79,13 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		if (context.getBootstrapContext().isRegistered(LoaderInterceptor.class)) {
 			LoaderInterceptor interceptor = context.getBootstrapContext().get(LoaderInterceptor.class);
 			Binder binder = context.getBootstrapContext().get(Binder.class);
-			return interceptor.apply(new LoadContext(context, location, binder, this::doLoad));
+			return interceptor.apply(new LoadContext(context, resource, binder, this::doLoad));
 		}
-		return doLoad(context, location);
+		return doLoad(context, resource);
 	}
 
-	public ConfigData doLoad(ConfigDataLoaderContext context, ConfigServerConfigDataLocation location) {
-		ConfigClientProperties properties = location.getProperties();
+	public ConfigData doLoad(ConfigDataLoaderContext context, ConfigServerConfigDataResource resource) {
+		ConfigClientProperties properties = resource.getProperties();
 		List<PropertySource<?>> composite = new ArrayList<>();
 		Exception error = null;
 		String errorBody = null;
@@ -97,7 +97,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 			String state = ConfigClientStateHolder.getState();
 			// Try all the labels until one works
 			for (String label : labels) {
-				Environment result = getRemoteEnvironment(context, location, label.trim(), state);
+				Environment result = getRemoteEnvironment(context, resource, label.trim(), state);
 				if (result != null) {
 					log(result);
 
@@ -137,13 +137,13 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		catch (Exception e) {
 			error = e;
 		}
-		if (properties.isFailFast() || !location.isOptional()) {
+		if (properties.isFailFast() || !resource.isOptional()) {
 			String reason;
 			if (properties.isFailFast()) {
 				reason = "the fail fast property is set";
 			}
 			else {
-				reason = "the location is not optional";
+				reason = "the resource is not optional";
 			}
 			throw new IllegalStateException("Could not locate PropertySource and " + reason + ", failing"
 					+ (errorBody == null ? "" : ": " + errorBody), error);
@@ -203,14 +203,14 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		}
 	}
 
-	protected Environment getRemoteEnvironment(ConfigDataLoaderContext context, ConfigServerConfigDataLocation location,
+	protected Environment getRemoteEnvironment(ConfigDataLoaderContext context, ConfigServerConfigDataResource resource,
 			String label, String state) {
-		ConfigClientProperties properties = location.getProperties();
+		ConfigClientProperties properties = resource.getProperties();
 		RestTemplate restTemplate = context.getBootstrapContext().get(RestTemplate.class);
 
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
-		String profile = StringUtils.collectionToCommaDelimitedString(location.getProfiles().getAccepted());
+		String profile = StringUtils.collectionToCommaDelimitedString(resource.getProfiles().getAccepted());
 		String token = properties.getToken();
 		int noOfUrls = properties.getUri().length;
 		if (noOfUrls > 1) {

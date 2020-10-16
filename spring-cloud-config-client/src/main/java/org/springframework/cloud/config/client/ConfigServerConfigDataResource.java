@@ -18,11 +18,11 @@ package org.springframework.cloud.config.client;
 
 import java.util.Objects;
 
-import org.springframework.boot.context.config.ConfigDataLocation;
+import org.springframework.boot.context.config.ConfigDataResource;
 import org.springframework.boot.context.config.Profiles;
 import org.springframework.core.style.ToStringCreator;
 
-public class ConfigServerConfigDataLocation extends ConfigDataLocation {
+public class ConfigServerConfigDataResource extends ConfigDataResource {
 
 	private final ConfigClientProperties properties;
 
@@ -30,7 +30,7 @@ public class ConfigServerConfigDataLocation extends ConfigDataLocation {
 
 	private final Profiles profiles;
 
-	public ConfigServerConfigDataLocation(ConfigClientProperties properties, boolean optional, Profiles profiles) {
+	public ConfigServerConfigDataResource(ConfigClientProperties properties, boolean optional, Profiles profiles) {
 		this.properties = properties;
 		this.optional = optional;
 		this.profiles = profiles;
@@ -56,7 +56,7 @@ public class ConfigServerConfigDataLocation extends ConfigDataLocation {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		ConfigServerConfigDataLocation that = (ConfigServerConfigDataLocation) o;
+		ConfigServerConfigDataResource that = (ConfigServerConfigDataResource) o;
 		return Objects.equals(this.properties, that.properties) && Objects.equals(this.optional, that.optional)
 				&& Objects.equals(this.profiles, that.profiles);
 	}

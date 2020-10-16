@@ -54,8 +54,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/", "classpath:/config/", "file:./",
 			"file:./config/" };
 
-	private static final Pattern RESOURCE_PATTERN = Pattern
-			.compile("Resource config '(.*?)' imported via location \".*\"");
+	static final Pattern RESOURCE_PATTERN = Pattern.compile("Config resource '(.*?)' via location.*");
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
@@ -213,7 +212,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		map.put("spring.config.location",
 				StringUtils.arrayToCommaDelimitedString(getLocations(application, profile, label).getLocations()));
 		// globally ignore config files that are not found
-		map.put("spring.config.on-location-not-found", "ignore");
+		map.put("spring.config.on-not-found", "IGNORE");
 		environment.getPropertySources().addFirst(new MapPropertySource("config-data-setup", map));
 		return environment;
 	}

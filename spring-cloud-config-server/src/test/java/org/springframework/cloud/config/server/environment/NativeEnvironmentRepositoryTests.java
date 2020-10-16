@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.regex.Matcher;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -42,7 +44,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Before
 	public void init() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class)
-				.web(WebApplicationType.NONE).run();
+				.properties("logging.level.org.springframework.boot.context.config=TRACE").web(WebApplicationType.NONE)
+				.run();
 		this.repository = new NativeEnvironmentRepository(context.getEnvironment(), new NativeEnvironmentProperties());
 		this.repository.setVersion("myversion");
 		this.repository.setDefaultLabel(null);
@@ -213,6 +216,14 @@ public class NativeEnvironmentRepositoryTests {
 								+ " in 'reader', line 1, column 1:\n" + "    key: value\n" + "    ^\n"
 								+ "found duplicate key key\n" + " in 'reader', line 2, column 1:\n" + "    key: value\n"
 								+ "    ^\n");
+	}
+
+	@Test
+	public void resourcePatternWorks() {
+		String name = "Config resource 'abc' via location '123'";
+		Matcher matcher = NativeEnvironmentRepository.RESOURCE_PATTERN.matcher(name);
+		assertThat(matcher.find()).isTrue();
+		assertThat(matcher.group(1)).isEqualTo("abc");
 	}
 
 }

@@ -67,7 +67,7 @@ public class ConfigServerBootstrapper implements Bootstrapper {
 
 	@FunctionalInterface
 	public interface LoaderInvocation
-			extends BiFunction<ConfigDataLoaderContext, ConfigServerConfigDataLocation, ConfigData> {
+			extends BiFunction<ConfigDataLoaderContext, ConfigServerConfigDataResource, ConfigData> {
 
 	}
 
@@ -75,13 +75,13 @@ public class ConfigServerBootstrapper implements Bootstrapper {
 
 		private final ConfigDataLoaderContext loaderContext;
 
-		private final ConfigServerConfigDataLocation location;
+		private final ConfigServerConfigDataResource location;
 
 		private final Binder binder;
 
 		private final LoaderInvocation invocation;
 
-		LoadContext(ConfigDataLoaderContext loaderContext, ConfigServerConfigDataLocation location, Binder binder,
+		LoadContext(ConfigDataLoaderContext loaderContext, ConfigServerConfigDataResource location, Binder binder,
 				LoaderInvocation invocation) {
 			Assert.notNull(loaderContext, "loaderContext may not be null");
 			Assert.notNull(location, "location may not be null");
@@ -97,7 +97,7 @@ public class ConfigServerBootstrapper implements Bootstrapper {
 			return this.loaderContext;
 		}
 
-		public ConfigServerConfigDataLocation getLocation() {
+		public ConfigServerConfigDataResource getLocation() {
 			return this.location;
 		}
 

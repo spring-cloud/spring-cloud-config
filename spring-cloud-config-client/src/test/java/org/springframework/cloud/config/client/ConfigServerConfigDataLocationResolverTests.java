@@ -19,6 +19,7 @@ package org.springframework.cloud.config.client;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.boot.context.config.ConfigDataLocation;
 import org.springframework.boot.context.config.ConfigDataLocationResolverContext;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.logging.DeferredLog;
@@ -48,18 +49,18 @@ public class ConfigServerConfigDataLocationResolverTests {
 
 	@Test
 	void isResolvableReturnsFalseWithIncorrectPrefix() {
-		assertThat(this.resolver.isResolvable(this.context, "test:")).isFalse();
+		assertThat(this.resolver.isResolvable(this.context, ConfigDataLocation.of("test:"))).isFalse();
 	}
 
 	@Test
 	void isResolvableReturnsTrueWithCorrectPrefix() {
-		assertThat(this.resolver.isResolvable(this.context, "configserver:")).isTrue();
+		assertThat(this.resolver.isResolvable(this.context, ConfigDataLocation.of("configserver:"))).isTrue();
 	}
 
 	@Test
 	void isResolvableReturnsFalseWhenDisabled() {
 		this.environment.setProperty(ConfigClientProperties.PREFIX + ".enabled", "false");
-		assertThat(this.resolver.isResolvable(this.context, "configserver:")).isFalse();
+		assertThat(this.resolver.isResolvable(this.context, ConfigDataLocation.of("configserver:"))).isFalse();
 	}
 
 }
