@@ -4,3 +4,4 @@ spring:
       server:
         overrides:
           bar: foo
+        bootstrap-log-file-path: logback-spring.xml

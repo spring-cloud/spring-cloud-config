@@ -90,6 +90,19 @@ public class ConfigServerProperties {
 	 */
 	private Encrypt encrypt = new Encrypt();
 
+	/**
+	 *
+	 */
+	private String bootstrapLogFilePath;
+
+	public String getBootstrapLogFilePath() {
+		return bootstrapLogFilePath;
+	}
+
+	public void setBootstrapLogFilePath(String bootstrapLogFilePath) {
+		this.bootstrapLogFilePath = bootstrapLogFilePath;
+	}
+
 	public Encrypt getEncrypt() {
 		return this.encrypt;
 	}

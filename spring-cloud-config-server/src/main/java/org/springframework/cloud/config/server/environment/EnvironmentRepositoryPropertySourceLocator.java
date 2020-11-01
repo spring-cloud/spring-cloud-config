@@ -16,13 +16,17 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.resource.ResourceRepository;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.io.Resource;
 
 /**
  * A PropertySourceLocator that reads from an EnvironmentRepository.
@@ -33,15 +37,18 @@ public class EnvironmentRepositoryPropertySourceLocator implements PropertySourc
 
 	private EnvironmentRepository repository;
 
+	private ResourceRepository resourceRepository;
+
 	private String name;
 
 	private String profiles;
 
 	private String label;
 
-	public EnvironmentRepositoryPropertySourceLocator(EnvironmentRepository repository, String name, String profiles,
-			String label) {
+	public EnvironmentRepositoryPropertySourceLocator(EnvironmentRepository repository,
+			ResourceRepository resourceRepository, String name, String profiles, String label) {
 		this.repository = repository;
+		this.resourceRepository = resourceRepository;
 		this.name = name;
 		this.profiles = profiles;
 		this.label = label;
@@ -56,6 +63,21 @@ public class EnvironmentRepositoryPropertySourceLocator implements PropertySourc
 			Map<String, Object> map = (Map<String, Object>) source.getSource();
 			composite.addPropertySource(new MapPropertySource(source.getName(), map));
 		}
+
+		String logFile = (String) composite.getProperty("spring.cloud.config.server.bootstrap-log-file-path");
+		if (logFile != null) {
+			Resource resource = resourceRepository.findOne(this.name, this.profiles, this.label, logFile);
+			try {
+				HashMap<String, Object> source = new HashMap<>();
+				source.put("logging.config", resource.getURL());
+
+				composite.addFirstPropertySource(new MapPropertySource("loggingConfig", source));
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
 		return composite;
 	}
 

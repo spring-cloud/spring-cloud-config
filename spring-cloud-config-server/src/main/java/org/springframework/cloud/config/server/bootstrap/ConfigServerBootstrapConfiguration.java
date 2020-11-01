@@ -22,8 +22,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.client.ConfigClientProperties;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
+import org.springframework.cloud.config.server.config.ResourceRepositoryConfiguration;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryPropertySourceLocator;
+import org.springframework.cloud.config.server.resource.ResourceRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -44,7 +46,7 @@ import org.springframework.util.StringUtils;
 public class ConfigServerBootstrapConfiguration {
 
 	@EnableConfigurationProperties(ConfigServerProperties.class)
-	@Import({ EnvironmentRepositoryConfiguration.class })
+	@Import({ EnvironmentRepositoryConfiguration.class, ResourceRepositoryConfiguration.class })
 	protected static class LocalPropertySourceLocatorConfiguration {
 
 		@Autowired
@@ -56,10 +58,13 @@ public class ConfigServerBootstrapConfiguration {
 		@Autowired
 		private ConfigServerProperties server;
 
+		@Autowired
+		private ResourceRepository resourceRepository;
+
 		@Bean
 		public EnvironmentRepositoryPropertySourceLocator environmentRepositoryPropertySourceLocator() {
-			return new EnvironmentRepositoryPropertySourceLocator(this.repository, this.client.getName(),
-					this.client.getProfile(), getDefaultLabel());
+			return new EnvironmentRepositoryPropertySourceLocator(this.repository, resourceRepository,
+					this.client.getName(), this.client.getProfile(), getDefaultLabel());
 		}
 
 		private String getDefaultLabel() {
