@@ -77,7 +77,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		String[] profileArray = parseProfiles(profiles);
 		String[] apps = new String[] { application };
 		if (application != null) {
-			apps = StringUtils.commaDelimitedListToStringArray(application.replace(" ",""));
+			apps = StringUtils.commaDelimitedListToStringArray(application.replace(" ", ""));
 		}
 
 		final Environment environment = new Environment(application, profileArray);
