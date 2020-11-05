@@ -19,8 +19,11 @@ package org.springframework.cloud.config.monitor;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.bus.BusProperties;
@@ -50,6 +53,26 @@ public class EnvironmentMonitorAutoConfiguration {
 		public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties) {
 			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors),
 					busProperties.getId());
+		}
+
+		// TODO: With the current implementation bus can't be disabled
+		@Bean
+		@ConditionalOnMissingBean(BusProperties.class)
+		public PropertyPathEndpoint noBusBeanPropertyPathEndpoint(
+				@Value("${spring.cloud.bus.id:application}") String id) {
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), id);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnMissingClass("org.springframework.cloud.bus.BusProperties")
+	protected static class NoBusPropertyPathConfiguration {
+
+		@Bean
+		public PropertyPathEndpoint noBusPropertyPathEndpoint(@Value("${spring.cloud.bus.id:application}") String id,
+				@Autowired(required = false) List<PropertyPathNotificationExtractor> extractors) {
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(extractors), id);
 		}
 
 	}
