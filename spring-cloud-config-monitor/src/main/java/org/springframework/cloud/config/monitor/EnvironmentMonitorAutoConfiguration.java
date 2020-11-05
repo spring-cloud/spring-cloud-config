@@ -19,6 +19,8 @@ package org.springframework.cloud.config.monitor;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.bus.BusProperties;
@@ -36,13 +38,20 @@ import org.springframework.context.annotation.Import;
 @Import(FileMonitorConfiguration.class)
 public class EnvironmentMonitorAutoConfiguration {
 
-	@Autowired(required = false)
-	private List<PropertyPathNotificationExtractor> extractors;
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(BusProperties.class)
+	protected static class BusPropertyPathConfiguration {
 
-	@Bean
-	public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties) {
-		return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors),
-				busProperties.getId());
+		@Autowired(required = false)
+		private List<PropertyPathNotificationExtractor> extractors;
+
+		@Bean
+		@ConditionalOnBean(BusProperties.class)
+		public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties) {
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors),
+					busProperties.getId());
+		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
