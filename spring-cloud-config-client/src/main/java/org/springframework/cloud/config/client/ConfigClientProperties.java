@@ -340,7 +340,7 @@ public class ConfigClientProperties {
 			return result;
 		}
 		catch (MalformedURLException e) {
-			throw new IllegalStateException("Invalid URL: " + uri);
+			throw new IllegalStateException("Invalid URL: " + uri, e);
 		}
 	}
 
