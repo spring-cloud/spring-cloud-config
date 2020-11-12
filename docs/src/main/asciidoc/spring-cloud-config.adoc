@@ -85,7 +85,6 @@ Precedence rules for profiles are also the same as in a regular Spring Boot appl
 
 The following sample client application has this bootstrap configuration:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
@@ -1480,10 +1479,28 @@ NOTE: The default configuration also detects filesystem changes in local git rep
 A Spring Boot application can take immediate advantage of the Spring Config Server (or other external property sources provided by the application developer).
 It also picks up some additional useful features related to `Environment` change events.
 
+[[config-data-import]]
+=== Spring Boot Config Data Import
+
+Spring Boot 2.4 introduced a new way to import configuration data via the `spring.config.import` property. This is now the default way to bind to Config Server.
+
+To optionally connect to config server set the following in application.properties:
+
+.application.properties
+[source,properties]
+----
+spring.config.import=optional:configserver:
+----
+
+This will connect to the Config Server at the default location of "http://localhost:8888". Removing the `optional:` prefix will cause the Config Client to fail if it is unable to connect to Config Server. To change the location of Config Server either set `spring.cloud.config.uri` or add the url to the `spring.config.import` statement such as, `spring.config.import=optional:configserver:http://myhost:8888`. The location in the import property has precedence over the uri property.
+
+NOTE: A `bootstrap` file (properties or yaml) is *not* needed for the Spring Boot Config Data method of import via `spring.config.import`.
+
 [[config-first-bootstrap]]
 === Config First Bootstrap
 
-The default behavior for any application that has the Spring Cloud Config Client on the classpath is as follows:
+To use the legacy bootstrap way of connecting to Config Server, bootstrap must be enabled via a property or the `spring-cloud-starter-bootstrap` starter. The property is `spring.cloud.bootstrap.enabled=true`. It must be set as a System Property or environment variable.
+Once bootstrap has been enabled any application with Spring Cloud Config Client on the classpath will connect to Config Server as follows:
 When a config client starts, it binds to the Config Server (through the `spring.cloud.config.uri` bootstrap configuration property) and initializes Spring `Environment` with remote property sources.
 
 The net result of this behavior is that all client applications that want to consume the Config Server need a `bootstrap.yml` (or an environment variable) with the server address set in `spring.cloud.config.uri` (it defaults to "http://localhost:8888").
@@ -1507,7 +1524,6 @@ If the Config Server is secured with HTTP Basic, you can configure the credentia
 Also, if the Config Server has a context path, you can set `configPath`.
 For example, the following YAML file is for a Config Server that is a Eureka client:
 
-.bootstrap.yml
 [source,yaml]
 ----
 eureka:
@@ -1525,6 +1541,8 @@ eureka:
 
 In some cases, you may want to fail startup of a service if it cannot connect to the Config Server.
 If this is the desired behavior, set the bootstrap configuration property `spring.cloud.config.fail-fast=true` to make the client halt with an Exception.
+
+NOTE: To get similar functionality using `spring.config.import`, simply omit the `optional:` prefix.
 
 [[config-client-retry]]
 === Config Client Retry
@@ -1574,7 +1592,6 @@ If you want to configure timeout thresholds:
 If you use HTTP Basic security on the server, clients need to know the password (and username if it is not the default).
 You can specify the username and password through the config server URI or via separate username and password properties, as shown in the following example:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
@@ -1585,7 +1602,6 @@ spring:
 
 The following example shows an alternate way to pass the same information:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
@@ -1601,7 +1617,6 @@ The `spring.cloud.config.password` and `spring.cloud.config.username` values ove
 If you deploy your apps on Cloud Foundry, the best way to provide the password is through service credentials (such as in the URI, since it does not need to be in a config file).
 The following example works locally and for a user-provided service on Cloud Foundry named `configserver`:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
@@ -1613,7 +1628,6 @@ spring:
 
 If config server requires client side TLS certificate, you can configure client side TLS certificate and trust store via properties, as shown in following example:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
@@ -1684,7 +1698,6 @@ When using Vault as a backend to your config server, the client needs to supply 
 This token can be provided within the client by setting `spring.cloud.config.token`
 in `bootstrap.yml`, as shown in the following example:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
