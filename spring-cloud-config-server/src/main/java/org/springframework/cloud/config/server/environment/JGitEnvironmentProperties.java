@@ -41,6 +41,11 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 	private boolean cloneOnStart = false;
 
 	/**
+	 * Flag to indicate that the submodules in the repository should be cloned.
+	 */
+	private boolean cloneSubmodules = false;
+
+	/**
 	 * Flag to indicate that the repository should force pull. If true discard any local
 	 * changes and take from remote repository.
 	 */
@@ -125,6 +130,14 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 
 	public void setCloneOnStart(boolean cloneOnStart) {
 		this.cloneOnStart = cloneOnStart;
+	}
+
+	public boolean isCloneSubmodules() {
+		return this.cloneSubmodules;
+	}
+
+	public void setCloneSubmodules(boolean cloneSubmodules) {
+		this.cloneSubmodules = cloneSubmodules;
 	}
 
 	public boolean isForcePull() {
