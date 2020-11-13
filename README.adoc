@@ -164,13 +164,13 @@ public class Application {
 ----
 
 When this HTTP server runs, it picks up the external configuration from the default local config server (if it is running) on port 8888.
-To modify the startup behavior, you can change the location of the config server by using `bootstrap.properties` (similar to `application.properties` but for the bootstrap phase of an application context), as shown in the following example:
+To modify the startup behavior, you can change the location of the config server by using `application.properties` as shown in the following example:
 
 ----
-spring.cloud.config.uri: http://myconfigserver.com
+spring.config.import=optional:configserver:http://myconfigserver.com
 ----
 
-By default, if no application name is set, `application` will be used. To modify the name, the following property can be added to the `bootstrap.properties` file:
+By default, if no application name is set, `application` will be used. To modify the name, the following property can be added to the `application.properties` file:
 
 ----
 spring.application.name: myapp
@@ -178,20 +178,30 @@ spring.application.name: myapp
 
 NOTE: When setting the property `${spring.application.name}` do not prefix your app name with the reserved word `application-` to prevent issues resolving the correct property source.
 
-The bootstrap properties show up in the `/env` endpoint as a high-priority property source, as shown in the following example.
+The Config Server properties show up in the `/env` endpoint as a high-priority property source, as shown in the following example.
 
 ----
 $ curl localhost:8080/env
 {
-  "profiles":[],
-  "configService:https://github.com/spring-cloud-samples/config-repo/bar.properties":{"foo":"bar"},
-  "servletContextInitParams":{},
-  "systemProperties":{...},
+  "activeProfiles": [],
+  {
+    "name": "servletContextInitParams",
+    "properties": {}
+  },
+  {
+    "name": "configserver:https://github.com/spring-cloud-samples/config-repo/foo.properties",
+    "properties": {
+      "foo": {
+        "value": "bar",
+        "origin": "Config Server https://github.com/spring-cloud-samples/config-repo/foo.properties:2:12"
+      }
+    }
+  },
   ...
 }
 ----
 
-A property source called `configService:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar` and is the highest priority.
+A property source called `configserver:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar`.
 
 NOTE: The URL in the property source name is the git repository, not the config server URL.
 
