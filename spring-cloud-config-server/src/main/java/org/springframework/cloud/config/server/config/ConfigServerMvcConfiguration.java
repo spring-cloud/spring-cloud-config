@@ -71,6 +71,11 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 		@Bean
 		public EnvironmentController environmentController(EnvironmentRepository envRepository,
 				ConfigServerProperties server) {
+			return delegateController(envRepository, server);
+		}
+
+		protected EnvironmentController delegateController(EnvironmentRepository envRepository,
+				ConfigServerProperties server) {
 			EnvironmentController controller = new EnvironmentController(encrypted(envRepository, server),
 					this.objectMapper);
 			controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
@@ -107,7 +112,7 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 		@RefreshScope
 		public EnvironmentController environmentController(EnvironmentRepository envRepository,
 				ConfigServerProperties server) {
-			return super.environmentController(envRepository, server);
+			return super.delegateController(envRepository, server);
 		}
 
 	}
