@@ -87,32 +87,28 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 		String profileSeparator = environmentProperties.getProfileSeparator();
 		String defaultProfile = configServerProperties.getDefaultProfile();
 
-		List<String> orderedProfiles = Stream
-				.concat(Arrays.stream(profiles).filter(p -> !p.equals(defaultProfile)),
-						Arrays.stream(new String[] { defaultProfile }))
-				.collect(Collectors.toList());
+		List<String> orderedProfiles = Stream.concat(Arrays.stream(profiles).filter(p -> !p.equals(defaultProfile)),
+				Arrays.stream(new String[] { defaultProfile })).collect(Collectors.toList());
 
 		if (application.equals(defaultApplication)) {
 			for (String profile : orderedProfiles) {
-				result.add(prefix + DEFAULT_PATH_SEPARATOR + defaultApplication
-						+ profileSeparator + profile + DEFAULT_PATH_SEPARATOR);
+				result.add(prefix + DEFAULT_PATH_SEPARATOR + defaultApplication + profileSeparator + profile
+						+ DEFAULT_PATH_SEPARATOR);
 			}
 		}
 		else {
 			for (String profile : orderedProfiles) {
-				result.add(prefix + DEFAULT_PATH_SEPARATOR + application
-						+ profileSeparator + profile + DEFAULT_PATH_SEPARATOR);
+				result.add(prefix + DEFAULT_PATH_SEPARATOR + application + profileSeparator + profile
+						+ DEFAULT_PATH_SEPARATOR);
 
-				result.add(prefix + DEFAULT_PATH_SEPARATOR + defaultApplication
-						+ profileSeparator + profile + DEFAULT_PATH_SEPARATOR);
+				result.add(prefix + DEFAULT_PATH_SEPARATOR + defaultApplication + profileSeparator + profile
+						+ DEFAULT_PATH_SEPARATOR);
 			}
 
-			result.add(prefix + DEFAULT_PATH_SEPARATOR + application
-					+ DEFAULT_PATH_SEPARATOR);
+			result.add(prefix + DEFAULT_PATH_SEPARATOR + application + DEFAULT_PATH_SEPARATOR);
 		}
 
-		result.add(prefix + DEFAULT_PATH_SEPARATOR + defaultApplication
-				+ DEFAULT_PATH_SEPARATOR);
+		result.add(prefix + DEFAULT_PATH_SEPARATOR + defaultApplication + DEFAULT_PATH_SEPARATOR);
 
 		return result;
 	}
@@ -141,8 +137,8 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 	private Map<String, String> getPropertiesByParameterPath(String path) {
 		Map<String, String> result = new HashMap<>();
 
-		GetParametersByPathRequest request = new GetParametersByPathRequest()
-				.withPath(path).withRecursive(environmentProperties.isRecursive())
+		GetParametersByPathRequest request = new GetParametersByPathRequest().withPath(path)
+				.withRecursive(environmentProperties.isRecursive())
 				.withWithDecryption(environmentProperties.isDecryptValues())
 				.withMaxResults(environmentProperties.getMaxResults());
 
@@ -152,8 +148,7 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 			addParametersToProperties(path, response.getParameters(), result);
 
 			while (!StringUtils.isEmpty(response.getNextToken())) {
-				response = awsSsmClient.getParametersByPath(
-						request.withNextToken(response.getNextToken()));
+				response = awsSsmClient.getParametersByPath(request.withNextToken(response.getNextToken()));
 
 				addParametersToProperties(path, response.getParameters(), result);
 			}
@@ -162,11 +157,9 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 		return result;
 	}
 
-	private void addParametersToProperties(String path, List<Parameter> parameters,
-			Map<String, String> properties) {
+	private void addParametersToProperties(String path, List<Parameter> parameters, Map<String, String> properties) {
 		for (Parameter parameter : parameters) {
-			String name = StringUtils.delete(parameter.getName(), path)
-					.replace(DEFAULT_PATH_SEPARATOR, ".");
+			String name = StringUtils.delete(parameter.getName(), path).replace(DEFAULT_PATH_SEPARATOR, ".");
 
 			properties.put(name, parameter.getValue());
 		}

@@ -53,10 +53,10 @@ public class TransportConfigurationIntegrationTests {
 	public static class PropertyBasedCallbackTest {
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(
-				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+		@SpringBootTest(classes = { ConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-				properties = { "spring.config.name:ssh/ssh-private-key-block" })
+				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
+						"spring.config.name:ssh-private-key-block" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
 
@@ -67,17 +67,16 @@ public class TransportConfigurationIntegrationTests {
 			public void propertyBasedTransportCallbackIsConfigured() throws Exception {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
 						.getTransportConfigCallback();
-				assertThat(transportConfigCallback)
-						.isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
+				assertThat(transportConfigCallback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 			}
 
 		}
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(
-				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+		@SpringBootTest(classes = { ConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-				properties = { "spring.config.name:ssh/ssh-private-key-block-list" })
+				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
+						"spring.config.name:ssh-private-key-block-list" })
 		@ActiveProfiles({ "test", "composite" })
 		public static class ListTest {
 
@@ -88,8 +87,7 @@ public class TransportConfigurationIntegrationTests {
 			public void propertyBasedTransportCallbackIsConfigured() throws Exception {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
 						.getTransportConfigCallback();
-				assertThat(transportConfigCallback)
-						.isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
+				assertThat(transportConfigCallback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 			}
 
 		}
@@ -99,10 +97,10 @@ public class TransportConfigurationIntegrationTests {
 	public static class PrivateKeyPropertyWithLineBreaks {
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(
-				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+		@SpringBootTest(classes = { ConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-				properties = { "spring.config.name:ssh/ssh-private-key-newline" })
+				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
+						"spring.config.name:ssh-private-key-newline" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
 
@@ -111,10 +109,8 @@ public class TransportConfigurationIntegrationTests {
 
 			@Test
 			public void privateKeyPropertyWithLineBreaks() throws Exception {
-				TransportConfigCallback callback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
-				assertThat(callback)
-						.isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
+				TransportConfigCallback callback = this.jGitEnvironmentRepository.getTransportConfigCallback();
+				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
@@ -124,10 +120,10 @@ public class TransportConfigurationIntegrationTests {
 		}
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(
-				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+		@SpringBootTest(classes = { ConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-				properties = { "spring.config.name:ssh/ssh-private-key-newline-list" })
+				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
+						"spring.config.name:ssh-private-key-newline-list" })
 		@ActiveProfiles({ "test", "composite" })
 		public static class ListTest {
 
@@ -136,10 +132,8 @@ public class TransportConfigurationIntegrationTests {
 
 			@Test
 			public void privateKeyPropertyWithLineBreaks() throws Exception {
-				TransportConfigCallback callback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
-				assertThat(callback)
-						.isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
+				TransportConfigCallback callback = this.jGitEnvironmentRepository.getTransportConfigCallback();
+				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
@@ -153,10 +147,10 @@ public class TransportConfigurationIntegrationTests {
 	public static class SshPropertiesWithinNestedRepo {
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(
-				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+		@SpringBootTest(classes = { ConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-				properties = { "spring.config.name:ssh/ssh-nested-settings" })
+				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
+						"spring.config.name:ssh-nested-settings" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
 
@@ -165,14 +159,11 @@ public class TransportConfigurationIntegrationTests {
 
 			@Test
 			public void sshPropertiesWithinNestedRepo() throws Exception {
-				TransportConfigCallback callback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
-				assertThat(callback)
-						.isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
+				TransportConfigCallback callback = this.jGitEnvironmentRepository.getTransportConfigCallback();
+				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
-				MultipleJGitEnvironmentProperties sshUriProperties = configCallback
-						.getSshUriProperties();
+				MultipleJGitEnvironmentProperties sshUriProperties = configCallback.getSshUriProperties();
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
 						.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
 
@@ -184,10 +175,10 @@ public class TransportConfigurationIntegrationTests {
 		}
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(
-				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+		@SpringBootTest(classes = { ConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-				properties = { "spring.config.name:ssh/ssh-nested-settings-list" })
+				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
+						"spring.config.name:ssh-nested-settings-list" })
 		@ActiveProfiles({ "test", "composite" })
 		public static class ListTest {
 
@@ -196,14 +187,11 @@ public class TransportConfigurationIntegrationTests {
 
 			@Test
 			public void sshPropertiesWithinNestedRepo() throws Exception {
-				TransportConfigCallback callback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
-				assertThat(callback)
-						.isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
+				TransportConfigCallback callback = this.jGitEnvironmentRepository.getTransportConfigCallback();
+				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
-				MultipleJGitEnvironmentProperties sshUriProperties = configCallback
-						.getSshUriProperties();
+				MultipleJGitEnvironmentProperties sshUriProperties = configCallback.getSshUriProperties();
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
 						.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
 
@@ -219,11 +207,9 @@ public class TransportConfigurationIntegrationTests {
 	public static class FileBasedCallbackTest {
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(
-				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+		@SpringBootTest(classes = { ConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-				properties = {
-						"spring.cloud.config.server.git.uri=git@gitserver.com:team/repo.git",
+				properties = { "spring.cloud.config.server.git.uri=git@gitserver.com:team/repo.git",
 						"spring.cloud.config.server.git.ignoreLocalSshSettings=false" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
@@ -235,8 +221,7 @@ public class TransportConfigurationIntegrationTests {
 			public void fileBasedTransportCallbackIsConfigured() throws Exception {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
 						.getTransportConfigCallback();
-				assertThat(transportConfigCallback)
-						.isInstanceOf(FileBasedSshTransportConfigCallback.class);
+				assertThat(transportConfigCallback).isInstanceOf(FileBasedSshTransportConfigCallback.class);
 			}
 
 			@Test
@@ -245,30 +230,25 @@ public class TransportConfigurationIntegrationTests {
 				SshSessionFactory.setInstance(null);
 				this.jGitEnvironmentRepository.setUri(uri);
 				this.jGitEnvironmentRepository.setBasedir(new File("./mybasedir"));
-				assertThat(this.jGitEnvironmentRepository.isStrictHostKeyChecking())
-						.isTrue();
+				assertThat(this.jGitEnvironmentRepository.isStrictHostKeyChecking()).isTrue();
 				this.jGitEnvironmentRepository.setCloneOnStart(true);
 				try {
 					// this will throw but we don't care about connecting.
 					this.jGitEnvironmentRepository.afterPropertiesSet();
 				}
 				catch (Exception e) {
-					final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect())
-							.lookup("github.com");
-					JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory
-							.getInstance();
+					final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect()).lookup("github.com");
+					JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory.getInstance();
 					// There's no public method that can be used to inspect the ssh
 					// configuration, so we'll reflect
 					// the configure method to allow us to check that the config
 					// property is set as expected.
-					Method configure = factory.getClass().getDeclaredMethod("configure",
-							OpenSshConfig.Host.class, Session.class);
+					Method configure = factory.getClass().getDeclaredMethod("configure", OpenSshConfig.Host.class,
+							Session.class);
 					configure.setAccessible(true);
 					Session session = mock(Session.class);
-					ArgumentCaptor<String> keyCaptor = ArgumentCaptor
-							.forClass(String.class);
-					ArgumentCaptor<String> valueCaptor = ArgumentCaptor
-							.forClass(String.class);
+					ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+					ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
 					configure.invoke(factory, hc, session);
 					verify(session).setConfig(keyCaptor.capture(), valueCaptor.capture());
 					configure.setAccessible(false);
@@ -279,8 +259,7 @@ public class TransportConfigurationIntegrationTests {
 		}
 
 		@RunWith(SpringRunner.class)
-		@SpringBootTest(
-				classes = { ConfigServerApplication.class, SshPropertyValidator.class },
+		@SpringBootTest(classes = { ConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 				properties = { "spring.cloud.config.server.composite[0].type=git",
 						"spring.cloud.config.server.composite[0].uri=git@gitserver.com:team/repo.git",
@@ -295,8 +274,7 @@ public class TransportConfigurationIntegrationTests {
 			public void fileBasedTransportCallbackIsConfigured() throws Exception {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
 						.getTransportConfigCallback();
-				assertThat(transportConfigCallback)
-						.isInstanceOf(FileBasedSshTransportConfigCallback.class);
+				assertThat(transportConfigCallback).isInstanceOf(FileBasedSshTransportConfigCallback.class);
 			}
 
 			@Test
@@ -305,30 +283,25 @@ public class TransportConfigurationIntegrationTests {
 				SshSessionFactory.setInstance(null);
 				this.jGitEnvironmentRepository.setUri(uri);
 				this.jGitEnvironmentRepository.setBasedir(new File("./mybasedir"));
-				assertThat(this.jGitEnvironmentRepository.isStrictHostKeyChecking())
-						.isTrue();
+				assertThat(this.jGitEnvironmentRepository.isStrictHostKeyChecking()).isTrue();
 				this.jGitEnvironmentRepository.setCloneOnStart(true);
 				try {
 					// this will throw but we don't care about connecting.
 					this.jGitEnvironmentRepository.afterPropertiesSet();
 				}
 				catch (Exception e) {
-					final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect())
-							.lookup("github.com");
-					JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory
-							.getInstance();
+					final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect()).lookup("github.com");
+					JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory.getInstance();
 					// There's no public method that can be used to inspect the ssh
 					// configuration, so we'll reflect
 					// the configure method to allow us to check that the config
 					// property is set as expected.
-					Method configure = factory.getClass().getDeclaredMethod("configure",
-							OpenSshConfig.Host.class, Session.class);
+					Method configure = factory.getClass().getDeclaredMethod("configure", OpenSshConfig.Host.class,
+							Session.class);
 					configure.setAccessible(true);
 					Session session = mock(Session.class);
-					ArgumentCaptor<String> keyCaptor = ArgumentCaptor
-							.forClass(String.class);
-					ArgumentCaptor<String> valueCaptor = ArgumentCaptor
-							.forClass(String.class);
+					ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+					ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
 					configure.invoke(factory, hc, session);
 					verify(session).setConfig(keyCaptor.capture(), valueCaptor.capture());
 					configure.setAccessible(false);
@@ -367,8 +340,7 @@ public class TransportConfigurationIntegrationTests {
 				+ "E1xUIdRbUIWhVZrr0VufG6hG/P0T7Y6Tpi6G0pKtvMkF3LcD9TS3adboix8H2ZXx\n"
 				+ "4L7MRQKBgQC0OO3qqNXOjIVYWOoqXLybOY/Wqu9lxCAgGyCYaMcstnBI7W0MZTBr\n"
 				+ "/syluvGsaFc1sE7MMGOOzKi1tF4YvDmSnzA/R1nmaPguuD9fOA+w7Pwkv5vLvuJq\n"
-				+ "2U7EeNwxq1I1L3Ag6E7wH4BHLHd4TKaZR6agFkn8oomz71yZPGjuZQ==\n"
-				+ "-----END RSA PRIVATE KEY-----";
+				+ "2U7EeNwxq1I1L3Ag6E7wH4BHLHd4TKaZR6agFkn8oomz71yZPGjuZQ==\n" + "-----END RSA PRIVATE KEY-----";
 
 		private static final String TEST_PRIVATE_KEY_2 = "-----BEGIN RSA PRIVATE KEY-----\n"
 				+ "MIIEpgIBAAKCAQEAx4UbaDzY5xjW6hc9jwN0mX33XpTDVW9WqHp5AKaRbtAC3DqX\n"
@@ -395,8 +367,7 @@ public class TransportConfigurationIntegrationTests {
 				+ "KTbTjefRFhVUjQqnucAvfGi29f+9oE3Ei9f7wA+H35ocF6JvTYUsHNMIO/3gZ38N\n"
 				+ "CPjyCMa9AoGBAMhsITNe3QcbsXAbdUR00dDsIFVROzyFJ2m40i4KCRM35bC/BIBs\n"
 				+ "q0TY3we+ERB40U8Z2BvU61QuwaunJ2+uGadHo58VSVdggqAo0BSkH58innKKt96J\n"
-				+ "69pcVH/4rmLbXdcmNYGm6iu+MlPQk4BUZknHSmVHIFdJ0EPupVaQ8RHT\n"
-				+ "-----END RSA PRIVATE KEY-----\n";
+				+ "69pcVH/4rmLbXdcmNYGm6iu+MlPQk4BUZknHSmVHIFdJ0EPupVaQ8RHT\n" + "-----END RSA PRIVATE KEY-----\n";
 
 	}
 

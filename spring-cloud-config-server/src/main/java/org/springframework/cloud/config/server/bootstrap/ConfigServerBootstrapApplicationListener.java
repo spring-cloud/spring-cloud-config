@@ -56,8 +56,7 @@ public class ConfigServerBootstrapApplicationListener
 	private int order = DEFAULT_ORDER;
 
 	private PropertySource<?> propertySource = new MapPropertySource("configServerClient",
-			Collections.<String, Object>singletonMap("spring.cloud.config.enabled",
-					"false"));
+			Collections.<String, Object>singletonMap("spring.cloud.config.enabled", "false"));
 
 	@Override
 	public int getOrder() {
@@ -71,10 +70,8 @@ public class ConfigServerBootstrapApplicationListener
 	@Override
 	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
 		ConfigurableEnvironment environment = event.getEnvironment();
-		if (!environment.resolvePlaceholders("${spring.cloud.config.enabled:false}")
-				.equalsIgnoreCase("true")) {
-			if (!environment.getPropertySources()
-					.contains(this.propertySource.getName())) {
+		if (!environment.resolvePlaceholders("${spring.cloud.config.enabled:false}").equalsIgnoreCase("true")) {
+			if (!environment.getPropertySources().contains(this.propertySource.getName())) {
 				environment.getPropertySources().addLast(this.propertySource);
 			}
 		}

@@ -30,16 +30,14 @@ public class SchemeBasedRoutePlanner extends DefaultRoutePlanner {
 
 	private final ProxyHostProperties httpProxy;
 
-	public SchemeBasedRoutePlanner(ProxyHostProperties httpsProxy,
-			ProxyHostProperties httpProxy) {
+	public SchemeBasedRoutePlanner(ProxyHostProperties httpsProxy, ProxyHostProperties httpProxy) {
 		super(null);
 		this.httpsProxy = httpsProxy;
 		this.httpProxy = httpProxy;
 	}
 
 	@Override
-	protected HttpHost determineProxy(HttpHost target, HttpRequest request,
-			HttpContext context) {
+	protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context) {
 		return "https".equals(target.getSchemeName()) ? determineProxy(this.httpsProxy)
 				: determineProxy(this.httpProxy);
 	}

@@ -55,22 +55,19 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 
 	private final JSch jSch;
 
-	public PropertyBasedSshSessionFactory(
-			Map<String, JGitEnvironmentProperties> sshKeysByHostname, JSch jSch) {
+	public PropertyBasedSshSessionFactory(Map<String, JGitEnvironmentProperties> sshKeysByHostname, JSch jSch) {
 		this.sshKeysByHostname = sshKeysByHostname;
 		this.jSch = jSch;
 	}
 
 	@Override
 	protected void configure(Host hc, Session session) {
-		JGitEnvironmentProperties sshProperties = this.sshKeysByHostname
-				.get(hc.getHostName());
+		JGitEnvironmentProperties sshProperties = this.sshKeysByHostname.get(hc.getHostName());
 		String hostKeyAlgorithm = sshProperties.getHostKeyAlgorithm();
 		if (hostKeyAlgorithm != null) {
 			session.setConfig(SERVER_HOST_KEY, hostKeyAlgorithm);
 		}
-		if (sshProperties.getHostKey() == null
-				|| !sshProperties.isStrictHostKeyChecking()) {
+		if (sshProperties.getHostKey() == null || !sshProperties.isStrictHostKeyChecking()) {
 			session.setConfig(STRICT_HOST_KEY_CHECKING, NO_OPTION);
 		}
 		else {
@@ -81,34 +78,28 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 			session.setConfig(PREFERRED_AUTHENTICATIONS, preferredAuthentications);
 		}
 
-		ProxyHostProperties proxyHostProperties = sshProperties.getProxy()
-				.get(ProxyHostProperties.ProxyForScheme.HTTP);
+		ProxyHostProperties proxyHostProperties = sshProperties.getProxy().get(ProxyHostProperties.ProxyForScheme.HTTP);
 		if (proxyHostProperties != null) {
 			ProxyHTTP proxy = createProxy(proxyHostProperties);
-			proxy.setUserPasswd(proxyHostProperties.getUsername(),
-					proxyHostProperties.getPassword());
+			proxy.setUserPasswd(proxyHostProperties.getUsername(), proxyHostProperties.getPassword());
 			session.setProxy(proxy);
 		}
 	}
 
 	protected ProxyHTTP createProxy(ProxyHostProperties proxyHostProperties) {
-		return new ProxyHTTP(proxyHostProperties.getHost(),
-				proxyHostProperties.getPort());
+		return new ProxyHTTP(proxyHostProperties.getHost(), proxyHostProperties.getPort());
 	}
 
 	@Override
-	protected Session createSession(Host hc, String user, String host, int port, FS fs)
-			throws JSchException {
+	protected Session createSession(Host hc, String user, String host, int port, FS fs) throws JSchException {
 		if (this.sshKeysByHostname.containsKey(host)) {
 			JGitEnvironmentProperties sshUriProperties = this.sshKeysByHostname.get(host);
-			this.jSch.addIdentity(host, sshUriProperties.getPrivateKey().getBytes(), null,
-					null);
+			this.jSch.addIdentity(host, sshUriProperties.getPrivateKey().getBytes(), null, null);
 			if (sshUriProperties.getKnownHostsFile() != null) {
 				this.jSch.setKnownHosts(sshUriProperties.getKnownHostsFile());
 			}
 			if (sshUriProperties.getHostKey() != null) {
-				HostKey hostkey = new HostKey(host,
-						Base64.decode(sshUriProperties.getHostKey()));
+				HostKey hostkey = new HostKey(host, Base64.decode(sshUriProperties.getHostKey()));
 				this.jSch.getHostKeyRepository().add(hostkey, null);
 			}
 			return this.jSch.getSession(user, host, port);

@@ -26,32 +26,26 @@ import org.springframework.vault.authentication.KubernetesAuthenticationOptions;
 import org.springframework.vault.authentication.KubernetesServiceAccountTokenFile;
 import org.springframework.web.client.RestOperations;
 
-public class KubernetesClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class KubernetesClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public KubernetesClientAuthenticationProvider() {
 		super(AuthenticationMethod.KUBERNETES);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
-		VaultEnvironmentProperties.KubernetesProperties kubernetes = vaultProperties
-				.getKubernetes();
+		VaultEnvironmentProperties.KubernetesProperties kubernetes = vaultProperties.getKubernetes();
 
-		Assert.hasText(kubernetes.getRole(), missingPropertyForAuthMethod(
-				"kubernetes.role", AuthenticationMethod.KUBERNETES));
+		Assert.hasText(kubernetes.getRole(),
+				missingPropertyForAuthMethod("kubernetes.role", AuthenticationMethod.KUBERNETES));
 		Assert.hasText(kubernetes.getServiceAccountTokenFile(),
-				missingPropertyForAuthMethod("kubernetes.service-account-token-file",
-						AuthenticationMethod.KUBERNETES));
+				missingPropertyForAuthMethod("kubernetes.service-account-token-file", AuthenticationMethod.KUBERNETES));
 
-		KubernetesAuthenticationOptions options = KubernetesAuthenticationOptions
-				.builder().path(kubernetes.getKubernetesPath()).role(kubernetes.getRole())
-				.jwtSupplier(new KubernetesServiceAccountTokenFile(
-						kubernetes.getServiceAccountTokenFile()))
-				.build();
+		KubernetesAuthenticationOptions options = KubernetesAuthenticationOptions.builder()
+				.path(kubernetes.getKubernetesPath()).role(kubernetes.getRole())
+				.jwtSupplier(new KubernetesServiceAccountTokenFile(kubernetes.getServiceAccountTokenFile())).build();
 
 		return new KubernetesAuthentication(options, vaultRestOperations);
 	}

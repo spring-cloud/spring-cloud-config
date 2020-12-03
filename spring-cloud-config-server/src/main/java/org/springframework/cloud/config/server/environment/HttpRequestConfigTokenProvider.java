@@ -29,8 +29,7 @@ public class HttpRequestConfigTokenProvider implements ConfigTokenProvider {
 
 	private ObjectProvider<HttpServletRequest> httpRequest;
 
-	public HttpRequestConfigTokenProvider(
-			ObjectProvider<HttpServletRequest> httpRequest) {
+	public HttpRequestConfigTokenProvider(ObjectProvider<HttpServletRequest> httpRequest) {
 		this.httpRequest = httpRequest;
 	}
 
@@ -44,8 +43,7 @@ public class HttpRequestConfigTokenProvider implements ConfigTokenProvider {
 		String token = request.getHeader(ConfigClientProperties.TOKEN_HEADER);
 		if (!StringUtils.hasLength(token)) {
 			throw new IllegalArgumentException(
-					"Missing required header in HttpServletRequest: "
-							+ ConfigClientProperties.TOKEN_HEADER);
+					"Missing required header in HttpServletRequest: " + ConfigClientProperties.TOKEN_HEADER);
 		}
 
 		return token;

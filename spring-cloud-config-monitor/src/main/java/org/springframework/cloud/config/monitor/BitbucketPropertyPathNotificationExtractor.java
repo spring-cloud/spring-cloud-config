@@ -31,19 +31,16 @@ import org.springframework.util.StringUtils;
  *
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
-public class BitbucketPropertyPathNotificationExtractor
-		implements PropertyPathNotificationExtractor {
+public class BitbucketPropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
 	@Override
-	public PropertyPathNotification extract(MultiValueMap<String, String> headers,
-			Map<String, Object> request) {
+	public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> request) {
 		if (("repo:push".equals(headers.getFirst("X-Event-Key"))
 				|| "pullrequest:fulfilled".equals(headers.getFirst("X-Event-Key")))
 				&& StringUtils.hasText(headers.getFirst("X-Hook-UUID"))) {
 			// Bitbucket cloud
 			Object push = request.get("push");
-			if (push instanceof Map
-					&& ((Map<?, ?>) push).get("changes") instanceof Collection) {
+			if (push instanceof Map && ((Map<?, ?>) push).get("changes") instanceof Collection) {
 				// Bitbucket doesn't tell us the files that changed so this is a
 				// broadcast to all apps
 				return new PropertyPathNotification("application.yml");

@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.Collections;
+
 import org.junit.Test;
 
 import org.springframework.cloud.client.DefaultServiceInstance;
@@ -26,6 +28,10 @@ import org.springframework.cloud.config.client.ConfigClientProperties.Credential
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
 
 /**
  * @author Dave Syer
@@ -35,14 +41,11 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 
 	@Test
 	public void offByDefault() throws Exception {
-		this.context = new AnnotationConfigApplicationContext(
-				DiscoveryClientConfigServiceBootstrapConfiguration.class);
+		this.context = new AnnotationConfigApplicationContext(DiscoveryClientConfigServiceBootstrapConfiguration.class);
 
-		assertThat(this.context.getBeanNamesForType(DiscoveryClient.class).length)
+		assertThat(this.context.getBeanNamesForType(DiscoveryClient.class).length).isEqualTo(0);
+		assertThat(this.context.getBeanNamesForType(DiscoveryClientConfigServiceBootstrapConfiguration.class).length)
 				.isEqualTo(0);
-		assertThat(this.context.getBeanNamesForType(
-				DiscoveryClientConfigServiceBootstrapConfiguration.class).length)
-						.isEqualTo(0);
 	}
 
 	@Test
@@ -53,6 +56,20 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		verifyDiscoveryClientCalledOnce();
+		expectConfigClientPropertiesHasConfigurationFromEureka();
+	}
+
+	@Test
+	public void configServerInstanceProviderFunction() {
+		ConfigServerInstanceProvider.Function function = mock(ConfigServerInstanceProvider.Function.class);
+		given(function.apply(DEFAULT_CONFIG_SERVER)).willReturn(Collections.singletonList(this.info));
+
+		setup(false, false, "spring.cloud.config.discovery.enabled=true");
+		this.context.getDefaultListableBeanFactory().registerSingleton("myFunction", function);
+		this.context.refresh();
+
+		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
+		verify(function).apply(DEFAULT_CONFIG_SERVER);
 		expectConfigClientPropertiesHasConfigurationFromEureka();
 	}
 
@@ -85,10 +102,8 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 
 	@Test
 	public void multipleInstancesReturnedFromDiscovery() {
-		ServiceInstance info1 = new DefaultServiceInstance("app1:8888", "app",
-				"localhost", 8888, true);
-		ServiceInstance info2 = new DefaultServiceInstance("app2:8888", "app",
-				"localhost1", 8888, false);
+		ServiceInstance info1 = new DefaultServiceInstance("app1:8888", "app", "localhost", 8888, true);
+		ServiceInstance info2 = new DefaultServiceInstance("app2:8888", "app", "localhost1", 8888, false);
 		givenDiscoveryClientReturnsInfoForMultipleInstances(info1, info2);
 
 		setup("spring.cloud.config.discovery.enabled=true");
@@ -96,8 +111,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 
 		verifyDiscoveryClientCalledOnce();
-		expectConfigClientPropertiesHasMultipleUris("https://localhost:8888/",
-				"http://localhost1:8888/");
+		expectConfigClientPropertiesHasMultipleUris("https://localhost:8888/", "http://localhost1:8888/");
 
 	}
 
@@ -108,8 +122,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 
 		setup("spring.cloud.config.discovery.enabled=true");
 
-		ConfigClientProperties locator = this.context
-				.getBean(ConfigClientProperties.class);
+		ConfigClientProperties locator = this.context.getBean(ConfigClientProperties.class);
 		Credentials credentials = locator.getCredentials(0);
 		assertThat(credentials.getUri()).isEqualTo("http://foo:8877/");
 		assertThat(credentials.getPassword()).isEqualTo("bar");
@@ -138,14 +151,11 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 	}
 
 	@Test
-	public void shouldRetryAndSucceedGetConfigServerInstanceFromDiscoveryClient()
-			throws Exception {
+	public void shouldRetryAndSucceedGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
-		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.fail-fast=true");
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.retry.maxAttempts=3",
+				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		verifyDiscoveryClientCalledThreeTimes();
@@ -159,8 +169,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 	public void shouldNotRetryIfNotFailFastPropertySet() throws Exception {
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
-		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.retry.maxAttempts=3",
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.retry.maxAttempts=3",
 				"spring.cloud.config.retry.initialInterval=10");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
@@ -169,27 +178,21 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 	}
 
 	@Test
-	public void shouldRetryAndFailWithExceptionGetConfigServerInstanceFromDiscoveryClient()
-			throws Exception {
+	public void shouldRetryAndFailWithExceptionGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsNoInfo();
 
 		expectNoInstancesOfConfigServerException();
 
-		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.fail-fast=true");
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.retry.maxAttempts=3",
+				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true");
 	}
 
 	@Test
-	public void shouldRetryAndFailWithMessageGetConfigServerInstanceFromDiscoveryClient()
-			throws Exception {
+	public void shouldRetryAndFailWithMessageGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsNoInfo();
 
-		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.fail-fast=false");
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.retry.maxAttempts=3",
+				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=false");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasDefaultConfiguration();

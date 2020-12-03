@@ -65,17 +65,14 @@ public final class GoogleCloudSourceSupport {
 	// This is why GoogleCloudSourceSupport is the optional bean, which can provide
 	// the TransportConfigCallback on request.
 	TransportConfigCallback createTransportConfigCallback() {
-		return new GCSTransportConfigCallback(
-				new ApplicationDefaultCredentialsProvider());
+		return new GCSTransportConfigCallback(new ApplicationDefaultCredentialsProvider());
 	}
 
-	TransportConfigCallback createTransportConfigCallback(
-			CredentialsProvider credentialsProvider) {
+	TransportConfigCallback createTransportConfigCallback(CredentialsProvider credentialsProvider) {
 		return new GCSTransportConfigCallback(credentialsProvider);
 	}
 
-	private static final class GCSTransportConfigCallback
-			implements TransportConfigCallback {
+	private static final class GCSTransportConfigCallback implements TransportConfigCallback {
 
 		private static final String GOOGLE_CLOUD_SOURCE_HOST = "source.developers.google.com";
 
@@ -88,8 +85,7 @@ public final class GoogleCloudSourceSupport {
 		@Override
 		public void configure(Transport transport) {
 			if (transport instanceof TransportHttp && canHandle(transport.getURI())) {
-				addHeaders((TransportHttp) transport,
-						credentialsProvider.getAuthorizationHeaders());
+				addHeaders((TransportHttp) transport, credentialsProvider.getAuthorizationHeaders());
 			}
 		}
 
@@ -118,14 +114,12 @@ public final class GoogleCloudSourceSupport {
 
 	}
 
-	private static class ApplicationDefaultCredentialsProvider
-			implements CredentialsProvider {
+	private static class ApplicationDefaultCredentialsProvider implements CredentialsProvider {
 
 		@Override
 		public Map<String, String> getAuthorizationHeaders() {
 			try {
-				return GoogleCredentials.getApplicationDefault().getRequestMetadata()
-						.entrySet().stream()
+				return GoogleCredentials.getApplicationDefault().getRequestMetadata().entrySet().stream()
 						.collect(toMap(Entry::getKey, this::joinValues));
 			}
 			catch (IOException ex) {

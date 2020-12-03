@@ -32,16 +32,13 @@ public class AwsParameterStoreEnvironmentRepositoryFactory implements
 
 	private final ConfigServerProperties configServerProperties;
 
-	public AwsParameterStoreEnvironmentRepositoryFactory(
-			ConfigServerProperties configServerProperties) {
+	public AwsParameterStoreEnvironmentRepositoryFactory(ConfigServerProperties configServerProperties) {
 		this.configServerProperties = configServerProperties;
 	}
 
 	@Override
-	public AwsParameterStoreEnvironmentRepository build(
-			AwsParameterStoreEnvironmentProperties environmentProperties) {
-		AWSSimpleSystemsManagementClientBuilder clientBuilder = AWSSimpleSystemsManagementClientBuilder
-				.standard();
+	public AwsParameterStoreEnvironmentRepository build(AwsParameterStoreEnvironmentProperties environmentProperties) {
+		AWSSimpleSystemsManagementClientBuilder clientBuilder = AWSSimpleSystemsManagementClientBuilder.standard();
 
 		String region = environmentProperties.getRegion();
 
@@ -62,8 +59,7 @@ public class AwsParameterStoreEnvironmentRepositoryFactory implements
 
 		AWSSimpleSystemsManagement client = clientBuilder.build();
 
-		return new AwsParameterStoreEnvironmentRepository(client, configServerProperties,
-				environmentProperties);
+		return new AwsParameterStoreEnvironmentRepository(client, configServerProperties, environmentProperties);
 	}
 
 }

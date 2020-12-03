@@ -32,16 +32,14 @@ public class TransportConfigCallbackFactory {
 	@Nullable
 	private final GoogleCloudSourceSupport googleCloudSourceSupport;
 
-	public TransportConfigCallbackFactory(
-			TransportConfigCallback customTransportConfigCallback,
+	public TransportConfigCallbackFactory(TransportConfigCallback customTransportConfigCallback,
 			GoogleCloudSourceSupport googleCloudSourceSupport) {
 
 		this.customTransportConfigCallback = customTransportConfigCallback;
 		this.googleCloudSourceSupport = googleCloudSourceSupport;
 	}
 
-	public TransportConfigCallback build(
-			MultipleJGitEnvironmentProperties environmentProperties) {
+	public TransportConfigCallback build(MultipleJGitEnvironmentProperties environmentProperties) {
 
 		// customTransportConfigCallback has the highest priority. If someone put
 		// a TransportConfigCallback bean in to the Spring context, we use it for
@@ -68,8 +66,7 @@ public class TransportConfigCallbackFactory {
 			MultipleJGitEnvironmentProperties gitEnvironmentProperties) {
 
 		if (gitEnvironmentProperties.isIgnoreLocalSshSettings()) {
-			return new PropertiesBasedSshTransportConfigCallback(
-					gitEnvironmentProperties);
+			return new PropertiesBasedSshTransportConfigCallback(gitEnvironmentProperties);
 		}
 		return new FileBasedSshTransportConfigCallback(gitEnvironmentProperties);
 	}

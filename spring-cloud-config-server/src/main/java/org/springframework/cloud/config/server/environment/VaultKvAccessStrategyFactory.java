@@ -41,8 +41,7 @@ public final class VaultKvAccessStrategyFactory {
 	 * @param version version of the Vault key-value backend.
 	 * @return the access strategy.
 	 */
-	public static VaultKvAccessStrategy forVersion(RestOperations rest, String baseUrl,
-			int version) {
+	public static VaultKvAccessStrategy forVersion(RestOperations rest, String baseUrl, int version) {
 
 		switch (version) {
 		case 1:
@@ -50,8 +49,7 @@ public final class VaultKvAccessStrategyFactory {
 		case 2:
 			return new V2VaultKvAccessStrategy(baseUrl, rest);
 		default:
-			throw new IllegalArgumentException(
-					"No support for given Vault k/v backend version " + version);
+			throw new IllegalArgumentException("No support for given Vault k/v backend version " + version);
 		}
 	}
 
@@ -92,8 +90,7 @@ public final class VaultKvAccessStrategyFactory {
 
 		@Override
 		public String extractDataFromBody(VaultResponse body) {
-			JsonNode nestedDataNode = body.getData() == null ? null
-					: ((JsonNode) body.getData()).get("data");
+			JsonNode nestedDataNode = body.getData() == null ? null : ((JsonNode) body.getData()).get("data");
 			return nestedDataNode == null ? null : nestedDataNode.toString();
 		}
 

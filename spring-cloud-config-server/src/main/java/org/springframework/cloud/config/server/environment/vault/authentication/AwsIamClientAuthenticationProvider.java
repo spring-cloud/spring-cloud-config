@@ -31,28 +31,24 @@ import org.springframework.vault.authentication.AwsIamAuthenticationOptions;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.web.client.RestOperations;
 
-public class AwsIamClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class AwsIamClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public AwsIamClientAuthenticationProvider() {
 		super(AuthenticationMethod.AWS_IAM);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
-		assertClassPresent("com.amazonaws.auth.AWSCredentials", missingClassForAuthMethod(
-				"AWSCredentials", "aws-java-sdk-core", AuthenticationMethod.AWS_IAM));
+		assertClassPresent("com.amazonaws.auth.AWSCredentials",
+				missingClassForAuthMethod("AWSCredentials", "aws-java-sdk-core", AuthenticationMethod.AWS_IAM));
 
 		VaultEnvironmentProperties.AwsIamProperties awsIam = vaultProperties.getAwsIam();
 
-		AWSCredentialsProvider credentialsProvider = AwsCredentialProvider
-				.getAwsCredentialsProvider();
+		AWSCredentialsProvider credentialsProvider = AwsCredentialProvider.getAwsCredentialsProvider();
 
-		AwsIamAuthenticationOptions.AwsIamAuthenticationOptionsBuilder builder = AwsIamAuthenticationOptions
-				.builder();
+		AwsIamAuthenticationOptions.AwsIamAuthenticationOptionsBuilder builder = AwsIamAuthenticationOptions.builder();
 
 		if (StringUtils.hasText(awsIam.getRole())) {
 			builder.role(awsIam.getRole());
@@ -69,8 +65,7 @@ public class AwsIamClientAuthenticationProvider
 		builder.path(awsIam.getAwsPath()) //
 				.credentialsProvider(credentialsProvider);
 
-		AwsIamAuthenticationOptions options = builder
-				.credentialsProvider(credentialsProvider).build();
+		AwsIamAuthenticationOptions options = builder.credentialsProvider(credentialsProvider).build();
 
 		return new AwsIamAuthentication(options, vaultRestOperations);
 	}

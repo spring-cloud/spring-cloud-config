@@ -19,6 +19,9 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.OrderComparator;
 
@@ -30,18 +33,23 @@ import org.springframework.core.OrderComparator;
  */
 public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
+	Log log = LogFactory.getLog(getClass());
+
 	protected List<EnvironmentRepository> environmentRepositories;
+
+	private boolean failOnError;
 
 	/**
 	 * Creates a new {@link CompositeEnvironmentRepository}.
 	 * @param environmentRepositories The list of {@link EnvironmentRepository}s to create
 	 * the composite from.
+	 * @param failOnError whether to throw an exception if there is an error.
 	 */
-	public CompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) {
+	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
 		// Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
 		this.environmentRepositories = environmentRepositories;
+		this.failOnError = failOnError;
 	}
 
 	@Override
@@ -50,21 +58,28 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label,
-			boolean includeOrigin) {
-		Environment env = new Environment(application, new String[] { profile }, label,
-				null, null);
+	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		Environment env = new Environment(application, new String[] { profile }, label, null, null);
 		if (this.environmentRepositories.size() == 1) {
-			Environment envRepo = this.environmentRepositories.get(0).findOne(application,
-					profile, label, includeOrigin);
+			Environment envRepo = this.environmentRepositories.get(0).findOne(application, profile, label,
+					includeOrigin);
 			env.addAll(envRepo.getPropertySources());
 			env.setVersion(envRepo.getVersion());
 			env.setState(envRepo.getState());
 		}
 		else {
 			for (EnvironmentRepository repo : environmentRepositories) {
-				env.addAll(repo.findOne(application, profile, label, includeOrigin)
-						.getPropertySources());
+				try {
+					env.addAll(repo.findOne(application, profile, label, includeOrigin).getPropertySources());
+				}
+				catch (Exception e) {
+					if (failOnError) {
+						throw e;
+					}
+					else {
+						log.info("Error adding environment for " + repo);
+					}
+				}
 			}
 		}
 		return env;

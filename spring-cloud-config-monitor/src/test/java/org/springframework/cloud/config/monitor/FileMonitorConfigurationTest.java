@@ -79,8 +79,7 @@ public class FileMonitorConfigurationTest {
 	public void testStart_withNativeEnvironmentRepository() {
 		// given
 		NativeEnvironmentRepository repository = createNativeEnvironmentRepository();
-		ReflectionTestUtils.setField(fileMonitorConfiguration,
-				"nativeEnvironmentRepository", repository);
+		ReflectionTestUtils.setField(fileMonitorConfiguration, "nativeEnvironmentRepository", repository);
 
 		// when
 		fileMonitorConfiguration.start();
@@ -92,8 +91,7 @@ public class FileMonitorConfigurationTest {
 	@Test
 	public void testStart_withOneScmRepository() {
 		// given
-		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(
-				SAMPLE_PATH);
+		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(SAMPLE_PATH);
 		addScmRepository(repository);
 
 		// when
@@ -106,10 +104,8 @@ public class FileMonitorConfigurationTest {
 	@Test
 	public void testStart_withTwoScmRepositories() {
 		// given
-		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(
-				SAMPLE_PATH);
-		AbstractScmEnvironmentRepository secondRepository = createScmEnvironmentRepository(
-				"anotherPath");
+		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(SAMPLE_PATH);
+		AbstractScmEnvironmentRepository secondRepository = createScmEnvironmentRepository("anotherPath");
 		addScmRepository(repository);
 		addScmRepository(secondRepository);
 
@@ -123,8 +119,7 @@ public class FileMonitorConfigurationTest {
 	@Test
 	public void testStart_withOneFileUrlScmRepository() {
 		// given
-		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(
-				SAMPLE_FILE_URL);
+		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(SAMPLE_FILE_URL);
 		addScmRepository(repository);
 
 		// when
@@ -137,10 +132,8 @@ public class FileMonitorConfigurationTest {
 	@Test
 	public void testStart_withTwoMixedPathAndFileUrlScmRepositories() {
 		// given
-		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(
-				SAMPLE_PATH);
-		AbstractScmEnvironmentRepository secondRepository = createScmEnvironmentRepository(
-				SAMPLE_FILE_URL);
+		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(SAMPLE_PATH);
+		AbstractScmEnvironmentRepository secondRepository = createScmEnvironmentRepository(SAMPLE_FILE_URL);
 		addScmRepository(repository);
 		addScmRepository(secondRepository);
 
@@ -153,8 +146,7 @@ public class FileMonitorConfigurationTest {
 
 	private void addScmRepository(AbstractScmEnvironmentRepository... repository) {
 		repositories.addAll(Arrays.asList(repository));
-		ReflectionTestUtils.setField(fileMonitorConfiguration, "scmRepositories",
-				repositories);
+		ReflectionTestUtils.setField(fileMonitorConfiguration, "scmRepositories", repositories);
 	}
 
 	private NativeEnvironmentRepository createNativeEnvironmentRepository() {
@@ -183,8 +175,7 @@ public class FileMonitorConfigurationTest {
 
 	@SuppressWarnings("unchecked")
 	private Set<Path> getDirectory() {
-		return (Set<Path>) ReflectionTestUtils.getField(fileMonitorConfiguration,
-				"directory");
+		return (Set<Path>) ReflectionTestUtils.getField(fileMonitorConfiguration, "directory");
 	}
 
 }

@@ -50,17 +50,13 @@ public class ResourceEncryptorConfiguration {
 	@Bean
 	Map<String, ResourceEncryptor> resourceEncryptors() {
 		Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
-		addSupportedExtensionsToMap(resourceEncryptorMap,
-				new CipherResourceJsonEncryptor(encryptor));
-		addSupportedExtensionsToMap(resourceEncryptorMap,
-				new CipherResourcePropertiesEncryptor(encryptor));
-		addSupportedExtensionsToMap(resourceEncryptorMap,
-				new CipherResourceYamlEncryptor(encryptor));
+		addSupportedExtensionsToMap(resourceEncryptorMap, new CipherResourceJsonEncryptor(encryptor));
+		addSupportedExtensionsToMap(resourceEncryptorMap, new CipherResourcePropertiesEncryptor(encryptor));
+		addSupportedExtensionsToMap(resourceEncryptorMap, new CipherResourceYamlEncryptor(encryptor));
 		return resourceEncryptorMap;
 	}
 
-	private void addSupportedExtensionsToMap(
-			Map<String, ResourceEncryptor> resourceEncryptorMap,
+	private void addSupportedExtensionsToMap(Map<String, ResourceEncryptor> resourceEncryptorMap,
 			ResourceEncryptor resourceEncryptor) {
 		for (String ext : resourceEncryptor.getSupportedExtensions()) {
 			resourceEncryptorMap.put(ext, resourceEncryptor);

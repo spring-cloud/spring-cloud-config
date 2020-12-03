@@ -42,8 +42,7 @@ public class EnvironmentCleaner {
 	protected Map<?, ?> clean(Map<?, ?> source, String uri) {
 		for (Map.Entry<?, ?> entry : source.entrySet()) {
 			if (entry.getValue() instanceof PropertyValueDescriptor) {
-				PropertyValueDescriptor descriptor = (PropertyValueDescriptor) entry
-						.getValue();
+				PropertyValueDescriptor descriptor = (PropertyValueDescriptor) entry.getValue();
 				if (!uri.endsWith("/")) {
 					uri = uri + "/";
 				}

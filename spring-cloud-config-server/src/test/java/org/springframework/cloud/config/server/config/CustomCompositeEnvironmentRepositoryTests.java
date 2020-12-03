@@ -53,8 +53,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CustomCompositeEnvironmentRepositoryTests {
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(
-			classes = CustomCompositeEnvironmentRepositoryTests.StaticTests.Config.class,
+	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.StaticTests.Config.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
 					"spring.cloud.config.server.git.order:1" },
@@ -76,9 +75,8 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 		@Test
 		public void contextLoads() {
-			Environment environment = new TestRestTemplate().getForObject(
-					"http://localhost:" + this.port + "/foo/development/",
-					Environment.class);
+			Environment environment = new TestRestTemplate()
+					.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
@@ -92,14 +90,12 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		protected static class Config {
 
 			public static void main(String[] args) throws Exception {
-				SpringApplication.run(
-						CustomEnvironmentRepositoryTests.TestApplication.class, args);
+				SpringApplication.run(CustomEnvironmentRepositoryTests.TestApplication.class, args);
 			}
 
 			@Bean
 			public EnvironmentRepository environmentRepository() {
-				return new CustomEnvironmentRepository(
-						new CustomEnvironmentProperties("p"));
+				return new CustomEnvironmentRepository(new CustomEnvironmentProperties("p"));
 			}
 
 		}
@@ -107,8 +103,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 	}
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(
-			classes = CustomCompositeEnvironmentRepositoryTests.ListTests.Config.class,
+	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.ListTests.Config.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.composite[0].type:git",
 					"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -132,9 +127,8 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 		@Test
 		public void contextLoads() {
-			Environment environment = new TestRestTemplate().getForObject(
-					"http://localhost:" + this.port + "/foo/development/",
-					Environment.class);
+			Environment environment = new TestRestTemplate()
+					.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
@@ -148,8 +142,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		protected static class Config {
 
 			public static void main(String[] args) throws Exception {
-				SpringApplication.run(
-						CustomEnvironmentRepositoryTests.TestApplication.class, args);
+				SpringApplication.run(CustomEnvironmentRepositoryTests.TestApplication.class, args);
 			}
 
 			@Bean
@@ -162,12 +155,11 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 	}
 
-	static class CustomEnvironmentRepositoryFactory implements
-			EnvironmentRepositoryFactory<CustomEnvironmentRepository, CustomEnvironmentProperties> {
+	static class CustomEnvironmentRepositoryFactory
+			implements EnvironmentRepositoryFactory<CustomEnvironmentRepository, CustomEnvironmentProperties> {
 
 		@Override
-		public CustomEnvironmentRepository build(
-				CustomEnvironmentProperties environmentProperties) throws Exception {
+		public CustomEnvironmentRepository build(CustomEnvironmentProperties environmentProperties) throws Exception {
 			return new CustomEnvironmentRepository(environmentProperties);
 		}
 
@@ -213,12 +205,9 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label,
-				boolean includeOrigin) {
-			Environment e = new Environment("test", new String[0], "label", "version",
-					"state");
-			PropertySource p = new PropertySource(this.properties.getPropertySourceName(),
-					new HashMap<>());
+		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+			Environment e = new Environment("test", new String[0], "label", "version", "state");
+			PropertySource p = new PropertySource(this.properties.getPropertySourceName(), new HashMap<>());
 			e.add(p);
 			return e;
 		}

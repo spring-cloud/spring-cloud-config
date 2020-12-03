@@ -17,14 +17,17 @@
 package org.springframework.cloud.config.client;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
+import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
 /**
@@ -41,34 +44,30 @@ import org.springframework.core.env.Environment;
 public class ConfigClientAutoConfiguration {
 
 	@Bean
-	public ConfigClientProperties configClientProperties(Environment environment,
-			ApplicationContext context) {
-		if (context.getParent() != null
-				&& BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
-						context.getParent(), ConfigClientProperties.class).length > 0) {
-			return BeanFactoryUtils.beanOfTypeIncludingAncestors(context.getParent(),
-					ConfigClientProperties.class);
+	@ConditionalOnMissingBean
+	public ConfigClientProperties configClientProperties(Environment environment, ApplicationContext context) {
+		if (context.getParent() != null && BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context.getParent(),
+				ConfigClientProperties.class).length > 0) {
+			return BeanFactoryUtils.beanOfTypeIncludingAncestors(context.getParent(), ConfigClientProperties.class);
 		}
 		ConfigClientProperties client = new ConfigClientProperties(environment);
 		return client;
 	}
 
-	@Bean
-	public ConfigClientHealthProperties configClientHealthProperties() {
-		return new ConfigClientHealthProperties();
-	}
-
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(HealthIndicator.class)
-	@ConditionalOnBean(ConfigServicePropertySourceLocator.class)
-	@ConditionalOnProperty(value = "health.config.enabled", matchIfMissing = true)
+	@ConditionalOnEnabledHealthIndicator("config")
 	protected static class ConfigServerHealthIndicatorConfiguration {
 
 		@Bean
-		public ConfigServerHealthIndicator clientConfigServerHealthIndicator(
-				ConfigServicePropertySourceLocator locator,
-				ConfigClientHealthProperties properties, Environment environment) {
-			return new ConfigServerHealthIndicator(locator, environment, properties);
+		public ConfigClientHealthProperties configClientHealthProperties() {
+			return new ConfigClientHealthProperties();
+		}
+
+		@Bean
+		public ConfigServerHealthIndicator clientConfigServerHealthIndicator(ConfigClientHealthProperties properties,
+				ConfigurableEnvironment environment) {
+			return new ConfigServerHealthIndicator(environment, properties);
 		}
 
 	}

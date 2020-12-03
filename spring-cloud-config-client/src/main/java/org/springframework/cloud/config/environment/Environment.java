@@ -60,13 +60,11 @@ public class Environment {
 	 * @param env Spring Environment
 	 */
 	public Environment(Environment env) {
-		this(env.getName(), env.getProfiles(), env.getLabel(), env.getVersion(),
-				env.getState());
+		this(env.getName(), env.getProfiles(), env.getLabel(), env.getVersion(), env.getState());
 	}
 
 	@JsonCreator
-	public Environment(@JsonProperty("name") String name,
-			@JsonProperty("profiles") String[] profiles,
+	public Environment(@JsonProperty("name") String name, @JsonProperty("profiles") String[] profiles,
 			@JsonProperty("label") String label, @JsonProperty("version") String version,
 			@JsonProperty("state") String state) {
 		super();
@@ -161,10 +159,9 @@ public class Environment {
 
 	@Override
 	public String toString() {
-		return "Environment [name=" + this.name + ", profiles="
-				+ Arrays.asList(this.profiles) + ", label=" + this.label
-				+ ", propertySources=" + this.propertySources + ", version="
-				+ this.version + ", state=" + this.state + "]";
+		return "Environment [name=" + this.name + ", profiles=" + Arrays.asList(this.profiles) + ", label=" + this.label
+				+ ", propertySources=" + this.propertySources + ", version=" + this.version + ", state=" + this.state
+				+ "]";
 	}
 
 }

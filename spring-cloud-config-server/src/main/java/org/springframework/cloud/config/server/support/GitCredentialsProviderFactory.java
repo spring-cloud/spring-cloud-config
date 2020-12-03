@@ -57,8 +57,7 @@ public class GitCredentialsProviderFactory {
 	 * {@link #createFor(String, String, String, String, boolean)}
 	 */
 	@Deprecated
-	public CredentialsProvider createFor(String uri, String username, String password,
-			String passphrase) {
+	public CredentialsProvider createFor(String uri, String username, String password, String passphrase) {
 		return createFor(uri, username, password, passphrase, false);
 	}
 
@@ -79,33 +78,27 @@ public class GitCredentialsProviderFactory {
 	 * @param skipSslValidation whether to skip SSL validation when connecting via HTTPS
 	 * @return the first matched credentials provider or the default or null.
 	 */
-	public CredentialsProvider createFor(String uri, String username, String password,
-			String passphrase, boolean skipSslValidation) {
+	public CredentialsProvider createFor(String uri, String username, String password, String passphrase,
+			boolean skipSslValidation) {
 		CredentialsProvider provider = null;
 		if (awsAvailable() && AwsCodeCommitCredentialProvider.canHandle(uri)) {
-			this.logger
-					.debug("Constructing AwsCodeCommitCredentialProvider for URI " + uri);
+			this.logger.debug("Constructing AwsCodeCommitCredentialProvider for URI " + uri);
 			AwsCodeCommitCredentialProvider aws = new AwsCodeCommitCredentialProvider();
 			aws.setUsername(username);
 			aws.setPassword(password);
 			provider = aws;
 		}
 		else if (hasText(username)) {
-			this.logger.debug(
-					"Constructing UsernamePasswordCredentialsProvider for URI " + uri);
-			provider = new UsernamePasswordCredentialsProvider(username,
-					password.toCharArray());
+			this.logger.debug("Constructing UsernamePasswordCredentialsProvider for URI " + uri);
+			provider = new UsernamePasswordCredentialsProvider(username, password.toCharArray());
 		}
 		else if (hasText(passphrase)) {
-			this.logger
-					.debug("Constructing PassphraseCredentialsProvider for URI " + uri);
+			this.logger.debug("Constructing PassphraseCredentialsProvider for URI " + uri);
 			provider = new PassphraseCredentialsProvider(passphrase);
 		}
 
 		if (skipSslValidation && GitSkipSslValidationCredentialsProvider.canHandle(uri)) {
-			this.logger
-					.debug("Constructing GitSkipSslValidationCredentialsProvider for URI "
-							+ uri);
+			this.logger.debug("Constructing GitSkipSslValidationCredentialsProvider for URI " + uri);
 			provider = new GitSkipSslValidationCredentialsProvider(provider);
 		}
 
@@ -122,8 +115,8 @@ public class GitCredentialsProviderFactory {
 	 * present, false otherwise.
 	 */
 	private boolean awsAvailable() {
-		return this.awsCodeCommitEnabled && ClassUtils
-				.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
+		return this.awsCodeCommitEnabled
+				&& ClassUtils.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
 	}
 
 	/**

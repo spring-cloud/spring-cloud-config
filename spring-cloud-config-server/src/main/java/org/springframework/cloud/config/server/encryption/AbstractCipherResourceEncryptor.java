@@ -51,25 +51,22 @@ abstract class AbstractCipherResourceEncryptor implements ResourceEncryptor {
 	public abstract List<String> getSupportedExtensions();
 
 	@Override
-	public abstract String decrypt(String text, Environment environment)
-			throws IOException;
+	public abstract String decrypt(String text, Environment environment) throws IOException;
 
-	protected String decryptWithJacksonParser(String text, String name, String[] profiles,
-			JsonFactory factory) throws IOException {
+	protected String decryptWithJacksonParser(String text, String name, String[] profiles, JsonFactory factory)
+			throws IOException {
 		Set<String> valsToDecrpyt = new HashSet<String>();
 		JsonParser parser = factory.createParser(text);
 		JsonToken token;
 
 		while ((token = parser.nextToken()) != null) {
-			if (token.equals(JsonToken.VALUE_STRING)
-					&& parser.getValueAsString().startsWith(CIPHER_MARKER)) {
+			if (token.equals(JsonToken.VALUE_STRING) && parser.getValueAsString().startsWith(CIPHER_MARKER)) {
 				valsToDecrpyt.add(parser.getValueAsString().trim());
 			}
 		}
 
 		for (String value : valsToDecrpyt) {
-			String decryptedValue = decryptValue(value.replace(CIPHER_MARKER, ""), name,
-					profiles);
+			String decryptedValue = decryptValue(value.replace(CIPHER_MARKER, ""), name, profiles);
 			text = text.replace(value, decryptedValue);
 		}
 
@@ -78,8 +75,7 @@ abstract class AbstractCipherResourceEncryptor implements ResourceEncryptor {
 
 	protected String decryptValue(String value, String name, String[] profiles) {
 		return encryptor
-				.locate(this.helper.getEncryptorKeys(name,
-						StringUtils.arrayToCommaDelimitedString(profiles), value))
+				.locate(this.helper.getEncryptorKeys(name, StringUtils.arrayToCommaDelimitedString(profiles), value))
 				.decrypt(this.helper.stripPrefix(value));
 	}
 

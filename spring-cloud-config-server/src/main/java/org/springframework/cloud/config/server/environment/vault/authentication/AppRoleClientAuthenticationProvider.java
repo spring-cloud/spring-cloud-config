@@ -26,29 +26,24 @@ import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.support.VaultToken;
 import org.springframework.web.client.RestOperations;
 
-public class AppRoleClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class AppRoleClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public AppRoleClientAuthenticationProvider() {
 		super(AuthenticationMethod.APPROLE);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
-		AppRoleAuthenticationOptions options = getAppRoleAuthenticationOptions(
-				vaultProperties);
+		AppRoleAuthenticationOptions options = getAppRoleAuthenticationOptions(vaultProperties);
 
 		return new AppRoleAuthentication(options, vaultRestOperations);
 	}
 
-	static AppRoleAuthenticationOptions getAppRoleAuthenticationOptions(
-			VaultEnvironmentProperties vaultProperties) {
+	static AppRoleAuthenticationOptions getAppRoleAuthenticationOptions(VaultEnvironmentProperties vaultProperties) {
 
-		VaultEnvironmentProperties.AppRoleProperties appRole = vaultProperties
-				.getAppRole();
+		VaultEnvironmentProperties.AppRoleProperties appRole = vaultProperties.getAppRole();
 
 		AppRoleAuthenticationOptions.AppRoleAuthenticationOptionsBuilder builder = AppRoleAuthenticationOptions
 				.builder().path(appRole.getAppRolePath());
@@ -58,56 +53,46 @@ public class AppRoleClientAuthenticationProvider
 		}
 
 		AppRoleAuthenticationOptions.RoleId roleId = getRoleId(vaultProperties, appRole);
-		AppRoleAuthenticationOptions.SecretId secretId = getSecretId(vaultProperties,
-				appRole);
+		AppRoleAuthenticationOptions.SecretId secretId = getSecretId(vaultProperties, appRole);
 
 		builder.roleId(roleId).secretId(secretId);
 
 		return builder.build();
 	}
 
-	private static AppRoleAuthenticationOptions.RoleId getRoleId(
-			VaultEnvironmentProperties vaultProperties,
+	private static AppRoleAuthenticationOptions.RoleId getRoleId(VaultEnvironmentProperties vaultProperties,
 			VaultEnvironmentProperties.AppRoleProperties appRole) {
 
 		if (StringUtils.hasText(appRole.getRoleId())) {
 			return AppRoleAuthenticationOptions.RoleId.provided(appRole.getRoleId());
 		}
 
-		if (StringUtils.hasText(vaultProperties.getToken())
-				&& StringUtils.hasText(appRole.getRole())) {
-			return AppRoleAuthenticationOptions.RoleId
-					.pull(VaultToken.of(vaultProperties.getToken()));
+		if (StringUtils.hasText(vaultProperties.getToken()) && StringUtils.hasText(appRole.getRole())) {
+			return AppRoleAuthenticationOptions.RoleId.pull(VaultToken.of(vaultProperties.getToken()));
 		}
 
 		if (StringUtils.hasText(vaultProperties.getToken())) {
-			return AppRoleAuthenticationOptions.RoleId
-					.wrapped(VaultToken.of(vaultProperties.getToken()));
+			return AppRoleAuthenticationOptions.RoleId.wrapped(VaultToken.of(vaultProperties.getToken()));
 		}
 
-		throw new IllegalArgumentException("Any of '" + VAULT_PROPERTIES_PREFIX
-				+ "app-role.role-id', '.token', "
-				+ "or '.app-role.role' and '.token' must be provided if the "
-				+ AuthenticationMethod.APPROLE + " authentication method is specified.");
+		throw new IllegalArgumentException("Any of '" + VAULT_PROPERTIES_PREFIX + "app-role.role-id', '.token', "
+				+ "or '.app-role.role' and '.token' must be provided if the " + AuthenticationMethod.APPROLE
+				+ " authentication method is specified.");
 	}
 
-	private static AppRoleAuthenticationOptions.SecretId getSecretId(
-			VaultEnvironmentProperties vaultProperties,
+	private static AppRoleAuthenticationOptions.SecretId getSecretId(VaultEnvironmentProperties vaultProperties,
 			VaultEnvironmentProperties.AppRoleProperties appRole) {
 
 		if (StringUtils.hasText(appRole.getSecretId())) {
 			return AppRoleAuthenticationOptions.SecretId.provided(appRole.getSecretId());
 		}
 
-		if (StringUtils.hasText(vaultProperties.getToken())
-				&& StringUtils.hasText(appRole.getRole())) {
-			return AppRoleAuthenticationOptions.SecretId
-					.pull(VaultToken.of(vaultProperties.getToken()));
+		if (StringUtils.hasText(vaultProperties.getToken()) && StringUtils.hasText(appRole.getRole())) {
+			return AppRoleAuthenticationOptions.SecretId.pull(VaultToken.of(vaultProperties.getToken()));
 		}
 
 		if (StringUtils.hasText(vaultProperties.getToken())) {
-			return AppRoleAuthenticationOptions.SecretId
-					.wrapped(VaultToken.of(vaultProperties.getToken()));
+			return AppRoleAuthenticationOptions.SecretId.wrapped(VaultToken.of(vaultProperties.getToken()));
 		}
 
 		return AppRoleAuthenticationOptions.SecretId.absent();

@@ -79,8 +79,7 @@ public class GoogleCloudSourceSupportTests {
 
 	@Test
 	public void verifyDoesNothingForSshGCSRepo() throws URISyntaxException {
-		TransportConfigCallback callback = transportConfigCallbackWith(
-				createAuthHeaders());
+		TransportConfigCallback callback = transportConfigCallbackWith(createAuthHeaders());
 		TransportHttp transport = mockTransportHttp(SSH_GOOGLE_CLOUD_SOURCE_REPO);
 
 		callback.configure(transport);
@@ -90,8 +89,7 @@ public class GoogleCloudSourceSupportTests {
 
 	@Test
 	public void verifyDoesNothingForHttpsOtherRepo() throws URISyntaxException {
-		TransportConfigCallback callback = transportConfigCallbackWith(
-				createAuthHeaders());
+		TransportConfigCallback callback = transportConfigCallbackWith(createAuthHeaders());
 		TransportHttp transport = mockTransportHttp(HTTPS_OTHER_REPO);
 
 		callback.configure(transport);
@@ -101,8 +99,7 @@ public class GoogleCloudSourceSupportTests {
 
 	@Test
 	public void verifyDoesNothingForNonHttpTransports() throws URISyntaxException {
-		TransportConfigCallback callback = transportConfigCallbackWith(
-				createAuthHeaders());
+		TransportConfigCallback callback = transportConfigCallbackWith(createAuthHeaders());
 		Transport transport = mockSshTransport(SSH_GOOGLE_CLOUD_SOURCE_REPO);
 
 		callback.configure(transport);
@@ -151,11 +148,9 @@ public class GoogleCloudSourceSupportTests {
 		return transport;
 	}
 
-	private TransportConfigCallback transportConfigCallbackWith(
-			Map<String, String> authHeaders) {
+	private TransportConfigCallback transportConfigCallbackWith(Map<String, String> authHeaders) {
 		CredentialsProvider credentialsProvider = () -> authHeaders;
-		return new GoogleCloudSourceSupport()
-				.createTransportConfigCallback(credentialsProvider);
+		return new GoogleCloudSourceSupport().createTransportConfigCallback(credentialsProvider);
 	}
 
 }

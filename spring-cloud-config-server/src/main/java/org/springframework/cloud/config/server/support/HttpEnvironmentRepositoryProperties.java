@@ -23,8 +23,7 @@ import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 /**
  * @author Dylan Roberts
  */
-public interface HttpEnvironmentRepositoryProperties
-		extends EnvironmentRepositoryProperties {
+public interface HttpEnvironmentRepositoryProperties extends EnvironmentRepositoryProperties {
 
 	Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> getProxy();
 

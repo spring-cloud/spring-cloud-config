@@ -29,13 +29,11 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
  *
  * @author Dylan Roberts
  */
-public class PropertiesBasedSshTransportConfigCallback
-		implements TransportConfigCallback {
+public class PropertiesBasedSshTransportConfigCallback implements TransportConfigCallback {
 
 	private MultipleJGitEnvironmentProperties sshUriProperties;
 
-	public PropertiesBasedSshTransportConfigCallback(
-			MultipleJGitEnvironmentProperties sshUriProperties) {
+	public PropertiesBasedSshTransportConfigCallback(MultipleJGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
 	}
 
@@ -48,9 +46,7 @@ public class PropertiesBasedSshTransportConfigCallback
 		if (transport instanceof SshTransport) {
 			SshTransport sshTransport = (SshTransport) transport;
 			sshTransport.setSshSessionFactory(new PropertyBasedSshSessionFactory(
-					new SshUriPropertyProcessor(this.sshUriProperties)
-							.getSshKeysByHostname(),
-					new JSch()));
+					new SshUriPropertyProcessor(this.sshUriProperties).getSshKeysByHostname(), new JSch()));
 		}
 	}
 

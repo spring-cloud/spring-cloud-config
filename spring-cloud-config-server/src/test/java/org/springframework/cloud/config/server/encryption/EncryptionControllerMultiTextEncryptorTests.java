@@ -30,8 +30,7 @@ import static org.springframework.http.MediaType.TEXT_PLAIN;
 
 public class EncryptionControllerMultiTextEncryptorTests {
 
-	EncryptionController controller = new EncryptionController(
-			new SingleTextEncryptorLocator(Encryptors.noOpText()));
+	EncryptionController controller = new EncryptionController(new SingleTextEncryptorLocator(Encryptors.noOpText()));
 
 	String application = "application";
 
@@ -46,12 +45,11 @@ public class EncryptionControllerMultiTextEncryptorTests {
 				new SingleTextEncryptorLocator(Encryptors.text("application", "11")));
 
 		// when
-		String encrypted = this.controller.encrypt(this.application, this.profiles,
-				this.data, TEXT_PLAIN);
+		String encrypted = this.controller.encrypt(this.application, this.profiles, this.data, TEXT_PLAIN);
 
 		// then
-		assertThat(this.controller.decrypt(this.application, this.profiles, encrypted,
-				TEXT_PLAIN)).isEqualTo(this.data);
+		assertThat(this.controller.decrypt(this.application, this.profiles, encrypted, TEXT_PLAIN))
+				.isEqualTo(this.data);
 	}
 
 	@Test(expected = EncryptionTooWeakException.class)

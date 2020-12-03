@@ -39,8 +39,7 @@ import org.eclipse.jgit.transport.URIish;
  */
 public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider {
 
-	private static final Pattern FORMAT_PLACEHOLDER_PATTERN = Pattern
-			.compile("\\s*\\{\\d}\\s*");
+	private static final Pattern FORMAT_PLACEHOLDER_PATTERN = Pattern.compile("\\s*\\{\\d}\\s*");
 
 	private final CredentialsProvider delegate;
 
@@ -71,32 +70,28 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 		List<CredentialItem> unprocessedItems = new ArrayList<>();
 
 		for (CredentialItem item : items) {
-			if (item instanceof CredentialItem.InformationalMessage
-					&& item.getPromptText() != null && item.getPromptText()
-							.contains(JGitText.get().sslFailureTrustExplanation)) {
+			if (item instanceof CredentialItem.InformationalMessage && item.getPromptText() != null
+					&& item.getPromptText().contains(JGitText.get().sslFailureTrustExplanation)) {
 				continue;
 			}
 
 			if (item instanceof CredentialItem.YesNoType && item.getPromptText() != null
 					&& (item.getPromptText().equals(JGitText.get().sslTrustNow)
 							|| item.getPromptText()
-									.startsWith(stripFormattingPlaceholders(
-											JGitText.get().sslTrustForRepo))
-							|| item.getPromptText()
-									.equals(JGitText.get().sslTrustAlways))) {
+									.startsWith(stripFormattingPlaceholders(JGitText.get().sslTrustForRepo))
+							|| item.getPromptText().equals(JGitText.get().sslTrustAlways))) {
 				continue;
 			}
 
 			unprocessedItems.add(item);
 		}
 
-		return unprocessedItems.isEmpty() || (this.delegate != null && this.delegate
-				.supports(unprocessedItems.toArray(new CredentialItem[0])));
+		return unprocessedItems.isEmpty()
+				|| (this.delegate != null && this.delegate.supports(unprocessedItems.toArray(new CredentialItem[0])));
 	}
 
 	@Override
-	public boolean get(URIish uri, CredentialItem... items)
-			throws UnsupportedCredentialItem {
+	public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
 		List<CredentialItem> unprocessedItems = new ArrayList<>();
 
 		for (CredentialItem item : items) {
@@ -106,8 +101,8 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 				if (prompt == null) {
 					unprocessedItems.add(item);
 				}
-				else if (prompt.equals(JGitText.get().sslTrustNow) || prompt.startsWith(
-						stripFormattingPlaceholders(JGitText.get().sslTrustForRepo))) {
+				else if (prompt.equals(JGitText.get().sslTrustNow)
+						|| prompt.startsWith(stripFormattingPlaceholders(JGitText.get().sslTrustForRepo))) {
 					yesNoItem.setValue(true);
 				}
 				else if (prompt.equals(JGitText.get().sslTrustAlways)) {
@@ -117,8 +112,7 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 					unprocessedItems.add(item);
 				}
 			}
-			else if (!item.getPromptText()
-					.contains(JGitText.get().sslFailureTrustExplanation)) {
+			else if (!item.getPromptText().contains(JGitText.get().sslFailureTrustExplanation)) {
 				unprocessedItems.add(item);
 			}
 		}
@@ -127,11 +121,9 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 			return true;
 		}
 		if (this.delegate != null) {
-			return this.delegate.get(uri,
-					unprocessedItems.toArray(new CredentialItem[0]));
+			return this.delegate.get(uri, unprocessedItems.toArray(new CredentialItem[0]));
 		}
-		throw new UnsupportedCredentialItem(uri,
-				unprocessedItems.size() + " credential items not supported");
+		throw new UnsupportedCredentialItem(uri, unprocessedItems.size() + " credential items not supported");
 	}
 
 	@Override

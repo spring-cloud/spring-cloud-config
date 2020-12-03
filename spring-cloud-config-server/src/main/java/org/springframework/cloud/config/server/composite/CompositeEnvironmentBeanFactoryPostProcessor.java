@@ -37,8 +37,7 @@ import org.springframework.core.env.Environment;
  *
  * @author Dylan Roberts
  */
-public class CompositeEnvironmentBeanFactoryPostProcessor
-		implements BeanFactoryPostProcessor {
+public class CompositeEnvironmentBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
 	private Environment environment;
 
@@ -47,24 +46,19 @@ public class CompositeEnvironmentBeanFactoryPostProcessor
 	}
 
 	@Override
-	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
-			throws BeansException {
-		List<String> typePropertyList = CompositeUtils
-				.getCompositeTypeList(this.environment);
+	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+		List<String> typePropertyList = CompositeUtils.getCompositeTypeList(this.environment);
 		for (int i = 0; i < typePropertyList.size(); i++) {
 			String type = typePropertyList.get(i);
 			String factoryName = CompositeUtils.getFactoryName(type, beanFactory);
 
-			Type[] factoryTypes = CompositeUtils
-					.getEnvironmentRepositoryFactoryTypeParams(beanFactory, factoryName);
+			Type[] factoryTypes = CompositeUtils.getEnvironmentRepositoryFactoryTypeParams(beanFactory, factoryName);
 			Class<? extends EnvironmentRepositoryProperties> propertiesClass;
 			propertiesClass = (Class<? extends EnvironmentRepositoryProperties>) factoryTypes[1];
-			EnvironmentRepositoryProperties properties = bindProperties(i,
-					propertiesClass, this.environment);
+			EnvironmentRepositoryProperties properties = bindProperties(i, propertiesClass, this.environment);
 
 			AbstractBeanDefinition beanDefinition = BeanDefinitionBuilder
-					.genericBeanDefinition(EnvironmentRepository.class)
-					.setFactoryMethodOnBean("build", factoryName)
+					.genericBeanDefinition(EnvironmentRepository.class).setFactoryMethodOnBean("build", factoryName)
 					.addConstructorArgValue(properties).getBeanDefinition();
 			String beanName = String.format("%s-env-repo%d", type, i);
 			BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
@@ -72,13 +66,11 @@ public class CompositeEnvironmentBeanFactoryPostProcessor
 		}
 	}
 
-	private <P extends EnvironmentRepositoryProperties> P bindProperties(int index,
-			Class<P> propertiesClass, Environment environment) {
+	private <P extends EnvironmentRepositoryProperties> P bindProperties(int index, Class<P> propertiesClass,
+			Environment environment) {
 		Binder binder = Binder.get(environment);
-		String environmentConfigurationPropertyName = String
-				.format("spring.cloud.config.server.composite[%d]", index);
-		P properties = binder.bindOrCreate(environmentConfigurationPropertyName,
-				propertiesClass);
+		String environmentConfigurationPropertyName = String.format("spring.cloud.config.server.composite[%d]", index);
+		P properties = binder.bindOrCreate(environmentConfigurationPropertyName, propertiesClass);
 		properties.setOrder(index + 1);
 		return properties;
 	}

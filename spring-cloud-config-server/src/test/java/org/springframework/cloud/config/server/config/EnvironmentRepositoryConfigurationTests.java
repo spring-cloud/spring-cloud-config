@@ -32,8 +32,7 @@ public class EnvironmentRepositoryConfigurationTests {
 	@Test
 	public void configTokenProviderCanBeOverridden() {
 		new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations
-						.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
+				.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
 				.withPropertyValues("spring.profiles.active=composite",
 						"spring.cloud.config.server.vault.authentication=TOKEN",
 						"spring.cloud.config.server.vault.token=testTokenValue",

@@ -16,26 +16,16 @@
 
 package org.springframework.cloud.config.client;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
-import org.springframework.cloud.client.discovery.event.HeartbeatMonitor;
 import org.springframework.cloud.commons.util.UtilAutoConfiguration;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.SmartApplicationListener;
 
 /**
  * Bootstrap configuration for a config client that wants to lookup the config server via
@@ -43,105 +33,32 @@ import org.springframework.context.event.SmartApplicationListener;
  *
  * @author Dave Syer
  */
-@ConditionalOnProperty(value = "spring.cloud.config.discovery.enabled",
-		matchIfMissing = false)
+@ConditionalOnProperty(ConfigClientProperties.CONFIG_DISCOVERY_ENABLED)
 @Configuration(proxyBeanMethods = false)
 @Import({ UtilAutoConfiguration.class })
 @EnableDiscoveryClient
-public class DiscoveryClientConfigServiceBootstrapConfiguration
-		implements SmartApplicationListener {
-
-	private static Log logger = LogFactory
-			.getLog(DiscoveryClientConfigServiceBootstrapConfiguration.class);
-
-	@Autowired
-	private ConfigClientProperties config;
-
-	@Autowired
-	private ConfigServerInstanceProvider instanceProvider;
-
-	private HeartbeatMonitor monitor = new HeartbeatMonitor();
+public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
 	@Bean
 	public ConfigServerInstanceProvider configServerInstanceProvider(
-			DiscoveryClient discoveryClient) {
-		return new ConfigServerInstanceProvider(discoveryClient);
-	}
-
-	@Override
-	public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
-		return ContextRefreshedEvent.class.isAssignableFrom(eventType)
-				|| HeartbeatEvent.class.isAssignableFrom(eventType);
-	}
-
-	@Override
-	public void onApplicationEvent(ApplicationEvent event) {
-		if (event instanceof ContextRefreshedEvent) {
-			startup((ContextRefreshedEvent) event);
+			ObjectProvider<ConfigServerInstanceProvider.Function> function,
+			ObjectProvider<DiscoveryClient> discoveryClient) {
+		ConfigServerInstanceProvider.Function fn = function.getIfAvailable();
+		if (fn != null) {
+			return new ConfigServerInstanceProvider(fn);
 		}
-		else if (event instanceof HeartbeatEvent) {
-			heartbeat((HeartbeatEvent) event);
+		DiscoveryClient client = discoveryClient.getIfAvailable();
+		if (client == null) {
+			throw new IllegalStateException("ConfigServerInstanceProvider requires a DiscoveryClient or Function");
 		}
+		return new ConfigServerInstanceProvider(client::getInstances);
 	}
 
-	public void startup(ContextRefreshedEvent event) {
-		refresh();
-	}
-
-	public void heartbeat(HeartbeatEvent event) {
-		if (this.monitor.update(event.getValue())) {
-			refresh();
-		}
-	}
-
-	private void refresh() {
-		try {
-			String serviceId = this.config.getDiscovery().getServiceId();
-			List<String> listOfUrls = new ArrayList<>();
-			List<ServiceInstance> serviceInstances = this.instanceProvider
-					.getConfigServerInstances(serviceId);
-
-			for (int i = 0; i < serviceInstances.size(); i++) {
-
-				ServiceInstance server = serviceInstances.get(i);
-				String url = getHomePage(server);
-
-				if (server.getMetadata().containsKey("password")) {
-					String user = server.getMetadata().get("user");
-					user = user == null ? "user" : user;
-					this.config.setUsername(user);
-					String password = server.getMetadata().get("password");
-					this.config.setPassword(password);
-				}
-
-				if (server.getMetadata().containsKey("configPath")) {
-					String path = server.getMetadata().get("configPath");
-					if (url.endsWith("/") && path.startsWith("/")) {
-						url = url.substring(0, url.length() - 1);
-					}
-					url = url + path;
-				}
-
-				listOfUrls.add(url);
-			}
-
-			String[] uri = new String[listOfUrls.size()];
-			uri = listOfUrls.toArray(uri);
-			this.config.setUri(uri);
-
-		}
-		catch (Exception ex) {
-			if (this.config.isFailFast()) {
-				throw ex;
-			}
-			else {
-				logger.warn("Could not locate configserver via discovery", ex);
-			}
-		}
-	}
-
-	private String getHomePage(ServiceInstance server) {
-		return server.getUri().toString() + "/";
+	@Bean
+	public ConfigServerInstanceMonitor configServerInstanceMonitor(ConfigClientProperties properties,
+			ConfigServerInstanceProvider provider) {
+		return new ConfigServerInstanceMonitor(LogFactory.getLog(ConfigServerInstanceMonitor.class), properties,
+				provider);
 	}
 
 }

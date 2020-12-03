@@ -16,7 +16,7 @@
 	<description>Spring Cloud Config Dependencies</description>
 	<properties>
 		<jgit.version>5.1.3.201810200350-r</jgit.version>
-		<spring-vault.version>2.2.0.RELEASE</spring-vault.version>
+		<spring-vault.version>2.3.0-M1</spring-vault.version>
 		<spring-credhub.version>2.0.0.RELEASE</spring-credhub.version>
 	</properties>
 	<dependencyManagement>
@@ -85,7 +85,7 @@
 				<repository>
 					<id>spring-snapshots</id>
 					<name>Spring Snapshots</name>
-					<url>https://repo.spring.io/libs-snapshot-local</url>
+					<url>https://repo.spring.io/snapshot</url>
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>
@@ -114,7 +114,7 @@
 				<pluginRepository>
 					<id>spring-snapshots</id>
 					<name>Spring Snapshots</name>
-					<url>https://repo.spring.io/libs-snapshot-local</url>
+					<url>https://repo.spring.io/snapshot</url>
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>

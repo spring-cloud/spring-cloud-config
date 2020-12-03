@@ -32,8 +32,7 @@ import org.springframework.validation.annotation.Validated;
  */
 @Validated
 @ConfigurationProperties("spring.cloud.config.server.awsparamstore")
-public class AwsParameterStoreEnvironmentProperties
-		implements EnvironmentRepositoryProperties {
+public class AwsParameterStoreEnvironmentProperties implements EnvironmentRepositoryProperties {
 
 	static final String DEFAULT_PATH_SEPARATOR = "/";
 

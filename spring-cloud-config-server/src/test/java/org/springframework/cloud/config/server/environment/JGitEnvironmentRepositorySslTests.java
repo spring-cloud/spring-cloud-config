@@ -46,8 +46,7 @@ public class JGitEnvironmentRepositorySslTests {
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		URL repoUrl = JGitEnvironmentRepositorySslTests.class
-				.getResource("/test1-config-repo/git");
+		URL repoUrl = JGitEnvironmentRepositorySslTests.class.getResource("/test1-config-repo/git");
 		Repository repo = new FileRepository(new File(repoUrl.toURI()));
 		server = new SimpleHttpServer(repo, true);
 		server.start();
@@ -68,12 +67,10 @@ public class JGitEnvironmentRepositorySslTests {
 
 	@Test(expected = CertificateException.class)
 	public void selfSignedCertIsRejected() throws Throwable {
-		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				TestConfiguration.class).properties(configServerProperties())
-						.web(WebApplicationType.NONE).run();
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfiguration.class)
+				.properties(configServerProperties()).web(WebApplicationType.NONE).run();
 
-		JGitEnvironmentRepository repository = context
-				.getBean(JGitEnvironmentRepository.class);
+		JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
 
 		try {
 			repository.findOne("bar", "staging", "master");
@@ -91,21 +88,17 @@ public class JGitEnvironmentRepositorySslTests {
 
 	@Test
 	public void selfSignedCertWithSkipSslValidationIsAccepted() {
-		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				TestConfiguration.class)
-						.properties(configServerProperties(
-								"spring.cloud.config.server.git.skipSslValidation=true"))
-						.web(WebApplicationType.NONE).run();
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfiguration.class)
+				.properties(configServerProperties("spring.cloud.config.server.git.skipSslValidation=true"))
+				.web(WebApplicationType.NONE).run();
 
-		JGitEnvironmentRepository repository = context
-				.getBean(JGitEnvironmentRepository.class);
+		JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
 		repository.findOne("bar", "staging", "master");
 	}
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
-	@Import({ PropertyPlaceholderAutoConfiguration.class,
-			EnvironmentRepositoryConfiguration.class })
+	@Import({ PropertyPlaceholderAutoConfiguration.class, EnvironmentRepositoryConfiguration.class })
 	static class TestConfiguration {
 
 	}

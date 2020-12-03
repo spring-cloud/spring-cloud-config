@@ -44,11 +44,9 @@ import static org.mockito.Mockito.when;
  * @author Dylan Roberts
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(
-		classes = VaultEnvironmentRepositoryIntegrationTests.TestApplication.class,
+@SpringBootTest(classes = VaultEnvironmentRepositoryIntegrationTests.TestApplication.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "server.ssl.key-store=classpath:ssl-test.jks",
-				"server.ssl.key-store-password=password",
+		properties = { "server.ssl.key-store=classpath:ssl-test.jks", "server.ssl.key-store-password=password",
 				"server.ssl.key-password=password", "server.key-alias=ssl-test" })
 public class VaultEnvironmentRepositoryIntegrationTests {
 
@@ -62,8 +60,7 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 	public void withSslValidation() throws Exception {
 		ObjectProvider<HttpServletRequest> request = withRequest();
 		VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory = new VaultEnvironmentRepositoryFactory(
-				request, new EnvironmentWatch.Default(),
-				Optional.of(new HttpClientVaultRestTemplateFactory()),
+				request, new EnvironmentWatch.Default(), Optional.of(new HttpClientVaultRestTemplateFactory()),
 				withTokenProvider(request));
 		VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
 				.build(withEnvironmentProperties(false));
@@ -76,20 +73,17 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 	public void skipSslValidation() throws Exception {
 		ObjectProvider<HttpServletRequest> request = withRequest();
 		VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory = new VaultEnvironmentRepositoryFactory(
-				request, new EnvironmentWatch.Default(),
-				Optional.of(new HttpClientVaultRestTemplateFactory()),
+				request, new EnvironmentWatch.Default(), Optional.of(new HttpClientVaultRestTemplateFactory()),
 				withTokenProvider(request));
 		VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
 				.build(withEnvironmentProperties(true));
 
-		Environment actual = vaultEnvironmentRepository.findOne("application", "profile",
-				"label");
+		Environment actual = vaultEnvironmentRepository.findOne("application", "profile", "label");
 
 		assertThat(actual).isNotNull();
 	}
 
-	private VaultEnvironmentProperties withEnvironmentProperties(
-			boolean skipSslValidation) {
+	private VaultEnvironmentProperties withEnvironmentProperties(boolean skipSslValidation) {
 		VaultEnvironmentProperties environmentProperties = new VaultEnvironmentProperties();
 		environmentProperties.setPort(Integer.decode(this.localServerPort));
 		environmentProperties.setScheme("https");
@@ -105,8 +99,7 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 		return requestProvider;
 	}
 
-	private ConfigTokenProvider withTokenProvider(
-			ObjectProvider<HttpServletRequest> request) {
+	private ConfigTokenProvider withTokenProvider(ObjectProvider<HttpServletRequest> request) {
 		return new HttpRequestConfigTokenProvider(request);
 	}
 

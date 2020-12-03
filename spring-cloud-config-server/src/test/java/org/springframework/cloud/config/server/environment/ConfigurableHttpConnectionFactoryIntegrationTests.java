@@ -101,12 +101,10 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 	public void authenticatedHttpsProxy() throws Exception {
 		String repoUrl = "https://myrepo/repo.git";
 		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties(repoUrl, null, AUTHENTICATED_HTTPS_PROXY))
-				.run();
+				.properties(gitProperties(repoUrl, null, AUTHENTICATED_HTTPS_PROXY)).run();
 		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(
-				allOf(instanceOf(UnknownHostException.class), hasProperty("message",
-						containsString(AUTHENTICATED_HTTPS_PROXY.getHost()))));
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+				hasProperty("message", containsString(AUTHENTICATED_HTTPS_PROXY.getHost()))));
 
 		makeRequest(httpClient, "https://somehost");
 	}
@@ -126,9 +124,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 	@Test
 	public void httpsProxy_placeholderUrl() throws Exception {
 		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties(
-						"https://myrepo/{placeholder1}/{placeholder2}-repo.git", null,
-						HTTPS_PROXY))
+				.properties(gitProperties("https://myrepo/{placeholder1}/{placeholder2}-repo.git", null, HTTPS_PROXY))
 				.run();
 		HttpClient httpClient = getHttpClientForUrl(
 				"https://myrepo/someplaceholdervalue/anotherplaceholdervalue-repo.git");
@@ -144,8 +140,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
 		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString("somehost"))));
+		this.expectedException.expectCause(
+				allOf(instanceOf(UnknownHostException.class), hasProperty("message", containsString("somehost"))));
 
 		makeRequest(httpClient, "http://somehost");
 	}
@@ -156,9 +152,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties(gitProperties(repoUrl, AUTHENTICATED_HTTP_PROXY, null)).run();
 		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(
-				allOf(instanceOf(UnknownHostException.class), hasProperty("message",
-						containsString(AUTHENTICATED_HTTP_PROXY.getHost()))));
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+				hasProperty("message", containsString(AUTHENTICATED_HTTP_PROXY.getHost()))));
 
 		makeRequest(httpClient, "http://somehost");
 	}
@@ -178,11 +173,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 	@Test
 	public void httpProxy_placeholderUrl() throws Exception {
 		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties("https://myrepo/{placeholder}-repo.git",
-						HTTP_PROXY, null))
-				.run();
-		HttpClient httpClient = getHttpClientForUrl(
-				"https://myrepo/someplaceholdervalue-repo.git");
+				.properties(gitProperties("https://myrepo/{placeholder}-repo.git", HTTP_PROXY, null)).run();
+		HttpClient httpClient = getHttpClientForUrl("https://myrepo/someplaceholdervalue-repo.git");
 		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
 				hasProperty("message", containsString(HTTP_PROXY.getHost()))));
 
@@ -195,8 +187,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
 		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString("somehost"))));
+		this.expectedException.expectCause(
+				allOf(instanceOf(UnknownHostException.class), hasProperty("message", containsString("somehost"))));
 
 		makeRequest(httpClient, "https://somehost");
 	}
@@ -208,8 +200,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 			ProxySelector.setDefault(new ProxySelector() {
 				@Override
 				public List<Proxy> select(URI uri) {
-					InetSocketAddress address = new InetSocketAddress(
-							HTTP_PROXY.getHost(), HTTP_PROXY.getPort());
+					InetSocketAddress address = new InetSocketAddress(HTTP_PROXY.getHost(), HTTP_PROXY.getPort());
 					Proxy proxy = new Proxy(Proxy.Type.HTTP, address);
 					return Collections.singletonList(proxy);
 				}
@@ -220,13 +211,10 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 				}
 			});
 			String repoUrl = "https://myrepo/repo.git";
-			new SpringApplicationBuilder(TestConfiguration.class)
-					.web(WebApplicationType.NONE).properties(new String[] {
-							"spring.cloud.config.server.git.uri=" + repoUrl })
-					.run();
+			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties(new String[] { "spring.cloud.config.server.git.uri=" + repoUrl }).run();
 			HttpClient httpClient = getHttpClientForUrl(repoUrl);
-			this.expectedException.expectCause(allOf(
-					instanceOf(UnknownHostException.class),
+			this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
 					hasProperty("message", containsString(HTTP_PROXY.getHost()))));
 
 			makeRequest(httpClient, "http://somehost");
@@ -236,44 +224,32 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		}
 	}
 
-	private String[] gitProperties(String repoUrl, ProxyHostProperties httpProxy,
-			ProxyHostProperties httpsProxy) {
+	private String[] gitProperties(String repoUrl, ProxyHostProperties httpProxy, ProxyHostProperties httpsProxy) {
 		List<String> result = new ArrayList<>();
 		result.add("spring.cloud.config.server.git.uri=" + repoUrl);
 		if (httpProxy != null) {
-			result.addAll(Arrays.asList(
-					"spring.cloud.config.server.git.proxy.http.host="
-							+ httpProxy.getHost(),
-					"spring.cloud.config.server.git.proxy.http.port="
-							+ httpProxy.getPort()));
+			result.addAll(Arrays.asList("spring.cloud.config.server.git.proxy.http.host=" + httpProxy.getHost(),
+					"spring.cloud.config.server.git.proxy.http.port=" + httpProxy.getPort()));
 			if (httpProxy.getUsername() != null && httpProxy.getPassword() != null) {
-				result.addAll(Arrays.asList(
-						"spring.cloud.config.server.git.proxy.http.username="
-								+ httpProxy.getUsername(),
-						"spring.cloud.config.server.git.proxy.http.password="
-								+ httpProxy.getPassword()));
+				result.addAll(
+						Arrays.asList("spring.cloud.config.server.git.proxy.http.username=" + httpProxy.getUsername(),
+								"spring.cloud.config.server.git.proxy.http.password=" + httpProxy.getPassword()));
 			}
 		}
 		if (httpsProxy != null) {
-			result.addAll(Arrays.asList(
-					"spring.cloud.config.server.git.proxy.https.host="
-							+ httpsProxy.getHost(),
-					"spring.cloud.config.server.git.proxy.https.port="
-							+ httpsProxy.getPort()));
+			result.addAll(Arrays.asList("spring.cloud.config.server.git.proxy.https.host=" + httpsProxy.getHost(),
+					"spring.cloud.config.server.git.proxy.https.port=" + httpsProxy.getPort()));
 			if (httpsProxy.getUsername() != null && httpsProxy.getPassword() != null) {
-				result.addAll(Arrays.asList(
-						"spring.cloud.config.server.git.proxy.https.username="
-								+ httpsProxy.getUsername(),
-						"spring.cloud.config.server.git.proxy.https.password="
-								+ httpsProxy.getPassword()));
+				result.addAll(
+						Arrays.asList("spring.cloud.config.server.git.proxy.https.username=" + httpsProxy.getUsername(),
+								"spring.cloud.config.server.git.proxy.https.password=" + httpsProxy.getPassword()));
 			}
 		}
 		return result.toArray(new String[0]);
 	}
 
 	private void makeRequest(HttpClient httpClient, String url) {
-		RestTemplate restTemplate = new RestTemplate(
-				new HttpComponentsClientHttpRequestFactory(httpClient));
+		RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
 		restTemplate.getForObject(url, String.class);
 	}
 
@@ -287,8 +263,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
-	@Import({ PropertyPlaceholderAutoConfiguration.class,
-			EnvironmentRepositoryConfiguration.class })
+	@Import({ PropertyPlaceholderAutoConfiguration.class, EnvironmentRepositoryConfiguration.class })
 	protected static class TestConfiguration {
 
 	}

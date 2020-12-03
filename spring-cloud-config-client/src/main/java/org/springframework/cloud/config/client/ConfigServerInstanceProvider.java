@@ -32,25 +32,44 @@ import org.springframework.retry.annotation.Retryable;
  */
 public class ConfigServerInstanceProvider {
 
-	private static Log logger = LogFactory.getLog(ConfigServerInstanceProvider.class);
+	private Log log = LogFactory.getLog(getClass());
 
-	private final DiscoveryClient client;
+	private final Function function;
 
+	@Deprecated
 	public ConfigServerInstanceProvider(DiscoveryClient client) {
-		this.client = client;
+		this.function = client::getInstances;
+	}
+
+	public ConfigServerInstanceProvider(Function function) {
+		this.function = function;
+	}
+
+	void setLog(Log log) {
+		this.log = log;
 	}
 
 	@Retryable(interceptor = "configServerRetryInterceptor")
 	public List<ServiceInstance> getConfigServerInstances(String serviceId) {
-		logger.debug("Locating configserver (" + serviceId + ") via discovery");
-		List<ServiceInstance> instances = this.client.getInstances(serviceId);
-		if (instances.isEmpty()) {
-			throw new IllegalStateException(
-					"No instances found of configserver (" + serviceId + ")");
+		if (log.isDebugEnabled()) {
+			log.debug("Locating configserver (" + serviceId + ") via discovery");
 		}
-		logger.debug("Located configserver (" + serviceId
-				+ ") via discovery. No of instances found: " + instances.size());
+		List<ServiceInstance> instances = this.function.apply(serviceId);
+		if (instances.isEmpty()) {
+			throw new IllegalStateException("No instances found of configserver (" + serviceId + ")");
+		}
+		if (log.isDebugEnabled()) {
+			log.debug("Located configserver (" + serviceId + ") via discovery. No of instances found: "
+					+ instances.size());
+		}
 		return instances;
+	}
+
+	@FunctionalInterface
+	public interface Function {
+
+		List<ServiceInstance> apply(String serviceId);
+
 	}
 
 }

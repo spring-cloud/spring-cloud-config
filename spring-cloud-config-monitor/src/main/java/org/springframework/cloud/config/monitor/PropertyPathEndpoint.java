@@ -57,8 +57,7 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 
 	private String busId;
 
-	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor,
-			String busId) {
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId) {
 		this.extractor = extractor;
 		this.busId = busId;
 	}
@@ -68,14 +67,12 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 	}
 
 	@Override
-	public void setApplicationEventPublisher(
-			ApplicationEventPublisher applicationEventPublisher) {
+	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
 	@RequestMapping(method = RequestMethod.POST)
-	public Set<String> notifyByPath(@RequestHeader HttpHeaders headers,
-			@RequestBody Map<String, Object> request) {
+	public Set<String> notifyByPath(@RequestHeader HttpHeaders headers, @RequestBody Map<String, Object> request) {
 		PropertyPathNotification notification = this.extractor.extract(headers, request);
 		if (notification != null) {
 
@@ -87,8 +84,8 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 			if (this.applicationEventPublisher != null) {
 				for (String service : services) {
 					log.info("Refresh for: " + service);
-					this.applicationEventPublisher.publishEvent(
-							new RefreshRemoteApplicationEvent(this, this.busId, service));
+					this.applicationEventPublisher
+							.publishEvent(new RefreshRemoteApplicationEvent(this, this.busId, service));
 				}
 				return services;
 			}
@@ -97,10 +94,8 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 		return Collections.emptySet();
 	}
 
-	@RequestMapping(method = RequestMethod.POST,
-			consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-	public Set<String> notifyByForm(@RequestHeader HttpHeaders headers,
-			@RequestParam("path") List<String> request) {
+	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+	public Set<String> notifyByForm(@RequestHeader HttpHeaders headers, @RequestParam("path") List<String> request) {
 		Map<String, Object> map = new HashMap<>();
 		String key = "path";
 		map.put(key, request);
@@ -110,8 +105,7 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 	private Set<String> guessServiceName(String path) {
 		Set<String> services = new LinkedHashSet<>();
 		if (path != null) {
-			String stem = StringUtils.stripFilenameExtension(
-					StringUtils.getFilename(StringUtils.cleanPath(path)));
+			String stem = StringUtils.stripFilenameExtension(StringUtils.getFilename(StringUtils.cleanPath(path)));
 			// TODO: correlate with service registry
 			int index = stem.indexOf("-");
 			while (index >= 0) {

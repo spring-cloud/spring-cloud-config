@@ -55,64 +55,55 @@ public class GitCredentialsProviderFactoryTests {
 
 	@Test
 	public void testCreateForFileNoUsernameIsNull() {
-		CredentialsProvider provider = this.factory.createFor(FILE_REPO, null, null, null,
-				false);
+		CredentialsProvider provider = this.factory.createFor(FILE_REPO, null, null, null, false);
 		assertThat(provider).isNull();
 	}
 
 	@Test
 	public void testCreateForFileWithUsername() {
-		CredentialsProvider provider = this.factory.createFor(FILE_REPO, USER, PASSWORD,
-				null, false);
+		CredentialsProvider provider = this.factory.createFor(FILE_REPO, USER, PASSWORD, null, false);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof UsernamePasswordCredentialsProvider).isTrue();
 	}
 
 	@Test
 	public void testCreateForServerNoUsernameIsNull() {
-		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, null, null,
-				null, false);
+		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, null, null, null, false);
 		assertThat(provider).isNull();
 	}
 
 	@Test
 	public void testCreateForServerWithUsername() {
-		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER,
-				PASSWORD, null, false);
+		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER, PASSWORD, null, false);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof UsernamePasswordCredentialsProvider).isTrue();
 	}
 
 	@Test
 	public void testCreateForHttpsServerWithSkipSslValidation() {
-		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER,
-				PASSWORD, null, true);
+		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER, PASSWORD, null, true);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof GitSkipSslValidationCredentialsProvider).isTrue();
 	}
 
 	@Test
 	public void testCreateForHttpsServerWithoutSpecifyingSkipSslValidation() {
-		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER,
-				PASSWORD, null);
+		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER, PASSWORD, null);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof UsernamePasswordCredentialsProvider)
-				.as("deprecated createFor() should not enable ssl validation skipping")
-				.isTrue();
+				.as("deprecated createFor() should not enable ssl validation skipping").isTrue();
 	}
 
 	@Test
 	public void testCreateForSshServerWithSkipSslValidation() {
-		CredentialsProvider provider = this.factory.createFor(SSH_GIT_REPO, USER,
-				PASSWORD, null, true);
+		CredentialsProvider provider = this.factory.createFor(SSH_GIT_REPO, USER, PASSWORD, null, true);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof UsernamePasswordCredentialsProvider).isTrue();
 	}
 
 	@Test
 	public void testCreateForAwsNoUsername() {
-		CredentialsProvider provider = this.factory.createFor(AWS_REPO, null, null, null,
-				false);
+		CredentialsProvider provider = this.factory.createFor(AWS_REPO, null, null, null, false);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof AwsCodeCommitCredentialProvider).isTrue();
 		AwsCodeCommitCredentialProvider aws = (AwsCodeCommitCredentialProvider) provider;
@@ -122,8 +113,7 @@ public class GitCredentialsProviderFactoryTests {
 
 	@Test
 	public void testCreateForAwsWithUsername() {
-		CredentialsProvider provider = this.factory.createFor(AWS_REPO, USER, PASSWORD,
-				null, false);
+		CredentialsProvider provider = this.factory.createFor(AWS_REPO, USER, PASSWORD, null, false);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof AwsCodeCommitCredentialProvider).isTrue();
 		AwsCodeCommitCredentialProvider aws = (AwsCodeCommitCredentialProvider) provider;
@@ -134,8 +124,7 @@ public class GitCredentialsProviderFactoryTests {
 	@Test
 	public void testCreateForAwsDisabled() {
 		this.factory.setAwsCodeCommitEnabled(false);
-		CredentialsProvider provider = this.factory.createFor(AWS_REPO, null, null, null,
-				false);
+		CredentialsProvider provider = this.factory.createFor(AWS_REPO, null, null, null, false);
 		assertThat(provider).isNull();
 		provider = this.factory.createFor(AWS_REPO, USER, PASSWORD, null, false);
 		assertThat(provider).isNotNull();
@@ -144,8 +133,7 @@ public class GitCredentialsProviderFactoryTests {
 
 	@Test
 	public void testCreatePassphraseCredentialProvider() {
-		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, null, null,
-				PASSWORD, false);
+		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, null, null, PASSWORD, false);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof PassphraseCredentialsProvider).isTrue();
 	}

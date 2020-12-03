@@ -29,8 +29,7 @@ import org.springframework.util.MultiValueMap;
  *
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
-public class GiteaPropertyPathNotificationExtractor
-		extends BasePropertyPathNotificationExtractor {
+public class GiteaPropertyPathNotificationExtractor extends BasePropertyPathNotificationExtractor {
 
 	private static final String HEADERS_KEY = "X-Gitea-Event";
 
@@ -47,8 +46,7 @@ public class GiteaPropertyPathNotificationExtractor
 	}
 
 	@Override
-	protected boolean requestBelongsToGitRepoManager(
-			MultiValueMap<String, String> headers) {
+	protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
 		return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
 	}
 
