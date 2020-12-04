@@ -42,14 +42,14 @@ public class AwsParameterStoreEnvironmentRepositoryFactory implements
 
 		String region = environmentProperties.getRegion();
 
-		if (!StringUtils.isEmpty(region)) {
+		if (StringUtils.hasLength(region)) {
 			Regions awsRegion = Regions.fromName(region);
 
 			clientBuilder.withRegion(awsRegion);
 
 			String endpoint = environmentProperties.getEndpoint();
 
-			if (!StringUtils.isEmpty(endpoint)) {
+			if (StringUtils.hasLength(endpoint)) {
 				AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
 						endpoint, awsRegion.getName());
 

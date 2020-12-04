@@ -59,11 +59,11 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-		if (StringUtils.isEmpty(application)) {
+		if (!StringUtils.hasLength(application)) {
 			application = configServerProperties.getDefaultApplicationName();
 		}
 
-		if (StringUtils.isEmpty(profile)) {
+		if (!StringUtils.hasLength(profile)) {
 			profile = configServerProperties.getDefaultProfile();
 		}
 
@@ -147,7 +147,7 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 		if (response != null) {
 			addParametersToProperties(path, response.getParameters(), result);
 
-			while (!StringUtils.isEmpty(response.getNextToken())) {
+			while (StringUtils.hasLength(response.getNextToken())) {
 				response = awsSsmClient.getParametersByPath(request.withNextToken(response.getNextToken()));
 
 				addParametersToProperties(path, response.getParameters(), result);
