@@ -731,7 +731,6 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 					}
 					else if (i == chunks.size() - 1) {
 						GetParametersByPathRequest requestClone = request.clone().withNextToken(nextToken);
-
 						GetParametersByPathResult responseClone = response.clone().withParameters(chunk);
 
 						when(awsSsmClientMock.getParametersByPath(eq(requestClone))).thenReturn(responseClone);
