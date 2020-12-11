@@ -231,6 +231,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			}
 			// TODO: needed anymore?
 			name = name.replace("applicationConfig: [", "");
+			name = name.replace("file [", "");
 			name = name.replace("]", "");
 			if (this.searchLocations != null) {
 				boolean matches = false;
