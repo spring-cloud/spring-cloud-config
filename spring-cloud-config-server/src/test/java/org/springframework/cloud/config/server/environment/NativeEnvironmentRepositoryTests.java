@@ -103,6 +103,26 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void cleanBoot240Classpath() {
+		Environment environment = new Environment("application");
+		environment.add(new PropertySource(
+				"Config resource 'classpath:/configs/application-myprofile.yml' via location 'classpath:/configs/' (document #0)",
+				Collections.singletonMap("foo", "bar")));
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName().contains("application-myprofile.yml"));
+	}
+
+	@Test
+	public void cleanBoot241Classpath() {
+		Environment environment = new Environment("application");
+		environment.add(new PropertySource(
+				"Config resource 'class path resource [configs/application.yml]' via location 'classpath:/configs/' (document #0)",
+				Collections.singletonMap("foo", "bar")));
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName().contains("application-myprofile.yml"));
+	}
+
+	@Test
 	@Ignore // FIXME: configdata
 	public void labelled() {
 		this.repository.setSearchLocations("classpath:/test");
