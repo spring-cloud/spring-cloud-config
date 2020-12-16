@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +29,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
+import org.springframework.boot.context.config.ConfigDataEnvironmentUpdateListener;
+import org.springframework.boot.context.config.ConfigDataLocation;
+import org.springframework.boot.context.config.ConfigDataResource;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.NestedExceptionUtils;
@@ -130,11 +134,12 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		try {
 			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
 			DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
+			TrackingConfigDataEnvironmentUpdateListener listener = new TrackingConfigDataEnvironmentUpdateListener();
 			ConfigDataEnvironmentPostProcessor.applyTo(environment, resourceLoader, null,
-					StringUtils.commaDelimitedListToStringArray(profile));
+					StringUtils.commaDelimitedListToSet(profile), listener);
 
 			environment.getPropertySources().remove("config-data-setup");
-			return clean(new PassthruEnvironmentRepository(environment).findOne(config, profile, label, includeOrigin));
+			return clean(new PassthruEnvironmentRepository(environment).findOne(config, profile, label, includeOrigin), listener);
 		}
 		catch (Exception e) {
 			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
@@ -217,7 +222,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		return environment;
 	}
 
-	protected Environment clean(Environment value) {
+	protected Environment clean(Environment value, TrackingConfigDataEnvironmentUpdateListener listener) {
 		Environment result = new Environment(value.getName(), value.getProfiles(), value.getLabel(), this.version,
 				value.getState());
 		for (PropertySource source : value.getPropertySources()) {
@@ -225,11 +230,18 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			if (this.environment.getPropertySources().contains(name)) {
 				continue;
 			}
-			Matcher matcher = RESOURCE_PATTERN.matcher(name);
 			String location = null;
-			if (matcher.find()) {
-				name = matcher.group(1);
-				location = matcher.group(2);
+			if (listener != null && listener.getEntries().containsKey(name)) {
+				Entry entry = listener.getEntries().get(name);
+				name = entry.resource.toString();
+				location = entry.location.toString();
+			}
+			else {
+				Matcher matcher = RESOURCE_PATTERN.matcher(name);
+				if (matcher.find()) {
+					name = matcher.group(1);
+					location = matcher.group(2);
+				}
 			}
 			// TODO: needed anymore?
 			name = name.replace("applicationConfig: [", "");
@@ -258,12 +270,13 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 						matches = true;
 						break;
 					}
-					if (location.startsWith("file:")) {
-						location = StringUtils
-								.cleanPath(new File(location.substring("file:".length())).getAbsolutePath()) + "/";
+					String locationToTest = location;
+					if (locationToTest.startsWith("file:")) {
+						locationToTest = StringUtils
+								.cleanPath(new File(locationToTest.substring("file:".length())).getAbsolutePath()) + "/";
 					}
-					if (location != null && location.startsWith(pattern)
-							&& !location.substring(pattern.length()).contains("/")) {
+					if (locationToTest != null && locationToTest.startsWith(pattern)
+							&& !locationToTest.substring(pattern.length()).contains("/")) {
 						matches = true;
 						break;
 					}
@@ -319,6 +332,38 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 	public void setOrder(int order) {
 		this.order = order;
+	}
+
+	private class TrackingConfigDataEnvironmentUpdateListener implements ConfigDataEnvironmentUpdateListener {
+
+		private Map<String, Entry> entries = new ConcurrentHashMap<>();
+
+		@Override
+		public void onPropertySourceAdded(org.springframework.core.env.PropertySource<?> propertySource, ConfigDataLocation location, ConfigDataResource resource) {
+			entries.put(propertySource.getName(), new Entry(location, resource));
+		}
+
+		public Map<String, Entry> getEntries() {
+			return this.entries;
+		}
+	}
+
+	private class Entry {
+		private final ConfigDataLocation location;
+		private final ConfigDataResource resource;
+
+		private Entry(ConfigDataLocation location, ConfigDataResource resource) {
+			this.location = location;
+			this.resource = resource;
+		}
+
+		public ConfigDataLocation getLocation() {
+			return this.location;
+		}
+
+		public ConfigDataResource getResource() {
+			return this.resource;
+		}
 	}
 
 }

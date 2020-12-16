@@ -98,6 +98,7 @@ public class NativeEnvironmentRepositoryTests {
 		environment.add(new PropertySource(
 				"Config resource 'file [/tmp/config-repo-7780026223759117699/application-dev.yml]' via location 'file:/tmp/config-repo-7780026223759117699/'",
 				Collections.singletonMap("foo", "bar")));
+		//environment = repository.clean(environment, null);
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName().contains("application-dev.yml"));
 	}
@@ -108,16 +109,19 @@ public class NativeEnvironmentRepositoryTests {
 		environment.add(new PropertySource(
 				"Config resource 'classpath:/configs/application-myprofile.yml' via location 'classpath:/configs/' (document #0)",
 				Collections.singletonMap("foo", "bar")));
+		//environment = repository.clean(environment, null);
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName().contains("application-myprofile.yml"));
 	}
 
 	@Test
 	public void cleanBoot241Classpath() {
+		//this.repository.setSearchLocations("classpath:/configs");
 		Environment environment = new Environment("application");
 		environment.add(new PropertySource(
 				"Config resource 'class path resource [configs/application.yml]' via location 'classpath:/configs/' (document #0)",
 				Collections.singletonMap("foo", "bar")));
+		//environment = repository.clean(environment, null);
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName().contains("application-myprofile.yml"));
 	}
