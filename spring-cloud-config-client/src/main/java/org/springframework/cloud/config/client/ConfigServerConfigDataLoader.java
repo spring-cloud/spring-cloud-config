@@ -210,7 +210,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
-		String profile = StringUtils.collectionToCommaDelimitedString(resource.getProfiles().getAccepted());
+		String profile = resource.getProfiles();
 		String token = properties.getToken();
 		int noOfUrls = properties.getUri().length;
 		if (noOfUrls > 1) {

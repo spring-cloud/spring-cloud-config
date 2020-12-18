@@ -21,6 +21,7 @@ import java.util.Objects;
 import org.springframework.boot.context.config.ConfigDataResource;
 import org.springframework.boot.context.config.Profiles;
 import org.springframework.core.style.ToStringCreator;
+import org.springframework.util.StringUtils;
 
 public class ConfigServerConfigDataResource extends ConfigDataResource {
 
@@ -44,8 +45,11 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 		return this.optional;
 	}
 
-	public Profiles getProfiles() {
-		return this.profiles;
+	public String getProfiles() {
+		if (StringUtils.hasText(properties.getProfile())) {
+			return properties.getProfile();
+		}
+		return StringUtils.collectionToCommaDelimitedString(profiles.getAccepted());
 	}
 
 	@Override

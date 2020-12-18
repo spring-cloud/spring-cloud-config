@@ -54,7 +54,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/", "classpath:/config/", "file:./",
 			"file:./config/" };
 
-	static final Pattern RESOURCE_PATTERN = Pattern.compile("Config resource '(.*?)' via location.*");
+	static final Pattern RESOURCE_PATTERN = Pattern.compile("Config resource '(.*?)' via location '(.*)'");
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
@@ -226,11 +226,14 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				continue;
 			}
 			Matcher matcher = RESOURCE_PATTERN.matcher(name);
+			String location = null;
 			if (matcher.find()) {
 				name = matcher.group(1);
+				location = matcher.group(2);
 			}
 			// TODO: needed anymore?
 			name = name.replace("applicationConfig: [", "");
+			name = name.replace("file [", "file:");
 			name = name.replace("]", "");
 			if (this.searchLocations != null) {
 				boolean matches = false;
@@ -252,6 +255,15 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 						logger.trace("Testing pattern: " + pattern + " with property source: " + name);
 					}
 					if (normal.startsWith(pattern) && !normal.substring(pattern.length()).contains("/")) {
+						matches = true;
+						break;
+					}
+					if (location.startsWith("file:")) {
+						location = StringUtils
+								.cleanPath(new File(location.substring("file:".length())).getAbsolutePath()) + "/";
+					}
+					if (location != null && location.startsWith(pattern)
+							&& !location.substring(pattern.length()).contains("/")) {
 						matches = true;
 						break;
 					}

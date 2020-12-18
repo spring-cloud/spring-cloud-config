@@ -16,11 +16,15 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.context.config.ConfigDataLocation;
 import org.springframework.boot.context.config.ConfigDataLocationResolverContext;
+import org.springframework.boot.context.config.Profiles;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.logging.DeferredLog;
 import org.springframework.mock.env.MockEnvironment;
@@ -61,6 +65,30 @@ public class ConfigServerConfigDataLocationResolverTests {
 	void isResolvableReturnsFalseWhenDisabled() {
 		this.environment.setProperty(ConfigClientProperties.PREFIX + ".enabled", "false");
 		assertThat(this.resolver.isResolvable(this.context, ConfigDataLocation.of("configserver:"))).isFalse();
+	}
+
+	@Test
+	void defaultSpringProfiles() {
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		assertThat(resource.getProfiles()).isEqualTo("default");
+	}
+
+	@Test
+	void configClientProfilesOverridesSpringProfilesActive() {
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".profile", "myprofile");
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		assertThat(resource.getProfiles()).isEqualTo("myprofile");
+	}
+
+	private ConfigServerConfigDataResource testResolveProvileSpecific() {
+		when(context.getBootstrapContext()).thenReturn(mock(ConfigurableBootstrapContext.class));
+		Profiles profiles = mock(Profiles.class);
+
+		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
+				ConfigDataLocation.of("configserver:"), profiles);
+		assertThat(resources).hasSize(1);
+		ConfigServerConfigDataResource resource = resources.get(0);
+		return resource;
 	}
 
 }

@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.Collections;
 import java.util.regex.Matcher;
 
 import org.junit.Before;
@@ -25,6 +26,7 @@ import org.junit.Test;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -88,6 +90,36 @@ public class NativeEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
+	}
+
+	@Test
+	public void cleanBoot24() {
+		Environment environment = new Environment("application");
+		environment.add(new PropertySource(
+				"Config resource 'file [/tmp/config-repo-7780026223759117699/application-dev.yml]' via location 'file:/tmp/config-repo-7780026223759117699/'",
+				Collections.singletonMap("foo", "bar")));
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName().contains("application-dev.yml"));
+	}
+
+	@Test
+	public void cleanBoot240Classpath() {
+		Environment environment = new Environment("application");
+		environment.add(new PropertySource(
+				"Config resource 'classpath:/configs/application-myprofile.yml' via location 'classpath:/configs/' (document #0)",
+				Collections.singletonMap("foo", "bar")));
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName().contains("application-myprofile.yml"));
+	}
+
+	@Test
+	public void cleanBoot241Classpath() {
+		Environment environment = new Environment("application");
+		environment.add(new PropertySource(
+				"Config resource 'class path resource [configs/application.yml]' via location 'classpath:/configs/' (document #0)",
+				Collections.singletonMap("foo", "bar")));
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName().contains("application-myprofile.yml"));
 	}
 
 	@Test
