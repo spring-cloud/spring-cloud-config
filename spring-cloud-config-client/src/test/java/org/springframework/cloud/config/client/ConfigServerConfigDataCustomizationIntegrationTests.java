@@ -44,8 +44,7 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 		ConfigurableApplicationContext context = null;
 		try {
 			BindHandlerBootstrapper bindHandlerBootstrapper = new BindHandlerBootstrapper();
-			context = new SpringApplicationBuilder(TestConfig.class)
-					.addBootstrapper(bindHandlerBootstrapper)
+			context = new SpringApplicationBuilder(TestConfig.class).addBootstrapper(bindHandlerBootstrapper)
 					.addBootstrapper(ConfigServerBootstrapper.create().withLoaderInterceptor(new Interceptor())
 							.withRestTemplateFactory(this::restTemplate))
 					.addBootstrapper(registry -> registry.addCloseListener(event -> {
@@ -55,7 +54,8 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 						RestTemplate restTemplate = bootstrapContext.get(RestTemplate.class);
 						beanFactory.registerSingleton("holder", new RestTemplateHolder(restTemplate));
 						beanFactory.registerSingleton("interceptor", bootstrapContext.get(LoaderInterceptor.class));
-					})).run("--spring.config.import=optional:configserver:", "--custom.prop=customval", "--spring.cloud.config.label=mylabel");
+					})).run("--spring.config.import=optional:configserver:", "--custom.prop=customval",
+							"--spring.cloud.config.label=mylabel");
 
 			RestTemplateHolder holder = context.getBean(RestTemplateHolder.class);
 			assertThat(holder).isNotNull();
@@ -133,12 +133,14 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 		public void intitialize(BootstrapRegistry registry) {
 			registry.register(BindHandler.class, context -> new BindHandler() {
 				@Override
-				public Object onSuccess(ConfigurationPropertyName name, Bindable<?> target, BindContext context, Object result) {
+				public Object onSuccess(ConfigurationPropertyName name, Bindable<?> target, BindContext context,
+						Object result) {
 					onSuccessCount++;
 					return result;
 				}
 			});
 		}
+
 	}
 
 }

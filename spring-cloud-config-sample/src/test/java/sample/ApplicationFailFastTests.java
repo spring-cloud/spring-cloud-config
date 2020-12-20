@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.fail;
 
 public class ApplicationFailFastTests {
 
-	// FIXME: configdata failfast works.
 	@Test
 	public void contextFails() {
 		try {
