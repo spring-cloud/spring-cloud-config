@@ -40,8 +40,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
-		// config
-		// server on the classpath we need to set it explicitly
+		// config server on the classpath we need to set it explicitly
 		properties = { "spring.cloud.config.enabled:true",
 				// FIXME: configdata why is this needed here?
 				"spring.config.use-legacy-processing=true", "management.security.enabled=false",

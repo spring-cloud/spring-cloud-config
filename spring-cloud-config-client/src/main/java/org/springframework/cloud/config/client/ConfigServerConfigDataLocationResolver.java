@@ -32,6 +32,7 @@ import org.springframework.boot.context.config.ConfigDataLocationResolver;
 import org.springframework.boot.context.config.ConfigDataLocationResolverContext;
 import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.boot.context.config.Profiles;
+import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.Ordered;
@@ -61,13 +62,20 @@ public class ConfigServerConfigDataLocationResolver
 		return -1;
 	}
 
-	protected ConfigClientProperties loadProperties(Binder binder) {
+	protected ConfigClientProperties loadProperties(ConfigDataLocationResolverContext context) {
+		Binder binder = context.getBinder();
+		BindHandler bindHandler = getBindHandler(context);
 		ConfigClientProperties configClientProperties = binder
-				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class))
-				.orElse(new ConfigClientProperties());
-		String applicationName = binder.bind("spring.application.name", String.class).orElse("application");
+				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
+				.orElseGet(ConfigClientProperties::new);
+		String applicationName = binder.bind("spring.application.name", Bindable.of(String.class), bindHandler)
+				.orElse("application");
 		configClientProperties.setName(applicationName);
 		return configClientProperties;
+	}
+
+	private BindHandler getBindHandler(ConfigDataLocationResolverContext context) {
+		return context.getBootstrapContext().getOrElse(BindHandler.class, null);
 	}
 
 	protected RestTemplate createRestTemplate(ConfigClientProperties properties) {
@@ -120,8 +128,7 @@ public class ConfigServerConfigDataLocationResolver
 	public List<ConfigServerConfigDataResource> resolveProfileSpecific(
 			ConfigDataLocationResolverContext resolverContext, ConfigDataLocation location, Profiles profiles)
 			throws ConfigDataLocationNotFoundException {
-		ConfigClientProperties properties = loadProperties(resolverContext.getBinder());
-
+		ConfigClientProperties properties = loadProperties(resolverContext);
 		String uris = location.getNonPrefixedValue(getPrefix());
 
 		if (StringUtils.hasText(uris)) {
@@ -139,7 +146,8 @@ public class ConfigServerConfigDataLocationResolver
 			return createRestTemplate(props);
 		});
 
-		boolean discoveryEnabled = resolverContext.getBinder().bind(CONFIG_DISCOVERY_ENABLED, Boolean.class)
+		boolean discoveryEnabled = resolverContext.getBinder()
+				.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(resolverContext))
 				.orElse(false);
 
 		if (discoveryEnabled) {

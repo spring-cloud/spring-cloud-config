@@ -20,11 +20,17 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.BootstrapContext;
+import org.springframework.boot.BootstrapRegistry;
+import org.springframework.boot.Bootstrapper;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.config.ConfigData;
+import org.springframework.boot.context.properties.bind.BindContext;
+import org.springframework.boot.context.properties.bind.BindHandler;
+import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoaderInterceptor;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.client.RestTemplate;
@@ -37,7 +43,8 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 	void customizableRestTemplate() {
 		ConfigurableApplicationContext context = null;
 		try {
-			context = new SpringApplicationBuilder(TestConfig.class)
+			BindHandlerBootstrapper bindHandlerBootstrapper = new BindHandlerBootstrapper();
+			context = new SpringApplicationBuilder(TestConfig.class).addBootstrapper(bindHandlerBootstrapper)
 					.addBootstrapper(ConfigServerBootstrapper.create().withLoaderInterceptor(new Interceptor())
 							.withRestTemplateFactory(this::restTemplate))
 					.addBootstrapper(registry -> registry.addCloseListener(event -> {
@@ -47,7 +54,8 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 						RestTemplate restTemplate = bootstrapContext.get(RestTemplate.class);
 						beanFactory.registerSingleton("holder", new RestTemplateHolder(restTemplate));
 						beanFactory.registerSingleton("interceptor", bootstrapContext.get(LoaderInterceptor.class));
-					})).run("--spring.config.import=optional:configserver:", "--custom.prop=customval");
+					})).run("--spring.config.import=optional:configserver:", "--custom.prop=customval",
+							"--spring.cloud.config.label=mylabel");
 
 			RestTemplateHolder holder = context.getBean(RestTemplateHolder.class);
 			assertThat(holder).isNotNull();
@@ -60,6 +68,8 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 			Interceptor interceptor = (Interceptor) loaderInterceptor;
 			assertThat(interceptor.applied).isTrue();
 			assertThat(interceptor.hasBinder).isTrue();
+
+			assertThat(bindHandlerBootstrapper.onSuccessCount).isGreaterThan(1);
 		}
 		finally {
 			if (context != null) {
@@ -111,6 +121,24 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 
 		CustomRestTemplate(String customProp) {
 			this.customProp = customProp;
+		}
+
+	}
+
+	static class BindHandlerBootstrapper implements Bootstrapper {
+
+		private int onSuccessCount = 0;
+
+		@Override
+		public void intitialize(BootstrapRegistry registry) {
+			registry.register(BindHandler.class, context -> new BindHandler() {
+				@Override
+				public Object onSuccess(ConfigurationPropertyName name, Bindable<?> target, BindContext context,
+						Object result) {
+					onSuccessCount++;
+					return result;
+				}
+			});
 		}
 
 	}
