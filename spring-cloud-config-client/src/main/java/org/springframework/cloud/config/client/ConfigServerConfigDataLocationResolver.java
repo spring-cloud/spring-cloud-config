@@ -35,8 +35,11 @@ import org.springframework.boot.context.config.Profiles;
 import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.core.Ordered;
+import org.springframework.core.log.LogMessage;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -150,13 +153,32 @@ public class ConfigServerConfigDataLocationResolver
 				.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(resolverContext))
 				.orElse(false);
 
+		boolean retryEnabled = resolverContext.getBinder().bind(ConfigClientProperties.PREFIX + ".fail-fast",
+				Bindable.of(Boolean.class), getBindHandler(resolverContext)).orElse(false);
+
 		if (discoveryEnabled) {
+			log.debug(LogMessage.format("discovery enabled"));
 			// register ConfigServerInstanceMonitor
 			bootstrapContext.registerIfAbsent(ConfigServerInstanceMonitor.class, context -> {
 				ConfigServerInstanceProvider.Function function = context
 						.get(ConfigServerInstanceProvider.Function.class);
-				ConfigServerInstanceProvider instanceProvider = new ConfigServerInstanceProvider(function);
+
+				ConfigServerInstanceProvider instanceProvider;
+				if (ConfigClientRetryBootstrapper.RETRY_IS_PRESENT && retryEnabled) {
+					log.debug(LogMessage.format("discovery plus retry enabled"));
+					RetryTemplate retryTemplate = context.get(RetryTemplate.class);
+					instanceProvider = new ConfigServerInstanceProvider(function) {
+						@Override
+						public List<ServiceInstance> getConfigServerInstances(String serviceId) {
+							return retryTemplate.execute(retryContext -> super.getConfigServerInstances(serviceId));
+						}
+					};
+				}
+				else {
+					instanceProvider = new ConfigServerInstanceProvider(function);
+				}
 				instanceProvider.setLog(log);
+
 				ConfigClientProperties clientProperties = context.get(ConfigClientProperties.class);
 				ConfigServerInstanceMonitor instanceMonitor = new ConfigServerInstanceMonitor(log, clientProperties,
 						instanceProvider);
