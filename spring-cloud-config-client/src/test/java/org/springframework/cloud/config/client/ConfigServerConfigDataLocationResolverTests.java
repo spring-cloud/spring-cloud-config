@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -80,9 +81,22 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource.getProfiles()).isEqualTo("myprofile");
 	}
 
+	@Test
+	void configClientSpringProfilesActiveOverridesDefaultClientProfiles() {
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific("myactiveprofile");
+		assertThat(resource.getProfiles()).isEqualTo("myactiveprofile");
+	}
+
 	private ConfigServerConfigDataResource testResolveProvileSpecific() {
+		return testResolveProvileSpecific("default");
+	}
+
+	private ConfigServerConfigDataResource testResolveProvileSpecific(String activeProfile) {
 		when(context.getBootstrapContext()).thenReturn(mock(ConfigurableBootstrapContext.class));
 		Profiles profiles = mock(Profiles.class);
+		if (activeProfile != null) {
+			when(profiles.getAccepted()).thenReturn(Collections.singletonList(activeProfile));
+		}
 
 		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
 				ConfigDataLocation.of("configserver:"), profiles);

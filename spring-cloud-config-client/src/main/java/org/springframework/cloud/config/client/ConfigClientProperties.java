@@ -66,6 +66,11 @@ public class ConfigClientProperties {
 	public static final String AUTHORIZATION = "authorization";
 
 	/**
+	 * Default profile value.
+	 */
+	public static final String DEFAULT_PROFILE = "default";
+
+	/**
 	 * Flag to say that remote configuration is enabled. Default true;
 	 */
 	private boolean enabled = true;
@@ -74,7 +79,7 @@ public class ConfigClientProperties {
 	 * The default profile to use when fetching remote configuration (comma-separated).
 	 * Default is "default".
 	 */
-	private String profile = "default";
+	private String profile = DEFAULT_PROFILE;
 
 	/**
 	 * Name of application used to fetch remote properties.
