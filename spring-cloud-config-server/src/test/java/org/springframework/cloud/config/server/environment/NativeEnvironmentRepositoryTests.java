@@ -82,6 +82,31 @@ public class NativeEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
+		// gh-1778 property sources has the same name.
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isNotEqualTo(environment.getPropertySources().get(1).getName());
+	}
+
+	@Test
+	public void prefixedYaml() {
+		this.repository.setSearchLocations("classpath:/test");
+		Environment environment = this.repository.findOne("bar", "development", "master");
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
+		// gh-1778 property sources has the same name.
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isNotEqualTo(environment.getPropertySources().get(1).getName());
+	}
+
+	@Test
+	public void prefixedMultiDocProperties() {
+		this.repository.setSearchLocations("classpath:/test");
+		Environment environment = this.repository.findOne("baz", "development", "master");
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
+		// gh-1778 property sources has the same name.
+		assertThat(environment.getPropertySources().get(0).getName())
+				.isNotEqualTo(environment.getPropertySources().get(1).getName());
 	}
 
 	@Test
