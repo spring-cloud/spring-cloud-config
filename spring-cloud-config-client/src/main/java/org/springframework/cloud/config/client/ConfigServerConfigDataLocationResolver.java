@@ -71,9 +71,12 @@ public class ConfigServerConfigDataLocationResolver
 		ConfigClientProperties configClientProperties = binder
 				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
 				.orElseGet(ConfigClientProperties::new);
-		String applicationName = binder.bind("spring.application.name", Bindable.of(String.class), bindHandler)
-				.orElse("application");
-		configClientProperties.setName(applicationName);
+		if (!StringUtils.hasText(configClientProperties.getName())) {
+			// default to spring.application.name if name isn't set
+			String applicationName = binder.bind("spring.application.name", Bindable.of(String.class), bindHandler)
+					.orElse("application");
+			configClientProperties.setName(applicationName);
+		}
 		return configClientProperties;
 	}
 

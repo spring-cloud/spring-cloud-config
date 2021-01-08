@@ -87,6 +87,27 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource.getProfiles()).isEqualTo("myactiveprofile");
 	}
 
+	@Test
+	void configNameDefaultsToApplication() {
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		assertThat(resource.getProperties().getName()).isEqualTo("application");
+	}
+
+	@Test
+	void configNameDefaultsToSpringApplicationName() {
+		this.environment.setProperty("spring.application.name", "myapp");
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		assertThat(resource.getProperties().getName()).isEqualTo("myapp");
+	}
+
+	@Test
+	void configNameOverridesSpringApplicationName() {
+		this.environment.setProperty("spring.application.name", "myapp");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".name", "myconfigname");
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		assertThat(resource.getProperties().getName()).isEqualTo("myconfigname");
+	}
+
 	private ConfigServerConfigDataResource testResolveProvileSpecific() {
 		return testResolveProvileSpecific("default");
 	}
