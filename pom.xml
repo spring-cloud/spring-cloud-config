@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.cloud</groupId>
 	<artifactId>spring-cloud-config</artifactId>
-	<version>3.0.1-SNAPSHOT</version>
+	<version>3.0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Config</name>
 	<description>Spring Cloud Config</description>
