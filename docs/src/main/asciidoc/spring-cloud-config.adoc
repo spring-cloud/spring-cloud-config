@@ -1150,7 +1150,7 @@ spring:
     password: '{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'
 ----
 
-Encrypted values in a .properties file must not be wrapped in quotes. Otherwise, the value is not decrypted. The following example shows values that would work:
+Encrypted values in `application.properties` file must not be wrapped in quotes. Otherwise, the value is not decrypted. The following example shows values that would work:
 
 .application.properties
 ----

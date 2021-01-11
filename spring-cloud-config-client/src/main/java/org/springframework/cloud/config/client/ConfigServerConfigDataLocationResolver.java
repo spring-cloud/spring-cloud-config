@@ -32,10 +32,14 @@ import org.springframework.boot.context.config.ConfigDataLocationResolver;
 import org.springframework.boot.context.config.ConfigDataLocationResolverContext;
 import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.boot.context.config.Profiles;
+import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.core.Ordered;
+import org.springframework.core.log.LogMessage;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -61,13 +65,23 @@ public class ConfigServerConfigDataLocationResolver
 		return -1;
 	}
 
-	protected ConfigClientProperties loadProperties(Binder binder) {
+	protected ConfigClientProperties loadProperties(ConfigDataLocationResolverContext context) {
+		Binder binder = context.getBinder();
+		BindHandler bindHandler = getBindHandler(context);
 		ConfigClientProperties configClientProperties = binder
-				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class))
-				.orElse(new ConfigClientProperties());
-		String applicationName = binder.bind("spring.application.name", String.class).orElse("application");
-		configClientProperties.setName(applicationName);
+				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
+				.orElseGet(ConfigClientProperties::new);
+		if (!StringUtils.hasText(configClientProperties.getName())) {
+			// default to spring.application.name if name isn't set
+			String applicationName = binder.bind("spring.application.name", Bindable.of(String.class), bindHandler)
+					.orElse("application");
+			configClientProperties.setName(applicationName);
+		}
 		return configClientProperties;
+	}
+
+	private BindHandler getBindHandler(ConfigDataLocationResolverContext context) {
+		return context.getBootstrapContext().getOrElse(BindHandler.class, null);
 	}
 
 	protected RestTemplate createRestTemplate(ConfigClientProperties properties) {
@@ -120,8 +134,7 @@ public class ConfigServerConfigDataLocationResolver
 	public List<ConfigServerConfigDataResource> resolveProfileSpecific(
 			ConfigDataLocationResolverContext resolverContext, ConfigDataLocation location, Profiles profiles)
 			throws ConfigDataLocationNotFoundException {
-		ConfigClientProperties properties = loadProperties(resolverContext.getBinder());
-
+		ConfigClientProperties properties = loadProperties(resolverContext);
 		String uris = location.getNonPrefixedValue(getPrefix());
 
 		if (StringUtils.hasText(uris)) {
@@ -139,16 +152,36 @@ public class ConfigServerConfigDataLocationResolver
 			return createRestTemplate(props);
 		});
 
-		boolean discoveryEnabled = resolverContext.getBinder().bind(CONFIG_DISCOVERY_ENABLED, Boolean.class)
+		boolean discoveryEnabled = resolverContext.getBinder()
+				.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(resolverContext))
 				.orElse(false);
 
+		boolean retryEnabled = resolverContext.getBinder().bind(ConfigClientProperties.PREFIX + ".fail-fast",
+				Bindable.of(Boolean.class), getBindHandler(resolverContext)).orElse(false);
+
 		if (discoveryEnabled) {
+			log.debug(LogMessage.format("discovery enabled"));
 			// register ConfigServerInstanceMonitor
 			bootstrapContext.registerIfAbsent(ConfigServerInstanceMonitor.class, context -> {
 				ConfigServerInstanceProvider.Function function = context
 						.get(ConfigServerInstanceProvider.Function.class);
-				ConfigServerInstanceProvider instanceProvider = new ConfigServerInstanceProvider(function);
+
+				ConfigServerInstanceProvider instanceProvider;
+				if (ConfigClientRetryBootstrapper.RETRY_IS_PRESENT && retryEnabled) {
+					log.debug(LogMessage.format("discovery plus retry enabled"));
+					RetryTemplate retryTemplate = context.get(RetryTemplate.class);
+					instanceProvider = new ConfigServerInstanceProvider(function) {
+						@Override
+						public List<ServiceInstance> getConfigServerInstances(String serviceId) {
+							return retryTemplate.execute(retryContext -> super.getConfigServerInstances(serviceId));
+						}
+					};
+				}
+				else {
+					instanceProvider = new ConfigServerInstanceProvider(function);
+				}
 				instanceProvider.setLog(log);
+
 				ConfigClientProperties clientProperties = context.get(ConfigClientProperties.class);
 				ConfigServerInstanceMonitor instanceMonitor = new ConfigServerInstanceMonitor(log, clientProperties,
 						instanceProvider);

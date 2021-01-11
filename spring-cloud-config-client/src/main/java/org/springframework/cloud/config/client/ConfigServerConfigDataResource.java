@@ -16,11 +16,13 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.springframework.boot.context.config.ConfigDataResource;
 import org.springframework.boot.context.config.Profiles;
 import org.springframework.core.style.ToStringCreator;
+import org.springframework.util.StringUtils;
 
 public class ConfigServerConfigDataResource extends ConfigDataResource {
 
@@ -44,8 +46,13 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 		return this.optional;
 	}
 
-	public Profiles getProfiles() {
-		return this.profiles;
+	public String getProfiles() {
+		List<String> accepted = profiles.getAccepted();
+		if (StringUtils.hasText(properties.getProfile())
+				&& !properties.getProfile().equals(ConfigClientProperties.DEFAULT_PROFILE)) {
+			return properties.getProfile();
+		}
+		return StringUtils.collectionToCommaDelimitedString(accepted);
 	}
 
 	@Override

@@ -78,8 +78,10 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		}
 		if (context.getBootstrapContext().isRegistered(LoaderInterceptor.class)) {
 			LoaderInterceptor interceptor = context.getBootstrapContext().get(LoaderInterceptor.class);
-			Binder binder = context.getBootstrapContext().get(Binder.class);
-			return interceptor.apply(new LoadContext(context, resource, binder, this::doLoad));
+			if (interceptor != null) {
+				Binder binder = context.getBootstrapContext().get(Binder.class);
+				return interceptor.apply(new LoadContext(context, resource, binder, this::doLoad));
+			}
 		}
 		return doLoad(context, resource);
 	}
@@ -210,7 +212,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
-		String profile = StringUtils.collectionToCommaDelimitedString(resource.getProfiles().getAccepted());
+		String profile = resource.getProfiles();
 		String token = properties.getToken();
 		int noOfUrls = properties.getUri().length;
 		if (noOfUrls > 1) {
