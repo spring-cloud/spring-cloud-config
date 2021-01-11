@@ -43,6 +43,7 @@ import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
 import org.eclipse.jgit.lib.BranchTrackingStatus;
@@ -425,7 +426,15 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			return false;
 		}
 
-		Status gitStatus = git.status().call();
+		Status gitStatus;
+		try {
+			gitStatus = git.status().call();
+		}
+		catch (JGitInternalException e) {
+			onPullInvalidIndex(git, e);
+			gitStatus = git.status().call();
+		}
+
 		boolean isWorkingTreeClean = gitStatus.isClean();
 		String originUrl = git.getRepository().getConfig().getString("remote", "origin",
 				"url");
@@ -442,6 +451,23 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 					+ ", the working tree is not clean.");
 		}
 		return shouldPull;
+	}
+
+	protected void onPullInvalidIndex(Git git, JGitInternalException e) {
+		if (!e.getMessage().contains("Short read of block.")) {
+			throw e;
+		}
+		if (!this.forcePull) {
+			throw e;
+		}
+		try {
+			new File(getWorkingDirectory(), ".git/index").delete();
+			git.reset().setMode(ResetType.HARD).setRef("HEAD").call();
+		}
+		catch (GitAPIException ex) {
+			e.addSuppressed(ex);
+			throw e;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
