@@ -27,18 +27,15 @@ import org.springframework.util.MultiValueMap;
  * @author Dave Syer
  *
  */
-public abstract class BasePropertyPathNotificationExtractor
-		implements PropertyPathNotificationExtractor {
+public abstract class BasePropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
 	@Override
-	public PropertyPathNotification extract(MultiValueMap<String, String> headers,
-			Map<String, Object> request) {
+	public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> request) {
 		if (requestBelongsToGitRepoManager(headers)) {
 			if (request.get("commits") instanceof Collection) {
 				Set<String> paths = new LinkedHashSet<>();
 				@SuppressWarnings("unchecked")
-				Collection<Map<String, Object>> commits = (Collection<Map<String, Object>>) request
-						.get("commits");
+				Collection<Map<String, Object>> commits = (Collection<Map<String, Object>>) request.get("commits");
 				addPaths(paths, commits);
 				if (!paths.isEmpty()) {
 					return new PropertyPathNotification(paths.toArray(new String[0]));
@@ -64,7 +61,6 @@ public abstract class BasePropertyPathNotificationExtractor
 		}
 	}
 
-	protected abstract boolean requestBelongsToGitRepoManager(
-			MultiValueMap<String, String> headers);
+	protected abstract boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers);
 
 }

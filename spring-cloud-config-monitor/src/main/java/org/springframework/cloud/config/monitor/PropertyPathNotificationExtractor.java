@@ -30,7 +30,6 @@ import org.springframework.util.MultiValueMap;
  */
 public interface PropertyPathNotificationExtractor {
 
-	PropertyPathNotification extract(MultiValueMap<String, String> headers,
-			Map<String, Object> payload);
+	PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> payload);
 
 }

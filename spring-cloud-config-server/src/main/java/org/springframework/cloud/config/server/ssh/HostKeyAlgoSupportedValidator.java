@@ -43,14 +43,13 @@ import static org.springframework.util.StringUtils.hasText;
  *
  * @author Ollie Hughes
  */
-public class HostKeyAlgoSupportedValidator implements
-		ConstraintValidator<HostKeyAlgoSupported, MultipleJGitEnvironmentProperties> {
+public class HostKeyAlgoSupportedValidator
+		implements ConstraintValidator<HostKeyAlgoSupported, MultipleJGitEnvironmentProperties> {
 
 	private static final String GIT_PROPERTY_PREFIX = "spring.cloud.config.server.git.";
 
 	private static final Set<String> VALID_HOST_KEY_ALGORITHMS = new LinkedHashSet<>(
-			Arrays.asList("ssh-dss", "ssh-rsa", "ecdsa-sha2-nistp256",
-					"ecdsa-sha2-nistp384", "ecdsa-sha2-nistp521"));
+			Arrays.asList("ssh-dss", "ssh-rsa", "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384", "ecdsa-sha2-nistp521"));
 
 	private final SshPropertyValidator sshPropertyValidator = new SshPropertyValidator();
 
@@ -60,33 +59,27 @@ public class HostKeyAlgoSupportedValidator implements
 	}
 
 	@Override
-	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties,
-			ConstraintValidatorContext context) {
+	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
 		context.disableDefaultConstraintViolation();
 		Set<Boolean> validationResults = new HashSet<>();
 		List<JGitEnvironmentProperties> extractedProperties = this.sshPropertyValidator
 				.extractRepoProperties(sshUriProperties);
 
 		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
-			if (sshUriProperties.isIgnoreLocalSshSettings()
-					&& isSshUri(extractedProperty.getUri())) {
-				validationResults.add(
-						isHostKeySpecifiedWhenAlgorithmSet(extractedProperty, context));
+			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
+				validationResults.add(isHostKeySpecifiedWhenAlgorithmSet(extractedProperty, context));
 			}
 		}
 		return !validationResults.contains(false);
 	}
 
-	private boolean isHostKeySpecifiedWhenAlgorithmSet(
-			JGitEnvironmentProperties sshUriProperties,
+	private boolean isHostKeySpecifiedWhenAlgorithmSet(JGitEnvironmentProperties sshUriProperties,
 			ConstraintValidatorContext context) {
-		if (hasText(sshUriProperties.getHostKeyAlgorithm()) && !VALID_HOST_KEY_ALGORITHMS
-				.contains(sshUriProperties.getHostKeyAlgorithm())) {
+		if (hasText(sshUriProperties.getHostKeyAlgorithm())
+				&& !VALID_HOST_KEY_ALGORITHMS.contains(sshUriProperties.getHostKeyAlgorithm())) {
 
-			context.buildConstraintViolationWithTemplate(
-					format("Property '%shostKeyAlgorithm' must be one of %s",
-							GIT_PROPERTY_PREFIX, VALID_HOST_KEY_ALGORITHMS))
-					.addConstraintViolation();
+			context.buildConstraintViolationWithTemplate(format("Property '%shostKeyAlgorithm' must be one of %s",
+					GIT_PROPERTY_PREFIX, VALID_HOST_KEY_ALGORITHMS)).addConstraintViolation();
 			return false;
 		}
 		return true;

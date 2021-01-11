@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
@@ -48,15 +49,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @ConditionalOnWebApplication
 public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 
-	@Autowired(required = false)
-	private List<EnvironmentEncryptor> environmentEncryptors;
-
-	@Autowired(required = false)
-	private ObjectMapper objectMapper = new ObjectMapper();
-
-	@Autowired(required = false)
-	private Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
-
 	@Override
 	public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
 		configurer.mediaType("properties", MediaType.valueOf("text/plain"));
@@ -64,34 +56,66 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 		configurer.mediaType("yaml", MediaType.valueOf("text/yaml"));
 	}
 
-	@Bean
-	@RefreshScope
-	public EnvironmentController environmentController(
-			EnvironmentRepository envRepository, ConfigServerProperties server) {
-		EnvironmentController controller = new EnvironmentController(
-				encrypted(envRepository, server), this.objectMapper);
-		controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
-		controller.setAcceptEmpty(server.isAcceptEmpty());
-		return controller;
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnMissingBean(org.springframework.cloud.context.scope.refresh.RefreshScope.class)
+	static class EnvironmentControllerConfiguration {
+
+		@Autowired(required = false)
+		private List<EnvironmentEncryptor> environmentEncryptors;
+
+		@Autowired(required = false)
+		private Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
+
+		@Autowired(required = false)
+		private ObjectMapper objectMapper = new ObjectMapper();
+
+		@Bean
+		public EnvironmentController environmentController(EnvironmentRepository envRepository,
+				ConfigServerProperties server) {
+			return delegateController(envRepository, server);
+		}
+
+		protected EnvironmentController delegateController(EnvironmentRepository envRepository,
+				ConfigServerProperties server) {
+			EnvironmentController controller = new EnvironmentController(encrypted(envRepository, server),
+					this.objectMapper);
+			controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
+			controller.setAcceptEmpty(server.isAcceptEmpty());
+			return controller;
+		}
+
+		@Bean
+		@ConditionalOnBean(ResourceRepository.class)
+		public ResourceController resourceController(ResourceRepository repository, EnvironmentRepository envRepository,
+				ConfigServerProperties server) {
+			ResourceController controller = new ResourceController(repository, encrypted(envRepository, server),
+					this.resourceEncryptorMap);
+			controller.setEncryptEnabled(server.getEncrypt().isEnabled());
+			controller.setPlainTextEncryptEnabled(server.getEncrypt().isPlainTextEncrypt());
+			return controller;
+		}
+
+		private EnvironmentRepository encrypted(EnvironmentRepository envRepository, ConfigServerProperties server) {
+			EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
+					envRepository, this.environmentEncryptors);
+			encrypted.setOverrides(server.getOverrides());
+			return encrypted;
+		}
+
 	}
 
-	@Bean
-	@ConditionalOnBean(ResourceRepository.class)
-	public ResourceController resourceController(ResourceRepository repository,
-			EnvironmentRepository envRepository, ConfigServerProperties server) {
-		ResourceController controller = new ResourceController(repository,
-				encrypted(envRepository, server), this.resourceEncryptorMap);
-		controller.setEncryptEnabled(server.getEncrypt().isEnabled());
-		controller.setPlainTextEncryptEnabled(server.getEncrypt().isPlainTextEncrypt());
-		return controller;
-	}
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnBean(org.springframework.cloud.context.scope.refresh.RefreshScope.class)
+	static class RefreshableEnvironmentControllerConfiguration extends EnvironmentControllerConfiguration {
 
-	private EnvironmentRepository encrypted(EnvironmentRepository envRepository,
-			ConfigServerProperties server) {
-		EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
-				envRepository, environmentEncryptors);
-		encrypted.setOverrides(server.getOverrides());
-		return encrypted;
+		@Override
+		@Bean
+		@RefreshScope
+		public EnvironmentController environmentController(EnvironmentRepository envRepository,
+				ConfigServerProperties server) {
+			return super.delegateController(envRepository, server);
+		}
+
 	}
 
 }

@@ -51,8 +51,7 @@ public class HttpRequestConfigTokenProviderTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void missingTokenHeader() {
-		when(httpRequestProvider.getIfAvailable())
-				.thenReturn(new MockHttpServletRequest());
+		when(httpRequestProvider.getIfAvailable()).thenReturn(new MockHttpServletRequest());
 		tokenProvider.getToken();
 	}
 

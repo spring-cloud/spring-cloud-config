@@ -74,6 +74,17 @@ public class ConfigServerProperties {
 	private String defaultProfile = "default";
 
 	/**
+	 * Flag indicating that if there are any errors reading properties from a subordinate
+	 * environment repository in a composite environment repository, then the entire
+	 * composite read should fail. Useful when set to false when a Vault repository is in
+	 * the composite to allow clients to still read properties from other repositories
+	 * without providing a valid Vault token.
+	 *
+	 * Defaults to true, resulting in a failure on any error.
+	 */
+	private boolean failOnCompositeError = true;
+
+	/**
 	 * Decryption configuration for when server handles encrypted properties before
 	 * sending them to clients.
 	 */
@@ -145,6 +156,14 @@ public class ConfigServerProperties {
 
 	public void setDefaultProfile(String defaultProfile) {
 		this.defaultProfile = defaultProfile;
+	}
+
+	public boolean isFailOnCompositeError() {
+		return failOnCompositeError;
+	}
+
+	public void setFailOnCompositeError(boolean failOnCompositeError) {
+		this.failOnCompositeError = failOnCompositeError;
 	}
 
 	/**

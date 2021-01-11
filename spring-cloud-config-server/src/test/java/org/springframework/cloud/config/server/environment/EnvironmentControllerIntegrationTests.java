@@ -72,17 +72,14 @@ public class EnvironmentControllerIntegrationTests {
 
 	@Test
 	public void environmentNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", null, false))
-				.thenReturn(this.environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default"))
-				.andExpect(MockMvcResultMatchers.status().isOk());
+		when(this.repository.findOne("foo", "default", null, false)).thenReturn(this.environment);
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default")).andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", null, false);
 	}
 
 	@Test
 	public void propertiesNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", null, false))
-				.thenReturn(this.environment);
+		when(this.repository.findOne("foo", "default", null, false)).thenReturn(this.environment);
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo-default.properties"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", null, false);
@@ -90,8 +87,7 @@ public class EnvironmentControllerIntegrationTests {
 
 	@Test
 	public void propertiesLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", "label", false))
-				.thenReturn(this.environment);
+		when(this.repository.findOne("foo", "default", "label", false)).thenReturn(this.environment);
 		this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-default.properties"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", "label", false);
@@ -101,8 +97,7 @@ public class EnvironmentControllerIntegrationTests {
 	public void propertiesLabelWhenApplicationNameContainsHyphen() throws Exception {
 		Environment environment = new Environment("foo-bar", "default");
 		environment.add(new PropertySource("foo", new HashMap<>()));
-		when(this.repository.findOne("foo-bar", "default", "label", false))
-				.thenReturn(this.environment);
+		when(this.repository.findOne("foo-bar", "default", "label", false)).thenReturn(this.environment);
 		this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-bar-default.properties"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo-bar", "default", "label", false);
@@ -111,18 +106,15 @@ public class EnvironmentControllerIntegrationTests {
 	@Test
 	public void propertiesLabelWithSlash() throws Exception {
 
-		when(this.repository.findOne("foo", "default", "label/spam", false))
-				.thenReturn(this.environment);
-		this.mvc.perform(
-				MockMvcRequestBuilders.get("/label(_)spam/foo-default.properties"))
+		when(this.repository.findOne("foo", "default", "label/spam", false)).thenReturn(this.environment);
+		this.mvc.perform(MockMvcRequestBuilders.get("/label(_)spam/foo-default.properties"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", "label/spam", false);
 	}
 
 	@Test
 	public void environmentWithLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", "awesome", false))
-				.thenReturn(this.environment);
+		when(this.repository.findOne("foo", "default", "awesome", false)).thenReturn(this.environment);
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/awesome"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 	}
@@ -145,32 +137,27 @@ public class EnvironmentControllerIntegrationTests {
 
 	@Test
 	public void environmentWithLabelContainingPeriod() throws Exception {
-		when(this.repository.findOne("foo", "default", "1.0.0", false))
-				.thenReturn(this.environment);
+		when(this.repository.findOne("foo", "default", "1.0.0", false)).thenReturn(this.environment);
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/1.0.0"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
 	}
 
 	@Test
 	public void environmentWithLabelContainingSlash() throws Exception {
-		when(this.repository.findOne("foo", "default", "feature/puff", false))
-				.thenReturn(this.environment);
+		when(this.repository.findOne("foo", "default", "feature/puff", false)).thenReturn(this.environment);
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/feature(_)puff"))
 				.andExpect(MockMvcResultMatchers.status().isOk())
-				.andExpect(MockMvcResultMatchers.content()
-						.string(Matchers.containsString("\"propertySources\":")));
+				.andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("\"propertySources\":")));
 	}
 
 	@Test
 	public void environmentWithApplicationContainingSlash() throws Exception {
 		Environment environment = new Environment("foo/app", "default");
 		environment.add(new PropertySource("foo", new HashMap<>()));
-		when(this.repository.findOne("foo/app", "default", null, false))
-				.thenReturn(environment);
+		when(this.repository.findOne("foo/app", "default", null, false)).thenReturn(environment);
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo(_)app/default"))
 				.andExpect(MockMvcResultMatchers.status().isOk())
-				.andExpect(MockMvcResultMatchers.content()
-						.string(Matchers.containsString("\"propertySources\":")));
+				.andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("\"propertySources\":")));
 	}
 
 	@Configuration

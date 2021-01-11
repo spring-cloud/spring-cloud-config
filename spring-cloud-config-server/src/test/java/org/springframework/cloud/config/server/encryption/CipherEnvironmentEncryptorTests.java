@@ -43,8 +43,7 @@ public class CipherEnvironmentEncryptorTests {
 
 	public CipherEnvironmentEncryptorTests(String salt, String key) {
 		this.textEncryptor = new EncryptorFactory(salt).create(key);
-		this.encryptor = new CipherEnvironmentEncryptor(
-				keys -> CipherEnvironmentEncryptorTests.this.textEncryptor);
+		this.encryptor = new CipherEnvironmentEncryptor(keys -> CipherEnvironmentEncryptorTests.this.textEncryptor);
 	}
 
 	@Parameters
@@ -62,12 +61,13 @@ public class CipherEnvironmentEncryptorTests {
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(
-				environment.getName(), "{cipher}" + this.textEncryptor.encrypt(secret))));
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				"{cipher}" + this.textEncryptor.encrypt(secret))));
 
 		// then
-		assertThat(this.encryptor.decrypt(environment).getPropertySources().get(0)
-				.getSource().get(environment.getName())).isEqualTo(secret);
+		assertThat(
+				this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+						.isEqualTo(secret);
 	}
 
 	@Test
@@ -77,13 +77,13 @@ public class CipherEnvironmentEncryptorTests {
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(),
-						"{cipher}{key:test}" + this.textEncryptor.encrypt(secret))));
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				"{cipher}{key:test}" + this.textEncryptor.encrypt(secret))));
 
 		// then
-		assertThat(this.encryptor.decrypt(environment).getPropertySources().get(0)
-				.getSource().get(environment.getName())).isEqualTo(secret);
+		assertThat(
+				this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+						.isEqualTo(secret);
 	}
 
 	@Test
@@ -91,12 +91,12 @@ public class CipherEnvironmentEncryptorTests {
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(), null)));
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), null)));
 
 		// then
-		assertThat(this.encryptor.decrypt(environment).getPropertySources().get(0)
-				.getSource().get(environment.getName())).isEqualTo(null);
+		assertThat(
+				this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+						.isEqualTo(null);
 	}
 
 	@Test
@@ -107,13 +107,13 @@ public class CipherEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		String encrypted = "{cipher}" + this.textEncryptor.encrypt(secret);
-		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(),
-						new PropertyValueDescriptor(encrypted, "encrypted value"))));
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				new PropertyValueDescriptor(encrypted, "encrypted value"))));
 
 		// then
-		assertThat(this.encryptor.decrypt(environment).getPropertySources().get(0)
-				.getSource().get(environment.getName())).isEqualTo(secret);
+		assertThat(
+				this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+						.isEqualTo(secret);
 	}
 
 }

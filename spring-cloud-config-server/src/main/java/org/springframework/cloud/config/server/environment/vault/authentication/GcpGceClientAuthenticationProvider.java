@@ -26,22 +26,19 @@ import org.springframework.vault.authentication.GcpComputeAuthentication;
 import org.springframework.vault.authentication.GcpComputeAuthenticationOptions;
 import org.springframework.web.client.RestOperations;
 
-public class GcpGceClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class GcpGceClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public GcpGceClientAuthenticationProvider() {
 		super(AuthenticationMethod.GCP_GCE);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
 		VaultEnvironmentProperties.GcpGceProperties gcp = vaultProperties.getGcpGce();
 
-		Assert.hasText(gcp.getRole(), missingPropertyForAuthMethod("gcp-iam.role",
-				AuthenticationMethod.GCP_GCE));
+		Assert.hasText(gcp.getRole(), missingPropertyForAuthMethod("gcp-iam.role", AuthenticationMethod.GCP_GCE));
 
 		GcpComputeAuthenticationOptions.GcpComputeAuthenticationOptionsBuilder builder = GcpComputeAuthenticationOptions
 				.builder().path(gcp.getGcpPath()).role(gcp.getRole());
@@ -50,8 +47,7 @@ public class GcpGceClientAuthenticationProvider
 			builder.serviceAccount(gcp.getServiceAccount());
 		}
 
-		return new GcpComputeAuthentication(builder.build(), vaultRestOperations,
-				externalRestOperations);
+		return new GcpComputeAuthentication(builder.build(), vaultRestOperations, externalRestOperations);
 	}
 
 }

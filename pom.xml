@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.cloud</groupId>
 	<artifactId>spring-cloud-config</artifactId>
-	<version>2.2.3.RELEASE</version>
+	<version>3.0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Config</name>
 	<description>Spring Cloud Config</description>
@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>2.3.0.RELEASE</version>
+		<version>3.0.1-SNAPSHOT</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<scm>
@@ -27,9 +27,9 @@
 	</scm>
 	<properties>
 		<bintray.package>config</bintray.package>
-		<spring-cloud-commons.version>2.2.3.RELEASE</spring-cloud-commons.version>
-		<aws-java-sdk.version>1.11.52</aws-java-sdk.version>
-		<google-api-services-iam.version>v1-rev20191010-1.30.3</google-api-services-iam.version>
+		<spring-cloud-commons.version>3.0.1-SNAPSHOT</spring-cloud-commons.version>
+		<aws-java-sdk.version>1.11.903</aws-java-sdk.version>
+		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failsOnViolation>true
 		</maven-checkstyle-plugin.failsOnViolation>
@@ -43,6 +43,7 @@
 		<module>spring-cloud-config-monitor</module>
 		<module>spring-cloud-config-sample</module>
 		<module>spring-cloud-starter-config</module>
+		<module>spring-cloud-config-client-tls-tests</module>
 		<module>docs</module>
 	</modules>
 	<dependencyManagement>
@@ -85,7 +86,7 @@
 			<dependency>
 				<groupId>com.google.auth</groupId>
 				<artifactId>google-auth-library-oauth2-http</artifactId>
-				<version>0.15.0</version>
+				<version>0.22.0</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -96,7 +97,7 @@
 				<repository>
 					<id>spring-snapshots</id>
 					<name>Spring Snapshots</name>
-					<url>https://repo.spring.io/libs-snapshot-local</url>
+					<url>https://repo.spring.io/snapshot</url>
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>
@@ -125,7 +126,7 @@
 				<pluginRepository>
 					<id>spring-snapshots</id>
 					<name>Spring Snapshots</name>
-					<url>https://repo.spring.io/libs-snapshot-local</url>
+					<url>https://repo.spring.io/snapshot</url>
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>

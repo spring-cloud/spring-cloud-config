@@ -25,17 +25,18 @@ import java.util.List;
  *
  * @author Ryan Baxter
  */
-public class SearchPathCompositeEnvironmentRepository
-		extends CompositeEnvironmentRepository implements SearchPathLocator {
+public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironmentRepository
+		implements SearchPathLocator {
 
 	/**
 	 * Creates a new {@link SearchPathCompositeEnvironmentRepository}.
 	 * @param environmentRepositories The {@link EnvironmentRepository}s to create this
 	 * composite from.
+	 * @param failOnError whether to throw an exception if there is an error.
 	 */
-	public SearchPathCompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories) {
-		super(environmentRepositories);
+	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
+			boolean failOnError) {
+		super(environmentRepositories, failOnError);
 	}
 
 	@Override
@@ -43,12 +44,11 @@ public class SearchPathCompositeEnvironmentRepository
 		List<String> locations = new ArrayList<>();
 		for (EnvironmentRepository repo : this.environmentRepositories) {
 			if (repo instanceof SearchPathLocator) {
-				locations.addAll(Arrays.asList(((SearchPathLocator) repo)
-						.getLocations(application, profile, label).getLocations()));
+				locations.addAll(Arrays
+						.asList(((SearchPathLocator) repo).getLocations(application, profile, label).getLocations()));
 			}
 		}
-		return new Locations(application, profile, label, null,
-				locations.toArray(new String[locations.size()]));
+		return new Locations(application, profile, label, null, locations.toArray(new String[locations.size()]));
 	}
 
 }

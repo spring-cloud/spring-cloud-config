@@ -65,19 +65,17 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 		List<Map<String, Object>> details = new ArrayList<>();
 		for (String name : this.repositories.keySet()) {
 			Repository repository = this.repositories.get(name);
-			String application = (repository.getName() == null) ? name
-					: repository.getName();
+			String application = (repository.getName() == null) ? name : repository.getName();
 			String profiles = repository.getProfiles();
 
 			try {
-				Environment environment = this.environmentRepository.findOne(application,
-						profiles, repository.getLabel(), false);
+				Environment environment = this.environmentRepository.findOne(application, profiles,
+						repository.getLabel(), false);
 
 				HashMap<String, Object> detail = new HashMap<>();
 				detail.put("name", environment.getName());
 				detail.put("label", environment.getLabel());
-				if (environment.getProfiles() != null
-						&& environment.getProfiles().length > 0) {
+				if (environment.getProfiles() != null && environment.getProfiles().length > 0) {
 					detail.put("profiles", Arrays.asList(environment.getProfiles()));
 				}
 

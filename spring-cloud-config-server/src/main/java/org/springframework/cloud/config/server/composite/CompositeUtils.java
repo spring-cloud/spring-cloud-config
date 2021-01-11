@@ -48,10 +48,8 @@ public final class CompositeUtils {
 	 * @return list of matching types
 	 */
 	public static List<String> getCompositeTypeList(Environment environment) {
-		return Binder.get(environment)
-				.bind("spring.cloud.config.server", CompositeConfig.class).get()
-				.getComposite().stream().map(map -> (String) map.get("type"))
-				.collect(Collectors.toList());
+		return Binder.get(environment).bind("spring.cloud.config.server", CompositeConfig.class).get().getComposite()
+				.stream().map(map -> (String) map.get("type")).collect(Collectors.toList());
 	}
 
 	/**
@@ -61,12 +59,10 @@ public final class CompositeUtils {
 	 * @param beanFactory Spring Bean Factory
 	 * @return name of the factory bean
 	 */
-	public static String getFactoryName(String type,
-			ConfigurableListableBeanFactory beanFactory) {
-		String[] factoryNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
-				beanFactory, EnvironmentRepositoryFactory.class, true, false);
-		return Arrays.stream(factoryNames).filter(n -> n.startsWith(type)).findFirst()
-				.orElse(null);
+	public static String getFactoryName(String type, ConfigurableListableBeanFactory beanFactory) {
+		String[] factoryNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(beanFactory,
+				EnvironmentRepositoryFactory.class, true, false);
+		return Arrays.stream(factoryNames).filter(n -> n.startsWith(type)).findFirst().orElse(null);
 	}
 
 	/**
@@ -76,10 +72,9 @@ public final class CompositeUtils {
 	 * @param factoryName name of the factory
 	 * @return generic type params of the factory
 	 */
-	public static Type[] getEnvironmentRepositoryFactoryTypeParams(
-			ConfigurableListableBeanFactory beanFactory, String factoryName) {
-		MethodMetadata methodMetadata = (MethodMetadata) beanFactory
-				.getBeanDefinition(factoryName).getSource();
+	public static Type[] getEnvironmentRepositoryFactoryTypeParams(ConfigurableListableBeanFactory beanFactory,
+			String factoryName) {
+		MethodMetadata methodMetadata = (MethodMetadata) beanFactory.getBeanDefinition(factoryName).getSource();
 		Class<?> factoryClass = null;
 		try {
 			factoryClass = Class.forName(methodMetadata.getReturnTypeName());
@@ -87,11 +82,10 @@ public final class CompositeUtils {
 		catch (ClassNotFoundException e) {
 			throw new IllegalStateException(e);
 		}
-		Optional<AnnotatedType> annotatedFactoryType = Arrays
-				.stream(factoryClass.getAnnotatedInterfaces()).filter(i -> {
+		Optional<AnnotatedType> annotatedFactoryType = Arrays.stream(factoryClass.getAnnotatedInterfaces())
+				.filter(i -> {
 					ParameterizedType parameterizedType = (ParameterizedType) i.getType();
-					return parameterizedType.getRawType()
-							.equals(EnvironmentRepositoryFactory.class);
+					return parameterizedType.getRawType().equals(EnvironmentRepositoryFactory.class);
 				}).findFirst();
 		ParameterizedType factoryParameterizedType = (ParameterizedType) annotatedFactoryType
 				.orElse(factoryClass.getAnnotatedSuperclass()).getType();

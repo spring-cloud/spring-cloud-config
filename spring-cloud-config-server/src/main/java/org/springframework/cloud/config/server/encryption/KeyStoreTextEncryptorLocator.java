@@ -55,8 +55,7 @@ public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 
 	private String salt = "deadbeef";
 
-	public KeyStoreTextEncryptorLocator(KeyStoreKeyFactory keys, String defaultSecret,
-			String defaultAlias) {
+	public KeyStoreTextEncryptorLocator(KeyStoreKeyFactory keys, String defaultSecret, String defaultAlias) {
 		this.keys = keys;
 		this.defaultAlias = defaultAlias;
 		this.defaultSecret = defaultSecret;
@@ -97,9 +96,8 @@ public class KeyStoreTextEncryptorLocator implements TextEncryptorLocator {
 	}
 
 	private RsaSecretEncryptor rsaSecretEncryptor(String alias, String secret) {
-		return new RsaSecretEncryptor(
-				this.keys.getKeyPair(alias, this.secretLocator.locate(secret)),
-				this.rsaAlgorithm, this.salt, this.strong);
+		return new RsaSecretEncryptor(this.keys.getKeyPair(alias, this.secretLocator.locate(secret)), this.rsaAlgorithm,
+				this.salt, this.strong);
 	}
 
 }

@@ -40,10 +40,10 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
-		// config
-		// server on the classpath we need to set it explicitly
+		// config server on the classpath we need to set it explicitly
 		properties = { "spring.cloud.config.enabled:true",
-				"management.security.enabled=false",
+				// FIXME: configdata why is this needed here?
+				"spring.config.use-legacy-processing=true", "management.security.enabled=false",
 				"management.endpoints.web.exposure.include=*" },
 		webEnvironment = RANDOM_PORT)
 public class ApplicationTests {
@@ -59,12 +59,9 @@ public class ApplicationTests {
 
 	@BeforeClass
 	public static void startConfigServer() throws IOException {
-		String baseDir = ConfigServerTestUtils
-				.getBaseDirectory("spring-cloud-config-sample");
-		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos",
-				"config-repo", "target/config");
-		server = SpringApplication.run(
-				org.springframework.cloud.config.server.ConfigServerApplication.class,
+		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
+		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
+		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
 				"--spring.cloud.config.server.git.uri=" + repo);
 		/*
@@ -91,8 +88,8 @@ public class ApplicationTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void contextLoads() {
-		Map res = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + BASE_PATH + "/env/info.foo", Map.class);
+		Map res = new TestRestTemplate().getForObject("http://localhost:" + this.port + BASE_PATH + "/env/info.foo",
+				Map.class);
 		assertThat(res).containsKey("propertySources");
 		Map<String, Object> property = (Map<String, Object>) res.get("property");
 		assertThat(property).containsEntry("value", "bar");

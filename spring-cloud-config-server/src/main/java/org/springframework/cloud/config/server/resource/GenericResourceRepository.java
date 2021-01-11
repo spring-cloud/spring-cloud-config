@@ -34,8 +34,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Dave Syer
  */
-public class GenericResourceRepository
-		implements ResourceRepository, ResourceLoaderAware {
+public class GenericResourceRepository implements ResourceRepository, ResourceLoaderAware {
 
 	private ResourceLoader resourceLoader;
 
@@ -51,12 +50,10 @@ public class GenericResourceRepository
 	}
 
 	@Override
-	public synchronized Resource findOne(String application, String profile, String label,
-			String path) {
+	public synchronized Resource findOne(String application, String profile, String label, String path) {
 
 		if (StringUtils.hasText(path)) {
-			String[] locations = this.service.getLocations(application, profile, label)
-					.getLocations();
+			String[] locations = this.service.getLocations(application, profile, label).getLocations();
 			ArrayList<Resource> locationResources = new ArrayList<>();
 			for (int i = locations.length; i-- > 0;) {
 				String location = locations[i];
@@ -68,11 +65,10 @@ public class GenericResourceRepository
 			try {
 				for (Resource location : locationResources) {
 					for (String local : getProfilePaths(profile, path)) {
-						if (!PathUtils.isInvalidPath(local)
-								&& !PathUtils.isInvalidEncodedPath(local)) {
+						if (!PathUtils.isInvalidPath(local) && !PathUtils.isInvalidEncodedPath(local)) {
 							Resource file = location.createRelative(local);
-							if (file.exists() && file.isReadable() && PathUtils
-									.checkResource(file, location, locationResources)) {
+							if (file.exists() && file.isReadable()
+									&& PathUtils.checkResource(file, location, locationResources)) {
 								return file;
 							}
 						}
@@ -80,8 +76,7 @@ public class GenericResourceRepository
 				}
 			}
 			catch (IOException e) {
-				throw new NoSuchResourceException(
-						"Error : " + path + ". (" + e.getMessage() + ")");
+				throw new NoSuchResourceException("Error : " + path + ". (" + e.getMessage() + ")");
 			}
 		}
 		throw new NoSuchResourceException("Not found: " + path);

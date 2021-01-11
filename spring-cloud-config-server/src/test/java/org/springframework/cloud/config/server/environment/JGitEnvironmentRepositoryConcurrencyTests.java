@@ -99,11 +99,9 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 	@Test
 	public void vanilla() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
-		this.context = new SpringApplicationBuilder(TestConfiguration.class)
-				.web(WebApplicationType.NONE)
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + uri).run();
-		final EnvironmentRepository repository = this.context
-				.getBean(EnvironmentRepository.class);
+		final EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		ExecutorService threads = Executors.newFixedThreadPool(4);
 		List<Future<Boolean>> tasks = new ArrayList<Future<Boolean>>();
 		for (int i = 0; i < 30; i++) {
@@ -138,8 +136,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 		repository.setCloneOnStart(true);
 		repository.setGitFactory(new DelayedGitFactoryMock());
 		repository.setBasedir(testData.getClonedGit().getGitWorkingDirectory());
-		repository.setUri(testData.getServerGit().getGitWorkingDirectory()
-				.getAbsolutePath().replace("file://", ""));
+		repository.setUri(testData.getServerGit().getGitWorkingDirectory().getAbsolutePath().replace("file://", ""));
 
 		final AtomicInteger errorCount = new AtomicInteger();
 
@@ -147,11 +144,9 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 		Thread client = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				JGitEnvironmentRepositoryConcurrencyTests.this.logger
-						.info("client start.");
+				JGitEnvironmentRepositoryConcurrencyTests.this.logger.info("client start.");
 				try {
-					Environment environment = testData.getRepository().findOne("bar",
-							"staging", "master");
+					Environment environment = testData.getRepository().findOne("bar", "staging", "master");
 				}
 				catch (Exception e) {
 					errorCount.incrementAndGet();
@@ -165,11 +160,9 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 			@Override
 			public void run() {
 				try {
-					JGitEnvironmentRepositoryConcurrencyTests.this.logger
-							.info("refresh start.");
+					JGitEnvironmentRepositoryConcurrencyTests.this.logger.info("refresh start.");
 					testData.getRepository().afterPropertiesSet();
-					JGitEnvironmentRepositoryConcurrencyTests.this.logger
-							.info("refresh end.");
+					JGitEnvironmentRepositoryConcurrencyTests.this.logger.info("refresh end.");
 				}
 				catch (Exception e) {
 					errorCount.incrementAndGet();
@@ -189,14 +182,12 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
-	@Import({ PropertyPlaceholderAutoConfiguration.class,
-			EnvironmentRepositoryConfiguration.class })
+	@Import({ PropertyPlaceholderAutoConfiguration.class, EnvironmentRepositoryConfiguration.class })
 	protected static class TestConfiguration {
 
 	}
 
-	private static class DelayedGitFactoryMock
-			extends JGitEnvironmentRepository.JGitFactory {
+	private static class DelayedGitFactoryMock extends JGitEnvironmentRepository.JGitFactory {
 
 		@Override
 		public Git getGitByOpen(File file) throws IOException {
@@ -232,8 +223,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 	private static class DelayedCloneCommand extends CloneCommand {
 
 		@Override
-		public Git call()
-				throws GitAPIException, InvalidRemoteException, TransportException {
+		public Git call() throws GitAPIException, InvalidRemoteException, TransportException {
 			try {
 				Thread.sleep(250);
 			}
@@ -252,8 +242,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 		}
 
 		@Override
-		public FetchResult call()
-				throws GitAPIException, InvalidRemoteException, TransportException {
+		public FetchResult call() throws GitAPIException, InvalidRemoteException, TransportException {
 			try {
 				Thread.sleep(250);
 			}
@@ -272,8 +261,8 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 		}
 
 		@Override
-		public Ref call() throws GitAPIException, RefAlreadyExistsException,
-				RefNotFoundException, InvalidRefNameException, CheckoutConflictException {
+		public Ref call() throws GitAPIException, RefAlreadyExistsException, RefNotFoundException,
+				InvalidRefNameException, CheckoutConflictException {
 			try {
 				Thread.sleep(250);
 			}

@@ -36,8 +36,7 @@ public class LocatorTextEncryptor implements TextEncryptor {
 
 	@Override
 	public String encrypt(String text) {
-		Map<String, String> keys = this.helper.getEncryptorKeys("configserver", "default",
-				text);
+		Map<String, String> keys = this.helper.getEncryptorKeys("configserver", "default", text);
 		return getLocator().locate(keys).encrypt(this.helper.stripPrefix(text));
 	}
 
@@ -47,8 +46,7 @@ public class LocatorTextEncryptor implements TextEncryptor {
 
 	@Override
 	public String decrypt(String encryptedText) {
-		Map<String, String> keys = this.helper.getEncryptorKeys("configserver", "default",
-				encryptedText);
+		Map<String, String> keys = this.helper.getEncryptorKeys("configserver", "default", encryptedText);
 		return getLocator().locate(keys).decrypt(this.helper.stripPrefix(encryptedText));
 	}
 

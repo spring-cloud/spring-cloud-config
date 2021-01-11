@@ -39,8 +39,8 @@ public class EnvironmentRepositoryPropertySourceLocator implements PropertySourc
 
 	private String label;
 
-	public EnvironmentRepositoryPropertySourceLocator(EnvironmentRepository repository,
-			String name, String profiles, String label) {
+	public EnvironmentRepositoryPropertySourceLocator(EnvironmentRepository repository, String name, String profiles,
+			String label) {
 		this.repository = repository;
 		this.name = name;
 		this.profiles = profiles;
@@ -48,11 +48,9 @@ public class EnvironmentRepositoryPropertySourceLocator implements PropertySourc
 	}
 
 	@Override
-	public org.springframework.core.env.PropertySource<?> locate(
-			Environment environment) {
+	public org.springframework.core.env.PropertySource<?> locate(Environment environment) {
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		for (PropertySource source : this.repository
-				.findOne(this.name, this.profiles, this.label, false)
+		for (PropertySource source : this.repository.findOne(this.name, this.profiles, this.label, false)
 				.getPropertySources()) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) source.getSource();

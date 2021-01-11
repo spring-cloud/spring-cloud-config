@@ -33,8 +33,7 @@ import org.springframework.stereotype.Component;
  * @author Sean Stiglitz
  */
 @Component
-public class CipherResourceYamlEncryptor extends AbstractCipherResourceEncryptor
-		implements ResourceEncryptor {
+public class CipherResourceYamlEncryptor extends AbstractCipherResourceEncryptor implements ResourceEncryptor {
 
 	private static final List<String> SUPPORTED_EXTENSIONS = Arrays.asList("yml", "yaml");
 
@@ -52,8 +51,7 @@ public class CipherResourceYamlEncryptor extends AbstractCipherResourceEncryptor
 
 	@Override
 	public String decrypt(String text, Environment environment) throws IOException {
-		return decryptWithJacksonParser(text, environment.getName(),
-				environment.getProfiles(), factory);
+		return decryptWithJacksonParser(text, environment.getName(), environment.getProfiles(), factory);
 	}
 
 }

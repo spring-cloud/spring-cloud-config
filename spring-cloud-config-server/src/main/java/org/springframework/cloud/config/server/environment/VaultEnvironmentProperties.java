@@ -173,8 +173,7 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 		return this.proxy;
 	}
 
-	public void setProxy(
-			Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy) {
+	public void setProxy(Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy) {
 		this.proxy = proxy;
 	}
 

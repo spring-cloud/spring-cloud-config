@@ -75,37 +75,28 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void vanilla() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
-				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class)
-				.web(WebApplicationType.NONE).profiles("subversion")
-				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		EnvironmentRepository repository = this.context
-				.getBean(EnvironmentRepository.class);
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
 	@Test
 	public void update() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
-				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class)
-				.web(WebApplicationType.NONE).profiles("subversion")
-				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		EnvironmentRepository repository = this.context
-				.getBean(EnvironmentRepository.class);
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "trunk");
-		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
-				.isEqualTo("bar");
+		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("bar");
 		updateRepoForUpdate(uri);
 		environment = repository.findOne("bar", "staging", "trunk");
-		assertThat(environment.getPropertySources().get(0).getSource().get("foo"))
-				.isEqualTo("foo");
+		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("foo");
 	}
 
-	private void updateRepoForUpdate(String uri)
-			throws SVNException, FileNotFoundException, IOException {
+	private void updateRepoForUpdate(String uri) throws SVNException, FileNotFoundException, IOException {
 		SvnOperationFactory svnFactory = new SvnOperationFactory();
 		final SvnCheckout checkout = svnFactory.createCheckout();
 		checkout.setSource(SvnTarget.fromURL(SVNURL.parseURIEncoded(uri)));
@@ -114,8 +105,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 
 		// update bar.properties
 		File barProps = new File(this.workingDir, "trunk/bar.properties");
-		StreamUtils.copy("foo: foo", Charset.defaultCharset(),
-				new FileOutputStream(barProps));
+		StreamUtils.copy("foo: foo", Charset.defaultCharset(), new FileOutputStream(barProps));
 		// commit to repo
 		SvnCommit svnCommit = svnFactory.createCommit();
 		svnCommit.setCommitMessage("update bar.properties");
@@ -125,48 +115,37 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void defaultLabel() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
-				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class)
-				.web(WebApplicationType.NONE).profiles("subversion")
-				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		SvnKitEnvironmentRepository repository = this.context
-				.getBean(SvnKitEnvironmentRepository.class);
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+		SvnKitEnvironmentRepository repository = this.context.getBean(SvnKitEnvironmentRepository.class);
 		assertThat(repository.getDefaultLabel()).isEqualTo("trunk");
 	}
 
 	@Test(expected = NoSuchLabelException.class)
 	public void invalidLabel() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
-				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class)
-				.web(WebApplicationType.NONE).profiles("subversion")
-				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		EnvironmentRepository repository = this.context
-				.getBean(EnvironmentRepository.class);
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
 		assertThat(environment.getPropertySources().size()).isEqualTo(0);
 	}
 
 	@Test
 	public void branchLabel() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo(
-				"src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class)
-				.web(WebApplicationType.NONE).profiles("subversion")
-				.run("--spring.cloud.config.server.svn.uri=" + uri);
-		EnvironmentRepository repository = this.context
-				.getBean(EnvironmentRepository.class);
+		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "demobranch");
-		assertThat(environment.getPropertySources().get(0).getName()
-				.contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
 		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 	}
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ConfigServerProperties.class)
-	@Import({ PropertyPlaceholderAutoConfiguration.class,
-			EnvironmentRepositoryConfiguration.class })
+	@Import({ PropertyPlaceholderAutoConfiguration.class, EnvironmentRepositoryConfiguration.class })
 	protected static class TestConfiguration {
 
 	}

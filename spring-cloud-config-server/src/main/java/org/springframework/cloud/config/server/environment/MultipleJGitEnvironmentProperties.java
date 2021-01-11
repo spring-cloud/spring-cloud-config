@@ -53,8 +53,7 @@ public class MultipleJGitEnvironmentProperties extends JGitEnvironmentProperties
 	/**
 	 * A {@link JGitEnvironmentProperties} that matches patterns.
 	 */
-	public static class PatternMatchingJGitEnvironmentProperties
-			extends JGitEnvironmentProperties {
+	public static class PatternMatchingJGitEnvironmentProperties extends JGitEnvironmentProperties {
 
 		/**
 		 * Pattern to match on application name and profiles.

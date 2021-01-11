@@ -37,8 +37,7 @@ public class ConfigClientPropertiesTests {
 	@Rule
 	public ExpectedException expected = ExpectedException.none();
 
-	private ConfigClientProperties locator = new ConfigClientProperties(
-			new StandardEnvironment());
+	private ConfigClientProperties locator = new ConfigClientProperties(new StandardEnvironment());
 
 	@Test
 	public void vanilla() {
@@ -128,11 +127,9 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void testThatExplicitUsernamePasswordTakePrecedence() {
-		ConfigClientProperties properties = new ConfigClientProperties(
-				new MockEnvironment());
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
 
-		properties.setUri(
-				new String[] { "https://userInfoName:userInfoPW@localhost:8888/" });
+		properties.setUri(new String[] { "https://userInfoName:userInfoPW@localhost:8888/" });
 		properties.setUsername("explicitName");
 		properties.setPassword("explicitPW");
 		Credentials credentials = properties.getCredentials(0);
@@ -142,8 +139,7 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void checkIfExceptionThrownForNegativeIndex() {
-		this.locator.setUri(
-				new String[] { "http://localhost:8888", "http://localhost:8889" });
+		this.locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("Trying to access an invalid array index");
 		Credentials credentials = this.locator.getCredentials(-1);
@@ -151,8 +147,7 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void checkIfExceptionThrownForPositiveInvalidIndex() {
-		this.locator.setUri(
-				new String[] { "http://localhost:8888", "http://localhost:8889" });
+		this.locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("Trying to access an invalid array index");
 		Credentials credentials = this.locator.getCredentials(3);
@@ -160,8 +155,7 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void checkIfExceptionThrownForIndexEqualToLength() {
-		this.locator.setUri(
-				new String[] { "http://localhost:8888", "http://localhost:8889" });
+		this.locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("Trying to access an invalid array index");
 		Credentials credentials = this.locator.getCredentials(2);

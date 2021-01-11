@@ -72,8 +72,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.setRepos(createRepositories());
 	}
 
-	private Map<String, PatternMatchingJGitEnvironmentRepository> createRepositories()
-			throws Exception {
+	private Map<String, PatternMatchingJGitEnvironmentRepository> createRepositories() throws Exception {
 		String test1Uri = ConfigServerTestUtils.prepareLocalRepo("test1-config-repo");
 
 		Map<String, PatternMatchingJGitEnvironmentRepository> repos = new HashMap<>();
@@ -81,8 +80,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		return repos;
 	}
 
-	private PatternMatchingJGitEnvironmentRepository createRepository(String name,
-			String pattern, String uri) {
+	private PatternMatchingJGitEnvironmentRepository createRepository(String name, String pattern, String uri) {
 		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository();
 		repo.setEnvironment(this.environment);
 		repo.setName(name);
@@ -103,20 +101,17 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	public void baseDirRepo() {
-		this.repository
-				.setUri(this.repository.getUri().replace("config-repo", "{application}"));
+		this.repository.setUri(this.repository.getUri().replace("config-repo", "{application}"));
 		repository.setBasedir(new File("target/testBase"));
-		JGitEnvironmentRepository newRepo = this.repository.getRepository(this.repository,
-				"config-repo", "staging", "master");
-		assertThat(newRepo.getBasedir().getAbsolutePath().contains("target/testBase"))
-				.isTrue();
+		JGitEnvironmentRepository newRepo = this.repository.getRepository(this.repository, "config-repo", "staging",
+				"master");
+		assertThat(newRepo.getBasedir().getAbsolutePath().contains("target/testBase")).isTrue();
 	}
 
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
 		assertThat(version).as("version was null").isNotNull();
-		assertThat(version.length() >= 40 && version.length() <= 64)
-				.as("version length was wrong").isTrue();
+		assertThat(version.length() >= 40 && version.length() <= 64).as("version length was wrong").isTrue();
 	}
 
 	@Test
@@ -162,14 +157,12 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void defaultRepoBasedir() {
 		this.repository.setBasedir(new File("target/testBase"));
 		assertThat(this.repository.getBasedir().toString()).contains("target/testBase");
-		assertThat(this.repository.getRepos().get("test1").getBasedir().toString())
-				.contains("/test1");
+		assertThat(this.repository.getRepos().get("test1").getBasedir().toString()).contains("/test1");
 	}
 
 	@Test
 	public void mappingRepo() {
-		Environment environment = this.repository.findOne("test1-svc", "staging",
-				"master");
+		Environment environment = this.repository.findOne("test1-svc", "staging", "master");
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
@@ -202,11 +195,9 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		TransportConfigCallback mockCallback1 = mock(TransportConfigCallback.class);
 		TransportConfigCallback mockCallback2 = mock(TransportConfigCallback.class);
 
-		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1",
-				"*test1*", "test1Uri");
+		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1", "*test1*", "test1Uri");
 
-		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2",
-				"*test2*", "test2Uri");
+		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2", "*test2*", "test2Uri");
 		repo2.setTransportConfigCallback(mockCallback2);
 
 		Map<String, PatternMatchingJGitEnvironmentRepository> repos = new HashMap<>();
@@ -229,12 +220,10 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		final String multiRepoUsername = "multi-repo-username";
 		final String multiRepoPassword = "multi-repo-password";
 		final String multiRepoPassphrase = "multi-repo-passphrase";
-		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1",
-				"*test1*", "test1Uri");
+		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1", "*test1*", "test1Uri");
 		repo1.setUsername(repo1Username);
 		repo1.setPassword(repo1Password);
-		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2",
-				"*test2*", "test2Uri");
+		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2", "*test2*", "test2Uri");
 		repo2.setPassphrase(repo2Passphrase);
 
 		Map<String, PatternMatchingJGitEnvironmentRepository> repos = new HashMap<>();
@@ -247,23 +236,20 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.setPassphrase(multiRepoPassphrase);
 		this.repository.afterPropertiesSet();
 
-		assertThat(repo1Username)
-				.as("Repo1 has its own username which should not be overwritten")
+		assertThat(repo1Username).as("Repo1 has its own username which should not be overwritten")
 				.isEqualTo(repo1.getUsername());
-		assertThat(repo1Password)
-				.as("Repo1 has its own password which should not be overwritten")
+		assertThat(repo1Password).as("Repo1 has its own password which should not be overwritten")
 				.isEqualTo(repo1.getPassword());
-		assertThat(multiRepoPassphrase).as(
-				"Repo1 did not specify a passphrase so this should have been copied from the multi repo")
+		assertThat(multiRepoPassphrase)
+				.as("Repo1 did not specify a passphrase so this should have been copied from the multi repo")
 				.isEqualTo(repo1.getPassphrase());
-		assertThat(multiRepoUsername).as(
-				"Repo2 did not specify a username so this should have been copied from the multi repo")
+		assertThat(multiRepoUsername)
+				.as("Repo2 did not specify a username so this should have been copied from the multi repo")
 				.isEqualTo(repo2.getUsername());
-		assertThat(multiRepoPassword).as(
-				"Repo2 did not specify a username so this should have been copied from the multi repo")
+		assertThat(multiRepoPassword)
+				.as("Repo2 did not specify a username so this should have been copied from the multi repo")
 				.isEqualTo(repo2.getPassword());
-		assertThat(repo2Passphrase)
-				.as("Repo2 has its own passphrase which should not have been overwritten")
+		assertThat(repo2Passphrase).as("Repo2 has its own passphrase which should not have been overwritten")
 				.isEqualTo(repo2.getPassphrase());
 	}
 
@@ -271,11 +257,9 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void setSkipSslValidation() throws Exception {
 		final boolean repo1SkipSslValidation = false;
 		final boolean repo2SkipSslValidation = true;
-		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1",
-				"*test1*", "test1Uri");
+		PatternMatchingJGitEnvironmentRepository repo1 = createRepository("test1", "*test1*", "test1Uri");
 		repo1.setSkipSslValidation(repo1SkipSslValidation);
-		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2",
-				"*test2*", "test2Uri");
+		PatternMatchingJGitEnvironmentRepository repo2 = createRepository("test2", "*test2*", "test2Uri");
 		repo2.setSkipSslValidation(repo2SkipSslValidation);
 
 		Map<String, PatternMatchingJGitEnvironmentRepository> repos = new HashMap<>();
@@ -285,11 +269,11 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.setRepos(repos);
 		this.repository.setSkipSslValidation(false);
 		this.repository.afterPropertiesSet();
-		assertThat(repo1.isSkipSslValidation()).as(
-				"If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
+		assertThat(repo1.isSkipSslValidation())
+				.as("If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
 				.isFalse();
-		assertThat(repo2.isSkipSslValidation()).as(
-				"If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
+		assertThat(repo2.isSkipSslValidation())
+				.as("If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
 				.isTrue();
 
 		this.repository.setSkipSslValidation(true);
@@ -319,8 +303,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 
 	@Test
 	// test for gh-700
-	public void exceptionThrownIfBasedirDoesnotExistAndCannotBeCreated()
-			throws Exception {
+	public void exceptionThrownIfBasedirDoesnotExistAndCannotBeCreated() throws Exception {
 		File basedir = mock(File.class);
 		File absoluteBasedir = mock(File.class);
 		when(basedir.getAbsoluteFile()).thenReturn(absoluteBasedir);
@@ -337,8 +320,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void exceptionNotThrownIfRelativeBasedirIsPassedByProperties()
-			throws Exception {
+	public void exceptionNotThrownIfRelativeBasedirIsPassedByProperties() throws Exception {
 		MultipleJGitEnvironmentProperties props = new MultipleJGitEnvironmentProperties();
 		props.setBasedir(new File("relative"));
 		this.repository = new MultipleJGitEnvironmentRepository(this.environment, props);
@@ -351,8 +333,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	private String getUri(String pattern) {
 		String uri = null;
 
-		Map<String, PatternMatchingJGitEnvironmentRepository> repoMappings = this.repository
-				.getRepos();
+		Map<String, PatternMatchingJGitEnvironmentRepository> repoMappings = this.repository.getRepos();
 
 		for (PatternMatchingJGitEnvironmentRepository repo : repoMappings.values()) {
 			String[] mappingPattern = repo.getPattern();

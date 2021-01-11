@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -45,6 +46,7 @@ import org.springframework.cloud.config.server.environment.vault.authentication.
 import org.springframework.cloud.config.server.environment.vault.authentication.KubernetesClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.authentication.PcfClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.authentication.TokenClientAuthenticationProvider;
+import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -92,25 +94,28 @@ class SpringVaultClientConfigurationTests {
 
 	private List<SpringVaultClientAuthenticationProvider> authProviders;
 
+	private StaticApplicationContext applicationContext;
+
 	@BeforeEach
 	public void setUp() {
 		authProviders = Arrays.asList(new AppRoleClientAuthenticationProvider(),
-				new AwsEc2ClientAuthenticationProvider(),
-				new AwsIamClientAuthenticationProvider(),
-				new AzureMsiClientAuthenticationProvider(),
-				new CertificateClientAuthenticationProvider(),
-				new CubbyholeClientAuthenticationProvider(),
-				new GcpGceClientAuthenticationProvider(),
-				new GcpIamClientAuthenticationProvider(),
-				new KubernetesClientAuthenticationProvider(),
-				new PcfClientAuthenticationProvider(),
-				new TokenClientAuthenticationProvider());
+				new AwsEc2ClientAuthenticationProvider(), new AwsIamClientAuthenticationProvider(),
+				new AzureMsiClientAuthenticationProvider(), new CertificateClientAuthenticationProvider(),
+				new CubbyholeClientAuthenticationProvider(), new GcpGceClientAuthenticationProvider(),
+				new GcpIamClientAuthenticationProvider(), new KubernetesClientAuthenticationProvider(),
+				new PcfClientAuthenticationProvider(), new TokenClientAuthenticationProvider());
+		applicationContext = new StaticApplicationContext();
+		applicationContext.refresh();
+	}
+
+	@AfterEach
+	public void teardown() {
+		applicationContext.close();
 	}
 
 	@Test
 	public void defaultAuthentication() {
-		assertClientAuthenticationOfType(properties,
-				ConfigTokenProviderAuthentication.class);
+		assertClientAuthenticationOfType(properties, ConfigTokenProviderAuthentication.class);
 	}
 
 	@Test
@@ -150,23 +155,20 @@ class SpringVaultClientConfigurationTests {
 
 		assertClientAuthenticationOfType(properties, AzureMsiAuthentication.class);
 
-		AzureMsiAuthentication clientAuthentication = (AzureMsiAuthentication) getConfiguration(
-				properties).clientAuthentication();
+		AzureMsiAuthentication clientAuthentication = (AzureMsiAuthentication) getConfiguration(properties)
+				.clientAuthentication();
 		AzureMsiAuthenticationOptions options = (AzureMsiAuthenticationOptions) ReflectionTestUtils
 				.getField(clientAuthentication, "options");
 
-		assertThat(options.getIdentityTokenServiceUri())
-				.isEqualTo(DEFAULT_IDENTITY_TOKEN_SERVICE_URI);
-		assertThat(options.getInstanceMetadataServiceUri())
-				.isEqualTo(DEFAULT_INSTANCE_METADATA_SERVICE_URI);
+		assertThat(options.getIdentityTokenServiceUri()).isEqualTo(DEFAULT_IDENTITY_TOKEN_SERVICE_URI);
+		assertThat(options.getInstanceMetadataServiceUri()).isEqualTo(DEFAULT_INSTANCE_METADATA_SERVICE_URI);
 	}
 
 	@Test
 	public void clientCertificateAuthentication() {
 		properties.setAuthentication(CERT);
 
-		assertClientAuthenticationOfType(properties,
-				ClientCertificateAuthentication.class);
+		assertClientAuthenticationOfType(properties, ClientCertificateAuthentication.class);
 	}
 
 	@Test
@@ -188,10 +190,8 @@ class SpringVaultClientConfigurationTests {
 
 	@Test
 	public void gcpIamAuthentication() {
-		final String GCE_JSON = "{" + "  \"type\": \"service_account\","
-				+ "  \"project_id\": \"project\","
-				+ "  \"private_key_id\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\","
-				+ "  \"private_key\": \""
+		final String GCE_JSON = "{" + "  \"type\": \"service_account\"," + "  \"project_id\": \"project\","
+				+ "  \"private_key_id\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"," + "  \"private_key\": \""
 				+ "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC5qHafKgP/FAKE\\n"
 				+ "xfRl0i47zXKbGQJvGAGpcmiXRgeWkZp+kwNwBguOYNwO1qDcmewKvMPazj7EL0hV\\n"
 				+ "XMkPxgshZ9ZSxPwg7/XHHcyGCYBJhDc2hyunQvc2WGUOlQKg/nOlq3Dg8d9c/0yF\\n"
@@ -216,9 +216,8 @@ class SpringVaultClientConfigurationTests {
 				+ "NnxmVJcO3jOHGAIoVqwaObVvKoFnOZq7gbjSdT82Smes4ADAlasEIAx4nK//+S3p\\n"
 				+ "kjJ24/ut/9kyIuyd9qym9Y7BI4hv6AZ79EBEMwsCgYEAgXzq5+NCfJIi6Zduugym\\n"
 				+ "iUU3y/3CWc/pLhnw3XZ5r3M5fLXokLhLU6FsNflTpdcf2QoNL58mE0tanPqg09Xh\\n"
-				+ "7fHWR/8rISt2TsMlqFjc5rQxWg8yRpdd5Ti/Ln8v7EV3RGbhFlOqlC9hiyqfyd7V\\n"
-				+ "qZjZg4zUxPO1I8ae8hbGMWs=\\n" + "-----END PRIVATE KEY-----\\n\","
-				+ "  \"client_email\": \"test@example.com\","
+				+ "7fHWR/8rISt2TsMlqFjc5rQxWg8yRpdd5Ti/Ln8v7EV3RGbhFlOqlC9hiyqfyd7V\\n" + "qZjZg4zUxPO1I8ae8hbGMWs=\\n"
+				+ "-----END PRIVATE KEY-----\\n\"," + "  \"client_email\": \"test@example.com\","
 				+ "  \"client_id\": \"111111111111111111111\","
 				+ "  \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\","
 				+ "  \"token_uri\": \"https://accounts.google.com/o/oauth2/token\","
@@ -250,10 +249,8 @@ class SpringVaultClientConfigurationTests {
 	public void pcfAuthentication() {
 		properties.setAuthentication(PCF);
 		properties.getPcf().setRole("my-role");
-		properties.getPcf()
-				.setInstanceKey(new ClassPathResource("configserver-test.yml"));
-		properties.getPcf()
-				.setInstanceCertificate(new ClassPathResource("configserver-test.yml"));
+		properties.getPcf().setInstanceKey(new ClassPathResource("configserver-test.yml"));
+		properties.getPcf().setInstanceCertificate(new ClassPathResource("configserver-test.yml"));
 
 		assertClientAuthenticationOfType(properties, PcfAuthentication.class);
 	}
@@ -273,10 +270,8 @@ class SpringVaultClientConfigurationTests {
 		SpringVaultClientConfiguration configuration = getConfiguration(properties);
 		SslConfiguration sslConfiguration = configuration.sslConfiguration();
 
-		assertThat(sslConfiguration.getKeyStoreConfiguration())
-				.isEqualTo(KeyStoreConfiguration.unconfigured());
-		assertThat(sslConfiguration.getTrustStoreConfiguration())
-				.isEqualTo(KeyStoreConfiguration.unconfigured());
+		assertThat(sslConfiguration.getKeyStoreConfiguration()).isEqualTo(KeyStoreConfiguration.unconfigured());
+		assertThat(sslConfiguration.getTrustStoreConfiguration()).isEqualTo(KeyStoreConfiguration.unconfigured());
 	}
 
 	@Test
@@ -290,16 +285,12 @@ class SpringVaultClientConfigurationTests {
 		SpringVaultClientConfiguration configuration = getConfiguration(properties);
 		SslConfiguration sslConfiguration = configuration.sslConfiguration();
 
-		KeyStoreConfiguration keyStoreConfiguration = sslConfiguration
-				.getKeyStoreConfiguration();
-		KeyStoreConfiguration trustStoreConfiguration = sslConfiguration
-				.getTrustStoreConfiguration();
+		KeyStoreConfiguration keyStoreConfiguration = sslConfiguration.getKeyStoreConfiguration();
+		KeyStoreConfiguration trustStoreConfiguration = sslConfiguration.getTrustStoreConfiguration();
 		assertThat(keyStoreConfiguration.isPresent()).isTrue();
-		assertThat(new String(keyStoreConfiguration.getStorePassword()))
-				.isEqualTo("password");
+		assertThat(new String(keyStoreConfiguration.getStorePassword())).isEqualTo("password");
 		assertThat(trustStoreConfiguration.isPresent()).isTrue();
-		assertThat(new String(trustStoreConfiguration.getStorePassword()))
-				.isEqualTo("password");
+		assertThat(new String(trustStoreConfiguration.getStorePassword())).isEqualTo("password");
 	}
 
 	@Test
@@ -308,8 +299,7 @@ class SpringVaultClientConfigurationTests {
 
 		SpringVaultClientConfiguration configuration = getConfiguration(properties);
 		HttpRequest request = invokeInterceptors(configuration.restOperations());
-		assertThat(request.getHeaders().getFirst(VaultHttpHeaders.VAULT_NAMESPACE))
-				.isNull();
+		assertThat(request.getHeaders().getFirst(VaultHttpHeaders.VAULT_NAMESPACE)).isNull();
 	}
 
 	@Test
@@ -319,18 +309,15 @@ class SpringVaultClientConfigurationTests {
 
 		SpringVaultClientConfiguration configuration = getConfiguration(properties);
 		HttpRequest request = invokeInterceptors(configuration.restOperations());
-		assertThat(request.getHeaders().getFirst(VaultHttpHeaders.VAULT_NAMESPACE))
-				.isEqualTo("test-namespace");
+		assertThat(request.getHeaders().getFirst(VaultHttpHeaders.VAULT_NAMESPACE)).isEqualTo("test-namespace");
 	}
 
-	private HttpRequest invokeInterceptors(RestOperations restOperations)
-			throws IOException {
+	private HttpRequest invokeInterceptors(RestOperations restOperations) throws IOException {
 		assertThat(restOperations).isInstanceOf(RestTemplate.class);
 		RestTemplate restTemplate = (RestTemplate) restOperations;
 
 		MockClientHttpRequest request = new MockClientHttpRequest();
-		ClientHttpRequestExecution execution = Mockito
-				.mock(ClientHttpRequestExecution.class);
+		ClientHttpRequestExecution execution = Mockito.mock(ClientHttpRequestExecution.class);
 		byte[] body = new byte[] {};
 		for (ClientHttpRequestInterceptor interceptor : restTemplate.getInterceptors()) {
 			interceptor.intercept(request, body, execution);
@@ -340,17 +327,16 @@ class SpringVaultClientConfigurationTests {
 
 	private void assertClientAuthenticationOfType(VaultEnvironmentProperties properties,
 			Class<? extends ClientAuthentication> type) {
-		ClientAuthentication clientAuthentication = getConfiguration(properties)
-				.clientAuthentication();
+		ClientAuthentication clientAuthentication = getConfiguration(properties).clientAuthentication();
 
 		assertThat(clientAuthentication).isInstanceOf(type);
 	}
 
-	private SpringVaultClientConfiguration getConfiguration(
-			VaultEnvironmentProperties properties) {
-		SpringVaultClientConfiguration configuration = new SpringVaultClientConfiguration(
-				properties, () -> null, authProviders);
+	private SpringVaultClientConfiguration getConfiguration(VaultEnvironmentProperties properties) {
+		SpringVaultClientConfiguration configuration = new SpringVaultClientConfiguration(properties, () -> null,
+				authProviders);
 		configuration.afterPropertiesSet();
+		configuration.setApplicationContext(applicationContext);
 		return configuration;
 	}
 
@@ -361,17 +347,11 @@ class SpringVaultClientConfigurationTests {
 	@Test
 	@SuppressWarnings("deprecation")
 	public void springVaultClientConfigurationIsAProxy() {
-		new WebApplicationContextRunner()
-				.withPropertyValues("spring.profiles.active=vault")
+		new WebApplicationContextRunner().withPropertyValues("spring.profiles.active=vault")
 				.withConfiguration(UserConfigurations.of(ConfigServerConfiguration.class))
-				.withConfiguration(
-						AutoConfigurations.of(ConfigServerAutoConfiguration.class))
-				.run(context -> {
-					assertThat(context).getBean(SpringVaultClientConfiguration.class)
-							.isNotNull()
-							.matches(svcc -> ClassUtils
-									.isCglibProxyClassName(svcc.getClass().getName()),
-									"is a proxy");
+				.withConfiguration(AutoConfigurations.of(ConfigServerAutoConfiguration.class)).run(context -> {
+					assertThat(context).getBean(SpringVaultClientConfiguration.class).isNotNull()
+							.matches(svcc -> ClassUtils.isCglibProxyClassName(svcc.getClass().getName()), "is a proxy");
 				});
 	}
 

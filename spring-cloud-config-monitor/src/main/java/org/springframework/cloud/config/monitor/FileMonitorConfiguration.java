@@ -165,8 +165,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 					this.watcher.close();
 				}
 				catch (IOException e) {
-					log.error("Failed to close watcher for " + this.directory.toString(),
-							e);
+					log.error("Failed to close watcher for " + this.directory.toString(), e);
 				}
 			}
 			this.running = false;
@@ -182,8 +181,8 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 	@Scheduled(fixedRateString = "${spring.cloud.config.server.monitor.fixedDelay:5000}")
 	public void poll() {
 		for (File file : filesFromEvents()) {
-			this.endpoint.notifyByPath(new HttpHeaders(), Collections
-					.<String, Object>singletonMap("path", file.getAbsolutePath()));
+			this.endpoint.notifyByPath(new HttpHeaders(),
+					Collections.<String, Object>singletonMap("path", file.getAbsolutePath()));
 		}
 	}
 
@@ -195,8 +194,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				for (AbstractScmEnvironmentRepository repository : scmRepositories) {
 					repositoryUri = repository.getUri();
 					Resource resource = this.resourceLoader.getResource(repositoryUri);
-					if (resource instanceof FileSystemResource
-							|| resource instanceof FileUrlResource) {
+					if (resource instanceof FileSystemResource || resource instanceof FileUrlResource) {
 						paths.add(Paths.get(resource.getURI()));
 					}
 				}
@@ -235,14 +233,14 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE
 						|| event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
 					Path item = (Path) event.context();
-					File file = new File(((Path) key.watchable()).toAbsolutePath()
-							+ File.separator + item.getFileName());
+					File file = new File(
+							((Path) key.watchable()).toAbsolutePath() + File.separator + item.getFileName());
 					if (file.isDirectory()) {
 						files.addAll(walkDirectory(file.toPath()));
 					}
 					else {
-						if (!file.getPath().contains(".git") && !PatternMatchUtils
-								.simpleMatch(this.excludes, file.getName())) {
+						if (!file.getPath().contains(".git")
+								&& !PatternMatchUtils.simpleMatch(this.excludes, file.getName())) {
 							if (log.isDebugEnabled()) {
 								log.debug("Watch Event: " + event.kind() + ": " + file);
 							}
@@ -252,8 +250,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				}
 				else if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
 					if (log.isDebugEnabled()) {
-						log.debug("Watch Event: " + event.kind() + ": context: "
-								+ event.context());
+						log.debug("Watch Event: " + event.kind() + ": context: " + event.context());
 					}
 					if (event.context() != null && event.context() instanceof Path) {
 						files.addAll(walkDirectory((Path) event.context()));
@@ -266,8 +263,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				}
 				else {
 					if (log.isDebugEnabled()) {
-						log.debug("Watch Event: " + event.kind() + ": context: "
-								+ event.context());
+						log.debug("Watch Event: " + event.kind() + ": context: " + event.context());
 					}
 				}
 			}
@@ -284,8 +280,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 			Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
 
 				@Override
-				public FileVisitResult preVisitDirectory(Path dir,
-						BasicFileAttributes attrs) throws IOException {
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 					FileVisitResult fileVisitResult = super.preVisitDirectory(dir, attrs);
 					// No need to monitor the git metadata
 					if (dir.toFile().getPath().contains(".git")) {
@@ -296,8 +291,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				}
 
 				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-						throws IOException {
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					FileVisitResult fileVisitResult = super.visitFile(file, attrs);
 					walkedFiles.add(file.toFile());
 					return fileVisitResult;
@@ -316,8 +310,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 			log.debug("registering: " + dir + " for file creation events");
 		}
 		try {
-			dir.register(this.watcher, StandardWatchEventKinds.ENTRY_CREATE,
-					StandardWatchEventKinds.ENTRY_MODIFY);
+			dir.register(this.watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
 		}
 		catch (IOException e) {
 			throw e;

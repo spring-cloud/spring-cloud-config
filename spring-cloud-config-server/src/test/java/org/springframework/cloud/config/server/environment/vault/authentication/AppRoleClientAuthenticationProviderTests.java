@@ -40,8 +40,7 @@ class AppRoleClientAuthenticationProviderTests {
 				.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.provided("bar").getClass());
+		assertThat(options.getSecretId()).isInstanceOf(SecretId.provided("bar").getClass());
 	}
 
 	@Test
@@ -70,8 +69,7 @@ class AppRoleClientAuthenticationProviderTests {
 
 		assertThat(options.getAppRole()).isEqualTo("my-role");
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.pull(VaultToken.of("token")).getClass());
+		assertThat(options.getSecretId()).isInstanceOf(SecretId.pull(VaultToken.of("token")).getClass());
 	}
 
 	@Test
@@ -85,10 +83,8 @@ class AppRoleClientAuthenticationProviderTests {
 				.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getAppRole()).isEqualTo("my-role");
-		assertThat(options.getRoleId())
-				.isInstanceOf(RoleId.pull(VaultToken.of("token")).getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.pull(VaultToken.of("token")).getClass());
+		assertThat(options.getRoleId()).isInstanceOf(RoleId.pull(VaultToken.of("token")).getClass());
+		assertThat(options.getSecretId()).isInstanceOf(SecretId.pull(VaultToken.of("token")).getClass());
 	}
 
 	@Test
@@ -100,10 +96,8 @@ class AppRoleClientAuthenticationProviderTests {
 		AppRoleAuthenticationOptions options = AppRoleClientAuthenticationProvider
 				.getAppRoleAuthenticationOptions(properties);
 
-		assertThat(options.getRoleId())
-				.isInstanceOf(RoleId.wrapped(VaultToken.of("token")).getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.wrapped(VaultToken.of("token")).getClass());
+		assertThat(options.getRoleId()).isInstanceOf(RoleId.wrapped(VaultToken.of("token")).getClass());
+		assertThat(options.getSecretId()).isInstanceOf(SecretId.wrapped(VaultToken.of("token")).getClass());
 	}
 
 	@Test
@@ -116,10 +110,8 @@ class AppRoleClientAuthenticationProviderTests {
 		AppRoleAuthenticationOptions options = AppRoleClientAuthenticationProvider
 				.getAppRoleAuthenticationOptions(properties);
 
-		assertThat(options.getRoleId())
-				.isInstanceOf(RoleId.wrapped(VaultToken.of("token")).getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.provided("bar").getClass());
+		assertThat(options.getRoleId()).isInstanceOf(RoleId.wrapped(VaultToken.of("token")).getClass());
+		assertThat(options.getSecretId()).isInstanceOf(SecretId.provided("bar").getClass());
 	}
 
 	@Test
@@ -133,8 +125,7 @@ class AppRoleClientAuthenticationProviderTests {
 				.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
-		assertThat(options.getSecretId())
-				.isInstanceOf(SecretId.wrapped(VaultToken.of("token")).getClass());
+		assertThat(options.getSecretId()).isInstanceOf(SecretId.wrapped(VaultToken.of("token")).getClass());
 	}
 
 	@Test
@@ -142,9 +133,8 @@ class AppRoleClientAuthenticationProviderTests {
 
 		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
 
-		assertThatThrownBy(() -> AppRoleClientAuthenticationProvider
-				.getAppRoleAuthenticationOptions(properties))
-						.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> AppRoleClientAuthenticationProvider.getAppRoleAuthenticationOptions(properties))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
@@ -153,9 +143,8 @@ class AppRoleClientAuthenticationProviderTests {
 		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
 		properties.getAppRole().setRole("my-role");
 
-		assertThatThrownBy(() -> AppRoleClientAuthenticationProvider
-				.getAppRoleAuthenticationOptions(properties))
-						.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> AppRoleClientAuthenticationProvider.getAppRoleAuthenticationOptions(properties))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 }

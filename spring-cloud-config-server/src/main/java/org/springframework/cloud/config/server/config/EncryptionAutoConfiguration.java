@@ -53,14 +53,18 @@ import org.springframework.util.StringUtils;
  *
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(KeyProperties.class)
-@Import({ SingleTextEncryptorConfiguration.class,
-		DefaultTextEncryptorConfiguration.class })
+@EnableConfigurationProperties
+@Import({ SingleTextEncryptorConfiguration.class, DefaultTextEncryptorConfiguration.class })
 public class EncryptionAutoConfiguration {
 
+	@Bean
+	@ConditionalOnMissingBean
+	public KeyProperties keyProperties() {
+		return new KeyProperties();
+	}
+
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled", matchIfMissing = true)
 	protected static class EncryptorConfiguration {
 
 		@Autowired(required = false)
@@ -83,8 +87,7 @@ public class EncryptionAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(RsaSecretEncryptor.class)
-	@ConditionalOnProperty(prefix = "encrypt.key-store", value = "location",
-			matchIfMissing = false)
+	@ConditionalOnProperty(prefix = "encrypt.key-store", value = "location", matchIfMissing = false)
 	protected static class KeyStoreConfiguration {
 
 		@Autowired
@@ -98,8 +101,7 @@ public class EncryptionAutoConfiguration {
 		public TextEncryptorLocator textEncryptorLocator() {
 			KeyStore keyStore = this.key.getKeyStore();
 			KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(
-					new KeyStoreKeyFactory(keyStore.getLocation(),
-							keyStore.getPassword().toCharArray(),
+					new KeyStoreKeyFactory(keyStore.getLocation(), keyStore.getPassword().toCharArray(),
 							key.getKeyStore().getType()),
 					keyStore.getSecret(), keyStore.getAlias());
 			RsaAlgorithm algorithm = this.rsaProperties.getAlgorithm();

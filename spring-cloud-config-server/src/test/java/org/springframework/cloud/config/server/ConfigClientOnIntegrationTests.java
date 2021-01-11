@@ -54,7 +54,7 @@ import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class,
-		properties = "spring.cloud.config.enabled:true",
+		properties = { "spring.config.use-legacy-processing=true", "spring.cloud.config.enabled:true" },
 		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
@@ -83,10 +83,12 @@ public class ConfigClientOnIntegrationTests {
 
 	@Test
 	public void contextLoads() {
-		Environment environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/foo/development/", Environment.class);
+		Environment environment = new TestRestTemplate()
+				.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
 		assertThat(environment.getPropertySources().isEmpty()).isTrue();
 	}
+
+	// FIXME: configdata config client on tests
 
 	@Test
 	public void configClientEnabled() throws Exception {

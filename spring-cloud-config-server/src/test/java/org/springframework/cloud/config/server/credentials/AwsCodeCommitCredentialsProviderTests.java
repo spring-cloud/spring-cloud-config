@@ -56,8 +56,7 @@ public class AwsCodeCommitCredentialsProviderTests {
 	@Before
 	public void init() {
 		GitCredentialsProviderFactory factory = new GitCredentialsProviderFactory();
-		this.provider = (AwsCodeCommitCredentialProvider) factory.createFor(AWS_REPO,
-				USER, PASSWORD, null, false);
+		this.provider = (AwsCodeCommitCredentialProvider) factory.createFor(AWS_REPO, USER, PASSWORD, null, false);
 	}
 
 	@Test
@@ -70,32 +69,30 @@ public class AwsCodeCommitCredentialsProviderTests {
 
 	@Test
 	public void testSupportsUsernamePassword() {
-		assertThat(this.provider.supports(new CredentialItem[] {
-				new CredentialItem.Username(), new CredentialItem.Password() })).isTrue();
+		assertThat(this.provider
+				.supports(new CredentialItem[] { new CredentialItem.Username(), new CredentialItem.Password() }))
+						.isTrue();
 	}
 
 	@Test
 	public void testNotSupportsOther() {
-		assertThat(this.provider.supports(
-				new CredentialItem[] { new CredentialItem.YesNoType("OK To Login?") // this
+		assertThat(this.provider.supports(new CredentialItem[] { new CredentialItem.YesNoType("OK To Login?") // this
 				// is
 				// not
 				// ok
-				})).isFalse();
-		assertThat(this.provider.supports(
-				new CredentialItem[] { new CredentialItem.StringType("OK To Login?", true) // this
+		})).isFalse();
+		assertThat(this.provider.supports(new CredentialItem[] { new CredentialItem.StringType("OK To Login?", true) // this
 				// is
 				// not
 				// ok
-				})).isFalse();
-		assertThat(this.provider
-				.supports(new CredentialItem[] { new CredentialItem.Username(), // this
-						// is
-						// ok
-						new CredentialItem.Password(), // this is ok
-						new CredentialItem.StringType("OK To Login?", true) // this is not
+		})).isFalse();
+		assertThat(this.provider.supports(new CredentialItem[] { new CredentialItem.Username(), // this
+				// is
 				// ok
-				})).isFalse();
+				new CredentialItem.Password(), // this is ok
+				new CredentialItem.StringType("OK To Login?", true) // this is not
+				// ok
+		})).isFalse();
 	}
 
 	@Test
@@ -108,38 +105,31 @@ public class AwsCodeCommitCredentialsProviderTests {
 	public void testAwsCredentialsProviderIsDefinedAfterGet() throws URISyntaxException {
 		AWSCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
 		assertThat(awsProvider).isNull();
-		assertThat(this.provider.get(new URIish(AWS_REPO), makeCredentialItems()))
-				.isTrue();
+		assertThat(this.provider.get(new URIish(AWS_REPO), makeCredentialItems())).isTrue();
 		awsProvider = this.provider.getAwsCredentialProvider();
 		assertThat(awsProvider).isNotNull();
-		assertThat(
-				awsProvider instanceof AwsCodeCommitCredentialProvider.AWSStaticCredentialsProvider)
-						.isTrue();
+		assertThat(awsProvider instanceof AwsCodeCommitCredentialProvider.AWSStaticCredentialsProvider).isTrue();
 	}
 
 	@Test
-	public void testBadUriReturnsFalse()
-			throws UnsupportedCredentialItem, URISyntaxException {
+	public void testBadUriReturnsFalse() throws UnsupportedCredentialItem, URISyntaxException {
 		CredentialItem[] credentialItems = makeCredentialItems();
 		assertThat(this.provider.get(new URIish(BAD_REPO), credentialItems)).isFalse();
 	}
 
 	@Test
-	public void testUriWithCurlyBracesReturnsTrue()
-			throws UnsupportedCredentialItem, URISyntaxException {
+	public void testUriWithCurlyBracesReturnsTrue() throws UnsupportedCredentialItem, URISyntaxException {
 		GitCredentialsProviderFactory factory = new GitCredentialsProviderFactory();
-		this.provider = (AwsCodeCommitCredentialProvider) factory
-				.createFor(CURLY_BRACES_REPO, USER, PASSWORD, null, false);
+		this.provider = (AwsCodeCommitCredentialProvider) factory.createFor(CURLY_BRACES_REPO, USER, PASSWORD, null,
+				false);
 		CredentialItem[] credentialItems = makeCredentialItems();
-		assertThat(this.provider.get(new URIish(CURLY_BRACES_REPO), credentialItems))
-				.isTrue();
+		assertThat(this.provider.get(new URIish(CURLY_BRACES_REPO), credentialItems)).isTrue();
 	}
 
 	@Test
 	public void testThrowsUnsupportedCredentialException() throws URISyntaxException {
 		CredentialItem[] goodCredentialItems = makeCredentialItems();
-		CredentialItem[] badCredentialItems = new CredentialItem[] {
-				goodCredentialItems[0], goodCredentialItems[1],
+		CredentialItem[] badCredentialItems = new CredentialItem[] { goodCredentialItems[0], goodCredentialItems[1],
 				new CredentialItem.YesNoType("OK?") };
 		try {
 			this.provider.get(new URIish(AWS_REPO), badCredentialItems);

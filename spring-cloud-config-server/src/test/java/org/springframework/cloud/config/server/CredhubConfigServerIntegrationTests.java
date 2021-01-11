@@ -32,10 +32,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Alberto C. Ríos
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class,
-		properties = { "spring.profiles.active:credhub",
-				"spring.cloud.config.server.credhub.url:https://credhub:8844" },
-		webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class, properties = { "spring.profiles.active:credhub",
+		"spring.cloud.config.server.credhub.url:https://credhub:8844" }, webEnvironment = RANDOM_PORT)
 public class CredhubConfigServerIntegrationTests extends CredhubIntegrationTest {
 
 	@LocalServerPort
@@ -43,15 +41,12 @@ public class CredhubConfigServerIntegrationTests extends CredhubIntegrationTest 
 
 	@Test
 	public void shouldRetrieveValuesFromCredhub() {
-		Environment environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/myapp/master/default",
-				Environment.class);
+		Environment environment = new TestRestTemplate()
+				.getForObject("http://localhost:" + this.port + "/myapp/master/default", Environment.class);
 
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-myapp-master-default");
-		assertThat(environment.getPropertySources().get(0).getSource().toString())
-				.isEqualTo("{key=value}");
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("credhub-myapp-master-default");
+		assertThat(environment.getPropertySources().get(0).getSource().toString()).isEqualTo("{key=value}");
 	}
 
 }

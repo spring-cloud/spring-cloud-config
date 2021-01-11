@@ -42,8 +42,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class,
-		properties = { "spring.config.name:configserver" }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class, properties = { "spring.config.name:configserver" },
+		webEnvironment = RANDOM_PORT)
 @ActiveProfiles({ "test", "native" })
 public class ConfigClientBackwardsCompatibilityIntegrationTests {
 
@@ -63,16 +63,16 @@ public class ConfigClientBackwardsCompatibilityIntegrationTests {
 
 	@Test
 	public void testBackwardsCompatibleFormat() {
-		Map environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/foo/development/", Map.class);
+		Map environment = new TestRestTemplate().getForObject("http://localhost:" + this.port + "/foo/development/",
+				Map.class);
 		Object value = getPropertySourceValue(environment);
 		assertThat(value).isInstanceOf(String.class).isEqualTo("true");
 	}
 
 	@Test
 	public void testBackwardsCompatibleFormatWithLabel() {
-		Map environment = new TestRestTemplate().getForObject(
-				"http://localhost:" + this.port + "/foo/development/master", Map.class);
+		Map environment = new TestRestTemplate()
+				.getForObject("http://localhost:" + this.port + "/foo/development/master", Map.class);
 		Object value = getPropertySourceValue(environment);
 		assertThat(value).isInstanceOf(String.class).isEqualTo("true");
 	}
@@ -80,8 +80,7 @@ public class ConfigClientBackwardsCompatibilityIntegrationTests {
 	@Test
 	public void testNewFormat() {
 		ResponseEntity<Map> response = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
-				getV2AcceptEntity(), Map.class);
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(), Map.class);
 		Object value = getPropertySourceValue(response.getBody());
 		assertThat(value).isInstanceOf(Map.class);
 		Map valueMap = Map.class.cast(value);
@@ -91,8 +90,8 @@ public class ConfigClientBackwardsCompatibilityIntegrationTests {
 	@Test
 	public void testNewFormatWithLabel() {
 		ResponseEntity<Map> response = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/master",
-				HttpMethod.GET, getV2AcceptEntity(), Map.class);
+				"http://localhost:" + this.port + "/foo/development/master", HttpMethod.GET, getV2AcceptEntity(),
+				Map.class);
 		Object value = getPropertySourceValue(response.getBody());
 		assertThat(value).isInstanceOf(Map.class);
 		Map valueMap = Map.class.cast(value);

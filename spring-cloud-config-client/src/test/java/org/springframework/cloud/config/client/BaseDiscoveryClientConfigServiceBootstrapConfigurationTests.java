@@ -48,8 +48,7 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 
 	protected DiscoveryClient client = Mockito.mock(DiscoveryClient.class);
 
-	protected ServiceInstance info = new DefaultServiceInstance("app:8877", "app", "foo",
-			8877, false);
+	protected ServiceInstance info = new DefaultServiceInstance("app:8877", "app", "foo", 8877, false);
 
 	@After
 	public void close() {
@@ -59,38 +58,30 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 	}
 
 	void givenDiscoveryClientReturnsNoInfo() {
-		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
-				.willReturn(Collections.<ServiceInstance>emptyList());
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Collections.<ServiceInstance>emptyList());
 	}
 
 	void givenDiscoveryClientReturnsInfo() {
-		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
-				.willReturn(Collections.singletonList(this.info));
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Collections.singletonList(this.info));
 	}
 
-	void givenDiscoveryClientReturnsInfoForMultipleInstances(ServiceInstance info1,
-			ServiceInstance info2) {
-		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
-				.willReturn(Arrays.asList(info1, info2));
+	void givenDiscoveryClientReturnsInfoForMultipleInstances(ServiceInstance info1, ServiceInstance info2) {
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Arrays.asList(info1, info2));
 	}
 
 	void givenDiscoveryClientReturnsInfoOnThirdTry() {
-		given(this.client.getInstances(DEFAULT_CONFIG_SERVER))
-				.willReturn(Collections.<ServiceInstance>emptyList())
-				.willReturn(Collections.<ServiceInstance>emptyList())
-				.willReturn(Collections.singletonList(this.info));
+		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Collections.<ServiceInstance>emptyList())
+				.willReturn(Collections.<ServiceInstance>emptyList()).willReturn(Collections.singletonList(this.info));
 	}
 
 	void expectNoInstancesOfConfigServerException() {
 		this.expectedException.expect(IllegalStateException.class);
-		this.expectedException.expectMessage(
-				"No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
+		this.expectedException.expectMessage("No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
 	}
 
 	void expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup() {
-		assertThat(this.context.getBeanNamesForType(
-				DiscoveryClientConfigServiceBootstrapConfiguration.class).length)
-						.isEqualTo(1);
+		assertThat(this.context.getBeanNamesForType(DiscoveryClientConfigServiceBootstrapConfiguration.class).length)
+				.isEqualTo(1);
 	}
 
 	void expectConfigClientPropertiesHasDefaultConfiguration() {
@@ -102,16 +93,13 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 	}
 
 	void expectConfigClientPropertiesHasConfiguration(final String expectedUri) {
-		ConfigClientProperties properties = this.context
-				.getBean(ConfigClientProperties.class);
+		ConfigClientProperties properties = this.context.getBean(ConfigClientProperties.class);
 		Credentials credentials = properties.getCredentials(0);
 		assertThat(credentials.getUri()).isEqualTo(expectedUri);
 	}
 
-	void expectConfigClientPropertiesHasMultipleUris(final String expectedUri1,
-			final String expectedUri2) {
-		ConfigClientProperties properties = this.context
-				.getBean(ConfigClientProperties.class);
+	void expectConfigClientPropertiesHasMultipleUris(final String expectedUri1, final String expectedUri2) {
+		ConfigClientProperties properties = this.context.getBean(ConfigClientProperties.class);
 		assertThat(properties.getUri().length).isEqualTo(2);
 		Credentials credentials1 = properties.getCredentials(0);
 		Credentials credentials2 = properties.getCredentials(1);
@@ -136,13 +124,11 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 		TestPropertyValues.of(env).applyTo(this.context);
 		TestPropertyValues.of("eureka.client.enabled=false").applyTo(this.context);
 		if (registerDiscoveryClient) {
-			this.context.getDefaultListableBeanFactory()
-					.registerSingleton("discoveryClient", this.client);
+			this.context.getDefaultListableBeanFactory().registerSingleton("discoveryClient", this.client);
 		}
-		this.context.register(UtilAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class,
-				DiscoveryClientConfigServiceBootstrapConfiguration.class,
-				ConfigServiceBootstrapConfiguration.class, ConfigClientProperties.class);
+		this.context.register(UtilAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
+				DiscoveryClientConfigServiceBootstrapConfiguration.class, ConfigServiceBootstrapConfiguration.class,
+				ConfigClientProperties.class);
 		if (refresh) {
 			this.context.refresh();
 		}

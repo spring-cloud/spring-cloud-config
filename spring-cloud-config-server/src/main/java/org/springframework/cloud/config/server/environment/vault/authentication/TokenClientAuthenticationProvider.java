@@ -24,20 +24,17 @@ import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.web.client.RestOperations;
 
-public class TokenClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class TokenClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public TokenClientAuthenticationProvider() {
 		super(AuthenticationMethod.TOKEN);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
-		Assert.hasText(vaultProperties.getToken(),
-				missingPropertyForAuthMethod("token", AuthenticationMethod.TOKEN));
+		Assert.hasText(vaultProperties.getToken(), missingPropertyForAuthMethod("token", AuthenticationMethod.TOKEN));
 
 		return new TokenAuthentication(vaultProperties.getToken());
 	}

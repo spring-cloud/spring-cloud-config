@@ -29,8 +29,7 @@ public abstract class SpringVaultClientAuthenticationProvider {
 
 	protected final AuthenticationMethod supportedAuthenticationMethod;
 
-	protected SpringVaultClientAuthenticationProvider(
-			AuthenticationMethod supportedAuthenticationMethod) {
+	protected SpringVaultClientAuthenticationProvider(AuthenticationMethod supportedAuthenticationMethod) {
 		this.supportedAuthenticationMethod = supportedAuthenticationMethod;
 	}
 
@@ -38,27 +37,22 @@ public abstract class SpringVaultClientAuthenticationProvider {
 		return properties.getAuthentication().equals(this.supportedAuthenticationMethod);
 	}
 
-	public abstract ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public abstract ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations);
 
-	protected String missingPropertyForAuthMethod(String propertyName,
-			AuthenticationMethod authenticationMethod) {
-		return "The '" + VAULT_PROPERTIES_PREFIX + propertyName
-				+ "' property must be provided " + "when the " + authenticationMethod
-				+ " authentication method is specified.";
+	protected String missingPropertyForAuthMethod(String propertyName, AuthenticationMethod authenticationMethod) {
+		return "The '" + VAULT_PROPERTIES_PREFIX + propertyName + "' property must be provided " + "when the "
+				+ authenticationMethod + " authentication method is specified.";
 	}
 
 	protected String missingClassForAuthMethod(String className, String classArtifact,
 			AuthenticationMethod authenticationMethod) {
-		return className + "(" + classArtifact + ")"
-				+ " must be on the classpath when the " + authenticationMethod
+		return className + "(" + classArtifact + ")" + " must be on the classpath when the " + authenticationMethod
 				+ " authentication method is specified";
 	}
 
 	protected void assertClassPresent(String className, String message) {
-		Assert.isTrue(ClassUtils.isPresent(className, getClass().getClassLoader()),
-				message);
+		Assert.isTrue(ClassUtils.isPresent(className, getClass().getClassLoader()), message);
 	}
 
 }

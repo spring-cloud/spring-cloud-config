@@ -33,14 +33,12 @@ public class EnvironmentPrefixHelperTests {
 
 	@Test
 	public void testAddPrefix() {
-		assertThat(this.helper.addPrefix(Collections.singletonMap("bar", "spam"), "foo"))
-				.isEqualTo("{bar:spam}foo");
+		assertThat(this.helper.addPrefix(Collections.singletonMap("bar", "spam"), "foo")).isEqualTo("{bar:spam}foo");
 	}
 
 	@Test
 	public void testAddNoPrefix() {
-		assertThat(this.helper.addPrefix(Collections.<String, String>emptyMap(), "foo"))
-				.isEqualTo("foo");
+		assertThat(this.helper.addPrefix(Collections.<String, String>emptyMap(), "foo")).isEqualTo("foo");
 	}
 
 	@Test
@@ -55,8 +53,7 @@ public class EnvironmentPrefixHelperTests {
 
 	@Test
 	public void testStripPrefixWithEscape() {
-		assertThat(this.helper.stripPrefix("{plain}{key:foo}foo"))
-				.isEqualTo("{key:foo}foo");
+		assertThat(this.helper.stripPrefix("{plain}{key:foo}foo")).isEqualTo("{key:foo}foo");
 	}
 
 	@Test
@@ -68,31 +65,27 @@ public class EnvironmentPrefixHelperTests {
 
 	@Test
 	public void testKeysWithPrefix() {
-		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar",
-				"{key:mykey}foo");
+		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar", "{key:mykey}foo");
 		assertThat(keys.size()).isEqualTo(3);
 		assertThat(keys.get("key")).isEqualTo("mykey");
 	}
 
 	@Test
 	public void testKeysWithPrefixAndEscape() {
-		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar",
-				"{key:mykey}{plain}{foo:bar}foo");
+		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar", "{key:mykey}{plain}{foo:bar}foo");
 		assertThat(keys.size()).isEqualTo(3);
 		assertThat(keys.get("key")).isEqualTo("mykey");
 	}
 
 	@Test
 	public void testTextWithCurlyBracesNoPrefix() {
-		assertThat(this.helper.stripPrefix("textwith}brac{es"))
-				.isEqualTo("textwith}brac{es");
+		assertThat(this.helper.stripPrefix("textwith}brac{es")).isEqualTo("textwith}brac{es");
 	}
 
 	@Test
 	public void testTextWithCurlyBracesPrefix() {
-		assertThat(
-				this.helper.stripPrefix("{key:foo}{name:bar}textwith}brac{es{and}prefix"))
-						.isEqualTo("textwith}brac{es{and}prefix");
+		assertThat(this.helper.stripPrefix("{key:foo}{name:bar}textwith}brac{es{and}prefix"))
+				.isEqualTo("textwith}brac{es{and}prefix");
 	}
 
 }

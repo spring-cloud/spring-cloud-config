@@ -19,6 +19,11 @@ package org.springframework.cloud.config.monitor;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.bus.BusProperties;
@@ -36,60 +41,83 @@ import org.springframework.context.annotation.Import;
 @Import(FileMonitorConfiguration.class)
 public class EnvironmentMonitorAutoConfiguration {
 
-	@Autowired(required = false)
-	private List<PropertyPathNotificationExtractor> extractors;
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(BusProperties.class)
+	protected static class BusPropertyPathConfiguration {
 
-	@Bean
-	public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties) {
-		return new PropertyPathEndpoint(
-				new CompositePropertyPathNotificationExtractor(this.extractors),
-				busProperties.getId());
+		@Autowired(required = false)
+		private List<PropertyPathNotificationExtractor> extractors;
+
+		@Bean
+		@ConditionalOnBean(BusProperties.class)
+		public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties) {
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors),
+					busProperties.getId());
+		}
+
+		// TODO: With the current implementation bus can't be disabled
+		@Bean
+		@ConditionalOnMissingBean(BusProperties.class)
+		public PropertyPathEndpoint noBusBeanPropertyPathEndpoint(
+				@Value("${spring.cloud.bus.id:application}") String id) {
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), id);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnMissingClass("org.springframework.cloud.bus.BusProperties")
+	protected static class NoBusPropertyPathConfiguration {
+
+		@Bean
+		public PropertyPathEndpoint noBusPropertyPathEndpoint(@Value("${spring.cloud.bus.id:application}") String id,
+				@Autowired(required = false) List<PropertyPathNotificationExtractor> extractors) {
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(extractors), id);
+		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
 	protected static class PropertyPathNotificationExtractorConfiguration {
 
 		@Bean
-		@ConditionalOnProperty(
-				value = "spring.cloud.config.server.monitor.github.enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.github.enabled", havingValue = "true",
+				matchIfMissing = true)
 		public GithubPropertyPathNotificationExtractor githubPropertyPathNotificationExtractor() {
 			return new GithubPropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(
-				value = "spring.cloud.config.server.monitor.gitlab.enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitlab.enabled", havingValue = "true",
+				matchIfMissing = true)
 		public GitlabPropertyPathNotificationExtractor gitlabPropertyPathNotificationExtractor() {
 			return new GitlabPropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(
-				value = "spring.cloud.config.server.monitor.bitbucket.enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.bitbucket.enabled", havingValue = "true",
+				matchIfMissing = true)
 		public BitbucketPropertyPathNotificationExtractor bitbucketPropertyPathNotificationExtractor() {
 			return new BitbucketPropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitea.enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitea.enabled", havingValue = "true",
+				matchIfMissing = true)
 		public GiteaPropertyPathNotificationExtractor giteaPropertyPathNotificationExtractor() {
 			return new GiteaPropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitee.enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitee.enabled", havingValue = "true",
+				matchIfMissing = true)
 		public GiteePropertyPathNotificationExtractor giteePropertyPathNotificationExtractor() {
 			return new GiteePropertyPathNotificationExtractor();
 		}
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gogs.enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gogs.enabled", havingValue = "true",
+				matchIfMissing = true)
 		public GogsPropertyPathNotificationExtractor gogsPropertyPathNotificationExtractor() {
 			return new GogsPropertyPathNotificationExtractor();
 		}

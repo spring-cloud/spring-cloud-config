@@ -28,23 +28,19 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTest
 		extends BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {
 
 	@Test
-	public void shouldFailWithExceptionGetConfigServerInstanceFromDiscoveryClient()
-			throws Exception {
+	public void shouldFailWithExceptionGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsNoInfo();
 
 		expectNoInstancesOfConfigServerException();
 
-		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.fail-fast=true");
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true");
 	}
 
 	@Test
-	public void shouldFailWithMessageGetConfigServerInstanceFromDiscoveryClient()
-			throws Exception {
+	public void shouldFailWithMessageGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsNoInfo();
 
-		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.fail-fast=false");
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=false");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasDefaultConfiguration();
@@ -52,12 +48,10 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTest
 	}
 
 	@Test
-	public void shouldSucceedGetConfigServerInstanceFromDiscoveryClient()
-			throws Exception {
+	public void shouldSucceedGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsInfo();
 
-		setup("spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.fail-fast=true");
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasConfigurationFromEureka();
