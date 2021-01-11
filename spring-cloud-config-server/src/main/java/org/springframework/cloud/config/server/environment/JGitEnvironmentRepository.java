@@ -323,7 +323,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	/**
-	 * Clones the remote repository and then opens a connection to it.
+	 * Clones the remote repository and then opens a connection to it. Checks out to the
+	 * defaultLabel if specified.
 	 * @throws GitAPIException when cloning fails
 	 * @throws IOException when repo opening fails
 	 */
@@ -335,6 +336,23 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				git.close();
 			}
 			git = openGitRepository();
+
+			// Check if git points to valid repository and default label is not empty or
+			// null.
+			if (null != git && git.getRepository() != null
+					&& !StringUtils.isEmpty(getDefaultLabel())) {
+				// Checkout the default branch set for repo in git. This may not always be
+				// master. It depends on the
+				// admin and organization settings.
+				String defaultBranchInGit = git.getRepository().getBranch();
+				// If default branch is not empty and NOT equal to defaultLabel, then
+				// checkout the branch/tag/commit-id.
+				if (!StringUtils.isEmpty(defaultBranchInGit)
+						&& !getDefaultLabel().equalsIgnoreCase(defaultBranchInGit)) {
+					checkout(git, getDefaultLabel());
+				}
+			}
+
 			if (git != null) {
 				git.close();
 			}
