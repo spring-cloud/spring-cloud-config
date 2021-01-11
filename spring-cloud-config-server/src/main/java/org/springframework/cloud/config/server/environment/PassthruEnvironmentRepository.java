@@ -45,12 +45,12 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 
 	private static final String DEFAULT_LABEL = "master";
 
-	private Set<String> standardSources = new HashSet<String>(Arrays.asList("vcap",
-			StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
-			StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
-			StandardServletEnvironment.JNDI_PROPERTY_SOURCE_NAME,
-			StandardServletEnvironment.SERVLET_CONFIG_PROPERTY_SOURCE_NAME,
-			StandardServletEnvironment.SERVLET_CONTEXT_PROPERTY_SOURCE_NAME));
+	private Set<String> standardSources = new HashSet<String>(
+			Arrays.asList("vcap", StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
+					StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+					StandardServletEnvironment.JNDI_PROPERTY_SOURCE_NAME,
+					StandardServletEnvironment.SERVLET_CONFIG_PROPERTY_SOURCE_NAME,
+					StandardServletEnvironment.SERVLET_CONTEXT_PROPERTY_SOURCE_NAME));
 
 	private ConfigurableEnvironment environment;
 
@@ -68,15 +68,12 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label,
-			boolean includeOrigin) {
-		Environment result = new Environment(application,
-				StringUtils.commaDelimitedListToStringArray(profile), label, null, null);
-		for (org.springframework.core.env.PropertySource<?> source : this.environment
-				.getPropertySources()) {
+	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		Environment result = new Environment(application, StringUtils.commaDelimitedListToStringArray(profile), label,
+				null, null);
+		for (org.springframework.core.env.PropertySource<?> source : this.environment.getPropertySources()) {
 			String name = source.getName();
-			if (!this.standardSources.contains(name)
-					&& source instanceof MapPropertySource) {
+			if (!this.standardSources.contains(name) && source instanceof MapPropertySource) {
 				result.add(new PropertySource(name, getMap(source, includeOrigin)));
 			}
 		}
@@ -84,8 +81,7 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 
 	}
 
-	private Map<?, ?> getMap(org.springframework.core.env.PropertySource<?> source,
-			boolean includeOrigin) {
+	private Map<?, ?> getMap(org.springframework.core.env.PropertySource<?> source, boolean includeOrigin) {
 		Map<Object, Object> map = new LinkedHashMap<>();
 		Map<?, ?> input = (Map<?, ?>) source.getSource();
 		if (includeOrigin && source instanceof OriginLookup) {

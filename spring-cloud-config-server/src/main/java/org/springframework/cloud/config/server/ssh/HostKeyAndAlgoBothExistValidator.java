@@ -42,8 +42,8 @@ import static org.springframework.util.StringUtils.hasText;
  *
  * @author Ollie Hughes
  */
-public class HostKeyAndAlgoBothExistValidator implements
-		ConstraintValidator<HostKeyAndAlgoBothExist, MultipleJGitEnvironmentProperties> {
+public class HostKeyAndAlgoBothExistValidator
+		implements ConstraintValidator<HostKeyAndAlgoBothExist, MultipleJGitEnvironmentProperties> {
 
 	private static final String GIT_PROPERTY_PREFIX = "spring.cloud.config.server.git.";
 
@@ -55,47 +55,41 @@ public class HostKeyAndAlgoBothExistValidator implements
 	}
 
 	@Override
-	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties,
-			ConstraintValidatorContext context) {
+	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
 		Set<Boolean> validationResults = new HashSet<>();
 		List<JGitEnvironmentProperties> extractedProperties = this.sshPropertyValidator
 				.extractRepoProperties(sshUriProperties);
 
 		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
-			if (sshUriProperties.isIgnoreLocalSshSettings()
-					&& isSshUri(extractedProperty.getUri())) {
-				validationResults.add(
-						isAlgorithmSpecifiedWhenHostKeySet(extractedProperty, context)
-								&& isHostKeySpecifiedWhenAlgorithmSet(extractedProperty,
-										context));
+			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
+				validationResults.add(isAlgorithmSpecifiedWhenHostKeySet(extractedProperty, context)
+						&& isHostKeySpecifiedWhenAlgorithmSet(extractedProperty, context));
 			}
 		}
 		return !validationResults.contains(false);
 	}
 
-	private boolean isHostKeySpecifiedWhenAlgorithmSet(
-			JGitEnvironmentProperties sshUriProperties,
+	private boolean isHostKeySpecifiedWhenAlgorithmSet(JGitEnvironmentProperties sshUriProperties,
 			ConstraintValidatorContext context) {
-		if (hasText(sshUriProperties.getHostKeyAlgorithm())
-				&& !hasText(sshUriProperties.getHostKey())) {
+		if (hasText(sshUriProperties.getHostKeyAlgorithm()) && !hasText(sshUriProperties.getHostKey())) {
 			context.disableDefaultConstraintViolation();
-			context.buildConstraintViolationWithTemplate(format(
-					"Property '%shostKey' must be set when '%shostKeyAlgorithm' is specified",
-					GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX)).addConstraintViolation();
+			context.buildConstraintViolationWithTemplate(
+					format("Property '%shostKey' must be set when '%shostKeyAlgorithm' is specified",
+							GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
+					.addConstraintViolation();
 			return false;
 		}
 		return true;
 	}
 
-	private boolean isAlgorithmSpecifiedWhenHostKeySet(
-			JGitEnvironmentProperties sshUriProperties,
+	private boolean isAlgorithmSpecifiedWhenHostKeySet(JGitEnvironmentProperties sshUriProperties,
 			ConstraintValidatorContext context) {
-		if (hasText(sshUriProperties.getHostKey())
-				&& !hasText(sshUriProperties.getHostKeyAlgorithm())) {
+		if (hasText(sshUriProperties.getHostKey()) && !hasText(sshUriProperties.getHostKeyAlgorithm())) {
 			context.disableDefaultConstraintViolation();
-			context.buildConstraintViolationWithTemplate(format(
-					"Property '%shostKeyAlgorithm' must be set when '%shostKey' is specified",
-					GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX)).addConstraintViolation();
+			context.buildConstraintViolationWithTemplate(
+					format("Property '%shostKeyAlgorithm' must be set when '%shostKey' is specified",
+							GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
+					.addConstraintViolation();
 			return false;
 		}
 		return true;

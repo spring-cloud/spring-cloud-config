@@ -57,15 +57,12 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository {
 
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profilesList);
 
-		Environment environment = new Environment(application, profiles, label, null,
-				null);
+		Environment environment = new Environment(application, profiles, label, null, null);
 		for (String profile : profiles) {
-			environment.add(new PropertySource(
-					"credhub-" + application + "-" + profile + "-" + label,
+			environment.add(new PropertySource("credhub-" + application + "-" + profile + "-" + label,
 					findProperties(application, profile, label)));
 			if (!DEFAULT_APPLICATION.equals(application)) {
-				addDefaultPropertySource(environment, DEFAULT_APPLICATION, profile,
-						label);
+				addDefaultPropertySource(environment, DEFAULT_APPLICATION, profile, label);
 			}
 		}
 
@@ -73,35 +70,30 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository {
 			addDefaultPropertySource(environment, application, DEFAULT_PROFILE, label);
 		}
 
-		if (!Arrays.asList(profiles).contains(DEFAULT_PROFILE)
-				&& !DEFAULT_APPLICATION.equals(application)) {
-			addDefaultPropertySource(environment, DEFAULT_APPLICATION, DEFAULT_PROFILE,
-					label);
+		if (!Arrays.asList(profiles).contains(DEFAULT_PROFILE) && !DEFAULT_APPLICATION.equals(application)) {
+			addDefaultPropertySource(environment, DEFAULT_APPLICATION, DEFAULT_PROFILE, label);
 		}
 
 		return environment;
 	}
 
-	private void addDefaultPropertySource(Environment environment, String application,
-			String profile, String label) {
+	private void addDefaultPropertySource(Environment environment, String application, String profile, String label) {
 		Map<Object, Object> properties = findProperties(application, profile, label);
 		if (!properties.isEmpty()) {
-			PropertySource propertySource = new PropertySource(
-					"credhub-" + application + "-" + profile + "-" + label, properties);
+			PropertySource propertySource = new PropertySource("credhub-" + application + "-" + profile + "-" + label,
+					properties);
 			environment.add(propertySource);
 		}
 	}
 
-	private Map<Object, Object> findProperties(String application, String profile,
-			String label) {
+	private Map<Object, Object> findProperties(String application, String profile, String label) {
 		String path = "/" + application + "/" + profile + "/" + label;
 
 		return this.credHubOperations.credentials().findByPath(path).stream()
 				.map(credentialSummary -> credentialSummary.getName().getName())
-				.map(name -> this.credHubOperations.credentials()
-						.getByName(new SimpleCredentialName(name), JsonCredential.class))
-				.map(CredentialDetails::getValue)
-				.flatMap(jsonCredential -> jsonCredential.entrySet().stream())
+				.map(name -> this.credHubOperations.credentials().getByName(new SimpleCredentialName(name),
+						JsonCredential.class))
+				.map(CredentialDetails::getValue).flatMap(jsonCredential -> jsonCredential.entrySet().stream())
 				.collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
 	}
 

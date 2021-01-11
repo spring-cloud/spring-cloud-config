@@ -61,12 +61,11 @@ public class RedisEnvironmentRepositoryIntegrationTests {
 		bound.put("name", "foo");
 		bound.put("tag", "myapp");
 
-		Environment env = new RedisEnvironmentRepository(redis,
-				new RedisEnvironmentProperties()).findOne("foo", "bar", "");
+		Environment env = new RedisEnvironmentRepository(redis, new RedisEnvironmentProperties()).findOne("foo", "bar",
+				"");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getPropertySources()).isNotEmpty();
-		assertThat(env.getPropertySources().get(0).getSource().get("tag"))
-				.isEqualTo("myapp");
+		assertThat(env.getPropertySources().get(0).getSource().get("tag")).isEqualTo("myapp");
 	}
 
 }

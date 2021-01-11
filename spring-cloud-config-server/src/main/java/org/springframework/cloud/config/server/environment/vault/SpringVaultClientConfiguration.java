@@ -54,8 +54,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * @author Scott Frederick
  */
 @Configuration
-public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
-		implements InitializingBean {
+public class SpringVaultClientConfiguration extends AbstractVaultConfiguration implements InitializingBean {
 
 	private static final String VAULT_PROPERTIES_PREFIX = "spring.cloud.config.server.vault.";
 
@@ -70,8 +69,7 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 	private final List<SpringVaultClientAuthenticationProvider> authProviders;
 
 	public SpringVaultClientConfiguration(VaultEnvironmentProperties vaultProperties,
-			ConfigTokenProvider configTokenProvider,
-			List<SpringVaultClientAuthenticationProvider> authProviders) {
+			ConfigTokenProvider configTokenProvider, List<SpringVaultClientAuthenticationProvider> authProviders) {
 
 		this.vaultProperties = vaultProperties;
 		this.configTokenProvider = configTokenProvider;
@@ -80,27 +78,23 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 
 	@Override
 	public void afterPropertiesSet() {
-		this.externalRestOperations = new RestTemplate(
-				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory());
+		this.externalRestOperations = new RestTemplate(clientHttpRequestFactoryWrapper().getClientHttpRequestFactory());
 	}
 
 	@Override
 	public VaultEndpoint vaultEndpoint() {
 
-		URI baseUrl = UriComponentsBuilder.newInstance()
-				.scheme(vaultProperties.getScheme()).host(vaultProperties.getHost())
-				.port(vaultProperties.getPort()).build().toUri();
+		URI baseUrl = UriComponentsBuilder.newInstance().scheme(vaultProperties.getScheme())
+				.host(vaultProperties.getHost()).port(vaultProperties.getPort()).build().toUri();
 
 		return VaultEndpoint.from(baseUrl);
 	}
 
 	@Override
-	protected RestTemplateBuilder restTemplateBuilder(
-			VaultEndpointProvider endpointProvider,
+	protected RestTemplateBuilder restTemplateBuilder(VaultEndpointProvider endpointProvider,
 			ClientHttpRequestFactory requestFactory) {
 
-		RestTemplateBuilder restTemplateBuilder = super.restTemplateBuilder(
-				endpointProvider, requestFactory);
+		RestTemplateBuilder restTemplateBuilder = super.restTemplateBuilder(endpointProvider, requestFactory);
 
 		if (vaultProperties.getNamespace() != null) {
 			restTemplateBuilder.customizers(this::applyNamespaceInterceptor);
@@ -113,19 +107,18 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 	public SslConfiguration sslConfiguration() {
 		if (vaultProperties.isSkipSslValidation()) {
 			log.warn("The '" + VAULT_PROPERTIES_PREFIX + "skipSslValidation' property "
-					+ "is not supported by this Vault environment repository implementation. "
-					+ "Use the '" + VAULT_PROPERTIES_PREFIX
-					+ "ssl` properties to provide "
+					+ "is not supported by this Vault environment repository implementation. " + "Use the '"
+					+ VAULT_PROPERTIES_PREFIX + "ssl` properties to provide "
 					+ "custom keyStore and trustStore material instead.");
 		}
 
 		VaultEnvironmentProperties.Ssl ssl = vaultProperties.getSsl();
 
-		SslConfiguration.KeyStoreConfiguration keyStoreConfiguration = getKeyStoreConfiguration(
-				ssl.getKeyStore(), ssl.getKeyStorePassword());
+		SslConfiguration.KeyStoreConfiguration keyStoreConfiguration = getKeyStoreConfiguration(ssl.getKeyStore(),
+				ssl.getKeyStorePassword());
 
-		SslConfiguration.KeyStoreConfiguration trustStoreConfiguration = getKeyStoreConfiguration(
-				ssl.getTrustStore(), ssl.getTrustStorePassword());
+		SslConfiguration.KeyStoreConfiguration trustStoreConfiguration = getKeyStoreConfiguration(ssl.getTrustStore(),
+				ssl.getTrustStorePassword());
 
 		return new SslConfiguration(keyStoreConfiguration, trustStoreConfiguration);
 	}
@@ -143,16 +136,15 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory()).build();
 	}
 
-	private SslConfiguration.KeyStoreConfiguration getKeyStoreConfiguration(
-			Resource resourceProperty, String passwordProperty) {
+	private SslConfiguration.KeyStoreConfiguration getKeyStoreConfiguration(Resource resourceProperty,
+			String passwordProperty) {
 
 		if (resourceProperty == null) {
 			return SslConfiguration.KeyStoreConfiguration.unconfigured();
 		}
 
 		if (StringUtils.hasText(passwordProperty)) {
-			return SslConfiguration.KeyStoreConfiguration.of(resourceProperty,
-					passwordProperty.toCharArray());
+			return SslConfiguration.KeyStoreConfiguration.of(resourceProperty, passwordProperty.toCharArray());
 		}
 
 		return SslConfiguration.KeyStoreConfiguration.of(resourceProperty);
@@ -160,8 +152,7 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 
 	private RestOperations applyNamespaceInterceptor(RestTemplate restTemplate) {
 		if (vaultProperties.getNamespace() != null) {
-			restTemplate.getInterceptors().add(VaultClients
-					.createNamespaceInterceptor(vaultProperties.getNamespace()));
+			restTemplate.getInterceptors().add(VaultClients.createNamespaceInterceptor(vaultProperties.getNamespace()));
 		}
 
 		return restTemplate;
@@ -179,14 +170,13 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 		}
 
 		if (this.authProviders == null || this.authProviders.isEmpty()) {
-			throw new UnsupportedOperationException(
-					"No Vault client authentication providers are configured");
+			throw new UnsupportedOperationException("No Vault client authentication providers are configured");
 		}
 
 		for (SpringVaultClientAuthenticationProvider authProvider : this.authProviders) {
 			if (authProvider.supports(this.vaultProperties)) {
-				return authProvider.getClientAuthentication(this.vaultProperties,
-						restOperations(), this.externalRestOperations);
+				return authProvider.getClientAuthentication(this.vaultProperties, restOperations(),
+						this.externalRestOperations);
 			}
 		}
 
@@ -206,8 +196,7 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration
 		public VaultToken login() throws VaultException {
 			String token = tokenProvider.getToken();
 			if (!StringUtils.hasLength(token)) {
-				throw new IllegalArgumentException(
-						"A Vault token must be supplied by a token provider");
+				throw new IllegalArgumentException("A Vault token must be supplied by a token provider");
 			}
 			return VaultToken.of(token);
 		}

@@ -89,41 +89,37 @@ public class EncryptionController {
 
 	@RequestMapping(value = "encrypt/status", method = RequestMethod.GET)
 	public Map<String, Object> status() {
-		TextEncryptor encryptor = getEncryptor(defaultApplicationName, defaultProfile,
-				"");
+		TextEncryptor encryptor = getEncryptor(defaultApplicationName, defaultProfile, "");
 		validateEncryptionWeakness(encryptor);
 		return Collections.singletonMap("status", "OK");
 	}
 
 	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
-	public String encrypt(@RequestBody String data,
-			@RequestHeader("Content-Type") MediaType type) {
+	public String encrypt(@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
 		return encrypt(defaultApplicationName, defaultProfile, data, type);
 	}
 
 	@RequestMapping(value = "/encrypt/{name}/{profiles}", method = RequestMethod.POST)
-	public String encrypt(@PathVariable String name, @PathVariable String profiles,
-			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
+	public String encrypt(@PathVariable String name, @PathVariable String profiles, @RequestBody String data,
+			@RequestHeader("Content-Type") MediaType type) {
 		TextEncryptor encryptor = getEncryptor(name, profiles, "");
 		validateEncryptionWeakness(encryptor);
 		String input = stripFormData(data, type, false);
 		Map<String, String> keys = helper.getEncryptorKeys(name, profiles, input);
 		String textToEncrypt = helper.stripPrefix(input);
-		String encrypted = helper.addPrefix(keys,
-				encryptorLocator.locate(keys).encrypt(textToEncrypt));
+		String encrypted = helper.addPrefix(keys, encryptorLocator.locate(keys).encrypt(textToEncrypt));
 		logger.info("Encrypted data");
 		return encrypted;
 	}
 
 	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
-	public String decrypt(@RequestBody String data,
-			@RequestHeader("Content-Type") MediaType type) {
+	public String decrypt(@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
 		return decrypt(defaultApplicationName, defaultProfile, data, type);
 	}
 
 	@RequestMapping(value = "/decrypt/{name}/{profiles}", method = RequestMethod.POST)
-	public String decrypt(@PathVariable String name, @PathVariable String profiles,
-			@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
+	public String decrypt(@PathVariable String name, @PathVariable String profiles, @RequestBody String data,
+			@RequestHeader("Content-Type") MediaType type) {
 		TextEncryptor encryptor = getEncryptor(name, profiles, "");
 		checkDecryptionPossible(encryptor);
 		validateEncryptionWeakness(encryptor);
@@ -144,8 +140,7 @@ public class EncryptionController {
 		if (encryptorLocator == null) {
 			throw new KeyNotInstalledException();
 		}
-		TextEncryptor encryptor = encryptorLocator
-				.locate(helper.getEncryptorKeys(name, profiles, data));
+		TextEncryptor encryptor = encryptorLocator.locate(helper.getEncryptorKeys(name, profiles, data));
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
@@ -159,8 +154,7 @@ public class EncryptionController {
 	}
 
 	private void checkDecryptionPossible(TextEncryptor textEncryptor) {
-		if (textEncryptor instanceof RsaSecretEncryptor
-				&& !((RsaSecretEncryptor) textEncryptor).canDecrypt()) {
+		if (textEncryptor instanceof RsaSecretEncryptor && !((RsaSecretEncryptor) textEncryptor).canDecrypt()) {
 			throw new DecryptionNotSupportedException();
 		}
 	}

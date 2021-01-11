@@ -40,6 +40,11 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	/** SQL used to query database for keys and values. */
 	private String sql = DEFAULT_SQL;
 
+	/**
+	 * Flag to determine how to handle query exceptions.
+	 */
+	private boolean failOnError = true;
+
 	public boolean isEnabled() {
 		return enabled;
 	}
@@ -63,6 +68,14 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 
 	public void setSql(String sql) {
 		this.sql = sql;
+	}
+
+	public boolean isFailOnError() {
+		return failOnError;
+	}
+
+	public void setFailOnError(boolean failOnError) {
+		this.failOnError = failOnError;
 	}
 
 }

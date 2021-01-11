@@ -118,13 +118,11 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		String codeCommitPassword;
 		try {
 			StringBuilder stringToSign = new StringBuilder();
-			stringToSign.append("AWS4-HMAC-SHA256\n").append(dateStamp).append("\n")
-					.append(shortDateStamp).append("/").append(region)
-					.append("/codecommit/aws4_request\n")
+			stringToSign.append("AWS4-HMAC-SHA256\n").append(dateStamp).append("\n").append(shortDateStamp).append("/")
+					.append(region).append("/codecommit/aws4_request\n")
 					.append(bytesToHexString(canonicalRequestDigest(uri)));
 
-			byte[] signedRequest = sign(awsSecretKey, shortDateStamp, region,
-					stringToSign.toString());
+			byte[] signedRequest = sign(awsSecretKey, shortDateStamp, region, stringToSign.toString());
 			codeCommitPassword = dateStamp + "Z" + bytesToHexString(signedRequest);
 		}
 		catch (Exception e) {
@@ -141,8 +139,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		return mac.doFinal(data.getBytes(UTF8));
 	}
 
-	private static byte[] sign(String secret, String shortDateStamp, String region,
-			String toSign) throws Exception {
+	private static byte[] sign(String secret, String shortDateStamp, String region, String toSign) throws Exception {
 		byte[] kSecret = ("AWS4" + secret).getBytes(UTF8);
 		byte[] kDate = hmacSha256(shortDateStamp, kSecret);
 		byte[] kRegion = hmacSha256(region, kDate);
@@ -157,8 +154,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 * @return a message digest
 	 * @throws NoSuchAlgorithmException when the SHA 256 algorithm is not found
 	 */
-	private static byte[] canonicalRequestDigest(URIish uri)
-			throws NoSuchAlgorithmException {
+	private static byte[] canonicalRequestDigest(URIish uri) throws NoSuchAlgorithmException {
 		StringBuilder canonicalRequest = new StringBuilder();
 		canonicalRequest.append("GIT\n") // codecommit uses GIT as the request method
 				.append(uri.getPath()).append("\n") // URI request path
@@ -207,12 +203,11 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 
 		try {
 			URL url = new URL(uri);
-			URI u = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(),
-					url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+			URI u = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(),
+					url.getQuery(), url.getRef());
 			if (u.getScheme().equals("https")) {
 				String host = u.getHost();
-				if (host.endsWith(".amazonaws.com")
-						&& host.startsWith("git-codecommit.")) {
+				if (host.endsWith(".amazonaws.com") && host.startsWith("git-codecommit.")) {
 					return true;
 				}
 			}
@@ -282,8 +277,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 * org.eclipse.jgit.transport.CredentialItem[])
 	 */
 	@Override
-	public boolean get(URIish uri, CredentialItem... items)
-			throws UnsupportedCredentialItem {
+	public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
 		String codeCommitPassword;
 		String awsAccessKey;
 		String awsSecretKey;
@@ -323,14 +317,12 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 				this.logger.trace("Returning password " + codeCommitPassword);
 				continue;
 			}
-			if (i instanceof CredentialItem.StringType
-					&& i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
+			if (i instanceof CredentialItem.StringType && i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
 				((CredentialItem.StringType) i).setValue(codeCommitPassword);
 				this.logger.trace("Returning password string " + codeCommitPassword);
 				continue;
 			}
-			throw new UnsupportedCredentialItem(uri,
-					i.getClass().getName() + ":" + i.getPromptText()); //$NON-NLS-1$
+			throw new UnsupportedCredentialItem(uri, i.getClass().getName() + ":" + i.getPromptText()); //$NON-NLS-1$
 		}
 
 		return true;

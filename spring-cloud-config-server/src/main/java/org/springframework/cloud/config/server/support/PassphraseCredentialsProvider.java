@@ -58,8 +58,7 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 	@Override
 	public boolean supports(CredentialItem... items) {
 		for (final CredentialItem item : items) {
-			if (item instanceof CredentialItem.StringType
-					&& item.getPromptText().startsWith(PROMPT)) {
+			if (item instanceof CredentialItem.StringType && item.getPromptText().startsWith(PROMPT)) {
 				continue;
 			}
 			else {
@@ -79,16 +78,13 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 	 * @throws UnsupportedCredentialItem if one of the items supplied is not supported.
 	 */
 	@Override
-	public boolean get(URIish uri, CredentialItem... items)
-			throws UnsupportedCredentialItem {
+	public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
 		for (final CredentialItem item : items) {
-			if (item instanceof CredentialItem.StringType
-					&& item.getPromptText().startsWith(PROMPT)) {
+			if (item instanceof CredentialItem.StringType && item.getPromptText().startsWith(PROMPT)) {
 				((CredentialItem.StringType) item).setValue(this.passphrase);
 				continue;
 			}
-			throw new UnsupportedCredentialItem(uri,
-					item.getClass().getName() + ":" + item.getPromptText());
+			throw new UnsupportedCredentialItem(uri, item.getClass().getName() + ":" + item.getPromptText());
 		}
 		return true;
 	}

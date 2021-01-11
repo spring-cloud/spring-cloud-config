@@ -85,7 +85,6 @@ Precedence rules for profiles are also the same as in a regular Spring Boot appl
 
 The following sample client application has this bootstrap configuration:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
@@ -336,7 +335,11 @@ To correct the above error the RSA key must be converted to PEM format. An examp
 Spring Cloud Config Server also supports https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html[AWS CodeCommit] authentication.
 AWS CodeCommit uses an authentication helper when using Git from the command line.
 This helper is not used with the JGit library, so a JGit CredentialProvider for AWS CodeCommit is created if the Git URI matches the AWS CodeCommit pattern.
-AWS CodeCommit URIs follow this pattern://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}.
+AWS CodeCommit URIs follow this pattern: 
+
+```bash
+https//git-codecommit.${AWS_REGION}.amazonaws.com/v1/repos/${repo}.
+```
 
 If you provide a username and password with an AWS CodeCommit URI, they must be the https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html[AWS accessKeyId and secretAccessKey] that provide access to the repository.
 If you do not specify a username and password, the accessKeyId and secretAccessKey are retrieved by using the https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[AWS Default Credential Provider Chain].
@@ -844,7 +847,7 @@ The properties should be stored as fields in a hash. The name of hash should be 
 HMSET sample-app server.port "8100" sample.topic.name "test" test.property1 "property1"
 ----
 
-After executing the command visible above a hash should contain the following keys with values:
+After running the command visible above a hash should contain the following keys with values:
 ----
 HGETALL sample-app
 {
@@ -1121,7 +1124,7 @@ spring:
               profiles: development
 ----
 
-You can disable the Health Indicator by setting `spring.cloud.config.server.health.enabled=false`.
+You can disable the Health Indicator by setting `management.health.config.enabled=false`.
 
 === Security
 
@@ -1151,7 +1154,7 @@ spring:
     password: '{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'
 ----
 
-Encrypted values in a .properties file must not be wrapped in quotes. Otherwise, the value is not decrypted. The following example shows values that would work:
+Encrypted values in `application.properties` file must not be wrapped in quotes. Otherwise, the value is not decrypted. The following example shows values that would work:
 
 .application.properties
 ----
@@ -1480,10 +1483,28 @@ NOTE: The default configuration also detects filesystem changes in local git rep
 A Spring Boot application can take immediate advantage of the Spring Config Server (or other external property sources provided by the application developer).
 It also picks up some additional useful features related to `Environment` change events.
 
+[[config-data-import]]
+=== Spring Boot Config Data Import
+
+Spring Boot 2.4 introduced a new way to import configuration data via the `spring.config.import` property. This is now the default way to bind to Config Server.
+
+To optionally connect to config server set the following in application.properties:
+
+.application.properties
+[source,properties]
+----
+spring.config.import=optional:configserver:
+----
+
+This will connect to the Config Server at the default location of "http://localhost:8888". Removing the `optional:` prefix will cause the Config Client to fail if it is unable to connect to Config Server. To change the location of Config Server either set `spring.cloud.config.uri` or add the url to the `spring.config.import` statement such as, `spring.config.import=optional:configserver:http://myhost:8888`. The location in the import property has precedence over the uri property.
+
+NOTE: A `bootstrap` file (properties or yaml) is *not* needed for the Spring Boot Config Data method of import via `spring.config.import`.
+
 [[config-first-bootstrap]]
 === Config First Bootstrap
 
-The default behavior for any application that has the Spring Cloud Config Client on the classpath is as follows:
+To use the legacy bootstrap way of connecting to Config Server, bootstrap must be enabled via a property or the `spring-cloud-starter-bootstrap` starter. The property is `spring.cloud.bootstrap.enabled=true`. It must be set as a System Property or environment variable.
+Once bootstrap has been enabled any application with Spring Cloud Config Client on the classpath will connect to Config Server as follows:
 When a config client starts, it binds to the Config Server (through the `spring.cloud.config.uri` bootstrap configuration property) and initializes Spring `Environment` with remote property sources.
 
 The net result of this behavior is that all client applications that want to consume the Config Server need a `bootstrap.yml` (or an environment variable) with the server address set in `spring.cloud.config.uri` (it defaults to "http://localhost:8888").
@@ -1507,7 +1528,6 @@ If the Config Server is secured with HTTP Basic, you can configure the credentia
 Also, if the Config Server has a context path, you can set `configPath`.
 For example, the following YAML file is for a Config Server that is a Eureka client:
 
-.bootstrap.yml
 [source,yaml]
 ----
 eureka:
@@ -1525,6 +1545,8 @@ eureka:
 
 In some cases, you may want to fail startup of a service if it cannot connect to the Config Server.
 If this is the desired behavior, set the bootstrap configuration property `spring.cloud.config.fail-fast=true` to make the client halt with an Exception.
+
+NOTE: To get similar functionality using `spring.config.import`, simply omit the `optional:` prefix.
 
 [[config-client-retry]]
 === Config Client Retry
@@ -1574,7 +1596,6 @@ If you want to configure timeout thresholds:
 If you use HTTP Basic security on the server, clients need to know the password (and username if it is not the default).
 You can specify the username and password through the config server URI or via separate username and password properties, as shown in the following example:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
@@ -1585,7 +1606,6 @@ spring:
 
 The following example shows an alternate way to pass the same information:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
@@ -1601,7 +1621,6 @@ The `spring.cloud.config.password` and `spring.cloud.config.username` values ove
 If you deploy your apps on Cloud Foundry, the best way to provide the password is through service credentials (such as in the URI, since it does not need to be in a config file).
 The following example works locally and for a user-provided service on Cloud Foundry named `configserver`:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:
@@ -1610,6 +1629,27 @@ spring:
      uri: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:8888}
 
 ----
+
+If config server requires client side TLS certificate, you can configure client side TLS certificate and trust store via properties, as shown in following example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      uri: https://myconfig.myconfig.com
+      tls:
+        enabled: true
+        key-store: <path-of-key-store>
+        key-store-type: PKCS12
+        key-store-password: <key-store-password>
+        key-password: <key-password>
+        trust-store: <path-of-trust-store>
+        trust-store-type: PKCS12
+        trust-store-password: <trust-store-password>
+----
+
+The `spring.cloud.config.tls.enabled` needs to be true to enable config client side TLS. When `spring.cloud.config.tls.trust-store` is omitted, a JVM default trust store is used. The default value for `spring.cloud.config.tls.key-store-type` and `spring.cloud.config.tls.trust-store-type` is PKCS12. When password properties are omitted, empty password is assumed.
 
 If you use another form of security, you might need to <<custom-rest-template,provide a `RestTemplate`>> to the `ConfigServicePropertySourceLocator` (for example, by grabbing it in the bootstrap context and injecting it).
 
@@ -1662,7 +1702,6 @@ When using Vault as a backend to your config server, the client needs to supply 
 This token can be provided within the client by setting `spring.cloud.config.token`
 in `bootstrap.yml`, as shown in the following example:
 
-.bootstrap.yml
 [source,yaml]
 ----
 spring:

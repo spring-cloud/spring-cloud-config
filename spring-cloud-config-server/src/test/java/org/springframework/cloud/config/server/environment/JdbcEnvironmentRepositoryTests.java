@@ -38,9 +38,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ApplicationConfiguration.class,
-		properties = { "spring.datasource.schema=classpath:schema-jdbc.sql",
-				"spring.datasource.data=classpath:data-jdbc.sql" })
+@SpringBootTest(classes = ApplicationConfiguration.class, properties = {
+		"spring.datasource.schema=classpath:schema-jdbc.sql", "spring.datasource.data=classpath:data-jdbc.sql" })
 @AutoConfigureTestDatabase
 @DirtiesContext
 public class JdbcEnvironmentRepositoryTests {
@@ -57,10 +56,8 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getLabel()).isEqualTo("master");
 		assertThat(env.getPropertySources()).isNotEmpty();
 		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("foo-bar");
-		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c"))
-				.isEqualTo("x");
-		assertThat(env.getPropertySources().get(1).getName())
-				.isEqualTo("application-default");
+		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c")).isEqualTo("x");
+		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("application-default");
 		assertThat(env.getPropertySources().get(1).getSource().get("a.b")).isEqualTo("y");
 	}
 

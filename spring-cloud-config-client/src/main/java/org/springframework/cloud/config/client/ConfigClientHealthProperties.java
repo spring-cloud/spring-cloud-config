@@ -16,7 +16,11 @@
 
 package org.springframework.cloud.config.client;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.convert.DurationUnit;
 
 /**
  * @author Spencer Gibb
@@ -25,28 +29,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ConfigClientHealthProperties {
 
 	/**
-	 * Flag to indicate that the config server health indicator should be installed.
+	 * Time to live for cached result. Default 5 min.
 	 */
-	boolean enabled;
+	@DurationUnit(ChronoUnit.MINUTES)
+	private Duration timeToLive = Duration.ofMinutes(5);
 
-	/**
-	 * Time to live for cached result, in milliseconds. Default 300000 (5 min).
-	 */
-	private long timeToLive = 60 * 5 * 1000;
-
-	public boolean isEnabled() {
-		return this.enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	public long getTimeToLive() {
+	public Duration getTimeToLive() {
 		return this.timeToLive;
 	}
 
-	public void setTimeToLive(long timeToLive) {
+	public void setTimeToLive(Duration timeToLive) {
 		this.timeToLive = timeToLive;
 	}
 

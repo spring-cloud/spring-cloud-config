@@ -44,8 +44,7 @@ public interface SearchPathLocator {
 
 		private final String version;
 
-		public Locations(String application, String profile, String label, String version,
-				String[] locations) {
+		public Locations(String application, String profile, String label, String version, String[] locations) {
 			this.application = application;
 			this.profile = profile;
 			this.label = label;
@@ -75,9 +74,8 @@ public interface SearchPathLocator {
 
 		@Override
 		public String toString() {
-			return "Locations [application=" + this.application + ", profile="
-					+ this.profile + ", label=" + this.label + ", locations="
-					+ Arrays.toString(this.locations) + ", version=" + this.version + "]";
+			return "Locations [application=" + this.application + ", profile=" + this.profile + ", label=" + this.label
+					+ ", locations=" + Arrays.toString(this.locations) + ", version=" + this.version + "]";
 		}
 
 	}

@@ -62,8 +62,7 @@ class EnvironmentPrefixHelper {
 	 * @param text text to cipher
 	 * @return encryptor keys
 	 */
-	public Map<String, String> getEncryptorKeys(String name, String profiles,
-			String text) {
+	public Map<String, String> getEncryptorKeys(String name, String profiles, String text) {
 
 		Map<String, String> keys = new LinkedHashMap<String, String>();
 
@@ -129,8 +128,7 @@ class EnvironmentPrefixHelper {
 	}
 
 	private String removeEnvironmentPrefix(String input) {
-		return input.replaceFirst("\\{name:.*\\}", "").replaceFirst("\\{profiles:.*\\}",
-				"");
+		return input.replaceFirst("\\{name:.*\\}", "").replaceFirst("\\{profiles:.*\\}", "");
 	}
 
 }

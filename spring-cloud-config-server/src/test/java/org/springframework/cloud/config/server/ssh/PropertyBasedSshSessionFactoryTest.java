@@ -81,8 +81,7 @@ public class PropertyBasedSshSessionFactoryTest {
 	public static String getResourceAsString(String path) {
 		try {
 			Resource resource = new ClassPathResource(path);
-			try (BufferedReader br = new BufferedReader(
-					new InputStreamReader(resource.getInputStream()))) {
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
 				StringBuilder builder = new StringBuilder();
 				String line;
 				while ((line = br.readLine()) != null) {
@@ -145,10 +144,8 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		this.factory.createSession(this.hc, null,
-				SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
-		verify(this.jSch).addIdentity("gitlab.example.local", PRIVATE_KEY.getBytes(),
-				null, null);
+		this.factory.createSession(this.hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
+		verify(this.jSch).addIdentity("gitlab.example.local", PRIVATE_KEY.getBytes(), null, null);
 	}
 
 	@Test
@@ -159,8 +156,7 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		this.factory.createSession(this.hc, null,
-				SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
+		this.factory.createSession(this.hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
 		ArgumentCaptor<HostKey> captor = ArgumentCaptor.forClass(HostKey.class);
 		verify(this.hostKeyRepository).add(captor.capture(), isNull());
 		HostKey hostKey = captor.getValue();
@@ -177,8 +173,7 @@ public class PropertyBasedSshSessionFactoryTest {
 		setupSessionFactory(sshKey);
 
 		this.factory.configure(this.hc, this.session);
-		verify(this.session).setConfig("PreferredAuthentications",
-				"password,keyboard-interactive");
+		verify(this.session).setConfig("PreferredAuthentications", "password,keyboard-interactive");
 		verify(this.session).setConfig("StrictHostKeyChecking", "no");
 		verifyNoMoreInteractions(this.session);
 	}
@@ -191,8 +186,7 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setKnownHostsFile("/ssh/known_hosts");
 		setupSessionFactory(sshKey);
 
-		this.factory.createSession(this.hc, null,
-				SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
+		this.factory.createSession(this.hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
 		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 
 		verify(this.jSch).setKnownHosts(captor.capture());
@@ -222,8 +216,7 @@ public class PropertyBasedSshSessionFactoryTest {
 
 	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {
 		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new HashMap<>();
-		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()),
-				sshKey);
+		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()), sshKey);
 		this.factory = new PropertyBasedSshSessionFactory(sshKeysByHostname, this.jSch) {
 
 			@Override
@@ -231,8 +224,7 @@ public class PropertyBasedSshSessionFactoryTest {
 				return proxyMock;
 			}
 		};
-		when(this.hc.getHostName())
-				.thenReturn(SshUriPropertyProcessor.getHostname(sshKey.getUri()));
+		when(this.hc.getHostName()).thenReturn(SshUriPropertyProcessor.getHostname(sshKey.getUri()));
 		when(this.jSch.getHostKeyRepository()).thenReturn(this.hostKeyRepository);
 	}
 

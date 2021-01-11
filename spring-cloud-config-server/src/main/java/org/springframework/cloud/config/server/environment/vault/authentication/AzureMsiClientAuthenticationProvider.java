@@ -27,34 +27,30 @@ import org.springframework.vault.authentication.AzureMsiAuthenticationOptions;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.web.client.RestOperations;
 
-public class AzureMsiClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class AzureMsiClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public AzureMsiClientAuthenticationProvider() {
 		super(AuthenticationMethod.AZURE_MSI);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
-		VaultEnvironmentProperties.AzureMsiProperties azureMsi = vaultProperties
-				.getAzureMsi();
+		VaultEnvironmentProperties.AzureMsiProperties azureMsi = vaultProperties.getAzureMsi();
 
-		Assert.hasText(azureMsi.getRole(), missingPropertyForAuthMethod("azure-msi.role",
-				AuthenticationMethod.AZURE_MSI));
+		Assert.hasText(azureMsi.getRole(),
+				missingPropertyForAuthMethod("azure-msi.role", AuthenticationMethod.AZURE_MSI));
 
-		AzureMsiAuthenticationOptions options = AzureMsiAuthenticationOptions.builder()
-				.role(azureMsi.getRole()).path(azureMsi.getAzurePath())
+		AzureMsiAuthenticationOptions options = AzureMsiAuthenticationOptions.builder().role(azureMsi.getRole())
+				.path(azureMsi.getAzurePath())
 				.instanceMetadataUri(getUri(azureMsi.getMetadataService(),
 						AzureMsiAuthenticationOptions.DEFAULT_INSTANCE_METADATA_SERVICE_URI))
 				.identityTokenServiceUri(getUri(azureMsi.getIdentityTokenService(),
 						AzureMsiAuthenticationOptions.DEFAULT_IDENTITY_TOKEN_SERVICE_URI))
 				.build();
 
-		return new AzureMsiAuthentication(options, vaultRestOperations,
-				externalRestOperations);
+		return new AzureMsiAuthentication(options, vaultRestOperations, externalRestOperations);
 	}
 
 	private URI getUri(String uriString, URI defaultUri) {

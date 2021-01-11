@@ -56,10 +56,9 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestConfiguration.class,
-		properties = { "spring.cloud.config.enabled=true",
-				"management.endpoint.env.post.enabled=true",
-				"management.endpoints.web.exposure.include=env, refresh" },
+@SpringBootTest(
+		classes = TestConfiguration.class, properties = { "spring.cloud.config.enabled=true",
+				"management.endpoint.env.post.enabled=true", "management.endpoints.web.exposure.include=env, refresh" },
 		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
@@ -95,8 +94,8 @@ public class RefreshableConfigServerIntegrationTests {
 	@Test
 	public void refreshOverrides() {
 		ResponseEntity<Environment> entity = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
-				getV2AcceptEntity(), Environment.class);
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				Environment.class);
 		Environment environment = entity.getBody();
 		assertThat(environment.getPropertySources()).isEmpty();
 
@@ -104,18 +103,15 @@ public class RefreshableConfigServerIntegrationTests {
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Content-Type", "application/json");
 		HttpEntity<String> request = new HttpEntity<>(
-				"{\"name\": \"spring.cloud.config.server.overrides.foo\", \"value\": \"bar\"}",
-				headers);
-		ResponseEntity<Void> response = new TestRestTemplate()
-				.postForEntity(actuatorEndpoint + "/env", request, Void.class);
+				"{\"name\": \"spring.cloud.config.server.overrides.foo\", \"value\": \"bar\"}", headers);
+		ResponseEntity<Void> response = new TestRestTemplate().postForEntity(actuatorEndpoint + "/env", request,
+				Void.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-		response = new TestRestTemplate().postForEntity(actuatorEndpoint + "/refresh",
-				null, Void.class);
+		response = new TestRestTemplate().postForEntity(actuatorEndpoint + "/refresh", null, Void.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-		entity = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
+		entity = new TestRestTemplate().exchange("http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
 				getV2AcceptEntity(), Environment.class);
 		environment = entity.getBody();
 		assertThat(environment.getPropertySources()).isNotEmpty();
@@ -131,17 +127,16 @@ public class RefreshableConfigServerIntegrationTests {
 		public EnvironmentRepository environmentRepository() {
 			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
 			Environment environment = new Environment("", "");
-			given(repository.findOne(isA(String.class), isA(String.class),
-					nullable(String.class), isA(Boolean.class))).willReturn(environment);
+			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(Boolean.class)))
+					.willReturn(environment);
 			return repository;
 		}
 
 		@Bean
 		public ResourceRepository resourceRepository() {
 			ResourceRepository repository = Mockito.mock(ResourceRepository.class);
-			given(repository.findOne(isA(String.class), isA(String.class),
-					nullable(String.class), isA(String.class)))
-							.willReturn(new ByteArrayResource("".getBytes()));
+			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(String.class)))
+					.willReturn(new ByteArrayResource("".getBytes()));
 			return repository;
 		}
 

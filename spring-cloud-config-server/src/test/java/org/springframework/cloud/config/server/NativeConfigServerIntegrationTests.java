@@ -40,8 +40,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class,
-		properties = { "spring.config.name:configserver" }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class, properties = { "spring.config.name:configserver" },
+		webEnvironment = RANDOM_PORT)
 @ActiveProfiles({ "test", "native" })
 public class NativeConfigServerIntegrationTests {
 
@@ -59,19 +59,18 @@ public class NativeConfigServerIntegrationTests {
 	@Test
 	public void contextLoads() {
 		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
-				getV2AcceptEntity(), Environment.class);
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				Environment.class);
 		Environment environment = response.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("overrides");
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("overrides");
 		ConfigServerTestUtils.assertConfigEnabled(environment);
 	}
 
 	@Test
 	public void badYaml() {
-		ResponseEntity<String> response = new TestRestTemplate().getForEntity(
-				"http://localhost:" + this.port + "/bad/default/", String.class);
+		ResponseEntity<String> response = new TestRestTemplate()
+				.getForEntity("http://localhost:" + this.port + "/bad/default/", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 

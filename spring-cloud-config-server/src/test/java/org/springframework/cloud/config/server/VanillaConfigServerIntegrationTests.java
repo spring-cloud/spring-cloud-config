@@ -43,10 +43,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class,
-		properties = { "spring.config.name:configserver",
-				"spring.cloud.config.server.git.uri:file:./target/repos/config-repo" },
-		webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = ConfigServerApplication.class, properties = { "spring.config.name:configserver",
+		"spring.cloud.config.server.git.uri:file:./target/repos/config-repo" }, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 public class VanillaConfigServerIntegrationTests {
 
@@ -64,19 +62,18 @@ public class VanillaConfigServerIntegrationTests {
 	@Test
 	public void contextLoads() {
 		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
-				getV2AcceptEntity(), Environment.class);
+				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				Environment.class);
 		Environment environment = response.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
-		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("overrides");
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("overrides");
 		ConfigServerTestUtils.assertConfigEnabled(environment);
 	}
 
 	@Test
 	public void resourseEndpointsWork() {
-		String text = new TestRestTemplate().getForObject("http://localhost:" + this.port
-				+ "/foo/development/master/bar.properties", String.class);
+		String text = new TestRestTemplate()
+				.getForObject("http://localhost:" + this.port + "/foo/development/master/bar.properties", String.class);
 
 		String expected = "foo: bar";
 		assertThat(text).as("invalid content").isEqualTo(expected);
@@ -84,8 +81,8 @@ public class VanillaConfigServerIntegrationTests {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
 		ResponseEntity<byte[]> response = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/raw/bar.properties",
-				HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
+				"http://localhost:" + this.port + "/foo/development/raw/bar.properties", HttpMethod.GET,
+				new HttpEntity<>(headers), byte[].class);
 		// FIXME: this is calling the text endpoint, not the binary one
 		// assertTrue("invalid content type",
 		// response.getHeaders().getContentType().isCompatibleWith(MediaType.APPLICATION_OCTET_STREAM));

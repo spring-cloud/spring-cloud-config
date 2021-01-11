@@ -35,35 +35,29 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 public class OnSearchPathLocatorPresent extends SpringBootCondition {
 
 	@Override
-	public ConditionOutcome getMatchOutcome(ConditionContext context,
-			AnnotatedTypeMetadata metadata) {
+	public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
 		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
-		List<String> types = CompositeUtils
-				.getCompositeTypeList(context.getEnvironment());
+		List<String> types = CompositeUtils.getCompositeTypeList(context.getEnvironment());
 
 		// get EnvironmentRepository types from registered factories
 		List<Class<? extends EnvironmentRepository>> repositoryTypes = new ArrayList<>();
 		for (String type : types) {
 			String factoryName = CompositeUtils.getFactoryName(type, beanFactory);
-			Type[] actualTypeArguments = CompositeUtils
-					.getEnvironmentRepositoryFactoryTypeParams(beanFactory, factoryName);
+			Type[] actualTypeArguments = CompositeUtils.getEnvironmentRepositoryFactoryTypeParams(beanFactory,
+					factoryName);
 			Class<? extends EnvironmentRepository> repositoryType;
 			repositoryType = (Class<? extends EnvironmentRepository>) actualTypeArguments[0];
 			repositoryTypes.add(repositoryType);
 		}
 
-		boolean required = metadata
-				.isAnnotated(ConditionalOnSearchPathLocator.class.getName());
-		boolean foundSearchPathLocator = repositoryTypes.stream()
-				.anyMatch(SearchPathLocator.class::isAssignableFrom);
+		boolean required = metadata.isAnnotated(ConditionalOnSearchPathLocator.class.getName());
+		boolean foundSearchPathLocator = repositoryTypes.stream().anyMatch(SearchPathLocator.class::isAssignableFrom);
 		if (required && !foundSearchPathLocator) {
-			return ConditionOutcome.noMatch(
-					ConditionMessage.forCondition(ConditionalOnSearchPathLocator.class)
-							.notAvailable(SearchPathLocator.class.getTypeName()));
+			return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnSearchPathLocator.class)
+					.notAvailable(SearchPathLocator.class.getTypeName()));
 		}
 		if (!required && foundSearchPathLocator) {
-			return ConditionOutcome.noMatch(ConditionMessage
-					.forCondition(ConditionalOnMissingSearchPathLocator.class)
+			return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnMissingSearchPathLocator.class)
 					.available(SearchPathLocator.class.getTypeName()));
 		}
 		return ConditionOutcome.match();

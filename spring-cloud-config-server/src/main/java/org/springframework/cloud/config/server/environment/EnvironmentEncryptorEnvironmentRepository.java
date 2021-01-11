@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -36,7 +37,7 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 
 	private EnvironmentRepository delegate;
 
-	private EnvironmentEncryptor environmentEncryptor;
+	private final List<EnvironmentEncryptor> environmentEncryptors;
 
 	private Map<String, String> overrides = new LinkedHashMap<>();
 
@@ -45,9 +46,9 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 	}
 
 	public EnvironmentEncryptorEnvironmentRepository(EnvironmentRepository delegate,
-			EnvironmentEncryptor environmentEncryptor) {
+			List<EnvironmentEncryptor> environmentEncryptors) {
 		this.delegate = delegate;
-		this.environmentEncryptor = environmentEncryptor;
+		this.environmentEncryptors = environmentEncryptors;
 	}
 
 	@Override
@@ -56,16 +57,15 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 	}
 
 	@Override
-	public Environment findOne(String name, String profiles, String label,
-			boolean includeOrigin) {
-		Environment environment = this.delegate.findOne(name, profiles, label,
-				includeOrigin);
-		if (this.environmentEncryptor != null) {
-			environment = this.environmentEncryptor.decrypt(environment);
+	public Environment findOne(String name, String profiles, String label, boolean includeOrigin) {
+		Environment environment = this.delegate.findOne(name, profiles, label, includeOrigin);
+		if (this.environmentEncryptors != null) {
+			for (EnvironmentEncryptor environmentEncryptor : environmentEncryptors) {
+				environment = environmentEncryptor.decrypt(environment);
+			}
 		}
 		if (!this.overrides.isEmpty()) {
-			environment.addFirst(
-					new PropertySource("overrides", getOverridesMap(includeOrigin)));
+			environment.addFirst(new PropertySource("overrides", getOverridesMap(includeOrigin)));
 		}
 		return environment;
 	}
@@ -76,8 +76,7 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 		}
 		Map<Object, Object> map = new LinkedHashMap<>();
 		for (Map.Entry entry : this.overrides.entrySet()) {
-			map.put(entry.getKey(), new PropertyValueDescriptor(entry.getValue(),
-					"Config server overrides"));
+			map.put(entry.getKey(), new PropertyValueDescriptor(entry.getValue(), "Config server overrides"));
 		}
 		return map;
 	}

@@ -21,8 +21,8 @@ import org.springframework.credhub.core.CredHubOperations;
 /**
  * @author Alberto C. Ríos
  */
-public class CredhubEnvironmentRepositoryFactory implements
-		EnvironmentRepositoryFactory<CredhubEnvironmentRepository, CredhubEnvironmentProperties> {
+public class CredhubEnvironmentRepositoryFactory
+		implements EnvironmentRepositoryFactory<CredhubEnvironmentRepository, CredhubEnvironmentProperties> {
 
 	private CredHubOperations credhubOperations;
 
@@ -31,8 +31,7 @@ public class CredhubEnvironmentRepositoryFactory implements
 	}
 
 	@Override
-	public CredhubEnvironmentRepository build(
-			CredhubEnvironmentProperties environmentProperties) {
+	public CredhubEnvironmentRepository build(CredhubEnvironmentProperties environmentProperties) {
 		return new CredhubEnvironmentRepository(this.credhubOperations);
 	}
 

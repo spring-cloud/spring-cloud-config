@@ -22,9 +22,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.config.environment.EnvironmentMediaType;
+import org.springframework.cloud.configuration.TlsProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -42,6 +46,11 @@ public class ConfigClientProperties {
 	public static final String PREFIX = "spring.cloud.config";
 
 	/**
+	 * Name of config discovery enabled property.
+	 */
+	public static final String CONFIG_DISCOVERY_ENABLED = PREFIX + ".discovery.enabled";
+
+	/**
 	 * Token header name.
 	 */
 	public static final String TOKEN_HEADER = "X-Config-Token";
@@ -57,6 +66,11 @@ public class ConfigClientProperties {
 	public static final String AUTHORIZATION = "authorization";
 
 	/**
+	 * Default profile value.
+	 */
+	public static final String DEFAULT_PROFILE = "default";
+
+	/**
 	 * Flag to say that remote configuration is enabled. Default true;
 	 */
 	private boolean enabled = true;
@@ -65,7 +79,7 @@ public class ConfigClientProperties {
 	 * The default profile to use when fetching remote configuration (comma-separated).
 	 * Default is "default".
 	 */
-	private String profile = "default";
+	private String profile = DEFAULT_PROFILE;
 
 	/**
 	 * Name of application used to fetch remote properties.
@@ -95,9 +109,19 @@ public class ConfigClientProperties {
 	private String[] uri = { "http://localhost:8888" };
 
 	/**
+	 * The Accept header media type to send to config server.
+	 */
+	private String mediaType = EnvironmentMediaType.V2_JSON;
+
+	/**
 	 * Discovery properties.
 	 */
 	private Discovery discovery = new Discovery();
+
+	/**
+	 * TLS properties.
+	 */
+	private TlsProperties tls = new TlsProperties();
 
 	/**
 	 * Flag to indicate that failure to connect to the server is fatal (default false).
@@ -129,7 +153,7 @@ public class ConfigClientProperties {
 	 */
 	private Map<String, String> headers = new HashMap<>();
 
-	private ConfigClientProperties() {
+	ConfigClientProperties() {
 	}
 
 	public ConfigClientProperties(Environment environment) {
@@ -200,12 +224,33 @@ public class ConfigClientProperties {
 		return extractCredentials(index);
 	}
 
+	public String getMediaType() {
+		return this.mediaType;
+	}
+
+	public void setMediaType(String mediaType) {
+		this.mediaType = mediaType;
+	}
+
 	public Discovery getDiscovery() {
 		return this.discovery;
 	}
 
 	public void setDiscovery(Discovery discovery) {
 		this.discovery = discovery;
+	}
+
+	public TlsProperties getTls() {
+		return tls;
+	}
+
+	public void setTls(TlsProperties tls) {
+		this.tls = tls;
+	}
+
+	@PostConstruct
+	public void checkTlsStoreType() {
+		tls.postConstruct();
 	}
 
 	public boolean isFailFast() {
@@ -274,8 +319,7 @@ public class ConfigClientProperties {
 			if (StringUtils.isEmpty(userInfo) || ":".equals(userInfo)) {
 				return result;
 			}
-			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build()
-					.toUriString();
+			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build().toUriString();
 			result.uri = bare;
 
 			// if userInfo does not contain a :, then append a : to it
@@ -301,7 +345,7 @@ public class ConfigClientProperties {
 			return result;
 		}
 		catch (MalformedURLException e) {
-			throw new IllegalStateException("Invalid URL: " + uri);
+			throw new IllegalStateException("Invalid URL: " + uri, e);
 		}
 	}
 
@@ -321,33 +365,27 @@ public class ConfigClientProperties {
 		return credentials;
 	}
 
-	public ConfigClientProperties override(
-			org.springframework.core.env.Environment environment) {
+	public ConfigClientProperties override(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties override = new ConfigClientProperties();
 		BeanUtils.copyProperties(this, override);
-		override.setName(
-				environment.resolvePlaceholders("${" + ConfigClientProperties.PREFIX
-						+ ".name:${spring.application.name:application}}"));
+		override.setName(environment.resolvePlaceholders(
+				"${" + ConfigClientProperties.PREFIX + ".name:${spring.application.name:application}}"));
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
-			override.setProfile(
-					environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
+			override.setProfile(environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
 		}
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".label")) {
-			override.setLabel(
-					environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
+			override.setLabel(environment.getProperty(ConfigClientProperties.PREFIX + ".label"));
 		}
 		return override;
 	}
 
 	@Override
 	public String toString() {
-		return "ConfigClientProperties [enabled=" + this.enabled + ", profile="
-				+ this.profile + ", name=" + this.name + ", label=" + this.label
-				+ ", username=" + this.username + ", password=" + this.password + ", uri="
-				+ Arrays.toString(this.uri) + ", discovery=" + this.discovery
-				+ ", failFast=" + this.failFast + ", token=" + this.token
-				+ ", requestConnectTimeout=" + this.requestConnectTimeout
-				+ ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
+		return "ConfigClientProperties [enabled=" + this.enabled + ", profile=" + this.profile + ", name=" + this.name
+				+ ", label=" + this.label + ", username=" + this.username + ", password=" + this.password + ", uri="
+				+ Arrays.toString(this.uri) + ", mediaType=" + this.mediaType + ", discovery=" + this.discovery
+				+ ", failFast=" + this.failFast + ", token=" + this.token + ", requestConnectTimeout="
+				+ this.requestConnectTimeout + ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
 				+ this.sendState + ", headers=" + this.headers + "]";
 	}
 

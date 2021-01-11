@@ -27,8 +27,8 @@ import org.springframework.core.env.ConfigurableEnvironment;
 /**
  * @author Dylan Roberts
  */
-public class MultipleJGitEnvironmentRepositoryFactory implements
-		EnvironmentRepositoryFactory<MultipleJGitEnvironmentRepository, MultipleJGitEnvironmentProperties> {
+public class MultipleJGitEnvironmentRepositoryFactory
+		implements EnvironmentRepositoryFactory<MultipleJGitEnvironmentRepository, MultipleJGitEnvironmentProperties> {
 
 	private ConfigurableEnvironment environment;
 
@@ -39,14 +39,12 @@ public class MultipleJGitEnvironmentRepositoryFactory implements
 	private final TransportConfigCallbackFactory transportConfigCallbackFactory;
 
 	@Deprecated
-	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-			ConfigServerProperties server,
+	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			TransportConfigCallbackFactory transportConfigCallbackFactory) {
 		this(environment, server, Optional.empty(), transportConfigCallbackFactory);
 	}
 
-	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-			ConfigServerProperties server,
+	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
 			TransportConfigCallbackFactory transportConfigCallbackFactory) {
 		this.environment = environment;
@@ -56,17 +54,16 @@ public class MultipleJGitEnvironmentRepositoryFactory implements
 	}
 
 	@Override
-	public MultipleJGitEnvironmentRepository build(
-			MultipleJGitEnvironmentProperties environmentProperties) throws Exception {
+	public MultipleJGitEnvironmentRepository build(MultipleJGitEnvironmentProperties environmentProperties)
+			throws Exception {
 		if (this.connectionFactory.isPresent()) {
 			HttpTransport.setConnectionFactory(this.connectionFactory.get());
 			this.connectionFactory.get().addConfiguration(environmentProperties);
 		}
 
-		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(
-				this.environment, environmentProperties);
-		repository.setTransportConfigCallback(
-				transportConfigCallbackFactory.build(environmentProperties));
+		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
+				environmentProperties);
+		repository.setTransportConfigCallback(transportConfigCallbackFactory.build(environmentProperties));
 		if (this.server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.server.getDefaultLabel());
 		}

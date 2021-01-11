@@ -46,6 +46,7 @@ public class ConfigServiceBootstrapConfiguration {
 	private ConfigurableEnvironment environment;
 
 	@Bean
+	@ConditionalOnMissingBean
 	public ConfigClientProperties configClientProperties() {
 		ConfigClientProperties client = new ConfigClientProperties(this.environment);
 		return client;
@@ -53,15 +54,12 @@ public class ConfigServiceBootstrapConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(ConfigServicePropertySourceLocator.class)
-	@ConditionalOnProperty(value = "spring.cloud.config.enabled", matchIfMissing = true)
-	public ConfigServicePropertySourceLocator configServicePropertySource(
-			ConfigClientProperties properties) {
-		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(
-				properties);
-		return locator;
+	@ConditionalOnProperty(name = ConfigClientProperties.PREFIX + ".enabled", matchIfMissing = true)
+	public ConfigServicePropertySourceLocator configServicePropertySource(ConfigClientProperties properties) {
+		return new ConfigServicePropertySourceLocator(properties);
 	}
 
-	@ConditionalOnProperty("spring.cloud.config.fail-fast")
+	@ConditionalOnProperty(ConfigClientProperties.PREFIX + ".fail-fast")
 	@ConditionalOnClass({ Retryable.class, Aspect.class, AopAutoConfiguration.class })
 	@Configuration(proxyBeanMethods = false)
 	@EnableRetry(proxyTargetClass = true)
@@ -71,12 +69,10 @@ public class ConfigServiceBootstrapConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(name = "configServerRetryInterceptor")
-		public RetryOperationsInterceptor configServerRetryInterceptor(
-				RetryProperties properties) {
-			return RetryInterceptorBuilder.stateless()
-					.backOffOptions(properties.getInitialInterval(),
-							properties.getMultiplier(), properties.getMaxInterval())
-					.maxAttempts(properties.getMaxAttempts()).build();
+		public RetryOperationsInterceptor configServerRetryInterceptor(RetryProperties properties) {
+			return RetryInterceptorBuilder.stateless().backOffOptions(properties.getInitialInterval(),
+					properties.getMultiplier(), properties.getMaxInterval()).maxAttempts(properties.getMaxAttempts())
+					.build();
 		}
 
 	}

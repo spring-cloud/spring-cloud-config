@@ -21,8 +21,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 /**
  * @author Piotr Mińkowski
  */
-public class RedisEnvironmentRepositoryFactory implements
-		EnvironmentRepositoryFactory<RedisEnvironmentRepository, RedisEnvironmentProperties> {
+public class RedisEnvironmentRepositoryFactory
+		implements EnvironmentRepositoryFactory<RedisEnvironmentRepository, RedisEnvironmentProperties> {
 
 	private StringRedisTemplate redis;
 
@@ -31,8 +31,7 @@ public class RedisEnvironmentRepositoryFactory implements
 	}
 
 	@Override
-	public RedisEnvironmentRepository build(
-			RedisEnvironmentProperties environmentProperties) {
+	public RedisEnvironmentRepository build(RedisEnvironmentProperties environmentProperties) {
 		return new RedisEnvironmentRepository(this.redis, environmentProperties);
 	}
 

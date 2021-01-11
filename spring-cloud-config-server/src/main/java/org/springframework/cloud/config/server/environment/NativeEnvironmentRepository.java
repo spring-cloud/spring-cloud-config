@@ -17,30 +17,25 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.boot.Banner.Mode;
-import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.config.ConfigFileApplicationListener;
+import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.util.StringUtils;
 
 /**
@@ -54,11 +49,12 @@ import org.springframework.util.StringUtils;
  * @author Venil Noronha
  * @author Daniel Lavoie
  */
-public class NativeEnvironmentRepository
-		implements EnvironmentRepository, SearchPathLocator, Ordered {
+public class NativeEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
 
-	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/",
-			"classpath:/config/", "file:./", "file:./config/" };
+	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/", "classpath:/config/", "file:./",
+			"file:./config/" };
+
+	static final Pattern RESOURCE_PATTERN = Pattern.compile("Config resource '(.*?)' via location '(.*)'");
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
@@ -89,8 +85,7 @@ public class NativeEnvironmentRepository
 
 	private int order;
 
-	public NativeEnvironmentRepository(ConfigurableEnvironment environment,
-			NativeEnvironmentProperties properties) {
+	public NativeEnvironmentRepository(ConfigurableEnvironment environment, NativeEnvironmentProperties properties) {
 		this.environment = environment;
 		this.addLabelLocations = properties.getAddLabelLocations();
 		this.defaultLabel = properties.getDefaultLabel();
@@ -130,31 +125,19 @@ public class NativeEnvironmentRepository
 	}
 
 	@Override
-	public Environment findOne(String config, String profile, String label,
-			boolean includeOrigin) {
-		SpringApplicationBuilder builder = new SpringApplicationBuilder(
-				PropertyPlaceholderAutoConfiguration.class);
-		ConfigurableEnvironment environment = getEnvironment(profile);
-		builder.environment(environment);
-		builder.web(WebApplicationType.NONE).bannerMode(Mode.OFF);
-		if (!logger.isDebugEnabled()) {
-			// Make the mini-application startup less verbose
-			builder.logStartupInfo(false);
-		}
-		String[] args = getArgs(config, profile, label);
-		// Explicitly set the listeners (to exclude logging listener which would change
-		// log levels in the caller)
-		builder.application()
-				.setListeners(Arrays.asList(new ConfigFileApplicationListener()));
+	public Environment findOne(String config, String profile, String label, boolean includeOrigin) {
 
-		try (ConfigurableApplicationContext context = builder.run(args)) {
-			environment.getPropertySources().remove("profiles");
-			return clean(new PassthruEnvironmentRepository(environment).findOne(config,
-					profile, label, includeOrigin));
+		try {
+			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
+			DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
+			ConfigDataEnvironmentPostProcessor.applyTo(environment, resourceLoader, null,
+					StringUtils.commaDelimitedListToStringArray(profile));
+
+			environment.getPropertySources().remove("config-data-setup");
+			return clean(new PassthruEnvironmentRepository(environment).findOne(config, profile, label, includeOrigin));
 		}
 		catch (Exception e) {
-			String msg = String.format(
-					"Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
+			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
 					config, profile, label, includeOrigin);
 			String completeMessage = NestedExceptionUtils.buildMessage(msg,
 					NestedExceptionUtils.getMostSpecificCause(e));
@@ -213,56 +196,75 @@ public class NativeEnvironmentRepository
 				}
 			}
 		}
-		return new Locations(application, profile, label, this.version,
-				output.toArray(new String[0]));
+		return new Locations(application, profile, label, this.version, output.toArray(new String[0]));
 	}
 
-	private ConfigurableEnvironment getEnvironment(String profile) {
+	private ConfigurableEnvironment getEnvironment(String application, String profile, String label) {
 		ConfigurableEnvironment environment = new StandardEnvironment();
 		Map<String, Object> map = new HashMap<>();
 		map.put("spring.profiles.active", profile);
-		map.put("spring.main.web-application-type", "none");
-		environment.getPropertySources().addFirst(new MapPropertySource("profiles", map));
+		String config = application;
+		if (!config.startsWith("application")) {
+			config = "application," + config;
+		}
+		map.put("spring.config.name", config);
+		// map.put("encrypt.failOnError=" + this.failOnError);
+		map.put("spring.config.location",
+				StringUtils.arrayToCommaDelimitedString(getLocations(application, profile, label).getLocations()));
+		// globally ignore config files that are not found
+		map.put("spring.config.on-not-found", "IGNORE");
+		environment.getPropertySources().addFirst(new MapPropertySource("config-data-setup", map));
 		return environment;
 	}
 
 	protected Environment clean(Environment value) {
-		Environment result = new Environment(value.getName(), value.getProfiles(),
-				value.getLabel(), this.version, value.getState());
+		Environment result = new Environment(value.getName(), value.getProfiles(), value.getLabel(), this.version,
+				value.getState());
 		for (PropertySource source : value.getPropertySources()) {
-			String name = source.getName();
+			String originalName = source.getName();
+			String name = originalName;
 			if (this.environment.getPropertySources().contains(name)) {
 				continue;
 			}
+			Matcher matcher = RESOURCE_PATTERN.matcher(name);
+			String location = null;
+			if (matcher.find()) {
+				name = matcher.group(1);
+				location = matcher.group(2);
+			}
+			// TODO: needed anymore?
 			name = name.replace("applicationConfig: [", "");
+			name = name.replace("file [", "file:");
 			name = name.replace("]", "");
 			if (this.searchLocations != null) {
 				boolean matches = false;
 				String normal = name;
 				if (normal.startsWith("file:")) {
-					normal = StringUtils
-							.cleanPath(new File(normal.substring("file:".length()))
-									.getAbsolutePath());
+					normal = StringUtils.cleanPath(new File(normal.substring("file:".length())).getAbsolutePath());
 				}
 				String profile = result.getProfiles() == null ? null
 						: StringUtils.arrayToCommaDelimitedString(result.getProfiles());
-				for (String pattern : getLocations(result.getName(), profile,
-						result.getLabel()).getLocations()) {
+				for (String pattern : getLocations(result.getName(), profile, result.getLabel()).getLocations()) {
 					if (!pattern.contains(":")) {
 						pattern = "file:" + pattern;
 					}
 					if (pattern.startsWith("file:")) {
-						pattern = StringUtils
-								.cleanPath(new File(pattern.substring("file:".length()))
-										.getAbsolutePath())
+						pattern = StringUtils.cleanPath(new File(pattern.substring("file:".length())).getAbsolutePath())
 								+ "/";
 					}
 					if (logger.isTraceEnabled()) {
-						logger.trace("Testing pattern: " + pattern
-								+ " with property source: " + name);
+						logger.trace("Testing pattern: " + pattern + " with property source: " + name);
 					}
-					if (normal.startsWith(pattern)
-							&& !normal.substring(pattern.length()).contains("/")) {
+					if (normal.startsWith(pattern) && !normal.substring(pattern.length()).contains("/")) {
+						matches = true;
+						break;
+					}
+					if (location.startsWith("file:")) {
+						location = StringUtils
+								.cleanPath(new File(location.substring("file:".length())).getAbsolutePath()) + "/";
+					}
+					if (location != null && location.startsWith(pattern)
+							&& !location.substring(pattern.length()).contains("/")) {
 						matches = true;
 						break;
 					}
@@ -270,29 +272,22 @@ public class NativeEnvironmentRepository
 				if (!matches) {
 					// Don't include this one: it wasn't matched by our search locations
 					if (logger.isDebugEnabled()) {
-						logger.debug("Not adding property source: " + name);
+						logger.debug("Not adding property source: " + originalName);
 					}
 					continue;
 				}
 			}
-			logger.info("Adding property source: " + name);
-			result.add(new PropertySource(name, source.getSource()));
+			logger.info("Adding property source: " + originalName);
+			if (originalName.contains("document #")) {
+				// this is a multi-document file, use originalName for uniqueness.
+				result.add(new PropertySource(originalName, source.getSource()));
+			}
+			else {
+				// many other file tests rely on the mangled name
+				result.add(new PropertySource(name, source.getSource()));
+			}
 		}
 		return result;
-	}
-
-	private String[] getArgs(String application, String profile, String label) {
-		List<String> list = new ArrayList<String>();
-		String config = application;
-		if (!config.startsWith("application")) {
-			config = "application," + config;
-		}
-		list.add("--spring.config.name=" + config);
-		list.add("--spring.cloud.bootstrap.enabled=false");
-		list.add("--encrypt.failOnError=" + this.failOnError);
-		list.add("--spring.config.location=" + StringUtils.arrayToCommaDelimitedString(
-				getLocations(application, profile, label).getLocations()));
-		return list.toArray(new String[0]);
 	}
 
 	public String[] getSearchLocations() {
@@ -321,8 +316,8 @@ public class NativeEnvironmentRepository
 	}
 
 	private boolean isDirectory(String location) {
-		return !location.contains("{") && !location.endsWith(".properties")
-				&& !location.endsWith(".yml") && !location.endsWith(".yaml");
+		return !location.contains("{") && !location.endsWith(".properties") && !location.endsWith(".yml")
+				&& !location.endsWith(".yaml");
 	}
 
 	@Override

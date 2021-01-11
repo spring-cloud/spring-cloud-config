@@ -31,8 +31,7 @@ public final class PropertyValueDescriptor {
 	private String origin;
 
 	@JsonCreator
-	public PropertyValueDescriptor(@JsonProperty("value") Object value,
-			@JsonProperty("origin") String origin) {
+	public PropertyValueDescriptor(@JsonProperty("value") Object value, @JsonProperty("origin") String origin) {
 		this.value = value;
 		this.origin = origin;
 	}

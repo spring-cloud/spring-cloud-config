@@ -36,8 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Application.class, properties = "spring.application.name:bad",
-		webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = Application.class, properties = "spring.application.name:bad", webEnvironment = RANDOM_PORT)
 public class ServerNativeApplicationTests {
 
 	private static int configPort = 0;
@@ -53,11 +52,9 @@ public class ServerNativeApplicationTests {
 	@BeforeClass
 	public static void startConfigServer() throws IOException {
 		String repo = ConfigServerTestUtils.prepareLocalRepo();
-		server = SpringApplication.run(
-				org.springframework.cloud.config.server.ConfigServerApplication.class,
+		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
-				"--spring.cloud.config.server.git.uri=" + repo,
-				"--spring.profiles.active=native");
+				"--spring.cloud.config.server.git.uri=" + repo, "--spring.profiles.active=native");
 		/*
 		 * FIXME configPort = ((EmbeddedWebApplicationContext) server)
 		 * .getEmbeddedServletContainer().getPort();

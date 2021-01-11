@@ -104,8 +104,7 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 		assertThat(extracted).isNull();
 	}
 
-	private void assertNotExtracted(String path, String eventKey)
-			throws java.io.IOException {
+	private void assertNotExtracted(String path, String eventKey) throws java.io.IOException {
 		Map<String, Object> value = readPayload(path);
 		setHeaders(eventKey);
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
@@ -125,8 +124,7 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 	@Test
 	public void bitbucketServerSamplePullRequest() throws Exception {
 		// https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html
-		Map<String, Object> value = readPayload(
-				"pathsamples/bitbucketserver-prmerged.json");
+		Map<String, Object> value = readPayload("pathsamples/bitbucketserver-prmerged.json");
 		setServerHeaders("pr:merged");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
@@ -140,8 +138,7 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 
 	@Test
 	public void notAPushOrPullRequestServer() throws Exception {
-		assertNotExtractedServer("pathsamples/bitbucketserver.json",
-				"repo:comment:added");
+		assertNotExtractedServer("pathsamples/bitbucketserver.json", "repo:comment:added");
 	}
 
 	@Test
@@ -156,15 +153,13 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 	@Test
 	public void missingChangesServer() throws Exception {
 		// https://confluence.atlassian.com/bitbucketserver/event-payload-938025882.html
-		Map<String, Object> value = readPayload(
-				"pathsamples/bitbucketserver-invalid.json");
+		Map<String, Object> value = readPayload("pathsamples/bitbucketserver-invalid.json");
 		setServerHeaders("repo:refs_changed");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNull();
 	}
 
-	private void assertNotExtractedServer(String path, String eventKey)
-			throws java.io.IOException {
+	private void assertNotExtractedServer(String path, String eventKey) throws java.io.IOException {
 		Map<String, Object> value = readPayload(path);
 		setServerHeaders(eventKey);
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);

@@ -64,8 +64,7 @@ public class SshPropertyValidatorTest {
 			+ "E1xUIdRbUIWhVZrr0VufG6hG/P0T7Y6Tpi6G0pKtvMkF3LcD9TS3adboix8H2ZXx\n"
 			+ "4L7MRQKBgQC0OO3qqNXOjIVYWOoqXLybOY/Wqu9lxCAgGyCYaMcstnBI7W0MZTBr\n"
 			+ "/syluvGsaFc1sE7MMGOOzKi1tF4YvDmSnzA/R1nmaPguuD9fOA+w7Pwkv5vLvuJq\n"
-			+ "2U7EeNwxq1I1L3Ag6E7wH4BHLHd4TKaZR6agFkn8oomz71yZPGjuZQ==\n"
-			+ "-----END RSA PRIVATE KEY-----";
+			+ "2U7EeNwxq1I1L3Ag6E7wH4BHLHd4TKaZR6agFkn8oomz71yZPGjuZQ==\n" + "-----END RSA PRIVATE KEY-----";
 
 	private static final String VALID_HOST_KEY = "AAAAB3NzaC1yc2EAAAADAQABAAABAQDg6/W"
 			+ "/5cbk/npvzpae7ZEa54F4rkwh2V3NiuqVZ5hWr+8O4/6SmrS7yBvRHAFeAJNb0LOCjE/7tjd1"
@@ -166,8 +165,7 @@ public class SshPropertyValidatorTest {
 		useLocal.setIgnoreLocalSshSettings(false);
 		useLocal.setPrivateKey("invalid_key");
 
-		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
-				.validate(useLocal);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(useLocal);
 		assertThat(constraintViolations).hasSize(0);
 
 	}
@@ -179,8 +177,7 @@ public class SshPropertyValidatorTest {
 		httpsUri.setIgnoreLocalSshSettings(true);
 		httpsUri.setPrivateKey("invalid_key");
 
-		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
-				.validate(httpsUri);
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(httpsUri);
 		assertThat(constraintViolations).hasSize(0);
 
 	}
@@ -190,8 +187,7 @@ public class SshPropertyValidatorTest {
 		MultipleJGitEnvironmentProperties sshUriProperties = new MultipleJGitEnvironmentProperties();
 		assertThat(validator.validate(sshUriProperties)).hasSize(0);
 
-		sshUriProperties.setPreferredAuthentications(
-				"keyboard-interactive, public-key ,kerberos");
+		sshUriProperties.setPreferredAuthentications("keyboard-interactive, public-key ,kerberos");
 		assertThat(validator.validate(sshUriProperties)).hasSize(0);
 
 		sshUriProperties.setPreferredAuthentications(",,");

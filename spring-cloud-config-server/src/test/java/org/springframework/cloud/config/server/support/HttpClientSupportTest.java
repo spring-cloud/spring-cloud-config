@@ -58,11 +58,10 @@ public class HttpClientSupportTest {
 		properties.setTimeout(1);
 		CloseableHttpClient httpClient = HttpClientSupport.builder(properties).build();
 
-		this.expectedException.expect(anyOf(isA(SocketTimeoutException.class),
-				hasCause(isA(SocketTimeoutException.class))));
+		this.expectedException
+				.expect(anyOf(isA(SocketTimeoutException.class), hasCause(isA(SocketTimeoutException.class))));
 
-		httpClient.execute(new HttpGet(String.format("http://127.0.0.1:%s/test/endpoint",
-				this.localServerPort)));
+		httpClient.execute(new HttpGet(String.format("http://127.0.0.1:%s/test/endpoint", this.localServerPort)));
 	}
 
 	@SpringBootConfiguration

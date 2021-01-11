@@ -35,9 +35,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class CompositePropertyPathNotificationExtractorTests {
 
-	private CompositePropertyPathNotificationExtractor extractor = new CompositePropertyPathNotificationExtractor(
-			Arrays.asList(new GitlabPropertyPathNotificationExtractor(),
-					new GithubPropertyPathNotificationExtractor()));
+	private CompositePropertyPathNotificationExtractor extractor = new CompositePropertyPathNotificationExtractor(Arrays
+			.asList(new GitlabPropertyPathNotificationExtractor(), new GithubPropertyPathNotificationExtractor()));
 
 	private HttpHeaders headers = new HttpHeaders();
 
@@ -64,14 +63,12 @@ public class CompositePropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		String[] paths = extracted.getPaths();
-		assertThat(paths).as("paths was wrong").contains("oldapp.yml",
-				"newapp.properties", "application.yml");
+		assertThat(paths).as("paths was wrong").contains("oldapp.yml", "newapp.properties", "application.yml");
 	}
 
 	@Test
 	public void fallback() throws Exception {
-		Map<String, Object> value = Collections.<String, Object>singletonMap("path",
-				"foo");
+		Map<String, Object> value = Collections.<String, Object>singletonMap("path", "foo");
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		assertThat(extracted.getPaths()[0]).isEqualTo("foo");

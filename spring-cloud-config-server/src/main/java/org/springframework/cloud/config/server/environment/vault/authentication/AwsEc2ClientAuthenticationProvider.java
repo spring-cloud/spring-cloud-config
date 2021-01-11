@@ -27,34 +27,29 @@ import org.springframework.vault.authentication.AwsEc2AuthenticationOptions;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.web.client.RestOperations;
 
-public class AwsEc2ClientAuthenticationProvider
-		extends SpringVaultClientAuthenticationProvider {
+public class AwsEc2ClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
 
 	public AwsEc2ClientAuthenticationProvider() {
 		super(AuthenticationMethod.AWS_EC2);
 	}
 
 	@Override
-	public ClientAuthentication getClientAuthentication(
-			VaultEnvironmentProperties vaultProperties,
+	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
 		VaultEnvironmentProperties.AwsEc2Properties awsEc2 = vaultProperties.getAwsEc2();
 
 		AwsEc2AuthenticationOptions.Nonce nonce = StringUtils.hasText(awsEc2.getNonce())
-				? AwsEc2AuthenticationOptions.Nonce
-						.provided(awsEc2.getNonce().toCharArray())
+				? AwsEc2AuthenticationOptions.Nonce.provided(awsEc2.getNonce().toCharArray())
 				: AwsEc2AuthenticationOptions.Nonce.generated();
 
-		AwsEc2AuthenticationOptions authenticationOptions = AwsEc2AuthenticationOptions
-				.builder().role(awsEc2.getRole()) //
+		AwsEc2AuthenticationOptions authenticationOptions = AwsEc2AuthenticationOptions.builder().role(awsEc2.getRole()) //
 				.path(awsEc2.getAwsEc2Path()) //
 				.nonce(nonce) //
 				.identityDocumentUri(URI.create(awsEc2.getIdentityDocument())) //
 				.build();
 
-		return new AwsEc2Authentication(authenticationOptions, vaultRestOperations,
-				externalRestOperations);
+		return new AwsEc2Authentication(authenticationOptions, vaultRestOperations, externalRestOperations);
 	}
 
 }

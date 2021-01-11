@@ -74,8 +74,7 @@ public class ConfigClientWatch implements Closeable, EnvironmentAware {
 	}
 
 	/* for testing */ boolean stateChanged(String oldState, String newState) {
-		return (!hasText(oldState) && hasText(newState))
-				|| (hasText(oldState) && !oldState.equals(newState));
+		return (!hasText(oldState) && hasText(newState)) || (hasText(oldState) && !oldState.equals(newState));
 	}
 
 	@Override
