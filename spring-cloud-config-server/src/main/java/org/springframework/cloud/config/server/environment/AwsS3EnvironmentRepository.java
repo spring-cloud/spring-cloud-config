@@ -91,13 +91,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 					final Properties config = s3ConfigFile.read();
 					config.putAll(serverProperties.getOverrides());
-					StringBuilder propertySourceName = new StringBuilder().append("s3:")
-						.append(app);
+					StringBuilder propertySourceName = new StringBuilder().append("s3:").append(app);
 					if (profile != null) {
 						propertySourceName.append("-").append(profile);
 					}
-					environment
-						.add(new PropertySource(propertySourceName.toString(), config));
+					environment.add(new PropertySource(propertySourceName.toString(), config));
 				}
 			}
 		}

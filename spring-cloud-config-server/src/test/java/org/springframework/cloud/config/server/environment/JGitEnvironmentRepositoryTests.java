@@ -1064,8 +1064,7 @@ public class JGitEnvironmentRepositoryTests {
 	 * @throws Exception should throw any runtime exception.
 	 */
 	@Test
-	public void afterPropertiesSet_CloneOnStartTrue_DefaultLabelSet_CloneAndCheckoutCalled()
-			throws Exception {
+	public void afterPropertiesSet_CloneOnStartTrue_DefaultLabelSet_CloneAndCheckoutCalled() throws Exception {
 		final String LABEL_TO_CHECKOUT = "release";
 		// Set the default branch of repository as master
 		Repository mockRepository = mock(Repository.class);
@@ -1104,8 +1103,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
 		when(mockCheckoutCommand.call()).thenReturn(mockReleaseRef);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-				this.environment, new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setCloneOnStart(true);
@@ -1165,8 +1164,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
 		when(mockCheckoutCommand.call()).thenReturn(mockReleaseRef);
 
-		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(
-				this.environment, new JGitEnvironmentProperties());
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.setCloneOnStart(true);
