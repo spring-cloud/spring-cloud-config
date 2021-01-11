@@ -16,16 +16,15 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.List;
 import java.util.Objects;
 
-import org.springframework.boot.context.config.ConfigDataLocation;
+import org.springframework.boot.context.config.ConfigDataResource;
 import org.springframework.boot.context.config.Profiles;
 import org.springframework.core.style.ToStringCreator;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.util.StringUtils;
 
-public abstract class AbstractConfigDataLocation extends ConfigDataLocation {
-
-	private final RestTemplate restTemplate;
+public class ConfigServerConfigDataResource extends ConfigDataResource {
 
 	private final ConfigClientProperties properties;
 
@@ -33,16 +32,10 @@ public abstract class AbstractConfigDataLocation extends ConfigDataLocation {
 
 	private final Profiles profiles;
 
-	public AbstractConfigDataLocation(RestTemplate restTemplate, ConfigClientProperties properties, boolean optional,
-			Profiles profiles) {
-		this.restTemplate = restTemplate;
+	public ConfigServerConfigDataResource(ConfigClientProperties properties, boolean optional, Profiles profiles) {
 		this.properties = properties;
 		this.optional = optional;
 		this.profiles = profiles;
-	}
-
-	public RestTemplate getRestTemplate() {
-		return this.restTemplate;
 	}
 
 	public ConfigClientProperties getProperties() {
@@ -53,8 +46,13 @@ public abstract class AbstractConfigDataLocation extends ConfigDataLocation {
 		return this.optional;
 	}
 
-	public Profiles getProfiles() {
-		return this.profiles;
+	public String getProfiles() {
+		List<String> accepted = profiles.getAccepted();
+		if (StringUtils.hasText(properties.getProfile())
+				&& !properties.getProfile().equals(ConfigClientProperties.DEFAULT_PROFILE)) {
+			return properties.getProfile();
+		}
+		return StringUtils.collectionToCommaDelimitedString(accepted);
 	}
 
 	@Override
@@ -65,14 +63,14 @@ public abstract class AbstractConfigDataLocation extends ConfigDataLocation {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		AbstractConfigDataLocation that = (AbstractConfigDataLocation) o;
-		return Objects.equals(this.restTemplate, that.restTemplate) && Objects.equals(this.properties, that.properties)
-				&& Objects.equals(this.optional, that.optional) && Objects.equals(this.profiles, that.profiles);
+		ConfigServerConfigDataResource that = (ConfigServerConfigDataResource) o;
+		return Objects.equals(this.properties, that.properties) && Objects.equals(this.optional, that.optional)
+				&& Objects.equals(this.profiles, that.profiles);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.restTemplate, this.properties, this.optional, this.profiles);
+		return Objects.hash(this.properties, this.optional, this.profiles);
 	}
 
 	@Override

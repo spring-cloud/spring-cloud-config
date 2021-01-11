@@ -18,6 +18,10 @@ package sample;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -26,13 +30,19 @@ import org.junit.runner.RunWith;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.SocketUtils;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -41,12 +51,12 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(classes = Application.class,
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
 		// config server on the classpath we need to set it explicitly
-		properties = { "spring.cloud.config.enabled:true",
-				// FIXME: configdata why is this needed here?
-				"spring.config.use-legacy-processing=true", "management.security.enabled=false",
-				"management.endpoints.web.exposure.include=*" },
+		properties = { "spring.application.name=retryapp", "spring.cloud.config.fail-fast=true",
+				"spring.cloud.config.enabled=true", "spring.config.import=configserver:",
+				"management.security.enabled=false", "management.endpoints.web.exposure.include=*",
+				"logging.level.org.springframework.retry=TRACE" },
 		webEnvironment = RANDOM_PORT)
-public class ApplicationTests {
+public class ConfigDataRetryIntegrationTests {
 
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
@@ -61,28 +71,18 @@ public class ApplicationTests {
 	public static void startConfigServer() throws IOException {
 		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
 		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
-		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
-				"--server.port=" + configPort, "--spring.config.name=server",
+		server = SpringApplication.run(TestConfig.class, "--server.port=" + configPort, "--spring.config.name=server",
 				"--spring.cloud.config.server.git.uri=" + repo);
-		/*
-		 * FIXME configPort = ((EmbeddedWebApplicationContext) server)
-		 * .getEmbeddedServletContainer().getPort();
-		 */
-		System.setProperty("config.port", "" + configPort);
+
+		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}
 
 	@AfterClass
 	public static void close() {
-		System.clearProperty("config.port");
+		System.clearProperty("spring.cloud.config.uri");
 		if (server != null) {
 			server.close();
 		}
-	}
-
-	public static void main(String[] args) throws IOException {
-		configPort = 8888;
-		startConfigServer();
-		SpringApplication.run(Application.class, args);
 	}
 
 	@Test
@@ -93,6 +93,29 @@ public class ApplicationTests {
 		assertThat(res).containsKey("propertySources");
 		Map<String, Object> property = (Map<String, Object>) res.get("property");
 		assertThat(property).containsEntry("value", "bar");
+	}
+
+	@Configuration
+	@EnableAutoConfiguration
+	@EnableConfigServer
+	static class TestConfig implements WebMvcConfigurer {
+
+		AtomicInteger count = new AtomicInteger(0);
+
+		// @Override
+		public void addInterceptors(InterceptorRegistry registry) {
+			registry.addInterceptor(new HandlerInterceptor() {
+				@Override
+				public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+						throws Exception {
+					if (request.getServletPath().equals("/retryapp/default")) {
+						return count.incrementAndGet() > 1;
+					}
+					return true;
+				}
+			});
+		}
+
 	}
 
 }

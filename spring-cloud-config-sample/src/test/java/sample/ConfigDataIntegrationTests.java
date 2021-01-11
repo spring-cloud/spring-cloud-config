@@ -41,12 +41,10 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(classes = Application.class,
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
 		// config server on the classpath we need to set it explicitly
-		properties = { "spring.cloud.config.enabled:true",
-				// FIXME: configdata why is this needed here?
-				"spring.config.use-legacy-processing=true", "management.security.enabled=false",
-				"management.endpoints.web.exposure.include=*" },
+		properties = { "spring.cloud.config.enabled=true", "spring.config.import=configserver:",
+				"management.security.enabled=false", "management.endpoints.web.exposure.include=*" },
 		webEnvironment = RANDOM_PORT)
-public class ApplicationTests {
+public class ConfigDataIntegrationTests {
 
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
@@ -64,25 +62,16 @@ public class ApplicationTests {
 		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
 				"--spring.cloud.config.server.git.uri=" + repo);
-		/*
-		 * FIXME configPort = ((EmbeddedWebApplicationContext) server)
-		 * .getEmbeddedServletContainer().getPort();
-		 */
-		System.setProperty("config.port", "" + configPort);
+
+		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}
 
 	@AfterClass
 	public static void close() {
-		System.clearProperty("config.port");
+		System.clearProperty("spring.cloud.config.uri");
 		if (server != null) {
 			server.close();
 		}
-	}
-
-	public static void main(String[] args) throws IOException {
-		configPort = 8888;
-		startConfigServer();
-		SpringApplication.run(Application.class, args);
 	}
 
 	@Test

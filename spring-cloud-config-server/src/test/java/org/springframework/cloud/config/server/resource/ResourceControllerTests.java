@@ -297,12 +297,12 @@ public class ResourceControllerTests {
 	}
 
 	@Test
-	public void defaultLabelForBinary() throws Exception {
+	public void nullLabelForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		ServletWebRequest webRequest = new ServletWebRequest(request, new MockHttpServletResponse());
 		request.setRequestURI("/dev/spam/bar/" + "foo.txt");
-		byte[] resource = this.controller.binary("dev/spam", "bar", webRequest);
+		byte[] resource = this.controller.binary("dev/spam", "bar", null, webRequest);
 		assertThat(new String(resource)).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 

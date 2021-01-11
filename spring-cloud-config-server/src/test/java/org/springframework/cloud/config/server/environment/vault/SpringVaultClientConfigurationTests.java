@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -45,6 +46,7 @@ import org.springframework.cloud.config.server.environment.vault.authentication.
 import org.springframework.cloud.config.server.environment.vault.authentication.KubernetesClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.authentication.PcfClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.authentication.TokenClientAuthenticationProvider;
+import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -92,6 +94,8 @@ class SpringVaultClientConfigurationTests {
 
 	private List<SpringVaultClientAuthenticationProvider> authProviders;
 
+	private StaticApplicationContext applicationContext;
+
 	@BeforeEach
 	public void setUp() {
 		authProviders = Arrays.asList(new AppRoleClientAuthenticationProvider(),
@@ -100,6 +104,13 @@ class SpringVaultClientConfigurationTests {
 				new CubbyholeClientAuthenticationProvider(), new GcpGceClientAuthenticationProvider(),
 				new GcpIamClientAuthenticationProvider(), new KubernetesClientAuthenticationProvider(),
 				new PcfClientAuthenticationProvider(), new TokenClientAuthenticationProvider());
+		applicationContext = new StaticApplicationContext();
+		applicationContext.refresh();
+	}
+
+	@AfterEach
+	public void teardown() {
+		applicationContext.close();
 	}
 
 	@Test
@@ -325,6 +336,7 @@ class SpringVaultClientConfigurationTests {
 		SpringVaultClientConfiguration configuration = new SpringVaultClientConfiguration(properties, () -> null,
 				authProviders);
 		configuration.afterPropertiesSet();
+		configuration.setApplicationContext(applicationContext);
 		return configuration;
 	}
 

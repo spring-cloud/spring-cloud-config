@@ -34,12 +34,17 @@ public class AwsS3EnvironmentRepositoryFactory
 	public AwsS3EnvironmentRepository build(AwsS3EnvironmentProperties environmentProperties) {
 		final AmazonS3ClientBuilder clientBuilder = AmazonS3ClientBuilder.standard();
 		if (environmentProperties.getRegion() != null) {
-			clientBuilder.withRegion(environmentProperties.getRegion());
+			if (environmentProperties.getEndpoint() != null) {
+				AmazonS3ClientBuilder.EndpointConfiguration endpointConfiguration = new AmazonS3ClientBuilder.EndpointConfiguration(
+						environmentProperties.getEndpoint(), environmentProperties.getRegion());
+				clientBuilder.withEndpointConfiguration(endpointConfiguration);
+			}
+			else {
+				clientBuilder.withRegion(environmentProperties.getRegion());
+			}
 		}
 		final AmazonS3 client = clientBuilder.build();
-		if (environmentProperties.getEndpoint() != null) {
-			client.setEndpoint(environmentProperties.getEndpoint());
-		}
+
 		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(client,
 				environmentProperties.getBucket(), server);
 		return repository;

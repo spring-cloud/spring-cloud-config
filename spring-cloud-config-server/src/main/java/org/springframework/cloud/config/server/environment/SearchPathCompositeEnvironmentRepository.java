@@ -32,9 +32,11 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 	 * Creates a new {@link SearchPathCompositeEnvironmentRepository}.
 	 * @param environmentRepositories The {@link EnvironmentRepository}s to create this
 	 * composite from.
+	 * @param failOnError whether to throw an exception if there is an error.
 	 */
-	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories) {
-		super(environmentRepositories);
+	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
+			boolean failOnError) {
+		super(environmentRepositories, failOnError);
 	}
 
 	@Override

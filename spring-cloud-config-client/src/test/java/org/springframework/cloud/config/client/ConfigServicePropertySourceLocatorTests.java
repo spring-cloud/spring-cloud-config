@@ -90,6 +90,26 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@Test
+	public void customMediaType() {
+		Environment body = new Environment("app", "master");
+		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
+		ConfigClientProperties properties = new ConfigClientProperties(this.environment);
+		properties.setMediaType("application/json");
+		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(properties);
+		locator.setRestTemplate(this.restTemplate);
+
+		ArgumentCaptor<HttpEntity> argumentCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+		assertThat(locator.locateCollection(this.environment)).isNotNull();
+
+		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(),
+				any(Class.class), anyString(), anyString());
+
+		HttpEntity httpEntity = argumentCaptor.getValue();
+		assertThat(httpEntity.getHeaders().getAccept()).containsExactly(MediaType.parseMediaType("application/json"));
+	}
+
+	@Test
 	public void sunnyDayWithLabel() {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithLabel(new ResponseEntity<>(body, HttpStatus.OK), "v1.0.0");

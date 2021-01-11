@@ -21,9 +21,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -217,7 +219,7 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 		if (locations == null || locations.length == 0) {
 			locations = AbstractScmAccessorProperties.DEFAULT_LOCATIONS;
 		}
-		else if (locations != AbstractScmAccessorProperties.DEFAULT_LOCATIONS) {
+		else if (!Arrays.equals(locations, AbstractScmAccessorProperties.DEFAULT_LOCATIONS)) {
 			locations = StringUtils.concatenateStringArrays(AbstractScmAccessorProperties.DEFAULT_LOCATIONS, locations);
 		}
 		Collection<String> output = new LinkedHashSet<String>();

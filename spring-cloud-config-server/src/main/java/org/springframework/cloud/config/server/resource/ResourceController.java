@@ -106,13 +106,6 @@ public class ResourceController {
 		return retrieve(request, name, profile, label, path, resolvePlaceholders);
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel")
-	public String retrieve(@PathVariable String name, @PathVariable String profile, ServletWebRequest request,
-			@RequestParam(defaultValue = "true") boolean resolvePlaceholders) throws IOException {
-		String path = getFilePath(request, name, profile, null);
-		return retrieve(request, name, profile, null, path, resolvePlaceholders);
-	}
-
 	private String getFilePath(ServletWebRequest request, String name, String profile, String label) {
 		String stem;
 		if (label != null) {
@@ -172,14 +165,6 @@ public class ResourceController {
 			ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return binary(request, name, profile, label, path);
-	}
-
-	@RequestMapping(value = "/{name}/{profile}/**", params = "useDefaultLabel",
-			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-	public byte[] binary(@PathVariable String name, @PathVariable String profile, ServletWebRequest request)
-			throws IOException {
-		String path = getFilePath(request, name, profile, null);
-		return binary(request, name, profile, null, path);
 	}
 
 	/*

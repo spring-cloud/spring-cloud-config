@@ -22,8 +22,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Dave Syer
  *
  */
-@ConfigurationProperties("spring.cloud.config.retry")
+@ConfigurationProperties(RetryProperties.PREFIX)
 public class RetryProperties {
+
+	/**
+	 * ConfigurationProperties prefix.
+	 */
+	public static final String PREFIX = "spring.cloud.config.retry";
 
 	/**
 	 * Initial retry interval in milliseconds.

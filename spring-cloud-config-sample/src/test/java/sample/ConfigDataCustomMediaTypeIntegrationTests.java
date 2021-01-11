@@ -17,20 +17,23 @@
 package sample;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
+import org.springframework.boot.origin.Origin;
+import org.springframework.boot.origin.OriginLookup;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.SocketUtils;
 
@@ -41,12 +44,11 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(classes = Application.class,
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
 		// config server on the classpath we need to set it explicitly
-		properties = { "spring.cloud.config.enabled:true",
-				// FIXME: configdata why is this needed here?
-				"spring.config.use-legacy-processing=true", "management.security.enabled=false",
+		properties = { "spring.cloud.config.enabled=true", "spring.cloud.config.media-type=application/json",
+				"spring.config.import=configserver:", "management.security.enabled=false",
 				"management.endpoints.web.exposure.include=*" },
 		webEnvironment = RANDOM_PORT)
-public class ApplicationTests {
+public class ConfigDataCustomMediaTypeIntegrationTests {
 
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
@@ -57,6 +59,9 @@ public class ApplicationTests {
 	@LocalServerPort
 	private int port;
 
+	@Autowired
+	ConfigurableEnvironment env;
+
 	@BeforeClass
 	public static void startConfigServer() throws IOException {
 		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
@@ -64,35 +69,32 @@ public class ApplicationTests {
 		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
 				"--spring.cloud.config.server.git.uri=" + repo);
-		/*
-		 * FIXME configPort = ((EmbeddedWebApplicationContext) server)
-		 * .getEmbeddedServletContainer().getPort();
-		 */
-		System.setProperty("config.port", "" + configPort);
+
+		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}
 
 	@AfterClass
 	public static void close() {
-		System.clearProperty("config.port");
+		System.clearProperty("spring.cloud.config.uri");
 		if (server != null) {
 			server.close();
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
-		configPort = 8888;
-		startConfigServer();
-		SpringApplication.run(Application.class, args);
-	}
-
 	@Test
 	@SuppressWarnings("unchecked")
-	public void contextLoads() {
-		Map res = new TestRestTemplate().getForObject("http://localhost:" + this.port + BASE_PATH + "/env/info.foo",
-				Map.class);
-		assertThat(res).containsKey("propertySources");
-		Map<String, Object> property = (Map<String, Object>) res.get("property");
-		assertThat(property).containsEntry("value", "bar");
+	public void noOriginWithMediaTypeApplicationJson() {
+		MutablePropertySources sources = env.getPropertySources();
+		sources.stream().filter(propertySource -> propertySource.getName().startsWith("configserver:")).findFirst()
+				.ifPresent(propertySource -> {
+					if (propertySource instanceof OriginLookup) {
+						OriginLookup<String> originLookup = (OriginLookup) propertySource;
+						Origin origin = originLookup.getOrigin("info.foo");
+						// because media-type was set as application/json, no origin
+						assertThat(origin).as("origin was not null").isNull();
+					}
+				});
+		assertThat(env.getProperty("info.foo")).isEqualTo("bar");
 	}
 
 }

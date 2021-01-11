@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
@@ -50,6 +53,8 @@ import org.springframework.util.StringUtils;
  */
 public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered {
 
+	private static final Log logger = LogFactory.getLog(JdbcEnvironmentRepository.class);
+
 	private final JdbcTemplate jdbc;
 
 	private final PropertiesResultSetExtractor extractor = new PropertiesResultSetExtractor();
@@ -58,10 +63,13 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private String sql;
 
+	private boolean failOnError;
+
 	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
 		this.jdbc = jdbc;
 		this.order = properties.getOrder();
 		this.sql = properties.getSql();
+		this.failOnError = properties.isFailOnError();
 	}
 
 	public String getSql() {
@@ -89,17 +97,28 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		if (!config.startsWith("application")) {
 			config = "application," + config;
 		}
-		List<String> applications = new ArrayList<String>(
+		List<String> applications = new ArrayList<>(
 				new LinkedHashSet<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(config))));
-		List<String> envs = new ArrayList<String>(new LinkedHashSet<>(Arrays.asList(profiles)));
+		List<String> envs = new ArrayList<>(new LinkedHashSet<>(Arrays.asList(profiles)));
 		Collections.reverse(applications);
 		Collections.reverse(envs);
 		for (String app : applications) {
 			for (String env : envs) {
-				Map<String, String> next = (Map<String, String>) this.jdbc.query(this.sql,
-						new Object[] { app, env, label }, this.extractor);
-				if (!next.isEmpty()) {
-					environment.add(new PropertySource(app + "-" + env, next));
+				try {
+					Map<String, String> next = this.jdbc.query(this.sql, this.extractor, app, env, label);
+					if (next != null && !next.isEmpty()) {
+						environment.add(new PropertySource(app + "-" + env, next));
+					}
+				}
+				catch (DataAccessException e) {
+					if (!failOnError) {
+						if (logger.isDebugEnabled()) {
+							logger.debug("Failed to retrieve configuration from JDBC Repository", e);
+						}
+					}
+					else {
+						throw e;
+					}
 				}
 			}
 		}
@@ -115,17 +134,25 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		this.order = order;
 	}
 
-}
+	public boolean isFailOnError() {
+		return failOnError;
+	}
 
-class PropertiesResultSetExtractor implements ResultSetExtractor<Map<String, String>> {
+	public void setFailOnError(boolean failOnError) {
+		this.failOnError = failOnError;
+	}
 
-	@Override
-	public Map<String, String> extractData(ResultSet rs) throws SQLException, DataAccessException {
-		Map<String, String> map = new LinkedHashMap<>();
-		while (rs.next()) {
-			map.put(rs.getString(1), rs.getString(2));
+	public static class PropertiesResultSetExtractor implements ResultSetExtractor<Map<String, String>> {
+
+		@Override
+		public Map<String, String> extractData(ResultSet rs) throws SQLException, DataAccessException {
+			Map<String, String> map = new LinkedHashMap<>();
+			while (rs.next()) {
+				map.put(rs.getString(1), rs.getString(2));
+			}
+			return map;
 		}
-		return map;
+
 	}
 
 }
