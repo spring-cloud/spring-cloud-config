@@ -75,22 +75,30 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		final String label = StringUtils.isEmpty(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
 
 		String[] profileArray = parseProfiles(profiles);
+		String[] apps = new String[] { application };
+		if (application != null) {
+			apps = StringUtils.commaDelimitedListToStringArray(application.replace(" ", ""));
+		}
 
 		final Environment environment = new Environment(application, profileArray);
 		environment.setLabel(label);
 
 		for (String profile : profileArray) {
-			S3ConfigFile s3ConfigFile = getS3ConfigFile(application, profile, label);
-			if (s3ConfigFile != null) {
-				environment.setVersion(s3ConfigFile.getVersion());
+			for (String app : apps) {
+				S3ConfigFile s3ConfigFile = getS3ConfigFile(app, profile, label);
+				if (s3ConfigFile != null) {
+					environment.setVersion(s3ConfigFile.getVersion());
 
-				final Properties config = s3ConfigFile.read();
-				config.putAll(serverProperties.getOverrides());
-				StringBuilder propertySourceName = new StringBuilder().append("s3:").append(application);
-				if (profile != null) {
-					propertySourceName.append("-").append(profile);
+					final Properties config = s3ConfigFile.read();
+					config.putAll(serverProperties.getOverrides());
+					StringBuilder propertySourceName = new StringBuilder().append("s3:")
+						.append(app);
+					if (profile != null) {
+						propertySourceName.append("-").append(profile);
+					}
+					environment
+						.add(new PropertySource(propertySourceName.toString(), config));
 				}
-				environment.add(new PropertySource(propertySourceName.toString(), config));
 			}
 		}
 
