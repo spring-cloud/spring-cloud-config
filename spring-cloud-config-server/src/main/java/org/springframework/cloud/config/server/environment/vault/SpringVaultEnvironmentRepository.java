@@ -59,7 +59,7 @@ public class SpringVaultEnvironmentRepository extends AbstractVaultEnvironmentRe
 		return null;
 	}
 
-	VaultKeyValueOperations getKeyValueTemplate() {
+	public VaultKeyValueOperations getKeyValueTemplate() {
 		return this.keyValueTemplate;
 	}
 
