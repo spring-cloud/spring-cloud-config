@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -80,9 +81,43 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource.getProfiles()).isEqualTo("myprofile");
 	}
 
+	@Test
+	void configClientSpringProfilesActiveOverridesDefaultClientProfiles() {
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific("myactiveprofile");
+		assertThat(resource.getProfiles()).isEqualTo("myactiveprofile");
+	}
+
+	@Test
+	void configNameDefaultsToApplication() {
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		assertThat(resource.getProperties().getName()).isEqualTo("application");
+	}
+
+	@Test
+	void configNameDefaultsToSpringApplicationName() {
+		this.environment.setProperty("spring.application.name", "myapp");
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		assertThat(resource.getProperties().getName()).isEqualTo("myapp");
+	}
+
+	@Test
+	void configNameOverridesSpringApplicationName() {
+		this.environment.setProperty("spring.application.name", "myapp");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".name", "myconfigname");
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		assertThat(resource.getProperties().getName()).isEqualTo("myconfigname");
+	}
+
 	private ConfigServerConfigDataResource testResolveProvileSpecific() {
+		return testResolveProvileSpecific("default");
+	}
+
+	private ConfigServerConfigDataResource testResolveProvileSpecific(String activeProfile) {
 		when(context.getBootstrapContext()).thenReturn(mock(ConfigurableBootstrapContext.class));
 		Profiles profiles = mock(Profiles.class);
+		if (activeProfile != null) {
+			when(profiles.getAccepted()).thenReturn(Collections.singletonList(activeProfile));
+		}
 
 		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
 				ConfigDataLocation.of("configserver:"), profiles);

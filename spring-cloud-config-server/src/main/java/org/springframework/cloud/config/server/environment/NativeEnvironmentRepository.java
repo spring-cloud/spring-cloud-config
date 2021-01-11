@@ -221,7 +221,8 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		Environment result = new Environment(value.getName(), value.getProfiles(), value.getLabel(), this.version,
 				value.getState());
 		for (PropertySource source : value.getPropertySources()) {
-			String name = source.getName();
+			String originalName = source.getName();
+			String name = originalName;
 			if (this.environment.getPropertySources().contains(name)) {
 				continue;
 			}
@@ -271,13 +272,20 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				if (!matches) {
 					// Don't include this one: it wasn't matched by our search locations
 					if (logger.isDebugEnabled()) {
-						logger.debug("Not adding property source: " + name);
+						logger.debug("Not adding property source: " + originalName);
 					}
 					continue;
 				}
 			}
-			logger.info("Adding property source: " + name);
-			result.add(new PropertySource(name, source.getSource()));
+			logger.info("Adding property source: " + originalName);
+			if (originalName.contains("document #")) {
+				// this is a multi-document file, use originalName for uniqueness.
+				result.add(new PropertySource(originalName, source.getSource()));
+			}
+			else {
+				// many other file tests rely on the mangled name
+				result.add(new PropertySource(name, source.getSource()));
+			}
 		}
 		return result;
 	}

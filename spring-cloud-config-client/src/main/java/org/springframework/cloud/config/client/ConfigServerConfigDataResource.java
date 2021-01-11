@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.springframework.boot.context.config.ConfigDataResource;
@@ -46,10 +47,12 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 	}
 
 	public String getProfiles() {
-		if (StringUtils.hasText(properties.getProfile())) {
+		List<String> accepted = profiles.getAccepted();
+		if (StringUtils.hasText(properties.getProfile())
+				&& !properties.getProfile().equals(ConfigClientProperties.DEFAULT_PROFILE)) {
 			return properties.getProfile();
 		}
-		return StringUtils.collectionToCommaDelimitedString(profiles.getAccepted());
+		return StringUtils.collectionToCommaDelimitedString(accepted);
 	}
 
 	@Override

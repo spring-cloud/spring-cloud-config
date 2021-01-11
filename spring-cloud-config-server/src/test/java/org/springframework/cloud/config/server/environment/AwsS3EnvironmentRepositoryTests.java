@@ -175,6 +175,26 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertExpectedEnvironment(env, "foo", null, "v1", 1, "bar");
 	}
 
+	@Test
+	public void findWithMultipleApplicationAllFound() throws UnsupportedEncodingException {
+		setupS3("foo-profile1.yml", jsonContent);
+		setupS3("bar-profile1.yml", jsonContent);
+
+		final Environment env = envRepo.findOne("foo,bar", "profile1", null);
+
+		assertExpectedEnvironment(env, "foo,bar", null, null, 2, "profile1");
+	}
+
+	@Test
+	public void factoryCustomizable() {
+		AwsS3EnvironmentRepositoryFactory factory = new AwsS3EnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsS3EnvironmentProperties properties = new AwsS3EnvironmentProperties();
+		properties.setRegion("us-east-1");
+		properties.setEndpoint("https://myawsendpoint/");
+		AwsS3EnvironmentRepository repository = factory.build(properties);
+		assertThat(repository).isNotNull();
+	}
+
 	private void setupS3(String fileName, String propertyContent) throws UnsupportedEncodingException {
 		setupS3(fileName, null, propertyContent);
 	}

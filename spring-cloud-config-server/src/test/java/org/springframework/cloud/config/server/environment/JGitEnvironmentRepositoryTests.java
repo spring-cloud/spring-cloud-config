@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.DeleteBranchCommand;
@@ -39,6 +40,7 @@ import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NotMergedException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.attributes.AttributesNodeProvider;
@@ -321,6 +323,137 @@ public class JGitEnvironmentRepositoryTests {
 		boolean shouldPull = repo.shouldPull(git);
 
 		assertThat(shouldPull).as("shouldPull was true").isFalse();
+	}
+
+	@Test
+	public void shouldPullTruncatedIndexForcePull() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		ResetCommand resetCommand = mock(ResetCommand.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
+		when(statusCommand.call())
+				.thenThrow(new JGitInternalException("Short read of block."))
+				.thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+		when(git.reset()).thenReturn(resetCommand);
+		when(resetCommand.setMode(any())).thenReturn(resetCommand);
+		when(resetCommand.setRef(any())).thenReturn(resetCommand);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+		repo.setUri("");
+		repo.setForcePull(true);
+
+		boolean shouldPull = repo.shouldPull(git);
+
+		assertThat(shouldPull).as("shouldPull was false").isTrue();
+	}
+
+	@Test
+	public void shouldPullTruncatedIndexNotForcePull() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
+		when(statusCommand.call())
+				.thenThrow(new JGitInternalException("Short read of block."));
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+		repo.setForcePull(false);
+
+		try {
+			final boolean shouldPull = repo.shouldPull(git);
+			assertThat(shouldPull).as("shouldPull did not fail").isFalse();
+		}
+		catch (JGitInternalException e) {
+			assertThat(e.getMessage()).as("shouldPull did not fail as expected")
+					.isEqualTo("Short read of block.");
+		}
+	}
+
+	@Test
+	public void shouldPullTruncatedIndexResetFail() throws Exception {
+		final String mockThrownMessage = "__mock_thrown__";
+
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		ResetCommand resetCommand = mock(ResetCommand.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
+		when(statusCommand.call()).thenThrow(new JGitInternalException(mockThrownMessage))
+				.thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+		when(git.reset()).thenReturn(resetCommand);
+		when(resetCommand.call()).thenThrow(new GitAPIException("") {
+		});
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+
+		try {
+			repo.shouldPull(git);
+			Assertions.fail("shouldPull did not fail");
+		}
+		catch (JGitInternalException e) {
+			assertThat(e.getMessage()).as("shouldPull did not fail as expected")
+					.isEqualTo(mockThrownMessage);
+		}
+	}
+
+	@Test
+	public void shouldPullStatusFail() throws Exception {
+		final String mockThrownMessage = "__mock_thrown__";
+
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url"))
+				.thenReturn("http://example/git");
+		when(statusCommand.call())
+				.thenThrow(new JGitInternalException(mockThrownMessage));
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+
+		try {
+			repo.shouldPull(git);
+			Assertions.fail("shouldPull did not fail");
+		}
+		catch (JGitInternalException e) {
+			assertThat(e.getMessage()).as("shouldPull did not fail as expected")
+					.isEqualTo(mockThrownMessage);
+		}
 	}
 
 	@Test
@@ -1057,6 +1190,127 @@ public class JGitEnvironmentRepositoryTests {
 		verify(deleteBranchCommand).setBranchNames(eq("feature/deletedBranchFromOrigin"));
 		verify(deleteBranchCommand).setForce(true);
 		verify(deleteBranchCommand).call();
+	}
+
+	/**
+	 * Test case to set if the default-label is checked out.
+	 * @throws Exception should throw any runtime exception.
+	 */
+	@Test
+	public void afterPropertiesSet_CloneOnStartTrue_DefaultLabelSet_CloneAndCheckoutCalled() throws Exception {
+		final String LABEL_TO_CHECKOUT = "release";
+		// Set the default branch of repository as master
+		Repository mockRepository = mock(Repository.class);
+		when(mockRepository.getBranch()).thenReturn("master");
+
+		Git mockGit = mock(Git.class);
+		when(mockGit.getRepository()).thenReturn(mockRepository);
+
+		// Mock the clone command
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+
+		// Mocking the commands to checkout to label.
+		ListBranchCommand mockListBranchCommand = mock(ListBranchCommand.class);
+		CheckoutCommand mockCheckoutCommand = mock(CheckoutCommand.class);
+
+		// Return the mocked checkout and ListBranchCommand.
+		when(mockGit.checkout()).thenReturn(mockCheckoutCommand);
+		when(mockGit.branchList()).thenReturn(mockListBranchCommand);
+
+		// Add 2 branches on mock repo {master, release}
+		List<Ref> repositoryRefsList = new ArrayList<>();
+
+		// Mock master branch
+		Ref mockMasterRef = mock(Ref.class);
+		repositoryRefsList.add(mockMasterRef);
+		when(mockMasterRef.getName()).thenReturn("/master");
+
+		// Mock release branch.
+		Ref mockReleaseRef = mock(Ref.class);
+		repositoryRefsList.add(mockReleaseRef);
+		when(mockReleaseRef.getName()).thenReturn("/release");
+
+		// Mock calls on list and checkout commands
+		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
+		when(mockCheckoutCommand.call()).thenReturn(mockReleaseRef);
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setCloneOnStart(true);
+
+		// Set the label to checkout. should be different from master
+		envRepository.setDefaultLabel(LABEL_TO_CHECKOUT);
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, times(1)).call();
+		verify(mockCheckoutCommand, times(1)).call();
+		verify(mockListBranchCommand, times(2)).call();
+		verify(mockCheckoutCommand, times(1)).setName(anyString());
+	}
+
+	/**
+	 * Test case to validate that check out is not called when the default branch for repo
+	 * is same as default label.
+	 * @throws Exception should throw any runtime exception.
+	 */
+	@Test
+	public void afterPropertiesSet_CloneOnStartTrue_DefaultLabelSameAsDefaultBranch_CheckoutNotCalled()
+			throws Exception {
+		final String LABEL_TO_CHECKOUT = "master";
+		// Set the default branch of repository as master
+		Repository mockRepository = mock(Repository.class);
+		when(mockRepository.getBranch()).thenReturn("master");
+
+		Git mockGit = mock(Git.class);
+		when(mockGit.getRepository()).thenReturn(mockRepository);
+
+		// Mock the clone command
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+
+		// Mocking the commands to checkout to label.
+		ListBranchCommand mockListBranchCommand = mock(ListBranchCommand.class);
+		CheckoutCommand mockCheckoutCommand = mock(CheckoutCommand.class);
+
+		// Return the mocked checkout and ListBranchCommand.
+		when(mockGit.checkout()).thenReturn(mockCheckoutCommand);
+		when(mockGit.branchList()).thenReturn(mockListBranchCommand);
+
+		// Add 2 branches on mock repo {master, release}
+		List<Ref> repositoryRefsList = new ArrayList<>();
+
+		// Mock master branch
+		Ref mockMasterRef = mock(Ref.class);
+		repositoryRefsList.add(mockMasterRef);
+		when(mockMasterRef.getName()).thenReturn("/master");
+
+		// Mock release branch.
+		Ref mockReleaseRef = mock(Ref.class);
+		repositoryRefsList.add(mockReleaseRef);
+		when(mockReleaseRef.getName()).thenReturn("/release");
+
+		// Mock calls on list and checkout commands
+		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
+		when(mockCheckoutCommand.call()).thenReturn(mockReleaseRef);
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties());
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setCloneOnStart(true);
+
+		// Set the label to checkout. should be different from master
+		envRepository.setDefaultLabel(LABEL_TO_CHECKOUT);
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, times(1)).call();
+		// Checkout/List Branch/Checkout setName should not be called
+		verify(mockCheckoutCommand, times(0)).call();
+		verify(mockListBranchCommand, times(0)).call();
+		verify(mockCheckoutCommand, times(0)).setName(anyString());
 	}
 
 	class MockCloneCommand extends CloneCommand {

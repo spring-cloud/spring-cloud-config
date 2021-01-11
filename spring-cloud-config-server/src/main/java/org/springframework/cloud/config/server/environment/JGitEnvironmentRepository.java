@@ -43,6 +43,7 @@ import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
 import org.eclipse.jgit.lib.BranchTrackingStatus;
@@ -323,7 +324,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	/**
-	 * Clones the remote repository and then opens a connection to it.
+	 * Clones the remote repository and then opens a connection to it. Checks out to the
+	 * defaultLabel if specified.
 	 * @throws GitAPIException when cloning fails
 	 * @throws IOException when repo opening fails
 	 */
@@ -335,6 +337,22 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				git.close();
 			}
 			git = openGitRepository();
+
+			// Check if git points to valid repository and default label is not empty or
+			// null.
+			if (null != git && git.getRepository() != null && !StringUtils.isEmpty(getDefaultLabel())) {
+				// Checkout the default branch set for repo in git. This may not always be
+				// master. It depends on the
+				// admin and organization settings.
+				String defaultBranchInGit = git.getRepository().getBranch();
+				// If default branch is not empty and NOT equal to defaultLabel, then
+				// checkout the branch/tag/commit-id.
+				if (!StringUtils.isEmpty(defaultBranchInGit)
+						&& !getDefaultLabel().equalsIgnoreCase(defaultBranchInGit)) {
+					checkout(git, getDefaultLabel());
+				}
+			}
+
 			if (git != null) {
 				git.close();
 			}
@@ -412,7 +430,15 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			return false;
 		}
 
-		Status gitStatus = git.status().call();
+		Status gitStatus;
+		try {
+			gitStatus = git.status().call();
+		}
+		catch (JGitInternalException e) {
+			onPullInvalidIndex(git, e);
+			gitStatus = git.status().call();
+		}
+
 		boolean isWorkingTreeClean = gitStatus.isClean();
 		String originUrl = git.getRepository().getConfig().getString("remote", "origin", "url");
 
@@ -427,6 +453,23 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			this.logger.info("Cannot pull from remote " + originUrl + ", the working tree is not clean.");
 		}
 		return shouldPull;
+	}
+
+	protected void onPullInvalidIndex(Git git, JGitInternalException e) {
+		if (!e.getMessage().contains("Short read of block.")) {
+			throw e;
+		}
+		if (!this.forcePull) {
+			throw e;
+		}
+		try {
+			new File(getWorkingDirectory(), ".git/index").delete();
+			git.reset().setMode(ResetType.HARD).setRef("HEAD").call();
+		}
+		catch (GitAPIException ex) {
+			e.addSuppressed(ex);
+			throw e;
+		}
 	}
 
 	@SuppressWarnings("unchecked")

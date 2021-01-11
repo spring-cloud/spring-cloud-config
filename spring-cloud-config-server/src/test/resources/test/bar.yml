@@ -1,0 +1,12 @@
+client:
+  test: Default
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: development
+
+client:
+  test: Development

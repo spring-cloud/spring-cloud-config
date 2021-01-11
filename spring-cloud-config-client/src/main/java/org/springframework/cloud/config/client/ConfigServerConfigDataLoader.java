@@ -78,8 +78,10 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		}
 		if (context.getBootstrapContext().isRegistered(LoaderInterceptor.class)) {
 			LoaderInterceptor interceptor = context.getBootstrapContext().get(LoaderInterceptor.class);
-			Binder binder = context.getBootstrapContext().get(Binder.class);
-			return interceptor.apply(new LoadContext(context, resource, binder, this::doLoad));
+			if (interceptor != null) {
+				Binder binder = context.getBootstrapContext().get(Binder.class);
+				return interceptor.apply(new LoadContext(context, resource, binder, this::doLoad));
+			}
 		}
 		return doLoad(context, resource);
 	}
