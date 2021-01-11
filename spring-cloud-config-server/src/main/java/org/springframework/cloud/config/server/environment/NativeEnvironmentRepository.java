@@ -54,7 +54,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 	private static final String[] DEFAULT_LOCATIONS = new String[] { "classpath:/", "classpath:/config/", "file:./",
 			"file:./config/" };
 
-	static final Pattern RESOURCE_PATTERN = Pattern.compile("Config resource '(.*?)' via location.*");
+	static final Pattern RESOURCE_PATTERN = Pattern.compile("Config resource '(.*?)' via location '(.*)'");
 
 	private static Log logger = LogFactory.getLog(NativeEnvironmentRepository.class);
 
@@ -221,16 +221,20 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		Environment result = new Environment(value.getName(), value.getProfiles(), value.getLabel(), this.version,
 				value.getState());
 		for (PropertySource source : value.getPropertySources()) {
-			String name = source.getName();
+			String originalName = source.getName();
+			String name = originalName;
 			if (this.environment.getPropertySources().contains(name)) {
 				continue;
 			}
 			Matcher matcher = RESOURCE_PATTERN.matcher(name);
+			String location = null;
 			if (matcher.find()) {
 				name = matcher.group(1);
+				location = matcher.group(2);
 			}
 			// TODO: needed anymore?
 			name = name.replace("applicationConfig: [", "");
+			name = name.replace("file [", "file:");
 			name = name.replace("]", "");
 			if (this.searchLocations != null) {
 				boolean matches = false;
@@ -255,17 +259,33 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 						matches = true;
 						break;
 					}
+					if (location.startsWith("file:")) {
+						location = StringUtils
+								.cleanPath(new File(location.substring("file:".length())).getAbsolutePath()) + "/";
+					}
+					if (location != null && location.startsWith(pattern)
+							&& !location.substring(pattern.length()).contains("/")) {
+						matches = true;
+						break;
+					}
 				}
 				if (!matches) {
 					// Don't include this one: it wasn't matched by our search locations
 					if (logger.isDebugEnabled()) {
-						logger.debug("Not adding property source: " + name);
+						logger.debug("Not adding property source: " + originalName);
 					}
 					continue;
 				}
 			}
-			logger.info("Adding property source: " + name);
-			result.add(new PropertySource(name, source.getSource()));
+			logger.info("Adding property source: " + originalName);
+			if (originalName.contains("document #")) {
+				// this is a multi-document file, use originalName for uniqueness.
+				result.add(new PropertySource(originalName, source.getSource()));
+			}
+			else {
+				// many other file tests rely on the mangled name
+				result.add(new PropertySource(name, source.getSource()));
+			}
 		}
 		return result;
 	}

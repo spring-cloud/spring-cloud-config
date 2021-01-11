@@ -22,7 +22,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -39,6 +38,7 @@ import org.springframework.cloud.config.client.ConfigClientProperties.Credential
 import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -164,7 +164,6 @@ public class DiscoveryClientConfigDataConfigurationTests {
 	}
 
 	@Test
-	@Disabled
 	public void shouldRetryAndSucceedGetConfigServerInstanceFromDiscoveryClient() {
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
@@ -179,7 +178,6 @@ public class DiscoveryClientConfigDataConfigurationTests {
 	}
 
 	@Test
-	@Disabled
 	public void shouldNotRetryIfNotFailFastPropertySet() {
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
@@ -191,18 +189,16 @@ public class DiscoveryClientConfigDataConfigurationTests {
 	}
 
 	@Test
-	@Disabled
 	public void shouldRetryAndFailWithExceptionGetConfigServerInstanceFromDiscoveryClient() {
 		givenDiscoveryClientReturnsNoInfo();
 
-		// expectNoInstancesOfConfigServerException();
-
-		context = setup("spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.fail-fast=true").run();
+		assertThatThrownBy(() -> context = setup("spring.cloud.config.retry.maxAttempts=3",
+				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true").run())
+						.isInstanceOf(IllegalStateException.class)
+						.hasMessageContaining("No instances found of configserver");
 	}
 
 	@Test
-	@Disabled
 	public void shouldRetryAndFailWithMessageGetConfigServerInstanceFromDiscoveryClient() {
 		givenDiscoveryClientReturnsNoInfo();
 
@@ -221,6 +217,10 @@ public class DiscoveryClientConfigDataConfigurationTests {
 				.properties(addDefaultEnv(env));
 		if (addInstanceProvider) {
 			builder.addBootstrapper(instanceProviderBootstrapper());
+			// ignore actual calls to config server since we're just testing discovery
+			// client.
+			builder.addBootstrapper(registry -> registry.register(ConfigServerBootstrapper.LoaderInterceptor.class,
+					ctx -> loadContext -> null));
 		}
 		return builder.addBootstrapper(registry -> registry.addCloseListener(event -> {
 			ConfigServerInstanceMonitor monitor = event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);

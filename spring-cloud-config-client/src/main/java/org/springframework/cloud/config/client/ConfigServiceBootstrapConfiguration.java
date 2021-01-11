@@ -56,8 +56,7 @@ public class ConfigServiceBootstrapConfiguration {
 	@ConditionalOnMissingBean(ConfigServicePropertySourceLocator.class)
 	@ConditionalOnProperty(name = ConfigClientProperties.PREFIX + ".enabled", matchIfMissing = true)
 	public ConfigServicePropertySourceLocator configServicePropertySource(ConfigClientProperties properties) {
-		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(properties);
-		return locator;
+		return new ConfigServicePropertySourceLocator(properties);
 	}
 
 	@ConditionalOnProperty(ConfigClientProperties.PREFIX + ".fail-fast")

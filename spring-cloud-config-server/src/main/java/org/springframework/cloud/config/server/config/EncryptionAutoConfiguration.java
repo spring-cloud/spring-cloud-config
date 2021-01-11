@@ -53,9 +53,15 @@ import org.springframework.util.StringUtils;
  *
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(KeyProperties.class)
+@EnableConfigurationProperties
 @Import({ SingleTextEncryptorConfiguration.class, DefaultTextEncryptorConfiguration.class })
 public class EncryptionAutoConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean
+	public KeyProperties keyProperties() {
+		return new KeyProperties();
+	}
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled", matchIfMissing = true)
