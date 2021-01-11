@@ -335,7 +335,11 @@ To correct the above error the RSA key must be converted to PEM format. An examp
 Spring Cloud Config Server also supports https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html[AWS CodeCommit] authentication.
 AWS CodeCommit uses an authentication helper when using Git from the command line.
 This helper is not used with the JGit library, so a JGit CredentialProvider for AWS CodeCommit is created if the Git URI matches the AWS CodeCommit pattern.
-AWS CodeCommit URIs follow this pattern://git-codecommit.${AWS_REGION}.amazonaws.com/${repopath}.
+AWS CodeCommit URIs follow this pattern: 
+
+```bash
+https//git-codecommit.${AWS_REGION}.amazonaws.com/v1/repos/${repo}.
+```
 
 If you provide a username and password with an AWS CodeCommit URI, they must be the https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html[AWS accessKeyId and secretAccessKey] that provide access to the repository.
 If you do not specify a username and password, the accessKeyId and secretAccessKey are retrieved by using the https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[AWS Default Credential Provider Chain].
