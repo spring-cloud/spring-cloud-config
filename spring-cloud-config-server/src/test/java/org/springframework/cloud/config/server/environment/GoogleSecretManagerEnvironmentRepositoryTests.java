@@ -51,16 +51,18 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 	@Test
 	public void testSupportedStrategy() {
 		GoogleSecretManagerEnvironmentProperties properties = new GoogleSecretManagerEnvironmentProperties();
+		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		properties.setVersion(1);
 		assertThat(GoogleSecretManagerAccessStrategyFactory.forVersion(null, null,
-				properties) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
+				properties, mock) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testGetUnsupportedStrategy() {
 		GoogleSecretManagerEnvironmentProperties properties = new GoogleSecretManagerEnvironmentProperties();
+		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		properties.setVersion(2);
-		GoogleSecretManagerAccessStrategyFactory.forVersion(null, null, properties);
+		GoogleSecretManagerAccessStrategyFactory.forVersion(null, null, properties, mock);
 	}
 
 	@Test

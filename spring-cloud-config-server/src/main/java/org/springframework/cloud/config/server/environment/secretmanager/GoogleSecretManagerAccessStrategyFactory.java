@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.environment.secretmanager;
 
+import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
+
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.RepositoryException;
 import org.springframework.web.client.RestTemplate;
@@ -27,22 +29,39 @@ public final class GoogleSecretManagerAccessStrategyFactory {
 	}
 
 	public static GoogleSecretManagerAccessStrategy forVersion(RestTemplate rest,
-			GoogleConfigProvider configProvider,
-			GoogleSecretManagerEnvironmentProperties properties) {
+		GoogleConfigProvider configProvider,
+		GoogleSecretManagerEnvironmentProperties properties) {
 
 		switch (properties.getVersion()) {
 		case 1:
 			try {
 				return new GoogleSecretManagerV1AccessStrategy(rest, configProvider,
-						properties.getServiceAccount());
+					properties.getServiceAccount());
 			}
 			catch (Exception e) {
 				throw new RepositoryException("Cannot create service client", e);
 			}
 		default:
 			throw new IllegalArgumentException(
-					"No support for given Google Secret manager backend version "
-							+ properties.getVersion());
+				"No support for given Google Secret manager backend version "
+					+ properties.getVersion());
+		}
+
+	}
+
+	public static GoogleSecretManagerAccessStrategy forVersion(RestTemplate rest,
+		GoogleConfigProvider configProvider,
+		GoogleSecretManagerEnvironmentProperties properties,
+		SecretManagerServiceClient client) {
+
+		switch (properties.getVersion()) {
+		case 1:
+			return new GoogleSecretManagerV1AccessStrategy(rest, configProvider,
+				client);
+		default:
+			throw new IllegalArgumentException(
+				"No support for given Google Secret manager backend version "
+					+ properties.getVersion());
 		}
 	}
 
