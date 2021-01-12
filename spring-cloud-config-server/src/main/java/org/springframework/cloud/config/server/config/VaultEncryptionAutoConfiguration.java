@@ -37,8 +37,7 @@ public class VaultEncryptionAutoConfiguration {
 	@Bean
 	public VaultEnvironmentEncryptor vaultEnvironmentEncryptor(
 			SpringVaultEnvironmentRepository vaultEnvironmentRepository) {
-		return new VaultEnvironmentEncryptor(
-				vaultEnvironmentRepository.getKeyValueTemplate());
+		return new VaultEnvironmentEncryptor(vaultEnvironmentRepository.getKeyValueTemplate());
 	}
 
 }

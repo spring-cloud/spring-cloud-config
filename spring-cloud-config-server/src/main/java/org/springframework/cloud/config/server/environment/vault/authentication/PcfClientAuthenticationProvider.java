@@ -50,16 +50,14 @@ public class PcfClientAuthenticationProvider extends SpringVaultClientAuthentica
 			builder.instanceCertificate(new ResourceCredentialSupplier(pcfProperties.getInstanceCertificate()));
 		}
 		else {
-			builder.instanceCertificate(new ResourceCredentialSupplier(
-					resolveEnvVariable("CF_INSTANCE_CERT")));
+			builder.instanceCertificate(new ResourceCredentialSupplier(resolveEnvVariable("CF_INSTANCE_CERT")));
 		}
 
 		if (pcfProperties.getInstanceKey() != null) {
 			builder.instanceKey(new ResourceCredentialSupplier(pcfProperties.getInstanceKey()));
 		}
 		else {
-			builder.instanceKey(new ResourceCredentialSupplier(
-					resolveEnvVariable("CF_INSTANCE_KEY")));
+			builder.instanceKey(new ResourceCredentialSupplier(resolveEnvVariable("CF_INSTANCE_KEY")));
 		}
 
 		return new PcfAuthentication(builder.build(), vaultRestOperations);
@@ -70,8 +68,7 @@ public class PcfClientAuthenticationProvider extends SpringVaultClientAuthentica
 		String value = System.getenv(name);
 
 		if (StringUtils.isEmpty(value)) {
-			throw new IllegalStateException(
-					String.format("Environment variable %s not set", name));
+			throw new IllegalStateException(String.format("Environment variable %s not set", name));
 		}
 
 		return value;

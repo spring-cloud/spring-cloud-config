@@ -42,20 +42,18 @@ public class VaultEnvironmentEncryptorTests {
 		String secret = "mysecret";
 
 		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
-		when(keyValueTemplate.get("accounts/mypay"))
-				.thenReturn(withVaultResponse("access_key", secret));
+		when(keyValueTemplate.get("accounts/mypay")).thenReturn(withVaultResponse("access_key", secret));
 
-		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(
-				keyValueTemplate);
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(
-				environment.getName(), "{vault}:accounts/mypay#access_key")));
+		environment.add(new PropertySource("a",
+				Collections.<Object, Object>singletonMap(environment.getName(), "{vault}:accounts/mypay#access_key")));
 
 		// then
-		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource()
-				.get(environment.getName())).isEqualTo(secret);
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+				.isEqualTo(secret);
 	}
 
 	@Test
@@ -64,20 +62,18 @@ public class VaultEnvironmentEncryptorTests {
 		String secret = "mysecret";
 
 		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
-		when(keyValueTemplate.get("accounts/mypay"))
-				.thenReturn(withVaultResponse("access_key", secret));
+		when(keyValueTemplate.get("accounts/mypay")).thenReturn(withVaultResponse("access_key", secret));
 
-		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(
-				keyValueTemplate);
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(
-				environment.getName(), "{vault}:accounts/mypay#another_key")));
+		environment.add(new PropertySource("a",
+				Collections.<Object, Object>singletonMap(environment.getName(), "{vault}:accounts/mypay#another_key")));
 
 		// then
-		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource()
-				.get(environment.getName())).isNull();
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+				.isNull();
 	}
 
 	@Test
@@ -87,17 +83,16 @@ public class VaultEnvironmentEncryptorTests {
 
 		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 
-		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(
-				keyValueTemplate);
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(), value)));
+		environment
+				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
-		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource()
-				.get(environment.getName())).isEqualTo(value);
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+				.isEqualTo(value);
 	}
 
 	@Test
@@ -107,21 +102,19 @@ public class VaultEnvironmentEncryptorTests {
 
 		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 
-		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(
-				keyValueTemplate);
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(), value)));
+		environment
+				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
-		assertThat(processedEnvironment.getPropertySources().get(0).getSource()
-				.get(environment.getName())).isNull();
-		assertThat(processedEnvironment.getPropertySources().get(0).getSource()
-				.get("invalid." + environment.getName())).isEqualTo("<n/a>");
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
+				.isEqualTo("<n/a>");
 	}
 
 	@Test
@@ -131,21 +124,19 @@ public class VaultEnvironmentEncryptorTests {
 
 		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 
-		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(
-				keyValueTemplate);
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(), value)));
+		environment
+				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
-		assertThat(processedEnvironment.getPropertySources().get(0).getSource()
-				.get(environment.getName())).isNull();
-		assertThat(processedEnvironment.getPropertySources().get(0).getSource()
-				.get("invalid." + environment.getName())).isEqualTo("<n/a>");
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
+				.isEqualTo("<n/a>");
 	}
 
 	@Test
@@ -155,21 +146,19 @@ public class VaultEnvironmentEncryptorTests {
 
 		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 
-		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(
-				keyValueTemplate);
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(), value)));
+		environment
+				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
-		assertThat(processedEnvironment.getPropertySources().get(0).getSource()
-				.get(environment.getName())).isNull();
-		assertThat(processedEnvironment.getPropertySources().get(0).getSource()
-				.get("invalid." + environment.getName())).isEqualTo("<n/a>");
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
+				.isEqualTo("<n/a>");
 	}
 
 	@Test
@@ -179,21 +168,19 @@ public class VaultEnvironmentEncryptorTests {
 
 		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 
-		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(
-				keyValueTemplate);
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		environment.add(new PropertySource("a",
-				Collections.<Object, Object>singletonMap(environment.getName(), value)));
+		environment
+				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
-		assertThat(processedEnvironment.getPropertySources().get(0).getSource()
-				.get(environment.getName())).isNull();
-		assertThat(processedEnvironment.getPropertySources().get(0).getSource()
-				.get("invalid." + environment.getName())).isEqualTo("<n/a>");
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
+				.isEqualTo("<n/a>");
 	}
 
 	private VaultResponse withVaultResponse(String key, Object value) {

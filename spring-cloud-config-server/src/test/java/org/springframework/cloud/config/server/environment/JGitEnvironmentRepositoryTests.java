@@ -337,11 +337,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.status()).thenReturn(statusCommand);
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
-		when(statusCommand.call())
-				.thenThrow(new JGitInternalException("Short read of block."))
-				.thenReturn(status);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenThrow(new JGitInternalException("Short read of block.")).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 		when(git.reset()).thenReturn(resetCommand);
 		when(resetCommand.setMode(any())).thenReturn(resetCommand);
@@ -368,10 +365,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.status()).thenReturn(statusCommand);
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
-		when(statusCommand.call())
-				.thenThrow(new JGitInternalException("Short read of block."));
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenThrow(new JGitInternalException("Short read of block."));
 		when(status.isClean()).thenReturn(true);
 
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
@@ -383,8 +378,7 @@ public class JGitEnvironmentRepositoryTests {
 			assertThat(shouldPull).as("shouldPull did not fail").isFalse();
 		}
 		catch (JGitInternalException e) {
-			assertThat(e.getMessage()).as("shouldPull did not fail as expected")
-					.isEqualTo("Short read of block.");
+			assertThat(e.getMessage()).as("shouldPull did not fail as expected").isEqualTo("Short read of block.");
 		}
 	}
 
@@ -402,10 +396,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.status()).thenReturn(statusCommand);
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
-		when(statusCommand.call()).thenThrow(new JGitInternalException(mockThrownMessage))
-				.thenReturn(status);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenThrow(new JGitInternalException(mockThrownMessage)).thenReturn(status);
 		when(status.isClean()).thenReturn(true);
 		when(git.reset()).thenReturn(resetCommand);
 		when(resetCommand.call()).thenThrow(new GitAPIException("") {
@@ -419,8 +411,7 @@ public class JGitEnvironmentRepositoryTests {
 			Assertions.fail("shouldPull did not fail");
 		}
 		catch (JGitInternalException e) {
-			assertThat(e.getMessage()).as("shouldPull did not fail as expected")
-					.isEqualTo(mockThrownMessage);
+			assertThat(e.getMessage()).as("shouldPull did not fail as expected").isEqualTo(mockThrownMessage);
 		}
 	}
 
@@ -437,10 +428,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.status()).thenReturn(statusCommand);
 		when(git.getRepository()).thenReturn(repository);
 		when(repository.getConfig()).thenReturn(storedConfig);
-		when(storedConfig.getString("remote", "origin", "url"))
-				.thenReturn("http://example/git");
-		when(statusCommand.call())
-				.thenThrow(new JGitInternalException(mockThrownMessage));
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenThrow(new JGitInternalException(mockThrownMessage));
 		when(status.isClean()).thenReturn(true);
 
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
@@ -451,8 +440,7 @@ public class JGitEnvironmentRepositoryTests {
 			Assertions.fail("shouldPull did not fail");
 		}
 		catch (JGitInternalException e) {
-			assertThat(e.getMessage()).as("shouldPull did not fail as expected")
-					.isEqualTo(mockThrownMessage);
+			assertThat(e.getMessage()).as("shouldPull did not fail as expected").isEqualTo(mockThrownMessage);
 		}
 	}
 

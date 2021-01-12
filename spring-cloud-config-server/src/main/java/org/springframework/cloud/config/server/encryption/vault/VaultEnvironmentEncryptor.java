@@ -58,8 +58,7 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 			for (Map.Entry<Object, Object> entry : new LinkedHashSet<>(map.entrySet())) {
 				Object key = entry.getKey();
 				String name = key.toString();
-				if (entry.getValue() != null
-						&& entry.getValue().toString().startsWith("{vault}")) {
+				if (entry.getValue() != null && entry.getValue().toString().startsWith("{vault}")) {
 					String value = entry.getValue().toString();
 					map.remove(key);
 					try {
@@ -81,8 +80,7 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 							throw new RuntimeException("Wrong format");
 						}
 
-						if (StringUtils.isEmpty(parts[0])
-								|| StringUtils.isEmpty(parts[1])) {
+						if (StringUtils.isEmpty(parts[0]) || StringUtils.isEmpty(parts[1])) {
 							throw new RuntimeException("Wrong format");
 						}
 
@@ -95,21 +93,19 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 
 						VaultResponse vaultResponse = loadedVaultKeys.get(vaultKey);
 
-						if (vaultResponse == null
-								|| (vaultResponse.getData() == null || !vaultResponse
-										.getData().containsKey(vaultParamName))) {
+						if (vaultResponse == null || (vaultResponse.getData() == null
+								|| !vaultResponse.getData().containsKey(vaultParamName))) {
 							value = null;
 						}
 						else {
-							value = vaultResponse.getData().get(vaultParamName)
-									.toString();
+							value = vaultResponse.getData().get(vaultParamName).toString();
 						}
 					}
 					catch (Exception e) {
 						value = "<n/a>";
 						name = "invalid." + name;
-						String message = "Cannot resolve key: " + key + " ("
-								+ e.getClass() + ": " + e.getMessage() + ")";
+						String message = "Cannot resolve key: " + key + " (" + e.getClass() + ": " + e.getMessage()
+								+ ")";
 						if (logger.isDebugEnabled()) {
 							logger.debug(message, e);
 						}
