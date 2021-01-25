@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.cloud.config.server.encryption.EncryptionControllerTe
 import org.springframework.cloud.config.server.encryption.EncryptionIntegrationTests;
 import org.springframework.cloud.config.server.encryption.EnvironmentPrefixHelperTests;
 import org.springframework.cloud.config.server.encryption.KeyStoreTextEncryptorLocatorTests;
+import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.EnvironmentControllerIntegrationTests;
@@ -86,7 +87,7 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
 		SshPropertyValidatorTest.class, CompositeIntegrationTests.class, SubversionConfigServerIntegrationTests.class,
 		ConfigServerHealthIndicatorTests.class, CustomCompositeEnvironmentRepositoryTests.class,
 		CustomEnvironmentRepositoryTests.class, BootstrapConfigServerIntegrationTests.class,
-		AwsS3EnvironmentRepositoryTests.class })
+		AwsS3EnvironmentRepositoryTests.class, AwsParameterStoreEnvironmentRepositoryTests.class })
 @Ignore
 public class AdhocTestSuite {
 
