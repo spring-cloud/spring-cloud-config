@@ -259,7 +259,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 						matches = true;
 						break;
 					}
-					if (location.startsWith("file:")) {
+					if (location != null && location.startsWith("file:")) {
 						location = StringUtils
 								.cleanPath(new File(location.substring("file:".length())).getAbsolutePath()) + "/";
 					}
