@@ -160,3 +160,5 @@ $ curl localhost:8080/env
 A property source called `configserver:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar`.
 
 NOTE: The URL in the property source name is the git repository, not the config server URL.
+
+WARNING: If you use Spring Cloud Config Client, you will need to set the `spring.config.import` property in order to bind to Config Server. You can read more about it https://docs.spring.io/spring-cloud-config/docs/current/reference/html/#config-data-import[here].
