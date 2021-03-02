@@ -13,10 +13,28 @@ Next try out a client, as follows:
 
 ----
 $ curl localhost:8888/foo/development
-{"name":"foo","label":"master","propertySources":[
-  {"name":"https://github.com/scratches/config-repo/foo-development.properties","source":{"bar":"spam"}},
-  {"name":"https://github.com/scratches/config-repo/foo.properties","source":{"foo":"bar"}}
-]}
+{
+  "name": "foo",
+  "profiles": [
+    "development"
+  ]
+  ....
+  "propertySources": [
+    {
+      "name": "https://github.com/spring-cloud-samples/config-repo/foo-development.properties",
+      "source": {
+        "bar": "spam",
+        "foo": "from foo development"
+      }
+    },
+    {
+      "name": "https://github.com/spring-cloud-samples/config-repo/foo.properties",
+      "source": {
+        "foo": "from foo props",
+        "democonfigclient.message": "hello spring io"
+      }
+    },
+    ....
 ----
 
 The default strategy for locating property sources is to clone a git repository (at `spring.cloud.config.server.git.uri`) and use it to initialize a mini `SpringApplication`.
