@@ -122,7 +122,6 @@ public class ResourceControllerIntegrationTests {
 		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
 	}
 
-	@Ignore
 	@Test
 	public void resourceNoLabel() throws Exception {
 		when(this.repository.findOne("foo", "default", null, false))
@@ -135,7 +134,6 @@ public class ResourceControllerIntegrationTests {
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
-	@Ignore
 	@Test
 	public void resourceNoLabelHttp() throws Exception {
 		when(this.repository.findOne("foo", "default", null, false))
@@ -144,23 +142,22 @@ public class ResourceControllerIntegrationTests {
 				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 
 		ResponseEntity<String> response = new TestRestTemplate()
-				.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
+				.getForEntity("http://localhost:" + port + "/foo/default/foo.txt?useDefaultLabel", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		verify(this.repository).findOne("foo", "default", null, false);
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
-	@Ignore
 	@Test
 	public void binaryResourceNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", null, false))
-				.thenReturn(new Environment("foo", "default", "master"));
+		when(this.repository.findOne("foo", "default", null))
+			.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
 				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt").param("useDefaultLabel", "")
 				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo", "default", null, false);
+		verify(this.repository).findOne("foo", "default", null);
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
