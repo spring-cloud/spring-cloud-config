@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -150,8 +149,7 @@ public class ResourceControllerIntegrationTests {
 
 	@Test
 	public void binaryResourceNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", null))
-			.thenReturn(new Environment("foo", "default", "master"));
+		when(this.repository.findOne("foo", "default", null)).thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
 				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt").param("useDefaultLabel", "")

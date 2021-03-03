@@ -108,8 +108,8 @@ public class ResourceController {
 
 	@RequestMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel")
 	public String retrieveDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
-						   ServletWebRequest request,@RequestParam(defaultValue = "true") boolean resolvePlaceholders
-	) throws IOException {
+			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			throws IOException {
 		return retrieve(request, name, profile, null, path, resolvePlaceholders);
 	}
 
@@ -177,8 +177,7 @@ public class ResourceController {
 	@RequestMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel",
 			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binaryDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
-						 ServletWebRequest request
-	)  throws IOException {
+			ServletWebRequest request) throws IOException {
 		return binary(request, name, profile, null, path);
 	}
 
