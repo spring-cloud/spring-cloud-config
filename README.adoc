@@ -223,6 +223,8 @@ A property source called `configserver:<URL of remote repository>/<file name>` c
 
 NOTE: The URL in the property source name is the git repository, not the config server URL.
 
+WARNING: If you use Spring Cloud Config Client, you need to set the `spring.config.import` property in order to bind to Config Server. You can read more about it https://docs.spring.io/spring-cloud-config/docs/current/reference/html/#config-data-import[in the Spring Cloud Config Reference Guide].
+
 === Sample Application
 
 You can find a sample application https://github.com/spring-cloud/spring-cloud-config/tree/master/spring-cloud-config-sample[here].
