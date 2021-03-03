@@ -271,13 +271,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 					deleteUntrackedLocalBranches(fetchStatus.getTrackingRefUpdates(), git);
 				}
 			}
-				// checkout after fetch so we can get any new branches, tags, ect.
 
-				// if nothing to update so just checkout and merge.
-				// Merge because remote branch could have been updated before
-				checkout(git, label);
-				tryMerge(git, label);
-			}
+			// checkout after fetch so we can get any new branches, tags, ect.
+			// if nothing to update so just checkout and merge.
+			// Merge because remote branch could have been updated before
+			checkout(git, label);
+			tryMerge(git, label);
+
 			// always return what is currently HEAD as the version
 			return git.getRepository().findRef("HEAD").getObjectId().getName();
 		}
