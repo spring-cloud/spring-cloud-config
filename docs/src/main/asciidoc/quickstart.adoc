@@ -43,8 +43,7 @@ The mini-application's `Environment` is used to enumerate property sources and p
 The HTTP service has resources in the following form:
 
 ----
-/{application}/{profile}
-/{application}/{profile}/{label}
+/{application}/{profile}[/{label}]
 /{application}-{profile}.yml
 /{label}/{application}-{profile}.yml
 /{application}-{profile}.properties
