@@ -78,6 +78,7 @@ import static org.eclipse.jgit.transport.ReceiveCommand.Type.DELETE;
  * @author Daniel Lavoie
  * @author Ryan Lynch
  * @author Gareth Clay
+ * @author ChaoDong Xi
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -269,12 +270,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				if (this.deleteUntrackedBranches && fetchStatus != null) {
 					deleteUntrackedLocalBranches(fetchStatus.getTrackingRefUpdates(), git);
 				}
-				// checkout after fetch so we can get any new branches, tags, ect.
-				checkout(git, label);
-				tryMerge(git, label);
 			}
-			else {
-				// nothing to update so just checkout and merge.
+				// checkout after fetch so we can get any new branches, tags, ect.
+
+				// if nothing to update so just checkout and merge.
 				// Merge because remote branch could have been updated before
 				checkout(git, label);
 				tryMerge(git, label);
