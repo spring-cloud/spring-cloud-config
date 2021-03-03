@@ -43,7 +43,8 @@ The mini-application's `Environment` is used to enumerate property sources and p
 The HTTP service has resources in the following form:
 
 ----
-/{application}/[{profile}]/{label}
+/{application}/{profile}
+/{application}/{profile}/{label}
 /{application}-{profile}.yml
 /{label}/{application}-{profile}.yml
 /{application}-{profile}.properties
@@ -53,6 +54,7 @@ The HTTP service has resources in the following form:
 For example:
 
 ----
+curl localhost:8888/foo/development
 curl localhost:8888/foo/development/master
 curl localhost:8888/foo/development,db/master
 curl localhost:8888/foo-development.yml
