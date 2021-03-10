@@ -102,6 +102,9 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 			applied = true;
 			hasBinder = context.getBinder() != null;
 			ConfigData configData = context.getInvocation().apply(context.getLoaderContext(), context.getResource());
+			assertThat(configData).as("ConfigData was null for location %s", context.getResource()).isNotNull();
+			assertThat(configData.getOptions()).as("ConfigData.options was null for location %s", context.getResource())
+					.isNotNull();
 			assertThat(configData.getOptions()).contains(Option.IGNORE_IMPORTS, Option.IGNORE_PROFILES);
 			return configData;
 		}
