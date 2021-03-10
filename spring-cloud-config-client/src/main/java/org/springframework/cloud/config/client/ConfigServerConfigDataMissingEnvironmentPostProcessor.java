@@ -87,7 +87,7 @@ public class ConfigServerConfigDataMissingEnvironmentPostProcessor implements En
 				description = "No spring.config.import property has been defined";
 			}
 			String action = "Add a spring.config.import=configserver: property to your configuration.\n"
-					+ "\tIf configuration in not required add spring.config.import=optional:configserver: instead.\n"
+					+ "\tIf configuration is not required add spring.config.import=optional:configserver: instead.\n"
 					+ "\tTo disable this check, set spring.cloud.config.enabled=false or \n"
 					+ "\tspring.cloud.config.import-check.enabled=false.";
 			return new FailureAnalysis(description, action, cause);
