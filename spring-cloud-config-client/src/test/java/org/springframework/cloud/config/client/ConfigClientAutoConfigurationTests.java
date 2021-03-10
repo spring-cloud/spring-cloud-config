@@ -40,7 +40,8 @@ public class ConfigClientAutoConfigurationTests {
 	@Test
 	public void withParent() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(ConfigClientAutoConfiguration.class)
-				.child(Object.class).web(WebApplicationType.NONE).run();
+				.child(Object.class).web(WebApplicationType.NONE).properties("spring.cloud.bootstrap.enabled=true")
+				.run();
 		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context, ConfigClientProperties.class).length)
 				.isEqualTo(1);
 		context.close();

@@ -57,10 +57,28 @@ Next try out a client, as follows:
 
 ----
 $ curl localhost:8888/foo/development
-{"name":"foo","label":"master","propertySources":[
-  {"name":"https://github.com/scratches/config-repo/foo-development.properties","source":{"bar":"spam"}},
-  {"name":"https://github.com/scratches/config-repo/foo.properties","source":{"foo":"bar"}}
-]}
+{
+  "name": "foo",
+  "profiles": [
+    "development"
+  ]
+  ....
+  "propertySources": [
+    {
+      "name": "https://github.com/spring-cloud-samples/config-repo/foo-development.properties",
+      "source": {
+        "bar": "spam",
+        "foo": "from foo development"
+      }
+    },
+    {
+      "name": "https://github.com/spring-cloud-samples/config-repo/foo.properties",
+      "source": {
+        "foo": "from foo props",
+        "democonfigclient.message": "hello spring io"
+      }
+    },
+    ....
 ----
 
 The default strategy for locating property sources is to clone a git repository (at `spring.cloud.config.server.git.uri`) and use it to initialize a mini `SpringApplication`.
@@ -74,6 +92,17 @@ The HTTP service has resources in the following form:
 /{label}/{application}-{profile}.yml
 /{application}-{profile}.properties
 /{label}/{application}-{profile}.properties
+----
+
+For example:
+
+----
+curl localhost:8888/foo/development
+curl localhost:8888/foo/development/master
+curl localhost:8888/foo/development,db/master
+curl localhost:8888/foo-development.yml
+curl localhost:8888/foo-db.properties
+curl localhost:8888/master/foo-db.properties
 ----
 
 where `application` is injected as the `spring.config.name` in the `SpringApplication` (what is normally `application` in a regular Spring Boot app), `profile` is an active profile (or comma-separated list of properties), and `label` is an optional git label (defaults to `master`.)
@@ -204,6 +233,8 @@ $ curl localhost:8080/env
 A property source called `configserver:<URL of remote repository>/<file name>` contains the `foo` property with a value of `bar`.
 
 NOTE: The URL in the property source name is the git repository, not the config server URL.
+
+WARNING: If you use Spring Cloud Config Client, you need to set the `spring.config.import` property in order to bind to Config Server. You can read more about it https://docs.spring.io/spring-cloud-config/docs/current/reference/html/#config-data-import[in the Spring Cloud Config Reference Guide].
 
 === Sample Application
 
