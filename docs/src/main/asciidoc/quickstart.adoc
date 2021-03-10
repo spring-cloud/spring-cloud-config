@@ -152,25 +152,24 @@ spring.application.name: myapp
 
 NOTE: When setting the property `${spring.application.name}` do not prefix your app name with the reserved word `application-` to prevent issues resolving the correct property source.
 
-The Config Server properties show up in the `/env` endpoint as a high-priority property source, as shown in the following example.
+The Config Server properties show up in the `actuator/env` endpoint as a high-priority property source, as shown in the following example.
 
 ----
-$ curl localhost:8080/env
+$ curl localhost:8080/actuator/env
 {
   "activeProfiles": [],
+  ....
   {
-    "name": "servletContextInitParams",
-    "properties": {}
-  },
-  {
-    "name": "configserver:https://github.com/spring-cloud-samples/config-repo/foo.properties",
-    "properties": {
-      "foo": {
-        "value": "bar",
-        "origin": "Config Server https://github.com/spring-cloud-samples/config-repo/foo.properties:2:12"
+      "name": "bootstrapProperties-https://github.com/spring-cloud-samples/config-repo/foo.properties",
+      "properties": {
+        "foo": {
+          "value": "from foo props"
+        },
+        "democonfigclient.message": {
+          "value": "hello spring io"
+        }
       }
-    }
-  },
+    },
   ...
 }
 ----

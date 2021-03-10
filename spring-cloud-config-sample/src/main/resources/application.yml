@@ -6,4 +6,18 @@ endpoints:
 logging:
   levels:
     org.springframework.boot.env.PropertySourcesLoader: TRACE
-    org.springframework.web: DEBUG
+    org.springframework: DEBUG
+
+management:
+  endpoint:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: env
+
+spring:
+  cloud:
+    config:
+      enabled: true
