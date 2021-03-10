@@ -6,7 +6,7 @@ endpoints:
 logging:
   levels:
     org.springframework.boot.env.PropertySourcesLoader: TRACE
-    org.springframework: DEBUG
+    org.springframework.web: DEBUG
 
 management:
   endpoint:
