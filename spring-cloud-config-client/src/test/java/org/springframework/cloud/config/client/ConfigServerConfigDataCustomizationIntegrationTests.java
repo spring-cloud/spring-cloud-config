@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -33,7 +35,12 @@ import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoaderInterceptor;
+import org.springframework.cloud.config.environment.Environment;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -129,6 +136,12 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 			this.customProp = customProp;
 		}
 
+		@Override
+		@SuppressWarnings("unchecked")
+		public <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> requestEntity, Class<T> responseType, Object... uriVariables) throws RestClientException {
+			ResponseEntity<T> response = (ResponseEntity<T>) ResponseEntity.of(Optional.of(new Environment("test")));
+			return response;
+		}
 	}
 
 	static class BindHandlerBootstrapper implements Bootstrapper {
