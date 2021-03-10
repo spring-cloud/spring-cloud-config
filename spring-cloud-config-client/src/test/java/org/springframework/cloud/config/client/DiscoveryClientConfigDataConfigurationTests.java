@@ -66,6 +66,7 @@ public class DiscoveryClientConfigDataConfigurationTests {
 	@Test
 	public void offByDefault() {
 		context = new SpringApplicationBuilder(TestConfig.class)
+				.properties("spring.config.import=optional:configserver:")
 				.addBootstrapper(registry -> registry.addCloseListener(event -> {
 					try {
 						event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);

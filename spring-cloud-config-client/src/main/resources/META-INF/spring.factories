@@ -6,6 +6,13 @@ org.springframework.cloud.bootstrap.BootstrapConfiguration=\
 org.springframework.cloud.config.client.ConfigServiceBootstrapConfiguration,\
 org.springframework.cloud.config.client.DiscoveryClientConfigServiceBootstrapConfiguration
 
+# Environment PostProcessor
+org.springframework.boot.env.EnvironmentPostProcessor=\
+org.springframework.cloud.config.client.ConfigServerConfigDataMissingEnvironmentPostProcessor
+
+org.springframework.boot.diagnostics.FailureAnalyzer=\
+org.springframework.cloud.config.client.ConfigServerConfigDataMissingEnvironmentPostProcessor.ImportExceptionFailureAnalyzer
+
 # ConfigData Location Resolvers
 org.springframework.boot.context.config.ConfigDataLocationResolver=\
 org.springframework.cloud.config.client.ConfigServerConfigDataLocationResolver

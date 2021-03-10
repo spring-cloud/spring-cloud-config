@@ -56,8 +56,8 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(
-		classes = TestConfiguration.class, properties = { "spring.cloud.config.enabled=true",
+@SpringBootTest(classes = TestConfiguration.class,
+		properties = { "spring.cloud.config.enabled=true", "spring.cloud.bootstrap.enabled=true",
 				"management.endpoint.env.post.enabled=true", "management.endpoints.web.exposure.include=env, refresh" },
 		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
