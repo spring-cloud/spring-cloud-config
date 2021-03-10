@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 
 import org.springframework.boot.context.config.ConfigData;
+import org.springframework.boot.context.config.ConfigData.Option;
 import org.springframework.boot.context.config.ConfigDataLoader;
 import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -125,7 +126,17 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					// the existence of this property source confirms a successful
 					// response from config server
 					composite.add(0, new MapPropertySource("configClient", map));
-					return new ConfigData(composite);
+					try {
+						return new ConfigData(composite, Option.IGNORE_IMPORTS, Option.IGNORE_PROFILES);
+					}
+					catch (NoSuchFieldError e) {
+						// IGNORE_PROFILES was added in boot 2.4.3, for backwards
+						// compatibility
+						// IGNORE_IMPORTS alone causes NPE prior to 2.4.3
+						// this will still throw an error if spring.profiles.include in
+						// remote config
+						return new ConfigData(composite);
+					}
 				}
 			}
 			errorBody = String.format("None of labels %s found", Arrays.toString(labels));

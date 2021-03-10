@@ -26,6 +26,7 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.config.ConfigData;
+import org.springframework.boot.context.config.ConfigData.Option;
 import org.springframework.boot.context.properties.bind.BindContext;
 import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
@@ -100,7 +101,9 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 		public ConfigData apply(ConfigServerBootstrapper.LoadContext context) {
 			applied = true;
 			hasBinder = context.getBinder() != null;
-			return context.getInvocation().apply(context.getLoaderContext(), context.getResource());
+			ConfigData configData = context.getInvocation().apply(context.getLoaderContext(), context.getResource());
+			assertThat(configData.getOptions()).contains(Option.IGNORE_IMPORTS, Option.IGNORE_PROFILES);
+			return configData;
 		}
 
 	}
