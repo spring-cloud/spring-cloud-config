@@ -138,10 +138,12 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> requestEntity, Class<T> responseType, Object... uriVariables) throws RestClientException {
+		public <T> ResponseEntity<T> exchange(String url, HttpMethod method, HttpEntity<?> requestEntity,
+				Class<T> responseType, Object... uriVariables) throws RestClientException {
 			ResponseEntity<T> response = (ResponseEntity<T>) ResponseEntity.of(Optional.of(new Environment("test")));
 			return response;
 		}
+
 	}
 
 	static class BindHandlerBootstrapper implements Bootstrapper {
