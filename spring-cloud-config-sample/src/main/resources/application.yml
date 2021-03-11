@@ -7,17 +7,3 @@ logging:
   levels:
     org.springframework.boot.env.PropertySourcesLoader: TRACE
     org.springframework.web: DEBUG
-
-management:
-  endpoint:
-    env:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: env
-
-spring:
-  cloud:
-    config:
-      enabled: true
