@@ -59,6 +59,8 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 	public void clientCertCanWork() {
 		try (TlsConfigClientRunner client = createConfigClient()) {
 			enableTlsClient(client);
+			client.property("logging.level.org.springframework.boot.context.config", "DEBUG");
+			client.property("logging.level.org.springframework.cloud.config.client", "DEBUG");
 			client.start();
 			assertThat(client.getProperty("dumb.key")).isEqualTo("dumb-value");
 		}
