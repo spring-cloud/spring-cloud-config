@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.config.client;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,14 +23,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.net.ssl.SSLContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.boot.origin.Origin;
@@ -42,33 +35,23 @@ import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropert
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpRequestExecution;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.Assert;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 
@@ -95,7 +78,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	public org.springframework.core.env.PropertySource<?> locate(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		CompositePropertySource composite = new OriginTrackedCompositePropertySource("configService");
-		RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(properties) : this.restTemplate;
+		ConfigClientRequestTemplateFactory requestTemplateFactory = new ConfigClientRequestTemplateFactory(logger,
+				properties);
+
 		Exception error = null;
 		String errorBody = null;
 		try {
@@ -106,7 +91,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			String state = ConfigClientStateHolder.getState();
 			// Try all the labels until one works
 			for (String label : labels) {
-				Environment result = getRemoteEnvironment(restTemplate, properties, label.trim(), state);
+				Environment result = getRemoteEnvironment(requestTemplateFactory, label.trim(), state);
 				if (result != null) {
 					log(result);
 
@@ -209,8 +194,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 	}
 
-	private Environment getRemoteEnvironment(RestTemplate restTemplate, ConfigClientProperties properties, String label,
+	private Environment getRemoteEnvironment(ConfigClientRequestTemplateFactory requestTemplateFactory, String label,
 			String state) {
+		RestTemplate restTemplate = this.restTemplate == null ? requestTemplateFactory.create() : this.restTemplate;
+		ConfigClientProperties properties = requestTemplateFactory.getProperties();
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
 		String profile = properties.getProfile();
@@ -241,7 +228,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			try {
 				HttpHeaders headers = new HttpHeaders();
 				headers.setAccept(acceptHeader);
-				addAuthorizationToken(properties, headers, username, password);
+				requestTemplateFactory.addAuthorizationToken(headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
 				}
@@ -282,93 +269,15 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		this.restTemplate = restTemplate;
 	}
 
-	private RestTemplate getSecureRestTemplate(ConfigClientProperties client) {
-		if (client.getRequestReadTimeout() < 0) {
-			throw new IllegalStateException("Invalid Value for Read Timeout set.");
-		}
-		if (client.getRequestConnectTimeout() < 0) {
-			throw new IllegalStateException("Invalid Value for Connect Timeout set.");
-		}
-
-		ClientHttpRequestFactory requestFactory = createHttpRquestFactory(client);
-		RestTemplate template = new RestTemplate(requestFactory);
-		Map<String, String> headers = new HashMap<>(client.getHeaders());
-		if (headers.containsKey(AUTHORIZATION)) {
-			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
-		}
-		if (!headers.isEmpty()) {
-			template.setInterceptors(
-					Arrays.<ClientHttpRequestInterceptor>asList(new GenericRequestHeaderInterceptor(headers)));
-		}
-
-		return template;
-	}
-
-	private ClientHttpRequestFactory createHttpRquestFactory(ConfigClientProperties client) {
-		if (client.getTls().isEnabled()) {
-			try {
-				SSLContextFactory factory = new SSLContextFactory(client.getTls());
-				SSLContext sslContext = factory.createSSLContext();
-				HttpClient httpClient = HttpClients.custom().setSSLContext(sslContext).build();
-				HttpComponentsClientHttpRequestFactory result = new HttpComponentsClientHttpRequestFactory(httpClient);
-
-				result.setReadTimeout(client.getRequestReadTimeout());
-				result.setConnectTimeout(client.getRequestConnectTimeout());
-				return result;
-
-			}
-			catch (GeneralSecurityException | IOException ex) {
-				logger.error(ex);
-				throw new IllegalStateException("Failed to create config client with TLS.", ex);
-			}
-		}
-
-		SimpleClientHttpRequestFactory result = new SimpleClientHttpRequestFactory();
-		result.setReadTimeout(client.getRequestReadTimeout());
-		result.setConnectTimeout(client.getRequestConnectTimeout());
-		return result;
-	}
-
-	private void addAuthorizationToken(ConfigClientProperties configClientProperties, HttpHeaders httpHeaders,
-			String username, String password) {
-		String authorization = configClientProperties.getHeaders().get(AUTHORIZATION);
-
-		if (password != null && authorization != null) {
-			throw new IllegalStateException("You must set either 'password' or 'authorization'");
-		}
-
-		if (password != null) {
-			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
-			httpHeaders.add("Authorization", "Basic " + new String(token));
-		}
-		else if (authorization != null) {
-			httpHeaders.add("Authorization", authorization);
-		}
-
-	}
-
 	/**
 	 * Adds the provided headers to the request.
 	 */
-	public static class GenericRequestHeaderInterceptor implements ClientHttpRequestInterceptor {
-
-		private final Map<String, String> headers;
+	@Deprecated
+	public static class GenericRequestHeaderInterceptor
+			extends ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor {
 
 		public GenericRequestHeaderInterceptor(Map<String, String> headers) {
-			this.headers = headers;
-		}
-
-		@Override
-		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
-				throws IOException {
-			for (Entry<String, String> header : this.headers.entrySet()) {
-				request.getHeaders().add(header.getKey(), header.getValue());
-			}
-			return execution.execute(request, body);
-		}
-
-		protected Map<String, String> getHeaders() {
-			return this.headers;
+			super(headers);
 		}
 
 	}

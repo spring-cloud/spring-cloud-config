@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConfigClientTlsTests extends AbstractTlsSetup {
 
-	private static TlsConfigServerRunner server;
+	protected static TlsConfigServerRunner server;
 
 	@BeforeClass
 	public static void setupAll() throws Exception {
@@ -95,7 +95,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test(expected = IllegalStateException.class)
 	public void wrongPasswordCauseFailure() {
-		TlsConfigClientRunner client = createConfigClient();
+		TlsConfigClientRunner client = createConfigClient(false);
 		enableTlsClient(client);
 		client.setKeyStore(clientCert, WRONG_PASSWORD, WRONG_PASSWORD);
 		client.start();
@@ -103,7 +103,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test(expected = IllegalStateException.class)
 	public void nonExistKeyStoreCauseFailure() {
-		TlsConfigClientRunner client = createConfigClient();
+		TlsConfigClientRunner client = createConfigClient(false);
 		enableTlsClient(client);
 		client.setKeyStore(new File("nonExistFile"));
 		client.start();
@@ -119,7 +119,15 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 		}
 	}
 
-	private TlsConfigClientRunner createConfigClient() {
+	protected TlsConfigClientRunner createConfigClient(boolean optional) {
+		TlsConfigClientRunner runner = createConfigClient();
+		if (!optional) {
+			runner.property("spring.cloud.config.fail-fast", "true");
+		}
+		return runner;
+	}
+
+	protected TlsConfigClientRunner createConfigClient() {
 		return new TlsConfigClientRunner(TestApp.class, server);
 	}
 

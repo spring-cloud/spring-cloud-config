@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.LogFactory;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +35,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor;
+import org.springframework.cloud.config.client.ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -51,7 +52,6 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.mock.http.client.MockClientHttpRequest;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -227,8 +227,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		byte[] body = new byte[] {};
 		Map<String, String> headers = new HashMap<>();
 		headers.put("X-Example-Version", "2.1");
-		new ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor(headers).intercept(request, body,
-				execution);
+		new GenericRequestHeaderInterceptor(headers).intercept(request, body, execution);
 		Mockito.verify(execution).execute(request, body);
 		assertThat(request.getHeaders().getFirst("X-Example-Version")).isEqualTo("2.1");
 	}
@@ -237,10 +236,9 @@ public class ConfigServicePropertySourceLocatorTests {
 	public void shouldAddAuthorizationHeaderWhenPasswordSet() {
 		HttpHeaders headers = new HttpHeaders();
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
 		String password = "pass";
-		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
+		factory(defaults).addAuthorizationToken(headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
 
@@ -249,10 +247,9 @@ public class ConfigServicePropertySourceLocatorTests {
 		HttpHeaders headers = new HttpHeaders();
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
 		String password = null;
-		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
+		factory(defaults).addAuthorizationToken(headers, username, password);
 		assertThat(headers).hasSize(1);
 	}
 
@@ -261,32 +258,29 @@ public class ConfigServicePropertySourceLocatorTests {
 		HttpHeaders headers = new HttpHeaders();
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		String username = "user";
 		String password = "pass";
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("You must set either 'password' or 'authorization'");
-		ReflectionTestUtils.invokeMethod(this.locator, "addAuthorizationToken", defaults, headers, username, password);
+		factory(defaults).addAuthorizationToken(headers, username, password);
 	}
 
 	@Test
 	public void shouldThrowExceptionWhenNegativeReadTimeoutSet() {
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setRequestReadTimeout(-1);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("Invalid Value for Read Timeout set.");
-		ReflectionTestUtils.invokeMethod(this.locator, "getSecureRestTemplate", defaults);
+		factory(defaults).create();
 	}
 
 	@Test
 	public void shouldThrowExceptionWhenNegativeConnectTimeoutSet() {
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setRequestConnectTimeout(-1);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("Invalid Value for Connect Timeout set.");
-		ReflectionTestUtils.invokeMethod(this.locator, "getSecureRestTemplate", defaults);
+		factory(defaults).create();
 	}
 
 	@Test
@@ -294,14 +288,17 @@ public class ConfigServicePropertySourceLocatorTests {
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 		defaults.getHeaders().put("key", "value");
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
-		RestTemplate restTemplate = ReflectionTestUtils.invokeMethod(this.locator, "getSecureRestTemplate", defaults);
+		RestTemplate restTemplate = factory(defaults).create();
 		Iterator<ClientHttpRequestInterceptor> iterator = restTemplate.getInterceptors().iterator();
 		while (iterator.hasNext()) {
 			GenericRequestHeaderInterceptor genericRequestHeaderInterceptor = (GenericRequestHeaderInterceptor) iterator
 					.next();
 			assertThat(genericRequestHeaderInterceptor.getHeaders().get(AUTHORIZATION)).isEqualTo(null);
 		}
+	}
+
+	private ConfigClientRequestTemplateFactory factory(ConfigClientProperties properties) {
+		return new ConfigClientRequestTemplateFactory(LogFactory.getLog(getClass()), properties);
 	}
 
 	@SuppressWarnings({ "unchecked", "raw" })

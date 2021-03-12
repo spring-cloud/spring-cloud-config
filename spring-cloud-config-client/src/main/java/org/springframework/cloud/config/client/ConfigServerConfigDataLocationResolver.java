@@ -18,9 +18,7 @@ package org.springframework.cloud.config.client;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 
@@ -38,12 +36,10 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.client.ConfigClientProperties.CONFIG_DISCOVERY_ENABLED;
 
 public class ConfigServerConfigDataLocationResolver
@@ -84,27 +80,9 @@ public class ConfigServerConfigDataLocationResolver
 		return context.getBootstrapContext().getOrElse(BindHandler.class, null);
 	}
 
+	@Deprecated
 	protected RestTemplate createRestTemplate(ConfigClientProperties properties) {
-		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-		if (properties.getRequestReadTimeout() < 0) {
-			throw new IllegalStateException("Invalid Value for Read Timeout set.");
-		}
-		if (properties.getRequestConnectTimeout() < 0) {
-			throw new IllegalStateException("Invalid Value for Connect Timeout set.");
-		}
-		requestFactory.setReadTimeout(properties.getRequestReadTimeout());
-		requestFactory.setConnectTimeout(properties.getRequestConnectTimeout());
-		RestTemplate template = new RestTemplate(requestFactory);
-		Map<String, String> headers = new HashMap<>(properties.getHeaders());
-		if (headers.containsKey(AUTHORIZATION)) {
-			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
-		}
-		if (!headers.isEmpty()) {
-			template.setInterceptors(Collections
-					.singletonList(new ConfigServicePropertySourceLocator.GenericRequestHeaderInterceptor(headers)));
-		}
-
-		return template;
+		return null;
 	}
 
 	protected Log getLog() {
@@ -147,9 +125,17 @@ public class ConfigServerConfigDataLocationResolver
 		bootstrapContext.addCloseListener(event -> event.getApplicationContext().getBeanFactory().registerSingleton(
 				"configDataConfigClientProperties", event.getBootstrapContext().get(ConfigClientProperties.class)));
 
+		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class,
+				context -> new ConfigClientRequestTemplateFactory(log, context.get(ConfigClientProperties.class)));
+
 		bootstrapContext.registerIfAbsent(RestTemplate.class, context -> {
-			ConfigClientProperties props = context.get(ConfigClientProperties.class);
-			return createRestTemplate(props);
+			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);
+			RestTemplate restTemplate = createRestTemplate(factory.getProperties());
+			if (restTemplate != null) {
+				// shouldn't normally happen
+				return restTemplate;
+			}
+			return factory.create();
 		});
 
 		boolean discoveryEnabled = resolverContext.getBinder()
