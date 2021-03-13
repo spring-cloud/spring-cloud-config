@@ -47,6 +47,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 		server.enableTls();
 		server.setKeyStore(serverCert, KEY_STORE_PASSWORD, "server", KEY_PASSWORD);
 		server.setTrustStore(caCert, KEY_STORE_PASSWORD);
+		server.property("logging.level.org.springframework.cloud.config.server", "TRACE");
 
 		server.start();
 	}
