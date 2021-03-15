@@ -68,15 +68,21 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	private RestTemplate restTemplate;
 
 	private ConfigClientProperties defaultProperties;
+	
+	private final String ACTIVE_PROFILES_PROPERTY_NAME = "spring.profiles.active";
 
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
 		this.defaultProperties = defaultProperties;
 	}
 
 	@Override
-	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
+		return locate(properties);
+	}
+
+	@Retryable(interceptor = "configServerRetryInterceptor")
+	public org.springframework.core.env.PropertySource<?> locate(ConfigClientProperties properties) {
 		CompositePropertySource composite = new OriginTrackedCompositePropertySource("configService");
 		ConfigClientRequestTemplateFactory requestTemplateFactory = new ConfigClientRequestTemplateFactory(logger,
 				properties);
@@ -101,6 +107,17 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 							@SuppressWarnings("unchecked")
 							Map<String, Object> map = translateOrigins(source.getName(),
 									(Map<String, Object>) source.getSource());
+
+							// if different profile is activated within the default
+							// profile
+							boolean relocate = checkIfProfileIsActivatedInDefault(result.getProfiles(), map);
+							if (relocate) {
+								OriginTrackedValue newProfiles = (OriginTrackedValue) map
+										.get(ACTIVE_PROFILES_PROPERTY_NAME);
+								properties.setProfile(newProfiles.getValue().toString());
+								return this.locate(properties); // relocate again
+							}
+
 							composite.addPropertySource(new OriginTrackedMapPropertySource(source.getName(), map));
 						}
 					}
@@ -136,6 +153,15 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		logger.warn("Could not locate PropertySource: " + (error != null ? error.getMessage() : errorBody));
 		return null;
 
+	}
+
+	// to check if different profile is activated within the default profile
+	private boolean checkIfProfileIsActivatedInDefault(String[] profiles, Map<String, Object> map) {
+		List<String> profilesList = Arrays.asList(profiles);
+		return (profilesList.size() == 1 && profilesList.get(0).equalsIgnoreCase("default")
+				&& map.containsKey(ACTIVE_PROFILES_PROPERTY_NAME)
+				&& !(((OriginTrackedValue) map.get(ACTIVE_PROFILES_PROPERTY_NAME))).getValue().toString()
+						.equalsIgnoreCase("default"));
 	}
 
 	@Override
