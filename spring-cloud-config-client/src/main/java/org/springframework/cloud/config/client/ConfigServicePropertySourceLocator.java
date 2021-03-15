@@ -68,7 +68,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	private RestTemplate restTemplate;
 
 	private ConfigClientProperties defaultProperties;
-	
+
 	private final String ACTIVE_PROFILES_PROPERTY_NAME = "spring.profiles.active";
 
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
