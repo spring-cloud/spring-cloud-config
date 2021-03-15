@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.config.client.tls;
 
-import org.junit.Ignore;
-import org.junit.Test;
-
 public class ConfigClientConfigDataTlsTests extends ConfigClientTlsTests {
 
 	@Override
@@ -35,10 +32,4 @@ public class ConfigClientConfigDataTlsTests extends ConfigClientTlsTests {
 		return new TlsConfigClientRunner(TestApp.class, server, "spring.config.import", "optional:configserver:");
 	}
 
-	@Test
-	@Ignore
-	@Override
-	public void clientCertCanWork() {
-		super.clientCertCanWork();
-	}
 }
