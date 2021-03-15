@@ -128,7 +128,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					}
 					// the existence of this property source confirms a successful
 					// response from config server
-					composite.add(0, new MapPropertySource("configClient", map));
+					composite.add(0, new MapPropertySource(CONFIG_CLIENT_PROPERTYSOURCE_NAME, map));
 					try {
 						return new ConfigData(composite, Option.IGNORE_IMPORTS, Option.IGNORE_PROFILES);
 					}
