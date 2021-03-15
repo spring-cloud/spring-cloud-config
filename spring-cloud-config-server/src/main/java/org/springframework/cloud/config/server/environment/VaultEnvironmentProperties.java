@@ -52,12 +52,21 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 	/** Vault backend. Defaults to secret. */
 	private String backend = "secret";
+		
 
 	/**
 	 * The key in vault shared by all applications. Defaults to application. Set to empty
 	 * to disable.
 	 */
 	private String defaultKey = "application";
+	
+	/** 
+	 * KV2 API required "data" after "mount-path". There could be folder/path structure, where the keys/applications are grouped.
+	 * This property is the path after mount-path, under which application(s) are located (appended after "data")
+	 * Default value is blank, which means all grouped applications are located right under the mount-path
+	 *  
+	 */
+	private String pathToKey = "";
 
 	/** Vault profile separator. Defaults to comma. */
 	private String profileSeparator = ",";
@@ -261,6 +270,14 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 	public AuthenticationMethod getAuthentication() {
 		return authentication;
+	}
+
+	public String getPathToKey() {
+		return pathToKey;
+	}
+
+	public void setPathToKey(String pathToKey) {
+		this.pathToKey = pathToKey;
 	}
 
 	public enum AuthenticationMethod {

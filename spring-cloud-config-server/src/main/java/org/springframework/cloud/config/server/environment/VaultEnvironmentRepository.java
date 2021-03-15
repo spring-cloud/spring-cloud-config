@@ -92,7 +92,7 @@ public class VaultEnvironmentRepository extends AbstractVaultEnvironmentReposito
 
 		String baseUrl = String.format("%s://%s:%s", this.scheme, this.host, this.port);
 
-		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl, properties.getKvVersion());
+		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl, properties.getKvVersion(), properties.getPathToKey());
 	}
 
 	/* for testing */ void setAccessStrategy(VaultKvAccessStrategy accessStrategy) {
