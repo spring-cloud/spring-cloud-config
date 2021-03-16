@@ -54,7 +54,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
 		properties = { "spring.cloud.config.enabled=true", "spring.config.import=configserver:",
-				"spring.application.name=payroll", "spring.profiles.active=myprofile, baz",
+				"spring.application.name=payroll", "spring.profiles.active=baz",
 				"logging.level.org.application-myprofile.ymlspringframework.boot.context.config=INFO" },
 		webEnvironment = RANDOM_PORT)
 public class ServerMyTestApplicationTests {
