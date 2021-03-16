@@ -7,3 +7,12 @@ logging:
   levels:
     org.springframework.boot.env.PropertySourcesLoader: TRACE
     org.springframework.web: DEBUG
+
+#spring:
+#  cloud:
+#    config:
+#      uri: http://localhost:${config.port:8888}
+#  config:
+#    import: configserver:${spring.cloud.config.uri}
+
+
