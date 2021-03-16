@@ -1,0 +1,3 @@
+spring:
+                flyway:
+      url: jdbc:mariadb://${db.host}/${db.name}

@@ -28,6 +28,8 @@ import java.util.Map.Entry;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
@@ -64,6 +66,8 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
 @RestController
 @RequestMapping(method = RequestMethod.GET, path = "${spring.cloud.config.server.prefix:}")
 public class EnvironmentController {
+
+	private static final Log LOG = LogFactory.getLog(EnvironmentController.class);
 
 	private EnvironmentRepository repository;
 
@@ -121,13 +125,20 @@ public class EnvironmentController {
 	}
 
 	public Environment getEnvironment(String name, String profiles, String label, boolean includeOrigin) {
-		name = normalize(name);
-		label = normalize(label);
-		Environment environment = this.repository.findOne(name, profiles, label, includeOrigin);
-		if (!this.acceptEmpty && (environment == null || environment.getPropertySources().isEmpty())) {
-			throw new EnvironmentNotFoundException("Profile Not found");
+		try {
+			name = normalize(name);
+			label = normalize(label);
+			Environment environment = this.repository.findOne(name, profiles, label, includeOrigin);
+			if (!this.acceptEmpty && (environment == null || environment.getPropertySources().isEmpty())) {
+				throw new EnvironmentNotFoundException("Profile Not found");
+			}
+			return environment;
 		}
-		return environment;
+		catch (Exception e) {
+			LOG.warn(String.format("Error getting the Environment with name=%s profiles=%s label=%s includeOrigin=%b",
+					name, profiles, label, includeOrigin), e);
+			throw e;
+		}
 	}
 
 	private String normalize(String part) {
