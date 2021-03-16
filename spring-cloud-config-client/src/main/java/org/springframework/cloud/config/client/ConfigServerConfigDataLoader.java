@@ -74,7 +74,6 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 	}
 
 	@Override
-	// TODO: implement retry LoaderInterceptor
 	public ConfigData load(ConfigDataLoaderContext context, ConfigServerConfigDataResource resource) {
 		if (context.getBootstrapContext().isRegistered(ConfigServerInstanceMonitor.class)) {
 			// force initialization if needed
