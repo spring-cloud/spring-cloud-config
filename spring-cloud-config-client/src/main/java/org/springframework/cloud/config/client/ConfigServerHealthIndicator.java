@@ -18,13 +18,17 @@ package org.springframework.cloud.config.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health.Builder;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
+
+import static org.springframework.cloud.bootstrap.config.PropertySourceBootstrapConfiguration.BOOTSTRAP_PROPERTY_SOURCE_NAME;
+import static org.springframework.cloud.config.client.ConfigServerConfigDataLoader.CONFIG_CLIENT_PROPERTYSOURCE_NAME;
+import static org.springframework.cloud.config.client.ConfigServerConfigDataLocationResolver.PREFIX;
 
 /**
  * @author Spencer Gibb
@@ -38,7 +42,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	private long lastAccess = 0;
 
-	private PropertySource<?> cached;
+	private List<PropertySource<?>> cached = new ArrayList<>();
 
 	public ConfigServerHealthIndicator(ConfigurableEnvironment environment, ConfigClientHealthProperties properties) {
 		this.environment = environment;
@@ -47,29 +51,38 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	@Override
 	protected void doHealthCheck(Builder builder) {
-		PropertySource<?> propertySource = getPropertySource();
-		builder.up();
-		if (propertySource instanceof CompositePropertySource) {
+		List<PropertySource<?>> propertySources = getPropertySource();
+		if (propertySources.isEmpty()) {
+			builder.unknown();
+			builder.unknown().withDetail("error", "no property sources located");
+		}
+		else {
+			builder.up();
 			List<String> sources = new ArrayList<>();
-			for (PropertySource<?> ps : ((CompositePropertySource) propertySource).getPropertySources()) {
-				sources.add(ps.getName());
+			for (PropertySource<?> propertySource : propertySources) {
+
+				if (propertySource instanceof CompositePropertySource) {
+					for (PropertySource<?> ps : ((CompositePropertySource) propertySource).getPropertySources()) {
+						sources.add(ps.getName());
+					}
+				}
+				else if (propertySource != null) {
+					sources.add(propertySource.getName());
+				}
 			}
 			builder.withDetail("propertySources", sources);
 		}
-		else if (propertySource != null) {
-			builder.withDetail("propertySources", propertySource.toString());
-		}
-		else {
-			builder.unknown().withDetail("error", "no property sources located");
-		}
 	}
 
-	private PropertySource<?> getPropertySource() {
+	private List<PropertySource<?>> getPropertySource() {
 		long accessTime = System.currentTimeMillis();
 		if (isCacheStale(accessTime)) {
 			this.lastAccess = accessTime;
-			MutablePropertySources propertySources = this.environment.getPropertySources();
-			this.cached = propertySources.get("configClient");
+			this.cached = this.environment.getPropertySources().stream()
+					.filter(p -> p.getName().startsWith(CONFIG_CLIENT_PROPERTYSOURCE_NAME)
+							|| p.getName().startsWith(BOOTSTRAP_PROPERTY_SOURCE_NAME + "-")
+							|| p.getName().startsWith(PREFIX))
+					.collect(Collectors.toList());
 		}
 		return this.cached;
 	}

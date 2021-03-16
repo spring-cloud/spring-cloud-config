@@ -17,6 +17,8 @@
 package org.springframework.cloud.config.client;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -62,13 +64,23 @@ public class ConfigServerHealthIndicatorTests {
 	@Test
 	public void testServerUp() {
 		setupPropertySources();
+		Map<String, Object> details = this.indicator.getHealth(true).getDetails();
+		List<String> propertySources = (List) details.get("propertySources");
+		assertThat(propertySources.contains("bootstrapProperties-test")).isTrue();
+		assertThat(propertySources.contains("configserver:test")).isTrue();
+		assertThat(propertySources.contains("configClient")).isTrue();
+		assertThat(propertySources.size()).isEqualTo(3);
 		assertThat(this.indicator.health().getStatus()).isEqualTo(Status.UP);
 	}
 
 	protected void setupPropertySources() {
 		PropertySource<?> source = new MapPropertySource("configClient", Collections.emptyMap());
+		PropertySource<?> configServerSource = new MapPropertySource("configserver:test", Collections.emptyMap());
+		PropertySource<?> bootstrapSource = new MapPropertySource("bootstrapProperties-test", Collections.emptyMap());
 		MutablePropertySources sources = new MutablePropertySources();
 		sources.addFirst(source);
+		sources.addFirst(bootstrapSource);
+		sources.addFirst(configServerSource);
 		doReturn(sources).when(this.environment).getPropertySources();
 	}
 

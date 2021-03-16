@@ -57,6 +57,11 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
 
 public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServerConfigDataResource>, Ordered {
 
+	/**
+	 * PropertySource name for the config client.
+	 */
+	public static final String CONFIG_CLIENT_PROPERTYSOURCE_NAME = "configClient";
+
 	protected final Log logger;
 
 	public ConfigServerConfigDataLoader(Log logger) {
@@ -123,7 +128,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					}
 					// the existence of this property source confirms a successful
 					// response from config server
-					composite.add(0, new MapPropertySource("configClient", map));
+					composite.add(0, new MapPropertySource(CONFIG_CLIENT_PROPERTYSOURCE_NAME, map));
 					try {
 						return new ConfigData(composite, Option.IGNORE_IMPORTS, Option.IGNORE_PROFILES);
 					}
@@ -159,7 +164,8 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 			throw new IllegalStateException("Could not locate PropertySource and " + reason + ", failing"
 					+ (errorBody == null ? "" : ": " + errorBody), error);
 		}
-		logger.warn("Could not locate PropertySource (" + resource + "): " + (error != null ? error.getMessage() : errorBody));
+		logger.warn("Could not locate PropertySource (" + resource + "): "
+				+ (error != null ? error.getMessage() : errorBody));
 		return null;
 	}
 
