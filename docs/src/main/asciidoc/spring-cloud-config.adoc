@@ -251,7 +251,9 @@ spring:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
-          search-paths: foo,bar*
+          search-paths:
+            - foo
+            - bar*
 ----
 
 In the preceding example, the server searches for config files in the top level and in the `foo/` sub-directory and also any sub-directory whose name begins with `bar`.
