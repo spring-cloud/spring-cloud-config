@@ -51,8 +51,8 @@ import org.springframework.util.StringUtils;
  */
 public class NativeEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
 
-	private static final String[] DEFAULT_LOCATIONS = new String[] { "optional:classpath:/", "classpath:/config/",
-			"file:./", "file:./config/" };
+	private static final String[] DEFAULT_LOCATIONS = new String[] { "optional:classpath:/",
+			"optional:classpath:/config/", "optional:file:./", "optional:file:./config/" };
 
 	static final Pattern RESOURCE_PATTERN = Pattern.compile("Config resource '(.*?)' via location '(.*)'");
 

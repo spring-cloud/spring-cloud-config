@@ -38,6 +38,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
+import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.prepareLocalRepo;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ConfigServerApplication.class, properties = { "spring.config.name:configserver" },
@@ -52,8 +53,7 @@ public class NativeConfigServerIntegrationTests {
 	public static void init() throws IOException {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
-
-		ConfigServerTestUtils.prepareLocalRepo();
+		prepareLocalRepo();
 	}
 
 	@Test
@@ -63,6 +63,18 @@ public class NativeConfigServerIntegrationTests {
 				Environment.class);
 		Environment environment = response.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("overrides");
+		ConfigServerTestUtils.assertConfigEnabled(environment);
+	}
+
+	@Test
+	public void testConfigServerDoesNotReturnItsOwnConfiguration() {
+		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
+				"http://localhost:" + this.port + "/configserver/default", HttpMethod.GET, getV2AcceptEntity(),
+				Environment.class);
+		Environment environment = response.getBody();
+		assertThat(environment.getPropertySources().isEmpty()).isFalse();
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("overrides");
 		ConfigServerTestUtils.assertConfigEnabled(environment);
 	}
