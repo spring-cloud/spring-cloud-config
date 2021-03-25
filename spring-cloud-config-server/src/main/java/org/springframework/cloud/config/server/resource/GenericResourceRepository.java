@@ -58,7 +58,7 @@ public class GenericResourceRepository implements ResourceRepository, ResourceLo
 			for (int i = locations.length; i-- > 0;) {
 				String location = locations[i];
 				if (!PathUtils.isInvalidEncodedLocation(location)) {
-					locationResources.add(this.resourceLoader.getResource(location));
+					locationResources.add(this.resourceLoader.getResource(location.replaceFirst("optional:", "")));
 				}
 			}
 
