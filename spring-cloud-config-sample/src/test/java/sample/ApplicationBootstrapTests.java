@@ -107,10 +107,8 @@ public class ApplicationBootstrapTests {
 
 	@Test
 	public void propertiesBeansRegisterByCompositeEnvBeanFactoryPostProcessor() {
-		String[] beanNames = server
-				.getBeanNamesForType(MultipleJGitEnvironmentProperties.class);
-		assertThat(beanNames).isNotNull()
-				.anyMatch(s -> s.matches("git-env-repo-properties\\d"));
+		String[] beanNames = server.getBeanNamesForType(MultipleJGitEnvironmentProperties.class);
+		assertThat(beanNames).isNotNull().anyMatch(s -> s.matches("git-env-repo-properties\\d"));
 	}
 
 }

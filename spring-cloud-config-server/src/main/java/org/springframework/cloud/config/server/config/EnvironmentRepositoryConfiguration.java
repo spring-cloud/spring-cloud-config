@@ -122,13 +122,11 @@ public class EnvironmentRepositoryConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(AbstractHealthIndicator.class)
-	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled", matchIfMissing = true)
 	protected static class ConfigServerActuatorConfiguration {
 
 		@Bean
-		public ConfigServerHealthIndicator configServerHealthIndicator(
-				EnvironmentRepository repository) {
+		public ConfigServerHealthIndicator configServerHealthIndicator(EnvironmentRepository repository) {
 			return new ConfigServerHealthIndicator(repository);
 		}
 
