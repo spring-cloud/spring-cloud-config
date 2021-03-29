@@ -24,6 +24,8 @@ import org.springframework.cloud.config.server.composite.CompositeUtils;
 import org.springframework.cloud.test.ClassPathExclusions;
 import org.springframework.cloud.test.ModifiedClassPathRunner;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class CompositeClasspathTests {
 
 	@RunWith(ModifiedClassPathRunner.class)
@@ -43,6 +45,29 @@ public class CompositeClasspathTests {
 							"spring.cloud.config.server.composite[1].type:svn")
 					.run(context -> {
 						CompositeUtils.getCompositeTypeList(context.getEnvironment());
+					});
+		}
+
+	}
+
+	@RunWith(ModifiedClassPathRunner.class)
+	@ClassPathExclusions({ "spring-jdbc-*.jar", "spring-data-redis-*.jar",
+			"spring-boot-actuator-*.jar" })
+	public static class NoActuatorTests {
+
+		@Test
+		public void contextLoads() {
+			new WebApplicationContextRunner()
+					.withUserConfiguration(ConfigServerApplication.class)
+					.withPropertyValues("spring.profiles.active:test,composite",
+							"spring.jmx.enabled=false",
+							"spring.config.name:compositeconfigserver",
+							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+							"spring.cloud.config.server.composite[0].type:git")
+					.run(context -> {
+						CompositeUtils.getCompositeTypeList(context.getEnvironment());
+						assertThat(context)
+								.doesNotHaveBean("configServerHealthIndicator");
 					});
 		}
 

@@ -27,6 +27,7 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -111,14 +112,6 @@ import org.springframework.vault.core.VaultTemplate;
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled",
-			matchIfMissing = true)
-	public ConfigServerHealthIndicator configServerHealthIndicator(
-			EnvironmentRepository repository) {
-		return new ConfigServerHealthIndicator(repository);
-	}
-
-	@Bean
 	@ConditionalOnMissingBean(search = SearchStrategy.CURRENT)
 	public MultipleJGitEnvironmentProperties multipleJGitEnvironmentProperties() {
 		return new MultipleJGitEnvironmentProperties();
@@ -129,6 +122,20 @@ public class EnvironmentRepositoryConfiguration {
 	public ConfigTokenProvider defaultConfigTokenProvider(
 			ObjectProvider<HttpServletRequest> httpRequest) {
 		return new HttpRequestConfigTokenProvider(httpRequest);
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(AbstractHealthIndicator.class)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.health.enabled",
+			matchIfMissing = true)
+	protected static class ConfigServerActuatorConfiguration {
+
+		@Bean
+		public ConfigServerHealthIndicator configServerHealthIndicator(
+				EnvironmentRepository repository) {
+			return new ConfigServerHealthIndicator(repository);
+		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
