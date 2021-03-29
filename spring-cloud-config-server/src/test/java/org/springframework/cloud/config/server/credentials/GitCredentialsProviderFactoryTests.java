@@ -60,8 +60,16 @@ public class GitCredentialsProviderFactoryTests {
 	}
 
 	@Test
-	public void testCreateForFileWithUsername() {
+	public void testCreateForFileWithUsernameAndPassword() {
 		CredentialsProvider provider = this.factory.createFor(FILE_REPO, USER, PASSWORD, null, false);
+		assertThat(provider).isNotNull();
+		assertThat(provider instanceof UsernamePasswordCredentialsProvider).isTrue();
+	}
+
+	@Test
+	public void testCreateForServerWithUsernameAndNoPassword() {
+		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER, "",
+				null, false);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof UsernamePasswordCredentialsProvider).isTrue();
 	}
