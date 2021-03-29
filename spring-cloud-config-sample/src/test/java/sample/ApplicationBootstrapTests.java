@@ -29,6 +29,7 @@ import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointPr
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -102,6 +103,14 @@ public class ApplicationBootstrapTests {
 		assertThat(res).containsKey("propertySources");
 		Map<String, Object> property = (Map<String, Object>) res.get("property");
 		assertThat(property).containsEntry("value", "bar");
+	}
+
+	@Test
+	public void propertiesBeansRegisterByCompositeEnvBeanFactoryPostProcessor() {
+		String[] beanNames = server
+				.getBeanNamesForType(MultipleJGitEnvironmentProperties.class);
+		assertThat(beanNames).isNotNull()
+				.anyMatch(s -> s.matches("git-env-repo-properties\\d"));
 	}
 
 }

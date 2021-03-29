@@ -45,8 +45,11 @@ public class CompositeEnvironmentBeanFactoryPostProcessor implements BeanFactory
 		this.environment = environment;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+		BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
+
 		List<String> typePropertyList = CompositeUtils.getCompositeTypeList(this.environment);
 		for (int i = 0; i < typePropertyList.size(); i++) {
 			String type = typePropertyList.get(i);
@@ -56,12 +59,18 @@ public class CompositeEnvironmentBeanFactoryPostProcessor implements BeanFactory
 			Class<? extends EnvironmentRepositoryProperties> propertiesClass;
 			propertiesClass = (Class<? extends EnvironmentRepositoryProperties>) factoryTypes[1];
 			EnvironmentRepositoryProperties properties = bindProperties(i, propertiesClass, this.environment);
+			AbstractBeanDefinition propertiesDefinition = BeanDefinitionBuilder
+					.genericBeanDefinition(EnvironmentRepositoryProperties.class,
+							() -> properties)
+					.getBeanDefinition();
+			String propertiesBeanName = String.format("%s-env-repo-properties%d", type,
+					i);
+			registry.registerBeanDefinition(propertiesBeanName, propertiesDefinition);
 
 			AbstractBeanDefinition beanDefinition = BeanDefinitionBuilder
 					.genericBeanDefinition(EnvironmentRepository.class).setFactoryMethodOnBean("build", factoryName)
 					.addConstructorArgValue(properties).getBeanDefinition();
 			String beanName = String.format("%s-env-repo%d", type, i);
-			BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
 			registry.registerBeanDefinition(beanName, beanDefinition);
 		}
 	}

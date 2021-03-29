@@ -240,7 +240,7 @@ spring:
 NOTE: Spring Cloud guesses that a pattern containing a profile that does not end in `\*` implies that you actually want to match a list of profiles starting with this pattern (so `*/staging` is a shortcut for `["\*/staging", "*/staging,*"]`, and so on).
 This is common where, for instance, you need to run applications in the "`development`" profile locally but also the "`cloud`" profile remotely.
 
-Every repository can also optionally store config files in sub-directories, and patterns to search for those directories can be specified as `searchPaths`.
+Every repository can also optionally store config files in sub-directories, and patterns to search for those directories can be specified as `search-paths`.
 The following example shows a config file at the top level:
 
 [source,yaml]
@@ -251,7 +251,9 @@ spring:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
-          searchPaths: foo,bar*
+          search-paths:
+            - foo
+            - bar*
 ----
 
 In the preceding example, the server searches for config files in the top level and in the `foo/` sub-directory and also any sub-directory whose name begins with `bar`.
@@ -451,7 +453,7 @@ spring:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
-          searchPaths: '{application}'
+          search-paths: '{application}'
 ----
 
 The preceding listing causes a search of the repository for files in the same name as the directory (as well as the top level).
