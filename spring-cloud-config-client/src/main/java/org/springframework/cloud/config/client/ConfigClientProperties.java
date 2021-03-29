@@ -16,8 +16,11 @@
 
 package org.springframework.cloud.config.client;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -333,9 +336,14 @@ public class ConfigClientProperties {
 				// But the username can be overridden
 				result.username = explicitCredentials.username;
 			}
+
+			result.password = URLDecoder.decode(result.password,
+					StandardCharsets.UTF_8.toString());
+			result.username = URLDecoder.decode(result.username,
+					StandardCharsets.UTF_8.toString());
 			return result;
 		}
-		catch (MalformedURLException e) {
+		catch (MalformedURLException | UnsupportedEncodingException e) {
 			throw new IllegalStateException("Invalid URL: " + uri, e);
 		}
 	}
