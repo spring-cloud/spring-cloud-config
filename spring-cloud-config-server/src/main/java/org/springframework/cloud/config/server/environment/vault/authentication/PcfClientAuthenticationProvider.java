@@ -52,20 +52,12 @@ public class PcfClientAuthenticationProvider extends SpringVaultClientAuthentica
 		else {
 			builder.instanceCertificate(new ResourceCredentialSupplier(resolveEnvVariable("CF_INSTANCE_CERT")));
 		}
-		else {
-			builder.instanceCertificate(new ResourceCredentialSupplier(
-					resolveEnvVariable("CF_INSTANCE_CERT")));
-		}
 
 		if (pcfProperties.getInstanceKey() != null) {
 			builder.instanceKey(new ResourceCredentialSupplier(pcfProperties.getInstanceKey()));
 		}
 		else {
 			builder.instanceKey(new ResourceCredentialSupplier(resolveEnvVariable("CF_INSTANCE_KEY")));
-		}
-		else {
-			builder.instanceKey(new ResourceCredentialSupplier(
-					resolveEnvVariable("CF_INSTANCE_KEY")));
 		}
 
 		return new PcfAuthentication(builder.build(), vaultRestOperations);
