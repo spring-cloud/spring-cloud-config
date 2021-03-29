@@ -96,8 +96,7 @@ public class GitCredentialsProviderFactory {
 			// useful for token based login gh-1602
 			// see
 			// https://stackoverflow.com/questions/28073266/how-to-use-jgit-to-push-changes-to-remote-with-oauth-access-token
-			this.logger.debug(
-					"Constructing UsernamePasswordCredentialsProvider for URI " + uri);
+			this.logger.debug("Constructing UsernamePasswordCredentialsProvider for URI " + uri);
 			provider = new UsernamePasswordCredentialsProvider(username, (String) null);
 		}
 		else if (hasText(passphrase)) {

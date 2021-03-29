@@ -346,10 +346,8 @@ public class ConfigClientProperties {
 				result.username = explicitCredentials.username;
 			}
 
-			result.password = URLDecoder.decode(result.password,
-					StandardCharsets.UTF_8.toString());
-			result.username = URLDecoder.decode(result.username,
-					StandardCharsets.UTF_8.toString());
+			result.password = URLDecoder.decode(result.password, StandardCharsets.UTF_8.toString());
+			result.username = URLDecoder.decode(result.username, StandardCharsets.UTF_8.toString());
 			return result;
 		}
 		catch (MalformedURLException | UnsupportedEncodingException e) {
