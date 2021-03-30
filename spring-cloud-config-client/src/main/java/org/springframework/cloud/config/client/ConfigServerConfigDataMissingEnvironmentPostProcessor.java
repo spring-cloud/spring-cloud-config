@@ -16,20 +16,17 @@
 
 package org.springframework.cloud.config.client;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.boot.diagnostics.AbstractFailureAnalyzer;
 import org.springframework.boot.diagnostics.FailureAnalysis;
-import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.core.Ordered;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.util.StringUtils;
+import org.springframework.cloud.commons.ConfigDataMissingEnvironmentPostProcessor;
+import org.springframework.core.env.Environment;
 
 import static org.springframework.cloud.config.client.ConfigServerConfigDataLocationResolver.PREFIX;
 import static org.springframework.cloud.util.PropertyUtils.bootstrapEnabled;
 import static org.springframework.cloud.util.PropertyUtils.useLegacyProcessing;
 
-public class ConfigServerConfigDataMissingEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
+public class ConfigServerConfigDataMissingEnvironmentPostProcessor extends ConfigDataMissingEnvironmentPostProcessor {
 
 	/**
 	 * Order of post processor, set to run after
@@ -43,36 +40,24 @@ public class ConfigServerConfigDataMissingEnvironmentPostProcessor implements En
 	}
 
 	@Override
-	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+	protected String getPrefix() {
+		return PREFIX;
+	}
+
+	@Override
+	protected boolean shouldProcessEnvironment(Environment environment) {
 		// don't run if using bootstrap or legacy processing
 		if (bootstrapEnabled(environment) || useLegacyProcessing(environment)) {
-			return;
+			return false;
 		}
 		boolean configEnabled = environment.getProperty(ConfigClientProperties.PREFIX + ".enabled", Boolean.class,
 				true);
 		boolean importCheckEnabled = environment.getProperty(ConfigClientProperties.PREFIX + ".import-check.enabled",
 				Boolean.class, true);
 		if (!configEnabled || !importCheckEnabled) {
-			return;
+			return false;
 		}
-		String property = environment.getProperty("spring.config.import");
-		if (!StringUtils.hasText(property)) {
-			throw new ImportException("No spring.config.import set", false);
-		}
-		if (!property.contains(PREFIX)) {
-			throw new ImportException("spring.config.import missing " + PREFIX, true);
-		}
-	}
-
-	static class ImportException extends RuntimeException {
-
-		final boolean missingPrefix;
-
-		ImportException(String message, boolean missingPrefix) {
-			super(message);
-			this.missingPrefix = missingPrefix;
-		}
-
+		return true;
 	}
 
 	static class ImportExceptionFailureAnalyzer extends AbstractFailureAnalyzer<ImportException> {
