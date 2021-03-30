@@ -35,7 +35,7 @@ public class GitUriFailureAnalyzer
 	 * Action to take for git failure.
 	 */
 	public static final String ACTION = "If you are using the git profile, you need to set a Git URI in your "
-			+ "configuration.  If you are using a native profile and have spring.cloud.config.server.bootstrap=true, "
+			+ "configuration.  If you have set spring.cloud.config.server.bootstrap=true, "
 			+ "you need to use a composite configuration.";
 
 	@Override
