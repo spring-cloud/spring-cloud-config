@@ -1512,10 +1512,11 @@ When a config client starts, it binds to the Config Server (through the `spring.
 The net result of this behavior is that all client applications that want to consume the Config Server need a `bootstrap.yml` (or an environment variable) with the server address set in `spring.cloud.config.uri` (it defaults to "http://localhost:8888").
 
 [[discovery-first-bootstrap]]
-=== Discovery First Bootstrap
+==== Discovery First Bootstrap
 
 If you use a `DiscoveryClient` implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
-However, in the default "`Config First`" mode, clients cannot take advantage of the registration.
+
+Using the `DiscoveryClient` to locate the config server requires that the config client *must use* <<config-first-bootstrap,config first bootstrap>> and *cannot use* <<config-data-import,config data import>>.
 
 If you prefer to use `DiscoveryClient` to locate the Config Server, you can do so by setting `spring.cloud.config.discovery.enabled=true` (the default is `false`).
 The net result of doing so is that client applications all need a `bootstrap.yml` (or an environment variable) with the appropriate discovery configuration.
