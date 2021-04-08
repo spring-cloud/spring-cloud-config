@@ -19,6 +19,7 @@ package org.springframework.cloud.config.client;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.apache.commons.logging.Log;
 
 import org.springframework.boot.context.config.ConfigData;
 import org.springframework.boot.context.config.ConfigData.Option;
+import org.springframework.boot.context.config.ConfigData.Options;
 import org.springframework.boot.context.config.ConfigDataLoader;
 import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -62,6 +64,8 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 	 */
 	public static final String CONFIG_CLIENT_PROPERTYSOURCE_NAME = "configClient";
 
+	private static final EnumSet<Option> ALL_OPTIONS = EnumSet.allOf(Option.class);
+
 	protected final Log logger;
 
 	public ConfigServerConfigDataLoader(Log logger) {
@@ -91,7 +95,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 
 	public ConfigData doLoad(ConfigDataLoaderContext context, ConfigServerConfigDataResource resource) {
 		ConfigClientProperties properties = resource.getProperties();
-		List<PropertySource<?>> composite = new ArrayList<>();
+		List<PropertySource<?>> propertySources = new ArrayList<>();
 		Exception error = null;
 		String errorBody = null;
 		try {
@@ -113,7 +117,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 							@SuppressWarnings("unchecked")
 							Map<String, Object> map = translateOrigins(source.getName(),
 									(Map<String, Object>) source.getSource());
-							composite.add(0,
+							propertySources.add(0,
 									new OriginTrackedMapPropertySource("configserver:" + source.getName(), map));
 						}
 					}
@@ -127,17 +131,31 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					}
 					// the existence of this property source confirms a successful
 					// response from config server
-					composite.add(0, new MapPropertySource(CONFIG_CLIENT_PROPERTYSOURCE_NAME, map));
-					try {
-						return new ConfigData(composite, Option.IGNORE_IMPORTS, Option.IGNORE_PROFILES);
+					propertySources.add(0, new MapPropertySource(CONFIG_CLIENT_PROPERTYSOURCE_NAME, map));
+					if (ALL_OPTIONS.size() == 1) {
+						// boot 2.4.2 and prior
+						return new ConfigData(propertySources);
 					}
-					catch (NoSuchFieldError e) {
-						// IGNORE_PROFILES was added in boot 2.4.3, for backwards
-						// compatibility
-						// IGNORE_IMPORTS alone causes NPE prior to 2.4.3
-						// this will still throw an error if spring.profiles.include in
-						// remote config
-						return new ConfigData(composite);
+					else if (ALL_OPTIONS.size() == 2) {
+						// boot 2.4.3 and 2.4.4
+						return new ConfigData(propertySources, Option.IGNORE_IMPORTS, Option.IGNORE_PROFILES);
+					}
+					else if (ALL_OPTIONS.size() > 2) {
+						// boot 2.4.5+
+						return new ConfigData(propertySources, propertySource -> {
+							String propertySourceName = propertySource.getName();
+							List<Option> options = new ArrayList<>();
+							options.add(Option.IGNORE_IMPORTS);
+							options.add(Option.IGNORE_PROFILES);
+							for (String profile : resource.getAcceptedProfiles()) {
+								// TODO: switch to match
+								if (propertySourceName.contains("-" + profile + ".")) {
+									// TODO: switch to Options.with() when implemented
+									options.add(Option.PROFILE_SPECIFIC);
+								}
+							}
+							return Options.of(options.toArray(new Option[0]));
+						});
 					}
 				}
 			}

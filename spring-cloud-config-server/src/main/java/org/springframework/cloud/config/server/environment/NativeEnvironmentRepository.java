@@ -235,7 +235,10 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			// TODO: needed anymore?
 			name = name.replace("applicationConfig: [", "");
 			name = name.replace("file [", "file:");
-			name = name.replace("]", "");
+			if (name.indexOf('[') < 0) {
+				// only remove if there isn't a matching left bracket
+				name = name.replace("]", "");
+			}
 			if (this.searchLocations != null) {
 				boolean matches = false;
 				String normal = name;

@@ -47,12 +47,15 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 	}
 
 	public String getProfiles() {
-		List<String> accepted = profiles.getAccepted();
 		if (StringUtils.hasText(properties.getProfile())
 				&& !properties.getProfile().equals(ConfigClientProperties.DEFAULT_PROFILE)) {
 			return properties.getProfile();
 		}
-		return StringUtils.collectionToCommaDelimitedString(accepted);
+		return StringUtils.collectionToCommaDelimitedString(getAcceptedProfiles());
+	}
+
+	List<String> getAcceptedProfiles() {
+		return this.profiles.getAccepted();
 	}
 
 	@Override

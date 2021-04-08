@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.config.ConfigData;
 import org.springframework.boot.context.config.ConfigData.Option;
+import org.springframework.boot.context.config.ConfigData.Options;
 import org.springframework.boot.context.properties.bind.BindContext;
 import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
@@ -37,6 +38,7 @@ import org.springframework.boot.context.properties.source.ConfigurationPropertyN
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoaderInterceptor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.PropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -110,9 +112,14 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 			hasBinder = context.getBinder() != null;
 			ConfigData configData = context.getInvocation().apply(context.getLoaderContext(), context.getResource());
 			assertThat(configData).as("ConfigData was null for location %s", context.getResource()).isNotNull();
-			assertThat(configData.getOptions()).as("ConfigData.options was null for location %s", context.getResource())
-					.isNotNull();
-			assertThat(configData.getOptions()).contains(Option.IGNORE_IMPORTS, Option.IGNORE_PROFILES);
+			assertThat(configData.getPropertySources()).hasSize(1);
+			PropertySource<?> propertySource = configData.getPropertySources().iterator().next();
+			Options options = configData.getOptions(propertySource);
+			assertThat(options).as("ConfigData.options was null for location %s property source %s",
+					context.getResource(), propertySource.getName()).isNotNull();
+			assertThat(options.contains(Option.IGNORE_IMPORTS)).isTrue();
+			assertThat(options.contains(Option.IGNORE_PROFILES)).isTrue();
+			assertThat(options.contains(Option.PROFILE_SPECIFIC)).isFalse();
 			return configData;
 		}
 
