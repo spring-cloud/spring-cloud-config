@@ -82,16 +82,12 @@ public class CompositeIntegrationTests {
 
 		@Test
 		public void resourceEndpointsWork() {
-			// This request will get the file from the Git Repo
+			// This request will get the file from the Git Repo because its order is first
+			// The SVN repo should have the content foo: bar
 			String text = new TestRestTemplate().getForObject(
 					"http://localhost:" + this.port + "/foo/development/composite/bar.properties", String.class);
 
-			String expected = "foo: bar";
-			assertThat(expected).isEqualTo(text).as("invalid content");
-
-			// This request will get the file from the SVN Repo
-			text = new TestRestTemplate().getForObject(
-					"http://localhost:" + this.port + "/foo/development/composite/bar.properties", String.class);
+			String expected = "foo: barconfig\n";
 			assertThat(expected).isEqualTo(text).as("invalid content");
 		}
 
@@ -141,7 +137,7 @@ public class CompositeIntegrationTests {
 			String text = new TestRestTemplate().getForObject(
 					"http://localhost:" + this.port + "/foo/development/composite/bar.properties", String.class);
 
-			String expected = "foo: bar";
+			String expected = "foo: barconfig\n";
 			assertThat(expected).isEqualTo(text).as("invalid content");
 
 			// This request will get the file from the SVN Repo
