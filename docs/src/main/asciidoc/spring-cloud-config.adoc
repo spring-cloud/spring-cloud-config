@@ -1542,6 +1542,11 @@ eureka:
       configPath: /config
 ----
 
+==== Discovery First Bootstrap Using Eureka And WebClient
+
+If you use the Eureka `DiscoveryClient` from Spring Cloud Netflix and also want to use `WebClient` instead of Jersey or `RestTemplate`,
+you need to include `WebClient` on your classpath as well as set `eureka.client.webclient.enabled=true`.
+
 
 [[config-client-fail-fast]]
 === Config Client Fail Fast
