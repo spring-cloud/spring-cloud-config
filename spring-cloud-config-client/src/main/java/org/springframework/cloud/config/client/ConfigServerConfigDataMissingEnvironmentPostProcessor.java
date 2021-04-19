@@ -54,7 +54,9 @@ public class ConfigServerConfigDataMissingEnvironmentPostProcessor extends Confi
 				true);
 		boolean importCheckEnabled = environment.getProperty(ConfigClientProperties.PREFIX + ".import-check.enabled",
 				Boolean.class, true);
-		if (!configEnabled || !importCheckEnabled) {
+		boolean configDiscoveryEnabled = environment.getProperty(ConfigClientProperties.PREFIX + ".discovery.enabled",
+				Boolean.class, false);
+		if (!configEnabled || !importCheckEnabled || configDiscoveryEnabled) {
 			return false;
 		}
 		return true;

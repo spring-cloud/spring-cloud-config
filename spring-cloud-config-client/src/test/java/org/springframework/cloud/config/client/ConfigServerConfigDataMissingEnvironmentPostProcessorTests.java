@@ -67,6 +67,15 @@ class ConfigServerConfigDataMissingEnvironmentPostProcessorTests {
 	}
 
 	@Test
+	void discoveryEnabled() {
+		MockEnvironment environment = new MockEnvironment();
+		environment.setProperty("spring.cloud.config.discovery.enabled", "true");
+		SpringApplication app = mock(SpringApplication.class);
+		ConfigServerConfigDataMissingEnvironmentPostProcessor processor = new ConfigServerConfigDataMissingEnvironmentPostProcessor();
+		assertThatCode(() -> processor.postProcessEnvironment(environment, app)).doesNotThrowAnyException();
+	}
+
+	@Test
 	void importCheckNotEnabled() {
 		MockEnvironment environment = new MockEnvironment();
 		environment.setProperty("spring.cloud.config.import-check.enabled", "false");
