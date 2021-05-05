@@ -19,6 +19,7 @@ package org.springframework.cloud.config.environment;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -34,10 +35,20 @@ public class PropertySource {
 
 	private Map<?, ?> source;
 
+	private org.springframework.core.env.PropertySource<?> originalPropertySource;
+
 	@JsonCreator
 	public PropertySource(@JsonProperty("name") String name, @JsonProperty("source") Map<?, ?> source) {
 		this.name = name;
 		this.source = source;
+	}
+
+	@JsonIgnore
+	public PropertySource(String name, Map<?, ?> source,
+			org.springframework.core.env.PropertySource<?> originalPropertySource) {
+		this.name = name;
+		this.source = source;
+		this.originalPropertySource = originalPropertySource;
 	}
 
 	public String getName() {
@@ -46,6 +57,11 @@ public class PropertySource {
 
 	public Map<?, ?> getSource() {
 		return this.source;
+	}
+
+	@JsonIgnore
+	public org.springframework.core.env.PropertySource<?> getOriginalPropertySource() {
+		return this.originalPropertySource;
 	}
 
 	@Override

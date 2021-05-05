@@ -74,13 +74,14 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 		for (org.springframework.core.env.PropertySource<?> source : this.environment.getPropertySources()) {
 			String name = source.getName();
 			if (!this.standardSources.contains(name) && source instanceof MapPropertySource) {
-				result.add(new PropertySource(name, getMap(source, includeOrigin)));
+				result.add(new PropertySource(name, getMap(source, includeOrigin), source));
 			}
 		}
 		return result;
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private Map<?, ?> getMap(org.springframework.core.env.PropertySource<?> source, boolean includeOrigin) {
 		Map<Object, Object> map = new LinkedHashMap<>();
 		Map<?, ?> input = (Map<?, ?>) source.getSource();

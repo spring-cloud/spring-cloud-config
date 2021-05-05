@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -28,6 +29,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
+import org.springframework.boot.context.config.ConfigDataEnvironmentUpdateListener;
+import org.springframework.boot.context.config.ConfigDataLocation;
+import org.springframework.boot.context.config.ConfigDataResource;
+import org.springframework.boot.context.config.StandardConfigDataResource;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.NestedExceptionUtils;
@@ -130,11 +135,20 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		try {
 			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
 			DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
+			Map<org.springframework.core.env.PropertySource<?>, PropertySourceConfigData> propertySourceToConfigData = new HashMap<>();
 			ConfigDataEnvironmentPostProcessor.applyTo(environment, resourceLoader, null,
-					StringUtils.commaDelimitedListToStringArray(profile));
+					StringUtils.commaDelimitedListToSet(profile), new ConfigDataEnvironmentUpdateListener() {
+						@Override
+						public void onPropertySourceAdded(org.springframework.core.env.PropertySource<?> propertySource,
+								ConfigDataLocation location, ConfigDataResource resource) {
+							propertySourceToConfigData.put(propertySource,
+									new PropertySourceConfigData(location, resource));
+						}
+					});
 
 			environment.getPropertySources().remove("config-data-setup");
-			return clean(new PassthruEnvironmentRepository(environment).findOne(config, profile, label, includeOrigin));
+			return clean(new PassthruEnvironmentRepository(environment).findOne(config, profile, label, includeOrigin),
+					propertySourceToConfigData);
 		}
 		catch (Exception e) {
 			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
@@ -217,20 +231,37 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		return environment;
 	}
 
-	protected Environment clean(Environment value) {
-		Environment result = new Environment(value.getName(), value.getProfiles(), value.getLabel(), this.version,
-				value.getState());
-		for (PropertySource source : value.getPropertySources()) {
+	protected Environment clean(Environment env) {
+		return clean(env, Collections.emptyMap());
+	}
+
+	protected Environment clean(Environment env,
+			Map<org.springframework.core.env.PropertySource<?>, PropertySourceConfigData> propertySourceToConfigData) {
+		Environment result = new Environment(env.getName(), env.getProfiles(), env.getLabel(), this.version,
+				env.getState());
+		for (PropertySource source : env.getPropertySources()) {
 			String originalName = source.getName();
 			String name = originalName;
 			if (this.environment.getPropertySources().contains(name)) {
 				continue;
 			}
-			Matcher matcher = RESOURCE_PATTERN.matcher(name);
 			String location = null;
-			if (matcher.find()) {
-				name = matcher.group(1);
-				location = matcher.group(2);
+
+			PropertySourceConfigData configData = propertySourceToConfigData.get(source.getOriginalPropertySource());
+			// try and get information directly from ConfigData
+			if (configData != null && configData.resource instanceof StandardConfigDataResource) {
+				StandardConfigDataResource configDataResource = (StandardConfigDataResource) configData.resource;
+				// use StandardConfigDataResource as that format is expected still
+				name = configDataResource.toString();
+				location = configData.location.toString();
+			}
+			else {
+				// if not, try and parse
+				Matcher matcher = RESOURCE_PATTERN.matcher(name);
+				if (matcher.find()) {
+					name = matcher.group(1);
+					location = matcher.group(2);
+				}
 			}
 			// TODO: needed anymore?
 			name = name.replace("applicationConfig: [", "");
@@ -330,6 +361,19 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 	public void setOrder(int order) {
 		this.order = order;
+	}
+
+	private final class PropertySourceConfigData {
+
+		private final ConfigDataLocation location;
+
+		private final ConfigDataResource resource;
+
+		private PropertySourceConfigData(ConfigDataLocation location, ConfigDataResource resource) {
+			this.location = location;
+			this.resource = resource;
+		}
+
 	}
 
 }

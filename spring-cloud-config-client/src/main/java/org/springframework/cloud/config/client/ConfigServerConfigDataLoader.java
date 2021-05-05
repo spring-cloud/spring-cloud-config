@@ -147,6 +147,10 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 							List<Option> options = new ArrayList<>();
 							options.add(Option.IGNORE_IMPORTS);
 							options.add(Option.IGNORE_PROFILES);
+							// TODO: the profile is now available on the backend
+							// in a future minor, add the profile associated with a
+							// PropertySource see
+							// https://github.com/spring-cloud/spring-cloud-config/issues/1874
 							for (String profile : resource.getAcceptedProfiles()) {
 								// TODO: switch to match
 								if (propertySourceName.contains("-" + profile + ".")) {
