@@ -52,7 +52,6 @@ public class ConfigClientRetryBootstrapper implements BootstrapRegistryInitializ
 			Binder binder = context.get(Binder.class);
 			boolean failFast = binder.bind(ConfigClientProperties.PREFIX + ".fail-fast", Boolean.class).orElse(false);
 			if (failFast) {
-				// if (false) {
 				RetryTemplate retryTemplate = context.get(RetryTemplate.class);
 				return loadContext -> retryTemplate.execute(retryContext -> loadContext.getInvocation()
 						.apply(loadContext.getLoaderContext(), loadContext.getResource()));
