@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import org.springframework.boot.BootstrapRegistry;
-import org.springframework.boot.Bootstrapper;
+import org.springframework.boot.BootstrapRegistryInitializer;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -104,19 +104,19 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(TestConfig.class)
 				.properties(addDefaultEnv(env));
 		if (addInstanceProvider) {
-			builder.addBootstrapper(instanceProviderBootstrapper());
+			builder.addBootstrapRegistryInitializer(instanceProviderBootstrapper());
 			// ignore actual calls to config server since we're just testing discovery
 			// client.
-			builder.addBootstrapper(registry -> registry.register(ConfigServerBootstrapper.LoaderInterceptor.class,
-					ctx -> loadContext -> null));
+			builder.addBootstrapRegistryInitializer(registry -> registry
+					.register(ConfigServerBootstrapper.LoaderInterceptor.class, ctx -> loadContext -> null));
 		}
-		return builder.addBootstrapper(registry -> registry.addCloseListener(event -> {
+		return builder.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
 			ConfigServerInstanceMonitor monitor = event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);
 			assertThat(monitor).as("ConfigServerInstanceMonitor was not created when it should").isNotNull();
 		}));
 	}
 
-	protected Bootstrapper instanceProviderBootstrapper() {
+	protected BootstrapRegistryInitializer instanceProviderBootstrapper() {
 		return registry -> registry.register(ConfigServerInstanceProvider.Function.class,
 				BootstrapRegistry.InstanceSupplier.from(() -> this.client::getInstances));
 	}

@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.BootstrapContext;
 import org.springframework.boot.BootstrapRegistry;
-import org.springframework.boot.Bootstrapper;
+import org.springframework.boot.BootstrapRegistryInitializer;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -54,10 +54,11 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 		ConfigurableApplicationContext context = null;
 		try {
 			BindHandlerBootstrapper bindHandlerBootstrapper = new BindHandlerBootstrapper();
-			context = new SpringApplicationBuilder(TestConfig.class).addBootstrapper(bindHandlerBootstrapper)
-					.addBootstrapper(ConfigServerBootstrapper.create().withLoaderInterceptor(new Interceptor())
-							.withRestTemplateFactory(this::restTemplate))
-					.addBootstrapper(registry -> registry.addCloseListener(event -> {
+			context = new SpringApplicationBuilder(TestConfig.class)
+					.addBootstrapRegistryInitializer(bindHandlerBootstrapper)
+					.addBootstrapRegistryInitializer(ConfigServerBootstrapper.create()
+							.withLoaderInterceptor(new Interceptor()).withRestTemplateFactory(this::restTemplate))
+					.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
 						BootstrapContext bootstrapContext = event.getBootstrapContext();
 						ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
 
@@ -153,12 +154,12 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 
 	}
 
-	static class BindHandlerBootstrapper implements Bootstrapper {
+	static class BindHandlerBootstrapper implements BootstrapRegistryInitializer {
 
 		private int onSuccessCount = 0;
 
 		@Override
-		public void intitialize(BootstrapRegistry registry) {
+		public void initialize(BootstrapRegistry registry) {
 			registry.register(BindHandler.class, context -> new BindHandler() {
 				@Override
 				public Object onSuccess(ConfigurationPropertyName name, Bindable<?> target, BindContext context,

@@ -21,6 +21,6 @@ org.springframework.cloud.config.client.ConfigServerConfigDataLocationResolver
 org.springframework.boot.context.config.ConfigDataLoader=\
 org.springframework.cloud.config.client.ConfigServerConfigDataLoader
 
-# Spring Boot Bootstrappers
-org.springframework.boot.Bootstrapper=\
+# Spring Boot BootstrapRegistryInitializers
+org.springframework.boot.BootstrapRegistryInitializer=\
 org.springframework.cloud.config.client.ConfigClientRetryBootstrapper
