@@ -20,13 +20,24 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.style.ToStringCreator;
 
 /**
  * @author Dave Syer
  * @author Roy Clarkson
  */
-@ConfigurationProperties("spring.cloud.config.server")
+@ConfigurationProperties(ConfigServerProperties.PREFIX)
 public class ConfigServerProperties {
+
+	/**
+	 * Config Server properties prefix.
+	 */
+	public static final String PREFIX = "spring.cloud.config.server";
+
+	/**
+	 * Flag indicating config server is enabled.
+	 */
+	private boolean enabled = true;
 
 	/**
 	 * Flag indicating that the config server should initialize its own Environment with
@@ -89,6 +100,14 @@ public class ConfigServerProperties {
 	 * sending them to clients.
 	 */
 	private Encrypt encrypt = new Encrypt();
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 
 	public Encrypt getEncrypt() {
 		return this.encrypt;
@@ -166,6 +185,16 @@ public class ConfigServerProperties {
 		this.failOnCompositeError = failOnCompositeError;
 	}
 
+	@Override
+	public String toString() {
+		return new ToStringCreator(this).append("enabled", enabled).append("bootstrap", bootstrap)
+				.append("prefix", prefix).append("defaultLabel", defaultLabel).append("overrides", overrides)
+				.append("stripDocumentFromYaml", stripDocumentFromYaml).append("acceptEmpty", acceptEmpty)
+				.append("defaultApplicationName", defaultApplicationName).append("defaultProfile", defaultProfile)
+				.append("failOnCompositeError", failOnCompositeError).append("encrypt", encrypt).toString();
+
+	}
+
 	/**
 	 * Encryption properties.
 	 */
@@ -196,6 +225,13 @@ public class ConfigServerProperties {
 
 		public void setPlainTextEncrypt(boolean plainTextEncrypt) {
 			this.plainTextEncrypt = plainTextEncrypt;
+		}
+
+		@Override
+		public String toString() {
+			return new ToStringCreator(this).append("enabled", enabled).append("plainTextEncrypt", plainTextEncrypt)
+					.toString();
+
 		}
 
 	}

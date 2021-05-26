@@ -1565,8 +1565,20 @@ Then you need to add `spring-retry` and `spring-boot-starter-aop` to your classp
 The default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs.
 You can configure these properties (and others) by setting the `spring.cloud.config.retry.*` configuration properties.
 
-TIP: To take full control of the retry behavior, add a `@Bean` of type `RetryOperationsInterceptor` with an ID of `configServerRetryInterceptor`.
+TIP: To take full control of the retry behavior and are using legacy bootstrap, add a `@Bean` of type `RetryOperationsInterceptor` with an ID of `configServerRetryInterceptor`.
 Spring Retry has a `RetryInterceptorBuilder` that supports creating one.
+
+=== Config Client Retry with spring.config.import
+
+Retry works with the Spring Boot `spring.config.import` statement and the normal properties work. However, if the import statement is in a profile, such as `application-prod.properties`, then you need a different way to configure retry. Configuration needs to be placed as url parameters on the import statement.
+
+.application-prod.properties
+[source,properties]
+----
+spring.config.import=configserver:http://configserver.example.com?fail-fast=true&max-attempts=10&max-interval=1500&multiplier=1.2&initial-interval=1100"
+----
+
+This sets `spring.cloud.config.fail-fast=true` (notice the missing prefix above) and all the available `spring.cloud.config.retry.*` configuration properties.
 
 === Locating Remote Configuration Resources
 

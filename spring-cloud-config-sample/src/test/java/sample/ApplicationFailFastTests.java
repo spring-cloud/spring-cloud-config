@@ -16,12 +16,17 @@
 
 package sample;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@ExtendWith(OutputCaptureExtension.class)
 public class ApplicationFailFastTests {
 
 	@Test
@@ -34,13 +39,15 @@ public class ApplicationFailFastTests {
 	}
 
 	@Test
-	public void configDataContextFails() {
+	public void configDataContextFails(CapturedOutput output) {
 		assertThatThrownBy(() -> {
 			new SpringApplicationBuilder().sources(Application.class).run("--server.port=0",
 					"--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
-					"--spring.config.import=optional:configserver:http://serverhostdoesnotexist:1234");
+					"--spring.config.import=optional:configserver:http://serverhostdoesnotexist:1234",
+					"--spring.cloud.config.server.enabled=false",
+					"--logging.level.org.springframework.boot.context.config=TRACE");
 		}).as("Exception not caused by fail fast").hasMessageContaining("fail fast");
-
+		assertThat(output).contains("Retry: count=5");
 	}
 
 }

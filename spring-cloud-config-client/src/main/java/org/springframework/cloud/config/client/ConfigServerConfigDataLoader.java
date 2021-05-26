@@ -87,7 +87,15 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 			LoaderInterceptor interceptor = context.getBootstrapContext().get(LoaderInterceptor.class);
 			if (interceptor != null) {
 				Binder binder = context.getBootstrapContext().get(Binder.class);
-				return interceptor.apply(new LoadContext(context, resource, binder, this::doLoad));
+				try {
+					return interceptor.apply(new LoadContext(context, resource, binder, this::doLoad));
+				}
+				catch (ConfigClientFailFastException e) {
+					context.getBootstrapContext()
+							.addCloseListener(event -> event.getApplicationContext().getBeanFactory()
+									.registerSingleton(ConfigClientFailFastException.class.getSimpleName(), e));
+					return new ConfigData(Collections.emptyList());
+				}
 			}
 		}
 		return doLoad(context, resource);
@@ -182,7 +190,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 			else {
 				reason = "the resource is not optional";
 			}
-			throw new IllegalStateException("Could not locate PropertySource and " + reason + ", failing"
+			throw new ConfigClientFailFastException("Could not locate PropertySource and " + reason + ", failing"
 					+ (errorBody == null ? "" : ": " + errorBody), error);
 		}
 		logger.warn("Could not locate PropertySource (" + resource + "): "

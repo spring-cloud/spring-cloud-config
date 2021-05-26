@@ -19,6 +19,7 @@ package org.springframework.cloud.config.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 
@@ -30,6 +31,7 @@ import org.springframework.boot.context.config.ConfigDataLocationResolver;
 import org.springframework.boot.context.config.ConfigDataLocationResolverContext;
 import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.boot.context.config.Profiles;
+import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -61,7 +63,7 @@ public class ConfigServerConfigDataLocationResolver
 		return -1;
 	}
 
-	protected ConfigClientProperties loadProperties(ConfigDataLocationResolverContext context) {
+	protected PropertyHolder loadProperties(ConfigDataLocationResolverContext context, String uris) {
 		Binder binder = context.getBinder();
 		BindHandler bindHandler = getBindHandler(context);
 		ConfigClientProperties configClientProperties = binder
@@ -73,7 +75,47 @@ public class ConfigServerConfigDataLocationResolver
 					.orElse("application");
 			configClientProperties.setName(applicationName);
 		}
-		return configClientProperties;
+
+		PropertyHolder holder = new PropertyHolder();
+		holder.properties = configClientProperties;
+		// bind retry, override later
+		holder.retryProperties = binder.bind(RetryProperties.PREFIX, RetryProperties.class)
+				.orElseGet(RetryProperties::new);
+
+		if (StringUtils.hasText(uris)) {
+			String[] uri = StringUtils.commaDelimitedListToStringArray(uris);
+			String paramStr = null;
+			for (int i = 0; i < uri.length; i++) {
+				int paramIdx = uri[i].indexOf('?');
+				if (paramIdx > 0) {
+					if (i == 0) {
+						// only gather params from first uri
+						paramStr = uri[i].substring(paramIdx + 1);
+					}
+					uri[i] = uri[i].substring(0, paramIdx);
+				}
+			}
+			if (StringUtils.hasText(paramStr)) {
+				Properties properties = StringUtils
+						.splitArrayElementsIntoProperties(StringUtils.delimitedListToStringArray(paramStr, "&"), "=");
+				if (properties != null) {
+					PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+					map.from(() -> properties.getProperty("fail-fast")).as(Boolean::valueOf)
+							.to(configClientProperties::setFailFast);
+					map.from(() -> properties.getProperty("max-attempts")).as(Integer::valueOf)
+							.to(holder.retryProperties::setMaxAttempts);
+					map.from(() -> properties.getProperty("max-interval")).as(Long::valueOf)
+							.to(holder.retryProperties::setMaxInterval);
+					map.from(() -> properties.getProperty("multiplier")).as(Double::valueOf)
+							.to(holder.retryProperties::setMultiplier);
+					map.from(() -> properties.getProperty("initial-interval")).as(Long::valueOf)
+							.to(holder.retryProperties::setInitialInterval);
+				}
+			}
+			configClientProperties.setUri(uri);
+		}
+
+		return holder;
 	}
 
 	private BindHandler getBindHandler(ConfigDataLocationResolverContext context) {
@@ -112,13 +154,9 @@ public class ConfigServerConfigDataLocationResolver
 	public List<ConfigServerConfigDataResource> resolveProfileSpecific(
 			ConfigDataLocationResolverContext resolverContext, ConfigDataLocation location, Profiles profiles)
 			throws ConfigDataLocationNotFoundException {
-		ConfigClientProperties properties = loadProperties(resolverContext);
 		String uris = location.getNonPrefixedValue(getPrefix());
-
-		if (StringUtils.hasText(uris)) {
-			String[] uri = StringUtils.commaDelimitedListToStringArray(uris);
-			properties.setUri(uri);
-		}
+		PropertyHolder propertyHolder = loadProperties(resolverContext, uris);
+		ConfigClientProperties properties = propertyHolder.properties;
 
 		ConfigurableBootstrapContext bootstrapContext = resolverContext.getBootstrapContext();
 		bootstrapContext.registerIfAbsent(ConfigClientProperties.class, InstanceSupplier.of(properties));
@@ -138,6 +176,11 @@ public class ConfigServerConfigDataLocationResolver
 			return factory.create();
 		});
 
+		ConfigServerConfigDataResource resource = new ConfigServerConfigDataResource(properties, location.isOptional(),
+				profiles);
+		resource.setLog(log);
+		resource.setRetryProperties(propertyHolder.retryProperties);
+
 		boolean discoveryEnabled = resolverContext.getBinder()
 				.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(resolverContext))
 				.orElse(false);
@@ -155,7 +198,7 @@ public class ConfigServerConfigDataLocationResolver
 				ConfigServerInstanceProvider instanceProvider;
 				if (ConfigClientRetryBootstrapper.RETRY_IS_PRESENT && retryEnabled) {
 					log.debug(LogMessage.format("discovery plus retry enabled"));
-					RetryTemplate retryTemplate = context.get(RetryTemplate.class);
+					RetryTemplate retryTemplate = RetryTemplateFactory.create(propertyHolder.retryProperties, log);
 					instanceProvider = new ConfigServerInstanceProvider(function) {
 						@Override
 						public List<ServiceInstance> getConfigServerInstances(String serviceId) {
@@ -186,9 +229,17 @@ public class ConfigServerConfigDataLocationResolver
 		}
 
 		List<ConfigServerConfigDataResource> locations = new ArrayList<>();
-		locations.add(new ConfigServerConfigDataResource(properties, location.isOptional(), profiles));
+		locations.add(resource);
 
 		return locations;
+	}
+
+	private class PropertyHolder {
+
+		ConfigClientProperties properties;
+
+		RetryProperties retryProperties;
+
 	}
 
 }

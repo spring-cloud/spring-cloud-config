@@ -19,6 +19,8 @@ package org.springframework.cloud.config.client;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.logging.Log;
+
 import org.springframework.boot.context.config.ConfigDataResource;
 import org.springframework.boot.context.config.Profiles;
 import org.springframework.core.style.ToStringCreator;
@@ -31,6 +33,10 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 	private final boolean optional;
 
 	private final Profiles profiles;
+
+	private RetryProperties retryProperties;
+
+	private Log log;
 
 	public ConfigServerConfigDataResource(ConfigClientProperties properties, boolean optional, Profiles profiles) {
 		this.properties = properties;
@@ -56,6 +62,22 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 
 	List<String> getAcceptedProfiles() {
 		return this.profiles.getAccepted();
+	}
+
+	public void setLog(Log log) {
+		this.log = log;
+	}
+
+	public Log getLog() {
+		return this.log;
+	}
+
+	public RetryProperties getRetryProperties() {
+		return this.retryProperties;
+	}
+
+	public void setRetryProperties(RetryProperties retryProperties) {
+		this.retryProperties = retryProperties;
 	}
 
 	@Override

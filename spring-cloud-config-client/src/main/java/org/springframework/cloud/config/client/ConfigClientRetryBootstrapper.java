@@ -18,7 +18,6 @@ package org.springframework.cloud.config.client;
 
 import org.springframework.boot.BootstrapRegistry;
 import org.springframework.boot.BootstrapRegistryInitializer;
-import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoaderInterceptor;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.ClassUtils;
@@ -40,23 +39,15 @@ public class ConfigClientRetryBootstrapper implements BootstrapRegistryInitializ
 			return;
 		}
 
-		registry.registerIfAbsent(RetryProperties.class, context -> context.get(Binder.class)
-				.bind(RetryProperties.PREFIX, RetryProperties.class).orElseGet(RetryProperties::new));
-
-		registry.registerIfAbsent(RetryTemplate.class, context -> {
-			RetryProperties properties = context.get(RetryProperties.class);
-			return RetryTemplate.builder().maxAttempts(properties.getMaxAttempts()).exponentialBackoff(
-					properties.getInitialInterval(), properties.getMultiplier(), properties.getMaxInterval()).build();
-		});
-		registry.registerIfAbsent(LoaderInterceptor.class, context -> {
-			Binder binder = context.get(Binder.class);
-			boolean failFast = binder.bind(ConfigClientProperties.PREFIX + ".fail-fast", Boolean.class).orElse(false);
-			if (failFast) {
-				RetryTemplate retryTemplate = context.get(RetryTemplate.class);
-				return loadContext -> retryTemplate.execute(retryContext -> loadContext.getInvocation()
-						.apply(loadContext.getLoaderContext(), loadContext.getResource()));
+		registry.registerIfAbsent(LoaderInterceptor.class, context -> loadContext -> {
+			ConfigServerConfigDataResource resource = loadContext.getResource();
+			if (resource.getProperties().isFailFast()) {
+				RetryProperties properties = resource.getRetryProperties();
+				RetryTemplate retryTemplate = RetryTemplateFactory.create(properties, resource.getLog());
+				return retryTemplate.execute(
+						retryContext -> loadContext.getInvocation().apply(loadContext.getLoaderContext(), resource));
 			}
-			return null;
+			return loadContext.getInvocation().apply(loadContext.getLoaderContext(), resource);
 		});
 
 	}

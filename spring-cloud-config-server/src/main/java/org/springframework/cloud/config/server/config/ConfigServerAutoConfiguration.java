@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -26,6 +27,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(ConfigServerConfiguration.Marker.class)
+@ConditionalOnProperty(name = ConfigServerProperties.PREFIX + ".enabled", matchIfMissing = true)
 @EnableConfigurationProperties(ConfigServerProperties.class)
 @Import({ EnvironmentRepositoryConfiguration.class, CompositeConfiguration.class, ResourceRepositoryConfiguration.class,
 		ConfigServerEncryptionConfiguration.class, ConfigServerMvcConfiguration.class,

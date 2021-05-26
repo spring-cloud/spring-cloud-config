@@ -108,6 +108,16 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource.getProperties().getName()).isEqualTo("myconfigname");
 	}
 
+	@Test
+	void retryPropertiesShouldBeDefaultByDefault() {
+		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		RetryProperties defaultRetry = new RetryProperties();
+		assertThat(resource.getRetryProperties().getMaxAttempts()).isEqualTo(defaultRetry.getMaxAttempts());
+		assertThat(resource.getRetryProperties().getMaxInterval()).isEqualTo(defaultRetry.getMaxInterval());
+		assertThat(resource.getRetryProperties().getInitialInterval()).isEqualTo(defaultRetry.getInitialInterval());
+		assertThat(resource.getRetryProperties().getMultiplier()).isEqualTo(defaultRetry.getMultiplier());
+	}
+
 	private ConfigServerConfigDataResource testResolveProvileSpecific() {
 		return testResolveProvileSpecific("default");
 	}
