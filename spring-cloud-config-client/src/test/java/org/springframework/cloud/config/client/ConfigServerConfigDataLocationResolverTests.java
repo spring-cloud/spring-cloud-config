@@ -118,6 +118,44 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource.getRetryProperties().getMultiplier()).isEqualTo(defaultRetry.getMultiplier());
 	}
 
+	@Test
+	void uriInLocationOverridesProperty() {
+		String locationUri = "http://actualuri";
+		ConfigServerConfigDataResource resource = testUri("http://shouldbeoverridden", locationUri);
+		assertThat(resource.getProperties().getUri()).containsExactly(locationUri);
+	}
+
+	@Test
+	void uriWithParamsParsesProperties() {
+		String locationUri = "http://actualuri";
+		ConfigServerConfigDataResource resource = testUri("http://shouldbeoverridden",
+				locationUri + "?fail-fast=true&max-attempts=10&max-interval=1500&multiplier=1.2&initial-interval=1100");
+		assertThat(resource.getProperties().getUri()).containsExactly(locationUri);
+		assertThat(resource.getProperties().isFailFast()).isTrue();
+		assertThat(resource.getRetryProperties().getMaxAttempts()).isEqualTo(10);
+		assertThat(resource.getRetryProperties().getMaxInterval()).isEqualTo(1500);
+		assertThat(resource.getRetryProperties().getInitialInterval()).isEqualTo(1100);
+		assertThat(resource.getRetryProperties().getMultiplier()).isEqualTo(1.2);
+	}
+
+	@Test
+	void urisInLocationOverridesProperty() {
+		String locationUri = "http://actualuri1,http://actualuri2";
+		ConfigServerConfigDataResource resource = testUri("http://shouldbeoverridden", locationUri);
+		assertThat(resource.getProperties().getUri()).containsExactly(locationUri.split(","));
+	}
+
+	private ConfigServerConfigDataResource testUri(String propertyUri, String locationUri) {
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".uri", propertyUri);
+		when(context.getBootstrapContext()).thenReturn(mock(ConfigurableBootstrapContext.class));
+		Profiles profiles = mock(Profiles.class);
+		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
+				ConfigDataLocation.of("configserver:" + locationUri), profiles);
+		assertThat(resources).hasSize(1);
+		ConfigServerConfigDataResource resource = resources.get(0);
+		return resource;
+	}
+
 	private ConfigServerConfigDataResource testResolveProvileSpecific() {
 		return testResolveProvileSpecific("default");
 	}
