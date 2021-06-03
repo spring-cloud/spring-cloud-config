@@ -96,7 +96,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		this.defaultLabel = properties.getDefaultLabel();
 		this.failOnError = properties.getFailOnError();
 		this.order = properties.getOrder();
-		this.searchLocations = properties.getSearchLocations();
+		setSearchLocations(properties.getSearchLocations());
 		this.version = properties.getVersion();
 	}
 
