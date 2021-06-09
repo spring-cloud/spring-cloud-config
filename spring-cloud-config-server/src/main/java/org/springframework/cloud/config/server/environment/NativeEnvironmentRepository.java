@@ -225,7 +225,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		map.put("spring.config.name", config);
 		// map.put("encrypt.failOnError=" + this.failOnError);
 		map.put("spring.config.location",
-				StringUtils.arrayToCommaDelimitedString(getLocations(application, profile, label).getLocations()));
+				StringUtils.arrayToDelimitedString(getLocations(application, profile, label).getLocations(), ";"));
 		// globally ignore config files that are not found
 		map.put("spring.config.on-not-found", "IGNORE");
 		environment.getPropertySources().addFirst(new MapPropertySource("config-data-setup", map));
@@ -318,24 +318,26 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			}
 			final String finalPattern = pattern;
 			if (logger.isTraceEnabled()) {
-				logger.trace("Testing pattern: " + pattern + " with property source: " + name);
+				logger.trace("Testing pattern: " + finalPattern + " with property source: " + name);
 			}
-			if (normal.startsWith(pattern) && !normal.substring(pattern.length()).contains("/")) {
+			if (normal.startsWith(finalPattern) && !normal.substring(finalPattern.length()).contains("/")) {
 				matches = true;
 				break;
 			}
 			if (locations != null) {
-				return !Arrays.stream(locations).map(location -> {
-					if (location.startsWith("file:")) {
-						return StringUtils.cleanPath(new File(location.substring("file:".length())).getAbsolutePath())
-								+ "/";
-					}
-					return location;
-				}).noneMatch(location -> location.startsWith(finalPattern)
-						&& !location.substring(finalPattern.length()).contains("/"));
+				return !Arrays.stream(locations).map(this::cleanFileLocation)
+						.noneMatch(location -> location.startsWith(finalPattern)
+								&& !location.substring(finalPattern.length()).contains("/"));
 			}
 		}
 		return matches;
+	}
+
+	private String cleanFileLocation(String location) {
+		if (location.startsWith("file:")) {
+			return StringUtils.cleanPath(new File(location.substring("file:".length())).getAbsolutePath()) + "/";
+		}
+		return location;
 	}
 
 	public String[] getSearchLocations() {
