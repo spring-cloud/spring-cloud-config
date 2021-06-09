@@ -220,6 +220,19 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	}
 
 	@Test
+	public void verifyPropertySourceOrdering() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("ordering-repo");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+			.run("--spring.cloud.config.server.git.uri=" + uri,
+				"--spring.cloud.config.server.git.searchPaths=**");
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		Environment environment = repository.findOne("application", "test", "master");
+		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("file:././target/repos/ordering-repo//project/sub/application-test.yml");
+		assertThat(environment.getPropertySources().get(1).getName()).isEqualTo("file:././target/repos/ordering-repo//project/application.yml");
+	}
+
+	@Test
 	public void nestedWithProfilePlaceholders() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("nested-repo");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
