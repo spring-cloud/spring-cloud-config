@@ -1,5 +1,6 @@
 info:
   component: Config Server
+
 spring:
   application:
     name: configserver
@@ -14,7 +15,6 @@ spring:
           repos:
             - patterns: multi-repo-demo-*
               uri: https://github.com/spring-cloud-samples/config-repo
-
 server:
   port: 8888
 management:
