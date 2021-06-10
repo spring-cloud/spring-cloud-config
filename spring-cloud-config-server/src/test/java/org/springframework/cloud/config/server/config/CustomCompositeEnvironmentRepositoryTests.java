@@ -60,6 +60,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "git" })
 	@DirtiesContext
+	@NoSecurityAutoConfiguration
 	public static class StaticTests {
 
 		@LocalServerPort
@@ -112,6 +113,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "composite" })
 	@DirtiesContext
+	@NoSecurityAutoConfiguration
 	public static class ListTests {
 
 		@LocalServerPort

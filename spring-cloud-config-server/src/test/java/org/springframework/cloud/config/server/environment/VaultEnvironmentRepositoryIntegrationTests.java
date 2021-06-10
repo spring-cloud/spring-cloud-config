@@ -33,6 +33,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.config.NoSecurityAutoConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,6 +49,7 @@ import static org.mockito.Mockito.when;
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		properties = { "server.ssl.key-store=classpath:ssl-test.jks", "server.ssl.key-store-password=password",
 				"server.ssl.key-password=password", "server.key-alias=ssl-test" })
+@NoSecurityAutoConfiguration
 public class VaultEnvironmentRepositoryIntegrationTests {
 
 	@Rule

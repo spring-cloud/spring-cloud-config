@@ -46,6 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
+@NoSecurityAutoConfiguration
 public class CustomEnvironmentRepositoryTests {
 
 	@LocalServerPort

@@ -19,12 +19,14 @@ package org.springframework.cloud.config.server.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.server.encryption.EncryptionController;
 import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
+import org.springframework.cloud.config.server.security.SecurityEnhancer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * @author Bartosz Wojtkiewicz
  * @author Rafal Zukowski
+ * @author ian
  *
  */
 @Configuration(proxyBeanMethods = false)
@@ -36,11 +38,15 @@ public class ConfigServerEncryptionConfiguration {
 	@Autowired
 	private ConfigServerProperties properties;
 
+	@Autowired(required = false)
+	private SecurityEnhancer securityEnhancer = SecurityEnhancer.DUMMY;
+
 	@Bean
 	public EncryptionController encryptionController() {
 		EncryptionController controller = new EncryptionController(this.encryptor);
 		controller.setDefaultApplicationName(this.properties.getDefaultApplicationName());
 		controller.setDefaultProfile(this.properties.getDefaultProfile());
+		controller.setSecurityEnhancer(securityEnhancer);
 		return controller;
 	}
 

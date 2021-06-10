@@ -33,6 +33,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.RefreshableConfigServerIntegrationTests.TestConfiguration;
+import org.springframework.cloud.config.server.config.NoSecurityAutoConfiguration;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.resource.ResourceRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
@@ -62,6 +63,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
+@NoSecurityAutoConfiguration
 public class RefreshableConfigServerIntegrationTests {
 
 	private static String localRepo = null;

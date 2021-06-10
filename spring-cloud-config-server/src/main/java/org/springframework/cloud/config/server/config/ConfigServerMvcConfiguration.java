@@ -33,6 +33,7 @@ import org.springframework.cloud.config.server.environment.EnvironmentEncryptorE
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.resource.ResourceController;
 import org.springframework.cloud.config.server.resource.ResourceRepository;
+import org.springframework.cloud.config.server.security.SecurityEnhancer;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,6 +45,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author Dave Syer
  * @author Roy Clarkson
  * @author Tim Ysewyn
+ * @author ian
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication
@@ -69,6 +71,10 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 		@Autowired(required = false)
 		private ObjectMapper objectMapper = new ObjectMapper();
 
+		@Autowired(required = false)
+		private SecurityEnhancer securityEnhancer = new SecurityEnhancer() {
+		};
+
 		@Bean
 		public EnvironmentController environmentController(EnvironmentRepository envRepository,
 				ConfigServerProperties server) {
@@ -77,8 +83,8 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 
 		protected EnvironmentController delegateController(EnvironmentRepository envRepository,
 				ConfigServerProperties server) {
-			EnvironmentController controller = new EnvironmentController(encrypted(envRepository, server),
-					this.objectMapper);
+			EnvironmentRepository repository = secured(encrypted(envRepository, server));
+			EnvironmentController controller = new EnvironmentController(repository, this.objectMapper);
 			controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
 			controller.setAcceptEmpty(server.isAcceptEmpty());
 			return controller;
@@ -88,8 +94,8 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 		@ConditionalOnBean(ResourceRepository.class)
 		public ResourceController resourceController(ResourceRepository repository, EnvironmentRepository envRepository,
 				ConfigServerProperties server) {
-			ResourceController controller = new ResourceController(repository, encrypted(envRepository, server),
-					this.resourceEncryptorMap);
+			ResourceController controller = new ResourceController(secured(repository),
+					encrypted(envRepository, server), this.resourceEncryptorMap);
 			controller.setEncryptEnabled(server.getEncrypt().isEnabled());
 			controller.setPlainTextEncryptEnabled(server.getEncrypt().isPlainTextEncrypt());
 			return controller;
@@ -100,6 +106,14 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 					envRepository, this.environmentEncryptors);
 			encrypted.setOverrides(server.getOverrides());
 			return encrypted;
+		}
+
+		private EnvironmentRepository secured(EnvironmentRepository repository) {
+			return securityEnhancer.secure(repository);
+		}
+
+		private ResourceRepository secured(ResourceRepository repository) {
+			return securityEnhancer.secure(repository);
 		}
 
 	}

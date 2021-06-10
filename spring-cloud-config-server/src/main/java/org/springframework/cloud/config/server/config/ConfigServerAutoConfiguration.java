@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Import;
 @EnableConfigurationProperties(ConfigServerProperties.class)
 @Import({ EnvironmentRepositoryConfiguration.class, CompositeConfiguration.class, ResourceRepositoryConfiguration.class,
 		ConfigServerEncryptionConfiguration.class, ConfigServerMvcConfiguration.class,
-		ResourceEncryptorConfiguration.class })
+		ResourceEncryptorConfiguration.class, ConfigServerSecurityConfiguration.class })
 public class ConfigServerAutoConfiguration {
 
 }
