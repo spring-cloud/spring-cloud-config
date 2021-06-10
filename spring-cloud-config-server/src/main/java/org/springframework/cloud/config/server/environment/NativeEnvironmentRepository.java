@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -224,7 +225,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		map.put("spring.config.name", config);
 		// map.put("encrypt.failOnError=" + this.failOnError);
 		map.put("spring.config.location",
-				StringUtils.arrayToCommaDelimitedString(getLocations(application, profile, label).getLocations()));
+				StringUtils.arrayToDelimitedString(getLocations(application, profile, label).getLocations(), ";"));
 		// globally ignore config files that are not found
 		map.put("spring.config.on-not-found", "IGNORE");
 		environment.getPropertySources().addFirst(new MapPropertySource("config-data-setup", map));
@@ -245,7 +246,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			if (this.environment.getPropertySources().contains(name)) {
 				continue;
 			}
-			String location = null;
+			String[] locations = null;
 
 			PropertySourceConfigData configData = propertySourceToConfigData.get(source.getOriginalPropertySource());
 			// try and get information directly from ConfigData
@@ -253,17 +254,16 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				StandardConfigDataResource configDataResource = (StandardConfigDataResource) configData.resource;
 				// use StandardConfigDataResource as that format is expected still
 				name = configDataResource.toString();
-				location = configData.location.toString();
+				locations = configDataLocations(configData.location.split());
 			}
 			else {
 				// if not, try and parse
 				Matcher matcher = RESOURCE_PATTERN.matcher(name);
 				if (matcher.find()) {
 					name = matcher.group(1);
-					location = matcher.group(2);
+					locations = new String[] { matcher.group(2) };
 				}
 			}
-			// TODO: needed anymore?
 			name = name.replace("applicationConfig: [", "");
 			name = name.replace("file [", "file:");
 			if (name.indexOf('[') < 0) {
@@ -271,38 +271,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				name = name.replace("]", "");
 			}
 			if (this.searchLocations != null) {
-				boolean matches = false;
-				String normal = name;
-				if (normal.startsWith("file:")) {
-					normal = StringUtils.cleanPath(new File(normal.substring("file:".length())).getAbsolutePath());
-				}
-				String profile = result.getProfiles() == null ? null
-						: StringUtils.arrayToCommaDelimitedString(result.getProfiles());
-				for (String pattern : getLocations(result.getName(), profile, result.getLabel()).getLocations()) {
-					if (!pattern.contains(":")) {
-						pattern = "file:" + pattern;
-					}
-					if (pattern.startsWith("file:")) {
-						pattern = StringUtils.cleanPath(new File(pattern.substring("file:".length())).getAbsolutePath())
-								+ "/";
-					}
-					if (logger.isTraceEnabled()) {
-						logger.trace("Testing pattern: " + pattern + " with property source: " + name);
-					}
-					if (normal.startsWith(pattern) && !normal.substring(pattern.length()).contains("/")) {
-						matches = true;
-						break;
-					}
-					if (location != null && location.startsWith("file:")) {
-						location = StringUtils
-								.cleanPath(new File(location.substring("file:".length())).getAbsolutePath()) + "/";
-					}
-					if (location != null && location.startsWith(pattern)
-							&& !location.substring(pattern.length()).contains("/")) {
-						matches = true;
-						break;
-					}
-				}
+				boolean matches = matchesLocation(locations, name, result);
 				if (!matches) {
 					// Don't include this one: it wasn't matched by our search locations
 					if (logger.isDebugEnabled()) {
@@ -322,6 +291,53 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			}
 		}
 		return result;
+	}
+
+	private String[] configDataLocations(ConfigDataLocation[] locations) {
+		String[] stringLocations = new String[locations.length];
+		for (int i = 0; i < locations.length; i++) {
+			stringLocations[i] = locations[i].toString();
+		}
+		return stringLocations;
+	}
+
+	private boolean matchesLocation(String[] locations, String name, Environment result) {
+		boolean matches = false;
+		String normal = name;
+		if (normal.startsWith("file:")) {
+			normal = StringUtils.cleanPath(new File(normal.substring("file:".length())).getAbsolutePath());
+		}
+		String profile = result.getProfiles() == null ? null
+				: StringUtils.arrayToCommaDelimitedString(result.getProfiles());
+		for (String pattern : getLocations(result.getName(), profile, result.getLabel()).getLocations()) {
+			if (!pattern.contains(":")) {
+				pattern = "file:" + pattern;
+			}
+			if (pattern.startsWith("file:")) {
+				pattern = StringUtils.cleanPath(new File(pattern.substring("file:".length())).getAbsolutePath()) + "/";
+			}
+			final String finalPattern = pattern;
+			if (logger.isTraceEnabled()) {
+				logger.trace("Testing pattern: " + finalPattern + " with property source: " + name);
+			}
+			if (normal.startsWith(finalPattern) && !normal.substring(finalPattern.length()).contains("/")) {
+				matches = true;
+				break;
+			}
+			if (locations != null) {
+				return !Arrays.stream(locations).map(this::cleanFileLocation)
+						.noneMatch(location -> location.startsWith(finalPattern)
+								&& !location.substring(finalPattern.length()).contains("/"));
+			}
+		}
+		return matches;
+	}
+
+	private String cleanFileLocation(String location) {
+		if (location.startsWith("file:")) {
+			return StringUtils.cleanPath(new File(location.substring("file:".length())).getAbsolutePath()) + "/";
+		}
+		return location;
 	}
 
 	public String[] getSearchLocations() {
