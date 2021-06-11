@@ -33,44 +33,44 @@ import org.springframework.util.StringUtils;
  * Using templates to generate authorities.
  *
  * <table>
- *     <tr><th>Uri path</th><th>Description</th><th>Authorities (any of them)</th></tr>
- *     <tr><td>
- *         /{label}/{application}-{profile}.(json|properties|yaml|yml) or /{application}/{profile}/{label}
- *     </td><td>
- *         Read envirionment for application with profile at label.
- *     </td><td>
- *         ENVIRONMENT_{LABEL}_{APPLICATION}, ENVIRONMENT_{LABEL} or ENVIRONMENT_{APPLICATION}_NULL_NULL
- *     </td></tr>
- *     <tr><td>
- *         /{application}-{profile}.(json|properties|yaml|yml) or /{application}/{profile}
- *     </td><td>
- *         Read envirionment for application with profile at default label.
- *     </td><td>
- *         ENVIRONMENT_NULL_{APPLICATION}, ENVIRONMENT_NULL or ENVIRONMENT_NULL_NULL_NULL
- *     </td></tr>
+ * <tr>
+ * <th>Uri path</th>
+ * <th>Description</th>
+ * <th>Authorities (any of them)</th>
+ * </tr>
+ * <tr>
+ * <td>/{label}/{application}-{profile}.(json|properties|yaml|yml) or
+ * /{application}/{profile}/{label}</td>
+ * <td>Read envirionment for application with profile at label.</td>
+ * <td>ENVIRONMENT_{LABEL}_{APPLICATION}, ENVIRONMENT_{LABEL} or
+ * ENVIRONMENT_{APPLICATION}_NULL_NULL</td>
+ * </tr>
+ * <tr>
+ * <td>/{application}-{profile}.(json|properties|yaml|yml) or /{application}/{profile}
+ * </td>
+ * <td>Read envirionment for application with profile at default label.</td>
+ * <td>ENVIRONMENT_NULL_{APPLICATION}, ENVIRONMENT_NULL or ENVIRONMENT_NULL_NULL_NULL</td>
+ * </tr>
  *
- *     <tr><td>
- *         /{application}/{profile}/{label}/{resource_path}
- *     </td><td>
- *         Read resource_path content for application with profile at label.
- *     </td><td>
- *         RESOURCE_{LABEL}_{APPLICATION}, RESOURCE_{LABEL} or RESOURCE_{APPLICATION}_NULL_NULL
- *     </td></tr>
- *     <tr><td>
- *         /{application}/{profile}/{resource_path}
- *     </td><td>
- *         Read resource_path content for application with profile at default label.
- *     </td><td>
- *         RESOURCE_NULLL_{APPLICATION}, RESOURCE_NULL or RESOURCE_{APPLICATION}_NULL_NULL
- *     </td></tr>
+ * <tr>
+ * <td>/{application}/{profile}/{label}/{resource_path}</td>
+ * <td>Read resource_path content for application with profile at label.</td>
+ * <td>RESOURCE_{LABEL}_{APPLICATION}, RESOURCE_{LABEL} or
+ * RESOURCE_{APPLICATION}_NULL_NULL</td>
+ * </tr>
+ * <tr>
+ * <td>/{application}/{profile}/{resource_path}</td>
+ * <td>Read resource_path content for application with profile at default label.</td>
+ * <td>RESOURCE_NULLL_{APPLICATION}, RESOURCE_NULL or RESOURCE_{APPLICATION}_NULL_NULL
+ * </td>
+ * </tr>
  *
- *     <tr><td>
- *         /(decrypt|encrypt)/{application}/{profile}
- *     </td><td>
- *         Decrypt or encrypt data for application with profile.
- *     </td><td>
- *         ENCRYPT_NULLL_{APPLICATION}, ENCRYPT_NULL or ENCRYPT_{APPLICATION}_{PROFILE}_{DECRYPT|ENCRYPT}
- *     </td></tr>
+ * <tr>
+ * <td>/(decrypt|encrypt)/{application}/{profile}</td>
+ * <td>Decrypt or encrypt data for application with profile.</td>
+ * <td>ENCRYPT_NULL_{APPLICATION}, ENCRYPT_NULL or
+ * ENCRYPT_{APPLICATION}_{PROFILE}_{DECRYPT|ENCRYPT}</td>
+ * </tr>
  * </table>
  *
  * @author ian
@@ -81,12 +81,12 @@ public class DefaultAuthorityExtractor implements AuthorityExtractor {
 	 * Default templates.
 	 */
 	public static final String[] DEFAULT_TEMPLATES = {
-		// Application level permission
-		"{type}_{label}_{application}",
-		// Environment (label) level permission
-		"{type}_{label}",
-		// encryptor
-		"{type}_{application}_{profiles}_{method}"};
+			// Application level permission
+			"{type}_{label}_{application}",
+			// Environment (label) level permission
+			"{type}_{label}",
+			// encryptor
+			"{type}_{application}_{profiles}_{method}" };
 
 	private List<String> authorityTemplates = Arrays.asList(DEFAULT_TEMPLATES);
 
