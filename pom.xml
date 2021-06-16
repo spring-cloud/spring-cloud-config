@@ -79,6 +79,11 @@
 				<version>${aws-java-sdk.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>com.amazonaws</groupId>
+				<artifactId>aws-java-sdk-secretsmanager</artifactId>
+				<version>${aws-java-sdk.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.google.apis</groupId>
 				<artifactId>google-api-services-iam</artifactId>
 				<version>${google-api-services-iam.version}</version>
