@@ -10,6 +10,7 @@ spring:
     config:
       server:
         git:
+          default-label: main
           uri: https://github.com/spring-cloud-samples/config-repo
           repos:
             - patterns: multi-repo-demo-*
