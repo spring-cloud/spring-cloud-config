@@ -21,6 +21,7 @@ import java.util.Optional;
 import org.eclipse.jgit.transport.HttpTransport;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
 
@@ -38,19 +39,32 @@ public class MultipleJGitEnvironmentRepositoryFactory
 
 	private final TransportConfigCallbackFactory transportConfigCallbackFactory;
 
+	private final GitCredentialsProviderFactory gitCredentialsProviderFactory;
+
 	@Deprecated
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			TransportConfigCallbackFactory transportConfigCallbackFactory) {
-		this(environment, server, Optional.empty(), transportConfigCallbackFactory);
+		this(environment, server, Optional.empty(), transportConfigCallbackFactory,
+				new GitCredentialsProviderFactory());
+	}
+
+	@Deprecated
+	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
+			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
+			TransportConfigCallbackFactory transportConfigCallbackFactory) {
+		this(environment, server, connectionFactory, transportConfigCallbackFactory,
+				new GitCredentialsProviderFactory());
 	}
 
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
-			TransportConfigCallbackFactory transportConfigCallbackFactory) {
+			TransportConfigCallbackFactory transportConfigCallbackFactory,
+			GitCredentialsProviderFactory gitCredentialsProviderFactory) {
 		this.environment = environment;
 		this.server = server;
 		this.connectionFactory = connectionFactory;
 		this.transportConfigCallbackFactory = transportConfigCallbackFactory;
+		this.gitCredentialsProviderFactory = gitCredentialsProviderFactory;
 	}
 
 	@Override
@@ -67,6 +81,7 @@ public class MultipleJGitEnvironmentRepositoryFactory
 		if (this.server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.server.getDefaultLabel());
 		}
+		repository.setGitCredentialsProviderFactory(gitCredentialsProviderFactory);
 		return repository;
 	}
 

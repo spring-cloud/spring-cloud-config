@@ -19,10 +19,12 @@ package org.springframework.cloud.config.server.config;
 import org.junit.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentConfigTokenProvider;
+import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.context.annotation.Bean;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,6 +51,19 @@ public class EnvironmentRepositoryConfigurationTests {
 				});
 	}
 
+	@Test
+	public void customGitCredentialsProvider() {
+		new ApplicationContextRunner()
+				.withConfiguration(AutoConfigurations.of(GitTestBeans.class, TestBeans.class,
+						EnvironmentRepositoryConfiguration.class))
+				.withPropertyValues("spring.profiles.active=git",
+						"spring.cloud.config.server.git.uri=http://github.com/user/test")
+				.run((context) -> {
+					assertThat(context.getBean(GitCredentialsProviderFactory.class))
+							.isInstanceOf(GitTestBeans.CustomGitCredentialsProviderFactory.class);
+				});
+	}
+
 	@TestConfiguration
 	public static class TestBeans {
 
@@ -56,6 +71,21 @@ public class EnvironmentRepositoryConfigurationTests {
 		public ConfigServerProperties vaultConfigServerProperties() {
 			ConfigServerProperties configServerProperties = new ConfigServerProperties();
 			return configServerProperties;
+		}
+
+	}
+
+	@TestConfiguration
+	@AutoConfigureBefore(EnvironmentRepositoryConfiguration.class)
+	public static class GitTestBeans {
+
+		@Bean
+		public GitCredentialsProviderFactory customGitCredentialsProviderFactory() {
+			return new CustomGitCredentialsProviderFactory();
+		}
+
+		public static class CustomGitCredentialsProviderFactory extends GitCredentialsProviderFactory {
+
 		}
 
 	}
