@@ -43,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -103,22 +104,22 @@ public class EnvironmentController {
 		this.acceptEmpty = acceptEmpty;
 	}
 
-	@RequestMapping(path = "/{name}/{profiles:.*[^-].*}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(path = "/{name}/{profiles:.*[^-].*}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Environment defaultLabel(@PathVariable String name, @PathVariable String profiles) {
 		return getEnvironment(name, profiles, null, false);
 	}
 
-	@RequestMapping(path = "/{name}/{profiles:.*[^-].*}", produces = EnvironmentMediaType.V2_JSON)
+	@GetMapping(path = "/{name}/{profiles:.*[^-].*}", produces = EnvironmentMediaType.V2_JSON)
 	public Environment defaultLabelIncludeOrigin(@PathVariable String name, @PathVariable String profiles) {
 		return getEnvironment(name, profiles, null, true);
 	}
 
-	@RequestMapping(path = "/{name}/{profiles}/{label:.*}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(path = "/{name}/{profiles}/{label:.*}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles, @PathVariable String label) {
 		return getEnvironment(name, profiles, label, false);
 	}
 
-	@RequestMapping(path = "/{name}/{profiles}/{label:.*}", produces = EnvironmentMediaType.V2_JSON)
+	@GetMapping(path = "/{name}/{profiles}/{label:.*}", produces = EnvironmentMediaType.V2_JSON)
 	public Environment labelledIncludeOrigin(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label) {
 		return getEnvironment(name, profiles, label, true);
@@ -148,13 +149,13 @@ public class EnvironmentController {
 		return Environment.normalize(part);
 	}
 
-	@RequestMapping("/{name}-{profiles}.properties")
+	@GetMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name, @PathVariable String profiles,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders) throws IOException {
 		return labelledProperties(name, profiles, null, resolvePlaceholders);
 	}
 
-	@RequestMapping("/{label}/{name}-{profiles}.properties")
+	@GetMapping("/{label}/{name}-{profiles}.properties")
 	public ResponseEntity<String> labelledProperties(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
@@ -168,13 +169,13 @@ public class EnvironmentController {
 		return getSuccess(propertiesString);
 	}
 
-	@RequestMapping("{name}-{profiles}.json")
+	@GetMapping("{name}-{profiles}.json")
 	public ResponseEntity<String> jsonProperties(@PathVariable String name, @PathVariable String profiles,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders) throws Exception {
 		return labelledJsonProperties(name, profiles, null, resolvePlaceholders);
 	}
 
-	@RequestMapping("/{label}/{name}-{profiles}.json")
+	@GetMapping("/{label}/{name}-{profiles}.json")
 	public ResponseEntity<String> labelledJsonProperties(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws Exception {
@@ -199,13 +200,13 @@ public class EnvironmentController {
 		return output.toString();
 	}
 
-	@RequestMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
+	@GetMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> yaml(@PathVariable String name, @PathVariable String profiles,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders) throws Exception {
 		return labelledYaml(name, profiles, null, resolvePlaceholders);
 	}
 
-	@RequestMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
+	@GetMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> labelledYaml(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws Exception {

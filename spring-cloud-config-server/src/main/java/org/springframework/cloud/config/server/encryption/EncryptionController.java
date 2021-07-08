@@ -35,11 +35,12 @@ import org.springframework.security.rsa.crypto.RsaKeyHolder;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -73,12 +74,12 @@ public class EncryptionController {
 		this.defaultProfile = defaultProfile;
 	}
 
-	@RequestMapping(value = "/key", method = RequestMethod.GET)
+	@GetMapping("/key")
 	public String getPublicKey() {
 		return getPublicKey(defaultApplicationName, defaultProfile);
 	}
 
-	@RequestMapping(value = "/key/{name}/{profiles}", method = RequestMethod.GET)
+	@GetMapping("/key/{name}/{profiles}")
 	public String getPublicKey(@PathVariable String name, @PathVariable String profiles) {
 		TextEncryptor encryptor = getEncryptor(name, profiles, "");
 		if (!(encryptor instanceof RsaKeyHolder)) {
@@ -87,19 +88,19 @@ public class EncryptionController {
 		return ((RsaKeyHolder) encryptor).getPublicKey();
 	}
 
-	@RequestMapping(value = "encrypt/status", method = RequestMethod.GET)
+	@GetMapping("encrypt/status")
 	public Map<String, Object> status() {
 		TextEncryptor encryptor = getEncryptor(defaultApplicationName, defaultProfile, "");
 		validateEncryptionWeakness(encryptor);
 		return Collections.singletonMap("status", "OK");
 	}
 
-	@RequestMapping(value = "encrypt", method = RequestMethod.POST)
+	@PostMapping("encrypt")
 	public String encrypt(@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
 		return encrypt(defaultApplicationName, defaultProfile, data, type);
 	}
 
-	@RequestMapping(value = "/encrypt/{name}/{profiles}", method = RequestMethod.POST)
+	@PostMapping("/encrypt/{name}/{profiles}")
 	public String encrypt(@PathVariable String name, @PathVariable String profiles, @RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
 		TextEncryptor encryptor = getEncryptor(name, profiles, "");
@@ -112,12 +113,12 @@ public class EncryptionController {
 		return encrypted;
 	}
 
-	@RequestMapping(value = "decrypt", method = RequestMethod.POST)
+	@PostMapping("decrypt")
 	public String decrypt(@RequestBody String data, @RequestHeader("Content-Type") MediaType type) {
 		return decrypt(defaultApplicationName, defaultProfile, data, type);
 	}
 
-	@RequestMapping(value = "/decrypt/{name}/{profiles}", method = RequestMethod.POST)
+	@PostMapping("/decrypt/{name}/{profiles}")
 	public String decrypt(@PathVariable String name, @PathVariable String profiles, @RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
 		TextEncryptor encryptor = getEncryptor(name, profiles, "");
