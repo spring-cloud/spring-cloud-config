@@ -75,6 +75,7 @@ import org.springframework.cloud.config.server.environment.VaultEnvironmentRepos
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientConfiguration;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport;
 import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
 import org.springframework.context.annotation.Bean;
@@ -163,11 +164,18 @@ public class EnvironmentRepositoryConfiguration {
 				ConfigurableEnvironment environment, ConfigServerProperties server,
 				Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
 				Optional<TransportConfigCallback> customTransportConfigCallback,
-				Optional<GoogleCloudSourceSupport> googleCloudSourceSupport) {
+				Optional<GoogleCloudSourceSupport> googleCloudSourceSupport,
+				GitCredentialsProviderFactory gitCredentialsProviderFactory) {
 			final TransportConfigCallbackFactory transportConfigCallbackFactory = new TransportConfigCallbackFactory(
 					customTransportConfigCallback.orElse(null), googleCloudSourceSupport.orElse(null));
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, jgitHttpConnectionFactory,
-					transportConfigCallbackFactory);
+					transportConfigCallbackFactory, gitCredentialsProviderFactory);
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		public GitCredentialsProviderFactory gitCredentialsProviderFactory() {
+			return new GitCredentialsProviderFactory();
 		}
 
 	}
