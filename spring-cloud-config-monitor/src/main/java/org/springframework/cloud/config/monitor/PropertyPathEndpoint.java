@@ -32,10 +32,10 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -71,7 +71,7 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
-	@RequestMapping(method = RequestMethod.POST)
+	@PostMapping
 	public Set<String> notifyByPath(@RequestHeader HttpHeaders headers, @RequestBody Map<String, Object> request) {
 		PropertyPathNotification notification = this.extractor.extract(headers, request);
 		if (notification != null) {
@@ -94,7 +94,7 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 		return Collections.emptySet();
 	}
 
-	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+	@PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public Set<String> notifyByForm(@RequestHeader HttpHeaders headers, @RequestParam("path") List<String> request) {
 		Map<String, Object> map = new HashMap<>();
 		String key = "path";

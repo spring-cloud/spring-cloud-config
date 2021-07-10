@@ -34,6 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -98,7 +99,7 @@ public class ResourceController {
 		this.plainTextEncryptEnabled = plainTextEncryptEnabled;
 	}
 
-	@RequestMapping("/{name}/{profile}/{label}/**")
+	@GetMapping("/{name}/{profile}/{label}/**")
 	public String retrieve(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
 			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
@@ -106,7 +107,7 @@ public class ResourceController {
 		return retrieve(request, name, profile, label, path, resolvePlaceholders);
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel")
+	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel")
 	public String retrieveDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
 			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
@@ -167,14 +168,14 @@ public class ResourceController {
 		return retrieve(null, name, profile, label, path, resolvePlaceholders);
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@GetMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binary(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
 			ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return binary(request, name, profile, label, path);
 	}
 
-	@RequestMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel",
+	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel",
 			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binaryDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
 			ServletWebRequest request) throws IOException {
