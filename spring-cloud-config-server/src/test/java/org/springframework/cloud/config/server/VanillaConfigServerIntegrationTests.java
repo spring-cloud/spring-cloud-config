@@ -29,6 +29,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.config.NoSecurityAutoConfiguration;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -46,6 +47,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 @SpringBootTest(classes = ConfigServerApplication.class, properties = { "spring.config.name:configserver",
 		"spring.cloud.config.server.git.uri:file:./target/repos/config-repo" }, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
+@NoSecurityAutoConfiguration
 public class VanillaConfigServerIntegrationTests {
 
 	@LocalServerPort

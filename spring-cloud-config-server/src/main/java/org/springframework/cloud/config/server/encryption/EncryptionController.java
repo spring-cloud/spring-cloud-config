@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.config.server.security.SecurityEnhancer;
 import org.springframework.cloud.context.encrypt.KeyFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * @author Dave Syer
  * @author Tim Ysewyn
+ * @author ian
  *
  */
 @RestController
@@ -62,12 +64,18 @@ public class EncryptionController {
 
 	private String defaultProfile = "default";
 
+	private SecurityEnhancer securityEnhancer = SecurityEnhancer.DUMMY;
+
 	public EncryptionController(TextEncryptorLocator encryptorLocator) {
 		this.encryptorLocator = encryptorLocator;
 	}
 
 	public void setDefaultApplicationName(String defaultApplicationName) {
 		this.defaultApplicationName = defaultApplicationName;
+	}
+
+	public void setSecurityEnhancer(SecurityEnhancer securityEnhancer) {
+		this.securityEnhancer = securityEnhancer;
 	}
 
 	public void setDefaultProfile(String defaultProfile) {
@@ -145,7 +153,7 @@ public class EncryptionController {
 		if (encryptor == null) {
 			throw new KeyNotInstalledException();
 		}
-		return encryptor;
+		return securityEnhancer.secure(encryptor, name, profiles);
 	}
 
 	private void validateEncryptionWeakness(TextEncryptor textEncryptor) {

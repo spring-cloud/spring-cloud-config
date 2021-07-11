@@ -30,6 +30,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.config.NoSecurityAutoConfiguration;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.http.HttpMethod;
@@ -47,6 +48,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 		"encrypt.rsa.algorithm=DEFAULT", "encrypt.rsa.strong=false" },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({ "test", "encrypt" })
+@NoSecurityAutoConfiguration
 public class BootstrapConfigServerIntegrationTests {
 
 	@LocalServerPort

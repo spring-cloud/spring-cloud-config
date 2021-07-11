@@ -26,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.config.NoSecurityAutoConfiguration;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +52,7 @@ public class CompositeIntegrationTests {
 					"spring.cloud.config.server.git.order:1" },
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "git", "subversion" })
+	@NoSecurityAutoConfiguration
 	public static class StaticTests {
 
 		@LocalServerPort
@@ -102,6 +104,7 @@ public class CompositeIntegrationTests {
 					"spring.cloud.config.server.composite[1].type:svn" },
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "composite" })
+	@NoSecurityAutoConfiguration
 	public static class ListTests {
 
 		@LocalServerPort

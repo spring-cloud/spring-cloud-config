@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.cloud.config.server.ConfigServerApplication;
+import org.springframework.cloud.config.server.config.NoSecurityAutoConfiguration;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -44,6 +45,7 @@ public class EncryptionIntegrationTests {
 			properties = { "spring.config.use-legacy-processing=true", "encrypt.key=foobar" })
 	@ActiveProfiles({ "test", "native" })
 	@DirtiesContext
+	@NoSecurityAutoConfiguration
 	public static class ConfigSymmetricEncryptionIntegrationTests {
 
 		@Autowired
@@ -64,6 +66,7 @@ public class EncryptionIntegrationTests {
 			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "native" })
 	@DirtiesContext
+	@NoSecurityAutoConfiguration
 	public static class BootstrapConfigSymmetricEncryptionIntegrationTests {
 
 		@Autowired
@@ -84,6 +87,7 @@ public class EncryptionIntegrationTests {
 			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "native" })
 	@DirtiesContext
+	@NoSecurityAutoConfiguration
 	public static class KeystoreConfigurationIntegrationTests {
 
 		@Autowired
@@ -104,6 +108,7 @@ public class EncryptionIntegrationTests {
 			webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 	@ActiveProfiles({ "test", "git" })
 	@DirtiesContext
+	@NoSecurityAutoConfiguration
 	public static class KeystoreConfigurationEncryptionOnlyIntegrationTests {
 
 		@Autowired

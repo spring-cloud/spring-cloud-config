@@ -31,6 +31,7 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.cloud.config.server.config.NoSecurityAutoConfiguration;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,6 +45,7 @@ import static org.junit.internal.matchers.ThrowableCauseMatcher.hasCause;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = HttpClientSupportTest.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@NoSecurityAutoConfiguration
 public class HttpClientSupportTest {
 
 	@Rule
