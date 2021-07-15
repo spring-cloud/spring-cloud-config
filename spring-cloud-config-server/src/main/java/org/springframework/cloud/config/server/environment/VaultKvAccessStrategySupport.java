@@ -60,7 +60,7 @@ abstract class VaultKvAccessStrategySupport implements VaultKvAccessStrategy {
 	 * @param headers must not be {@literal null}.
 	 * @param backend secret backend mount path, must not be {@literal null}.
 	 * @param key key within the key-value secret backend, must not be {@literal null}.
-	 * @return
+	 * @return raw JSON.
 	 */
 	@Override
 	public String getData(HttpHeaders headers, String backend, String key) {
