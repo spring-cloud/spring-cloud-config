@@ -142,6 +142,13 @@ public class ConfigServerConfigDataLocationResolverTests {
 	}
 
 	@Test
+	void urisInLocationOverridesProperty() {
+		String locationUri = "http://actualuri1,http://actualuri2";
+		ConfigServerConfigDataResource resource = testUri("http://shouldbeoverridden", locationUri);
+		assertThat(resource.getProperties().getUri()).containsExactly(locationUri.split(","));
+	}
+
+	@Test
 	void useExistingConfigClientPropertiesInBootstrapContext() {
 		ConfigurableBootstrapContext bootstrapContext = mock(ConfigurableBootstrapContext.class);
 		when(bootstrapContext.isRegistered(eq(ConfigClientProperties.class))).thenReturn(true);
@@ -150,11 +157,11 @@ public class ConfigServerConfigDataLocationResolverTests {
 		when(bootstrapContext.get(eq(ConfigClientProperties.class))).thenReturn(configClientProperties);
 		when(context.getBootstrapContext()).thenReturn(bootstrapContext);
 		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
-				ConfigDataLocation.of("configserver:http://locationuri"), mock(Profiles.class));
+				ConfigDataLocation.of("configserver:"), mock(Profiles.class));
 		assertThat(resources).hasSize(1);
 		verify(bootstrapContext, times(1)).get(eq(ConfigClientProperties.class));
 		ConfigServerConfigDataResource resource = resources.get(0);
-		assertThat(resource.getProperties().getUri()).isEqualTo(new String[] { "http://locationuri" });
+		assertThat(resource.getProperties().getUri()).isEqualTo(new String[] { "http://myuri" });
 	}
 
 	@Test
