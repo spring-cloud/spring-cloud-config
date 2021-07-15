@@ -31,7 +31,10 @@ import org.springframework.boot.logging.DeferredLog;
 import org.springframework.mock.env.MockEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ConfigServerConfigDataLocationResolverTests {
@@ -139,10 +142,35 @@ public class ConfigServerConfigDataLocationResolverTests {
 	}
 
 	@Test
-	void urisInLocationOverridesProperty() {
-		String locationUri = "http://actualuri1,http://actualuri2";
-		ConfigServerConfigDataResource resource = testUri("http://shouldbeoverridden", locationUri);
-		assertThat(resource.getProperties().getUri()).containsExactly(locationUri.split(","));
+	void useExistingConfigClientPropertiesInBootstrapContext() {
+		ConfigurableBootstrapContext bootstrapContext = mock(ConfigurableBootstrapContext.class);
+		when(bootstrapContext.isRegistered(eq(ConfigClientProperties.class))).thenReturn(true);
+		ConfigClientProperties configClientProperties = new ConfigClientProperties();
+		configClientProperties.setUri(new String[] { "http://myuri" });
+		when(bootstrapContext.get(eq(ConfigClientProperties.class))).thenReturn(configClientProperties);
+		when(context.getBootstrapContext()).thenReturn(bootstrapContext);
+		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
+				ConfigDataLocation.of("configserver:http://locationuri"), mock(Profiles.class));
+		assertThat(resources).hasSize(1);
+		verify(bootstrapContext, times(1)).get(eq(ConfigClientProperties.class));
+		ConfigServerConfigDataResource resource = resources.get(0);
+		assertThat(resource.getProperties().getUri()).isEqualTo(new String[] { "http://locationuri" });
+	}
+
+	@Test
+	void createNewConfigClientPropertiesInBootstrapContext() {
+		ConfigurableBootstrapContext bootstrapContext = mock(ConfigurableBootstrapContext.class);
+		when(bootstrapContext.isRegistered(eq(ConfigClientProperties.class))).thenReturn(false);
+		ConfigClientProperties configClientProperties = new ConfigClientProperties();
+		configClientProperties.setUri(new String[] { "http://myuri" });
+		when(bootstrapContext.get(eq(ConfigClientProperties.class))).thenReturn(configClientProperties);
+		when(context.getBootstrapContext()).thenReturn(bootstrapContext);
+		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
+				ConfigDataLocation.of("configserver:http://locationuri"), mock(Profiles.class));
+		assertThat(resources).hasSize(1);
+		verify(bootstrapContext, times(0)).get(eq(ConfigClientProperties.class));
+		ConfigServerConfigDataResource resource = resources.get(0);
+		assertThat(resource.getProperties().getUri()).isEqualTo(new String[] { "http://locationuri" });
 	}
 
 	private ConfigServerConfigDataResource testUri(String propertyUri, String locationUri) {
