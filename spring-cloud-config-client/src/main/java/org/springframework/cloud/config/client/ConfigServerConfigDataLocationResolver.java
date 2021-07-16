@@ -66,9 +66,16 @@ public class ConfigServerConfigDataLocationResolver
 	protected PropertyHolder loadProperties(ConfigDataLocationResolverContext context, String uris) {
 		Binder binder = context.getBinder();
 		BindHandler bindHandler = getBindHandler(context);
-		ConfigClientProperties configClientProperties = binder
-				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
-				.orElseGet(ConfigClientProperties::new);
+
+		ConfigClientProperties configClientProperties;
+		if (context.getBootstrapContext().isRegistered(ConfigClientProperties.class)) {
+			configClientProperties = context.getBootstrapContext().get(ConfigClientProperties.class);
+		}
+		else {
+			configClientProperties = binder
+					.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
+					.orElseGet(ConfigClientProperties::new);
+		}
 		if (!StringUtils.hasText(configClientProperties.getName())) {
 			// default to spring.application.name if name isn't set
 			String applicationName = binder.bind("spring.application.name", Bindable.of(String.class), bindHandler)
