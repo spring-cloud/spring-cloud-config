@@ -334,6 +334,43 @@ public class VaultEnvironmentRepositoryTests {
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
+	public void testVaultKV2WithPath2Key() {
+		RestTemplate rest = mock(RestTemplate.class);
+
+		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
+		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse myAppVaultResp = getVaultResponse("{\"data\": {\"data\": {\"foo\": \"bar\"}}}");
+		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/data/myorg/{key}"), eq(HttpMethod.GET),
+				any(HttpEntity.class), eq(VaultResponse.class), eq("myapp"))).thenReturn(myAppResp);
+
+		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
+		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
+		VaultResponse appVaultResp = getVaultResponse("{\"data\": {\"data\": {\"def-foo\":\"def-bar\"}}}");
+		when(appResp.getBody()).thenReturn(appVaultResp);
+		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/data/myorg/{key}"), eq(HttpMethod.GET),
+				any(HttpEntity.class), eq(VaultResponse.class), eq("application"))).thenReturn(appResp);
+
+		final VaultEnvironmentProperties vaultEnvironmentProperties = new VaultEnvironmentProperties();
+		vaultEnvironmentProperties.setKvVersion(2);
+		vaultEnvironmentProperties.setPathToKey("myorg");
+		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
+				new EnvironmentWatch.Default(), rest, vaultEnvironmentProperties, mockTokenProvider());
+
+		Environment e = repo.findOne("myapp", null, null);
+		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
+		assertThat(e.getPropertySources().size()).as(
+				"Properties for specified application and default application with key 'application' should be returned")
+				.isEqualTo(2);
+		Map<String, String> firstResult = new HashMap<>();
+		firstResult.put("foo", "bar");
+		assertThat(e.getPropertySources().get(0).getSource())
+				.as("Properties for specified application should be returned in priority position")
+				.isEqualTo(firstResult);
+	}
+
+	@Test
 	@SuppressWarnings({ "Duplicates", "unchecked" })
 	public void testNamespaceHeaderSent() {
 		RestTemplate rest = mock(RestTemplate.class);
@@ -401,7 +438,7 @@ public class VaultEnvironmentRepositoryTests {
 			String baseUrl = String.format("%s://%s:%s", properties.getScheme(), properties.getHost(),
 					properties.getPort());
 			this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(restTemplate, baseUrl,
-					properties.getKvVersion());
+					properties.getKvVersion(), "");
 		}
 
 		@Override

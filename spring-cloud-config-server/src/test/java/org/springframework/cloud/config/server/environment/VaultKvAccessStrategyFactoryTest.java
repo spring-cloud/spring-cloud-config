@@ -30,19 +30,19 @@ public class VaultKvAccessStrategyFactoryTest {
 
 	@Test
 	public void testGetV1Strategy() {
-		VaultKvAccessStrategy vaultKvAccessStrategy = VaultKvAccessStrategyFactory.forVersion(null, "foo", 1);
+		VaultKvAccessStrategy vaultKvAccessStrategy = VaultKvAccessStrategyFactory.forVersion(null, "foo", 1, "");
 		assertThat(vaultKvAccessStrategy instanceof V1VaultKvAccessStrategy).isTrue();
 	}
 
 	@Test
 	public void testGetV2Strategy() {
-		VaultKvAccessStrategy vaultKvAccessStrategy = VaultKvAccessStrategyFactory.forVersion(null, "foo", 2);
+		VaultKvAccessStrategy vaultKvAccessStrategy = VaultKvAccessStrategyFactory.forVersion(null, "foo", 2, "");
 		assertThat(vaultKvAccessStrategy instanceof V2VaultKvAccessStrategy).isTrue();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testGetUnsupportedStrategy() {
-		VaultKvAccessStrategyFactory.forVersion(null, "foo", 0);
+		VaultKvAccessStrategyFactory.forVersion(null, "foo", 0, "");
 	}
 
 }
