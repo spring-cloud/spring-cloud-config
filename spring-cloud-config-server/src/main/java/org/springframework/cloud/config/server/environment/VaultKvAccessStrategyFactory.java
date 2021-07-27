@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestOperations;
 
 /**
@@ -39,15 +40,16 @@ public final class VaultKvAccessStrategyFactory {
 	 * @param rest must not be {@literal null}.
 	 * @param baseUrl the Vault base URL.
 	 * @param version version of the Vault key-value backend.
+	 * @param pathToKey path after the mount-path, under which the key(s) can be found.
 	 * @return the access strategy.
 	 */
-	public static VaultKvAccessStrategy forVersion(RestOperations rest, String baseUrl, int version) {
+	public static VaultKvAccessStrategy forVersion(RestOperations rest, String baseUrl, int version, String pathToKey) {
 
 		switch (version) {
 		case 1:
 			return new V1VaultKvAccessStrategy(baseUrl, rest);
 		case 2:
-			return new V2VaultKvAccessStrategy(baseUrl, rest);
+			return new V2VaultKvAccessStrategy(baseUrl, pathToKey, rest);
 		default:
 			throw new IllegalArgumentException("No support for given Vault k/v backend version " + version);
 		}
@@ -79,12 +81,20 @@ public final class VaultKvAccessStrategyFactory {
 	 */
 	static class V2VaultKvAccessStrategy extends VaultKvAccessStrategySupport {
 
-		V2VaultKvAccessStrategy(String baseUrl, RestOperations rest) {
+		private String pathToKey;
+
+		V2VaultKvAccessStrategy(String baseUrl, String pathToKey, RestOperations rest) {
 			super(baseUrl, rest);
+			this.pathToKey = pathToKey;
 		}
 
 		@Override
 		public String getPath() {
+
+			if (StringUtils.hasText(pathToKey)) {
+				return "data/" + pathToKey + "/{key}";
+			}
+
 			return "data/{key}";
 		}
 
