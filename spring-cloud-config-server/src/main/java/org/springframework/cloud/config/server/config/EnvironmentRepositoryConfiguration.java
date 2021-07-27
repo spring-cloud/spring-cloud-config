@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
@@ -40,6 +41,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.server.composite.CompositeEnvironmentBeanFactoryPostProcessor;
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
 import org.springframework.cloud.config.server.composite.ConditionalOnSearchPathLocator;
+import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentProperties;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepositoryFactory;
@@ -106,17 +110,19 @@ import org.springframework.vault.core.VaultTemplate;
  * @author Alberto C. Ríos
  * @author Scott Frederick
  * @author Tejas Pandilwar
+ * @author Iulian Antohe
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class, CredhubEnvironmentProperties.class,
 		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
 		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
-		AwsSecretsManagerEnvironmentProperties.class, GoogleSecretManagerEnvironmentProperties.class })
+		AwsSecretsManagerEnvironmentProperties.class, AwsParameterStoreEnvironmentProperties.class, GoogleSecretManagerEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultConfiguration.class,
 		VaultRepositoryConfiguration.class, SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
 		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
 		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
+	AwsParameterStoreRepositoryConfiguration.class,,
 		GoogleSecretManagerRepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
@@ -221,6 +227,18 @@ public class EnvironmentRepositoryConfiguration {
 		public AwsSecretsManagerEnvironmentRepositoryFactory awsSecretsManagerEnvironmentRepositoryFactory(
 				ConfigServerProperties configServerProperties) {
 			return new AwsSecretsManagerEnvironmentRepositoryFactory(configServerProperties);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(AWSSimpleSystemsManagement.class)
+	static class AwsParameterStoreFactoryConfig {
+
+		@Bean
+		public AwsParameterStoreEnvironmentRepositoryFactory awsParameterStoreEnvironmentRepositoryFactory(
+				ConfigServerProperties server) {
+			return new AwsParameterStoreEnvironmentRepositoryFactory(server);
 		}
 
 	}
@@ -380,6 +398,20 @@ class AwsS3RepositoryConfiguration {
 	@ConditionalOnMissingBean(AwsS3EnvironmentRepository.class)
 	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(AwsS3EnvironmentRepositoryFactory factory,
 			AwsS3EnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration(proxyBeanMethods = false)
+@Profile("awsparamstore")
+class AwsParameterStoreRepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean(AwsParameterStoreEnvironmentRepository.class)
+	public AwsParameterStoreEnvironmentRepository awsParameterStoreEnvironmentRepository(
+			AwsParameterStoreEnvironmentRepositoryFactory factory,
+			AwsParameterStoreEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 
