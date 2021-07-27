@@ -972,10 +972,10 @@ spring:
           endpoint: https://ssm.eu-west-2.amazonaws.com
           origin: aws:parameter:
           prefix: /config/service
-          profileSeparator: _
+          profile-separator: _
           recursive: true
-          decryptValues: true
-          maxResults: 5
+          decrypt-values: true
+          max-results: 5
 ----
 
 The following table describes the AWS Parameter Store configuration properties.
@@ -1004,7 +1004,7 @@ The following table describes the AWS Parameter Store configuration properties.
 |`/config`
 |Prefix indicating L1 level in the parameter hierarchy for every property loaded from the AWS Parameter Store.
 
-|*profileSeparator*
+|*profile-separator*
 |no
 |`-`
 |String that separates an appended profile from the context name.
@@ -1014,12 +1014,12 @@ The following table describes the AWS Parameter Store configuration properties.
 |`true`
 |Flag to indicate the retrieval of all AWS parameters within a hierarchy.
 
-|*decryptValues*
+|*decrypt-values*
 |no
 |`true`
 |Flag to indicate the retrieval of all AWS parameters with their value decrypted.
 
-|*maxResults*
+|*max-results*
 |no
 |`10`
 |The maximum number of items to return for an AWS Parameter Store API call.
@@ -1033,8 +1033,8 @@ Versioned parameters are already supported with the default behaviour of returni
 ====
 - When no application is specified `application` is the default, and when no profile is specified `default` is used.
 - Valid values for `awsparamstore.prefix` must start with a forward slash followed by one or more valid path segments or be empty.
-- Valid values for `awsparamstore.profileSeparator` can only contain dots, dashes and underscores.
-- Valid values for `awsparamstore.maxResults` must be within the *[1, 10]* range.
+- Valid values for `awsparamstore.profile-separator` can only contain dots, dashes and underscores.
+- Valid values for `awsparamstore.max-results` must be within the *[1, 10]* range.
 ====
 
 ==== AWS Secrets Manager Backend
