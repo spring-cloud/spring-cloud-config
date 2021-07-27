@@ -53,8 +53,7 @@ public class HttpHeaderGoogleConfigProvider implements GoogleConfigProvider {
 		}
 		String value = request.getHeader(key);
 		if (!StringUtils.hasLength(value) && mandatory) {
-			throw new IllegalArgumentException(
-					"Missing required header in HttpServletRequest: " + key);
+			throw new IllegalArgumentException("Missing required header in HttpServletRequest: " + key);
 		}
 		return value;
 	}
