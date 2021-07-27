@@ -24,8 +24,7 @@ import org.springframework.core.Ordered;
  * @author Jose Maria Alvarez
  */
 @ConfigurationProperties("spring.cloud.config.server.gcp-secret-manager")
-public class GoogleSecretManagerEnvironmentProperties
-		implements EnvironmentRepositoryProperties {
+public class GoogleSecretManagerEnvironmentProperties implements EnvironmentRepositoryProperties {
 
 	private int order = Ordered.LOWEST_PRECEDENCE;
 

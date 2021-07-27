@@ -117,7 +117,7 @@ import org.springframework.vault.core.VaultTemplate;
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
 		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
 		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
-	GoogleSecretManagerRepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
+		GoogleSecretManagerRepositoryConfiguration.class, DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
 	@Bean
@@ -516,8 +516,7 @@ class GoogleSecretManagerRepositoryConfiguration {
 	@Bean
 	public GoogleSecretManagerEnvironmentRepository googleSecretManagerEnvironmentRepository(
 			GoogleSecretManagerEnvironmentRepositoryFactory factory,
-			GoogleSecretManagerEnvironmentProperties environmentProperties)
-			throws Exception {
+			GoogleSecretManagerEnvironmentProperties environmentProperties) throws Exception {
 		return factory.build(environmentProperties);
 	}
 

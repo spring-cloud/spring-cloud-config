@@ -29,17 +29,14 @@ public class GoogleSecretManagerEnvironmentRepositoryFactory implements
 
 	private final ObjectProvider<HttpServletRequest> request;
 
-	public GoogleSecretManagerEnvironmentRepositoryFactory(
-			ObjectProvider<HttpServletRequest> request) {
+	public GoogleSecretManagerEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request) {
 		this.request = request;
 	}
 
 	@Override
 	public GoogleSecretManagerEnvironmentRepository build(
-			GoogleSecretManagerEnvironmentProperties environmentProperties)
-			throws Exception {
-		return new GoogleSecretManagerEnvironmentRepository(request, new RestTemplate(),
-				environmentProperties);
+			GoogleSecretManagerEnvironmentProperties environmentProperties) throws Exception {
+		return new GoogleSecretManagerEnvironmentRepository(request, new RestTemplate(), environmentProperties);
 	}
 
 }

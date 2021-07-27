@@ -49,14 +49,12 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 
 	private GoogleConfigProvider configProvider;
 
-	public GoogleSecretManagerEnvironmentRepository(
-		ObjectProvider<HttpServletRequest> request, RestTemplate rest,
-		GoogleSecretManagerEnvironmentProperties properties) {
+	public GoogleSecretManagerEnvironmentRepository(ObjectProvider<HttpServletRequest> request, RestTemplate rest,
+			GoogleSecretManagerEnvironmentProperties properties) {
 		this.applicationLabel = properties.getApplicationLabel();
 		this.profileLabel = properties.getProfileLabel();
 		this.configProvider = new HttpHeaderGoogleConfigProvider(request);
-		this.accessStrategy = GoogleSecretManagerAccessStrategyFactory.forVersion(rest,
-			configProvider, properties);
+		this.accessStrategy = GoogleSecretManagerAccessStrategyFactory.forVersion(rest, configProvider, properties);
 		this.tokenMandatory = properties.getTokenMandatory();
 	}
 
@@ -72,7 +70,7 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 			profile = "default," + profile;
 		}
 		String[] profiles = org.springframework.util.StringUtils
-			.trimArrayElements(org.springframework.util.StringUtils.commaDelimitedListToStringArray(profile));
+				.trimArrayElements(org.springframework.util.StringUtils.commaDelimitedListToStringArray(profile));
 		Environment result = new Environment(application, profile, label, null, null);
 		if (tokenMandatory) {
 			if (accessStrategy.checkRemotePermissions()) {
@@ -85,13 +83,11 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 		return result;
 	}
 
-	private void addPropertySource(String application, String[] profiles,
-		Environment result) {
+	private void addPropertySource(String application, String[] profiles, Environment result) {
 		for (String profileUnit : profiles) {
 			Map<?, ?> secrets = getSecrets(application, profileUnit);
 			if (!secrets.isEmpty()) {
-				result.add(new PropertySource("gsm:" + application + "-" + profileUnit,
-					secrets));
+				result.add(new PropertySource("gsm:" + application + "-" + profileUnit, secrets));
 			}
 		}
 	}
@@ -103,23 +99,16 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 	 */
 	private Map<?, ?> getSecrets(String application, String profile) {
 		Map<String, String> result = new HashMap<>();
-		String prefix = configProvider
-			.getValue(HttpHeaderGoogleConfigProvider.PREFIX_HEADER, false);
+		String prefix = configProvider.getValue(HttpHeaderGoogleConfigProvider.PREFIX_HEADER, false);
 		for (Secret secret : accessStrategy.getSecrets()) {
-			if (secret.getLabelsOrDefault(applicationLabel, "application")
-				.equalsIgnoreCase(application)
-				&& secret.getLabelsOrDefault(profileLabel, "profile")
-				.equalsIgnoreCase(profile)) {
-				result.put(accessStrategy.getSecretName(secret), accessStrategy
-					.getSecretValue(secret, new GoogleSecretComparatorByVersion()));
+			if (secret.getLabelsOrDefault(applicationLabel, "application").equalsIgnoreCase(application)
+					&& secret.getLabelsOrDefault(profileLabel, "profile").equalsIgnoreCase(profile)) {
+				result.put(accessStrategy.getSecretName(secret),
+						accessStrategy.getSecretValue(secret, new GoogleSecretComparatorByVersion()));
 			}
-			else if (StringUtils.isNotBlank(prefix)
-				&& accessStrategy.getSecretName(secret).startsWith(prefix)) {
-				result.put(
-					StringUtils.removeStart(accessStrategy.getSecretName(secret),
-						prefix),
-					accessStrategy.getSecretValue(secret,
-						new GoogleSecretComparatorByVersion()));
+			else if (StringUtils.isNotBlank(prefix) && accessStrategy.getSecretName(secret).startsWith(prefix)) {
+				result.put(StringUtils.removeStart(accessStrategy.getSecretName(secret), prefix),
+						accessStrategy.getSecretValue(secret, new GoogleSecretComparatorByVersion()));
 			}
 		}
 		return result;
