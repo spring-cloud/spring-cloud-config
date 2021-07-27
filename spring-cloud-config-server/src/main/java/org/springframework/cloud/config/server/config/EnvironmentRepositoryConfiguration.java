@@ -104,19 +104,15 @@ import org.springframework.vault.core.VaultTemplate;
  * @author Tejas Pandilwar
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties({ SvnKitEnvironmentProperties.class,
-		CredhubEnvironmentProperties.class, JdbcEnvironmentProperties.class,
-		NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
+@EnableConfigurationProperties({ SvnKitEnvironmentProperties.class, CredhubEnvironmentProperties.class,
+		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
 		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
 		AwsSecretsManagerEnvironmentProperties.class })
-@Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class,
-		VaultConfiguration.class, VaultRepositoryConfiguration.class,
-		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
-		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class,
-		NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
-		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
-		AwsS3RepositoryConfiguration.class,
-		AwsSecretsManagerRepositoryConfiguration.class,
+@Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultConfiguration.class,
+		VaultRepositoryConfiguration.class, SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
+		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
+		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
+		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
 
@@ -220,8 +216,7 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public AwsSecretsManagerEnvironmentRepositoryFactory awsSecretsManagerEnvironmentRepositoryFactory(
 				ConfigServerProperties configServerProperties) {
-			return new AwsSecretsManagerEnvironmentRepositoryFactory(
-					configServerProperties);
+			return new AwsSecretsManagerEnvironmentRepositoryFactory(configServerProperties);
 		}
 
 	}

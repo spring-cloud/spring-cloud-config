@@ -27,8 +27,7 @@ import org.springframework.core.Ordered;
  * @author Tejas Pandilwar
  */
 @ConfigurationProperties("spring.cloud.config.server.aws-secretsmanager")
-public class AwsSecretsManagerEnvironmentProperties
-		implements EnvironmentRepositoryProperties {
+public class AwsSecretsManagerEnvironmentProperties implements EnvironmentRepositoryProperties {
 
 	static final String DEFAULT_PATH_SEPARATOR = "/";
 
@@ -44,8 +43,8 @@ public class AwsSecretsManagerEnvironmentProperties
 	private String region;
 
 	/**
-	 * The endpoint to be used by AWS Secrets Manager client.
-	 * This can be used to specify an alternate endpoint for the API requests.
+	 * The endpoint to be used by AWS Secrets Manager client. This can be used to specify
+	 * an alternate endpoint for the API requests.
 	 */
 	private String endpoint;
 

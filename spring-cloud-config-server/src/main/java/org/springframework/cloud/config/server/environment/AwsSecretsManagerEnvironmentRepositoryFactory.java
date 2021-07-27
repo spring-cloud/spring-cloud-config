@@ -32,16 +32,13 @@ public class AwsSecretsManagerEnvironmentRepositoryFactory implements
 
 	private final ConfigServerProperties configServerProperties;
 
-	public AwsSecretsManagerEnvironmentRepositoryFactory(
-			ConfigServerProperties configServerProperties) {
+	public AwsSecretsManagerEnvironmentRepositoryFactory(ConfigServerProperties configServerProperties) {
 		this.configServerProperties = configServerProperties;
 	}
 
 	@Override
-	public AwsSecretsManagerEnvironmentRepository build(
-			AwsSecretsManagerEnvironmentProperties environmentProperties) {
-		AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder
-				.standard();
+	public AwsSecretsManagerEnvironmentRepository build(AwsSecretsManagerEnvironmentProperties environmentProperties) {
+		AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder.standard();
 		String region = environmentProperties.getRegion();
 
 		if (!StringUtils.isEmpty(region)) {
@@ -57,8 +54,7 @@ public class AwsSecretsManagerEnvironmentRepositoryFactory implements
 		}
 
 		AWSSecretsManager client = clientBuilder.build();
-		return new AwsSecretsManagerEnvironmentRepository(client, configServerProperties,
-				environmentProperties);
+		return new AwsSecretsManagerEnvironmentRepository(client, configServerProperties, environmentProperties);
 	}
 
 }
