@@ -11,7 +11,8 @@ org.springframework.boot.env.EnvironmentPostProcessor=\
 org.springframework.cloud.config.client.ConfigServerConfigDataMissingEnvironmentPostProcessor
 
 org.springframework.boot.diagnostics.FailureAnalyzer=\
-org.springframework.cloud.config.client.ConfigServerConfigDataMissingEnvironmentPostProcessor.ImportExceptionFailureAnalyzer
+org.springframework.cloud.config.client.ConfigServerConfigDataMissingEnvironmentPostProcessor.ImportExceptionFailureAnalyzer,\
+org.springframework.cloud.config.client.diagnostics.analyzer.InvalidApplicationNameExceptionFailureAnalyzer
 
 # ConfigData Location Resolvers
 org.springframework.boot.context.config.ConfigDataLocationResolver=\
@@ -24,7 +25,3 @@ org.springframework.cloud.config.client.ConfigServerConfigDataLoader
 # Spring Boot BootstrapRegistryInitializers
 org.springframework.boot.BootstrapRegistryInitializer=\
 org.springframework.cloud.config.client.ConfigClientRetryBootstrapper
-
-# Failure analyzers
-org.springframework.boot.diagnostics.FailureAnalyzer=\
-org.springframework.cloud.config.client.diagnostics.analyzer.InvalidApplicationNameExceptionFailureAnalyzer
