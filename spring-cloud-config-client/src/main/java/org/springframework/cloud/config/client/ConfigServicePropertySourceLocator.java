@@ -81,14 +81,13 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 
 		if (StringUtils.startsWithIgnoreCase(properties.getName(), "application-")) {
-			InvalidApplicationNameException exception = new InvalidApplicationNameException(
-				properties.getName());
+			InvalidApplicationNameException exception = new InvalidApplicationNameException(properties.getName());
 			if (properties.isFailFast()) {
 				throw exception;
 			}
 			else {
 				logger.warn(NAME_PLACEHOLDER + " resolved to " + properties.getName()
-					+ ", not going to load remote properties. Ensure application name doesn't start with 'application-'");
+						+ ", not going to load remote properties. Ensure application name doesn't start with 'application-'");
 				return null;
 			}
 		}

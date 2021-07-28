@@ -30,10 +30,8 @@ public class InvalidApplicationNameExceptionFailureAnalyzer
 		extends AbstractFailureAnalyzer<InvalidApplicationNameException> {
 
 	@Override
-	protected FailureAnalysis analyze(Throwable rootFailure,
-			InvalidApplicationNameException cause) {
-		StringBuilder description = new StringBuilder(
-				String.format("%s:%n", cause.getMessage()));
+	protected FailureAnalysis analyze(Throwable rootFailure, InvalidApplicationNameException cause) {
+		StringBuilder description = new StringBuilder(String.format("%s:%n", cause.getMessage()));
 		description.append(String.format("%n    Property: %s", cause.getProperty()));
 		description.append(String.format("%n    Value: %s", cause.getValue()));
 		String action = "Change ${spring.application.name} or the ${spring.cloud.config.name} "
