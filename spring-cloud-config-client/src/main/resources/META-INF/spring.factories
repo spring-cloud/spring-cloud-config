@@ -24,3 +24,7 @@ org.springframework.cloud.config.client.ConfigServerConfigDataLoader
 # Spring Boot BootstrapRegistryInitializers
 org.springframework.boot.BootstrapRegistryInitializer=\
 org.springframework.cloud.config.client.ConfigClientRetryBootstrapper
+
+# Failure analyzers
+org.springframework.boot.diagnostics.FailureAnalyzer=\
+org.springframework.cloud.config.client.diagnostics.analyzer.InvalidApplicationNameExceptionFailureAnalyzer

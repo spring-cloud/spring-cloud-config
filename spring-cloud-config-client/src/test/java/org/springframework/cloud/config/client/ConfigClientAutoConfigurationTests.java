@@ -16,15 +16,19 @@
 
 package org.springframework.cloud.config.client;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ConfigClientAutoConfigurationTests {
 
@@ -44,6 +48,68 @@ public class ConfigClientAutoConfigurationTests {
 				.run();
 		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context, ConfigClientProperties.class).length)
 				.isEqualTo(1);
+		context.close();
+	}
+
+	@Test
+	public void invalidApplicationNameOverrideWithFailFastEnabledFailsToStartup() {
+		SpringApplication application = new SpringApplicationBuilder(
+				ConfigClientAutoConfiguration.class)
+						.web(WebApplicationType.NONE)
+						.properties("spring.cloud.config.fail-fast=true",
+								"spring.cloud.bootstrap.enabled=true",
+								"spring.cloud.config.name=application-service")
+						.application();
+
+		assertThatThrownBy(application::run)
+				.isInstanceOf(InvalidApplicationNameException.class).extracting("value")
+				.isEqualTo("application-service");
+	}
+
+	@Test
+	public void invalidApplicationNameOverrideWithFailFastDisabledStartsUpButNoConfigServerPropertiesAreLoaded() {
+		SpringApplication application = new SpringApplicationBuilder(
+				ConfigClientAutoConfiguration.class).web(WebApplicationType.NONE)
+						.properties("spring.cloud.config.name=application-service",
+							"spring.cloud.bootstrap.enabled=true")
+						.application();
+
+		ConfigurableApplicationContext context = application.run();
+
+		assertThat(context.getEnvironment().getPropertySources().get("configService"))
+				.isNull();
+
+		context.close();
+	}
+
+	@Test
+	public void invalidApplicationNameWithFailFastEnabledFailsToStartup() {
+		SpringApplication application = new SpringApplicationBuilder(
+				ConfigClientAutoConfiguration.class)
+						.web(WebApplicationType.NONE)
+						.properties("spring.cloud.config.fail-fast=true",
+								"spring.cloud.bootstrap.enabled=true",
+								"spring.application.name=application-service")
+						.application();
+
+		assertThatThrownBy(application::run)
+				.isInstanceOf(InvalidApplicationNameException.class).extracting("value")
+				.isEqualTo("application-service");
+	}
+
+	@Test
+	public void invalidApplicationNameWithFailFastDisabledStartsUpButNoConfigServerPropertiesAreLoaded() {
+		SpringApplication application = new SpringApplicationBuilder(
+				ConfigClientAutoConfiguration.class).web(WebApplicationType.NONE)
+						.properties("spring.application.name=application-service",
+							"spring.cloud.bootstrap.enabled=true")
+						.application();
+
+		ConfigurableApplicationContext context = application.run();
+
+		assertThat(context.getEnvironment().getPropertySources().get("configService"))
+				.isNull();
+
 		context.close();
 	}
 

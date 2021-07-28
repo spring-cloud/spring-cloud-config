@@ -49,6 +49,13 @@ public class ConfigClientProperties {
 	public static final String PREFIX = "spring.cloud.config";
 
 	/**
+	 * Placeholder string that allows ${spring.cloud.config.name} to override
+	 * ${spring.application.name:application}.
+	 */
+	public static final String NAME_PLACEHOLDER = "${" + ConfigClientProperties.PREFIX
+			+ ".name:${spring.application.name:application}}";
+
+	/**
 	 * Name of config discovery enabled property.
 	 */
 	public static final String CONFIG_DISCOVERY_ENABLED = PREFIX + ".discovery.enabled";
@@ -374,8 +381,7 @@ public class ConfigClientProperties {
 	public ConfigClientProperties override(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties override = new ConfigClientProperties();
 		BeanUtils.copyProperties(this, override);
-		override.setName(environment.resolvePlaceholders(
-				"${" + ConfigClientProperties.PREFIX + ".name:${spring.application.name:application}}"));
+		override.setName(environment.resolvePlaceholders(NAME_PLACEHOLDER));
 		if (environment.containsProperty(ConfigClientProperties.PREFIX + ".profile")) {
 			override.setProfile(environment.getProperty(ConfigClientProperties.PREFIX + ".profile"));
 		}
