@@ -16,7 +16,8 @@
 
 package org.springframework.cloud.config.client;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.boot.SpringApplication;
@@ -50,12 +51,13 @@ public class ConfigClientAutoConfigurationTests {
 		context.close();
 	}
 
-	@org.junit.jupiter.api.Test
+	@Test
 	public void invalidApplicationNameOverrideWithFailFastEnabledFailsToStartup() {
 		SpringApplication application = new SpringApplicationBuilder(
 				ConfigClientAutoConfiguration.class)
 						.web(WebApplicationType.NONE)
 						.properties("spring.cloud.config.fail-fast=true",
+								"spring.cloud.bootstrap.enabled=true",
 								"spring.cloud.config.name=application-service")
 						.application();
 
@@ -64,11 +66,12 @@ public class ConfigClientAutoConfigurationTests {
 				.isEqualTo("application-service");
 	}
 
-	@org.junit.jupiter.api.Test
+	@Test
 	public void invalidApplicationNameOverrideWithFailFastDisabledStartsUpButNoConfigServerPropertiesAreLoaded() {
 		SpringApplication application = new SpringApplicationBuilder(
 				ConfigClientAutoConfiguration.class).web(WebApplicationType.NONE)
-						.properties("spring.cloud.config.name=application-service")
+						.properties("spring.cloud.config.name=application-service",
+							"spring.cloud.bootstrap.enabled=true")
 						.application();
 
 		ConfigurableApplicationContext context = application.run();
@@ -79,12 +82,13 @@ public class ConfigClientAutoConfigurationTests {
 		context.close();
 	}
 
-	@org.junit.jupiter.api.Test
+	@Test
 	public void invalidApplicationNameWithFailFastEnabledFailsToStartup() {
 		SpringApplication application = new SpringApplicationBuilder(
 				ConfigClientAutoConfiguration.class)
 						.web(WebApplicationType.NONE)
 						.properties("spring.cloud.config.fail-fast=true",
+								"spring.cloud.bootstrap.enabled=true",
 								"spring.application.name=application-service")
 						.application();
 
@@ -93,11 +97,12 @@ public class ConfigClientAutoConfigurationTests {
 				.isEqualTo("application-service");
 	}
 
-	@org.junit.jupiter.api.Test
+	@Test
 	public void invalidApplicationNameWithFailFastDisabledStartsUpButNoConfigServerPropertiesAreLoaded() {
 		SpringApplication application = new SpringApplicationBuilder(
 				ConfigClientAutoConfiguration.class).web(WebApplicationType.NONE)
-						.properties("spring.application.name=application-service")
+						.properties("spring.application.name=application-service",
+							"spring.cloud.bootstrap.enabled=true")
 						.application();
 
 		ConfigurableApplicationContext context = application.run();
