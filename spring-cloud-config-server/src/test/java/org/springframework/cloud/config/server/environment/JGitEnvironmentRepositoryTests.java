@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.assertj.core.api.Assertions;
@@ -557,13 +558,8 @@ public class JGitEnvironmentRepositoryTests {
 		FetchCommand fetchCommand = mock(FetchCommand.class);
 		when(git.fetch()).thenReturn(fetchCommand);
 		when(fetchCommand.setRemote(anyString())).thenReturn(fetchCommand);
-		when(fetchCommand.call()).thenThrow(new InvalidRemoteException("invalid mock remote")); // here
-																								// is
-																								// our
-																								// exception
-																								// we
-																								// are
-																								// testing
+		// here is our exception we are testing
+		when(fetchCommand.call()).thenThrow(new InvalidRemoteException("invalid mock remote"));
 
 		// refresh()->checkout
 		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
@@ -580,18 +576,13 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->merge
 		MergeCommand mergeCommand = mock(MergeCommand.class);
 		when(git.merge()).thenReturn(mergeCommand);
-		when(mergeCommand.call()).thenThrow(new NotMergedException()); // here
-																		// is
-																		// our
-																		// exception
-																		// we
-																		// are
-																		// testing
+		// here is our exception we are testing
+		when(mergeCommand.call()).thenThrow(new NotMergedException());
 
 		// refresh()->return
 		// git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(this.database.getRef(anyString())).thenReturn(headRef);
+		when(this.database.findRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
@@ -604,9 +595,17 @@ public class JGitEnvironmentRepositoryTests {
 
 	private Repository stubbedRepo() {
 		return spy(new Repository(new BaseRepositoryBuilder()) {
+
+			private String id = UUID.randomUUID().toString();
+
 			@Override
 			public void create(boolean bare) throws IOException {
 
+			}
+
+			@Override
+			public String getIdentifier() {
+				return id;
 			}
 
 			@Override
@@ -695,7 +694,7 @@ public class JGitEnvironmentRepositoryTests {
 
 		// refresh()->return git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(this.database.getRef(anyString())).thenReturn(headRef);
+		when(this.database.findRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
@@ -804,13 +803,8 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->merge
 		MergeCommand mergeCommand = mock(MergeCommand.class);
 		when(git.merge()).thenReturn(mergeCommand);
-		when(mergeCommand.call()).thenThrow(new NotMergedException()); // here
-																		// is
-																		// our
-																		// exception
-																		// we
-																		// are
-																		// testing
+		// here is our exception we are testing
+		when(mergeCommand.call()).thenThrow(new NotMergedException());
 
 		// refresh()->hardReset
 		ResetCommand resetCommand = mock(ResetCommand.class);
@@ -820,7 +814,7 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(this.database.getRef(anyString())).thenReturn(headRef);
+		when(this.database.findRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);
@@ -1135,13 +1129,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.branchDelete()).thenReturn(deleteBranchCommand);
 		when(deleteBranchCommand.setBranchNames(eq("feature/deletedBranchFromOrigin"))).thenReturn(deleteBranchCommand);
 		when(deleteBranchCommand.setForce(true)).thenReturn(deleteBranchCommand);
-		when(deleteBranchCommand.call()).thenThrow(new NotMergedException()); // here
-																				// is
-																				// our
-																				// exception
-																				// we
-																				// are
-																				// testing
+		// here is our exception we are testing
+		when(deleteBranchCommand.call()).thenThrow(new NotMergedException());
 
 		// refresh()->checkout
 		CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
@@ -1167,7 +1156,7 @@ public class JGitEnvironmentRepositoryTests {
 		// refresh()->return
 		// git.getRepository().findRef("HEAD").getObjectId().getName();
 		Ref headRef = mock(Ref.class);
-		when(this.database.getRef(anyString())).thenReturn(headRef);
+		when(this.database.findRef(anyString())).thenReturn(headRef);
 
 		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
 		when(headRef.getObjectId()).thenReturn(newObjectId);

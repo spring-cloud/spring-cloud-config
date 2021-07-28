@@ -15,7 +15,7 @@
 	<name>spring-cloud-config-dependencies</name>
 	<description>Spring Cloud Config Dependencies</description>
 	<properties>
-		<jgit.version>5.1.3.201810200350-r</jgit.version>
+		<jgit.version>5.12.0.202106070339-r</jgit.version>
 		<spring-vault.version>2.3.2</spring-vault.version>
 		<spring-credhub.version>2.1.1.RELEASE</spring-credhub.version>
 	</properties>
@@ -64,6 +64,11 @@
 			<dependency>
 				<groupId>org.eclipse.jgit</groupId>
 				<artifactId>org.eclipse.jgit.http.apache</artifactId>
+				<version>${jgit.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.jgit</groupId>
+				<artifactId>org.eclipse.jgit.ssh.jsch</artifactId>
 				<version>${jgit.version}</version>
 			</dependency>
 			<dependency>
