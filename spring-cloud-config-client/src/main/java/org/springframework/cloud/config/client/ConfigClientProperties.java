@@ -484,7 +484,7 @@ public class ConfigClientProperties {
 	 * Enumerates possible strategies to use when multiple URLs are provided and an error
 	 * occurs.
 	 */
-	public static enum MultipleUriStrategy {
+	public enum MultipleUriStrategy {
 
 		/**
 		 * Try the next URL in the list on any error.
