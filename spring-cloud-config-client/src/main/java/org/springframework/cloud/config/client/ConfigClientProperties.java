@@ -119,6 +119,13 @@ public class ConfigClientProperties {
 	private String[] uri = { "http://localhost:8888" };
 
 	/**
+	 * The strategy to use when call to server fails and there are multiple URLs
+	 * configured on the uri property (default
+	 * {@link MultipleUriStrategy#CONNECTION_TIMEOUT_ONLY}).
+	 */
+	private MultipleUriStrategy multipleUriStrategy = MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY;
+
+	/**
 	 * The Accept header media type to send to config server.
 	 */
 	private String mediaType = EnvironmentMediaType.V2_JSON;
@@ -188,6 +195,14 @@ public class ConfigClientProperties {
 
 	public void setUri(String[] url) {
 		this.uri = url;
+	}
+
+	public MultipleUriStrategy getMultipleUriStrategy() {
+		return multipleUriStrategy;
+	}
+
+	public void setMultipleUriStrategy(MultipleUriStrategy multipleUriStrategy) {
+		this.multipleUriStrategy = multipleUriStrategy;
 	}
 
 	public String getName() {
@@ -462,6 +477,24 @@ public class ConfigClientProperties {
 		public void setServiceId(String serviceId) {
 			this.serviceId = serviceId;
 		}
+
+	}
+
+	/**
+	 * Enumerates possible strategies to use when multiple URLs are provided and an error
+	 * occurs.
+	 */
+	public static enum MultipleUriStrategy {
+
+		/**
+		 * Try the next URL in the list on any error.
+		 */
+		ALWAYS,
+
+		/**
+		 * Try the next URL in the list only if no response was received.
+		 */
+		CONNECTION_TIMEOUT_ONLY
 
 	}
 

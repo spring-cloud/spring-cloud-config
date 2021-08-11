@@ -38,6 +38,7 @@ import org.springframework.boot.origin.Origin;
 import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoadContext;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoaderInterceptor;
+import org.springframework.cloud.config.client.ConfigClientProperties.MultipleUriStrategy;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.MapPropertySource;
@@ -299,12 +300,18 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity, Environment.class, args);
 			}
 			catch (HttpClientErrorException e) {
+				if (i < noOfUrls - 1 && properties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info("Failed to fetch configs from server at  : " + uri
+							+ ". Will try the next url if available. Error : " + e.getMessage());
+					continue;
+				}
+
 				if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
 					throw e;
 				}
 			}
 			catch (ResourceAccessException e) {
-				logger.info("Connect Timeout Exception on Url - " + uri + ". Will be trying the next url if available");
+				logger.info("Connect Timeout Exception on Url - " + uri + ". Will try the next url if available");
 				if (i == noOfUrls - 1) {
 					throw e;
 				}

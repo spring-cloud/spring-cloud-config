@@ -33,6 +33,7 @@ import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropertySource;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
+import org.springframework.cloud.config.client.ConfigClientProperties.MultipleUriStrategy;
 import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -255,12 +256,18 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity, Environment.class, args);
 			}
 			catch (HttpClientErrorException e) {
+				if (i < noOfUrls - 1 && defaultProperties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info("Failed to fetch configs from server at  : " + uri
+							+ ". Will try the next url if available. Error : " + e.getMessage());
+					continue;
+				}
+
 				if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
 					throw e;
 				}
 			}
 			catch (ResourceAccessException e) {
-				logger.info("Connect Timeout Exception on Url - " + uri + ". Will be trying the next url if available");
+				logger.info("Connect Timeout Exception on Url - " + uri + ". Will try the next url if available");
 				if (i == noOfUrls - 1) {
 					throw e;
 				}
