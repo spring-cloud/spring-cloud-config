@@ -82,6 +82,8 @@ public class MultipleJGitEnvironmentRepositoryFactory
 			repository.setDefaultLabel(this.server.getDefaultLabel());
 		}
 		repository.setGitCredentialsProviderFactory(gitCredentialsProviderFactory);
+		repository.getRepos()
+				.forEach((name, repo) -> repo.setGitCredentialsProviderFactory(gitCredentialsProviderFactory));
 		return repository;
 	}
 
