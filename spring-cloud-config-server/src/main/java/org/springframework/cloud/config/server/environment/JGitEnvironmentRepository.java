@@ -205,6 +205,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.gitCredentialsProviderFactory = gitCredentialsProviderFactory;
 	}
 
+	GitCredentialsProviderFactory getGitCredentialsProviderFactory() {
+		return gitCredentialsProviderFactory;
+	}
+
 	public String getDefaultLabel() {
 		return this.defaultLabel;
 	}
