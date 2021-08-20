@@ -31,6 +31,7 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -68,11 +69,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	@Override
 	public Environment findOne(String specifiedApplication, String specifiedProfiles, String specifiedLabel) {
-		final String application = StringUtils.isEmpty(specifiedApplication)
+		final String application = ObjectUtils.isEmpty(specifiedApplication)
 				? serverProperties.getDefaultApplicationName() : specifiedApplication;
-		final String profiles = StringUtils.isEmpty(specifiedProfiles) ? serverProperties.getDefaultProfile()
+		final String profiles = ObjectUtils.isEmpty(specifiedProfiles) ? serverProperties.getDefaultProfile()
 				: specifiedProfiles;
-		final String label = StringUtils.isEmpty(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
+		final String label = ObjectUtils.isEmpty(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
 
 		String[] profileArray = parseProfiles(profiles);
 		String[] apps = new String[] { application };
@@ -120,11 +121,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private String buildObjectKeyPrefix(String application, String profile, String label) {
 		StringBuilder objectKeyPrefix = new StringBuilder();
-		if (!StringUtils.isEmpty(label)) {
+		if (!ObjectUtils.isEmpty(label)) {
 			objectKeyPrefix.append(label).append(PATH_SEPARATOR);
 		}
 		objectKeyPrefix.append(application);
-		if (!StringUtils.isEmpty(profile)) {
+		if (!ObjectUtils.isEmpty(profile)) {
 			objectKeyPrefix.append("-").append(profile);
 		}
 		return objectKeyPrefix.toString();

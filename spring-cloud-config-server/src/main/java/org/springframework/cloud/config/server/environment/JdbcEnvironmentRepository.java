@@ -36,6 +36,7 @@ import org.springframework.core.Ordered;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -83,10 +84,10 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 		String config = application;
-		if (StringUtils.isEmpty(label)) {
+		if (ObjectUtils.isEmpty(label)) {
 			label = "master";
 		}
-		if (StringUtils.isEmpty(profile)) {
+		if (ObjectUtils.isEmpty(profile)) {
 			profile = "default";
 		}
 		if (!profile.startsWith("default")) {
