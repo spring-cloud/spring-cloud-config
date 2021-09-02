@@ -1239,6 +1239,7 @@ The priority order of a repository helps resolve any potential conflicts between
 NOTE: If your composite environment includes a Vault server as in the previous example, you must include a Vault token in every request made to the configuration server. See <<vault-backend,Vault Backend>>.
 
 NOTE: Any type of failure when retrieving values from an environment repository results in a failure for the entire composite environment.
+If you would like the composite to continue even when a repository fails you can set `spring.cloud.config.server.failOnCompositeError` to `false`.
 
 NOTE: When using a composite environment, it is important that all repositories contain the same labels.
 If you have an environment similar to those in the preceding examples and you request configuration data with the `master` label but the Subversion repository does not contain a branch called `master`, the entire request fails.
