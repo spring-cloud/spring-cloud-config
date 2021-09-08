@@ -335,7 +335,6 @@ class SpringVaultClientConfigurationTests {
 	private SpringVaultClientConfiguration getConfiguration(VaultEnvironmentProperties properties) {
 		SpringVaultClientConfiguration configuration = new SpringVaultClientConfiguration(properties, () -> null,
 				authProviders);
-		configuration.afterPropertiesSet();
 		configuration.setApplicationContext(applicationContext);
 		return configuration;
 	}
