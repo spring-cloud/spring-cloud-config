@@ -324,6 +324,12 @@ public class EnvironmentRepositoryConfiguration {
 			return new JdbcEnvironmentRepositoryFactory(jdbc, propertiesResultSetExtractor);
 		}
 
+		@Bean
+		@ConditionalOnMissingBean(PropertiesResultSetExtractor.class)
+		public JdbcEnvironmentRepository.StringPropertiesResultSetExtractor propertiesResultSetExtractor() {
+			return new JdbcEnvironmentRepository.StringPropertiesResultSetExtractor();
+		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -497,12 +503,6 @@ class JdbcRepositoryConfiguration {
 	public JdbcEnvironmentRepository jdbcEnvironmentRepository(JdbcEnvironmentRepositoryFactory factory,
 			JdbcEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean(PropertiesResultSetExtractor.class)
-	public JdbcEnvironmentRepository.StringPropertiesResultSetExtractor propertiesResultSetExtractor() {
-		return new JdbcEnvironmentRepository.StringPropertiesResultSetExtractor();
 	}
 
 }
