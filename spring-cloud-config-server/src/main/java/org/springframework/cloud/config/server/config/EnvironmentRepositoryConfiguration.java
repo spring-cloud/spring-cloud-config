@@ -74,6 +74,7 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.PropertiesResultSetExtractor;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentRepositoryFactory;
@@ -318,8 +319,9 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		@ConditionalOnBean(JdbcTemplate.class)
-		public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
-			return new JdbcEnvironmentRepositoryFactory(jdbc);
+		public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc,
+				PropertiesResultSetExtractor propertiesResultSetExtractor) {
+			return new JdbcEnvironmentRepositoryFactory(jdbc, propertiesResultSetExtractor);
 		}
 
 	}
@@ -495,6 +497,12 @@ class JdbcRepositoryConfiguration {
 	public JdbcEnvironmentRepository jdbcEnvironmentRepository(JdbcEnvironmentRepositoryFactory factory,
 			JdbcEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(PropertiesResultSetExtractor.class)
+	public JdbcEnvironmentRepository.StringPropertiesResultSetExtractor propertiesResultSetExtractor() {
+		return new JdbcEnvironmentRepository.StringPropertiesResultSetExtractor();
 	}
 
 }

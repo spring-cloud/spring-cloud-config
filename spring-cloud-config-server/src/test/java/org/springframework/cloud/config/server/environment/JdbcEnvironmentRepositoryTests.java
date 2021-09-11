@@ -50,7 +50,8 @@ public class JdbcEnvironmentRepositoryTests {
 	@Test
 	public void basicProperties() {
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
-				new JdbcEnvironmentProperties()).findOne("foo", "bar", "");
+				new JdbcEnvironmentProperties(), new JdbcEnvironmentRepository.StringPropertiesResultSetExtractor())
+						.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default", "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -64,7 +65,8 @@ public class JdbcEnvironmentRepositoryTests {
 	@Test
 	public void defaults() {
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
-				new JdbcEnvironmentProperties()).findOne("application", "", "");
+				new JdbcEnvironmentProperties(), new JdbcEnvironmentRepository.StringPropertiesResultSetExtractor())
+						.findOne("application", "", "");
 		assertThat(env.getName()).isEqualTo("application");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default" });
 		assertThat(env.getLabel()).isEqualTo("master");

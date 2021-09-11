@@ -35,7 +35,6 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.Ordered;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.util.StringUtils;
 
 /**
@@ -57,7 +56,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private final JdbcTemplate jdbc;
 
-	private final PropertiesResultSetExtractor extractor = new PropertiesResultSetExtractor();
+	private final PropertiesResultSetExtractor extractor;
 
 	private int order;
 
@@ -65,11 +64,13 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private boolean failOnError;
 
-	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
+	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties,
+			PropertiesResultSetExtractor extractor) {
 		this.jdbc = jdbc;
 		this.order = properties.getOrder();
 		this.sql = properties.getSql();
 		this.failOnError = properties.isFailOnError();
+		this.extractor = extractor;
 	}
 
 	public String getSql() {
@@ -105,7 +106,9 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		for (String app : applications) {
 			for (String env : envs) {
 				try {
-					Map<String, String> next = this.jdbc.query(this.sql, this.extractor, app, env, label);
+					@SuppressWarnings("unchecked")
+					Map<String, Object> next = (Map<String, Object>) this.jdbc.query(this.sql, this.extractor, app, env,
+							label);
 					if (next != null && !next.isEmpty()) {
 						environment.add(new PropertySource(app + "-" + env, next));
 					}
@@ -142,11 +145,11 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		this.failOnError = failOnError;
 	}
 
-	public static class PropertiesResultSetExtractor implements ResultSetExtractor<Map<String, String>> {
+	public static class StringPropertiesResultSetExtractor implements PropertiesResultSetExtractor {
 
 		@Override
-		public Map<String, String> extractData(ResultSet rs) throws SQLException, DataAccessException {
-			Map<String, String> map = new LinkedHashMap<>();
+		public Map<String, Object> extractData(ResultSet rs) throws SQLException, DataAccessException {
+			Map<String, Object> map = new LinkedHashMap<>();
 			while (rs.next()) {
 				map.put(rs.getString(1), rs.getString(2));
 			}

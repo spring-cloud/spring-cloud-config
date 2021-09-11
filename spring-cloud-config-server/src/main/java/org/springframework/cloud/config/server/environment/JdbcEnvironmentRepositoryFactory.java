@@ -24,15 +24,19 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class JdbcEnvironmentRepositoryFactory
 		implements EnvironmentRepositoryFactory<JdbcEnvironmentRepository, JdbcEnvironmentProperties> {
 
-	private JdbcTemplate jdbc;
+	private final JdbcTemplate jdbc;
 
-	public JdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
+	private final PropertiesResultSetExtractor propertiesResultSetExtractor;
+
+	public JdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc,
+			PropertiesResultSetExtractor propertiesResultSetExtractor) {
 		this.jdbc = jdbc;
+		this.propertiesResultSetExtractor = propertiesResultSetExtractor;
 	}
 
 	@Override
 	public JdbcEnvironmentRepository build(JdbcEnvironmentProperties environmentProperties) {
-		return new JdbcEnvironmentRepository(this.jdbc, environmentProperties);
+		return new JdbcEnvironmentRepository(this.jdbc, environmentProperties, propertiesResultSetExtractor);
 	}
 
 }
