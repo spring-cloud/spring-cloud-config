@@ -148,8 +148,8 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 	public static class StringPropertiesResultSetExtractor implements PropertiesResultSetExtractor {
 
 		@Override
-		public Map<String, Object> extractData(ResultSet rs) throws SQLException, DataAccessException {
-			Map<String, Object> map = new LinkedHashMap<>();
+		public Map<String, String> extractData(ResultSet rs) throws SQLException, DataAccessException {
+			Map<String, String> map = new LinkedHashMap<>();
 			while (rs.next()) {
 				map.put(rs.getString(1), rs.getString(2));
 			}
