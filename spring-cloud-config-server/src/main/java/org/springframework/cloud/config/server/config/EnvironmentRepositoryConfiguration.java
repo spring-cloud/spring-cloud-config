@@ -318,8 +318,15 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		@ConditionalOnBean(JdbcTemplate.class)
-		public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
-			return new JdbcEnvironmentRepositoryFactory(jdbc);
+		public JdbcEnvironmentRepositoryFactory jdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc,
+				JdbcEnvironmentRepository.PropertiesResultSetExtractor propertiesResultSetExtractor) {
+			return new JdbcEnvironmentRepositoryFactory(jdbc, propertiesResultSetExtractor);
+		}
+
+		@Bean
+		@ConditionalOnMissingBean(JdbcEnvironmentRepository.PropertiesResultSetExtractor.class)
+		public JdbcEnvironmentRepository.PropertiesResultSetExtractor propertiesResultSetExtractor() {
+			return new JdbcEnvironmentRepository.PropertiesResultSetExtractor();
 		}
 
 	}
