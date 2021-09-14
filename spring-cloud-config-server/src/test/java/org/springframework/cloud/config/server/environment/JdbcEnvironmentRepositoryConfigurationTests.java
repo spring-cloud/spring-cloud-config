@@ -17,6 +17,9 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -25,6 +28,7 @@ import org.springframework.boot.test.context.runner.ContextConsumer;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.cloud.config.server.ConfigServerApplication;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.dao.DataAccessException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,6 +46,19 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 				.run(context -> {
 					assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
 					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
+					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.PropertiesResultSetExtractor.class);
+				});
+	}
+
+	@Test
+	public void jdbcEnvironmentRepositoryBeansConfiguredWitCustomResultSetExtractor() {
+		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+				.withBean(CustomResultSetExtractor.class, CustomResultSetExtractor::new)
+				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
+				.run(context -> {
+					assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
+					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
+					assertThat(context).hasSingleBean(CustomResultSetExtractor.class);
 				});
 	}
 
@@ -73,6 +90,15 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 						"spring.cloud.config.server.git.uri:" + uri,
 						"spring.cloud.config.server.jdbc.enabled:" + jdbcEnabled)
 				.run(consumer);
+	}
+
+	private static class CustomResultSetExtractor extends JdbcEnvironmentRepository.PropertiesResultSetExtractor {
+
+		@Override
+		public Map<String, Object> extractData(ResultSet rs) throws SQLException, DataAccessException {
+			return super.extractData(rs);
+		}
+
 	}
 
 }
