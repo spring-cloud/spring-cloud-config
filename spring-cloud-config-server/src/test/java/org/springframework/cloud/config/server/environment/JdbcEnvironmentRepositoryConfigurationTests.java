@@ -46,26 +46,19 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 				.run(context -> {
 					assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
 					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
-					assertThat(context)
-							.hasSingleBean(JdbcEnvironmentRepository.StringPropertiesResultSetExtractor.class);
+					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.PropertiesResultSetExtractor.class);
 				});
 	}
 
 	@Test
-	public void jdbcEnvironmentRepositoryBeansConfiguredWitCustomResultSetExtractor() throws IOException {
+	public void jdbcEnvironmentRepositoryBeansConfiguredWitCustomResultSetExtractor() {
 		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
-				.withBean(PropertiesResultSetExtractor.class, () -> new PropertiesResultSetExtractor() {
-					@Override
-					public Map<String, Integer> extractData(ResultSet resultSet)
-							throws SQLException, DataAccessException {
-						return null;
-					}
-				}).withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
+				.withBean(CustomResultSetExtractor.class, CustomResultSetExtractor::new)
+				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
 				.run(context -> {
 					assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
 					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
-					assertThat(context)
-							.doesNotHaveBean(JdbcEnvironmentRepository.StringPropertiesResultSetExtractor.class);
+					assertThat(context).hasSingleBean(CustomResultSetExtractor.class);
 				});
 	}
 
@@ -97,6 +90,15 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 						"spring.cloud.config.server.git.uri:" + uri,
 						"spring.cloud.config.server.jdbc.enabled:" + jdbcEnabled)
 				.run(consumer);
+	}
+
+	public static class CustomResultSetExtractor extends JdbcEnvironmentRepository.PropertiesResultSetExtractor {
+
+		@Override
+		public Map<String, Object> extractData(ResultSet rs) throws SQLException, DataAccessException {
+			return super.extractData(rs);
+		}
+
 	}
 
 }
