@@ -37,32 +37,24 @@ import org.springframework.context.annotation.Primary;
 @ConditionalOnMissingBean(CompositeEnvironmentRepository.class)
 public class CompositeConfiguration {
 
-	private List<EnvironmentRepository> environmentRepos = new ArrayList<>();
-
-	private ConfigServerProperties properties;
-
 	@Bean
 	@Primary
 	@ConditionalOnBean(SearchPathLocator.class)
-	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository() {
-		return new SearchPathCompositeEnvironmentRepository(this.environmentRepos, properties.isFailOnCompositeError());
+	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository(
+			@Autowired(required = false) List<EnvironmentRepository> environmentRepos,
+			ConfigServerProperties properties) {
+		environmentRepos = environmentRepos != null ? environmentRepos : new ArrayList<>();
+		return new SearchPathCompositeEnvironmentRepository(environmentRepos, properties.isFailOnCompositeError());
 	}
 
 	@Bean
 	@Primary
 	@ConditionalOnMissingBean(SearchPathLocator.class)
-	public CompositeEnvironmentRepository compositeEnvironmentRepository() {
-		return new CompositeEnvironmentRepository(this.environmentRepos, properties.isFailOnCompositeError());
-	}
-
-	@Autowired
-	public void setEnvironmentRepos(List<EnvironmentRepository> repos) {
-		this.environmentRepos = repos;
-	}
-
-	@Autowired
-	public void setProperties(ConfigServerProperties properties) {
-		this.properties = properties;
+	public CompositeEnvironmentRepository compositeEnvironmentRepository(
+			@Autowired(required = false) List<EnvironmentRepository> environmentRepos,
+			ConfigServerProperties properties) {
+		environmentRepos = environmentRepos != null ? environmentRepos : new ArrayList<>();
+		return new CompositeEnvironmentRepository(environmentRepos, properties.isFailOnCompositeError());
 	}
 
 }
