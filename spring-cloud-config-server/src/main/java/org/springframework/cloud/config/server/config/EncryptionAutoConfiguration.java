@@ -50,11 +50,12 @@ import org.springframework.util.StringUtils;
  * @author Bartosz Wojtkiewicz
  * @author Rafal Zukowski
  * @author Dave Syer
+ * @author Olga Maciaszek-Sharma
  *
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties
-@Import({ SingleTextEncryptorConfiguration.class, DefaultTextEncryptorConfiguration.class })
+@Import(SingleTextEncryptorConfiguration.class)
 public class EncryptionAutoConfiguration {
 
 	@Bean
@@ -63,26 +64,29 @@ public class EncryptionAutoConfiguration {
 		return new KeyProperties();
 	}
 
-	@Configuration(proxyBeanMethods = false)
+	@Bean
+	@ConditionalOnMissingBean
 	@ConditionalOnProperty(value = "spring.cloud.config.server.encrypt.enabled", matchIfMissing = true)
-	protected static class EncryptorConfiguration {
-
-		@Autowired(required = false)
-		private TextEncryptorLocator locator;
-
-		@Autowired
-		private TextEncryptor encryptor;
-
-		@Bean
-		@ConditionalOnMissingBean
-		public EnvironmentEncryptor environmentEncryptor() {
-			TextEncryptorLocator locator = this.locator;
-			if (locator == null) {
-				locator = new SingleTextEncryptorLocator(this.encryptor);
-			}
-			return new CipherEnvironmentEncryptor(locator);
+	@ConditionalOnBean(TextEncryptorLocator.class)
+	public EnvironmentEncryptor environmentEncryptor(@Autowired(required = false) TextEncryptorLocator locator,
+			TextEncryptor encryptor) {
+		if (locator == null) {
+			locator = new SingleTextEncryptorLocator(encryptor);
 		}
+		return new CipherEnvironmentEncryptor(locator);
+	}
 
+	@Bean
+	@ConditionalOnMissingBean(TextEncryptor.class)
+	public TextEncryptor defaultTextEncryptor(@Autowired(required = false) TextEncryptorLocator locator,
+			KeyProperties key) {
+		if (locator != null) {
+			return new LocatorTextEncryptor(locator);
+		}
+		if (StringUtils.hasText(key.getKey())) {
+			return new EncryptorFactory(key.getSalt()).create(key.getKey());
+		}
+		return Encryptors.noOpText();
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -99,7 +103,7 @@ public class EncryptionAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		public TextEncryptorLocator textEncryptorLocator() {
-			KeyStore keyStore = this.key.getKeyStore();
+			KeyStore keyStore = key.getKeyStore();
 			KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(
 					new KeyStoreKeyFactory(keyStore.getLocation(), keyStore.getPassword().toCharArray(),
 							key.getKeyStore().getType()),
@@ -120,35 +124,9 @@ public class EncryptionAutoConfiguration {
 @Configuration(proxyBeanMethods = false)
 class SingleTextEncryptorConfiguration {
 
-	@Autowired
-	private TextEncryptor encryptor;
-
 	@Bean
-	public SingleTextEncryptorLocator textEncryptorLocator() {
-		return new SingleTextEncryptorLocator(this.encryptor);
-	}
-
-}
-
-@ConditionalOnMissingBean(TextEncryptor.class)
-@Configuration(proxyBeanMethods = false)
-class DefaultTextEncryptorConfiguration {
-
-	@Autowired
-	private KeyProperties key;
-
-	@Autowired(required = false)
-	private TextEncryptorLocator locator;
-
-	@Bean
-	public TextEncryptor defaultTextEncryptor() {
-		if (this.locator != null) {
-			return new LocatorTextEncryptor(this.locator);
-		}
-		if (StringUtils.hasText(this.key.getKey())) {
-			return new EncryptorFactory(this.key.getSalt()).create(this.key.getKey());
-		}
-		return Encryptors.noOpText();
+	public SingleTextEncryptorLocator textEncryptorLocator(TextEncryptor encryptor) {
+		return new SingleTextEncryptorLocator(encryptor);
 	}
 
 }
