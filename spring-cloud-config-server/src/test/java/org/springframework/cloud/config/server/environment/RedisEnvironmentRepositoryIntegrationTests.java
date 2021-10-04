@@ -16,44 +16,46 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.io.IOException;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import redis.embedded.RedisServer;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
-@DataRedisTest(properties = "spring.redis.port=6378")
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("redis")
+@Testcontainers
 public class RedisEnvironmentRepositoryIntegrationTests {
 
-	private RedisServer redisServer;
-
-	@Before
-	public void startRedis() throws IOException {
-		redisServer = new RedisServer(6378);
-		redisServer.start();
-	}
-
-	@After
-	public void stopRedis() {
-		redisServer.stop();
-	}
+	@Container
+	public static GenericContainer redisContainer = new GenericContainer<>("redis:5.0.9-alpine").withExposedPorts(6379);
 
 	@Autowired
-	StringRedisTemplate redis;
+	private StringRedisTemplate redis;
+
+	@BeforeAll
+	public static void startRedisContainer() {
+		redisContainer.start();
+	}
+
+	@DynamicPropertySource
+	static void containerProperties(DynamicPropertyRegistry registry) {
+		registry.add("spring.redis.host", redisContainer::getContainerIpAddress);
+		registry.add("spring.redis.port", redisContainer::getFirstMappedPort);
+	}
 
 	@Test
 	public void test() {
