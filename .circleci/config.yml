@@ -2,9 +2,6 @@ version: 2
 jobs:
   build:
     machine: true
-#    docker:
-#      - image: springcloud/pipeline-base
-#        user: appuser
     environment:
       _JAVA_OPTIONS: "-Xms1024m -Xmx2048m"
       TERM: dumb
@@ -13,15 +10,9 @@ jobs:
         - gh-pages # list of branches to ignore
     steps:
       - checkout
-      - restore_cache:
-          key: sc-config-{{ .Branch }}
       - run:
           name: "Download dependencies"
           command: ./mvnw -s .settings.xml -U --fail-never dependency:go-offline || true
-      - save_cache:
-          key: sc-config-{{ .Branch }}
-          paths:
-            - ~/.m2
       - run:
           name: "Running build"
           command: ./mvnw -s .settings.xml clean org.jacoco:jacoco-maven-plugin:prepare-agent install -U -P sonar -nsu --batch-mode -Dmaven.test.redirectTestOutputToFile=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
