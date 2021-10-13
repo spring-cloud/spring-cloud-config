@@ -53,7 +53,6 @@ public class RedisEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void test() {
-
 		BoundHashOperations bound = redis.boundHashOps("foo-bar");
 		bound.put("name", "foo");
 		bound.put("tag", "myapp");
