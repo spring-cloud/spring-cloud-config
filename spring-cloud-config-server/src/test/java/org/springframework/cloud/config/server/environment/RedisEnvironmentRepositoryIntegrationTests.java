@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -33,14 +32,11 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assume.assumeThat;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("redis")
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 public class RedisEnvironmentRepositoryIntegrationTests {
 
 	@Container
@@ -55,13 +51,9 @@ public class RedisEnvironmentRepositoryIntegrationTests {
 		registry.add("spring.redis.port", redisContainer::getFirstMappedPort);
 	}
 
-	@BeforeEach
-	public void setup() {
-		assumeThat("Ignore on Circle", System.getenv("CIRCLECI"), is(nullValue()));
-	}
-
 	@Test
 	public void test() {
+
 		BoundHashOperations bound = redis.boundHashOps("foo-bar");
 		bound.put("name", "foo");
 		bound.put("tag", "myapp");
