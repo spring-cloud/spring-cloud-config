@@ -47,6 +47,7 @@ public class AwsS3EnvironmentRepositoryFactory
 
 		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(client,
 				environmentProperties.getBucket(), server);
+		repository.setOrder(environmentProperties.getOrder());
 		return repository;
 	}
 
