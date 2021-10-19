@@ -20,7 +20,9 @@ import java.util.Collections;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.context.ApplicationListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
@@ -46,7 +48,12 @@ import org.springframework.core.env.PropertySource;
  * @author Ryan Baxter
  *
  */
-public class ConfigServerBootstrapEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
+// TODO We changed this class from an ApplicationListener to an EnvironmentPostProcessor
+// but did not change the class name to avoid breaking anyone in a minor release.
+// In the next major it will be safe to change the class name and remove the
+// ApplicationListener interface.
+public class ConfigServerBootstrapApplicationListener
+		implements ApplicationListener<ApplicationEnvironmentPreparedEvent>, EnvironmentPostProcessor, Ordered {
 
 	/**
 	 * Default order of the bootstrap application listener.
@@ -74,6 +81,11 @@ public class ConfigServerBootstrapEnvironmentPostProcessor implements Environmen
 
 	public void setOrder(int order) {
 		this.order = order;
+	}
+
+	@Override
+	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
+		postProcessEnvironment(event.getEnvironment(), event.getSpringApplication());
 	}
 
 }

@@ -5,7 +5,7 @@ org.springframework.cloud.config.server.config.EncryptionAutoConfiguration
 
 # Environment PostProcessor
 org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapEnvironmentPostProcessor
+org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapApplicationListener
 
 # Autoconfiguration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
