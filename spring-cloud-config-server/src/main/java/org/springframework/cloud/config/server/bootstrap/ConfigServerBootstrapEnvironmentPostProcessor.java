@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package org.springframework.cloud.config.server.bootstrap;
 
 import java.util.Collections;
 
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
-import org.springframework.context.ApplicationListener;
+import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
@@ -43,10 +43,10 @@ import org.springframework.core.env.PropertySource;
  * This listener is only to prevent it from using HTTP to contact itself.
  *
  * @author Dave Syer
+ * @author Ryan Baxter
  *
  */
-public class ConfigServerBootstrapApplicationListener
-		implements ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
+public class ConfigServerBootstrapEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
 	/**
 	 * Default order of the bootstrap application listener.
@@ -59,22 +59,21 @@ public class ConfigServerBootstrapApplicationListener
 			Collections.<String, Object>singletonMap("spring.cloud.config.enabled", "false"));
 
 	@Override
+	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+		if (!environment.resolvePlaceholders("${spring.cloud.config.enabled:false}").equalsIgnoreCase("true")) {
+			if (!environment.getPropertySources().contains(this.propertySource.getName())) {
+				environment.getPropertySources().addLast(this.propertySource);
+			}
+		}
+	}
+
+	@Override
 	public int getOrder() {
 		return this.order;
 	}
 
 	public void setOrder(int order) {
 		this.order = order;
-	}
-
-	@Override
-	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
-		ConfigurableEnvironment environment = event.getEnvironment();
-		if (!environment.resolvePlaceholders("${spring.cloud.config.enabled:false}").equalsIgnoreCase("true")) {
-			if (!environment.getPropertySources().contains(this.propertySource.getName())) {
-				environment.getPropertySources().addLast(this.propertySource);
-			}
-		}
 	}
 
 }

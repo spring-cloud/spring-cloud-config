@@ -2,9 +2,11 @@
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
 org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapConfiguration,\
 org.springframework.cloud.config.server.config.EncryptionAutoConfiguration
-# Application listeners
-org.springframework.context.ApplicationListener=\
-org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapApplicationListener
+
+# Environment PostProcessor
+org.springframework.boot.env.EnvironmentPostProcessor=\
+org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapEnvironmentPostProcessor
+
 # Autoconfiguration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.config.server.config.ConfigServerAutoConfiguration,\
