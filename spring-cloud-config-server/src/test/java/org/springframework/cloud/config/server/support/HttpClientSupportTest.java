@@ -19,7 +19,12 @@ package org.springframework.cloud.config.server.support;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Rule;
@@ -32,11 +37,19 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.isA;
 import static org.junit.internal.matchers.ThrowableCauseMatcher.hasCause;
@@ -62,6 +75,42 @@ public class HttpClientSupportTest {
 				.expect(anyOf(isA(SocketTimeoutException.class), hasCause(isA(SocketTimeoutException.class))));
 
 		httpClient.execute(new HttpGet(String.format("http://127.0.0.1:%s/test/endpoint", this.localServerPort)));
+	}
+
+	@Test
+	public void httpsProxy() throws GeneralSecurityException, IOException {
+		WireMockServer wireMockProxyServer = new WireMockServer(
+				options().httpDisabled(true).dynamicHttpsPort().enableBrowserProxying(true).trustAllProxyTargets(true));
+		WireMockServer wireMockServer = new WireMockServer(options().httpDisabled(true).dynamicHttpsPort());
+		wireMockProxyServer.start();
+		wireMockServer.start();
+		WireMock.configureFor("https", "localhost", wireMockServer.httpsPort());
+		stubFor(get("/test/proxy").willReturn(aResponse().withStatus(200)));
+
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
+		ProxyHostProperties hostProperties = new ProxyHostProperties();
+		hostProperties.setHost("localhost");
+		hostProperties.setPort(wireMockProxyServer.httpsPort());
+		proxy.put(ProxyHostProperties.ProxyForScheme.HTTPS, hostProperties);
+		properties.setProxy(proxy);
+		properties.setSkipSslValidation(true);
+		CloseableHttpClient httpClient = null;
+		CloseableHttpResponse response = null;
+		try {
+			httpClient = HttpClientSupport.builder(properties).build();
+			response = httpClient
+					.execute(new HttpGet("https://localhost:" + wireMockServer.httpsPort() + "/test/proxy"));
+		}
+		finally {
+			if (response != null) {
+				response.close();
+			}
+			if (httpClient != null) {
+				httpClient.close();
+			}
+			verify(1, getRequestedFor(urlEqualTo("/test/proxy")));
+		}
 	}
 
 	@SpringBootConfiguration
