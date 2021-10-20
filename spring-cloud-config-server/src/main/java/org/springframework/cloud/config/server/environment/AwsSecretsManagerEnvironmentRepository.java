@@ -33,14 +33,16 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
 import static org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
 
 /**
  * @author Tejas Pandilwar
+ * @author KNV Srinivas
  */
-public class AwsSecretsManagerEnvironmentRepository implements EnvironmentRepository {
+public class AwsSecretsManagerEnvironmentRepository implements EnvironmentRepository, Ordered {
 
 	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
@@ -52,12 +54,15 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 	private final AwsSecretsManagerEnvironmentProperties environmentProperties;
 
+	private final int order;
+
 	public AwsSecretsManagerEnvironmentRepository(AWSSecretsManager awsSmClient,
 			ConfigServerProperties configServerProperties,
 			AwsSecretsManagerEnvironmentProperties environmentProperties) {
 		this.awsSmClient = awsSmClient;
 		this.configServerProperties = configServerProperties;
 		this.environmentProperties = environmentProperties;
+		this.order = environmentProperties.getOrder();
 		this.objectMapper = new ObjectMapper();
 	}
 
@@ -151,6 +156,11 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		}
 
 		return properties;
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
 	}
 
 }
