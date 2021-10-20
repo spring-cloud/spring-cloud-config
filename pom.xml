@@ -30,6 +30,7 @@
 		<spring-cloud-commons.version>3.0.5-SNAPSHOT</spring-cloud-commons.version>
 		<aws-java-sdk.version>1.11.903</aws-java-sdk.version>
 		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
+		<wiremock.version>2.31.0</wiremock.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failsOnViolation>true
 		</maven-checkstyle-plugin.failsOnViolation>
@@ -87,6 +88,11 @@
 				<groupId>com.google.auth</groupId>
 				<artifactId>google-auth-library-oauth2-http</artifactId>
 				<version>0.22.0</version>
+			</dependency>
+			<dependency>
+				<groupId>com.github.tomakehurst</groupId>
+				<artifactId>wiremock-jre8</artifactId>
+				<version>${wiremock.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
