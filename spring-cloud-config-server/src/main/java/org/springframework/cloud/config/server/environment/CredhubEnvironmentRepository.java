@@ -109,4 +109,5 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 	public void setOrder(int order) {
 		this.order = order;
 	}
+
 }

@@ -123,4 +123,5 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 	public int getOrder() {
 		return order;
 	}
+
 }
