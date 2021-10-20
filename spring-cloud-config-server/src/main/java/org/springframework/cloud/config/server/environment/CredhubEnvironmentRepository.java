@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.core.Ordered;
 import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.credhub.support.CredentialDetails;
 import org.springframework.credhub.support.SimpleCredentialName;
@@ -31,8 +32,9 @@ import static java.util.stream.Collectors.toMap;
 
 /**
  * @author Alberto C. Ríos
+ * @author KNV Srinivas
  */
-public class CredhubEnvironmentRepository implements EnvironmentRepository {
+public class CredhubEnvironmentRepository implements EnvironmentRepository, Ordered {
 
 	private CredHubOperations credHubOperations;
 
@@ -41,6 +43,8 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository {
 	private static final String DEFAULT_LABEL = "master";
 
 	private static final String DEFAULT_APPLICATION = "application";
+
+	private int order = Ordered.LOWEST_PRECEDENCE;
 
 	public CredhubEnvironmentRepository(CredHubOperations credHubOperations) {
 		this.credHubOperations = credHubOperations;
@@ -97,4 +101,12 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository {
 				.collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
 	}
 
+	@Override
+	public int getOrder() {
+		return order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
+	}
 }
