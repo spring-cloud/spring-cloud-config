@@ -320,14 +320,13 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			if (logger.isTraceEnabled()) {
 				logger.trace("Testing pattern: " + finalPattern + " with property source: " + name);
 			}
-			if (normal.startsWith(finalPattern) && !normal.substring(finalPattern.length()).contains("/")) {
+			if (normal.startsWith(finalPattern)) {
 				matches = true;
 				break;
 			}
 			if (locations != null) {
 				return !Arrays.stream(locations).map(this::cleanFileLocation)
-						.noneMatch(location -> location.startsWith(finalPattern)
-								&& !location.substring(finalPattern.length()).contains("/"));
+						.noneMatch(location -> location.startsWith(finalPattern));
 			}
 		}
 		return matches;

@@ -259,8 +259,17 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void testDefaultLabel() {
 		this.repository.setDefaultLabel("test");
-		assertThat(this.repository.findOne("foo", "default", null).getPropertySources().get(0).getSource().get("foo"))
-				.isEqualTo("test_bar");
+		Environment environment = this.repository.findOne("foo", "default", null);
+		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("test_bar");
+	}
+
+	@Test
+	public void testImportPrefixedWithFile() {
+		this.repository.setSearchLocations("file:./src/test/resources/test");
+		Environment environment = this.repository.findOne("import", "default", "master");
+		assertThat(environment.getPropertySources().size()).isEqualTo(3);
+		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("imported");
+		assertThat(environment.getPropertySources().get(2).getSource().get("foo")).isEqualTo("importing");
 	}
 
 	@Test
