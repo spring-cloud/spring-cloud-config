@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -36,7 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("redis")
-@Testcontainers(disabledWithoutDocker = true)
+@Testcontainers
+@Tag("DockerRequired")
 public class RedisEnvironmentRepositoryIntegrationTests {
 
 	@Container
