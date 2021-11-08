@@ -329,8 +329,11 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				break;
 			}
 			if (locations != null) {
-				return !Arrays.stream(locations).map(this::cleanFileLocation)
-						.noneMatch(location -> location.startsWith(finalPattern));
+				matches = Arrays.stream(locations).map(this::cleanFileLocation)
+					.anyMatch(location -> location.startsWith(finalPattern));
+				if (matches) {
+					break;
+				}
 			}
 		}
 		return matches;
