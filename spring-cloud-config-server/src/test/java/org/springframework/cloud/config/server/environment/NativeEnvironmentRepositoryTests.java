@@ -286,6 +286,12 @@ public class NativeEnvironmentRepositoryTests {
 		testImport();
 	}
 
+	@Test
+	public void testImportWithoutPrefix() {
+		this.repository.setSearchLocations("src/test/resources/test");
+		testImport();
+	}
+
 	private void testImport() {
 		Environment environment = this.repository.findOne("import", "default", "master");
 		// TODO should be 4, bar.yml contains 2 yaml documents
