@@ -266,6 +266,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			}
 			name = name.replace("applicationConfig: [", "");
 			name = name.replace("file [", "file:");
+			name = name.replace("class path resource [", "classpath:/");
 			if (name.indexOf('[') < 0) {
 				// only remove if there isn't a matching left bracket
 				name = name.replace("]", "");

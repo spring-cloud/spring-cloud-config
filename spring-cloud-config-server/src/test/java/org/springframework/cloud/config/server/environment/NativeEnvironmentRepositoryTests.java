@@ -264,9 +264,20 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testImportPrefixedWithClasspath() {
+		this.repository.setSearchLocations("classpath:/test");
+		testImport();
+	}
+
+	@Test
 	public void testImportPrefixedWithFile() {
 		this.repository.setSearchLocations("file:./src/test/resources/test");
+		testImport();
+	}
+
+	private void testImport() {
 		Environment environment = this.repository.findOne("import", "default", "master");
+		// TODO should be 4, bar.yml contains 2 yaml documents
 		assertThat(environment.getPropertySources().size()).isEqualTo(3);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("imported");
 		assertThat(environment.getPropertySources().get(2).getSource().get("foo")).isEqualTo("importing");
