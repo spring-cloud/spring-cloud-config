@@ -264,6 +264,17 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testImportVanilla() {
+		testImport();
+	}
+
+	@Test
+	public void testImportEmptySearchLocations() {
+		this.repository.setSearchLocations();
+		testImport();
+	}
+
+	@Test
 	public void testImportPrefixedWithClasspath() {
 		this.repository.setSearchLocations("classpath:/test");
 		testImport();

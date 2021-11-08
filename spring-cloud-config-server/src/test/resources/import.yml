@@ -1,0 +1,5 @@
+foo: importing
+
+spring.config.import:
+  - configserver-test.yml
+  - test/import/foo.yml

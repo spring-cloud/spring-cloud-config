@@ -314,6 +314,9 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			if (!pattern.contains(":")) {
 				pattern = "file:" + pattern;
 			}
+			if (pattern.startsWith("optional:")) {
+				pattern = pattern.substring("optional:".length());
+			}
 			if (pattern.startsWith("file:")) {
 				pattern = StringUtils.cleanPath(new File(pattern.substring("file:".length())).getAbsolutePath()) + "/";
 			}
