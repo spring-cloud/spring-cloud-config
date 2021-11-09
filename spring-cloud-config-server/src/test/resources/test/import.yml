@@ -1,0 +1,5 @@
+foo: importing
+
+spring.config.import:
+  - bar.yml
+  - import/foo.yml

@@ -266,6 +266,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			}
 			name = name.replace("applicationConfig: [", "");
 			name = name.replace("file [", "file:");
+			name = name.replace("class path resource [", "classpath:/");
 			if (name.indexOf('[') < 0) {
 				// only remove if there isn't a matching left bracket
 				name = name.replace("]", "");
@@ -313,6 +314,9 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			if (!pattern.contains(":")) {
 				pattern = "file:" + pattern;
 			}
+			if (pattern.startsWith("optional:")) {
+				pattern = pattern.substring("optional:".length());
+			}
 			if (pattern.startsWith("file:")) {
 				pattern = StringUtils.cleanPath(new File(pattern.substring("file:".length())).getAbsolutePath()) + "/";
 			}
@@ -320,14 +324,16 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			if (logger.isTraceEnabled()) {
 				logger.trace("Testing pattern: " + finalPattern + " with property source: " + name);
 			}
-			if (normal.startsWith(finalPattern) && !normal.substring(finalPattern.length()).contains("/")) {
+			if (normal.startsWith(finalPattern)) {
 				matches = true;
 				break;
 			}
 			if (locations != null) {
-				return !Arrays.stream(locations).map(this::cleanFileLocation)
-						.noneMatch(location -> location.startsWith(finalPattern)
-								&& !location.substring(finalPattern.length()).contains("/"));
+				matches = Arrays.stream(locations).map(this::cleanFileLocation)
+					.anyMatch(location -> location.startsWith(finalPattern));
+				if (matches) {
+					break;
+				}
 			}
 		}
 		return matches;
