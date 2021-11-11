@@ -149,6 +149,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private boolean skipSslValidation;
 
+	private boolean tryMasterBranch;
+
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties) {
 		super(environment, properties);
 		this.cloneOnStart = properties.isCloneOnStart();
@@ -159,6 +161,15 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.refreshRate = properties.getRefreshRate();
 		this.skipSslValidation = properties.isSkipSslValidation();
 		this.gitFactory = new JGitFactory(properties.isCloneSubmodules());
+		this.tryMasterBranch = properties.isTryMasterBranch();
+	}
+
+	public boolean isTryMasterBranch() {
+		return tryMasterBranch;
+	}
+
+	public void setTryMasterBranch(boolean tryMasterBranch) {
+		this.tryMasterBranch = tryMasterBranch;
 	}
 
 	public boolean isCloneOnStart() {
@@ -246,7 +257,21 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		if (label == null) {
 			label = this.defaultLabel;
 		}
-		String version = refresh(label);
+		String version;
+		try {
+			version = refresh(label);
+		}
+		catch (Exception e) {
+			if (this.defaultLabel.equals(label) && JGitEnvironmentProperties.MAIN_LABEL.equals(this.defaultLabel)
+					&& tryMasterBranch) {
+				logger.info("Could not refresh default label " + label, e);
+				logger.info("Will try to checkout master label instead.");
+				version = refresh(JGitEnvironmentProperties.MASTER_LABEL);
+			}
+			else {
+				throw e;
+			}
+		}
 		return new Locations(application, profile, label, version,
 				getSearchLocations(getWorkingDirectory(), application, profile, label));
 	}
@@ -352,12 +377,29 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				// checkout the branch/tag/commit-id.
 				if (!StringUtils.isEmpty(defaultBranchInGit)
 						&& !getDefaultLabel().equalsIgnoreCase(defaultBranchInGit)) {
-					checkout(git, getDefaultLabel());
+					checkoutDefaultBranchWithRetry(git);
 				}
 			}
 
 			if (git != null) {
 				git.close();
+			}
+		}
+
+	}
+
+	private void checkoutDefaultBranchWithRetry(Git git) throws GitAPIException {
+		try {
+			checkout(git, getDefaultLabel());
+		}
+		catch (Exception e) {
+			if (JGitEnvironmentProperties.MAIN_LABEL.equals(getDefaultLabel()) && tryMasterBranch) {
+				logger.info("Could not checkout default label " + getDefaultLabel(), e);
+				logger.info("Will try to checkout master label instead.");
+				checkout(git, JGitEnvironmentProperties.MASTER_LABEL);
+			}
+			else {
+				throw e;
 			}
 		}
 
@@ -393,7 +435,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 		try {
 			// make sure that deleted branch not a current one
-			checkout(git, this.defaultLabel);
+			checkoutDefaultBranchWithRetry(git);
 			return deleteBranches(git, branchesToDelete);
 		}
 		catch (Exception ex) {

@@ -264,7 +264,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + uri).run();
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
-		assertThat(repository.getDefaultLabel()).isEqualTo("master");
+		assertThat(repository.getDefaultLabel()).isEqualTo(JGitEnvironmentProperties.MAIN_LABEL);
 	}
 
 	@Test(expected = NoSuchLabelException.class)

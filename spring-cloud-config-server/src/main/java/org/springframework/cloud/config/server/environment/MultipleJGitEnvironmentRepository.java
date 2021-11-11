@@ -169,6 +169,21 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		if (label == null) {
 			label = candidate.getDefaultLabel();
 		}
+		try {
+			return findOneFromCandidate(candidate, application, profile, label, includeOrigin);
+		}
+		catch (Exception e) {
+			if (MultipleJGitEnvironmentProperties.MAIN_LABEL.equals(label) && isTryMasterBranch()) {
+				candidate = getRepository(this, application, profile, MultipleJGitEnvironmentProperties.MASTER_LABEL);
+				return findOneFromCandidate(candidate, application, profile,
+						MultipleJGitEnvironmentProperties.MASTER_LABEL, includeOrigin);
+			}
+			throw e;
+		}
+	}
+
+	private Environment findOneFromCandidate(JGitEnvironmentRepository candidate, String application, String profile,
+			String label, boolean includeOrigin) {
 		if (candidate == this) {
 			return super.findOne(application, profile, label, includeOrigin);
 		}
