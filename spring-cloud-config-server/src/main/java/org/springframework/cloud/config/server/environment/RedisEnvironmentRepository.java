@@ -72,4 +72,5 @@ public class RedisEnvironmentRepository implements EnvironmentRepository, Ordere
 	public int getOrder() {
 		return order;
 	}
+
 }
