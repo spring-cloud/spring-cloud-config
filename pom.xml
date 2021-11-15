@@ -31,6 +31,7 @@
 		<aws-java-sdk.version>1.11.911</aws-java-sdk.version>
 		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
 		<testcontainers.version>1.15.1</testcontainers.version>
+		<wiremock.version>2.31.0</wiremock.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failsOnViolation>true
 		</maven-checkstyle-plugin.failsOnViolation>
@@ -115,6 +116,11 @@
 				<version>${testcontainers.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+      </dependency>
+      <dependency>
+				<groupId>com.github.tomakehurst</groupId>
+				<artifactId>wiremock-jre8</artifactId>
+				<version>${wiremock.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -136,7 +142,7 @@
 				<repository>
 					<id>spring-milestones</id>
 					<name>Spring Milestones</name>
-					<url>https://repo.spring.io/libs-milestone-local</url>
+					<url>https://repo.spring.io/milestone</url>
 					<snapshots>
 						<enabled>false</enabled>
 					</snapshots>
@@ -165,7 +171,7 @@
 				<pluginRepository>
 					<id>spring-milestones</id>
 					<name>Spring Milestones</name>
-					<url>https://repo.spring.io/libs-milestone-local</url>
+					<url>https://repo.spring.io/milestone</url>
 					<snapshots>
 						<enabled>false</enabled>
 					</snapshots>
@@ -173,7 +179,7 @@
 				<pluginRepository>
 					<id>spring-releases</id>
 					<name>Spring Releases</name>
-					<url>https://repo.spring.io/libs-release-local</url>
+					<url>https://repo.spring.io/release</url>
 					<snapshots>
 						<enabled>false</enabled>
 					</snapshots>

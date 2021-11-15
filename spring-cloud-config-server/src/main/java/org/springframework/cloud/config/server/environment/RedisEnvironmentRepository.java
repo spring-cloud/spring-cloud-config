@@ -24,21 +24,26 @@ import java.util.Map;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Piotr Mińkowski
+ * @author KNV Srinivas
  */
-public class RedisEnvironmentRepository implements EnvironmentRepository {
+public class RedisEnvironmentRepository implements EnvironmentRepository, Ordered {
 
 	private final StringRedisTemplate redis;
 
 	private final RedisEnvironmentProperties properties;
 
+	private final int order;
+
 	public RedisEnvironmentRepository(StringRedisTemplate redis, RedisEnvironmentProperties properties) {
 		this.redis = redis;
 		this.properties = properties;
+		this.order = properties.getOrder();
 	}
 
 	@Override
@@ -61,6 +66,11 @@ public class RedisEnvironmentRepository implements EnvironmentRepository {
 		}
 		Collections.reverse(keys);
 		return keys;
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
 	}
 
 }

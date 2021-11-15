@@ -32,12 +32,14 @@ import org.springframework.cloud.config.server.environment.secretmanager.GoogleS
 import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerAccessStrategy;
 import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerAccessStrategyFactory;
 import org.springframework.cloud.config.server.environment.secretmanager.HttpHeaderGoogleConfigProvider;
+import org.springframework.core.Ordered;
 import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Jose Maria Alvarez
+ * @author KNV Srinivas
  */
-public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepository {
+public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepository, Ordered {
 
 	private String applicationLabel;
 
@@ -49,6 +51,8 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 
 	private GoogleConfigProvider configProvider;
 
+	private final int order;
+
 	public GoogleSecretManagerEnvironmentRepository(ObjectProvider<HttpServletRequest> request, RestTemplate rest,
 			GoogleSecretManagerEnvironmentProperties properties) {
 		this.applicationLabel = properties.getApplicationLabel();
@@ -56,6 +60,7 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 		this.configProvider = new HttpHeaderGoogleConfigProvider(request);
 		this.accessStrategy = GoogleSecretManagerAccessStrategyFactory.forVersion(rest, configProvider, properties);
 		this.tokenMandatory = properties.getTokenMandatory();
+		this.order = properties.getOrder();
 	}
 
 	@Override
@@ -112,6 +117,11 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
 	}
 
 }

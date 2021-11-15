@@ -38,15 +38,15 @@ public class SchemeBasedRoutePlanner extends DefaultRoutePlanner {
 
 	@Override
 	protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context) {
-		return "https".equals(target.getSchemeName()) ? determineProxy(this.httpsProxy)
-				: determineProxy(this.httpProxy);
+		return "https".equals(target.getSchemeName()) ? determineProxy(this.httpsProxy, "https")
+				: determineProxy(this.httpProxy, HttpHost.DEFAULT_SCHEME_NAME);
 	}
 
-	private HttpHost determineProxy(ProxyHostProperties properties) {
+	private HttpHost determineProxy(ProxyHostProperties properties, String scheme) {
 		if (properties == null) {
 			return null;
 		}
-		return new HttpHost(properties.getHost(), properties.getPort());
+		return new HttpHost(properties.getHost(), properties.getPort(), scheme);
 	}
 
 }

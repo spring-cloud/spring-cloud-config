@@ -832,8 +832,6 @@ secret value =
 }
 ----
 
-----
-
 ===== AWS Parameter Store
 
 When using AWS Parameter Store as a backend, you can share configuration with all applications by placing properties within the `/application` hierarchy.
