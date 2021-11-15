@@ -1,9 +1,11 @@
-version: 2
+version: 2.1
 jobs:
   build:
-    docker:
-      - image: springcloud/pipeline-base
-        user: appuser
+    machine:
+      image: ubuntu-2004:202107-02
+#    docker:
+#      - image: springcloud/pipeline-base
+#        user: appuser
     environment:
       _JAVA_OPTIONS: "-Xms1024m -Xmx2048m"
       TERM: dumb
