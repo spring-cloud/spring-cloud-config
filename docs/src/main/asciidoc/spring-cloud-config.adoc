@@ -540,6 +540,13 @@ value of this property is specified in seconds.  By default the value is 0, mean
 the config server will fetch updated configuration from the Git repo every time it
 is requested.
 
+===== Default Label
+
+The default label used for Git is `main`.  If you do not set `spring.cloud.config.server.git.defaultLabel` and a branch named `main`
+does not exist, the config server will by default also try to checkout a branch named `master`.  If
+you would like to disable to the fallback branch behavior you can set
+`spring.cloud.config.server.git.tryMasterBranch` to `false`.
+
 ==== Version Control Backend Filesystem Use
 
 WARNING: With VCS-based backends (git, svn), files are checked out or cloned to the local filesystem.

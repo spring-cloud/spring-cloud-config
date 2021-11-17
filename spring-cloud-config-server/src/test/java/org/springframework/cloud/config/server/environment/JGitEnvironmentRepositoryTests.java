@@ -43,6 +43,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NotMergedException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.attributes.AttributesNodeProvider;
 import org.eclipse.jgit.junit.MockSystemReader;
@@ -1226,6 +1227,109 @@ public class JGitEnvironmentRepositoryTests {
 		verify(mockCheckoutCommand, times(1)).call();
 		verify(mockListBranchCommand, times(2)).call();
 		verify(mockCheckoutCommand, times(1)).setName(anyString());
+	}
+
+	@Test
+	public void tryMasterBranch() throws Exception {
+		// Set the default branch of repository as master
+		Repository mockRepository = mock(Repository.class);
+		when(mockRepository.getBranch()).thenReturn("master");
+
+		Git mockGit = mock(Git.class);
+		when(mockGit.getRepository()).thenReturn(mockRepository);
+
+		// Mock the clone command
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+
+		// Mocking the commands to checkout to label.
+		ListBranchCommand mockListBranchCommand = mock(ListBranchCommand.class);
+		CheckoutCommand mockCheckoutCommand = mock(CheckoutCommand.class);
+
+		// Return the mocked checkout and ListBranchCommand.
+		when(mockGit.checkout()).thenReturn(mockCheckoutCommand);
+		when(mockGit.branchList()).thenReturn(mockListBranchCommand);
+
+		// Add 2 branches on mock repo {master, main}
+		List<Ref> repositoryRefsList = new ArrayList<>();
+
+		// Mock master branch
+		Ref mockMasterRef = mock(Ref.class);
+		repositoryRefsList.add(mockMasterRef);
+		when(mockMasterRef.getName()).thenReturn("/master");
+
+		// Mock calls on list and checkout commands
+		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
+		when(mockCheckoutCommand.call()).thenThrow(new RefNotFoundException("Ref main cannot be resolved"))
+				.thenReturn(mockMasterRef);
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setTryMasterBranch(true);
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment, properties);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setCloneOnStart(true);
+
+		// By default we will try and checkout main, make sure we fall back to trying
+		// master
+		envRepository.afterPropertiesSet();
+		verify(mockCloneCommand, times(1)).call();
+		verify(mockCheckoutCommand, times(2)).call();
+		verify(mockListBranchCommand, times(3)).call();
+		verify(mockCheckoutCommand, times(1)).setName(eq("master"));
+	}
+
+	@Test
+	public void doNotTryMasterBranch() throws Exception {
+		// Set the default branch of repository as master
+		Repository mockRepository = mock(Repository.class);
+		when(mockRepository.getBranch()).thenReturn("master");
+
+		Git mockGit = mock(Git.class);
+		when(mockGit.getRepository()).thenReturn(mockRepository);
+
+		// Mock the clone command
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+
+		// Mocking the commands to checkout to label.
+		ListBranchCommand mockListBranchCommand = mock(ListBranchCommand.class);
+		CheckoutCommand mockCheckoutCommand = mock(CheckoutCommand.class);
+
+		// Return the mocked checkout and ListBranchCommand.
+		when(mockGit.checkout()).thenReturn(mockCheckoutCommand);
+		when(mockGit.branchList()).thenReturn(mockListBranchCommand);
+
+		// Add 2 branches on mock repo {master, main}
+		List<Ref> repositoryRefsList = new ArrayList<>();
+
+		// Mock master branch
+		Ref mockMasterRef = mock(Ref.class);
+		repositoryRefsList.add(mockMasterRef);
+		when(mockMasterRef.getName()).thenReturn("/master");
+
+		// Mock calls on list and checkout commands
+		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
+		when(mockCheckoutCommand.call()).thenThrow(new RefNotFoundException("Ref main cannot be resolved"))
+				.thenReturn(mockMasterRef);
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setTryMasterBranch(false);
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment, properties);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("http://somegitserver/somegitrepo");
+		envRepository.setCloneOnStart(true);
+
+		// By default we will try and checkout main, but do not fallback, expect exception
+		try {
+			envRepository.afterPropertiesSet();
+		}
+		catch (RefNotFoundException e) {
+			verify(mockCloneCommand, times(1)).call();
+			verify(mockCheckoutCommand, times(1)).call();
+			verify(mockListBranchCommand, times(1)).call();
+			verify(mockCheckoutCommand, times(1)).setName(eq("main"));
+		}
 	}
 
 	/**

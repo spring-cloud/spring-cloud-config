@@ -109,6 +109,17 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThat(environment.getLabel()).isEqualTo("master");
 	}
 
+	@Test(expected = NoSuchLabelException.class)
+	public void shouldFailIfNotTryingMaster() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo();
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+				.properties("spring.cloud.config.server.git.uri:" + uri,
+						"spring.cloud.config.server.git.tryMasterBranch:false")
+				.run();
+		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+		Environment environment = repository.findOne("bar", "staging", null);
+	}
+
 	@Test
 	public void pull() throws Exception {
 		ConfigServerTestUtils.prepareLocalRepo();
@@ -264,7 +275,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + uri).run();
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
-		assertThat(repository.getDefaultLabel()).isEqualTo("master");
+		assertThat(repository.getDefaultLabel()).isEqualTo(JGitEnvironmentProperties.MAIN_LABEL);
 	}
 
 	@Test(expected = NoSuchLabelException.class)

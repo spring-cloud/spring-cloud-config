@@ -183,7 +183,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	public void mappingRepoWithDefaultLabel() {
 		Environment environment = this.repository.findOne("test1-svc", "staging", null);
-		assertThat(environment.getLabel()).isEqualTo("master");
+		assertThat(environment.getLabel()).isEqualTo(JGitEnvironmentProperties.MAIN_LABEL);
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
