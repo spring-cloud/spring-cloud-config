@@ -1136,6 +1136,10 @@ You can secure your Config Server in any way that makes sense to you (from physi
 To use the default Spring Boot-configured HTTP Basic security, include Spring Security on the classpath (for example, through `spring-boot-starter-security`).
 The default is a username of `user` and a randomly generated password. A random password is not useful in practice, so we recommend you configure the password (by setting `spring.security.user.password`) and encrypt it (see below for instructions on how to do that).
 
+=== Actuator and Security
+
+IMPORTANT: Some platforms configure health checks or something similar and point to `/actuator/health` or other actuator endpoints. If actuator is not a dependency of config server, requests to `/actuator/**` would match the config server API `/{application}/{label}` possibly leaking secure information. Remember to add the `spring-boot-starter-actuator` dependency in this case and configure the users such that the user that makes calls to `/actuator/**` does not have access to the config server API at `/{application}/{label}`.
+
 === Encryption and Decryption
 
 IMPORTANT: To use the encryption and decryption features you need the full-strength JCE installed in your JVM (it is not included by default).
