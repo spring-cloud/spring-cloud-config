@@ -161,8 +161,11 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 							// https://github.com/spring-cloud/spring-cloud-config/issues/1874
 							for (String profile : resource.getAcceptedProfiles()) {
 								// TODO: switch to match
-								if (propertySourceName.contains("-" + profile + ".")) {
-									// TODO: switch to Options.with() when implemented
+								// , is used as a profile-separator for property sources
+								// from vault
+								// - is the default profile-separator for property sources
+								if (propertySourceName.matches(".*[-,]" + profile + ".*")) {
+									// // TODO: switch to Options.with() when implemented
 									options.add(Option.PROFILE_SPECIFIC);
 								}
 							}
