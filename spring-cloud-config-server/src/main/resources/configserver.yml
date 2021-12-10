@@ -18,4 +18,6 @@ spring:
 server:
   port: 8888
 management:
-  context_path: /admin
+  endpoints:
+    web:
+      base-path: /admin
