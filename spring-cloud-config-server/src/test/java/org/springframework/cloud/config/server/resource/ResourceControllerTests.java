@@ -347,8 +347,9 @@ public class ResourceControllerTests {
 	@Test
 	public void setSearchLocationsAppendSlashByConstructor() {
 		final NativeEnvironmentProperties properties = new NativeEnvironmentProperties();
-		properties.setSearchLocations(new String[]{"classpath:/test"});
+		properties.setSearchLocations(new String[] { "classpath:/test" });
 		NativeEnvironmentRepository repo = new NativeEnvironmentRepository(this.context.getEnvironment(), properties);
 		assertThat(repo.getSearchLocations()[0]).isEqualTo("classpath:/test/");
 	}
+
 }
