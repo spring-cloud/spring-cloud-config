@@ -16,13 +16,12 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
-import org.springframework.util.StringUtils;
+
+import static org.springframework.cloud.config.server.environment.AwsClientBuilderConfigurer.configureClientBuilder;
 
 /**
  * @author Tejas Pandilwar
@@ -39,19 +38,8 @@ public class AwsSecretsManagerEnvironmentRepositoryFactory implements
 	@Override
 	public AwsSecretsManagerEnvironmentRepository build(AwsSecretsManagerEnvironmentProperties environmentProperties) {
 		AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder.standard();
-		String region = environmentProperties.getRegion();
 
-		if (!StringUtils.isEmpty(region)) {
-			Regions awsRegion = Regions.fromName(region);
-			clientBuilder.withRegion(awsRegion);
-
-			String endpoint = environmentProperties.getEndpoint();
-			if (!StringUtils.isEmpty(endpoint)) {
-				AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
-						endpoint, awsRegion.getName());
-				clientBuilder.withEndpointConfiguration(endpointConfiguration);
-			}
-		}
+		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 
 		AWSSecretsManager client = clientBuilder.build();
 		return new AwsSecretsManagerEnvironmentRepository(client, configServerProperties, environmentProperties);

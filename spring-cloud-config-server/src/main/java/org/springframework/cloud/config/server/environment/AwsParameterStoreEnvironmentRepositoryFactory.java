@@ -16,13 +16,12 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
-import org.springframework.util.StringUtils;
+
+import static org.springframework.cloud.config.server.environment.AwsClientBuilderConfigurer.configureClientBuilder;
 
 /**
  * @author Iulian Antohe
@@ -40,22 +39,7 @@ public class AwsParameterStoreEnvironmentRepositoryFactory implements
 	public AwsParameterStoreEnvironmentRepository build(AwsParameterStoreEnvironmentProperties environmentProperties) {
 		AWSSimpleSystemsManagementClientBuilder clientBuilder = AWSSimpleSystemsManagementClientBuilder.standard();
 
-		String region = environmentProperties.getRegion();
-
-		if (StringUtils.hasLength(region)) {
-			Regions awsRegion = Regions.fromName(region);
-
-			clientBuilder.withRegion(awsRegion);
-
-			String endpoint = environmentProperties.getEndpoint();
-
-			if (StringUtils.hasLength(endpoint)) {
-				AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
-						endpoint, awsRegion.getName());
-
-				clientBuilder.withEndpointConfiguration(endpointConfiguration);
-			}
-		}
+		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 
 		AWSSimpleSystemsManagement client = clientBuilder.build();
 
