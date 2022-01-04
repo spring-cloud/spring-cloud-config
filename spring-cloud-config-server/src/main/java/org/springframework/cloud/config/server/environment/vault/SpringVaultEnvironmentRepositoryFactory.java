@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.config.server.environment.vault;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryFactory;

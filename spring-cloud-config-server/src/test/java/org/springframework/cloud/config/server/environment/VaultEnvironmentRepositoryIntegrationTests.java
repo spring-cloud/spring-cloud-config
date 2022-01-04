@@ -19,8 +19,8 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Optional;
 
 import javax.net.ssl.SSLHandshakeException;
-import javax.servlet.http.HttpServletRequest;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

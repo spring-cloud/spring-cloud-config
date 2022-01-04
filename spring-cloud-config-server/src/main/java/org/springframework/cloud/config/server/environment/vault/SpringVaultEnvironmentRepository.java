@@ -16,10 +16,9 @@
 
 package org.springframework.cloud.config.server.environment.vault;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.server.environment.AbstractVaultEnvironmentRepository;

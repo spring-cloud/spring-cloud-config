@@ -19,8 +19,7 @@ package org.springframework.cloud.config.server.environment.vault;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
