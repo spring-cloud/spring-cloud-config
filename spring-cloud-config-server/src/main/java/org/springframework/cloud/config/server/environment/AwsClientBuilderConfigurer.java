@@ -22,6 +22,7 @@ import com.amazonaws.client.builder.AwsSyncClientBuilder;
 import org.springframework.util.StringUtils;
 
 abstract class AwsClientBuilderConfigurer {
+
 	private AwsClientBuilderConfigurer() {
 	}
 
@@ -29,7 +30,7 @@ abstract class AwsClientBuilderConfigurer {
 		if (StringUtils.hasText(region)) {
 			if (StringUtils.hasText(endpoint)) {
 				AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
-					endpoint, region);
+						endpoint, region);
 				clientBuilder.withEndpointConfiguration(endpointConfiguration);
 			}
 			else {
@@ -37,4 +38,5 @@ abstract class AwsClientBuilderConfigurer {
 			}
 		}
 	}
+
 }
