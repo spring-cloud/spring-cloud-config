@@ -21,6 +21,8 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 
+import static org.springframework.cloud.config.server.environment.AwsClientBuilderConfigurer.configureClientBuilder;
+
 public class AwsS3EnvironmentRepositoryFactory
 		implements EnvironmentRepositoryFactory<AwsS3EnvironmentRepository, AwsS3EnvironmentProperties> {
 
@@ -33,16 +35,7 @@ public class AwsS3EnvironmentRepositoryFactory
 	@Override
 	public AwsS3EnvironmentRepository build(AwsS3EnvironmentProperties environmentProperties) {
 		final AmazonS3ClientBuilder clientBuilder = AmazonS3ClientBuilder.standard();
-		if (environmentProperties.getRegion() != null) {
-			if (environmentProperties.getEndpoint() != null) {
-				AmazonS3ClientBuilder.EndpointConfiguration endpointConfiguration = new AmazonS3ClientBuilder.EndpointConfiguration(
-						environmentProperties.getEndpoint(), environmentProperties.getRegion());
-				clientBuilder.withEndpointConfiguration(endpointConfiguration);
-			}
-			else {
-				clientBuilder.withRegion(environmentProperties.getRegion());
-			}
-		}
+		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 		final AmazonS3 client = clientBuilder.build();
 
 		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(client,

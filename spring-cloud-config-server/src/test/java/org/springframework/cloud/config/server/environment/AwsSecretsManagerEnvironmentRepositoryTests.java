@@ -715,6 +715,25 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
 
+	@Test
+	public void factoryCustomizableWithRegion() {
+		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsSecretsManagerEnvironmentProperties properties = new AwsSecretsManagerEnvironmentProperties();
+		properties.setRegion("us-east-1");
+		AwsSecretsManagerEnvironmentRepository repository = factory.build(properties);
+		assertThat(repository).isNotNull();
+	}
+
+	@Test
+	public void factoryCustomizableWithRegionAndEndpoint() {
+		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsSecretsManagerEnvironmentProperties properties = new AwsSecretsManagerEnvironmentProperties();
+		properties.setRegion("us-east-1");
+		properties.setEndpoint("https://myawsendpoint/");
+		AwsSecretsManagerEnvironmentRepository repository = factory.build(properties);
+		assertThat(repository).isNotNull();
+	}
+
 	private void setupAwsSmClientMocks(Environment environment) {
 		for (PropertySource ps : environment.getPropertySources()) {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
