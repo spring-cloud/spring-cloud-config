@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     machine:
-      mage: ubuntu-2004:202111-02
+      image: "ubuntu-2004:202111-02"
 #    docker:
 #      - image: springcloud/pipeline-base
 #        user: appuser
