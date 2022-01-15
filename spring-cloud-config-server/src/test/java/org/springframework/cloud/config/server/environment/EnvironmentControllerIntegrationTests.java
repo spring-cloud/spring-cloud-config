@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,27 +19,25 @@ package org.springframework.cloud.config.server.environment;
 import java.util.HashMap;
 
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.cloud.config.server.environment.EnvironmentControllerIntegrationTests.ControllerConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,131 +46,144 @@ import static org.mockito.Mockito.when;
  * @author Dave Syer
  * @author Roy Clarkson
  * @author Ivan Corrales Solera
+ * @author Henning Pöttker
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = ControllerConfiguration.class)
-public class EnvironmentControllerIntegrationTests {
+class EnvironmentControllerIntegrationTests {
 
-	@Autowired
-	private WebApplicationContext context;
+	abstract static class TestCases {
 
-	private MockMvc mvc;
+		@Autowired
+		private WebApplicationContext context;
 
-	@Autowired
-	private EnvironmentRepository repository;
+		private MockMvc mvc;
 
-	private Environment environment = new Environment("foo", "default");
+		@Autowired
+		private EnvironmentRepository repository;
 
-	@Before
-	public void init() {
-		Mockito.reset(this.repository);
-		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).build();
-		this.environment.add(new PropertySource("foo", new HashMap<>()));
+		private final Environment environment = new Environment("foo", "default");
+
+		@BeforeEach
+		public void init() {
+			Mockito.reset(this.repository);
+			this.mvc = MockMvcBuilders.webAppContextSetup(this.context).build();
+			this.environment.add(new PropertySource("foo", new HashMap<>()));
+		}
+
+		@Test
+		public void environmentNoLabel() throws Exception {
+			when(this.repository.findOne("foo", "default", null, false)).thenReturn(this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/default"))
+					.andExpect(MockMvcResultMatchers.status().isOk());
+			verify(this.repository).findOne("foo", "default", null, false);
+		}
+
+		@Test
+		public void propertiesNoLabel() throws Exception {
+			when(this.repository.findOne("foo", "default", null, false)).thenReturn(this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo-default.properties"))
+					.andExpect(MockMvcResultMatchers.status().isOk());
+			verify(this.repository).findOne("foo", "default", null, false);
+		}
+
+		@Test
+		public void propertiesLabel() throws Exception {
+			when(this.repository.findOne("foo", "default", "label", false)).thenReturn(this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-default.properties"))
+					.andExpect(MockMvcResultMatchers.status().isOk());
+			verify(this.repository).findOne("foo", "default", "label", false);
+		}
+
+		@Test
+		public void propertiesLabelWhenApplicationNameContainsHyphen() throws Exception {
+			Environment environment = new Environment("foo-bar", "default");
+			environment.add(new PropertySource("foo", new HashMap<>()));
+			when(this.repository.findOne("foo-bar", "default", "label", false)).thenReturn(this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-bar-default.properties"))
+					.andExpect(MockMvcResultMatchers.status().isOk());
+			verify(this.repository).findOne("foo-bar", "default", "label", false);
+		}
+
+		@Test
+		public void propertiesLabelWithSlash() throws Exception {
+
+			when(this.repository.findOne("foo", "default", "label/spam", false)).thenReturn(this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/label(_)spam/foo-default.properties"))
+					.andExpect(MockMvcResultMatchers.status().isOk());
+			verify(this.repository).findOne("foo", "default", "label/spam", false);
+		}
+
+		@Test
+		public void environmentWithLabel() throws Exception {
+			when(this.repository.findOne("foo", "default", "awesome", false)).thenReturn(this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/awesome"))
+					.andExpect(MockMvcResultMatchers.status().isOk());
+		}
+
+		@Test
+		public void environmentWithMissingLabel() throws Exception {
+			when(this.repository.findOne("foo", "default", "missing", false))
+					.thenThrow(new NoSuchLabelException("Planned"));
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/missing"))
+					.andExpect(MockMvcResultMatchers.status().isNotFound());
+		}
+
+		@Test
+		public void environmentWithMissingRepo() throws Exception {
+			when(this.repository.findOne("foo", "default", "missing", false))
+					.thenThrow(new NoSuchRepositoryException("Planned"));
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/missing"))
+					.andExpect(MockMvcResultMatchers.status().isNotFound());
+		}
+
+		@Test
+		public void environmentWithLabelContainingPeriod() throws Exception {
+			when(this.repository.findOne("foo", "default", "1.0.0", false)).thenReturn(this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/1.0.0"))
+					.andExpect(MockMvcResultMatchers.status().isOk());
+		}
+
+		@Test
+		public void environmentWithLabelContainingSlash() throws Exception {
+			when(this.repository.findOne("foo", "default", "feature/puff", false)).thenReturn(this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/feature(_)puff"))
+					.andExpect(MockMvcResultMatchers.status().isOk())
+					.andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("\"propertySources\":")));
+		}
+
+		@Test
+		public void environmentWithApplicationContainingSlash() throws Exception {
+			Environment environment = new Environment("foo/app", "default");
+			environment.add(new PropertySource("foo", new HashMap<>()));
+			when(this.repository.findOne("foo/app", "default", null, false)).thenReturn(environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo(_)app/default"))
+					.andExpect(MockMvcResultMatchers.status().isOk())
+					.andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("\"propertySources\":")));
+		}
+
 	}
 
-	@Test
-	public void environmentNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", null, false)).thenReturn(this.environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default")).andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo", "default", null, false);
+	@SpringBootTest(classes = ControllerConfiguration.class)
+	static class PathPatternParserTests extends TestCases {
+
 	}
 
-	@Test
-	public void propertiesNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", null, false)).thenReturn(this.environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo-default.properties"))
-				.andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo", "default", null, false);
-	}
+	@SpringBootTest(classes = ControllerConfiguration.class)
+	@TestPropertySource(properties = "spring.mvc.pathmatch.matching-strategy=ant_path_matcher")
+	static class AntPathMatcherTests extends TestCases {
 
-	@Test
-	public void propertiesLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", "label", false)).thenReturn(this.environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-default.properties"))
-				.andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo", "default", "label", false);
-	}
-
-	@Test
-	public void propertiesLabelWhenApplicationNameContainsHyphen() throws Exception {
-		Environment environment = new Environment("foo-bar", "default");
-		environment.add(new PropertySource("foo", new HashMap<>()));
-		when(this.repository.findOne("foo-bar", "default", "label", false)).thenReturn(this.environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/label/foo-bar-default.properties"))
-				.andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo-bar", "default", "label", false);
-	}
-
-	@Test
-	public void propertiesLabelWithSlash() throws Exception {
-
-		when(this.repository.findOne("foo", "default", "label/spam", false)).thenReturn(this.environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/label(_)spam/foo-default.properties"))
-				.andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo", "default", "label/spam", false);
-	}
-
-	@Test
-	public void environmentWithLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", "awesome", false)).thenReturn(this.environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/awesome"))
-				.andExpect(MockMvcResultMatchers.status().isOk());
-	}
-
-	@Test
-	public void environmentWithMissingLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", "missing", false))
-				.thenThrow(new NoSuchLabelException("Planned"));
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/missing"))
-				.andExpect(MockMvcResultMatchers.status().isNotFound());
-	}
-
-	@Test
-	public void environmentWithMissingRepo() throws Exception {
-		when(this.repository.findOne("foo", "default", "missing", false))
-				.thenThrow(new NoSuchRepositoryException("Planned"));
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/missing"))
-				.andExpect(MockMvcResultMatchers.status().isNotFound());
-	}
-
-	@Test
-	public void environmentWithLabelContainingPeriod() throws Exception {
-		when(this.repository.findOne("foo", "default", "1.0.0", false)).thenReturn(this.environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/1.0.0"))
-				.andExpect(MockMvcResultMatchers.status().isOk());
-	}
-
-	@Test
-	public void environmentWithLabelContainingSlash() throws Exception {
-		when(this.repository.findOne("foo", "default", "feature/puff", false)).thenReturn(this.environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/feature(_)puff"))
-				.andExpect(MockMvcResultMatchers.status().isOk())
-				.andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("\"propertySources\":")));
-	}
-
-	@Test
-	public void environmentWithApplicationContainingSlash() throws Exception {
-		Environment environment = new Environment("foo/app", "default");
-		environment.add(new PropertySource("foo", new HashMap<>()));
-		when(this.repository.findOne("foo/app", "default", null, false)).thenReturn(environment);
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo(_)app/default"))
-				.andExpect(MockMvcResultMatchers.status().isOk())
-				.andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("\"propertySources\":")));
 	}
 
 	@Configuration
-	@EnableWebMvc
-	@Import(PropertyPlaceholderAutoConfiguration.class)
-	public static class ControllerConfiguration {
+	@Import({ PropertyPlaceholderAutoConfiguration.class, WebMvcAutoConfiguration.class })
+	static class ControllerConfiguration {
 
 		@Bean
-		public EnvironmentRepository environmentRepository() {
-			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
-			return repository;
+		EnvironmentRepository environmentRepository() {
+			return Mockito.mock(EnvironmentRepository.class);
 		}
 
 		@Bean
-		public EnvironmentController controller() {
+		EnvironmentController controller() {
 			return new EnvironmentController(environmentRepository());
 		}
 
