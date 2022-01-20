@@ -40,8 +40,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ApplicationConfiguration.class, properties = { "debug=true",
-		"spring.sql.init.schema-locations=classpath:schema-jdbc.sql", "spring.sql.init.data-locations=classpath:data-jdbc.sql" })
+@SpringBootTest(classes = ApplicationConfiguration.class,
+		properties = { "debug=true", "spring.sql.init.schema-locations=classpath:schema-jdbc.sql",
+				"spring.sql.init.data-locations=classpath:data-jdbc.sql" })
 @AutoConfigureTestDatabase
 @DirtiesContext
 public class JdbcEnvironmentRepositoryTests {
