@@ -23,6 +23,7 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.boot.BootstrapRegistry.InstanceSupplier;
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.context.config.ConfigDataLocation;
@@ -69,7 +70,8 @@ public class ConfigServerConfigDataLocationResolver
 
 		ConfigClientProperties configClientProperties;
 		if (context.getBootstrapContext().isRegistered(ConfigClientProperties.class)) {
-			configClientProperties = context.getBootstrapContext().get(ConfigClientProperties.class);
+			configClientProperties = new ConfigClientProperties();
+			BeanUtils.copyProperties(context.getBootstrapContext().get(ConfigClientProperties.class), configClientProperties);
 		}
 		else {
 			configClientProperties = binder
