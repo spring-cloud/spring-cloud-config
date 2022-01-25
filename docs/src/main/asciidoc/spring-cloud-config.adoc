@@ -592,21 +592,22 @@ By default, Spring Cloud Config Server uses Token based Authentication to fetch 
 Vault also supports additional authentication methods like AppRole, LDAP, JWT, CloudFoundry, Kubernetes Auth.
 In order to use any authentication method other than TOKEN or the X-Config-Token header, we need to have Spring Vault Core on the classpath so that Config Server can delegate authentication to that library. Please add the below dependencies to your Config Server App.
 
+`Maven (pom.xml)`
+----
 <dependencies>
 	<dependency>
 		<groupId>org.springframework.vault</groupId>
 		<artifactId>spring-vault-core</artifactId>
 	</dependency>
 </dependencies>
-in a Maven pom.xml 
+----
 
-or
-
+`Gradle (build.gradle)`
+----
 dependencies {
     implementation "org.springframework.vault:spring-vault-core"
 }
-in a Gradle build.gradle file.
-
+----
 ****
 
 By default, the config server assumes that your Vault server runs at `http://127.0.0.1:8200`.
