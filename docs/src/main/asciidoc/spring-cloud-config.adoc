@@ -587,6 +587,29 @@ For more information on Vault, see the https://learn.hashicorp.com/vault/?track=
 To enable the config server to use a Vault backend, you can run your config server with the `vault` profile.
 For example, in your config server's `application.properties`, you can add `spring.profiles.active=vault`.
 
+****
+By default, Spring Cloud Config Server uses Token based Authentication to fetch config from Vault.
+Vault also supports additional authentication methods like AppRole, LDAP, JWT, CloudFoundry, Kubernetes Auth.
+In order to use any authentication method other than TOKEN or the X-Config-Token header, we need to have Spring Vault Core on the classpath so that Config Server can delegate authentication to that library. Please add the below dependencies to your Config Server App.
+
+`Maven (pom.xml)`
+----
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.vault</groupId>
+		<artifactId>spring-vault-core</artifactId>
+	</dependency>
+</dependencies>
+----
+
+`Gradle (build.gradle)`
+----
+dependencies {
+    implementation "org.springframework.vault:spring-vault-core"
+}
+----
+****
+
 By default, the config server assumes that your Vault server runs at `http://127.0.0.1:8200`.
 It also assumes that the name of backend is `secret` and the key is `application`.
 All of these defaults can be configured in your config server's `application.properties`.
