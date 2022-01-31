@@ -717,7 +717,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void factoryCustomizableWithRegion() {
-		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(
+				new ConfigServerProperties());
 		AwsSecretsManagerEnvironmentProperties properties = new AwsSecretsManagerEnvironmentProperties();
 		properties.setRegion("us-east-1");
 		AwsSecretsManagerEnvironmentRepository repository = factory.build(properties);
@@ -726,7 +727,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void factoryCustomizableWithRegionAndEndpoint() {
-		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(
+				new ConfigServerProperties());
 		AwsSecretsManagerEnvironmentProperties properties = new AwsSecretsManagerEnvironmentProperties();
 		properties.setRegion("us-east-1");
 		properties.setEndpoint("https://myawsendpoint/");

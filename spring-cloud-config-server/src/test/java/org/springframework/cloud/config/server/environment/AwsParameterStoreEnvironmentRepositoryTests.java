@@ -697,7 +697,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 
 	@Test
 	public void factoryCustomizableWithRegion() {
-		AwsParameterStoreEnvironmentRepositoryFactory factory = new AwsParameterStoreEnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsParameterStoreEnvironmentRepositoryFactory factory = new AwsParameterStoreEnvironmentRepositoryFactory(
+				new ConfigServerProperties());
 		AwsParameterStoreEnvironmentProperties properties = new AwsParameterStoreEnvironmentProperties();
 		properties.setRegion("us-east-1");
 		AwsParameterStoreEnvironmentRepository repository = factory.build(properties);
@@ -706,7 +707,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 
 	@Test
 	public void factoryCustomizableWithRegionAndEndpoint() {
-		AwsParameterStoreEnvironmentRepositoryFactory factory = new AwsParameterStoreEnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsParameterStoreEnvironmentRepositoryFactory factory = new AwsParameterStoreEnvironmentRepositoryFactory(
+				new ConfigServerProperties());
 		AwsParameterStoreEnvironmentProperties properties = new AwsParameterStoreEnvironmentProperties();
 		properties.setRegion("us-east-1");
 		properties.setEndpoint("https://myawsendpoint/");
