@@ -1,0 +1,13 @@
+spring:
+  profiles:
+    active: native, vault
+  cloud:
+    config:
+      server:
+        vault:
+          order: 10
+          token: my-root-token
+          kv-version: 2
+        native:
+          order: 20
+          searchLocations: classpath:/vault-test-repo
