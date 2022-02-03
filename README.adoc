@@ -264,7 +264,7 @@ The refresh endpoint reports that the "sample" property changed.
 
 == Building
 
-:jdkversion: 1.8
+:jdkversion: 17
 
 === Basic Compile and Test
 
