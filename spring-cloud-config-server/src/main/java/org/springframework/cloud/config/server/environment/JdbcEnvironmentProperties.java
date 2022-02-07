@@ -27,7 +27,7 @@ import org.springframework.core.Ordered;
 @ConfigurationProperties("spring.cloud.config.server.jdbc")
 public class JdbcEnvironmentProperties implements EnvironmentRepositoryProperties {
 
-	private static final String DEFAULT_SQL = "SELECT KEY, VALUE from PROPERTIES"
+	private static final String DEFAULT_SQL = "SELECT \"KEY\", \"VALUE\" from PROPERTIES"
 			+ " where APPLICATION=? and PROFILE=? and LABEL=?";
 
 	/**
