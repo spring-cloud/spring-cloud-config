@@ -6,10 +6,10 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-config</artifactId>
-		<version>3.1.1</version>
+		<version>3.1.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>spring-cloud-starter-config</artifactId>
-	<version>3.1.1</version>
+	<version>3.1.1-SNAPSHOT</version>
 	<name>spring-cloud-starter-config</name>
 	<description>Spring Cloud Starter</description>
 	<url>https://projects.spring.io/spring-cloud</url>
