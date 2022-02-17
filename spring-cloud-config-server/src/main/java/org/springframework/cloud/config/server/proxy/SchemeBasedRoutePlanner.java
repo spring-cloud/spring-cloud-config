@@ -26,23 +26,27 @@ import org.apache.http.protocol.HttpContext;
  */
 public class SchemeBasedRoutePlanner extends DefaultRoutePlanner {
 
-	private final ProxyHostProperties httpsProxy;
+	private final HttpHost httpsProxy;
 
-	private final ProxyHostProperties httpProxy;
+	private final HttpHost defaultSchemeProxy;
 
 	public SchemeBasedRoutePlanner(ProxyHostProperties httpsProxy, ProxyHostProperties httpProxy) {
 		super(null);
-		this.httpsProxy = httpsProxy;
-		this.httpProxy = httpProxy;
+		this.httpsProxy = buildProxy(httpsProxy, "https");
+		this.defaultSchemeProxy = buildProxy(httpProxy, HttpHost.DEFAULT_SCHEME_NAME);
 	}
 
 	@Override
 	protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context) {
-		return "https".equals(target.getSchemeName()) ? determineProxy(this.httpsProxy, "https")
-				: determineProxy(this.httpProxy, HttpHost.DEFAULT_SCHEME_NAME);
+		return "https".equals(target.getSchemeName()) ? determineProxy(this.httpsProxy, this.defaultSchemeProxy)
+				: determineProxy(this.defaultSchemeProxy, this.httpsProxy);
 	}
 
-	private HttpHost determineProxy(ProxyHostProperties properties, String scheme) {
+	private HttpHost determineProxy(HttpHost proxy, HttpHost fallbackProxy) {
+		return proxy != null ? proxy : fallbackProxy;
+	}
+
+	private HttpHost buildProxy(ProxyHostProperties properties, String scheme) {
 		if (properties == null) {
 			return null;
 		}
