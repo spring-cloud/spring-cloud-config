@@ -19,7 +19,7 @@ package org.springframework.cloud.config.client;
 import java.io.Closeable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import jakarta.annotation.PostConstruct;
+import javax.annotation.PostConstruct;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
