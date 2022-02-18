@@ -22,6 +22,7 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
+import org.springframework.cloud.config.client.ConfigClientProperties.MultipleUriStrategy;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.mock.env.MockEnvironment;
@@ -168,6 +169,22 @@ public class ConfigClientPropertiesTests {
 		this.expected.expect(IllegalStateException.class);
 		this.expected.expectMessage("Trying to access an invalid array index");
 		Credentials credentials = this.locator.getCredentials(2);
+	}
+
+	@Test
+	public void testThatDefaultMultipleUriStrategyIsConnectionTimeoutOnly() {
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		assertThat(properties.getMultipleUriStrategy()).isNotNull();
+		assertThat(properties.getMultipleUriStrategy().name())
+				.isEqualTo(MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY.name());
+	}
+
+	@Test
+	public void testThatExplicitMultipleUriStrategyTakesPrecedence() {
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		properties.setMultipleUriStrategy(MultipleUriStrategy.ALWAYS);
+		assertThat(properties.getMultipleUriStrategy()).isNotNull();
+		assertThat(properties.getMultipleUriStrategy().name()).isEqualTo(MultipleUriStrategy.ALWAYS.name());
 	}
 
 }

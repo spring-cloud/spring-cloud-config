@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.client;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,6 +53,9 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.mock.http.client.MockClientHttpRequest;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -158,23 +162,14 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void failFast() throws Exception {
 		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
-		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-		ClientHttpResponse response = Mockito.mock(ClientHttpResponse.class);
-		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
-				.thenReturn(request);
+		mockRequestResponse(requestFactory, null, HttpStatus.INTERNAL_SERVER_ERROR);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setFailFast(true);
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
-		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
-		Mockito.when(request.execute()).thenReturn(response);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		Mockito.when(response.getHeaders()).thenReturn(headers);
-		Mockito.when(response.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
-		Mockito.when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));
 		this.locator.setRestTemplate(restTemplate);
-		this.expected.expectCause(IsInstanceOf.instanceOf(IllegalArgumentException.class));
+		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
+		this.expected.expectCause(IsInstanceOf.instanceOf(HttpServerErrorException.class));
 		this.expected.expectMessage("fail fast property is set");
 		this.locator.locateCollection(this.environment);
 	}
@@ -182,23 +177,26 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void failFastWhenNotFound() throws Exception {
 		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
-		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-		ClientHttpResponse response = Mockito.mock(ClientHttpResponse.class);
-		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
-				.thenReturn(request);
+		mockRequestResponse(requestFactory, null, HttpStatus.NOT_FOUND);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.setFailFast(true);
 		this.locator = new ConfigServicePropertySourceLocator(defaults);
-		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
-		Mockito.when(request.execute()).thenReturn(response);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		Mockito.when(response.getHeaders()).thenReturn(headers);
-		Mockito.when(response.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND);
-		Mockito.when(response.getBody()).thenReturn(new ByteArrayInputStream("".getBytes()));
 		this.locator.setRestTemplate(restTemplate);
-		this.expected.expectCause(IsInstanceOf.instanceOf(IllegalArgumentException.class));
+		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
+		this.expected.expectMessage("fail fast property is set, failing: None of labels [] found");
+		this.locator.locateCollection(this.environment);
+	}
+
+	@Test
+	public void failFastWhenRequestTimesOut() {
+		mockRequestTimedOut();
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setFailFast(true);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		this.locator.setRestTemplate(this.restTemplate);
+		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
+		this.expected.expectCause(IsInstanceOf.instanceOf(ResourceAccessException.class));
 		this.expected.expectMessage("fail fast property is set");
 		this.locator.locateCollection(this.environment);
 	}
@@ -284,6 +282,103 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@Test
+	public void shouldNotUseNextUriFor_400_And_CONNECTION_TIMEOUT_ONLY_Strategy() throws Exception {
+		assertNextUriIsNotTriedForClientError(ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY,
+				HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_400_And_ALWAYS_Strategy() throws Exception {
+		assertNextUriIsTried(ConfigClientProperties.MultipleUriStrategy.ALWAYS, HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	public void shouldNotUseNextUriFor_404_And_CONNECTION_TIMEOUT_ONLY_Strategy() throws Exception {
+		assertNextUriIsNotTriedForNotFoundError(ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY,
+				HttpStatus.NOT_FOUND);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_404_And_ALWAYS_Strategy() throws Exception {
+		assertNextUriIsTried(ConfigClientProperties.MultipleUriStrategy.ALWAYS, HttpStatus.NOT_FOUND);
+	}
+
+	@Test
+	public void shouldNotUseNextUriFor_500_And_CONNECTION_TIMEOUT_ONLY_Strategy() throws Exception {
+		assertNextUriIsNotTriedForServerError(ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY,
+				HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_500_And_ALWAYS_Strategy() throws Exception {
+		assertNextUriIsTried(ConfigClientProperties.MultipleUriStrategy.ALWAYS, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_TimeOut_And_ALWAYS_Strategy() throws Exception {
+		assertNextUriIsTriedOnTimeout(ConfigClientProperties.MultipleUriStrategy.ALWAYS);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_TimeOut_And_CONNECTION_TIMEOUT_ONLY_Strategy() throws Exception {
+		assertNextUriIsTriedOnTimeout(ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY);
+	}
+
+	@Test
+	public void shouldNotUseNextUriWhenOneIsSuccessful() throws Exception {
+		// Set up with three URIs.
+		ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
+		String badURI1 = "http://baduri1";
+		String goodURI = "http://localhost:8888";
+		String badURI2 = "http://baduri2";
+		String[] uris = new String[] { badURI1, goodURI, badURI2 };
+		clientProperties.setUri(uris);
+		clientProperties.setFailFast(true);
+		clientProperties.setMultipleUriStrategy(ConfigClientProperties.MultipleUriStrategy.ALWAYS);
+		this.locator = new ConfigServicePropertySourceLocator(clientProperties);
+		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
+
+		// Second URI will be successful, and the third one should never be called, so
+		// locateCollection
+		// should return a value.
+		mockRequestResponse(requestFactory, badURI1, HttpStatus.BAD_REQUEST);
+		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+		mockRequestResponse(requestFactory, badURI2, HttpStatus.INTERNAL_SERVER_ERROR);
+
+		this.locator.setRestTemplate(restTemplate);
+		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
+	}
+
+	@Test
+	public void shouldUseMultipleURIs() throws Exception {
+		// Set up with four URIs. All should be called until one is successful
+		ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
+		String badURI1 = "http://baduri1";
+		String badURI2 = "http://baduri2";
+		String badURI3 = "http://baduri3";
+		String goodURI = "http://localhost:8888";
+		String[] uris = new String[] { badURI1, goodURI, badURI2 };
+		clientProperties.setUri(uris);
+		clientProperties.setFailFast(true);
+		clientProperties.setMultipleUriStrategy(ConfigClientProperties.MultipleUriStrategy.ALWAYS);
+		this.locator = new ConfigServicePropertySourceLocator(clientProperties);
+		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
+
+		// Second URI will be successful, and the third one should never be called, so
+		// locateCollection
+		// should return a value.
+		mockRequestResponse(requestFactory, badURI1, HttpStatus.BAD_REQUEST);
+		mockRequestResponse(requestFactory, badURI2, HttpStatus.INTERNAL_SERVER_ERROR);
+		mockRequestResponse(requestFactory, badURI3, HttpStatus.NOT_FOUND);
+		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+
+		this.locator.setRestTemplate(restTemplate);
+		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
+	}
+
+	@Test
 	public void checkInterceptorHasNoAuthorizationHeaderPresent() {
 		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
@@ -344,11 +439,127 @@ public class ConfigServicePropertySourceLocatorTests {
 		assertThat(source).isInstanceOf(LinkedHashMap.class);
 	}
 
+	private void assertNextUriIsNotTried(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy,
+			HttpStatus firstUriResponse, Class<? extends Exception> expectedCause) throws Exception {
+		// Set up with two URIs.
+		ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
+		String badURI = "http://baduri";
+		String goodURI = "http://localhost:8888";
+		String[] uris = new String[] { badURI, goodURI };
+		clientProperties.setUri(uris);
+		clientProperties.setFailFast(true);
+		// Strategy is CONNECTION_TIMEOUT_ONLY, so it should not try the next URI for
+		// INTERNAL_SERVER_ERROR
+		clientProperties.setMultipleUriStrategy(multipleUriStrategy);
+		this.locator = new ConfigServicePropertySourceLocator(clientProperties);
+		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
+		mockRequestResponse(requestFactory, badURI, firstUriResponse);
+		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+		this.locator.setRestTemplate(restTemplate);
+		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
+		if (expectedCause != null) {
+			this.expected.expectCause(IsInstanceOf.instanceOf(expectedCause));
+		}
+		this.expected.expectMessage("fail fast property is set");
+		this.locator.locateCollection(this.environment);
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private void assertNextUriIsNotTriedForClientError(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy,
+			HttpStatus firstUriResponse) throws Exception {
+
+		assertNextUriIsNotTried(multipleUriStrategy, firstUriResponse, HttpClientErrorException.class);
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private void assertNextUriIsNotTriedForNotFoundError(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy,
+			HttpStatus firstUriResponse) throws Exception {
+
+		// NOT_FOUND is treated differently
+		assertNextUriIsNotTried(multipleUriStrategy, firstUriResponse, null);
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private void assertNextUriIsNotTriedForServerError(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy,
+			HttpStatus firstUriResponse) throws Exception {
+
+		assertNextUriIsNotTried(multipleUriStrategy, firstUriResponse, HttpServerErrorException.class);
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	private void assertNextUriIsTried(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy,
+			HttpStatus firstUriResponse) throws Exception {
+
+		// Set up with two URIs.
+		ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
+		String badURI = "http://baduri";
+		String goodURI = "http://localhost:8888";
+		String[] uris = new String[] { badURI, goodURI };
+		clientProperties.setUri(uris);
+		clientProperties.setFailFast(true);
+		// Strategy is ALWAYS, so it should try all URIs until successful
+		clientProperties.setMultipleUriStrategy(multipleUriStrategy);
+		this.locator = new ConfigServicePropertySourceLocator(clientProperties);
+		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
+		mockRequestResponse(requestFactory, badURI, firstUriResponse);
+		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+		this.locator.setRestTemplate(restTemplate);
+		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
+	}
+
+	private void assertNextUriIsTriedOnTimeout(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy)
+			throws Exception {
+		// Set up with two URIs.
+		ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
+		String badURI = "http://baduri";
+		String goodURI = "http://localhost:8888";
+		String[] uris = new String[] { badURI, goodURI };
+		clientProperties.setUri(uris);
+		clientProperties.setFailFast(true);
+		// Strategy should not matter when the error is connection timed out
+		clientProperties.setMultipleUriStrategy(multipleUriStrategy);
+		this.locator = new ConfigServicePropertySourceLocator(clientProperties);
+		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
+
+		// First URI times out. Second one is successful
+		mockRequestTimedOut(requestFactory, badURI);
+		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+		this.locator.setRestTemplate(restTemplate);
+		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
+	}
+
 	private Map<String, Object> originValue(String value, String origin) {
 		HashMap<String, Object> map = new HashMap<>();
 		map.put("value", value);
 		map.put("origin", origin);
 		return map;
+	}
+
+	private void mockRequestResponse(ClientHttpRequestFactory requestFactory, String baseURI, HttpStatus status)
+			throws Exception {
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+		ClientHttpResponse response = Mockito.mock(ClientHttpResponse.class);
+
+		if (baseURI == null) {
+			Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
+					.thenReturn(request);
+		}
+		else {
+			Mockito.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
+					Mockito.any(HttpMethod.class))).thenReturn(request);
+		}
+
+		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
+		Mockito.when(request.execute()).thenReturn(response);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		Mockito.when(response.getHeaders()).thenReturn(headers);
+		Mockito.when(response.getRawStatusCode()).thenReturn(status.value());
+		Mockito.when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -366,10 +577,26 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void mockRequestResponseWithoutLabelWithExpectedName(ResponseEntity<?> response, String expectedName) {
+	private void mockRequestTimedOut() {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
-				Mockito.any(HttpEntity.class), Mockito.any(Class.class), ArgumentMatchers.eq(expectedName),
-				anyString())).thenReturn(response);
+				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString()))
+				.thenThrow(ResourceAccessException.class);
+	}
+
+	private void mockRequestTimedOut(ClientHttpRequestFactory requestFactory, String baseURI) throws Exception {
+		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+
+		if (baseURI == null) {
+			Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
+					.thenReturn(request);
+		}
+		else {
+			Mockito.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
+					Mockito.any(HttpMethod.class))).thenReturn(request);
+		}
+
+		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
+		Mockito.when(request.execute()).thenThrow(IOException.class);
 	}
 
 }
