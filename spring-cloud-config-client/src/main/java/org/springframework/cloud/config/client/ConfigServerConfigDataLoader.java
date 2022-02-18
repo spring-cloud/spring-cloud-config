@@ -302,10 +302,10 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity, Environment.class, args);
 			}
-			catch (HttpClientErrorException e) {
+			catch (HttpClientErrorException | HttpServerErrorException e) {
 				if (i < noOfUrls - 1 && properties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
 					logger.info("Failed to fetch configs from server at  : " + uri
-						+ ". Will try the next url if available. Error : " + e.getMessage());
+							+ ". Will try the next url if available. Error : " + e.getMessage());
 					continue;
 				}
 
