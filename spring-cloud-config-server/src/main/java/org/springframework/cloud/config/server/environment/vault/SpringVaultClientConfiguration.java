@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod;
@@ -54,15 +53,13 @@ import org.springframework.web.util.UriComponentsBuilder;
  * @author Scott Frederick
  */
 @Configuration
-public class SpringVaultClientConfiguration extends AbstractVaultConfiguration implements InitializingBean {
+public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 
 	private static final String VAULT_PROPERTIES_PREFIX = "spring.cloud.config.server.vault.";
 
 	private final VaultEnvironmentProperties vaultProperties;
 
 	private final ConfigTokenProvider configTokenProvider;
-
-	private RestOperations externalRestOperations;
 
 	private final Log log = LogFactory.getLog(getClass());
 
@@ -74,11 +71,6 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration i
 		this.vaultProperties = vaultProperties;
 		this.configTokenProvider = configTokenProvider;
 		this.authProviders = authProviders;
-	}
-
-	@Override
-	public void afterPropertiesSet() {
-		this.externalRestOperations = new RestTemplate(clientHttpRequestFactoryWrapper().getClientHttpRequestFactory());
 	}
 
 	@Override
@@ -173,10 +165,12 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration i
 			throw new UnsupportedOperationException("No Vault client authentication providers are configured");
 		}
 
+		RestTemplate externalOperations = new RestTemplate(
+				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory());
+
 		for (SpringVaultClientAuthenticationProvider authProvider : this.authProviders) {
 			if (authProvider.supports(this.vaultProperties)) {
-				return authProvider.getClientAuthentication(this.vaultProperties, restOperations(),
-						this.externalRestOperations);
+				return authProvider.getClientAuthentication(this.vaultProperties, restOperations(), externalOperations);
 			}
 		}
 

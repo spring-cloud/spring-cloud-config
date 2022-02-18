@@ -23,11 +23,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
+import jakarta.annotation.PostConstruct;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -48,6 +48,8 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	private Map<String, Repository> repositories = new LinkedHashMap<>();
 
+	// autowired required or boot constructor binding produces an error
+	@Autowired
 	public ConfigServerHealthIndicator(EnvironmentRepository environmentRepository) {
 		this.environmentRepository = environmentRepository;
 	}

@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotEmpty;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpHeaders;

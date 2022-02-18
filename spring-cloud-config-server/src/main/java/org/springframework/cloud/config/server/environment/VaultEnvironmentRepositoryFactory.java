@@ -18,7 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.client.RestTemplate;

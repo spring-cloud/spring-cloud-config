@@ -19,7 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.Pattern;
 
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
@@ -32,7 +32,23 @@ import org.springframework.cloud.config.server.support.HttpEnvironmentRepository
 public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 		implements HttpEnvironmentRepositoryProperties {
 
-	private static final String DEFAULT_LABEL = "master";
+	/**
+	 * Master label.
+	 */
+	public static final String MASTER_LABEL = "master";
+
+	/**
+	 * Main label.
+	 */
+	public static final String MAIN_LABEL = "main";
+
+	private static final String DEFAULT_LABEL = MAIN_LABEL;
+
+	/**
+	 * To maintain compatibility we will try the master branch in addition to main when we
+	 * try to fetch the default branch.
+	 */
+	private boolean tryMasterBranch = true;
 
 	/**
 	 * Flag to indicate that the repository should be cloned on startup (not on demand).
@@ -247,6 +263,14 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 
 	public void setProxy(Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy) {
 		this.proxy = proxy;
+	}
+
+	public boolean isTryMasterBranch() {
+		return tryMasterBranch;
+	}
+
+	public void setTryMasterBranch(boolean tryMasterBranch) {
+		this.tryMasterBranch = tryMasterBranch;
 	}
 
 }

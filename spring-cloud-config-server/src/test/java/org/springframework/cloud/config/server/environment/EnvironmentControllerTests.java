@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.yaml.snakeyaml.Yaml;
@@ -41,8 +40,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -55,25 +57,23 @@ import static org.mockito.Mockito.when;
  * @author Ivan Corrales Solera
  * @author Daniel Frey
  * @author Ian Bondoc
+ * @author Henning Pöttker
  */
-public class EnvironmentControllerTests {
+class EnvironmentControllerTests {
 
-	@Rule
-	public ExpectedException expected = ExpectedException.none();
-
-	private EnvironmentRepository repository = mock(EnvironmentRepository.class);
+	private final EnvironmentRepository repository = mock(EnvironmentRepository.class);
 
 	private EnvironmentController controller;
 
-	private Environment environment = new Environment("foo", "master");
+	private final Environment environment = new Environment("foo", "master");
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.controller = new EnvironmentController(this.repository);
 		this.environment.add(new PropertySource("foo", new HashMap<>()));
 	}
 
-	@After
+	@AfterEach
 	public void clean() {
 		System.clearProperty("foo");
 	}
@@ -222,10 +222,11 @@ public class EnvironmentControllerTests {
 
 	}
 
-	@Test(expected = EnvironmentNotFoundException.class)
+	@Test
 	public void testEnvironmentNotFound() {
 		this.controller.setAcceptEmpty(false);
-		this.controller.labelled("foo", "bar", null);
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", null))
+				.isInstanceOf(EnvironmentNotFoundException.class);
 	}
 
 	@Test
@@ -509,141 +510,171 @@ public class EnvironmentControllerTests {
 	}
 
 	@Test
-	public void mappingForEnvironment() throws Exception {
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/foo/bar")).andExpect(MockMvcResultMatchers.status().isOk());
-	}
-
-	@Test
-	public void mappingForLabelledEnvironment() throws Exception {
-		when(this.repository.findOne("foo", "bar", "other", false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/foo/bar/other")).andExpect(MockMvcResultMatchers.status().isOk());
-	}
-
-	@Test
-	public void environmentMissing() throws Exception {
-		when(this.repository.findOne("foo1", "notfound", null, false))
-				.thenThrow(new EnvironmentNotFoundException("Missing Environment"));
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/foo1/notfound"))
-				.andExpect(MockMvcResultMatchers.status().isNotFound());
-	}
-
-	@Test
-	public void mappingForYaml() throws Exception {
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/foo-bar.yml"))
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN))
-				.andExpect(MockMvcResultMatchers.content().string("{}\n"));
-	}
-
-	@Test
-	public void mappingForJson() throws Exception {
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json"))
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(MockMvcResultMatchers.content().string("{}"));
-	}
-
-	@Test
-	public void mappingForLabelledYaml() throws Exception {
-		when(this.repository.findOne("foo", "bar", "other", false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.yml"))
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
-	}
-
-	@Test
-	public void mappingForLabelledProperties() throws Exception {
-		when(this.repository.findOne("foo", "bar", "other", false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.properties"))
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
-	}
-
-	@Test
-	public void mappingForProperties() throws Exception {
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/foo-bar.properties"))
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
-	}
-
-	@Test
-	public void mappingForLabelledYamlWithHyphen() throws Exception {
-		when(this.repository.findOne("foo-bar-foo2-bar2", "spam", "other", false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-foo2-bar2-spam.yml"))
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
-	}
-
-	@Test
-	public void mappingforLabelledJsonProperties() throws Exception {
-		when(this.repository.findOne("foo", "bar", "other", false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.json"))
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-	}
-
-	@Test
-	public void mappingforJsonProperties() throws Exception {
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json"))
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-	}
-
-	@Test
-	public void mappingForLabelledJsonPropertiesWithHyphen() throws Exception {
-		when(this.repository.findOne("foo-bar-foo2-bar2", "spam", "other", false)).thenReturn(this.environment);
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(this.controller).build();
-		mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-foo2-bar2-spam.json"))
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-
-	}
-
-	@Test
-	public void handleEnvironmentException() throws Exception {
-		when(repository.findOne(eq("exception"), eq("bad-syntax.ext"), any(), eq(false))).thenThrow(
-				new FailedToConstructEnvironmentException("Cannot construct", new RuntimeException("underlier")));
-		MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(controller).build();
-		MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/exception/bad-syntax.ext"))
-				.andExpect(MockMvcResultMatchers.status().is(500)).andReturn();
-		assertThat(result.getResponse().getErrorMessage()).isEqualTo("Cannot construct");
-	}
-
-	@Test
 	public void labelWithPreviousDirectory() {
-		expected.expect(InvalidEnvironmentRequestException.class);
-		this.controller.labelled("foo", "bar", "..(_)..");
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "..(_).."))
+				.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
 	@Test
 	public void labelWithPreviousDirectoryEncodedParenthesis() {
-		expected.expect(InvalidEnvironmentRequestException.class);
-		this.controller.labelled("foo", "bar", "..%28_%29..");
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "..%28_%29.."))
+				.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
 	@Test
 	public void labelWithPreviousDirectoryAllEncoded() {
-		expected.expect(InvalidEnvironmentRequestException.class);
-		this.controller.labelled("foo", "bar", "%2E%2E%28%5F%29%2E%2E");
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "%2E%2E%28%5F%29%2E%2E"))
+				.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
 	@Test
 	public void nameWithPound() {
-		expected.expect(InvalidEnvironmentRequestException.class);
-		this.controller.labelled("foo#", "bar", "mylabel");
+		assertThatThrownBy(() -> this.controller.labelled("foo#", "bar", "mylabel"))
+				.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
 	@Test
 	public void nameWithPoundEncoded() {
-		expected.expect(InvalidEnvironmentRequestException.class);
-		this.controller.labelled("foo%23", "bar", "mylabel");
+		assertThatThrownBy(() -> this.controller.labelled("foo%23", "bar", "mylabel"))
+				.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	abstract class MockMvcTestCases {
+
+		protected MockMvc mvc;
+
+		@Test
+		public void mappingForEnvironment() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/bar")).andExpect(MockMvcResultMatchers.status().isOk());
+		}
+
+		@Test
+		public void mappingForLabelledEnvironment() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/bar/other"))
+					.andExpect(MockMvcResultMatchers.status().isOk());
+		}
+
+		@Test
+		public void environmentMissing() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo1", "notfound", null, false))
+					.thenThrow(new EnvironmentNotFoundException("Missing Environment"));
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo1/notfound"))
+					.andExpect(MockMvcResultMatchers.status().isNotFound());
+		}
+
+		@Test
+		public void mappingForYaml() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo-bar.yml"))
+					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN))
+					.andExpect(MockMvcResultMatchers.content().string("{}\n"));
+		}
+
+		@Test
+		public void mappingForJson() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json"))
+					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+					.andExpect(MockMvcResultMatchers.content().string("{}"));
+		}
+
+		@Test
+		public void mappingForLabelledYaml() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.yml"))
+					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
+		}
+
+		@Test
+		public void mappingForLabelledProperties() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.properties"))
+					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
+		}
+
+		@Test
+		public void mappingForProperties() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo-bar.properties"))
+					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
+		}
+
+		@Test
+		public void mappingForLabelledYamlWithHyphen() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo-bar-foo2-bar2", "spam", "other", false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-foo2-bar2-spam.yml"))
+					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
+		}
+
+		@Test
+		public void mappingforLabelledJsonProperties() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.json"))
+					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+		}
+
+		@Test
+		public void mappingforJsonProperties() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json"))
+					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+		}
+
+		@Test
+		public void mappingForLabelledJsonPropertiesWithHyphen() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne("foo-bar-foo2-bar2", "spam", "other", false))
+					.thenReturn(EnvironmentControllerTests.this.environment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-foo2-bar2-spam.json"))
+					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+
+		}
+
+		@Test
+		public void handleEnvironmentException() throws Exception {
+			when(EnvironmentControllerTests.this.repository.findOne(eq("exception"), eq("bad_syntax.ext"), any(),
+					eq(false)))
+							.thenThrow(new FailedToConstructEnvironmentException("Cannot construct",
+									new RuntimeException("underlier")));
+			MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/exception/bad_syntax.ext"))
+					.andExpect(MockMvcResultMatchers.status().is(500)).andReturn();
+			assertThat(result.getResponse().getErrorMessage()).isEqualTo("Cannot construct");
+		}
+
+	}
+
+	@Nested
+	class PathPatternParserTests extends MockMvcTestCases {
+
+		@BeforeEach
+		public void initMockMvc() {
+			StandaloneMockMvcBuilder builder = MockMvcBuilders
+					.standaloneSetup(EnvironmentControllerTests.this.controller);
+			builder.setPatternParser(new PathPatternParser());
+			this.mvc = builder.build();
+		}
+
+	}
+
+	@Nested
+	class AntPathMatcherTests extends MockMvcTestCases {
+
+		@BeforeEach
+		public void initMockMvc() {
+			this.mvc = MockMvcBuilders.standaloneSetup(EnvironmentControllerTests.this.controller).build();
+		}
+
 	}
 
 }

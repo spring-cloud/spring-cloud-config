@@ -1,4 +1,0 @@
-0000000000000000000000000000000000000000 9f01fb972bc9617e4ea59f5c8ee3ceb5ff515cd0 Dave Syer <dsyer@gopivotal.com> 1406860776 -0700	branch: Created from 9f01fb972bc9617e4ea59f5c8ee3ceb5ff515cd0
-9f01fb972bc9617e4ea59f5c8ee3ceb5ff515cd0 ad5e0cb7036ed11ddd4b7be6ed86ad3565c8a3fc Dave Syer <dsyer@pivotal.io> 1498491468 +0100	commit: Add encrypted property
-ad5e0cb7036ed11ddd4b7be6ed86ad3565c8a3fc bd414a6cc8653d7e282df0a257babc6283b83596 Marcin Grzejszczak <marcin@grzejszczak.pl> 1549357702 +0100	commit: Updated
-bd414a6cc8653d7e282df0a257babc6283b83596 fd07d827993aaf6ed7ef1b979767ee9277d1d409 Tim Ysewyn <tysewyn@pivotal.io> 1564492480 +0200	commit: Added server overrides

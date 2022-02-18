@@ -540,6 +540,13 @@ value of this property is specified in seconds.  By default the value is 0, mean
 the config server will fetch updated configuration from the Git repo every time it
 is requested.
 
+===== Default Label
+
+The default label used for Git is `main`.  If you do not set `spring.cloud.config.server.git.defaultLabel` and a branch named `main`
+does not exist, the config server will by default also try to checkout a branch named `master`.  If
+you would like to disable to the fallback branch behavior you can set
+`spring.cloud.config.server.git.tryMasterBranch` to `false`.
+
 ==== Version Control Backend Filesystem Use
 
 WARNING: With VCS-based backends (git, svn), files are checked out or cloned to the local filesystem.
@@ -586,6 +593,29 @@ For more information on Vault, see the https://learn.hashicorp.com/vault/?track=
 
 To enable the config server to use a Vault backend, you can run your config server with the `vault` profile.
 For example, in your config server's `application.properties`, you can add `spring.profiles.active=vault`.
+
+****
+By default, Spring Cloud Config Server uses Token based Authentication to fetch config from Vault.
+Vault also supports additional authentication methods like AppRole, LDAP, JWT, CloudFoundry, Kubernetes Auth.
+In order to use any authentication method other than TOKEN or the X-Config-Token header, we need to have Spring Vault Core on the classpath so that Config Server can delegate authentication to that library. Please add the below dependencies to your Config Server App.
+
+`Maven (pom.xml)`
+----
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.vault</groupId>
+		<artifactId>spring-vault-core</artifactId>
+	</dependency>
+</dependencies>
+----
+
+`Gradle (build.gradle)`
+----
+dependencies {
+    implementation "org.springframework.vault:spring-vault-core"
+}
+----
+****
 
 By default, the config server assumes that your Vault server runs at `http://127.0.0.1:8200`.
 It also assumes that the name of backend is `secret` and the key is `application`.
@@ -832,8 +862,6 @@ secret value =
 }
 ----
 
-----
-
 ===== AWS Parameter Store
 
 When using AWS Parameter Store as a backend, you can share configuration with all applications by placing properties within the `/application` hierarchy.
@@ -921,7 +949,7 @@ You can enable this feature by adding a dependency to the link:https://docs.aws.
 	</dependencies>
 ----
 
-The following configuration uses the AWS S3 client to access configuration files. We can use `spring.awss3.*` properties to select the bucket where your configuration is stored.
+The following configuration uses the AWS S3 client to access configuration files. We can use `spring.cloud.config.server.awss3.*` properties to select the bucket where your configuration is stored.
 
 [source,yaml]
 ----
@@ -936,7 +964,7 @@ spring:
           bucket: bucket1
 ----
 
-It is also possible to specify an AWS URL to link:https://aws.amazon.com/blogs/developer/using-new-regions-and-endpoints/[override the standard endpoint] of your S3 service with `spring.awss3.endpoint`. This allows support for beta regions of S3, and other S3 compatible storage APIs.
+It is also possible to specify an AWS URL to link:https://aws.amazon.com/blogs/developer/using-new-regions-and-endpoints/[override the standard endpoint] of your S3 service with `spring.cloud.config.server.awss3.endpoint`. This allows support for beta regions of S3, and other S3 compatible storage APIs.
 
 Credentials are found using the link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[Default AWS Credential Provider Chain]. Versioned and encrypted buckets are supported without further configuration.
 
@@ -1239,6 +1267,7 @@ The priority order of a repository helps resolve any potential conflicts between
 NOTE: If your composite environment includes a Vault server as in the previous example, you must include a Vault token in every request made to the configuration server. See <<vault-backend,Vault Backend>>.
 
 NOTE: Any type of failure when retrieving values from an environment repository results in a failure for the entire composite environment.
+If you would like the composite to continue even when a repository fails you can set `spring.cloud.config.server.failOnCompositeError` to `false`.
 
 NOTE: When using a composite environment, it is important that all repositories contain the same labels.
 If you have an environment similar to those in the preceding examples and you request configuration data with the `master` label but the Subversion repository does not contain a branch called `master`, the entire request fails.
@@ -1311,6 +1340,10 @@ You can secure your Config Server in any way that makes sense to you (from physi
 
 To use the default Spring Boot-configured HTTP Basic security, include Spring Security on the classpath (for example, through `spring-boot-starter-security`).
 The default is a username of `user` and a randomly generated password. A random password is not useful in practice, so we recommend you configure the password (by setting `spring.security.user.password`) and encrypt it (see below for instructions on how to do that).
+
+=== Actuator and Security
+
+IMPORTANT: Some platforms configure health checks or something similar and point to `/actuator/health` or other actuator endpoints. If actuator is not a dependency of config server, requests to `/actuator/**` would match the config server API `/{application}/{label}` possibly leaking secure information. Remember to add the `spring-boot-starter-actuator` dependency in this case and configure the users such that the user that makes calls to `/actuator/**` does not have access to the config server API at `/{application}/{label}`.
 
 === Encryption and Decryption
 

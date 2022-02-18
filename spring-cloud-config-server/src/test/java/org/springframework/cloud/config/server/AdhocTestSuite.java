@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,8 +35,6 @@ import org.springframework.cloud.config.server.encryption.KeyStoreTextEncryptorL
 import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepositoryTests;
-import org.springframework.cloud.config.server.environment.EnvironmentControllerIntegrationTests;
-import org.springframework.cloud.config.server.environment.EnvironmentControllerTests;
 import org.springframework.cloud.config.server.environment.EnvironmentEncryptorEnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentRepositoryConcurrencyTests;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentRepositoryIntegrationTests;
@@ -67,8 +65,7 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
 @SuiteClasses({ NativeConfigServerIntegrationTests.class, GenericResourceRepositoryTests.class,
 		ResourceControllerTests.class, ResourceControllerIntegrationTests.class, ConfigClientOnIntegrationTests.class,
 		ConfigServerApplicationTests.class, VanillaConfigServerIntegrationTests.class,
-		EnvironmentControllerIntegrationTests.class, MultipleJGitEnvironmentRepositoryIntegrationTests.class,
-		EnvironmentEncryptorEnvironmentRepositoryTests.class, EnvironmentControllerTests.class,
+		MultipleJGitEnvironmentRepositoryIntegrationTests.class, EnvironmentEncryptorEnvironmentRepositoryTests.class,
 		SVNKitEnvironmentRepositoryIntegrationTests.class,
 		MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests.class, JdbcEnvironmentRepositoryTests.class,
 		CompositeEnvironmentRepositoryTests.class, JGitEnvironmentRepositoryConcurrencyTests.class,

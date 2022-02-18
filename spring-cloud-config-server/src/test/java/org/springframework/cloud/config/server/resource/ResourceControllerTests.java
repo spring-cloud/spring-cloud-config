@@ -344,4 +344,12 @@ public class ResourceControllerTests {
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
+	@Test
+	public void setSearchLocationsAppendSlashByConstructor() {
+		final NativeEnvironmentProperties properties = new NativeEnvironmentProperties();
+		properties.setSearchLocations(new String[] { "classpath:/test" });
+		NativeEnvironmentRepository repo = new NativeEnvironmentRepository(this.context.getEnvironment(), properties);
+		assertThat(repo.getSearchLocations()[0]).isEqualTo("classpath:/test/");
+	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.servlet.http.HttpServletResponse;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
@@ -104,12 +103,12 @@ public class EnvironmentController {
 		this.acceptEmpty = acceptEmpty;
 	}
 
-	@GetMapping(path = "/{name}/{profiles:.*[^-].*}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(path = "/{name}/{profiles:[^-]+}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Environment defaultLabel(@PathVariable String name, @PathVariable String profiles) {
 		return getEnvironment(name, profiles, null, false);
 	}
 
-	@GetMapping(path = "/{name}/{profiles:.*[^-].*}", produces = EnvironmentMediaType.V2_JSON)
+	@GetMapping(path = "/{name}/{profiles:[^-]+}", produces = EnvironmentMediaType.V2_JSON)
 	public Environment defaultLabelIncludeOrigin(@PathVariable String name, @PathVariable String profiles) {
 		return getEnvironment(name, profiles, null, true);
 	}

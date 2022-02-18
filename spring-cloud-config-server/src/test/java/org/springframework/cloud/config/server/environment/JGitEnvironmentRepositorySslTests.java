@@ -28,6 +28,7 @@ import org.eclipse.jgit.junit.http.SimpleHttpServer;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.springframework.boot.WebApplicationType;
@@ -40,6 +41,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+// FIXME: 4.0.0 https://bugs.eclipse.org/bugs/show_bug.cgi?id=570447
+@Ignore("SimpleHttpServer does not use jakarta.servlet")
 public class JGitEnvironmentRepositorySslTests {
 
 	private static SimpleHttpServer server;
