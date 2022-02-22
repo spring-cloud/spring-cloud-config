@@ -180,6 +180,27 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource.getProperties().getUri()).isEqualTo(new String[] { "http://locationuri" });
 	}
 
+	@Test
+	void multipleImportEntriesDoesNotShareSameURIs() {
+		ConfigurableBootstrapContext bootstrapContext = mock(ConfigurableBootstrapContext.class);
+		when(bootstrapContext.isRegistered(eq(ConfigClientProperties.class))).thenReturn(true);
+		ConfigClientProperties configClientProperties = new ConfigClientProperties();
+		configClientProperties.setUri(new String[] { "http://myuri" });
+		when(bootstrapContext.get(eq(ConfigClientProperties.class))).thenReturn(configClientProperties);
+		when(context.getBootstrapContext()).thenReturn(bootstrapContext);
+		List<ConfigServerConfigDataResource> resources1 = this.resolver.resolveProfileSpecific(context,
+			ConfigDataLocation.of("configserver:http://urlNo1"), mock(Profiles.class));
+		List<ConfigServerConfigDataResource> resources2 = this.resolver.resolveProfileSpecific(context,
+			ConfigDataLocation.of("configserver:http://urlNo2"), mock(Profiles.class));
+		assertThat(resources1).hasSize(1);
+		assertThat(resources2).hasSize(1);
+		verify(bootstrapContext, times(2)).get(eq(ConfigClientProperties.class));
+		ConfigServerConfigDataResource resource1 = resources1.get(0);
+		assertThat(resource1.getProperties().getUri()).isEqualTo(new String[] { "http://urlNo1" });
+		ConfigServerConfigDataResource resource2 = resources2.get(0);
+		assertThat(resource2.getProperties().getUri()).isEqualTo(new String[] { "http://urlNo2" });
+	}
+
 	private ConfigServerConfigDataResource testUri(String propertyUri, String locationUri) {
 		this.environment.setProperty(ConfigClientProperties.PREFIX + ".uri", propertyUri);
 		when(context.getBootstrapContext()).thenReturn(mock(ConfigurableBootstrapContext.class));
@@ -187,8 +208,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
 				ConfigDataLocation.of("configserver:" + locationUri), profiles);
 		assertThat(resources).hasSize(1);
-		ConfigServerConfigDataResource resource = resources.get(0);
-		return resource;
+		return resources.get(0);
 	}
 
 	private ConfigServerConfigDataResource testResolveProvileSpecific() {
@@ -205,8 +225,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
 				ConfigDataLocation.of("configserver:"), profiles);
 		assertThat(resources).hasSize(1);
-		ConfigServerConfigDataResource resource = resources.get(0);
-		return resource;
+		return resources.get(0);
 	}
 
 }
