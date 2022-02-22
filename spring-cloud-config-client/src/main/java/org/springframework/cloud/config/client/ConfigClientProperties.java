@@ -118,10 +118,9 @@ public class ConfigClientProperties {
 
 	/**
 	 * The strategy to use when call to server fails and there are multiple URLs
-	 * configured on the uri property (default
-	 * {@link MultipleUriStrategy#CONNECTION_TIMEOUT_ONLY}).
+	 * configured on the uri property (default {@link MultipleUriStrategy#ALWAYS}).
 	 */
-	private MultipleUriStrategy multipleUriStrategy = MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY;
+	private MultipleUriStrategy multipleUriStrategy = MultipleUriStrategy.ALWAYS;
 
 	/**
 	 * The Accept header media type to send to config server.

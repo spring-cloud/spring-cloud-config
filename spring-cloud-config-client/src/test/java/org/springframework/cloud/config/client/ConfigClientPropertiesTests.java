@@ -172,19 +172,19 @@ public class ConfigClientPropertiesTests {
 	}
 
 	@Test
-	public void testThatDefaultMultipleUriStrategyIsConnectionTimeoutOnly() {
+	public void testThatDefaultMultipleUriStrategyIsAlways() {
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
 		assertThat(properties.getMultipleUriStrategy()).isNotNull();
-		assertThat(properties.getMultipleUriStrategy().name())
-				.isEqualTo(MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY.name());
+		assertThat(properties.getMultipleUriStrategy().name()).isEqualTo(MultipleUriStrategy.ALWAYS.name());
 	}
 
 	@Test
 	public void testThatExplicitMultipleUriStrategyTakesPrecedence() {
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
-		properties.setMultipleUriStrategy(MultipleUriStrategy.ALWAYS);
+		properties.setMultipleUriStrategy(MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY);
 		assertThat(properties.getMultipleUriStrategy()).isNotNull();
-		assertThat(properties.getMultipleUriStrategy().name()).isEqualTo(MultipleUriStrategy.ALWAYS.name());
+		assertThat(properties.getMultipleUriStrategy().name())
+				.isEqualTo(MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY.name());
 	}
 
 }
