@@ -135,13 +135,13 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 	}
 
 	@Test
-	public void httpsProxy_notCalled() throws Exception {
+	public void httpsProxy_called_for_http_request_when_no_httpProxy_specified() throws Exception {
 		String repoUrl = "https://myrepo/repo.git";
 		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
 		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(
-				allOf(instanceOf(UnknownHostException.class), hasProperty("message", containsString("somehost"))));
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+			hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
 
 		makeRequest(httpClient, "http://somehost");
 	}
@@ -182,13 +182,13 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 	}
 
 	@Test
-	public void httpProxy_notCalled() throws Exception {
+	public void httpProxy_called_for_https_request_when_no_httpsProxy_specified() throws Exception {
 		String repoUrl = "https://myrepo/repo.git";
 		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
 		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(
-				allOf(instanceOf(UnknownHostException.class), hasProperty("message", containsString("somehost"))));
+		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
+			hasProperty("message", containsString(HTTP_PROXY.getHost()))));
 
 		makeRequest(httpClient, "https://somehost");
 	}
