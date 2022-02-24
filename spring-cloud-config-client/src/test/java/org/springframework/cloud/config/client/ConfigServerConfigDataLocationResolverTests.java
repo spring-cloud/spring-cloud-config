@@ -189,9 +189,9 @@ public class ConfigServerConfigDataLocationResolverTests {
 		when(bootstrapContext.get(eq(ConfigClientProperties.class))).thenReturn(configClientProperties);
 		when(context.getBootstrapContext()).thenReturn(bootstrapContext);
 		List<ConfigServerConfigDataResource> resources1 = this.resolver.resolveProfileSpecific(context,
-			ConfigDataLocation.of("configserver:http://urlNo1"), mock(Profiles.class));
+				ConfigDataLocation.of("configserver:http://urlNo1"), mock(Profiles.class));
 		List<ConfigServerConfigDataResource> resources2 = this.resolver.resolveProfileSpecific(context,
-			ConfigDataLocation.of("configserver:http://urlNo2"), mock(Profiles.class));
+				ConfigDataLocation.of("configserver:http://urlNo2"), mock(Profiles.class));
 		assertThat(resources1).hasSize(1);
 		assertThat(resources2).hasSize(1);
 		verify(bootstrapContext, times(2)).get(eq(ConfigClientProperties.class));

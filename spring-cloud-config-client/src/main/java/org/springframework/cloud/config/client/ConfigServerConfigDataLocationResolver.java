@@ -71,7 +71,8 @@ public class ConfigServerConfigDataLocationResolver
 		ConfigClientProperties configClientProperties;
 		if (context.getBootstrapContext().isRegistered(ConfigClientProperties.class)) {
 			configClientProperties = new ConfigClientProperties();
-			BeanUtils.copyProperties(context.getBootstrapContext().get(ConfigClientProperties.class), configClientProperties);
+			BeanUtils.copyProperties(context.getBootstrapContext().get(ConfigClientProperties.class),
+					configClientProperties);
 		}
 		else {
 			configClientProperties = binder
