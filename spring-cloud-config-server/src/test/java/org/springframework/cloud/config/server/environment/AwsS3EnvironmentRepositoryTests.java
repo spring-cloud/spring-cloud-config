@@ -26,6 +26,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectId;
 import com.amazonaws.util.StringInputStream;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
@@ -43,11 +44,11 @@ import static org.mockito.Mockito.when;
  */
 public class AwsS3EnvironmentRepositoryTests {
 
-	final ConfigServerProperties server = new ConfigServerProperties();
+	ConfigServerProperties server = new ConfigServerProperties();
 
 	final AmazonS3 s3Client = mock(AmazonS3.class, "config");
 
-	final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
+	EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
 
 	final String propertyContent = "cloudfoundry.enabled=true\n" + "cloudfoundry.accounts[0].name=acc1\n"
 			+ "cloudfoundry.accounts[0].user=user1\n" + "cloudfoundry.accounts[0].password=password1\n"
@@ -82,6 +83,12 @@ public class AwsS3EnvironmentRepositoryTests {
 		expectedProperties.put("cloudfoundry.accounts[1].password", "password2");
 		expectedProperties.put("cloudfoundry.accounts[1].api", "api.sys.acc2.cf-app.com");
 		expectedProperties.put("cloudfoundry.accounts[1].environment", "test2");
+	}
+
+	@Before
+	public void before() {
+		server = new ConfigServerProperties();
+		envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
 	}
 
 	@Test
@@ -165,6 +172,16 @@ public class AwsS3EnvironmentRepositoryTests {
 		final Environment env = envRepo.findOne("foo", "profile1", null);
 
 		assertExpectedEnvironment(env, "foo", null, null, 2, "profile1", null);
+	}
+
+	@Test
+	public void findWithNoProfileAndNoServerDefaultOneFound() throws UnsupportedEncodingException {
+		server.setDefaultProfile(null);
+		setupS3("foo.yml", yamlContent);
+
+		final Environment env = envRepo.findOne("foo", null, null);
+
+		assertExpectedEnvironment(env, "foo", null, null, 1, (String) null);
 	}
 
 	@Test
