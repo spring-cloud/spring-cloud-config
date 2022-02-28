@@ -150,14 +150,13 @@ public class EnvironmentController {
 
 	@GetMapping("/{name}-{profiles}.properties")
 	public ResponseEntity<String> properties(@PathVariable String name, @PathVariable String profiles,
-			@RequestParam(defaultValue = "true") boolean resolvePlaceholders) throws IOException {
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders) {
 		return labelledProperties(name, profiles, null, resolvePlaceholders);
 	}
 
 	@GetMapping("/{label}/{name}-{profiles}.properties")
 	public ResponseEntity<String> labelledProperties(@PathVariable String name, @PathVariable String profiles,
-			@PathVariable String label, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws IOException {
+			@PathVariable String label, @RequestParam(defaultValue = "true") boolean resolvePlaceholders) {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToProperties(environment);
@@ -201,14 +200,13 @@ public class EnvironmentController {
 
 	@GetMapping({ "/{name}-{profiles}.yml", "/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> yaml(@PathVariable String name, @PathVariable String profiles,
-			@RequestParam(defaultValue = "true") boolean resolvePlaceholders) throws Exception {
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders) {
 		return labelledYaml(name, profiles, null, resolvePlaceholders);
 	}
 
 	@GetMapping({ "/{label}/{name}-{profiles}.yml", "/{label}/{name}-{profiles}.yaml" })
 	public ResponseEntity<String> labelledYaml(@PathVariable String name, @PathVariable String profiles,
-			@PathVariable String label, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws Exception {
+			@PathVariable String label, @RequestParam(defaultValue = "true") boolean resolvePlaceholders) {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> result = convertToMap(environment);
