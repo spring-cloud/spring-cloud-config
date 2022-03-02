@@ -1338,6 +1338,8 @@ spring:
 
 You can disable the Health Indicator by setting `management.health.config.enabled=false`.
 
+Also, you can provide a custom `down` status of your own by setting property `spring.cloud.config.server.health.down-health-status` (valued to `"DOWN'` by default).
+
 === Security
 
 You can secure your Config Server in any way that makes sense to you (from physical network security to OAuth2 bearer tokens), because Spring Security and Spring Boot offer support for many security arrangements.
