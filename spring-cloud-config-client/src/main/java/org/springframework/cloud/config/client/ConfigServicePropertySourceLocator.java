@@ -260,7 +260,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				}
 			}
 			catch (ResourceAccessException e) {
-				logger.info("Connect Timeout Exception on Url - " + uri + ". Will be trying the next url if available");
+				logger.info("Exception on Url - " + uri + ":" + e + ". Will be trying the next url if available");
 				if (i == noOfUrls - 1) {
 					throw e;
 				}
