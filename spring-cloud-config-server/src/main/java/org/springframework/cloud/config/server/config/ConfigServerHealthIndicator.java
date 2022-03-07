@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -48,6 +49,8 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	private Map<String, Repository> repositories = new LinkedHashMap<>();
 
+	private String downHealthStatus = Status.DOWN.getCode();
+
 	// autowired required or boot constructor binding produces an error
 	@Autowired
 	public ConfigServerHealthIndicator(EnvironmentRepository environmentRepository) {
@@ -62,7 +65,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 	}
 
 	@Override
-	protected void doHealthCheck(Health.Builder builder) throws Exception {
+	protected void doHealthCheck(Health.Builder builder) {
 		builder.up();
 		List<Map<String, Object>> details = new ArrayList<>();
 		for (String name : this.repositories.keySet()) {
@@ -96,7 +99,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 				map.put("application", application);
 				map.put("profiles", profiles);
 				builder.withDetail("repository", map);
-				builder.down(e);
+				builder.status(this.downHealthStatus).withException(e);
 				return;
 			}
 		}
@@ -110,6 +113,14 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	public void setRepositories(Map<String, Repository> repositories) {
 		this.repositories = repositories;
+	}
+
+	public String getDownHealthStatus() {
+		return downHealthStatus;
+	}
+
+	public void setDownHealthStatus(String downHealthStatus) {
+		this.downHealthStatus = downHealthStatus;
 	}
 
 	/**
