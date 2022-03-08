@@ -71,14 +71,15 @@ public class EnvironmentRepositoryConfigurationTests {
 	@Test
 	public void configServerActuatorConfigurationWithCustomHealthStatus() {
 		new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfigurationTests.EnableConfigurationPropertiesBeans.class,
-				EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class))
-			.withPropertyValues("spring.cloud.config.server.health.down-health-status=CUSTOMIZED")
-			.run((context) -> {
-				ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
-				assertThat(ReflectionTestUtils.getField(healthIndicator, "downHealthStatus"))
-					.isEqualTo("CUSTOMIZED");
-			});
+				.withConfiguration(AutoConfigurations.of(
+						EnvironmentRepositoryConfigurationTests.EnableConfigurationPropertiesBeans.class,
+						EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class))
+				.withPropertyValues("spring.cloud.config.server.health.down-health-status=CUSTOMIZED")
+				.run((context) -> {
+					ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
+					assertThat(ReflectionTestUtils.getField(healthIndicator, "downHealthStatus"))
+							.isEqualTo("CUSTOMIZED");
+				});
 	}
 
 	@TestConfiguration

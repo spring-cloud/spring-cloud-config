@@ -74,10 +74,9 @@ public class ConfigServerHealthIndicatorTests {
 	public void exceptionDownStatusMayBeCustomized() {
 		ReflectionTestUtils.setField(this.indicator, "downHealthStatus", "CUSTOM");
 		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-			.thenThrow(new RuntimeException());
+				.thenThrow(new RuntimeException());
 		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(new Status(("CUSTOM")));
 	}
-
 
 	@Test
 	public void customLabelWorks() {
