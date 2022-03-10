@@ -78,6 +78,16 @@ class EnvironmentControllerIntegrationTests {
 		}
 
 		@Test
+		public void profileWithDash() throws Exception {
+			Environment dashEnvironment = new Environment("foo", "dev-db");
+			dashEnvironment.add(new PropertySource("foo", new HashMap<>()));
+			when(this.repository.findOne("foo", "dev-db", null, false)).thenReturn(dashEnvironment);
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/dev-db"))
+					.andExpect(MockMvcResultMatchers.status().isOk());
+			verify(this.repository).findOne("foo", "dev-db", null, false);
+		}
+
+		@Test
 		public void propertiesNoLabel() throws Exception {
 			when(this.repository.findOne("foo", "default", null, false)).thenReturn(this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo-default.properties"))
