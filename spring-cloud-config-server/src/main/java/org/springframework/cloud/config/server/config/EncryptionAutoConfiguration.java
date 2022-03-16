@@ -17,30 +17,17 @@
 package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
-import org.springframework.cloud.bootstrap.encrypt.KeyProperties.KeyStore;
-import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
 import org.springframework.cloud.config.server.encryption.CipherEnvironmentEncryptor;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
-import org.springframework.cloud.config.server.encryption.KeyStoreTextEncryptorLocator;
-import org.springframework.cloud.config.server.encryption.LocatorTextEncryptor;
 import org.springframework.cloud.config.server.encryption.SingleTextEncryptorLocator;
 import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
-import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
-import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
-import org.springframework.security.rsa.crypto.RsaAlgorithm;
-import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
-import org.springframework.util.StringUtils;
 
 /**
  * Auto configuration for text encryptors and environment encryptors (non-web stuff).
@@ -54,15 +41,8 @@ import org.springframework.util.StringUtils;
  *
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties
-@Import(SingleTextEncryptorConfiguration.class)
+@AutoConfigureAfter(TextEncryptionAutoConfiguration.class)
 public class EncryptionAutoConfiguration {
-
-	@Bean
-	@ConditionalOnMissingBean
-	public KeyProperties keyProperties() {
-		return new KeyProperties();
-	}
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -74,59 +54,6 @@ public class EncryptionAutoConfiguration {
 			locator = new SingleTextEncryptorLocator(encryptor);
 		}
 		return new CipherEnvironmentEncryptor(locator);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean(TextEncryptor.class)
-	public TextEncryptor defaultTextEncryptor(@Autowired(required = false) TextEncryptorLocator locator,
-			KeyProperties key) {
-		if (locator != null) {
-			return new LocatorTextEncryptor(locator);
-		}
-		if (StringUtils.hasText(key.getKey())) {
-			return new EncryptorFactory(key.getSalt()).create(key.getKey());
-		}
-		return Encryptors.noOpText();
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(RsaSecretEncryptor.class)
-	@ConditionalOnProperty(prefix = "encrypt.key-store", value = "location", matchIfMissing = false)
-	protected static class KeyStoreConfiguration {
-
-		@Autowired
-		private KeyProperties key;
-
-		@Autowired
-		private RsaProperties rsaProperties;
-
-		@Bean
-		@ConditionalOnMissingBean
-		public TextEncryptorLocator textEncryptorLocator() {
-			KeyStore keyStore = key.getKeyStore();
-			KeyStoreTextEncryptorLocator locator = new KeyStoreTextEncryptorLocator(
-					new KeyStoreKeyFactory(keyStore.getLocation(), keyStore.getPassword().toCharArray(),
-							key.getKeyStore().getType()),
-					keyStore.getSecret(), keyStore.getAlias());
-			RsaAlgorithm algorithm = this.rsaProperties.getAlgorithm();
-			locator.setRsaAlgorithm(algorithm);
-			locator.setSalt(this.rsaProperties.getSalt());
-			locator.setStrong(this.rsaProperties.isStrong());
-			return locator;
-		}
-
-	}
-
-}
-
-@ConditionalOnBean(TextEncryptor.class)
-@ConditionalOnMissingBean(TextEncryptorLocator.class)
-@Configuration(proxyBeanMethods = false)
-class SingleTextEncryptorConfiguration {
-
-	@Bean
-	public SingleTextEncryptorLocator textEncryptorLocator(TextEncryptor encryptor) {
-		return new SingleTextEncryptorLocator(encryptor);
 	}
 
 }
