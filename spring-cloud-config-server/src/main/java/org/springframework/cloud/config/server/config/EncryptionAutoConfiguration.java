@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 /**
- * Auto configuration for text encryptors and environment encryptors (non-web stuff).
+ * Auto-configuration for text encryptors and environment encryptors (non-web stuff).
  * Users can provide beans of the same type as any or all of the beans defined here in
  * application code to override the default behaviour.
  *
@@ -41,8 +41,15 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
  *
  */
 @Configuration(proxyBeanMethods = false)
-@AutoConfigureAfter(TextEncryptionAutoConfiguration.class)
+@AutoConfigureAfter(DefaultTextEncryptionAutoConfiguration.class)
 public class EncryptionAutoConfiguration {
+
+	@Bean
+	@ConditionalOnBean(TextEncryptor.class)
+	@ConditionalOnMissingBean(TextEncryptorLocator.class)
+	public SingleTextEncryptorLocator singleTextEncryptorLocator(TextEncryptor encryptor) {
+		return new SingleTextEncryptorLocator(encryptor);
+	}
 
 	@Bean
 	@ConditionalOnMissingBean

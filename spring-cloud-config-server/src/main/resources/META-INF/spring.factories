@@ -1,7 +1,8 @@
 # Bootstrap components
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
 org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapConfiguration,\
-org.springframework.cloud.config.server.config.TextEncryptionAutoConfiguration,\
+org.springframework.cloud.config.server.config.DefaultTextEncryptionAutoConfiguration,\
+org.springframework.cloud.config.server.config.RsaEncryptionAutoConfiguration,\
 org.springframework.cloud.config.server.config.EncryptionAutoConfiguration
 
 # Environment PostProcessor
@@ -12,7 +13,8 @@ org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapApplicati
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.config.server.config.ConfigServerAutoConfiguration,\
 org.springframework.cloud.config.server.config.EncryptionAutoConfiguration,\
-org.springframework.cloud.config.server.config.TextEncryptionAutoConfiguration,\
+org.springframework.cloud.config.server.config.DefaultTextEncryptionAutoConfiguration,\
+org.springframework.cloud.config.server.config.RsaEncryptionAutoConfiguration,\
 org.springframework.cloud.config.server.config.VaultEncryptionAutoConfiguration
 org.springframework.boot.diagnostics.FailureAnalyzer=\
 org.springframework.cloud.config.server.diagnostics.GitUriFailureAnalyzer
