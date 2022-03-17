@@ -36,6 +36,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.boot.logging.DeferredLogFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
@@ -78,7 +79,7 @@ import static org.springframework.cloud.config.environment.EnvironmentMediaType.
  */
 public class ConfigServerConfigDataLoaderTests {
 
-	private static final Log logger = LogFactory.getLog(ConfigServerConfigDataLoaderTests.class);
+	private static final Log logFactory = DeferredLogFactory logFactory = Supplier::get;
 
 	private static final String LABEL = "main";
 
@@ -110,7 +111,7 @@ public class ConfigServerConfigDataLoaderTests {
 		MockitoAnnotations.openMocks(this);
 
 		environment = new StandardEnvironment();
-		loader = new ConfigServerConfigDataLoader(logger);
+		loader = new ConfigServerConfigDataLoader(logFactory);
 		restTemplate = mock(RestTemplate.class);
 		context = mock(ConfigDataLoaderContext.class);
 		bootstrapContext = mock(ConfigurableBootstrapContext.class);
@@ -347,7 +348,7 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setUri(uris);
 		properties.setFailFast(true);
 		properties.setMultipleUriStrategy(ConfigClientProperties.MultipleUriStrategy.ALWAYS);
-		this.loader = new ConfigServerConfigDataLoader(logger);
+		this.loader = new ConfigServerConfigDataLoader(logFactory);
 		ClientHttpRequestFactory requestFactory = mock(ClientHttpRequestFactory.class);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		when(bootstrapContext.get(RestTemplate.class)).thenReturn(restTemplate);
@@ -373,7 +374,7 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setUri(uris);
 		properties.setFailFast(true);
 		properties.setMultipleUriStrategy(ConfigClientProperties.MultipleUriStrategy.ALWAYS);
-		this.loader = new ConfigServerConfigDataLoader(logger);
+		this.loader = new ConfigServerConfigDataLoader(logFactory);
 		ClientHttpRequestFactory requestFactory = mock(ClientHttpRequestFactory.class);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		when(bootstrapContext.get(RestTemplate.class)).thenReturn(restTemplate);
@@ -404,7 +405,7 @@ public class ConfigServerConfigDataLoaderTests {
 		// Strategy is CONNECTION_TIMEOUT_ONLY, so it should not try the next URI for
 		// INTERNAL_SERVER_ERROR
 		properties.setMultipleUriStrategy(multipleUriStrategy);
-		this.loader = new ConfigServerConfigDataLoader(logger);
+		this.loader = new ConfigServerConfigDataLoader(logFactory);
 		ClientHttpRequestFactory requestFactory = mock(ClientHttpRequestFactory.class);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		mockRequestResponse(requestFactory, badURI, firstUriResponse);
@@ -453,7 +454,7 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setFailFast(true);
 		// Strategy is ALWAYS, so it should try all URIs until successful
 		properties.setMultipleUriStrategy(multipleUriStrategy);
-		this.loader = new ConfigServerConfigDataLoader(logger);
+		this.loader = new ConfigServerConfigDataLoader(logFactory);
 		ClientHttpRequestFactory requestFactory = mock(ClientHttpRequestFactory.class);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		mockRequestResponse(requestFactory, badURI, firstUriResponse);
@@ -473,7 +474,7 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setFailFast(true);
 		// Strategy should not matter when the error is connection timed out
 		properties.setMultipleUriStrategy(multipleUriStrategy);
-		this.loader = new ConfigServerConfigDataLoader(logger);
+		this.loader = new ConfigServerConfigDataLoader(logFactory);
 		ClientHttpRequestFactory requestFactory = mock(ClientHttpRequestFactory.class);
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		when(bootstrapContext.get(RestTemplate.class)).thenReturn(restTemplate);
