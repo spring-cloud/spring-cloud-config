@@ -34,6 +34,7 @@ import org.springframework.boot.context.config.ConfigDataLoader;
 import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
+import org.springframework.boot.logging.DeferredLogFactory;
 import org.springframework.boot.origin.Origin;
 import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoadContext;
@@ -67,6 +68,10 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 	private static final EnumSet<Option> ALL_OPTIONS = EnumSet.allOf(Option.class);
 
 	protected final Log logger;
+
+	public ConfigServerConfigDataLoader(DeferredLogFactory logFactory) {
+		this.logger = logFactory.getLog(getClass());
+	}
 
 	public ConfigServerConfigDataLoader(Log logger) {
 		this.logger = logger;
