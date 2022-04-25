@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
@@ -73,6 +75,7 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryAspect;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentRepositoryFactory;
@@ -122,7 +125,7 @@ import org.springframework.vault.core.VaultTemplate;
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
 		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
 		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
-		AwsParameterStoreRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class,
+		AwsParameterStoreRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class, ObservationConfiguration.class,
 		// DefaultRepositoryConfiguration must be last
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
@@ -558,6 +561,18 @@ class GoogleSecretManagerRepositoryConfiguration {
 			GoogleSecretManagerEnvironmentRepositoryFactory factory,
 			GoogleSecretManagerEnvironmentProperties environmentProperties) throws Exception {
 		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration(proxyBeanMethods = false)
+@ConditionalOnClass(Observation.class)
+@ConditionalOnBean(ObservationRegistry.class)
+class ObservationConfiguration {
+
+	@Bean
+	public ObservationEnvironmentRepositoryAspect environmentRepositoryAspect(ObservationRegistry registry) {
+		return new ObservationEnvironmentRepositoryAspect(registry);
 	}
 
 }
