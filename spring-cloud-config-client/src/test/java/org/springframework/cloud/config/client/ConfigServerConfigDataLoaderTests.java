@@ -503,7 +503,7 @@ public class ConfigServerConfigDataLoaderTests {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		when(response.getHeaders()).thenReturn(headers);
-		when(response.getRawStatusCode()).thenReturn(status.value());
+		when(response.getStatusCode()).thenReturn(status);
 		when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));
 	}
 
