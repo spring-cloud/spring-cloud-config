@@ -33,8 +33,7 @@ class SchemeBasedRoutePlannerTest {
 
 	@Test
 	void determineProxy_should_return_https_proxy_when_target_scheme_name_is_https_and_https_proxy_provided() {
-		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(SECURED_PROXY_PROPERTIES,
-				UNSECURED_PROXY_PROPERTIES);
+		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(SECURED_PROXY_PROPERTIES, UNSECURED_PROXY_PROPERTIES);
 
 		final HttpHost result = planner.determineProxy(target("https"), anyRequest(), anyContext());
 
@@ -56,8 +55,7 @@ class SchemeBasedRoutePlannerTest {
 
 	@Test
 	void determineProxy_should_return_http_proxy_when_target_scheme_name_is_http_and_http_proxy_provided() {
-		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(SECURED_PROXY_PROPERTIES,
-				UNSECURED_PROXY_PROPERTIES);
+		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(SECURED_PROXY_PROPERTIES, UNSECURED_PROXY_PROPERTIES);
 
 		final HttpHost result = planner.determineProxy(target("http"), anyRequest(), anyContext());
 

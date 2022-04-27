@@ -141,7 +141,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 				.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
 		HttpClient httpClient = getHttpClientForUrl(repoUrl);
 		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
+			hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
 
 		makeRequest(httpClient, "http://somehost");
 	}
@@ -188,7 +188,7 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 				.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
 		HttpClient httpClient = getHttpClientForUrl(repoUrl);
 		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(HTTP_PROXY.getHost()))));
+			hasProperty("message", containsString(HTTP_PROXY.getHost()))));
 
 		makeRequest(httpClient, "https://somehost");
 	}
