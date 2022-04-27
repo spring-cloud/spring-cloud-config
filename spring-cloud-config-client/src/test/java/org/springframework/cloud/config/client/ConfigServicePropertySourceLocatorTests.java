@@ -559,6 +559,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		Mockito.when(response.getHeaders()).thenReturn(headers);
 		Mockito.when(response.getStatusCode()).thenReturn(status);
+		Mockito.when(response.getRawStatusCode()).thenReturn(status.value());
 		Mockito.when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));
 	}
 
