@@ -27,6 +27,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -43,7 +44,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 public class CompositeIntegrationTests {
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = ConfigServerApplication.class,
+	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
 					"spring.cloud.config.server.svn.order:2",
@@ -94,7 +95,7 @@ public class CompositeIntegrationTests {
 	}
 
 	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = ConfigServerApplication.class,
+	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
 					"spring.cloud.config.server.composite[0].type:git",

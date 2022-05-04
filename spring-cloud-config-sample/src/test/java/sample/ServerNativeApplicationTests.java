@@ -52,7 +52,7 @@ public class ServerNativeApplicationTests {
 	@BeforeClass
 	public static void startConfigServer() throws IOException {
 		String repo = ConfigServerTestUtils.prepareLocalRepo();
-		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
+		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
 				"--server.port=" + configPort, "--spring.config.name=server",
 				"--spring.cloud.config.server.git.uri=" + repo, "--spring.profiles.active=native");
 		/*

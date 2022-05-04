@@ -30,6 +30,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +48,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
  * @author Roy Clarkson
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class,
+@SpringBootTest(classes = TestConfigServerApplication.class,
 		properties = { "spring.config.name:configserver",
 				"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
 				"logging.level.org.springframework.cloud=DEBUG" },

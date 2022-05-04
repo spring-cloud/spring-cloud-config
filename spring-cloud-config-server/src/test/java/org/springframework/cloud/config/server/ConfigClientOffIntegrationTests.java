@@ -36,6 +36,7 @@ import org.springframework.cloud.config.server.ConfigClientOffIntegrationTests.T
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.resource.ResourceRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -83,7 +84,7 @@ public class ConfigClientOffIntegrationTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@Import(ConfigServerApplication.class)
+	@Import(TestConfigServerApplication.class)
 	protected static class TestConfiguration {
 
 		@Bean

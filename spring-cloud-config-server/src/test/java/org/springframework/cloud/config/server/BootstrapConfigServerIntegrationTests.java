@@ -31,6 +31,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +43,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class, properties = { "spring.cloud.bootstrap.enabled=true",
+@SpringBootTest(classes = TestConfigServerApplication.class, properties = { "spring.cloud.bootstrap.enabled=true",
 		"logging.level.org.springframework.boot.context.config=TRACE", "spring.cloud.bootstrap.name:enable-bootstrap",
 		"encrypt.rsa.algorithm=DEFAULT", "encrypt.rsa.strong=false" },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.config.server;
+package org.springframework.cloud.config.server.test;
 
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.cloud.config.server.EnableConfigServer;
 
-/**
- * Configuration server application.
- *
- * @author Dave Syer
- * @deprecated Will be removed in 4.0.0.
- */
-@Configuration(proxyBeanMethods = false)
-@EnableAutoConfiguration
 @EnableConfigServer
-@Deprecated
-public class ConfigServerApplication {
+@SpringBootApplication
+public class TestConfigServerApplication {
 
 	public static void main(String[] args) {
-		new SpringApplicationBuilder(ConfigServerApplication.class).properties("spring.config.name=configserver")
+		new SpringApplicationBuilder(TestConfigServerApplication.class).properties("spring.config.name=configserver")
 				.run(args);
 	}
 
