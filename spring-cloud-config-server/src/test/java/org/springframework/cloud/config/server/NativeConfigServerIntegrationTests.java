@@ -29,6 +29,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.prepareLocalRepo;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class, properties = { "spring.config.name:configserver" },
+@SpringBootTest(classes = TestConfigServerApplication.class, properties = { "spring.config.name:configserver" },
 		webEnvironment = RANDOM_PORT)
 @ActiveProfiles({ "test", "native" })
 public class NativeConfigServerIntegrationTests {

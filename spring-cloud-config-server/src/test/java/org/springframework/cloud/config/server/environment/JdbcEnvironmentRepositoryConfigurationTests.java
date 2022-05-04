@@ -26,8 +26,8 @@ import org.junit.Test;
 import org.springframework.boot.test.context.assertj.AssertableWebApplicationContext;
 import org.springframework.boot.test.context.runner.ContextConsumer;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
-import org.springframework.cloud.config.server.ConfigServerApplication;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.dao.DataAccessException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,7 +41,7 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 
 	@Test
 	public void jdbcEnvironmentRepositoryBeansConfiguredWhenDefault() throws IOException {
-		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
 				.run(context -> {
 					assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
@@ -52,7 +52,7 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 
 	@Test
 	public void jdbcEnvironmentRepositoryBeansConfiguredWitCustomResultSetExtractor() {
-		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 				.withBean(CustomResultSetExtractor.class, CustomResultSetExtractor::new)
 				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
 				.run(context -> {
@@ -85,7 +85,7 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 	private void getApplicationContextWithJdbcEnabled(boolean jdbcEnabled,
 			ContextConsumer<? super AssertableWebApplicationContext> consumer) throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
-		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none",
 						"spring.cloud.config.server.git.uri:" + uri,
 						"spring.cloud.config.server.jdbc.enabled:" + jdbcEnabled)

@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
-import org.springframework.cloud.config.server.ConfigServerApplication;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +34,7 @@ public class CompositUtilsTests {
 
 	@Test
 	public void getCompositeTypeListWorks() {
-		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 				.withPropertyValues("spring.profiles.active:test,composite", "spring.config.name:compositeconfigserver",
 						"spring.jmx.enabled=false",
 						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -51,7 +51,7 @@ public class CompositUtilsTests {
 	public void getCompositeTypeListFails() {
 		this.thrown.expect(IllegalStateException.class);
 
-		new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 				.withPropertyValues("spring.profiles.active:test,composite", "spring.config.name:compositeconfigserver",
 						"spring.jmx.enabled=false",
 						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",

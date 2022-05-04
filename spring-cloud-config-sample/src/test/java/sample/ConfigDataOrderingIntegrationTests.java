@@ -60,7 +60,7 @@ public class ConfigDataOrderingIntegrationTests {
 
 	@BeforeClass
 	public static void startConfigServer() {
-		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
+		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
 				"--spring.profiles.active=native", "--server.port=" + configPort, "--spring.config.name=server");
 
 		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);

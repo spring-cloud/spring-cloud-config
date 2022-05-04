@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.cloud.config.server.composite.CompositeUtils;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.cloud.test.ClassPathExclusions;
 import org.springframework.cloud.test.ModifiedClassPathRunner;
 
@@ -34,7 +35,7 @@ public class CompositeClasspathTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -54,7 +55,7 @@ public class CompositeClasspathTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -73,7 +74,7 @@ public class CompositeClasspathTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -93,7 +94,7 @@ public class CompositeClasspathTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -113,7 +114,7 @@ public class CompositeClasspathTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:///./target/repos/svn-config-repo",
@@ -133,7 +134,7 @@ public class CompositeClasspathTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:configserver",
 							"spring.cloud.config.server.composite[0].uri:https://source.developers.google.com",
