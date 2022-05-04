@@ -22,6 +22,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
@@ -38,8 +40,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ApplicationConfiguration.class, properties = {
-		"spring.datasource.schema=classpath:schema-jdbc.sql", "spring.datasource.data=classpath:data-jdbc.sql" })
+@SpringBootTest(classes = ApplicationConfiguration.class,
+		properties = { "debug=true", "spring.sql.init.schema-locations=classpath:schema-jdbc.sql",
+				"spring.sql.init.data-locations=classpath:data-jdbc.sql" })
 @AutoConfigureTestDatabase
 @DirtiesContext
 public class JdbcEnvironmentRepositoryTests {
@@ -51,7 +54,7 @@ public class JdbcEnvironmentRepositoryTests {
 	public void basicProperties() {
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
 				new JdbcEnvironmentProperties(), new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
-						.findOne("foo", "bar", "");
+				.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default", "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -73,6 +76,7 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(0).getSource().get("a.b")).isEqualTo("y");
 	}
 
+	@ImportAutoConfiguration(SqlInitializationAutoConfiguration.class)
 	@Configuration(proxyBeanMethods = false)
 	protected static class ApplicationConfiguration {
 
