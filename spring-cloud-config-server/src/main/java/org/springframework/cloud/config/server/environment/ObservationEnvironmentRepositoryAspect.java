@@ -42,21 +42,9 @@ public class ObservationEnvironmentRepositoryAspect
 
 	@Around("execution (* org.springframework.cloud.config.server.environment.EnvironmentRepository.*(..))")
 	public Object observationFindEnvironment(final ProceedingJoinPoint pjp) throws Throwable {
-		// @formatter:off
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(pjp);
-		Observation observation = DocumentedConfigObservation.CONFIG_OBSERVATION.observation(this.registry, context)
-			.keyValuesProvider(this.keyValuesProvider).start();
-		try (Observation.Scope scope = observation.openScope()) {
-			return pjp.proceed();
-		}
-		catch (Exception exception) {
-			observation.error(exception);
-			throw exception;
-		}
-		finally {
-			observation.stop();
-		}
-		// @formatter:on
+		return DocumentedConfigObservation.CONFIG_OBSERVATION.observation(this.registry, context)
+			.keyValuesProvider(this.keyValuesProvider).observeChecked(() -> pjp.proceed());
 	}
 
 	@Override
