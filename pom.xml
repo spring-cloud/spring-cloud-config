@@ -32,6 +32,8 @@
 		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
 		<testcontainers.version>1.16.2</testcontainers.version>
 		<wiremock.version>2.31.0</wiremock.version>
+		<micrometer.version>1.10.0-SNAPSHOT</micrometer.version>
+		<micrometer-tracing.version>1.0.0-SNAPSHOT</micrometer-tracing.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failsOnViolation>true
 		</maven-checkstyle-plugin.failsOnViolation>
@@ -103,7 +105,21 @@
 				<version>${testcontainers.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-      </dependency>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-bom</artifactId>
+				<version>${micrometer.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-tracing-bom</artifactId>
+				<version>${micrometer-tracing.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
       <dependency>
 				<groupId>com.github.tomakehurst</groupId>
 				<artifactId>wiremock-jre8</artifactId>

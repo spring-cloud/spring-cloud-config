@@ -16,73 +16,128 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import brave.handler.SpanHandler;
+import brave.test.TestSpanHandler;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.tck.MeterRegistryAssert;
 import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.tracing.test.SampleTestRunner;
+import io.micrometer.tracing.brave.bridge.BraveFinishedSpan;
+import io.micrometer.tracing.exporter.FinishedSpan;
+import io.micrometer.tracing.otel.bridge.ArrayListSpanProcessor;
+import io.micrometer.tracing.otel.bridge.OtelFinishedSpan;
 import io.micrometer.tracing.test.simple.SpansAssert;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.server.ConfigServerApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
-// TODO: We need to improve how this is tested
-@SpringBootTest(classes = ObservationEnvironmentRepositoryTests.TestConfiguration.class, properties = {"spring.profiles.active=test,native",
-	"spring.main.web-application-type=none",
-	"management.tracing.sampling.probability=1.0",
-	"spring.autoconfigure.exclude=org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration,org.springframework.boot.actuate.autoconfigure.wavefront.WavefrontAutoConfiguration"})
-public class ObservationEnvironmentRepositoryTests extends SampleTestRunner {
+@DisplayName("Observation with Metrics and ")
+public class ObservationEnvironmentRepositoryTests {
 
-	@Autowired
-	MeterRegistry meterRegistry;
+	@Nested
+	@SpringBootTest(classes = BraveTests.BraveConfiguration.class,
+			properties = "spring.autoconfigure.exclude=org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration")
+	@DisplayName("Brave Tracer")
+	class BraveTests extends AbstractObservationEnvironmentRepositoryTests {
 
-	@Autowired
-	ObservationRegistry observationRegistry;
+		@Autowired
+		TestSpanHandler testSpanHandler;
 
-	@Autowired
-	EnvironmentRepository environmentRepository;
+		@Override
+		List<FinishedSpan> finishedSpans() {
+			return this.testSpanHandler.spans().stream().map(BraveFinishedSpan::fromBrave).collect(Collectors.toList());
+		}
 
-	@Override
-	public SampleTestRunnerConsumer yourCode() throws Exception {
-		return (buildingBlocks, mr) -> {
+		@Configuration(proxyBeanMethods = false)
+		protected static class BraveConfiguration {
+
+			@Bean
+			SpanHandler braveTestSpanHandler() {
+				return new TestSpanHandler();
+			}
+
+		}
+
+	}
+
+	@Nested
+	@SpringBootTest(classes = OtelTests.OtelConfiguration.class,
+			properties = "spring.autoconfigure.exclude=org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration")
+	@DisplayName("OTel Tracer")
+	class OtelTests extends AbstractObservationEnvironmentRepositoryTests {
+
+		@Autowired
+		ArrayListSpanProcessor arrayListSpanProcessor;
+
+		@Override
+		List<FinishedSpan> finishedSpans() {
+			return this.arrayListSpanProcessor.spans().stream().map(OtelFinishedSpan::fromOtel)
+					.collect(Collectors.toList());
+		}
+
+		@Configuration(proxyBeanMethods = false)
+		protected static class OtelConfiguration {
+
+			@Bean
+			ArrayListSpanProcessor otelArrayListSpanProcessor() {
+				return new ArrayListSpanProcessor();
+			}
+
+		}
+
+	}
+
+	@ContextConfiguration(classes = AbstractObservationEnvironmentRepositoryTests.TestConfiguration.class)
+	@TestPropertySource(properties = { "spring.profiles.active=test,native", "spring.main.web-application-type=none",
+			"management.tracing.sampling.probability=1.0" })
+	static abstract class AbstractObservationEnvironmentRepositoryTests {
+
+		@Autowired
+		MeterRegistry meterRegistry;
+
+		@Autowired
+		ObservationRegistry observationRegistry;
+
+		@Autowired
+		EnvironmentRepository environmentRepository;
+
+		@Test
+		void should_collect_measurements() {
 			this.environmentRepository.findOne("foo", "bar", "baz");
 
-			SpansAssert.assertThat(buildingBlocks.getFinishedSpans())
-				.haveSameTraceId()
-				.hasNumberOfSpansWithNameEqualTo("find", 2)
-				.hasSize(2);
-			MeterRegistryAssert.assertThat(mr)
-				.hasTimerWithNameAndTags("find", Tags.of(
-					Tag.of("spring.config.environment.class", "org.springframework.cloud.config.server.environment.NativeEnvironmentRepository"),
-					Tag.of("spring.config.environment.method", "findOne")))
-				.hasTimerWithNameAndTags("find", Tags.of(
-					Tag.of("spring.config.environment.class", "org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository"),
-					Tag.of("spring.config.environment.method", "findOne")));
-		};
-	}
+			SpansAssert.assertThat(finishedSpans()).haveSameTraceId().hasNumberOfSpansWithNameEqualTo("find", 2)
+					.hasSize(2);
+			MeterRegistryAssert.assertThat(meterRegistry)
+					.hasTimerWithNameAndTags("find",
+							Tags.of(Tag.of("spring.config.environment.class",
+									"org.springframework.cloud.config.server.environment.NativeEnvironmentRepository"),
+									Tag.of("spring.config.environment.method", "findOne")))
+					.hasTimerWithNameAndTags("find", Tags.of(Tag.of("spring.config.environment.class",
+							"org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository"),
+							Tag.of("spring.config.environment.method", "findOne")));
+		}
 
-	@Override
-	public TracingSetup[] getTracingSetup() {
-		return new TracingSetup[] {TracingSetup.IN_MEMORY_BRAVE};
-	}
+		abstract List<FinishedSpan> finishedSpans();
 
-	@Override
-	protected MeterRegistry getMeterRegistry() {
-		return this.meterRegistry;
-	}
+		@Configuration(proxyBeanMethods = false)
+		@Import(ConfigServerApplication.class)
+		protected static class TestConfiguration {
 
-	@Override
-	protected ObservationRegistry getObservationRegistry() {
-		return this.observationRegistry;
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@Import(ConfigServerApplication.class)
-	protected static class TestConfiguration {
+		}
 
 	}
+
 }

@@ -36,4 +36,5 @@ public class ObservationEnvironmentRepositoryContext extends Observation.Context
 	public ProceedingJoinPoint getProceedingJoinPoint() {
 		return this.pjp;
 	}
+
 }

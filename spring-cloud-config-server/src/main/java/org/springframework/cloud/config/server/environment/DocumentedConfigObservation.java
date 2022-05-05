@@ -19,7 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.DocumentedObservation;
 
-enum ConfigDocumentedObservation implements DocumentedObservation {
+enum DocumentedConfigObservation implements DocumentedObservation {
 
 	/**
 	 * Observation created around an EnvironmentRepository.

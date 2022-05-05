@@ -29,7 +29,8 @@ import org.aspectj.lang.annotation.Aspect;
  * @since 4.0.0
  */
 @Aspect
-public class ObservationEnvironmentRepositoryAspect implements Observation.KeyValuesProviderAware<ObservationEnvironmentRepositoryKeyValuesProvider> {
+public class ObservationEnvironmentRepositoryAspect
+		implements Observation.KeyValuesProviderAware<ObservationEnvironmentRepositoryKeyValuesProvider> {
 
 	private final ObservationRegistry registry;
 
@@ -43,7 +44,7 @@ public class ObservationEnvironmentRepositoryAspect implements Observation.KeyVa
 	public Object observationFindEnvironment(final ProceedingJoinPoint pjp) throws Throwable {
 		// @formatter:off
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(pjp);
-		Observation observation = ConfigDocumentedObservation.CONFIG_OBSERVATION.observation(this.registry, context)
+		Observation observation = DocumentedConfigObservation.CONFIG_OBSERVATION.observation(this.registry, context)
 			.keyValuesProvider(this.keyValuesProvider).start();
 		try (Observation.Scope scope = observation.openScope()) {
 			return pjp.proceed();
@@ -62,4 +63,5 @@ public class ObservationEnvironmentRepositoryAspect implements Observation.KeyVa
 	public void setKeyValuesProvider(ObservationEnvironmentRepositoryKeyValuesProvider keyValuesProvider) {
 		this.keyValuesProvider = keyValuesProvider;
 	}
+
 }

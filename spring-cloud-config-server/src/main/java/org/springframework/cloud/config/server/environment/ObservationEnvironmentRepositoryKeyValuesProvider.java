@@ -26,17 +26,19 @@ import org.aspectj.lang.ProceedingJoinPoint;
  * @author Marcin Grzejszczak
  * @since 4.0.0
  */
-public class ObservationEnvironmentRepositoryKeyValuesProvider implements Observation.KeyValuesProvider<ObservationEnvironmentRepositoryContext> {
+public class ObservationEnvironmentRepositoryKeyValuesProvider
+		implements Observation.KeyValuesProvider<ObservationEnvironmentRepositoryContext> {
 
 	@Override
 	public KeyValues getLowCardinalityKeyValues(ObservationEnvironmentRepositoryContext context) {
 		ProceedingJoinPoint pjp = context.getProceedingJoinPoint();
-		return KeyValues.of(ConfigDocumentedObservation.Tags.ENVIRONMENT_CLASS.of(pjp.getTarget().getClass().getName()),
-			ConfigDocumentedObservation.Tags.ENVIRONMENT_METHOD.of(pjp.getSignature().getName()));
+		return KeyValues.of(DocumentedConfigObservation.Tags.ENVIRONMENT_CLASS.of(pjp.getTarget().getClass().getName()),
+				DocumentedConfigObservation.Tags.ENVIRONMENT_METHOD.of(pjp.getSignature().getName()));
 	}
 
 	@Override
 	public boolean supportsContext(Observation.Context context) {
 		return context instanceof ObservationEnvironmentRepositoryContext;
 	}
+
 }

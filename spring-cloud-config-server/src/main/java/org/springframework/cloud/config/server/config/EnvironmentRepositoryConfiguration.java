@@ -125,7 +125,8 @@ import org.springframework.vault.core.VaultTemplate;
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
 		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
 		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
-		AwsParameterStoreRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class, ObservationConfiguration.class,
+		AwsParameterStoreRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class,
+		ObservationConfiguration.class,
 		// DefaultRepositoryConfiguration must be last
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
