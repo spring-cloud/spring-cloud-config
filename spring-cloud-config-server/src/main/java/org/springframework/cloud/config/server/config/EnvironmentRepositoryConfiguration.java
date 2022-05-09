@@ -24,6 +24,7 @@ import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.http.client.HttpClient;
+import org.aspectj.lang.annotation.Aspect;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -567,7 +568,7 @@ class GoogleSecretManagerRepositoryConfiguration {
 }
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(Observation.class)
+@ConditionalOnClass({ Observation.class, Aspect.class })
 @ConditionalOnBean(ObservationRegistry.class)
 class ObservationConfiguration {
 
