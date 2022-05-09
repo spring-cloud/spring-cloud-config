@@ -45,7 +45,12 @@ public class ConfigClientRetryBootstrapper implements BootstrapRegistryInitializ
 				RetryProperties properties = resource.getRetryProperties();
 				RetryTemplate retryTemplate = RetryTemplateFactory.create(properties, resource.getLog());
 				return retryTemplate.execute(
-						retryContext -> loadContext.getInvocation().apply(loadContext.getLoaderContext(), resource));
+						retryContext -> {
+							if (resource.getLog().isDebugEnabled()) {
+								resource.getLog().debug("Retry: count=" + retryContext.getRetryCount());
+							}
+							return loadContext.getInvocation().apply(loadContext.getLoaderContext(), resource);
+						});
 			}
 			return loadContext.getInvocation().apply(loadContext.getLoaderContext(), resource);
 		});
