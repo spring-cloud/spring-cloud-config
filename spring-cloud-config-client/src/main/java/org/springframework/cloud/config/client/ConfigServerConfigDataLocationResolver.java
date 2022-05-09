@@ -36,6 +36,7 @@ import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.logging.DeferredLogFactory;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
@@ -55,8 +56,8 @@ public class ConfigServerConfigDataLocationResolver
 
 	private final Log log;
 
-	public ConfigServerConfigDataLocationResolver(Log log) {
-		this.log = log;
+	public ConfigServerConfigDataLocationResolver(DeferredLogFactory factory) {
+		this.log = factory.getLog(ConfigServerConfigDataLocationResolver.class);
 	}
 
 	@Override
