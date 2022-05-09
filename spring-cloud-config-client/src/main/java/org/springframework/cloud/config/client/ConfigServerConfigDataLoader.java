@@ -74,10 +74,6 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		this.logger = logFactory.getLog(getClass());
 	}
 
-	public ConfigServerConfigDataLoader(Log logger) {
-		this.logger = logger;
-	}
-
 	@Override
 	public int getOrder() {
 		return -1;

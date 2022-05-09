@@ -59,7 +59,7 @@ public class ConfigDataOrderingVaultIntegrationTests {
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {
-		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
+		server = SpringApplication.run(TestConfigServerApplication.class,
 				"--spring.config.location=classpath:/vaultordering/", "--spring.config.name=server",
 				"--server.port=" + configServerPort,
 				"--spring.cloud.config.server.vault.port=" + vaultContainer.getFirstMappedPort());
