@@ -104,13 +104,13 @@ public class EnvironmentController {
 		this.acceptEmpty = acceptEmpty;
 	}
 
-	@GetMapping(path = "/{name}/{profiles:(?!.*\\b(?:ya?ml|properties|json)\\b).*}",
+	@GetMapping(path = "/{name}/{profiles:(?!.*\\b\\.(?:ya?ml|properties|json)\\b).*}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public Environment defaultLabel(@PathVariable String name, @PathVariable String profiles) {
 		return getEnvironment(name, profiles, null, false);
 	}
 
-	@GetMapping(path = "/{name}/{profiles:(?!.*\\b(?:ya?ml|properties|json)\\b).*}",
+	@GetMapping(path = "/{name}/{profiles:(?!.*\\b\\.(?:ya?ml|properties|json)\\b).*}",
 			produces = EnvironmentMediaType.V2_JSON)
 	public Environment defaultLabelIncludeOrigin(@PathVariable String name, @PathVariable String profiles) {
 		return getEnvironment(name, profiles, null, true);
