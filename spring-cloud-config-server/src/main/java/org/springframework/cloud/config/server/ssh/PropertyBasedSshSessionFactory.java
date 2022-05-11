@@ -79,7 +79,7 @@ public class PropertyBasedSshSessionFactory extends JschConfigSessionFactory {
 		}
 
 		ProxyHostProperties proxyHostProperties = sshProperties.getProxy().get(ProxyHostProperties.ProxyForScheme.HTTP);
-		if (proxyHostProperties != null) {
+		if (proxyHostProperties != null && proxyHostProperties.connectionInformationProvided()) {
 			ProxyHTTP proxy = createProxy(proxyHostProperties);
 			proxy.setUserPasswd(proxyHostProperties.getUsername(), proxyHostProperties.getPassword());
 			session.setProxy(proxy);

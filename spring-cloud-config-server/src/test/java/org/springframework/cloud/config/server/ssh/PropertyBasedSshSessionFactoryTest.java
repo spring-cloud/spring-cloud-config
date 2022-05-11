@@ -199,6 +199,8 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshProperties.setPrivateKey(PRIVATE_KEY);
 		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> map = new HashMap<>();
 		ProxyHostProperties proxyHostProperties = new ProxyHostProperties();
+		proxyHostProperties.setHost("host.domain");
+		proxyHostProperties.setPort(8080);
 		proxyHostProperties.setUsername("user");
 		proxyHostProperties.setPassword("password");
 		map.put(ProxyHostProperties.ProxyForScheme.HTTP, proxyHostProperties);

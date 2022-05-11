@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.proxy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
@@ -100,6 +101,16 @@ public class ProxyHostProperties {
 			return this.name().toLowerCase();
 		}
 
+	}
+
+	@JsonIgnore
+	public boolean connectionInformationProvided() {
+		return host != null && !host.isEmpty() && port > 0;
+	}
+
+	@JsonIgnore
+	public boolean authenticationProvided() {
+		return username != null && password != null;
 	}
 
 }
