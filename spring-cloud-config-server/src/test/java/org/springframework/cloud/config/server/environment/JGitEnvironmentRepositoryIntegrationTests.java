@@ -28,6 +28,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collections;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
@@ -264,9 +265,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				"--spring.cloud.config.server.git.searchPaths[0]={application}");
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertThat(repository.getSearchPaths()).containsExactly("{application}");
-		assertThat(Arrays.equals(repository.getSearchPaths(),
-				new JGitEnvironmentRepository(repository.getEnvironment(), new JGitEnvironmentProperties())
-						.getSearchPaths())).isFalse();
+		assertThat(Arrays.equals(repository.getSearchPaths(), new JGitEnvironmentRepository(repository.getEnvironment(),
+				new JGitEnvironmentProperties(), ObservationRegistry.NOOP).getSearchPaths())).isFalse();
 	}
 
 	@Test

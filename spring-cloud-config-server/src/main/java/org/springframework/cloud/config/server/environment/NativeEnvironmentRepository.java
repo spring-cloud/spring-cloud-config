@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -91,12 +92,16 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 	private int order;
 
-	public NativeEnvironmentRepository(ConfigurableEnvironment environment, NativeEnvironmentProperties properties) {
+	private final ObservationRegistry observationRegistry;
+
+	public NativeEnvironmentRepository(ConfigurableEnvironment environment, NativeEnvironmentProperties properties,
+			ObservationRegistry observationRegistry) {
 		this.environment = environment;
 		this.addLabelLocations = properties.getAddLabelLocations();
 		this.defaultLabel = properties.getDefaultLabel();
 		this.failOnError = properties.getFailOnError();
 		this.order = properties.getOrder();
+		this.observationRegistry = observationRegistry;
 		setSearchLocations(properties.getSearchLocations());
 		this.version = properties.getVersion();
 	}
@@ -148,8 +153,9 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 					});
 
 			environment.getPropertySources().remove("config-data-setup");
-			return clean(new PassthruEnvironmentRepository(environment).findOne(config, profile, label, includeOrigin),
-					propertySourceToConfigData);
+			return clean(ObservationEnvironmentRepositoryWrapper
+					.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment))
+					.findOne(config, profile, label, includeOrigin), propertySourceToConfigData);
 		}
 		catch (Exception e) {
 			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",

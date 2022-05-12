@@ -18,7 +18,6 @@ package org.springframework.cloud.config.server.environment;
 
 import io.micrometer.common.KeyValues;
 import io.micrometer.observation.Observation;
-import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
  * Default provider of key values for {@link ObservationEnvironmentRepositoryContext}.
@@ -26,14 +25,14 @@ import org.aspectj.lang.ProceedingJoinPoint;
  * @author Marcin Grzejszczak
  * @since 4.0.0
  */
-public class ObservationEnvironmentRepositoryKeyValuesProvider
+class ObservationEnvironmentRepositoryKeyValuesProvider
 		implements Observation.KeyValuesProvider<ObservationEnvironmentRepositoryContext> {
 
+	// TODO: Do we care about application, profile, label tags?
 	@Override
 	public KeyValues getLowCardinalityKeyValues(ObservationEnvironmentRepositoryContext context) {
-		ProceedingJoinPoint pjp = context.getProceedingJoinPoint();
-		return KeyValues.of(DocumentedConfigObservation.Tags.ENVIRONMENT_CLASS.of(pjp.getTarget().getClass().getName()),
-				DocumentedConfigObservation.Tags.ENVIRONMENT_METHOD.of(pjp.getSignature().getName()));
+		return KeyValues.of(DocumentedConfigObservation.Tags.ENVIRONMENT_CLASS
+				.of(context.getEnvironmentRepositoryClass().getName()));
 	}
 
 	@Override

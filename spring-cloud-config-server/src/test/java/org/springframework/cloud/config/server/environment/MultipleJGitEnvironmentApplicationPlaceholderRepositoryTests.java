@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
 import org.junit.Before;
@@ -43,7 +44,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	private StandardEnvironment environment = new StandardEnvironment();
 
 	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
-			new MultipleJGitEnvironmentProperties());
+			new MultipleJGitEnvironmentProperties(), ObservationRegistry.NOOP);
 
 	@BeforeClass
 	public static void initClass() {
@@ -69,7 +70,8 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	}
 
 	private PatternMatchingJGitEnvironmentRepository createRepository(String name, String pattern, String uri) {
-		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository();
+		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository(
+				ObservationRegistry.NOOP);
 		repo.setEnvironment(this.environment);
 		repo.setName(name);
 		repo.setPattern(new String[] { pattern });

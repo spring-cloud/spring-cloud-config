@@ -17,7 +17,6 @@
 package org.springframework.cloud.config.server.environment;
 
 import io.micrometer.observation.Observation;
-import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
  * {@link Observation.Context} for Spring Cloud Config.
@@ -27,14 +26,14 @@ import org.aspectj.lang.ProceedingJoinPoint;
  */
 public class ObservationEnvironmentRepositoryContext extends Observation.Context {
 
-	private final ProceedingJoinPoint pjp;
+	private final Class<? extends EnvironmentRepository> clazz;
 
-	public ObservationEnvironmentRepositoryContext(ProceedingJoinPoint pjp) {
-		this.pjp = pjp;
+	public ObservationEnvironmentRepositoryContext(Class<? extends EnvironmentRepository> clazz) {
+		this.clazz = clazz;
 	}
 
-	public ProceedingJoinPoint getProceedingJoinPoint() {
-		return this.pjp;
+	public Class<? extends EnvironmentRepository> getEnvironmentRepositoryClass() {
+		return this.clazz;
 	}
 
 }

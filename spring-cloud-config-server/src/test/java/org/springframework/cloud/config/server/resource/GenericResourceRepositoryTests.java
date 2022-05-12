@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.resource;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,7 +64,7 @@ public class GenericResourceRepositoryTests {
 		this.context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
 				.run();
 		this.nativeRepository = new NativeEnvironmentRepository(this.context.getEnvironment(),
-				new NativeEnvironmentProperties());
+				new NativeEnvironmentProperties(), ObservationRegistry.NOOP);
 		this.repository = new GenericResourceRepository(this.nativeRepository);
 		this.repository.setResourceLoader(this.context);
 		this.context.close();

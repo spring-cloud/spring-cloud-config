@@ -37,7 +37,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 
 		@Override
 		public String getPrefix() {
-			return "spring.config";
+			return "spring.cloud.config";
 		}
 	};
 
@@ -49,17 +49,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 		ENVIRONMENT_CLASS {
 			@Override
 			public String getKeyName() {
-				return "spring.config.environment.class";
-			}
-		},
-
-		/**
-		 * Method executed on the EnvironmentRepository.
-		 */
-		ENVIRONMENT_METHOD {
-			@Override
-			public String getKeyName() {
-				return "spring.config.environment.method";
+				return "spring.cloud.config.environment.class";
 			}
 		}
 

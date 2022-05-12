@@ -20,11 +20,9 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
-import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.http.client.HttpClient;
-import org.aspectj.lang.annotation.Aspect;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -76,7 +74,6 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryFactory;
-import org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryAspect;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentRepositoryFactory;
@@ -127,7 +124,6 @@ import org.springframework.vault.core.VaultTemplate;
 		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
 		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
 		AwsParameterStoreRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class,
-		ObservationConfiguration.class,
 		// DefaultRepositoryConfiguration must be last
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
@@ -255,8 +251,9 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-				ConfigServerProperties server) {
-			return new SvnEnvironmentRepositoryFactory(environment, server);
+				ConfigServerProperties server, ObjectProvider<ObservationRegistry> observationRegistry) {
+			return new SvnEnvironmentRepositoryFactory(environment, server,
+					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP));
 		}
 
 	}
@@ -364,8 +361,10 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public NativeEnvironmentRepositoryFactory nativeEnvironmentRepositoryFactory(
-				ConfigurableEnvironment environment, ConfigServerProperties properties) {
-			return new NativeEnvironmentRepositoryFactory(environment, properties);
+				ConfigurableEnvironment environment, ConfigServerProperties properties,
+				ObjectProvider<ObservationRegistry> observationRegistry) {
+			return new NativeEnvironmentRepositoryFactory(environment, properties,
+					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP));
 		}
 
 	}
@@ -538,8 +537,10 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnSearchPathLocator
 	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties) {
+			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties,
+			ObjectProvider<ObservationRegistry> observationRegistry) {
 		return new SearchPathCompositeEnvironmentRepository(environmentRepositories,
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
 				properties.isFailOnCompositeError());
 	}
 
@@ -547,8 +548,11 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnMissingSearchPathLocator
 	public CompositeEnvironmentRepository compositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties) {
-		return new CompositeEnvironmentRepository(environmentRepositories, properties.isFailOnCompositeError());
+			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties,
+			ObjectProvider<ObservationRegistry> observationRegistry) {
+		return new CompositeEnvironmentRepository(environmentRepositories,
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
+				properties.isFailOnCompositeError());
 	}
 
 }
@@ -563,18 +567,6 @@ class GoogleSecretManagerRepositoryConfiguration {
 			GoogleSecretManagerEnvironmentRepositoryFactory factory,
 			GoogleSecretManagerEnvironmentProperties environmentProperties) throws Exception {
 		return factory.build(environmentProperties);
-	}
-
-}
-
-@Configuration(proxyBeanMethods = false)
-@ConditionalOnClass({ Observation.class, Aspect.class })
-@ConditionalOnBean(ObservationRegistry.class)
-class ObservationConfiguration {
-
-	@Bean
-	public ObservationEnvironmentRepositoryAspect environmentRepositoryAspect(ObservationRegistry registry) {
-		return new ObservationEnvironmentRepositoryAspect(registry);
 	}
 
 }

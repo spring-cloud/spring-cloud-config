@@ -18,7 +18,9 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,12 +45,16 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	 * Creates a new {@link CompositeEnvironmentRepository}.
 	 * @param environmentRepositories The list of {@link EnvironmentRepository}s to create
 	 * the composite from.
+	 * @param observationRegistry observation registry
 	 * @param failOnError whether to throw an exception if there is an error.
 	 */
-	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
+	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
+			ObservationRegistry observationRegistry, boolean failOnError) {
 		// Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
-		this.environmentRepositories = environmentRepositories;
+		this.environmentRepositories = environmentRepositories.stream()
+				.map(e -> ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, e))
+				.collect(Collectors.toList());
 		this.failOnError = failOnError;
 	}
 

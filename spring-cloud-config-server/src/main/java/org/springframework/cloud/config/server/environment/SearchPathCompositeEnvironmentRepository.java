@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.micrometer.observation.ObservationRegistry;
+
 /**
  * A {@link CompositeEnvironmentRepository} which implements {@link SearchPathLocator}.
  *
@@ -32,23 +34,32 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 	 * Creates a new {@link SearchPathCompositeEnvironmentRepository}.
 	 * @param environmentRepositories The {@link EnvironmentRepository}s to create this
 	 * composite from.
+	 * @param observationRegistry observation registry
 	 * @param failOnError whether to throw an exception if there is an error.
 	 */
 	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
-			boolean failOnError) {
-		super(environmentRepositories, failOnError);
+			ObservationRegistry observationRegistry, boolean failOnError) {
+		super(environmentRepositories, observationRegistry, failOnError);
 	}
 
 	@Override
 	public Locations getLocations(String application, String profile, String label) {
 		List<String> locations = new ArrayList<>();
 		for (EnvironmentRepository repo : this.environmentRepositories) {
-			if (repo instanceof SearchPathLocator) {
-				locations.addAll(Arrays
-						.asList(((SearchPathLocator) repo).getLocations(application, profile, label).getLocations()));
+			if (repo instanceof SearchPathLocator searchPathLocator) {
+				addForSearchPathLocators(application, profile, label, locations, searchPathLocator);
+			}
+			else if (repo instanceof ObservationEnvironmentRepositoryWrapper wrapper
+					&& wrapper.getDelegate() instanceof SearchPathLocator searchPathLocator) {
+				addForSearchPathLocators(application, profile, label, locations, searchPathLocator);
 			}
 		}
 		return new Locations(application, profile, label, null, locations.toArray(new String[locations.size()]));
+	}
+
+	private void addForSearchPathLocators(String application, String profile, String label, List<String> locations,
+			SearchPathLocator searchPathLocator) {
+		locations.addAll(Arrays.asList(searchPathLocator.getLocations(application, profile, label).getLocations()));
 	}
 
 }
