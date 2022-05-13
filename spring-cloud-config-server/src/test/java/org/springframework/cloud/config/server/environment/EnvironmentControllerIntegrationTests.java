@@ -45,7 +45,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-
 /**
  * @author Dave Syer
  * @author Roy Clarkson
@@ -92,25 +91,25 @@ class EnvironmentControllerIntegrationTests {
 		}
 
 		@ParameterizedTest
-		@ValueSource(strings = {"yml", "yaml", "json", "properties"})
+		@ValueSource(strings = { "yml", "yaml", "json", "properties" })
 		public void profileContainingExtensionKeyword(String extensionKeyword) throws Exception {
 			String profiles = "dev-" + extensionKeyword;
 			Environment dashEnvironment = new Environment("foo", profiles);
 			dashEnvironment.add(new PropertySource("foo", new HashMap<>()));
 			when(this.repository.findOne("foo", profiles, null, false)).thenReturn(dashEnvironment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo/" + profiles))
-				.andExpect(MockMvcResultMatchers.status().isOk());
+					.andExpect(MockMvcResultMatchers.status().isOk());
 			verify(this.repository).findOne("foo", profiles, null, false);
 		}
 
 		@ParameterizedTest
-		@ValueSource(strings = {"yml", "yaml", "json", "properties"})
+		@ValueSource(strings = { "yml", "yaml", "json", "properties" })
 		public void profileHavingAnExtension(String extensionKeyword) throws Exception {
 			String profiles = "dev." + extensionKeyword;
 			Environment dashEnvironment = new Environment("foo", profiles);
 			dashEnvironment.add(new PropertySource("foo", new HashMap<>()));
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo/" + profiles))
-				.andExpect(MockMvcResultMatchers.status().isNotFound());
+					.andExpect(MockMvcResultMatchers.status().isNotFound());
 			verifyNoInteractions(this.repository);
 		}
 
