@@ -77,6 +77,15 @@ class SchemeBasedRoutePlannerTest {
 		assertThat(result.getPort()).isEqualTo(UNSECURED_PROXY_PROPERTIES.getPort());
 	}
 
+	@Test
+	void determineProxy_should_return_null_when_provided_proxies_are_incomplete() {
+		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(buildProxyProperties("", 777), buildProxyProperties("host", 0));
+
+		final HttpHost result = planner.determineProxy(target("https"), anyRequest(), anyContext());
+
+		assertThat(result).isNull();
+	}
+
 	private HttpHost target(String scheme) {
 		HttpHost host = mock(HttpHost.class);
 		when(host.getSchemeName()).thenReturn(scheme);
