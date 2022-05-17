@@ -47,7 +47,7 @@ public class SchemeBasedRoutePlanner extends DefaultRoutePlanner {
 	}
 
 	private HttpHost buildProxy(ProxyHostProperties properties, String scheme) {
-		if (properties == null) {
+		if (properties == null || !properties.connectionInformationProvided()) {
 			return null;
 		}
 		return new HttpHost(properties.getHost(), properties.getPort(), scheme);

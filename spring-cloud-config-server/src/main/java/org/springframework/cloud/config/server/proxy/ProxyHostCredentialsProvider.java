@@ -29,7 +29,7 @@ public class ProxyHostCredentialsProvider extends BasicCredentialsProvider {
 
 		for (ProxyHostProperties proxy : proxyHostProperties) {
 
-			if (proxy != null && proxy.getUsername() != null && proxy.getPassword() != null) {
+			if (proxy != null && proxy.connectionInformationProvided() && proxy.authenticationProvided()) {
 				AuthScope authscope = new AuthScope(proxy.getHost(), proxy.getPort());
 				UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(proxy.getUsername(),
 						proxy.getPassword());
