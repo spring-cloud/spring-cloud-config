@@ -31,7 +31,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.test.context.junit4.SpringRunner;
 

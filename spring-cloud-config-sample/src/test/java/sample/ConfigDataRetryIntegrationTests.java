@@ -32,7 +32,7 @@ import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointPr
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.cloud.test.TestSocketUtils;

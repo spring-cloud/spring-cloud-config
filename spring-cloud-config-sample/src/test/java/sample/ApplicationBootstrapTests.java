@@ -28,7 +28,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.cloud.test.TestSocketUtils;
