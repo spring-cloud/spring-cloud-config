@@ -109,7 +109,9 @@ public class EncryptionController {
 		Map<String, String> keys = helper.getEncryptorKeys(name, profiles, input);
 		String textToEncrypt = helper.stripPrefix(input);
 		String encrypted = helper.addPrefix(keys, encryptorLocator.locate(keys).encrypt(textToEncrypt));
-		logger.info("Encrypted data");
+		if (logger.isInfoEnabled()) {
+			logger.info("Encrypted data");
+		}
 		return encrypted;
 	}
 
@@ -128,21 +130,31 @@ public class EncryptionController {
 			encryptor = getEncryptor(name, profiles, data);
 			String input = stripFormData(helper.stripPrefix(data), type, true);
 			String decrypted = encryptor.decrypt(input);
-			logger.info("Decrypted cipher data");
+			if (logger.isInfoEnabled()) {
+				logger.info("Decrypted cipher data");
+			}
 			return decrypted;
 		}
 		catch (IllegalArgumentException | IllegalStateException e) {
-			logger.error("Cannot decrypt key:" + name + ", value:" + data, e);
+			if (logger.isErrorEnabled()) {
+				logger.error("Cannot decrypt key:" + name + ", value:" + data, e);
+			}
 			throw new InvalidCipherException();
 		}
 	}
 
 	private TextEncryptor getEncryptor(String name, String profiles, String data) {
 		if (encryptorLocator == null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Text encryptorLocator is null.");
+			}
 			throw new KeyNotInstalledException();
 		}
 		TextEncryptor encryptor = encryptorLocator.locate(helper.getEncryptorKeys(name, profiles, data));
 		if (encryptor == null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("TextEncryptor is null.");
+			}
 			throw new KeyNotInstalledException();
 		}
 		return encryptor;
