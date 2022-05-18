@@ -77,7 +77,7 @@ public class BootstrapConfigServerIntegrationTests {
 
 	@Test
 	@Ignore // FIXME: configdata
-	public void environmentBootstraps() {
+	public void environmentBootstraps() throws Exception {
 		assertThat(this.env.getProperty("info.foo", "")).isEqualTo("bar");
 		assertThat(this.env.getProperty("config.foo", "")).isEqualTo("foo");
 	}
