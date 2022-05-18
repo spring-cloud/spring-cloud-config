@@ -34,9 +34,11 @@ class ProxyHostCredentialsProviderTest {
 		ProxyHostProperties withoutCredentials = proxyHost("bad.proxy", 666, null, null);
 		ProxyHostProperties goodProxy = proxyHost("good.proxy", 888, "user", "P@s$W0rd!");
 
-		ProxyHostCredentialsProvider provider = new ProxyHostCredentialsProvider(withoutConnection, withoutCredentials, goodProxy);
+		ProxyHostCredentialsProvider provider = new ProxyHostCredentialsProvider(withoutConnection, withoutCredentials,
+				goodProxy);
 
-		Map<AuthScope, Credentials> credentials = (Map<AuthScope, Credentials>) ReflectionTestUtils.getField(provider, "credMap");
+		Map<AuthScope, Credentials> credentials = (Map<AuthScope, Credentials>) ReflectionTestUtils.getField(provider,
+				"credMap");
 		assertThat(credentials).hasSize(1);
 		Map.Entry<AuthScope, Credentials> entry = credentials.entrySet().iterator().next();
 		assertThat(entry.getKey().getHost()).isEqualTo("good.proxy");
