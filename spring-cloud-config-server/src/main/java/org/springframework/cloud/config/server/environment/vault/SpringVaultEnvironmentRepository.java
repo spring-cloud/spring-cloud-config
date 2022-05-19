@@ -47,7 +47,7 @@ public class SpringVaultEnvironmentRepository extends AbstractVaultEnvironmentRe
 		super(request, watch, properties);
 		this.keyValueTemplate = keyValueTemplate;
 		if (properties.getKvVersion() == 2 && StringUtils.hasText(properties.getPathToKey())) {
-			path = "data/" + properties.getPathToKey() + "/";
+			path = properties.getPathToKey() + "/";
 		}
 		this.objectMapper = new ObjectMapper();
 	}

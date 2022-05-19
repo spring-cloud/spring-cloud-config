@@ -65,7 +65,7 @@ public class SpringVaultEnvironmentRepositoryTests {
 	private void defaultKeyTest(String myPathKey, int version) {
 		String path = "";
 		if (StringUtils.hasText(myPathKey) && version == 2) {
-			path = "data/" + myPathKey + "/";
+			path = myPathKey + "/";
 		}
 		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 		when(keyValueTemplate.get(path + "myapp")).thenReturn(withVaultResponse("foo", "bar"));
