@@ -19,6 +19,8 @@
 		<docs.main>spring-cloud-config</docs.main>
 		<main.basedir>${basedir}/..</main.basedir>
 		<upload-docs-zip.phase>deploy</upload-docs-zip.phase>
+		<!-- Don't upload docs jar to central / repo.spring.io -->
+		<maven-deploy-plugin-default.phase>none</maven-deploy-plugin-default.phase>
 		<configprops.inclusionPattern>spring.cloud.config.*</configprops.inclusionPattern>
 	</properties>
 	<dependencies>
