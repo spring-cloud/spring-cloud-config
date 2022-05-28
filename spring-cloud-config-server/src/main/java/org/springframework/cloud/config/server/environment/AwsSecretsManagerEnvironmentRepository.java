@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,19 +21,20 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
-import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import static org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
@@ -48,7 +49,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 	private final ObjectMapper objectMapper;
 
-	private final AWSSecretsManager awsSmClient;
+	private final SecretsManagerClient awsSmClient;
 
 	private final ConfigServerProperties configServerProperties;
 
@@ -56,7 +57,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 	private final int order;
 
-	public AwsSecretsManagerEnvironmentRepository(AWSSecretsManager awsSmClient,
+	public AwsSecretsManagerEnvironmentRepository(SecretsManagerClient awsSmClient,
 			ConfigServerProperties configServerProperties,
 			AwsSecretsManagerEnvironmentProperties environmentProperties) {
 		this.awsSmClient = awsSmClient;
@@ -71,11 +72,11 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		final String defaultApplication = configServerProperties.getDefaultApplicationName();
 		final String defaultProfile = configServerProperties.getDefaultProfile();
 
-		if (StringUtils.isEmpty(application)) {
+		if (ObjectUtils.isEmpty(application)) {
 			application = defaultApplication;
 		}
 
-		if (StringUtils.isEmpty(profileList)) {
+		if (ObjectUtils.isEmpty(profileList)) {
 			profileList = defaultProfile;
 		}
 
@@ -135,18 +136,15 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 	private Map<Object, Object> findProperties(String path) {
 		Map<Object, Object> properties = new HashMap<>();
 
-		GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(path);
+		GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(path).build();
 		try {
-			GetSecretValueResult response = awsSmClient.getSecretValue(request);
+			GetSecretValueResponse response = awsSmClient.getSecretValue(request);
 
 			if (response != null) {
-				Map<String, Object> secretMap = objectMapper.readValue(response.getSecretString(),
-						new TypeReference<Map<String, Object>>() {
-						});
+				Map<String, Object> secretMap = objectMapper.readValue(response.secretString(), new TypeReference<>() {
+				});
 
-				for (Map.Entry<String, Object> secretEntry : secretMap.entrySet()) {
-					properties.put(secretEntry.getKey(), secretEntry.getValue());
-				}
+				properties.putAll(secretMap);
 			}
 		}
 		catch (ResourceNotFoundException | IOException e) {

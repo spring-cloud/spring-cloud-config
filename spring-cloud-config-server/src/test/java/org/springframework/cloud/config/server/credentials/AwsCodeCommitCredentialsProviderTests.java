@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,13 @@ package org.springframework.cloud.config.server.credentials;
 
 import java.net.URISyntaxException;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.URIish;
 import org.junit.Before;
 import org.junit.Test;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
@@ -97,18 +98,18 @@ public class AwsCodeCommitCredentialsProviderTests {
 
 	@Test
 	public void testAwsCredentialsProviderIsNullInitially() {
-		AWSCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
+		AwsCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
 		assertThat(awsProvider).isNull();
 	}
 
 	@Test
 	public void testAwsCredentialsProviderIsDefinedAfterGet() throws URISyntaxException {
-		AWSCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
+		AwsCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
 		assertThat(awsProvider).isNull();
 		assertThat(this.provider.get(new URIish(AWS_REPO), makeCredentialItems())).isTrue();
 		awsProvider = this.provider.getAwsCredentialProvider();
 		assertThat(awsProvider).isNotNull();
-		assertThat(awsProvider instanceof AwsCodeCommitCredentialProvider.AWSStaticCredentialsProvider).isTrue();
+		assertThat(awsProvider).isInstanceOf(StaticCredentialsProvider.class);
 	}
 
 	@Test

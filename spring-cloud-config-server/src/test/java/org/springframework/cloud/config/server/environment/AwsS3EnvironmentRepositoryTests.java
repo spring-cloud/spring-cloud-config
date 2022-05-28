@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,19 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Objects;
 import java.util.Properties;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectId;
-import com.amazonaws.util.StringInputStream;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+import org.mockito.internal.stubbing.answers.ThrowsExceptionForClassType;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.http.AbortableInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.utils.StringInputStream;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -35,8 +36,8 @@ import org.springframework.cloud.config.server.config.ConfigServerProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * @author Clay McCoy
@@ -45,7 +46,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	final ConfigServerProperties server = new ConfigServerProperties();
 
-	final AmazonS3 s3Client = mock(AmazonS3.class, "config");
+	final S3Client s3Client = mock(S3Client.class, new ThrowsExceptionForClassType(NoSuchKeyException.class));
 
 	final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
 
@@ -91,7 +92,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findPropertiesObject() throws UnsupportedEncodingException {
+	public void findPropertiesObject() {
 		setupS3("foo-bar.properties", propertyContent);
 
 		// Pulling content from a .properties file forces a boolean into a String
@@ -103,7 +104,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findJsonObject() throws UnsupportedEncodingException {
+	public void findJsonObject() {
 		setupS3("foo-bar.json", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
@@ -112,7 +113,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findYamlObject() throws UnsupportedEncodingException {
+	public void findYamlObject() {
 		setupS3("foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
@@ -121,7 +122,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithDefaultProfile() throws UnsupportedEncodingException {
+	public void findWithDefaultProfile() {
 		setupS3("foo.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", null, null);
@@ -130,7 +131,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithDefaultProfileUsingSuffix() throws UnsupportedEncodingException {
+	public void findWithDefaultProfileUsingSuffix() {
 		setupS3("foo-default.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", null, null);
@@ -139,7 +140,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithMultipleProfilesAllFound() throws UnsupportedEncodingException {
+	public void findWithMultipleProfilesAllFound() {
 		setupS3("foo-profile1.yml", yamlContent);
 		setupS3("foo-profile2.yml", jsonContent);
 
@@ -149,7 +150,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithMultipleProfilesOneFound() throws UnsupportedEncodingException {
+	public void findWithMultipleProfilesOneFound() {
 		setupS3("foo-profile2.yml", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
@@ -158,7 +159,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithLabel() throws UnsupportedEncodingException {
+	public void findWithLabel() {
 		setupS3("label1/foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", "label1");
@@ -167,7 +168,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithVersion() throws UnsupportedEncodingException {
+	public void findWithVersion() {
 		setupS3("foo-bar.yml", "v1", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
@@ -176,7 +177,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithMultipleApplicationAllFound() throws UnsupportedEncodingException {
+	public void findWithMultipleApplicationAllFound() {
 		setupS3("foo-profile1.yml", jsonContent);
 		setupS3("bar-profile1.yml", jsonContent);
 
@@ -195,24 +196,21 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(repository).isNotNull();
 	}
 
-	private void setupS3(String fileName, String propertyContent) throws UnsupportedEncodingException {
+	private void setupS3(String fileName, String propertyContent) {
 		setupS3(fileName, null, propertyContent);
 	}
 
-	private void setupS3(String fileName, String version, String propertyContent) throws UnsupportedEncodingException {
-		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", fileName);
-		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
+	private void setupS3(String fileName, String version, String propertyContent) {
+		final GetObjectRequest request = GetObjectRequest.builder().bucket("bucket1").key(fileName).build();
 
-		final S3Object s3Object = new S3Object();
-		s3Object.setObjectContent(new StringInputStream(propertyContent));
-
+		GetObjectResponse.Builder responseBuilder = GetObjectResponse.builder();
 		if (version != null) {
-			final ObjectMetadata metadata = new ObjectMetadata();
-			metadata.setHeader("x-amz-version-id", version);
-			s3Object.setObjectMetadata(metadata);
+			responseBuilder.versionId(version);
 		}
+		ResponseInputStream<GetObjectResponse> responseInputStream = new ResponseInputStream<>(responseBuilder.build(),
+				AbortableInputStream.create(new StringInputStream(propertyContent)));
 
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request)))).thenReturn(s3Object);
+		doReturn(responseInputStream).when(s3Client).getObject(argThat(new GetObjectRequestMatcher(request)));
 	}
 
 	private void assertExpectedEnvironment(Environment env, String applicationName, String label, String version,
@@ -240,9 +238,8 @@ public class AwsS3EnvironmentRepositoryTests {
 			if (actual == null) {
 				return false;
 			}
-			return Objects.equals(actual.getBucketName(), expected.getBucketName())
-					&& Objects.equals(actual.getKey(), expected.getKey())
-					&& Objects.equals(actual.getVersionId(), expected.getVersionId());
+			return Objects.equals(actual.bucket(), expected.bucket()) && Objects.equals(actual.key(), expected.key())
+					&& Objects.equals(actual.versionId(), expected.versionId());
 		}
 
 	}

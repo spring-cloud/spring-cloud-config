@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,12 +118,13 @@ public class GitCredentialsProviderFactory {
 
 	/**
 	 * Check to see if the AWS Authentication API is available.
-	 * @return true if the com.amazonaws.auth.DefaultAWSCredentialsProviderChain is
-	 * present, false otherwise.
+	 * @return true if the
+	 * software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider is present,
+	 * false otherwise.
 	 */
 	private boolean awsAvailable() {
 		return this.awsCodeCommitEnabled
-				&& ClassUtils.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
+				&& ClassUtils.isPresent("software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider", null);
 	}
 
 	/**

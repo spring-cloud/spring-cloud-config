@@ -28,9 +28,10 @@
 	<properties>
 		<bintray.package>config</bintray.package>
 		<spring-cloud-commons.version>4.0.0-SNAPSHOT</spring-cloud-commons.version>
-		<aws-java-sdk.version>1.11.911</aws-java-sdk.version>
+		<aws-java-sdk.version>2.17.195</aws-java-sdk.version>
 		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
 		<testcontainers.version>1.16.2</testcontainers.version>
+		<aws-java-sdk-v1.version>1.12.220</aws-java-sdk-v1.version>
 		<wiremock.version>2.31.0</wiremock.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failsOnViolation>true
@@ -71,23 +72,23 @@
 				<version>${spring-cloud-commons.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.amazonaws</groupId>
-				<artifactId>aws-java-sdk-core</artifactId>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>protocol-core</artifactId>
 				<version>${aws-java-sdk.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.amazonaws</groupId>
-				<artifactId>aws-java-sdk-s3</artifactId>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>s3</artifactId>
 				<version>${aws-java-sdk.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.amazonaws</groupId>
-				<artifactId>aws-java-sdk-secretsmanager</artifactId>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>secretsmanager</artifactId>
 				<version>${aws-java-sdk.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.amazonaws</groupId>
-				<artifactId>aws-java-sdk-ssm</artifactId>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>ssm</artifactId>
 				<version>${aws-java-sdk.version}</version>
 			</dependency>
 			<dependency>
@@ -116,8 +117,13 @@
 				<version>${testcontainers.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-      </dependency>
-      <dependency>
+			</dependency>
+			<dependency>
+				<groupId>com.amazonaws</groupId>
+				<artifactId>aws-java-sdk-core</artifactId>
+				<version>${aws-java-sdk-v1.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.github.tomakehurst</groupId>
 				<artifactId>wiremock-jre8</artifactId>
 				<version>${wiremock.version}</version>

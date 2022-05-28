@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,18 +27,18 @@ import java.util.TimeZone;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSSessionCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.util.ValidationUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -76,20 +76,20 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	protected Log logger = LogFactory.getLog(getClass());
 
 	/**
-	 * The AWSCredentialsProvider will be used to provide the access key and secret key if
+	 * The AwsCredentialsProvider will be used to provide the access key and secret key if
 	 * they are not specified.
 	 */
-	private AWSCredentialsProvider awsCredentialProvider;
+	private AwsCredentialsProvider awsCredentialProvider;
 
 	/**
-	 * If the access and secret keys are provided, then the AWSCredentialsProvider will
-	 * not be used. The username is the awsAccessKeyId.
+	 * If the access and secret keys are provided, then the AwsCredentialsProvider will
+	 * not be used. The username is the accessKeyId.
 	 */
 	private String username;
 
 	/**
-	 * If the access and secret keys are provided, then the AWSCredentialsProvider will
-	 * not be used. The password is the awsSecretKey.
+	 * If the access and secret keys are provided, then the AwsCredentialsProvider will
+	 * not be used. The password is the secretAccessKey.
 	 */
 	private String password;
 
@@ -98,10 +98,10 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 * uses the algorithm published by AWS at
 	 * https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
 	 * @param uri the codecommit repository uri
-	 * @param awsSecretKey the aws secret key
+	 * @param secretAccessKey the secret access key
 	 * @return the password to use in the git request
 	 */
-	protected static String calculateCodeCommitPassword(URIish uri, String awsSecretKey) {
+	protected static String calculateCodeCommitPassword(URIish uri, String secretAccessKey) {
 		String[] split = uri.getHost().split("\\.");
 		if (split.length < 4) {
 			throw new CredentialException("Cannot detect AWS region from URI", null);
@@ -122,7 +122,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 					.append(region).append("/codecommit/aws4_request\n")
 					.append(bytesToHexString(canonicalRequestDigest(uri)));
 
-			byte[] signedRequest = sign(awsSecretKey, shortDateStamp, region, stringToSign.toString());
+			byte[] signedRequest = sign(secretAccessKey, shortDateStamp, region, stringToSign.toString());
 			codeCommitPassword = dateStamp + "Z" + bytesToHexString(signedRequest);
 		}
 		catch (Exception e) {
@@ -250,25 +250,25 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	}
 
 	/**
-	 * Get the AWSCredentials. If an AWSCredentialProvider was specified, use that,
-	 * otherwise, create a new AWSCredentialsProvider. If the username and password are
-	 * provided, then use those directly as AWSCredentials. Otherwise us the
-	 * {@link DefaultAWSCredentialsProviderChain} as is standard with AWS applications.
+	 * Get the AwsCredentials. If an AwsCredentialProvider was specified, use that,
+	 * otherwise, create a new AwsCredentialsProvider. If the username and password are
+	 * provided, then use those directly as AwsCredentials. Otherwise, use the
+	 * {@link DefaultCredentialsProvider} as is standard with AWS applications.
 	 * @return the AWS credentials.
 	 */
-	private AWSCredentials retrieveAwsCredentials() {
+	private AwsCredentials retrieveAwsCredentials() {
 		if (this.awsCredentialProvider == null) {
 			if (this.username != null && this.password != null) {
-				this.logger.debug("Creating a static AWSCredentialsProvider");
-				this.awsCredentialProvider = new AWSStaticCredentialsProvider(
-						new BasicAWSCredentials(this.username, this.password));
+				this.logger.debug("Creating a StaticCredentialsProvider");
+				this.awsCredentialProvider = StaticCredentialsProvider
+						.create(AwsBasicCredentials.create(this.username, this.password));
 			}
 			else {
-				this.logger.debug("Creating a default AWSCredentialsProvider");
-				this.awsCredentialProvider = new DefaultAWSCredentialsProviderChain();
+				this.logger.debug("Creating a DefaultCredentialsProvider");
+				this.awsCredentialProvider = DefaultCredentialsProvider.create();
 			}
 		}
-		return this.awsCredentialProvider.getCredentials();
+		return this.awsCredentialProvider.resolveCredentials();
 	}
 
 	/**
@@ -280,16 +280,15 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
 		String codeCommitPassword;
 		String awsAccessKey;
-		String awsSecretKey;
+		String secretAccessKey;
 		try {
-			AWSCredentials awsCredentials = retrieveAwsCredentials();
+			AwsCredentials awsCredentials = retrieveAwsCredentials();
 			StringBuilder awsKey = new StringBuilder();
-			awsKey.append(awsCredentials.getAWSAccessKeyId());
-			awsSecretKey = awsCredentials.getAWSSecretKey();
-			if (awsCredentials instanceof AWSSessionCredentials) {
-				AWSSessionCredentials sessionCreds = (AWSSessionCredentials) awsCredentials;
-				if (sessionCreds.getSessionToken() != null) {
-					awsKey.append('%').append(sessionCreds.getSessionToken());
+			awsKey.append(awsCredentials.accessKeyId());
+			secretAccessKey = awsCredentials.secretAccessKey();
+			if (awsCredentials instanceof AwsSessionCredentials sessionCreds) {
+				if (sessionCreds.sessionToken() != null) {
+					awsKey.append('%').append(sessionCreds.sessionToken());
 				}
 			}
 			awsAccessKey = awsKey.toString();
@@ -299,7 +298,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 			return false;
 		}
 		try {
-			codeCommitPassword = calculateCodeCommitPassword(uri, awsSecretKey);
+			codeCommitPassword = calculateCodeCommitPassword(uri, secretAccessKey);
 		}
 		catch (Throwable t) {
 			this.logger.warn("Error calculating the AWS CodeCommit password", t);
@@ -336,22 +335,22 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	public void reset(URIish uri) {
 		// Should throw out cached info.
 		// Note that even though the credentials (password) we calculate here is
-		// valid for 15 minutes, we do not cache it. Instead we just re-calculate
-		// it each time we need it. However, the AWSCredentialProvider will cache
-		// its AWSCredentials object.
+		// valid for 15 minutes, we do not cache it. Instead, we just re-calculate
+		// it each time we need it. However, the AwsCredentialProvider will cache
+		// its AwsCredentials object.
 	}
 
 	/**
 	 * @return the awsCredentialProvider
 	 */
-	public AWSCredentialsProvider getAwsCredentialProvider() {
+	public AwsCredentialsProvider getAwsCredentialProvider() {
 		return this.awsCredentialProvider;
 	}
 
 	/**
 	 * @param awsCredentialProvider the awsCredentialProvider to set
 	 */
-	public void setAwsCredentialProvider(AWSCredentialsProvider awsCredentialProvider) {
+	public void setAwsCredentialProvider(AwsCredentialsProvider awsCredentialProvider) {
 		this.awsCredentialProvider = awsCredentialProvider;
 	}
 
@@ -381,28 +380,6 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	 */
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	/**
-	 * Simple implementation of AWSCredentialsProvider that just wraps static
-	 * AWSCredentials. AWS Actually provides this class in newer versions of the AWS API.
-	 */
-	public class AWSStaticCredentialsProvider implements AWSCredentialsProvider {
-
-		private final AWSCredentials credentials;
-
-		public AWSStaticCredentialsProvider(AWSCredentials credentials) {
-			this.credentials = ValidationUtils.assertNotNull(credentials, "credentials");
-		}
-
-		public AWSCredentials getCredentials() {
-			return this.credentials;
-		}
-
-		public void refresh() {
-			// Nothing to do for static credentials.
-		}
-
 	}
 
 }

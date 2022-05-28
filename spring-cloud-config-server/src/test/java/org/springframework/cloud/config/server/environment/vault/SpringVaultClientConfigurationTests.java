@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,7 +138,7 @@ class SpringVaultClientConfigurationTests {
 	@Test
 	public void awsIamAuthentication() {
 		System.setProperty("aws.accessKeyId", "access-key-id");
-		System.setProperty("aws.secretKey", "secret-key");
+		System.setProperty("aws.secretAccessKey", "secret-access-key");
 
 		properties.setAuthentication(AWS_IAM);
 		properties.getAwsIam().setRole("server");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -30,6 +27,9 @@ import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -49,7 +49,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
-	private final AWSSecretsManager awsSmClientMock = mock(AWSSecretsManager.class, "aws-sm-client-mock");
+	private final SecretsManagerClient awsSmClientMock = mock(SecretsManagerClient.class, "aws-sm-client-mock");
 
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
 
@@ -739,10 +739,10 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	private void setupAwsSmClientMocks(Environment environment) {
 		for (PropertySource ps : environment.getPropertySources()) {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
-			GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(path);
+			GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(path).build();
 
 			String secrets = getSecrets(ps);
-			GetSecretValueResult response = new GetSecretValueResult().withSecretString(secrets);
+			GetSecretValueResponse response = GetSecretValueResponse.builder().secretString(secrets).build();
 
 			when(awsSmClientMock.getSecretValue(eq(request))).thenReturn(response);
 		}

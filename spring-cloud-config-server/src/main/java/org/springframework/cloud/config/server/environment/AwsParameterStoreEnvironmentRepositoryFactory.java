@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.SsmClientBuilder;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 
@@ -37,11 +37,11 @@ public class AwsParameterStoreEnvironmentRepositoryFactory implements
 
 	@Override
 	public AwsParameterStoreEnvironmentRepository build(AwsParameterStoreEnvironmentProperties environmentProperties) {
-		AWSSimpleSystemsManagementClientBuilder clientBuilder = AWSSimpleSystemsManagementClientBuilder.standard();
+		SsmClientBuilder clientBuilder = SsmClient.builder();
 
 		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 
-		AWSSimpleSystemsManagement client = clientBuilder.build();
+		SsmClient client = clientBuilder.build();
 
 		return new AwsParameterStoreEnvironmentRepository(client, configServerProperties, environmentProperties);
 	}
