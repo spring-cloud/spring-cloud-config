@@ -95,7 +95,7 @@
 		</dependency>
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
-			<artifactId>protocol-core</artifactId>
+			<artifactId>auth</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

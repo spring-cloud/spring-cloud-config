@@ -73,7 +73,7 @@
 			</dependency>
 			<dependency>
 				<groupId>software.amazon.awssdk</groupId>
-				<artifactId>protocol-core</artifactId>
+				<artifactId>auth</artifactId>
 				<version>${aws-java-sdk.version}</version>
 			</dependency>
 			<dependency>
