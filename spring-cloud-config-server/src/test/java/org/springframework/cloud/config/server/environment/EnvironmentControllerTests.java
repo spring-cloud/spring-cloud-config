@@ -28,6 +28,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.yaml.snakeyaml.Yaml;
@@ -44,6 +46,7 @@ import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
@@ -407,6 +410,19 @@ class EnvironmentControllerTests {
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertThat(yaml).isEqualTo(
 				"'[key.with.dots]': a\n'[a.b]':\n  c: d\nx:\n  '[y.z]': b\na:\n  b:\n  - d:\n      '[e.f]': g\n");
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "invalid..key", "invalid[key", "invalid.key[", "invalid.key..", "invalid[k.e.y",
+			"invalid[key]", ".invalid.key", "invalid[]", "invalid[.key]", "invalid[.]" })
+	public void exceptionThrownForInvalidKeys(String invalidKey) {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put(invalidKey, "foo");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> this.controller.yaml("foo", "bar", false).getBody())
+				.withMessage("Invalid key: " + invalidKey);
 	}
 
 	@Test
