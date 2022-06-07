@@ -61,6 +61,7 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  * @author Ivan Corrales Solera
  * @author Daniel Frey
  * @author Ian Bondoc
+ * @author Kornel Skórka
  *
  */
 @RestController
@@ -502,9 +503,42 @@ public class EnvironmentController {
 				// then it's invalid
 			}
 			else if (this.currentPos == start) {
-				throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
+				if (this.valueType == NodeType.ARRAY) {
+					return handleEscapedKey(start);
+				}
+				else {
+					throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
+				}
 			}
 			return this.propertyKey.substring(start, this.currentPos);
+		}
+
+		private String handleEscapedKey(int start) {
+			// find end of the array
+			for (int i = start; i < this.propertyKey.length(); i++) {
+				char currentChar = this.propertyKey.charAt(i);
+				if (currentChar == ']') {
+					this.currentPos = i;
+				}
+			}
+			if (this.currentPos == this.propertyKey.length() - 1) {
+				// escape sequence is at the end of key
+				this.valueType = NodeType.LEAF;
+				return escapeKeyWithDots(this.propertyKey.substring(start + 1, this.currentPos));
+			}
+			else if (this.propertyKey.charAt(this.currentPos + 1) == '.') {
+				// escape sequence is followed by another delimiter
+				this.valueType = NodeType.MAP;
+				this.currentPos += 1;
+				return escapeKeyWithDots(this.propertyKey.substring(start + 1, this.currentPos - 1));
+			}
+			else {
+				throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
+			}
+		}
+
+		private String escapeKeyWithDots(String key) {
+			return "[" + key + "]";
 		}
 
 		private enum NodeType {

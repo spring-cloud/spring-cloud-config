@@ -396,6 +396,20 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void escapeSequenceInKeyInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("[key.with.dots]", "a");
+		map.put("x.[y.z]", "b");
+		map.put("[a.b].c", "d");
+		map.put("a.b[0].d.[e.f]", "g");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo(
+				"'[key.with.dots]': a\n'[a.b]':\n  c: d\nx:\n  '[y.z]': b\na:\n  b:\n  - d:\n      '[e.f]': g\n");
+	}
+
+	@Test
 	public void arrayOfObjectNestedLevelInYaml() throws Exception {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("x.a.b[0].c", "d");
