@@ -49,6 +49,17 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 	private String endpoint;
 
 	/**
+	 * The flag indicating enabled support of the labels. Defaults to false for backward
+	 * compatibility.
+	 */
+	private boolean labelEnabled;
+
+	/**
+	 * The default label to be suffixed (if defined) to the secret names.
+	 */
+	private String defaultLabel;
+
+	/**
 	 * The order of the environment repository.
 	 */
 	private int order = Ordered.LOWEST_PRECEDENCE;
@@ -89,6 +100,22 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 
 	public void setEndpoint(String endpoint) {
 		this.endpoint = endpoint;
+	}
+
+	public boolean isLabelEnabled() {
+		return labelEnabled;
+	}
+
+	public void setLabelEnabled(boolean labelEnabled) {
+		this.labelEnabled = labelEnabled;
+	}
+
+	public String getDefaultLabel() {
+		return defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 	public int getOrder() {

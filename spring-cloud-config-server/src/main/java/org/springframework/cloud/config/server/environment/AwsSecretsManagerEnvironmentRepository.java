@@ -70,6 +70,11 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 	public Environment findOne(String application, String profileList, String label) {
 		final String defaultApplication = configServerProperties.getDefaultApplicationName();
 		final String defaultProfile = configServerProperties.getDefaultProfile();
+		if (environmentProperties.isLabelEnabled()) {
+			if (label == null) {
+				label = environmentProperties.getDefaultLabel();
+			}
+		}
 
 		if (StringUtils.isEmpty(application)) {
 			application = defaultApplication;
@@ -88,31 +93,31 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		}
 
 		for (String profile : profiles) {
-			addPropertySource(environment, application, profile);
+			addPropertySource(environment, application, profile, label);
 			if (!defaultApplication.equals(application)) {
-				addPropertySource(environment, defaultApplication, profile);
+				addPropertySource(environment, defaultApplication, profile, label);
 			}
 		}
 
 		if (!Arrays.asList(profiles).contains(defaultProfile)) {
-			addPropertySource(environment, application, defaultProfile);
+			addPropertySource(environment, application, defaultProfile, label);
 		}
 
 		if (!Arrays.asList(profiles).contains(defaultProfile) && !defaultApplication.equals(application)) {
-			addPropertySource(environment, defaultApplication, defaultProfile);
+			addPropertySource(environment, defaultApplication, defaultProfile, label);
 		}
 
 		if (!defaultApplication.equals(application)) {
-			addPropertySource(environment, application, null);
+			addPropertySource(environment, application, null, label);
 		}
 
-		addPropertySource(environment, defaultApplication, null);
+		addPropertySource(environment, defaultApplication, null, label);
 
 		return environment;
 	}
 
-	private void addPropertySource(Environment environment, String application, String profile) {
-		String path = buildPath(application, profile);
+	private void addPropertySource(Environment environment, String application, String profile, String label) {
+		String path = buildPath(application, profile, label);
 
 		Map<Object, Object> properties = findProperties(path);
 		if (!properties.isEmpty()) {
@@ -120,16 +125,23 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		}
 	}
 
-	private String buildPath(String application, String profile) {
+	private String buildPath(String application, String profile, String label) {
 		String prefix = environmentProperties.getPrefix();
 		String profileSeparator = environmentProperties.getProfileSeparator();
 
-		if (profile == null || profile.isEmpty()) {
-			return prefix + DEFAULT_PATH_SEPARATOR + application + DEFAULT_PATH_SEPARATOR;
+		StringBuilder path = new StringBuilder().append(prefix).append(DEFAULT_PATH_SEPARATOR).append(application);
+
+		if (StringUtils.hasText(profile)) {
+			path.append(profileSeparator).append(profile);
 		}
-		else {
-			return prefix + DEFAULT_PATH_SEPARATOR + application + profileSeparator + profile + DEFAULT_PATH_SEPARATOR;
+
+		path.append(DEFAULT_PATH_SEPARATOR);
+
+		if (environmentProperties.isLabelEnabled() && StringUtils.hasText(label)) {
+			path.append(label).append(DEFAULT_PATH_SEPARATOR);
 		}
+
+		return path.toString();
 	}
 
 	private Map<Object, Object> findProperties(String path) {
