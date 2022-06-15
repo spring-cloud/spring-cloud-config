@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.ssh;
 
+import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
@@ -46,6 +47,14 @@ public class FileBasedSshTransportConfigCallback implements TransportConfigCallb
 	@Override
 	public void configure(Transport transport) {
 		SshSessionFactory.setInstance(new JschConfigSessionFactory() {
+			static {
+				/**
+				 * To avoid NPE in JschConfigSessionFactory.createDefaultJSch check this
+				 * issue for more info: https://github.com/mwiede/jsch/issues/43
+				 */
+				JSch.setConfig("signature.rsa", JSch.getConfig("ssh-rsa"));
+			}
+
 			@Override
 			protected void configure(OpenSshConfig.Host hc, Session session) {
 				session.setConfig("StrictHostKeyChecking",
