@@ -21,14 +21,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
-import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -48,7 +48,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 	private final ObjectMapper objectMapper;
 
-	private final AWSSecretsManager awsSmClient;
+	private final SecretsManagerClient awsSmClient;
 
 	private final ConfigServerProperties configServerProperties;
 
@@ -56,7 +56,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 	private final int order;
 
-	public AwsSecretsManagerEnvironmentRepository(AWSSecretsManager awsSmClient,
+	public AwsSecretsManagerEnvironmentRepository(SecretsManagerClient awsSmClient,
 			ConfigServerProperties configServerProperties,
 			AwsSecretsManagerEnvironmentProperties environmentProperties) {
 		this.awsSmClient = awsSmClient;
@@ -135,12 +135,12 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 	private Map<Object, Object> findProperties(String path) {
 		Map<Object, Object> properties = new HashMap<>();
 
-		GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(path);
+		GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(path).build();
 		try {
-			GetSecretValueResult response = awsSmClient.getSecretValue(request);
+			GetSecretValueResponse response = awsSmClient.getSecretValue(request);
 
 			if (response != null) {
-				Map<String, Object> secretMap = objectMapper.readValue(response.getSecretString(),
+				Map<String, Object> secretMap = objectMapper.readValue(response.secretString(),
 						new TypeReference<Map<String, Object>>() {
 						});
 

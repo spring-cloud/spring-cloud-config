@@ -29,13 +29,13 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParametersByPathRequest;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParametersByPathResult;
-import com.amazonaws.services.simplesystemsmanagement.model.Parameter;
-import com.amazonaws.services.simplesystemsmanagement.model.ParameterType;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.GetParametersByPathRequest;
+import software.amazon.awssdk.services.ssm.model.GetParametersByPathResponse;
+import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.awssdk.services.ssm.model.ParameterType;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -97,8 +97,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		}
 	};
 
-	private final AWSSimpleSystemsManagement awsSsmClientMock = mock(AWSSimpleSystemsManagement.class,
-			"aws-ssm-client-mock");
+	private final SsmClient awsSsmClientMock = mock(SsmClient.class, "aws-ssm-client-mock");
 
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
 
@@ -686,7 +685,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		Environment expected = new Environment(application, profiles, null, null, null);
 
 		when(awsSsmClientMock.getParametersByPath(any(GetParametersByPathRequest.class)))
-				.thenReturn(new GetParametersByPathResult());
+				.thenReturn(GetParametersByPathResponse.builder().build());
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
@@ -725,14 +724,14 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		for (PropertySource ps : environment.getPropertySources()) {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 
-			GetParametersByPathRequest request = new GetParametersByPathRequest().withPath(path)
-					.withRecursive(environmentProperties.isRecursive())
-					.withWithDecryption(environmentProperties.isDecryptValues())
-					.withMaxResults(environmentProperties.getMaxResults());
+			GetParametersByPathRequest request = GetParametersByPathRequest.builder().path(path)
+					.recursive(environmentProperties.isRecursive())
+					.withDecryption(environmentProperties.isDecryptValues())
+					.maxResults(environmentProperties.getMaxResults()).build();
 
 			Set<Parameter> parameters = getParameters(ps, path, withSlashesForPropertyName);
 
-			GetParametersByPathResult response = new GetParametersByPathResult().withParameters(parameters);
+			GetParametersByPathResponse response = GetParametersByPathResponse.builder().parameters(parameters).build();
 
 			if (paginatedResponse && environmentProperties.getMaxResults() < parameters.size()) {
 				List<Set<Parameter>> chunks = splitParametersIntoChunks(parameters);
@@ -745,24 +744,24 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 					if (i == 0) {
 						nextToken = generateNextToken();
 
-						GetParametersByPathResult responseClone = response.clone().withParameters(chunk)
-								.withNextToken(nextToken);
+						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
+								.nextToken(nextToken).build();
 
 						when(awsSsmClientMock.getParametersByPath(eq(request))).thenReturn(responseClone);
 					}
 					else if (i == chunks.size() - 1) {
-						GetParametersByPathRequest requestClone = request.clone().withNextToken(nextToken);
-						GetParametersByPathResult responseClone = response.clone().withParameters(chunk);
+						GetParametersByPathRequest requestClone = request.toBuilder().nextToken(nextToken).build();
+						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk).build();
 
 						when(awsSsmClientMock.getParametersByPath(eq(requestClone))).thenReturn(responseClone);
 					}
 					else {
 						String newNextToken = generateNextToken();
 
-						GetParametersByPathRequest requestClone = request.clone().withNextToken(nextToken);
+						GetParametersByPathRequest requestClone = request.toBuilder().nextToken(nextToken).build();
 
-						GetParametersByPathResult responseClone = response.clone().withParameters(chunk)
-								.withNextToken(newNextToken);
+						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
+								.nextToken(newNextToken).build();
 
 						when(awsSsmClientMock.getParametersByPath(eq(requestClone))).thenReturn(responseClone);
 
@@ -778,10 +777,10 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 
 	private Set<Parameter> getParameters(PropertySource propertySource, String path,
 			boolean withSlashesForPropertyName) {
-		Function<Map.Entry<?, ?>, Parameter> mapper = p -> new Parameter()
-				.withName(path + (withSlashesForPropertyName
+		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter
+				.builder().name(path + (withSlashesForPropertyName
 						? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR) : p.getKey()))
-				.withType(ParameterType.String).withValue((String) p.getValue()).withVersion(1L);
+				.type(ParameterType.STRING).value((String) p.getValue()).version(1L).build();
 
 		return propertySource.getSource().entrySet().stream().map(mapper).collect(Collectors.toSet());
 	}

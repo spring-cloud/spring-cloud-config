@@ -18,12 +18,12 @@ package org.springframework.cloud.config.server.credentials;
 
 import java.net.URISyntaxException;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.URIish;
 import org.junit.Before;
 import org.junit.Test;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
@@ -97,13 +97,13 @@ public class AwsCodeCommitCredentialsProviderTests {
 
 	@Test
 	public void testAwsCredentialsProviderIsNullInitially() {
-		AWSCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
+		AwsCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
 		assertThat(awsProvider).isNull();
 	}
 
 	@Test
 	public void testAwsCredentialsProviderIsDefinedAfterGet() throws URISyntaxException {
-		AWSCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
+		AwsCredentialsProvider awsProvider = this.provider.getAwsCredentialProvider();
 		assertThat(awsProvider).isNull();
 		assertThat(this.provider.get(new URIish(AWS_REPO), makeCredentialItems())).isTrue();
 		awsProvider = this.provider.getAwsCredentialProvider();

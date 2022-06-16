@@ -19,14 +19,14 @@ package org.springframework.cloud.config.server.config;
 import java.util.List;
 import java.util.Optional;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
@@ -210,7 +210,7 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(AmazonS3.class)
+	@ConditionalOnClass(S3Client.class)
 	static class AwsS3FactoryConfig {
 
 		@Bean
@@ -221,7 +221,7 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(AWSSecretsManager.class)
+	@ConditionalOnClass(SecretsManagerClient.class)
 	static class AwsSecretsManagerFactoryConfig {
 
 		@Bean
@@ -233,7 +233,7 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(AWSSimpleSystemsManagement.class)
+	@ConditionalOnClass(SsmClient.class)
 	static class AwsParameterStoreFactoryConfig {
 
 		@Bean
