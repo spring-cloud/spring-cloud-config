@@ -18,9 +18,9 @@ package org.springframework.cloud.config.server.environment.vault.authentication
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod;
@@ -41,12 +41,12 @@ public class AwsIamClientAuthenticationProvider extends SpringVaultClientAuthent
 	public ClientAuthentication getClientAuthentication(VaultEnvironmentProperties vaultProperties,
 			RestOperations vaultRestOperations, RestOperations externalRestOperations) {
 
-		assertClassPresent("com.amazonaws.auth.AWSCredentials",
-				missingClassForAuthMethod("AWSCredentials", "aws-java-sdk-core", AuthenticationMethod.AWS_IAM));
+		assertClassPresent("software.amazon.awssdk.auth.credentials.AwsCredentials",
+				missingClassForAuthMethod("AwsCredentials", "aws-core", AuthenticationMethod.AWS_IAM));
 
 		VaultEnvironmentProperties.AwsIamProperties awsIam = vaultProperties.getAwsIam();
 
-		AWSCredentialsProvider credentialsProvider = AwsCredentialProvider.getAwsCredentialsProvider();
+		AwsCredentialsProvider credentialsProvider = AwsCredentialProvider.getAwsCredentialsProvider();
 
 		AwsIamAuthenticationOptions.AwsIamAuthenticationOptionsBuilder builder = AwsIamAuthenticationOptions.builder();
 
@@ -72,32 +72,27 @@ public class AwsIamClientAuthenticationProvider extends SpringVaultClientAuthent
 
 	private static class AwsCredentialProvider {
 
-		private static AWSCredentialsProvider getAwsCredentialsProvider() {
+		private static AwsCredentialsProvider getAwsCredentialsProvider() {
 
-			DefaultAWSCredentialsProviderChain backingCredentialsProvider = DefaultAWSCredentialsProviderChain
-					.getInstance();
+			DefaultCredentialsProvider backingCredentialsProvider = DefaultCredentialsProvider.create();
 
 			// Eagerly fetch credentials preventing lag during the first, actual login.
-			AWSCredentials firstAccess = backingCredentialsProvider.getCredentials();
+			AwsCredentials firstAccess = backingCredentialsProvider.resolveCredentials();
 
-			AtomicReference<AWSCredentials> once = new AtomicReference<>(firstAccess);
+			AtomicReference<AwsCredentials> once = new AtomicReference<>(firstAccess);
 
-			return new AWSCredentialsProvider() {
+			return new AwsCredentialsProvider() {
 
 				@Override
-				public AWSCredentials getCredentials() {
+				public AwsCredentials resolveCredentials() {
 
 					if (once.compareAndSet(firstAccess, null)) {
 						return firstAccess;
 					}
 
-					return backingCredentialsProvider.getCredentials();
+					return backingCredentialsProvider.resolveCredentials();
 				}
 
-				@Override
-				public void refresh() {
-					backingCredentialsProvider.refresh();
-				}
 			};
 		}
 

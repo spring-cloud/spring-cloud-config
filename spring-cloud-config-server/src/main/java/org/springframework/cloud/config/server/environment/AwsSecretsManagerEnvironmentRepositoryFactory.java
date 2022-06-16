@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilder;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 
@@ -37,11 +37,11 @@ public class AwsSecretsManagerEnvironmentRepositoryFactory implements
 
 	@Override
 	public AwsSecretsManagerEnvironmentRepository build(AwsSecretsManagerEnvironmentProperties environmentProperties) {
-		AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder.standard();
+		SecretsManagerClientBuilder clientBuilder = SecretsManagerClient.builder();
 
 		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 
-		AWSSecretsManager client = clientBuilder.build();
+		SecretsManagerClient client = clientBuilder.build();
 		return new AwsSecretsManagerEnvironmentRepository(client, configServerProperties, environmentProperties);
 	}
 
