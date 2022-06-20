@@ -16,8 +16,10 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.client.builder.AwsSyncClientBuilder;
+import java.net.URI;
+
+import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
+import software.amazon.awssdk.regions.Region;
 
 import org.springframework.util.StringUtils;
 
@@ -26,15 +28,11 @@ abstract class AwsClientBuilderConfigurer {
 	private AwsClientBuilderConfigurer() {
 	}
 
-	static void configureClientBuilder(AwsSyncClientBuilder<?, ?> clientBuilder, String region, String endpoint) {
+	static void configureClientBuilder(AwsClientBuilder<?, ?> clientBuilder, String region, String endpoint) {
 		if (StringUtils.hasText(region)) {
+			clientBuilder.region(Region.of(region));
 			if (StringUtils.hasText(endpoint)) {
-				AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
-						endpoint, region);
-				clientBuilder.withEndpointConfiguration(endpointConfiguration);
-			}
-			else {
-				clientBuilder.withRegion(region);
+				clientBuilder.endpointOverride(URI.create(endpoint));
 			}
 		}
 	}

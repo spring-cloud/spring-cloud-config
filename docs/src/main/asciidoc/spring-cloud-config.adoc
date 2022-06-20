@@ -340,17 +340,17 @@ This helper is not used with the JGit library, so a JGit CredentialProvider for 
 AWS CodeCommit URIs follow this pattern:
 
 ```bash
-https//git-codecommit.${AWS_REGION}.amazonaws.com/v1/repos/${repo}.
+https://git-codecommit.${AWS_REGION}.amazonaws.com/v1/repos/${repo}
 ```
 
 If you provide a username and password with an AWS CodeCommit URI, they must be the https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html[AWS accessKeyId and secretAccessKey] that provide access to the repository.
-If you do not specify a username and password, the accessKeyId and secretAccessKey are retrieved by using the https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[AWS Default Credential Provider Chain].
+If you do not specify a username and password, the accessKeyId and secretAccessKey are retrieved by using the https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html[Default Credential Provider Chain].
 
 If your Git URI matches the CodeCommit URI pattern (shown earlier), you must provide valid AWS credentials in the username and password or in one of the locations supported by the default credential provider chain.
 AWS EC2 instances may use https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html[IAM Roles for EC2 Instances].
 
-NOTE: The `aws-java-sdk-core` jar is an optional dependency.
-If the `aws-java-sdk-core` jar is not on your classpath, the AWS Code Commit credential provider is not created, regardless of the git server URI.
+NOTE: The `software.amazon.awssdk:auth` jar is an optional dependency.
+If the `software.amazon.awssdk:auth` jar is not on your classpath, the AWS Code Commit credential provider is not created, regardless of the git server URI.
 
 ===== Authentication with Google Cloud Source
 
@@ -962,15 +962,15 @@ NOTE: When no profile is specified `default` will be used.
 ==== AWS S3 Backend
 
 Spring Cloud Config Server supports AWS S3 as a backend for configuration properties.
-You can enable this feature by adding a dependency to the link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-s3.html[AWS Java SDK For Amazon S3].
+You can enable this feature by adding a dependency to the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/examples-s3.html[AWS Java SDK For Amazon S3].
 
 [source,xml,indent=0]
 .pom.xml
 ----
 	<dependencies>
 		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-s3</artifactId>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
 		</dependency>
 	</dependencies>
 ----
@@ -992,7 +992,7 @@ spring:
 
 It is also possible to specify an AWS URL to link:https://aws.amazon.com/blogs/developer/using-new-regions-and-endpoints/[override the standard endpoint] of your S3 service with `spring.cloud.config.server.awss3.endpoint`. This allows support for beta regions of S3, and other S3 compatible storage APIs.
 
-Credentials are found using the link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[Default AWS Credential Provider Chain]. Versioned and encrypted buckets are supported without further configuration.
+Credentials are found using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html[Default Credential Provider Chain]. Versioned and encrypted buckets are supported without further configuration.
 
 Configuration files are stored in your bucket as `{application}-{profile}.properties`, `{application}-{profile}.yml` or `{application}-{profile}.json`. An optional label can be provided to specify a directory path to the file.
 
@@ -1000,14 +1000,14 @@ NOTE: When no profile is specified `default` will be used.
 
 ==== AWS Parameter Store Backend
 
-Spring Cloud Config Server supports AWS Parameter Store as a backend for configuration properties. You can enable this feature by adding a dependency to the link:https://github.com/aws/aws-sdk-java/tree/master/aws-java-sdk-ssm[AWS Java SDK for SSM].
+Spring Cloud Config Server supports AWS Parameter Store as a backend for configuration properties. You can enable this feature by adding a dependency to the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/examples-ssm.html[AWS Java SDK for SSM].
 
 [source,xml,indent=0]
 .pom.xml
 ----
     <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-ssm</artifactId>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>ssm</artifactId>
     </dependency>
 ----
 
@@ -1041,7 +1041,7 @@ The following table describes the AWS Parameter Store configuration properties.
 |*region*
 |no
 |
-|The region to be used by the AWS Parameter Store client. If it's not explicitly set, the SDK tries to determine the region to use by using the link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/java-dg-region-selection.html#default-region-provider-chain[Default Region Provider Chain].
+|The region to be used by the AWS Parameter Store client. If it's not explicitly set, the SDK tries to determine the region to use by using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/region-selection.html#default-region-provider-chain[Default Region Provider Chain].
 
 |*endpoint*
 |no
@@ -1080,7 +1080,7 @@ The following table describes the AWS Parameter Store configuration properties.
 
 |===
 
-AWS Parameter Store API credentials are determined using the link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default[Default Credential Provider Chain].
+AWS Parameter Store API credentials are determined using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html#credentials-default[Default Credential Provider Chain].
 Versioned parameters are already supported with the default behaviour of returning the latest version.
 
 [NOTE]
@@ -1094,14 +1094,14 @@ Versioned parameters are already supported with the default behaviour of returni
 ==== AWS Secrets Manager Backend
 
 Spring Cloud Config Server supports link:https://aws.amazon.com/secrets-manager/[AWS Secrets Manager] as a backend for configuration properties.
-You can enable this feature by adding a dependency to link:https://github.com/aws/aws-sdk-java/tree/master/aws-java-sdk-secretsmanager[AWS Java SDK for Secrets Manager].
+You can enable this feature by adding a dependency to link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/examples-secretsmanager.html[AWS Java SDK for Secrets Manager].
 
 [source,xml,indent=0]
 .pom.xml
 ----
 <dependency>
-    <groupId>com.amazonaws</groupId>
-    <artifactId>aws-java-sdk-secretsmanager</artifactId>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>secretsmanager</artifactId>
 </dependency>
 ----
 
@@ -1124,7 +1124,7 @@ spring:
 
 ----
 
-AWS Secrets Manager API credentials are determined using link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default[Default Credential Provider Chain].
+AWS Secrets Manager API credentials are determined using link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html#credentials-default[Default Credential Provider Chain].
 
 [NOTE]
 ====
@@ -1838,7 +1838,7 @@ For instance, you might want to align the config label with your branch but make
 
 === Specifying Multiple URLs for the Config Server
 
-To ensure high availability when you have multiple instances of Config Server deployed and expect one or more instances to be unavailable or unable to honor requests from time to time (such as if the Git server is down), you can either specify multiple URLs (as a comma-separated list under the `spring.cloud.config.uri` property) or have all your instances register in a Service Registry like Eureka (if using Discovery-First Bootstrap mode). 
+To ensure high availability when you have multiple instances of Config Server deployed and expect one or more instances to be unavailable or unable to honor requests from time to time (such as if the Git server is down), you can either specify multiple URLs (as a comma-separated list under the `spring.cloud.config.uri` property) or have all your instances register in a Service Registry like Eureka (if using Discovery-First Bootstrap mode).
 
 The URLs listed under `spring.cloud.config.uri` are tried in the order listed. By default, the Config Client will try to fetch properties from each URL until an attempt is successful to ensure high availability.
 
