@@ -97,7 +97,7 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 	private String privateKey;
 
 	/**
-	 * One of ssh-dss, ssh-rsa, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384, or
+	 * One of ssh-dss, ssh-rsa, ssh-ed25519, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384, or
 	 * ecdsa-sha2-nistp521. Must be set if hostKey is also set.
 	 */
 	private String hostKeyAlgorithm;

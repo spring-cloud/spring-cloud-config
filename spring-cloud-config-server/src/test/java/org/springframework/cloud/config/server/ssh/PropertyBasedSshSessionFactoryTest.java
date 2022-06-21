@@ -17,21 +17,35 @@
 package org.springframework.cloud.config.server.ssh;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Spliterator;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import com.jcraft.jsch.HostKey;
-import com.jcraft.jsch.HostKeyRepository;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.ProxyHTTP;
-import com.jcraft.jsch.Session;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
+import org.apache.sshd.common.config.keys.impl.ECDSAPublicKeyEntryDecoder;
+import org.apache.sshd.common.keyprovider.KeyIdentityProvider;
+import org.apache.sshd.common.session.SessionContext;
+import org.eclipse.jgit.transport.SshConfigStore;
+import org.eclipse.jgit.transport.sshd.ProxyData;
+import org.eclipse.jgit.transport.sshd.ProxyDataFactory;
+import org.eclipse.jgit.transport.sshd.ServerKeyDatabase;
+import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
@@ -40,9 +54,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -62,21 +74,6 @@ public class PropertyBasedSshSessionFactoryTest {
 	private static final String PRIVATE_KEY = getResourceAsString("/ssh/key");
 
 	private PropertyBasedSshSessionFactory factory;
-
-	@Mock
-	private Host hc;
-
-	@Mock
-	private Session session;
-
-	@Mock
-	private JSch jSch;
-
-	@Mock
-	private HostKeyRepository hostKeyRepository;
-
-	@Mock
-	private ProxyHTTP proxyMock;
 
 	public static String getResourceAsString(String path) {
 		try {
@@ -102,10 +99,9 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		this.factory.configure(this.hc, this.session);
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
 
-		verify(this.session).setConfig("StrictHostKeyChecking", "no");
-		verifyNoMoreInteractions(this.session);
+		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isEqualTo("no");
 	}
 
 	@Test
@@ -116,10 +112,25 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		this.factory.configure(this.hc, this.session);
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
 
-		verify(this.session).setConfig("StrictHostKeyChecking", "yes");
-		verifyNoMoreInteractions(this.session);
+		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isEqualTo("yes");
+	}
+
+	@Test
+	public void sshConfigIsUsedForRelevantHostOnly() {
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		sshKey.setHostKeyAlgorithm(HOST_KEY_ALGORITHM);
+		sshKey.setHostKey(HOST_KEY);
+		sshKey.setPrivateKey(PRIVATE_KEY);
+		setupSessionFactory(sshKey);
+		PublicKey configuredKey = toPublicKey(HOST_KEY, HOST_KEY_ALGORITHM);
+
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("another.host");
+
+		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isNull();
+		assertThat(isKnownKeyForHost(configuredKey, "another.host")).isFalse();
 	}
 
 	@Test
@@ -131,37 +142,40 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		this.factory.configure(this.hc, this.session);
-		verify(this.session).setConfig("server_host_key", HOST_KEY_ALGORITHM);
-		verify(this.session).setConfig("StrictHostKeyChecking", "yes");
-		verifyNoMoreInteractions(this.session);
+		PublicKey hostKey = getSshHostKey("gitlab.example.local");
+
+		assertThat(hostKey).isNotNull();
+		assertThat(hostKey.getAlgorithm()).isEqualTo(toPublicKey(HOST_KEY, HOST_KEY_ALGORITHM).getAlgorithm());
 	}
 
 	@Test
-	public void privateKeyIsUsed() throws Exception {
+	public void privateKeyIsUsed() {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
 		sshKey.setUri("git@gitlab.example.local:someorg/somerepo.git");
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
 
-		this.factory.createSession(this.hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
-		verify(this.jSch).addIdentity("gitlab.example.local", PRIVATE_KEY.getBytes(), null, null);
+		PrivateKey privateKey = getSshPrivateKey("gitlab.example.local");
+
+		assertThat(privateKey).isNotNull();
+		assertThat(privateKey).isEqualTo(toPrivateKey(PRIVATE_KEY));
 	}
 
 	@Test
-	public void hostKeyIsUsed() throws Exception {
+	public void hostKeyIsUsed() {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
 		sshKey.setUri("git@gitlab.example.local:someorg/somerepo.git");
+		sshKey.setHostKeyAlgorithm(HOST_KEY_ALGORITHM);
 		sshKey.setHostKey(HOST_KEY);
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
+		PublicKey configuredKey = toPublicKey(HOST_KEY, HOST_KEY_ALGORITHM);
 
-		this.factory.createSession(this.hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
-		ArgumentCaptor<HostKey> captor = ArgumentCaptor.forClass(HostKey.class);
-		verify(this.hostKeyRepository).add(captor.capture(), isNull());
-		HostKey hostKey = captor.getValue();
-		assertThat(hostKey.getHost()).isEqualTo("gitlab.example.local");
-		assertThat(hostKey.getKey()).isEqualTo(HOST_KEY);
+		PublicKey knownHostKey = getSshHostKey("gitlab.example.local");
+
+		assertThat(knownHostKey).isNotNull();
+		assertThat(knownHostKey).isEqualTo(configuredKey);
+		assertThat(isKnownKeyForHost(configuredKey, "gitlab.example.local")).isTrue();
 	}
 
 	@Test
@@ -172,30 +186,32 @@ public class PropertyBasedSshSessionFactoryTest {
 		sshKey.setPreferredAuthentications("password,keyboard-interactive");
 		setupSessionFactory(sshKey);
 
-		this.factory.configure(this.hc, this.session);
-		verify(this.session).setConfig("PreferredAuthentications", "password,keyboard-interactive");
-		verify(this.session).setConfig("StrictHostKeyChecking", "no");
-		verifyNoMoreInteractions(this.session);
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
+
+		assertThat(sshConfig.getValue("PreferredAuthentications")).isEqualTo("password,keyboard-interactive");
+		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isEqualTo("no");
 	}
 
 	@Test
-	public void customKnownHostsFileIsUsed() throws Exception {
+	public void customKnownHostsFileIsUsed() throws IOException {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
 		sshKey.setUri("git@gitlab.example.local:someorg/somerepo.git");
 		sshKey.setPrivateKey(PRIVATE_KEY);
-		sshKey.setKnownHostsFile("/ssh/known_hosts");
+		sshKey.setKnownHostsFile(new ClassPathResource("/ssh/known_hosts").getFile().getPath());
 		setupSessionFactory(sshKey);
+		PublicKey configuredKey = toPublicKey(HOST_KEY, HOST_KEY_ALGORITHM);
 
-		this.factory.createSession(this.hc, null, SshUriPropertyProcessor.getHostname(sshKey.getUri()), 22, null);
-		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		PublicKey knownHostKey = getSshHostKey("gitlab.example.local");
 
-		verify(this.jSch).setKnownHosts(captor.capture());
-		assertThat(captor.getValue()).isEqualTo("/ssh/known_hosts");
+		assertThat(knownHostKey).isNotNull();
+		assertThat(knownHostKey).isEqualTo(configuredKey);
+		assertThat(isKnownKeyForHost(configuredKey, "gitlab.example.local")).isTrue();
 	}
 
 	@Test
-	public void proxySettingsIsUsed() {
+	public void proxySettingsIsUsed() throws Exception {
 		JGitEnvironmentProperties sshProperties = new JGitEnvironmentProperties();
+		sshProperties.setUri("ssh://gitlab.example.local:3322/somerepo.git");
 		sshProperties.setPrivateKey(PRIVATE_KEY);
 		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> map = new HashMap<>();
 		ProxyHostProperties proxyHostProperties = new ProxyHostProperties();
@@ -204,30 +220,99 @@ public class PropertyBasedSshSessionFactoryTest {
 		proxyHostProperties.setUsername("user");
 		proxyHostProperties.setPassword("password");
 		map.put(ProxyHostProperties.ProxyForScheme.HTTP, proxyHostProperties);
-
 		sshProperties.setProxy(map);
 		setupSessionFactory(sshProperties);
 
-		this.factory.configure(this.hc, this.session);
-		ArgumentCaptor<ProxyHTTP> captor = ArgumentCaptor.forClass(ProxyHTTP.class);
+		ProxyData proxyData = getSshProxyData("gitlab.example.local");
 
-		verify(this.session).setProxy(captor.capture());
-		assertThat(captor.getValue()).isNotNull();
-		verify(this.proxyMock).setUserPasswd("user", "password");
+		assertThat(proxyData.getUser()).isEqualTo("user");
+		assertThat(new String(proxyData.getPassword())).isEqualTo("password");
+		assertThat(proxyData.getProxy().type().toString()).isEqualTo("HTTP");
+		assertThat(proxyData.getProxy().address().toString()).containsPattern("host\\.domain.*:8080");
+	}
+
+	@Test
+	public void sshConfigFileIsNotUsed() {
+		setupSessionFactory(new JGitEnvironmentProperties());
+
+		assertThat(factory.getSshConfig(new File("."))).isNull();
+	}
+
+	private ProxyData getSshProxyData(String hostname) {
+		try {
+			Field proxies = SshdSessionFactory.class.getDeclaredField("proxies");
+			proxies.setAccessible(true);
+			ProxyDataFactory proxyDataFactory = (ProxyDataFactory) proxies.get(factory);
+			proxies.setAccessible(false);
+			return proxyDataFactory.get(new InetSocketAddress(hostname, 22));
+		}
+		catch (NoSuchFieldException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private PublicKey toPublicKey(String key, String algorithm) {
+		try {
+			return new ECDSAPublicKeyEntryDecoder().decodePublicKey(null, algorithm, Base64.getDecoder().decode(key),
+					Collections.emptyMap());
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private PrivateKey toPrivateKey(String key) {
+		try {
+			Collection<KeyPair> keyPairs = KeyPairUtils.load(null, key);
+
+			return keyPairs.isEmpty() ? null : keyPairs.iterator().next().getPrivate();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private PrivateKey getSshPrivateKey(String hostName) {
+		SessionContext session = mock(SessionContext.class);
+		when(session.getRemoteAddress()).thenReturn(new InetSocketAddress(hostName, 22));
+
+		List<KeyPair> kayPairs;
+		try {
+			Spliterator<KeyPair> spliterator = ((KeyIdentityProvider) factory.getDefaultKeys(new File(".")))
+					.loadKeys(session).spliterator();
+
+			kayPairs = StreamSupport.stream(spliterator, false).collect(Collectors.toList());
+		}
+		catch (IOException | GeneralSecurityException e) {
+			throw new RuntimeException(e);
+		}
+
+		return kayPairs.isEmpty() ? null : kayPairs.get(0).getPrivate();
+	}
+
+	private PublicKey getSshHostKey(String hostName) {
+		InetSocketAddress address = new InetSocketAddress(hostName, 22);
+		List<PublicKey> publicKeys = factory.getServerKeyDatabase(null, null).lookup("address", address,
+				mock(ServerKeyDatabase.Configuration.class));
+
+		return publicKeys.isEmpty() ? null : publicKeys.get(0);
+	}
+
+	private boolean isKnownKeyForHost(PublicKey publicKey, String hostName) {
+		InetSocketAddress address = new InetSocketAddress(hostName, 22);
+		return factory.getServerKeyDatabase(null, null).accept("address", address, publicKey,
+				mock(ServerKeyDatabase.Configuration.class), null);
+	}
+
+	private SshConfigStore.HostConfig getSshHostConfig(String hostName) {
+		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName").lookup(hostName, 22,
+				"userName");
 	}
 
 	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {
 		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new HashMap<>();
 		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()), sshKey);
-		this.factory = new PropertyBasedSshSessionFactory(sshKeysByHostname, this.jSch) {
-
-			@Override
-			protected ProxyHTTP createProxy(ProxyHostProperties proxyHostProperties) {
-				return proxyMock;
-			}
-		};
-		when(this.hc.getHostName()).thenReturn(SshUriPropertyProcessor.getHostname(sshKey.getUri()));
-		when(this.jSch.getHostKeyRepository()).thenReturn(this.hostKeyRepository);
+		this.factory = new PropertyBasedSshSessionFactory(sshKeysByHostname);
 	}
 
 }
