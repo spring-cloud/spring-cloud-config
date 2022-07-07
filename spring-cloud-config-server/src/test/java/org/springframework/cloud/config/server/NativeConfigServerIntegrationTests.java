@@ -60,7 +60,7 @@ public class NativeConfigServerIntegrationTests {
 	@Test
 	public void contextLoads() {
 		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
 		Environment environment = response.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
@@ -83,7 +83,7 @@ public class NativeConfigServerIntegrationTests {
 	@Test
 	public void badYaml() {
 		ResponseEntity<String> response = new TestRestTemplate()
-				.getForEntity("http://localhost:" + this.port + "/bad/default/", String.class);
+				.getForEntity("http://localhost:" + this.port + "/bad/default", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 

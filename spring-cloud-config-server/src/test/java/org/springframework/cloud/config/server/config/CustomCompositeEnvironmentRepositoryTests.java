@@ -76,7 +76,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate()
-					.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
+					.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
@@ -128,7 +128,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate()
-					.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
+					.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
