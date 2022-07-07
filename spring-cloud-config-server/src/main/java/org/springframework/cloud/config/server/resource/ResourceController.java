@@ -126,10 +126,11 @@ public class ResourceController {
 		path = path.substring(path.indexOf(stem) + stem.length());
 		return path;
 	}
-    
+
 	/**
-	 * This method is synchronized because the underlying EnvironmentRespositorys may not be threadsafe (JGit for example).
-	 * Calling this method could result in an update to the files on disk.
+	 * This method is synchronized because the underlying EnvironmentRespositorys may not
+	 * be threadsafe (JGit for example). Calling this method could result in an update to
+	 * the files on disk.
 	 */
 	synchronized String retrieve(ServletWebRequest request, String name, String profile, String label, String path,
 			boolean resolvePlaceholders) throws IOException {
