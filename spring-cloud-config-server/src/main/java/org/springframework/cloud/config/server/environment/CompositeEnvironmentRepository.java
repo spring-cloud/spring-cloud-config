@@ -52,10 +52,21 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 			ObservationRegistry observationRegistry, boolean failOnError) {
 		// Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
-		this.environmentRepositories = environmentRepositories.stream()
+		this.environmentRepositories = observationRegistry.isNoop() ? environmentRepositories : environmentRepositories.stream()
 				.map(e -> ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, e))
 				.collect(Collectors.toList());
 		this.failOnError = failOnError;
+	}
+
+	/**
+	 * Creates a new {@link CompositeEnvironmentRepository}.
+	 * @param environmentRepositories The list of {@link EnvironmentRepository}s to create
+	 * the composite from.
+	 * @param failOnError whether to throw an exception if there is an error.
+	 */
+	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
+		// Sort the environment repositories by the priority
+		this(environmentRepositories, ObservationRegistry.NOOP, failOnError);
 	}
 
 	@Override

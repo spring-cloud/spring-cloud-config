@@ -16,17 +16,20 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import io.micrometer.core.tck.TestObservationRegistry;
+import java.util.Arrays;
+
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.tck.TestObservationRegistry;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.environment.Environment;
 
-import static io.micrometer.core.tck.TestObservationRegistryAssert.assertThat;
+import static io.micrometer.observation.tck.TestObservationRegistryAssert.assertThat;
 
 class ObservationEnvironmentRepositoryWrapperTests {
 
 	@Test
-	void should_collect_metrics() {
+	void shouldCollectMetrics() {
 		TestObservationRegistry registry = TestObservationRegistry.create();
 		EnvironmentRepository delegate = new MyEnvRepo();
 		EnvironmentRepository wrapper = ObservationEnvironmentRepositoryWrapper.wrap(registry, delegate);
@@ -38,11 +41,31 @@ class ObservationEnvironmentRepositoryWrapperTests {
 						"org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo");
 	}
 
+	@Test
+	void shouldCreateRootObservationForCompositeAndChildObservationsForDelegates() {
+		TestObservationRegistry registry = TestObservationRegistry.create();
+		EnvironmentRepository delegate = new MyEnvRepo();
+		EnvironmentRepository composite = new CompositeEnvironmentRepository(Arrays.asList(delegate), registry, true);
+		EnvironmentRepository wrapper = ObservationEnvironmentRepositoryWrapper.wrap(registry, composite);
+
+		wrapper.findOne("foo", "bar", "baz");
+
+		assertThat(registry).hasHandledContextsThatSatisfy(contexts -> {
+			contexts.stream().filter(context -> context.getName().equals("find") && contextExists(context, "spring.cloud.config.environment.class", "org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository")).findFirst().orElseThrow(() -> new AssertionError("There's no observation for the Composite EnvironmentRepository"));
+			contexts.stream().filter(context -> context.getName().equals("find") && contextExists(context, "spring.cloud.config.environment.class", "org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo")).findFirst().orElseThrow(() -> new AssertionError("There's no observation for the wrapped EnvironmentRepository"));
+		});
+	}
+
+	private boolean contextExists(Observation.Context context, String tagName, String tagValue) {
+		return context.getLowCardinalityKeyValues().stream().anyMatch(keyValue -> keyValue.getKey().equals(tagName) && keyValue.getValue()
+			.equals(tagValue));
+	}
+
 	static class MyEnvRepo implements EnvironmentRepository {
 
 		@Override
 		public Environment findOne(String application, String profile, String label) {
-			return null;
+			return new Environment("foo", "bar");
 		}
 
 	}

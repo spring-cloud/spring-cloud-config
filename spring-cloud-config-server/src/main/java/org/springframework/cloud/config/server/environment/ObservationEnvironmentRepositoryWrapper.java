@@ -28,11 +28,10 @@ import org.springframework.cloud.config.environment.Environment;
  */
 public final class ObservationEnvironmentRepositoryWrapper implements EnvironmentRepository {
 
+	private static final ObservationEnvironmentRepositoryObservationConvention CONVENTION = new ObservationEnvironmentRepositoryObservationConvention();
 	private final ObservationRegistry registry;
 
 	private final EnvironmentRepository delegate;
-
-	private final ObservationEnvironmentRepositoryKeyValuesProvider keyValuesProvider = new ObservationEnvironmentRepositoryKeyValuesProvider();
 
 	/**
 	 * Creates an instance of {@link ObservationEnvironmentRepositoryWrapper}.
@@ -61,8 +60,7 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 	public Environment findOne(String application, String profile, String label) {
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
 				this.delegate.getClass());
-		return DocumentedConfigObservation.CONFIG_OBSERVATION.observation(this.registry, context)
-				.keyValuesProvider(this.keyValuesProvider)
+		return DocumentedConfigObservation.CONFIG_OBSERVATION.observation(null, CONVENTION, context, this.registry)
 				.observe(() -> this.delegate.findOne(application, profile, label));
 	}
 
@@ -70,8 +68,7 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
 				this.delegate.getClass());
-		return DocumentedConfigObservation.CONFIG_OBSERVATION.observation(this.registry, context)
-				.keyValuesProvider(this.keyValuesProvider)
+		return DocumentedConfigObservation.CONFIG_OBSERVATION.observation(null, CONVENTION, context, this.registry)
 				.observe(() -> this.delegate.findOne(application, profile, label, includeOrigin));
 	}
 

@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.environment;
 
 import io.micrometer.common.docs.KeyName;
+import io.micrometer.observation.Observation;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 enum DocumentedConfigObservation implements DocumentedObservation {
@@ -26,12 +27,12 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 	 */
 	CONFIG_OBSERVATION {
 		@Override
-		public String getName() {
-			return "find";
+		public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+			return ObservationEnvironmentRepositoryObservationConvention.class;
 		}
 
 		@Override
-		public KeyName[] getHighCardinalityKeyNames() {
+		public KeyName[] getLowCardinalityKeyNames() {
 			return Tags.values();
 		}
 

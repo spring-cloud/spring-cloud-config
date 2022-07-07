@@ -25,8 +25,8 @@ import io.micrometer.observation.Observation;
  * @author Marcin Grzejszczak
  * @since 4.0.0
  */
-class ObservationEnvironmentRepositoryKeyValuesProvider
-		implements Observation.KeyValuesProvider<ObservationEnvironmentRepositoryContext> {
+class ObservationEnvironmentRepositoryObservationConvention
+		implements Observation.ObservationConvention<ObservationEnvironmentRepositoryContext> {
 
 	// TODO: Do we care about application, profile, label tags?
 	@Override
@@ -40,4 +40,8 @@ class ObservationEnvironmentRepositoryKeyValuesProvider
 		return context instanceof ObservationEnvironmentRepositoryContext;
 	}
 
+	@Override
+	public String getName() {
+		return "find";
+	}
 }
