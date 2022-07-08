@@ -51,14 +51,23 @@ class ObservationEnvironmentRepositoryWrapperTests {
 		wrapper.findOne("foo", "bar", "baz");
 
 		assertThat(registry).hasHandledContextsThatSatisfy(contexts -> {
-			contexts.stream().filter(context -> context.getName().equals("find") && contextExists(context, "spring.cloud.config.environment.class", "org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository")).findFirst().orElseThrow(() -> new AssertionError("There's no observation for the Composite EnvironmentRepository"));
-			contexts.stream().filter(context -> context.getName().equals("find") && contextExists(context, "spring.cloud.config.environment.class", "org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo")).findFirst().orElseThrow(() -> new AssertionError("There's no observation for the wrapped EnvironmentRepository"));
+			contexts.stream()
+					.filter(context -> context.getName().equals("find") && contextExists(context,
+							"spring.cloud.config.environment.class",
+							"org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository"))
+					.findFirst().orElseThrow(
+							() -> new AssertionError("There's no observation for the Composite EnvironmentRepository"));
+			contexts.stream().filter(context -> context.getName().equals("find") && contextExists(context,
+					"spring.cloud.config.environment.class",
+					"org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo"))
+					.findFirst().orElseThrow(
+							() -> new AssertionError("There's no observation for the wrapped EnvironmentRepository"));
 		});
 	}
 
 	private boolean contextExists(Observation.Context context, String tagName, String tagValue) {
-		return context.getLowCardinalityKeyValues().stream().anyMatch(keyValue -> keyValue.getKey().equals(tagName) && keyValue.getValue()
-			.equals(tagValue));
+		return context.getLowCardinalityKeyValues().stream()
+				.anyMatch(keyValue -> keyValue.getKey().equals(tagName) && keyValue.getValue().equals(tagValue));
 	}
 
 	static class MyEnvRepo implements EnvironmentRepository {

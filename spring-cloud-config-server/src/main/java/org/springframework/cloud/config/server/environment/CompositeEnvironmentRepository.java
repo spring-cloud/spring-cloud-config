@@ -52,9 +52,10 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 			ObservationRegistry observationRegistry, boolean failOnError) {
 		// Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
-		this.environmentRepositories = observationRegistry.isNoop() ? environmentRepositories : environmentRepositories.stream()
-				.map(e -> ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, e))
-				.collect(Collectors.toList());
+		this.environmentRepositories = observationRegistry.isNoop() ? environmentRepositories
+				: environmentRepositories.stream()
+						.map(e -> ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, e))
+						.collect(Collectors.toList());
 		this.failOnError = failOnError;
 	}
 

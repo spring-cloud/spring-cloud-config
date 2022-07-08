@@ -29,6 +29,7 @@ import org.springframework.cloud.config.environment.Environment;
 public final class ObservationEnvironmentRepositoryWrapper implements EnvironmentRepository {
 
 	private static final ObservationEnvironmentRepositoryObservationConvention CONVENTION = new ObservationEnvironmentRepositoryObservationConvention();
+
 	private final ObservationRegistry registry;
 
 	private final EnvironmentRepository delegate;
