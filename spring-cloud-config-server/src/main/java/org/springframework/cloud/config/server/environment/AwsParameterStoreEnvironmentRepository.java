@@ -34,14 +34,16 @@ import software.amazon.awssdk.services.ssm.model.Parameter;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
 import static org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
 
 /**
  * @author Iulian Antohe
+ * @author Vineet Jayaprakasan
  */
-public class AwsParameterStoreEnvironmentRepository implements EnvironmentRepository {
+public class AwsParameterStoreEnvironmentRepository implements EnvironmentRepository, Ordered {
 
 	private final SsmClient awsSsmClient;
 
@@ -49,11 +51,14 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 
 	private final AwsParameterStoreEnvironmentProperties environmentProperties;
 
+	private final int order;
+
 	public AwsParameterStoreEnvironmentRepository(SsmClient awsSsmClient, ConfigServerProperties configServerProperties,
 			AwsParameterStoreEnvironmentProperties environmentProperties) {
 		this.awsSsmClient = awsSsmClient;
 		this.configServerProperties = configServerProperties;
 		this.environmentProperties = environmentProperties;
+		this.order = environmentProperties.getOrder();
 	}
 
 	@Override
@@ -162,6 +167,11 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 
 			properties.put(name, parameter.value());
 		}
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
 	}
 
 }
