@@ -36,8 +36,8 @@ class ObservationEnvironmentRepositoryWrapperTests {
 
 		wrapper.findOne("foo", "bar", "baz");
 
-		assertThat(registry).hasSingleObservationThat().hasNameEqualTo("find").hasBeenStarted().hasBeenStopped()
-				.hasLowCardinalityKeyValue("spring.cloud.config.environment.class",
+		assertThat(registry).hasSingleObservationThat().hasNameEqualTo("spring.cloud.config.environment.find")
+				.hasBeenStarted().hasBeenStopped().hasLowCardinalityKeyValue("spring.cloud.config.environment.class",
 						"org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo");
 	}
 
@@ -51,15 +51,14 @@ class ObservationEnvironmentRepositoryWrapperTests {
 		wrapper.findOne("foo", "bar", "baz");
 
 		assertThat(registry).hasHandledContextsThatSatisfy(contexts -> {
-			contexts.stream()
-					.filter(context -> context.getName().equals("find") && contextExists(context,
-							"spring.cloud.config.environment.class",
+			contexts.stream().filter(context -> context.getName().equals("spring.cloud.config.environment.find")
+					&& contextExists(context, "spring.cloud.config.environment.class",
 							"org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository"))
 					.findFirst().orElseThrow(
 							() -> new AssertionError("There's no observation for the Composite EnvironmentRepository"));
-			contexts.stream().filter(context -> context.getName().equals("find") && contextExists(context,
-					"spring.cloud.config.environment.class",
-					"org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo"))
+			contexts.stream().filter(context -> context.getName().equals("spring.cloud.config.environment.find")
+					&& contextExists(context, "spring.cloud.config.environment.class",
+							"org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo"))
 					.findFirst().orElseThrow(
 							() -> new AssertionError("There's no observation for the wrapped EnvironmentRepository"));
 		});

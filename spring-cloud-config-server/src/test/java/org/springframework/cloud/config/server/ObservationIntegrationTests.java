@@ -34,7 +34,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -53,13 +52,13 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 
 @AutoConfigureObservability
 @SpringBootTest(classes = { TestConfigServerApplication.class, ObservationIntegrationTests.Config.class },
-	properties = {"spring.config.name:compositeconfigserver",
-		"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
-		"spring.cloud.config.server.svn.order:2",
-		"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
-		"spring.cloud.config.server.git.order:1"},
-	webEnvironment = RANDOM_PORT)
-@ActiveProfiles({"test", "git", "subversion"})
+		properties = { "spring.application.name:config-server", "spring.config.name:compositeconfigserver",
+				"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
+				"spring.cloud.config.server.svn.order:2",
+				"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
+				"spring.cloud.config.server.git.order:1" },
+		webEnvironment = RANDOM_PORT)
+@ActiveProfiles({ "test", "git", "subversion" })
 class ObservationIntegrationTests {
 
 	@LocalServerPort
@@ -71,8 +70,7 @@ class ObservationIntegrationTests {
 		SystemReader.setInstance(new MockSystemReader());
 
 		ConfigServerTestUtils.prepareLocalRepo();
-		ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
-			"target/repos/svn-config-repo");
+		ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
 	}
 
 	@Autowired
@@ -84,25 +82,55 @@ class ObservationIntegrationTests {
 	@Test
 	void testSuccessfulObservation() {
 		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
-			"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
-			Environment.class);
+				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
+				Environment.class);
 
 		Environment environment = response.getBody();
 		Assertions.assertThat(environment).isNotNull();
 		ConfigServerTestUtils.assertConfigEnabled(environment);
 
-		// TODO: Write proper assertions
-//		List<FinishedSpan> finishedSpans = finishedSpans();
-//
-//		SpansAssert.then(finishedSpans)
-//			.thenASpanWithNameEqualTo("my-command-line-runner")
-//			.hasTag("spring.cloud.task.runner.bean-name", "myCommandLineRunner")
-//			.backToSpans()
-//			.thenASpanWithNameEqualTo("my-application-runner")
-//			.hasTag("spring.cloud.task.runner.bean-name", "myApplicationRunner");
-//		MeterRegistryAssert.then(this.meterRegistry)
-//			.hasTimerWithNameAndTags("spring.cloud.task.runner", KeyValues.of("spring.cloud.task.runner.bean-name", "myCommandLineRunner"))
-//			.hasTimerWithNameAndTags("spring.cloud.task.runner", KeyValues.of("spring.cloud.task.runner.bean-name", "myApplicationRunner"));
+		List<FinishedSpan> finishedSpans = finishedSpans();
+
+		SpansAssert.then(finishedSpans).hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
+				.hasTag("spring.cloud.config.environment.application", "foo")
+				.hasTag("spring.cloud.config.environment.profile", "development")
+				.hasTag("spring.cloud.config.environment.class",
+						"org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository"))
+				.hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
+						.hasTag("spring.cloud.config.environment.application", "foo")
+						.hasTag("spring.cloud.config.environment.profile", "development")
+						.hasTag("spring.cloud.config.environment.class",
+								"org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository"))
+				.hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
+						.hasTag("spring.cloud.config.environment.application", "foo")
+						.hasTag("spring.cloud.config.environment.profile", "development")
+						.hasTag("spring.cloud.config.environment.class",
+								"org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository"))
+				.hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
+						.hasTag("spring.cloud.config.environment.application", "foo")
+						.hasTag("spring.cloud.config.environment.profile", "development")
+						.hasTag("spring.cloud.config.environment.class",
+								"org.springframework.cloud.config.server.environment.PassthruEnvironmentRepository"));
+
+		MeterRegistryAssert.then(this.meterRegistry)
+				.hasTimerWithNameAndTags("spring.cloud.config.environment.find", KeyValues.of(
+						"spring.cloud.config.environment.application", "foo", "spring.cloud.config.environment.profile",
+						"development", "spring.cloud.config.environment.class",
+						"org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository"))
+				.hasTimerWithNameAndTags("spring.cloud.config.environment.find", KeyValues.of(
+						"spring.cloud.config.environment.application", "foo", "spring.cloud.config.environment.profile",
+						"development", "spring.cloud.config.environment.class",
+						"org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository"))
+				.hasTimerWithNameAndTags("spring.cloud.config.environment.find",
+						KeyValues.of("spring.cloud.config.environment.application", "foo",
+								"spring.cloud.config.environment.profile", "development",
+								"spring.cloud.config.environment.class",
+								"org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository"))
+				.hasTimerWithNameAndTags("spring.cloud.config.environment.find",
+						KeyValues.of("spring.cloud.config.environment.application", "foo",
+								"spring.cloud.config.environment.profile", "development",
+								"spring.cloud.config.environment.class",
+								"org.springframework.cloud.config.server.environment.PassthruEnvironmentRepository"));
 	}
 
 	private List<FinishedSpan> finishedSpans() {
@@ -111,6 +139,7 @@ class ObservationIntegrationTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {
+
 		@Bean
 		TestSpanHandler testSpanHandler() {
 			return new TestSpanHandler();
@@ -120,5 +149,7 @@ class ObservationIntegrationTests {
 		Sampler sampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
+
 }

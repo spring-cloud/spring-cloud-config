@@ -28,12 +28,34 @@ public class ObservationEnvironmentRepositoryContext extends Observation.Context
 
 	private final Class<? extends EnvironmentRepository> clazz;
 
-	public ObservationEnvironmentRepositoryContext(Class<? extends EnvironmentRepository> clazz) {
+	private final String application;
+
+	private final String profile;
+
+	private final String label;
+
+	public ObservationEnvironmentRepositoryContext(Class<? extends EnvironmentRepository> clazz, String application,
+			String profile, String label) {
 		this.clazz = clazz;
+		this.application = application;
+		this.profile = profile;
+		this.label = label;
 	}
 
 	public Class<? extends EnvironmentRepository> getEnvironmentRepositoryClass() {
 		return this.clazz;
+	}
+
+	public String getApplication() {
+		return this.application;
+	}
+
+	public String getProfile() {
+		return this.profile;
+	}
+
+	public String getLabel() {
+		return this.label;
 	}
 
 }

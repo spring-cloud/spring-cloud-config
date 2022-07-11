@@ -25,24 +25,29 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 	/**
 	 * Observation created around an EnvironmentRepository.
 	 */
-	CONFIG_OBSERVATION {
+	ENVIRONMENT_REPOSITORY {
 		@Override
 		public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
 			return ObservationEnvironmentRepositoryObservationConvention.class;
 		}
 
 		@Override
+		public String getContextualName() {
+			return "env find";
+		}
+
+		@Override
 		public KeyName[] getLowCardinalityKeyNames() {
-			return Tags.values();
+			return LowCardinalityTags.values();
 		}
 
 		@Override
 		public String getPrefix() {
-			return "spring.cloud.config";
+			return "spring.cloud.config.environment";
 		}
 	};
 
-	enum Tags implements KeyName {
+	enum LowCardinalityTags implements KeyName {
 
 		/**
 		 * Implementation of the EnvironmentRepository.
@@ -51,6 +56,36 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 			@Override
 			public String getKeyName() {
 				return "spring.cloud.config.environment.class";
+			}
+		},
+
+		/**
+		 * Application name for which properties are being queried for.
+		 */
+		PROFILE {
+			@Override
+			public String getKeyName() {
+				return "spring.cloud.config.environment.profile";
+			}
+		},
+
+		/**
+		 * Label for which properties are being queried for.
+		 */
+		LABEL {
+			@Override
+			public String getKeyName() {
+				return "spring.cloud.config.environment.label";
+			}
+		},
+
+		/**
+		 * Application name for which properties are being queried for.
+		 */
+		APPLICATION {
+			@Override
+			public String getKeyName() {
+				return "spring.cloud.config.environment.application";
 			}
 		}
 
