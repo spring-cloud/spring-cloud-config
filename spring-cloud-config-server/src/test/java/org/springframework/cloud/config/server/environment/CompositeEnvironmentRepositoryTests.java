@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.Test;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -77,7 +78,7 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestOrderedEnvironmentRepository(2, e3, loc2));
 		repos.add(new TestOrderedEnvironmentRepository(1, e2, loc3));
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
-				true);
+				ObservationRegistry.NOOP, true);
 		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world", false);
 		List<PropertySource> propertySources = compositeEnv.getPropertySources();
 		assertThat(propertySources.size()).isEqualTo(5);
@@ -123,9 +124,9 @@ public class CompositeEnvironmentRepositoryTests {
 		repos2.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		repos2.add(new TestOrderedEnvironmentRepository(3, e2, loc2));
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
-				true);
+				ObservationRegistry.NOOP, true);
 		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(
-				repos2, true);
+				repos2, ObservationRegistry.NOOP, true);
 		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		assertThat(env.getVersion()).isEqualTo("1");
 		assertThat(env.getState()).isEqualTo("state");
@@ -168,7 +169,7 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestFailingEnvironmentRepository(1, e2, loc2));
 
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
-				false);
+				ObservationRegistry.NOOP, false);
 		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		List<PropertySource> propertySources = env.getPropertySources();
 		assertThat(propertySources.size()).isEqualTo(1);
@@ -235,8 +236,10 @@ public class CompositeEnvironmentRepositoryTests {
 		@Bean
 		@Primary
 		CompositeEnvironmentRepository customCompositeEnvironmentRepository() {
-			return new CompositeEnvironmentRepository(Arrays.<EnvironmentRepository>asList(
-					new TestOrderedEnvironmentRepository(1, new Environment("app", "dev"), null)), true);
+			return new CompositeEnvironmentRepository(
+					Arrays.<EnvironmentRepository>asList(
+							new TestOrderedEnvironmentRepository(1, new Environment("app", "dev"), null)),
+					ObservationRegistry.NOOP, true);
 		}
 
 	}

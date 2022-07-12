@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,7 +50,7 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 
 	@Before
 	public void init() {
-		this.controller = new EnvironmentEncryptorEnvironmentRepository(this.repository);
+		this.controller = new EnvironmentEncryptorEnvironmentRepository(this.repository, ObservationRegistry.NOOP);
 	}
 
 	@Test

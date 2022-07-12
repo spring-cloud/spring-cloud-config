@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.resource;
 
 import java.util.Map;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -70,7 +71,7 @@ public class ResourceControllerTests {
 		this.context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
 				.run();
 		this.environmentRepository = new NativeEnvironmentRepository(this.context.getEnvironment(),
-				new NativeEnvironmentProperties());
+				new NativeEnvironmentProperties(), ObservationRegistry.NOOP);
 		this.repository = new GenericResourceRepository(this.environmentRepository);
 		this.repository.setResourceLoader(this.context);
 		this.controller = new ResourceController(this.repository, this.environmentRepository,
@@ -348,7 +349,8 @@ public class ResourceControllerTests {
 	public void setSearchLocationsAppendSlashByConstructor() {
 		final NativeEnvironmentProperties properties = new NativeEnvironmentProperties();
 		properties.setSearchLocations(new String[] { "classpath:/test" });
-		NativeEnvironmentRepository repo = new NativeEnvironmentRepository(this.context.getEnvironment(), properties);
+		NativeEnvironmentRepository repo = new NativeEnvironmentRepository(this.context.getEnvironment(), properties,
+				ObservationRegistry.NOOP);
 		assertThat(repo.getSearchLocations()[0]).isEqualTo("classpath:/test/");
 	}
 

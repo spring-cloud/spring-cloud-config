@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.observation.ObservationRegistry;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -69,6 +70,9 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 		@Autowired(required = false)
 		private ObjectMapper objectMapper = new ObjectMapper();
 
+		@Autowired(required = false)
+		private ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
+
 		@Bean
 		public EnvironmentController environmentController(EnvironmentRepository envRepository,
 				ConfigServerProperties server) {
@@ -97,7 +101,7 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 
 		private EnvironmentRepository encrypted(EnvironmentRepository envRepository, ConfigServerProperties server) {
 			EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
-					envRepository, this.environmentEncryptors);
+					envRepository, this.environmentEncryptors, this.observationRegistry);
 			encrypted.setOverrides(server.getOverrides());
 			return encrypted;
 		}

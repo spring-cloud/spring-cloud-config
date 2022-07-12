@@ -19,6 +19,9 @@ package org.springframework.cloud.config.server.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.micrometer.observation.ObservationRegistry;
+
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -42,9 +45,11 @@ public class CompositeConfiguration {
 	@ConditionalOnBean(SearchPathLocator.class)
 	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository(
 			@Autowired(required = false) List<EnvironmentRepository> environmentRepos,
-			ConfigServerProperties properties) {
+			ConfigServerProperties properties, ObjectProvider<ObservationRegistry> observationRegistry) {
 		environmentRepos = environmentRepos != null ? environmentRepos : new ArrayList<>();
-		return new SearchPathCompositeEnvironmentRepository(environmentRepos, properties.isFailOnCompositeError());
+		return new SearchPathCompositeEnvironmentRepository(environmentRepos,
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
+				properties.isFailOnCompositeError());
 	}
 
 	@Bean
@@ -52,9 +57,11 @@ public class CompositeConfiguration {
 	@ConditionalOnMissingBean(SearchPathLocator.class)
 	public CompositeEnvironmentRepository compositeEnvironmentRepository(
 			@Autowired(required = false) List<EnvironmentRepository> environmentRepos,
-			ConfigServerProperties properties) {
+			ConfigServerProperties properties, ObjectProvider<ObservationRegistry> observationRegistry) {
 		environmentRepos = environmentRepos != null ? environmentRepos : new ArrayList<>();
-		return new CompositeEnvironmentRepository(environmentRepos, properties.isFailOnCompositeError());
+		return new CompositeEnvironmentRepository(environmentRepos,
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
+				properties.isFailOnCompositeError());
 	}
 
 }

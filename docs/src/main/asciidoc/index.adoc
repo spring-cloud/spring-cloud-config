@@ -1,1 +1,1 @@
-spring-cloud-config.adoc
+include::spring-cloud-config.adoc[]

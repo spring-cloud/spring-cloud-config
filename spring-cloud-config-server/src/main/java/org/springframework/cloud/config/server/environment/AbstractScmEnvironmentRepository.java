@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import io.micrometer.observation.ObservationRegistry;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.AbstractScmAccessor;
 import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
@@ -33,14 +35,19 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
-	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment) {
+	private final ObservationRegistry observationRegistry;
+
+	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
+			ObservationRegistry observationRegistry) {
 		super(environment);
+		this.observationRegistry = observationRegistry;
 	}
 
 	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
-			AbstractScmAccessorProperties properties) {
+			AbstractScmAccessorProperties properties, ObservationRegistry observationRegistry) {
 		super(environment, properties);
 		this.order = properties.getOrder();
+		this.observationRegistry = observationRegistry;
 	}
 
 	@Override
@@ -51,7 +58,7 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 	@Override
 	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin) {
 		NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(getEnvironment(),
-				new NativeEnvironmentProperties());
+				new NativeEnvironmentProperties(), this.observationRegistry);
 		Locations locations = getLocations(application, profile, label);
 		delegate.setSearchLocations(locations.getLocations());
 		Environment result = delegate.findOne(application, profile, "", includeOrigin);
