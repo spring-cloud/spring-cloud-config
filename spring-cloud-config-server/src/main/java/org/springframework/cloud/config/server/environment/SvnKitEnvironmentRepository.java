@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import java.io.File;
 import java.net.URI;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.tmatesoft.svn.core.SVNException;
@@ -54,8 +55,9 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	 */
 	private String defaultLabel;
 
-	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment, SvnKitEnvironmentProperties properties) {
-		super(environment, properties);
+	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment, SvnKitEnvironmentProperties properties,
+			ObservationRegistry observationRegistry) {
+		super(environment, properties, observationRegistry);
 		this.defaultLabel = properties.getDefaultLabel();
 	}
 

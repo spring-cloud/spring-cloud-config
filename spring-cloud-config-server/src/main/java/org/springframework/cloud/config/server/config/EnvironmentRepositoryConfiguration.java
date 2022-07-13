@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
+import io.micrometer.observation.ObservationRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
@@ -250,8 +251,9 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-				ConfigServerProperties server) {
-			return new SvnEnvironmentRepositoryFactory(environment, server);
+				ConfigServerProperties server, ObjectProvider<ObservationRegistry> observationRegistry) {
+			return new SvnEnvironmentRepositoryFactory(environment, server,
+					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP));
 		}
 
 	}
@@ -359,8 +361,10 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public NativeEnvironmentRepositoryFactory nativeEnvironmentRepositoryFactory(
-				ConfigurableEnvironment environment, ConfigServerProperties properties) {
-			return new NativeEnvironmentRepositoryFactory(environment, properties);
+				ConfigurableEnvironment environment, ConfigServerProperties properties,
+				ObjectProvider<ObservationRegistry> observationRegistry) {
+			return new NativeEnvironmentRepositoryFactory(environment, properties,
+					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP));
 		}
 
 	}
@@ -533,8 +537,10 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnSearchPathLocator
 	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties) {
+			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties,
+			ObjectProvider<ObservationRegistry> observationRegistry) {
 		return new SearchPathCompositeEnvironmentRepository(environmentRepositories,
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
 				properties.isFailOnCompositeError());
 	}
 
@@ -542,8 +548,11 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnMissingSearchPathLocator
 	public CompositeEnvironmentRepository compositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties) {
-		return new CompositeEnvironmentRepository(environmentRepositories, properties.isFailOnCompositeError());
+			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties,
+			ObjectProvider<ObservationRegistry> observationRegistry) {
+		return new CompositeEnvironmentRepository(environmentRepositories,
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
+				properties.isFailOnCompositeError());
 	}
 
 }

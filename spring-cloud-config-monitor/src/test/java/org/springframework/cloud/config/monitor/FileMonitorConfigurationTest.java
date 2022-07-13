@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -153,14 +154,14 @@ public class FileMonitorConfigurationTest {
 		ConfigurableEnvironment environment = createConfigurableEnvironment();
 		NativeEnvironmentProperties properties = new NativeEnvironmentProperties();
 		properties.setSearchLocations(new String[] { "classpath:pathsamples" });
-		return new NativeEnvironmentRepository(environment, properties);
+		return new NativeEnvironmentRepository(environment, properties, ObservationRegistry.NOOP);
 	}
 
 	private AbstractScmEnvironmentRepository createScmEnvironmentRepository(String uri) {
 		ConfigurableEnvironment environment = createConfigurableEnvironment();
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		properties.setUri(uri);
-		return new JGitEnvironmentRepository(environment, properties);
+		return new JGitEnvironmentRepository(environment, properties, ObservationRegistry.NOOP);
 	}
 
 	private void assertOnDirectory(int expectedDirectorySize) {

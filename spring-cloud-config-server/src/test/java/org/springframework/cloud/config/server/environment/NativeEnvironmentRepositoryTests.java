@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Collections;
 import java.util.regex.Matcher;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,7 +49,8 @@ public class NativeEnvironmentRepositoryTests {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class)
 				.properties("logging.level.org.springframework.boot.context.config=TRACE").web(WebApplicationType.NONE)
 				.run();
-		this.repository = new NativeEnvironmentRepository(context.getEnvironment(), new NativeEnvironmentProperties());
+		this.repository = new NativeEnvironmentRepository(context.getEnvironment(), new NativeEnvironmentProperties(),
+				ObservationRegistry.NOOP);
 		this.repository.setVersion("myversion");
 		this.repository.setDefaultLabel(null);
 		context.close();

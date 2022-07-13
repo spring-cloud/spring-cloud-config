@@ -1,0 +1,8 @@
+:root-target: ../../../../target/
+
+[[observability]]
+== Observability metadata
+
+include::{root-target}_metrics.adoc[]
+
+include::{root-target}_spans.adoc[]

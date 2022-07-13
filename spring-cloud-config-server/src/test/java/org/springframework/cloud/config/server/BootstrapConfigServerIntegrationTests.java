@@ -67,7 +67,7 @@ public class BootstrapConfigServerIntegrationTests {
 	@Test
 	public void contextLoads() {
 		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
 		Environment environment = response.getBody();
 		assertThat(environment.getPropertySources()).hasSize(2);

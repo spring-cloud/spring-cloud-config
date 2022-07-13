@@ -70,7 +70,7 @@ public class SubversionConfigServerIntegrationTests {
 	@Test
 	public void contextLoads() {
 		ResponseEntity<Environment> exchange = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
 		Environment environment = exchange.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();

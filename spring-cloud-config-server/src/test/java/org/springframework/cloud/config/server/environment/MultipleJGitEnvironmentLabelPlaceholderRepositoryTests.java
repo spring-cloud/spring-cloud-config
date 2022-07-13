@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
 import org.junit.Before;
@@ -38,7 +39,7 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 	private StandardEnvironment environment = new StandardEnvironment();
 
 	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
-			new MultipleJGitEnvironmentProperties());
+			new MultipleJGitEnvironmentProperties(), ObservationRegistry.NOOP);
 
 	private String defaultUri;
 

@@ -94,7 +94,7 @@ public class RefreshableConfigServerIntegrationTests {
 	@Test
 	public void refreshOverrides() {
 		ResponseEntity<Environment> entity = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
 		Environment environment = entity.getBody();
 		assertThat(environment.getPropertySources()).isEmpty();
@@ -111,7 +111,7 @@ public class RefreshableConfigServerIntegrationTests {
 		response = new TestRestTemplate().postForEntity(actuatorEndpoint + "/refresh", null, Void.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-		entity = new TestRestTemplate().exchange("http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
+		entity = new TestRestTemplate().exchange("http://localhost:" + this.port + "/foo/development", HttpMethod.GET,
 				getV2AcceptEntity(), Environment.class);
 		environment = entity.getBody();
 		assertThat(environment.getPropertySources()).isNotEmpty();
