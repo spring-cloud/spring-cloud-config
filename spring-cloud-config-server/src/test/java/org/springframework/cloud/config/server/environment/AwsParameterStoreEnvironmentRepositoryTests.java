@@ -40,6 +40,7 @@ import org.junit.Test;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
@@ -799,6 +800,18 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String random = randomAlphabetic(RandomUtils.nextInt(3, 33));
 
 		return Base64.getEncoder().encodeToString(random.getBytes(StandardCharsets.UTF_8));
+	}
+
+	@Test
+	public void testOrderPopulation() {
+		int expectedOrder = Ordered.HIGHEST_PRECEDENCE;
+		AwsParameterStoreEnvironmentRepositoryFactory factory = new AwsParameterStoreEnvironmentRepositoryFactory(
+				new ConfigServerProperties());
+		AwsParameterStoreEnvironmentProperties properties = new AwsParameterStoreEnvironmentProperties();
+		properties.setOrder(expectedOrder);
+		AwsParameterStoreEnvironmentRepository repository = factory.build(properties);
+		int actualOrder = repository.getOrder();
+		assertThat(actualOrder).isEqualTo(expectedOrder);
 	}
 
 }
