@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
@@ -50,10 +49,7 @@ import org.eclipse.jgit.lib.BranchTrackingStatus;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.FetchResult;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.ReceiveCommand;
-import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.TrackingRefUpdate;
 import org.eclipse.jgit.util.FileUtils;
@@ -134,8 +130,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 * changes and take from remote repository.
 	 */
 	private boolean forcePull;
-
-	private boolean initialized;
 
 	/**
 	 * Flag to indicate that the branch should be deleted locally if it's origin tracked
@@ -279,7 +273,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	@Override
 	public synchronized void afterPropertiesSet() throws Exception {
 		Assert.state(getUri() != null, MESSAGE);
-		initialize();
 		if (this.cloneOnStart) {
 			initClonedRepository();
 		}
@@ -674,18 +667,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 					throw new IllegalStateException("Failed to initialize base directory", e);
 				}
 			}
-		}
-	}
-
-	private void initialize() {
-		if (!this.initialized) {
-			SshSessionFactory.setInstance(new JschConfigSessionFactory() {
-				@Override
-				protected void configure(Host hc, Session session) {
-					session.setConfig("StrictHostKeyChecking", isStrictHostKeyChecking() ? "yes" : "no");
-				}
-			});
-			this.initialized = true;
 		}
 	}
 

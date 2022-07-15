@@ -16,11 +16,8 @@
 
 package org.springframework.cloud.config.server.ssh;
 
-import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.TransportConfigCallback;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig;
-import org.eclipse.jgit.transport.SshSessionFactory;
+import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
@@ -33,7 +30,7 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
  */
 public class FileBasedSshTransportConfigCallback implements TransportConfigCallback {
 
-	private MultipleJGitEnvironmentProperties sshUriProperties;
+	private final MultipleJGitEnvironmentProperties sshUriProperties;
 
 	public FileBasedSshTransportConfigCallback(MultipleJGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
@@ -45,14 +42,9 @@ public class FileBasedSshTransportConfigCallback implements TransportConfigCallb
 
 	@Override
 	public void configure(Transport transport) {
-		SshSessionFactory.setInstance(new JschConfigSessionFactory() {
-			@Override
-			protected void configure(OpenSshConfig.Host hc, Session session) {
-				session.setConfig("StrictHostKeyChecking",
-						FileBasedSshTransportConfigCallback.this.sshUriProperties.isStrictHostKeyChecking() ? "yes"
-								: "no");
-			}
-		});
+		if (transport instanceof SshTransport) {
+			((SshTransport) transport).setSshSessionFactory(new FileBasedSshSessionFactory(sshUriProperties));
+		}
 	}
 
 }
