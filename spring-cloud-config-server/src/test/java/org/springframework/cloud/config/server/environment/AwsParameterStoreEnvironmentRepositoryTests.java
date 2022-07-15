@@ -805,8 +805,10 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 	public void testOrderPopulation() {
 		int expectedOrder = Ordered.HIGHEST_PRECEDENCE;
 		AwsParameterStoreEnvironmentRepositoryFactory factory = new AwsParameterStoreEnvironmentRepositoryFactory(
-				new ConfigServerProperties());
+			new ConfigServerProperties());
 		AwsParameterStoreEnvironmentProperties properties = new AwsParameterStoreEnvironmentProperties();
+		properties.setRegion("us-east-1");
+		properties.setEndpoint("https://myawsendpoint/");
 		properties.setOrder(expectedOrder);
 		AwsParameterStoreEnvironmentRepository repository = factory.build(properties);
 		int actualOrder = repository.getOrder();
