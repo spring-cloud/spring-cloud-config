@@ -50,10 +50,7 @@ import org.eclipse.jgit.lib.BranchTrackingStatus;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.FetchResult;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.ReceiveCommand;
-import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.TrackingRefUpdate;
 import org.eclipse.jgit.util.FileUtils;
@@ -135,8 +132,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private boolean forcePull;
 
-	private boolean initialized;
-
 	/**
 	 * Flag to indicate that the branch should be deleted locally if it's origin tracked
 	 * branch was removed.
@@ -151,8 +146,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private boolean tryMasterBranch;
 
-	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties) {
-		super(environment, properties);
+	private final ObservationRegistry observationRegistry;
+
+	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties,
+			ObservationRegistry observationRegistry) {
+		super(environment, properties, observationRegistry);
 		this.cloneOnStart = properties.isCloneOnStart();
 		this.defaultLabel = properties.getDefaultLabel();
 		this.forcePull = properties.isForcePull();
@@ -162,6 +160,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.skipSslValidation = properties.isSkipSslValidation();
 		this.gitFactory = new JGitFactory(properties.isCloneSubmodules());
 		this.tryMasterBranch = properties.isTryMasterBranch();
+		this.observationRegistry = observationRegistry;
 	}
 
 	public boolean isTryMasterBranch() {
@@ -279,7 +278,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	@Override
 	public synchronized void afterPropertiesSet() throws Exception {
 		Assert.state(getUri() != null, MESSAGE);
-		initialize();
 		if (this.cloneOnStart) {
 			initClonedRepository();
 		}
@@ -674,18 +672,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 					throw new IllegalStateException("Failed to initialize base directory", e);
 				}
 			}
-		}
-	}
-
-	private void initialize() {
-		if (!this.initialized) {
-			SshSessionFactory.setInstance(new JschConfigSessionFactory() {
-				@Override
-				protected void configure(Host hc, Session session) {
-					session.setConfig("StrictHostKeyChecking", isStrictHostKeyChecking() ? "yes" : "no");
-				}
-			});
-			this.initialized = true;
 		}
 	}
 
