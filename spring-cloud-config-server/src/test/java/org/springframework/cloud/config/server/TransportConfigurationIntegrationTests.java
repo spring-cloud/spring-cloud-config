@@ -18,31 +18,32 @@ package org.springframework.cloud.config.server;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 
-import com.jcraft.jsch.Session;
 import org.eclipse.jgit.api.TransportConfigCallback;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig;
-import org.eclipse.jgit.transport.SshSessionFactory;
-import org.eclipse.jgit.util.FS;
+import org.eclipse.jgit.transport.FetchConnection;
+import org.eclipse.jgit.transport.PushConnection;
+import org.eclipse.jgit.transport.SshConfigStore;
+import org.eclipse.jgit.transport.SshTransport;
+import org.eclipse.jgit.transport.URIish;
+import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.ssh.FileBasedSshSessionFactory;
 import org.springframework.cloud.config.server.ssh.FileBasedSshTransportConfigCallback;
 import org.springframework.cloud.config.server.ssh.PropertiesBasedSshTransportConfigCallback;
+import org.springframework.cloud.config.server.ssh.PropertyBasedSshSessionFactory;
 import org.springframework.cloud.config.server.ssh.SshPropertyValidator;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 /**
  * Integration tests for property based SSH config support.
@@ -65,10 +66,20 @@ public class TransportConfigurationIntegrationTests {
 			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
 
 			@Test
-			public void propertyBasedTransportCallbackIsConfigured() throws Exception {
+			public void propertyBasedTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
 						.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
+			}
+
+			@Test
+			public void propertyBasedSessionFactoryIsUsedForSshTransports() throws Exception {
+				this.jGitEnvironmentRepository.afterPropertiesSet();
+
+				SshTransport sshTransport = DummySshTransport.newInstance();
+				this.jGitEnvironmentRepository.getTransportConfigCallback().configure(sshTransport);
+
+				assertThat(sshTransport.getSshSessionFactory()).isInstanceOf(PropertyBasedSshSessionFactory.class);
 			}
 
 		}
@@ -85,10 +96,20 @@ public class TransportConfigurationIntegrationTests {
 			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
 
 			@Test
-			public void propertyBasedTransportCallbackIsConfigured() throws Exception {
+			public void propertyBasedTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
 						.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
+			}
+
+			@Test
+			public void propertyBasedSessionFactoryIsUsedForSshTransports() throws Exception {
+				this.jGitEnvironmentRepository.afterPropertiesSet();
+
+				SshTransport sshTransport = DummySshTransport.newInstance();
+				this.jGitEnvironmentRepository.getTransportConfigCallback().configure(sshTransport);
+
+				assertThat(sshTransport.getSshSessionFactory()).isInstanceOf(PropertyBasedSshSessionFactory.class);
 			}
 
 		}
@@ -109,7 +130,7 @@ public class TransportConfigurationIntegrationTests {
 			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
 
 			@Test
-			public void privateKeyPropertyWithLineBreaks() throws Exception {
+			public void privateKeyPropertyWithLineBreaks() {
 				TransportConfigCallback callback = this.jGitEnvironmentRepository.getTransportConfigCallback();
 				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
@@ -132,7 +153,7 @@ public class TransportConfigurationIntegrationTests {
 			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
 
 			@Test
-			public void privateKeyPropertyWithLineBreaks() throws Exception {
+			public void privateKeyPropertyWithLineBreaks() {
 				TransportConfigCallback callback = this.jGitEnvironmentRepository.getTransportConfigCallback();
 				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
@@ -159,7 +180,7 @@ public class TransportConfigurationIntegrationTests {
 			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
 
 			@Test
-			public void sshPropertiesWithinNestedRepo() throws Exception {
+			public void sshPropertiesWithinNestedRepo() {
 				TransportConfigCallback callback = this.jGitEnvironmentRepository.getTransportConfigCallback();
 				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
@@ -187,7 +208,7 @@ public class TransportConfigurationIntegrationTests {
 			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
 
 			@Test
-			public void sshPropertiesWithinNestedRepo() throws Exception {
+			public void sshPropertiesWithinNestedRepo() {
 				TransportConfigCallback callback = this.jGitEnvironmentRepository.getTransportConfigCallback();
 				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
@@ -219,42 +240,44 @@ public class TransportConfigurationIntegrationTests {
 			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
 
 			@Test
-			public void fileBasedTransportCallbackIsConfigured() throws Exception {
+			public void fileBasedTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
 						.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isInstanceOf(FileBasedSshTransportConfigCallback.class);
 			}
 
 			@Test
+			public void fileBasedSessionFactoryIsUsedForSshTransports() throws Exception {
+				this.jGitEnvironmentRepository.afterPropertiesSet();
+
+				SshTransport sshTransport = DummySshTransport.newInstance();
+				this.jGitEnvironmentRepository.getTransportConfigCallback().configure(sshTransport);
+
+				assertThat(sshTransport.getSshSessionFactory()).isInstanceOf(FileBasedSshSessionFactory.class);
+			}
+
+			@Test
 			public void strictHostKeyCheckShouldCheck() throws Exception {
-				String uri = "git+ssh://git@somegitserver/somegitrepo";
-				SshSessionFactory.setInstance(null);
-				this.jGitEnvironmentRepository.setUri(uri);
-				this.jGitEnvironmentRepository.setBasedir(new File("./mybasedir"));
 				assertThat(this.jGitEnvironmentRepository.isStrictHostKeyChecking()).isTrue();
-				this.jGitEnvironmentRepository.setCloneOnStart(true);
-				try {
-					// this will throw but we don't care about connecting.
-					this.jGitEnvironmentRepository.afterPropertiesSet();
-				}
-				catch (Exception e) {
-					final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect()).lookup("github.com");
-					JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory.getInstance();
-					// There's no public method that can be used to inspect the ssh
-					// configuration, so we'll reflect
-					// the configure method to allow us to check that the config
-					// property is set as expected.
-					Method configure = factory.getClass().getDeclaredMethod("configure", OpenSshConfig.Host.class,
-							Session.class);
-					configure.setAccessible(true);
-					Session session = mock(Session.class);
-					ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-					ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
-					configure.invoke(factory, hc, session);
-					verify(session).setConfig(keyCaptor.capture(), valueCaptor.capture());
-					configure.setAccessible(false);
-					assertThat("yes".equals(valueCaptor.getValue())).isTrue();
-				}
+
+				this.jGitEnvironmentRepository.afterPropertiesSet();
+				SshTransport sshTransport = DummySshTransport.newInstance();
+				this.jGitEnvironmentRepository.getTransportConfigCallback().configure(sshTransport);
+
+				SshdSessionFactory factory = (SshdSessionFactory) sshTransport.getSshSessionFactory();
+				// There's no public method that can be used to inspect the ssh
+				// configuration, so we'll reflect
+				// the createSshConfigStore method to allow us to check that the config
+				// property is set as expected.
+				Method createSshConfigStore = factory.getClass().getDeclaredMethod("createSshConfigStore", File.class,
+						File.class, String.class);
+				createSshConfigStore.setAccessible(true);
+				SshConfigStore configStore = (SshConfigStore) createSshConfigStore.invoke(factory, new File("."),
+						new File("."), "local-username");
+				createSshConfigStore.setAccessible(false);
+				assertThat("yes"
+						.equals(configStore.lookup("gitserver.com", 22, "username").getValue("StrictHostKeyChecking")))
+								.isTrue();
 			}
 
 		}
@@ -272,44 +295,73 @@ public class TransportConfigurationIntegrationTests {
 			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
 
 			@Test
-			public void fileBasedTransportCallbackIsConfigured() throws Exception {
+			public void fileBasedTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
 						.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isInstanceOf(FileBasedSshTransportConfigCallback.class);
 			}
 
 			@Test
-			public void strictHostKeyCheckShouldCheck() throws Exception {
-				String uri = "git+ssh://git@somegitserver/somegitrepo";
-				SshSessionFactory.setInstance(null);
-				this.jGitEnvironmentRepository.setUri(uri);
-				this.jGitEnvironmentRepository.setBasedir(new File("./mybasedir"));
-				assertThat(this.jGitEnvironmentRepository.isStrictHostKeyChecking()).isTrue();
-				this.jGitEnvironmentRepository.setCloneOnStart(true);
-				try {
-					// this will throw but we don't care about connecting.
-					this.jGitEnvironmentRepository.afterPropertiesSet();
-				}
-				catch (Exception e) {
-					final OpenSshConfig.Host hc = OpenSshConfig.get(FS.detect()).lookup("github.com");
-					JschConfigSessionFactory factory = (JschConfigSessionFactory) SshSessionFactory.getInstance();
-					// There's no public method that can be used to inspect the ssh
-					// configuration, so we'll reflect
-					// the configure method to allow us to check that the config
-					// property is set as expected.
-					Method configure = factory.getClass().getDeclaredMethod("configure", OpenSshConfig.Host.class,
-							Session.class);
-					configure.setAccessible(true);
-					Session session = mock(Session.class);
-					ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-					ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
-					configure.invoke(factory, hc, session);
-					verify(session).setConfig(keyCaptor.capture(), valueCaptor.capture());
-					configure.setAccessible(false);
-					assertThat("yes".equals(valueCaptor.getValue())).isTrue();
-				}
+			public void fileBasedSessionFactoryIsUsedForSshTransports() throws Exception {
+				this.jGitEnvironmentRepository.afterPropertiesSet();
+
+				SshTransport sshTransport = DummySshTransport.newInstance();
+				this.jGitEnvironmentRepository.getTransportConfigCallback().configure(sshTransport);
+
+				assertThat(sshTransport.getSshSessionFactory()).isInstanceOf(FileBasedSshSessionFactory.class);
 			}
 
+			@Test
+			public void strictHostKeyCheckShouldCheck() throws Exception {
+				assertThat(this.jGitEnvironmentRepository.isStrictHostKeyChecking()).isTrue();
+
+				this.jGitEnvironmentRepository.afterPropertiesSet();
+				SshTransport sshTransport = DummySshTransport.newInstance();
+				this.jGitEnvironmentRepository.getTransportConfigCallback().configure(sshTransport);
+
+				SshdSessionFactory factory = (SshdSessionFactory) sshTransport.getSshSessionFactory();
+				// There's no public method that can be used to inspect the ssh
+				// configuration, so we'll reflect
+				// the createSshConfigStore method to allow us to check that the config
+				// property is set as expected.
+				Method createSshConfigStore = factory.getClass().getDeclaredMethod("createSshConfigStore", File.class,
+						File.class, String.class);
+				createSshConfigStore.setAccessible(true);
+				SshConfigStore configStore = (SshConfigStore) createSshConfigStore.invoke(factory, new File("."),
+						new File("."), "local-username");
+				createSshConfigStore.setAccessible(false);
+				assertThat("yes"
+						.equals(configStore.lookup("gitserver.com", 22, "username").getValue("StrictHostKeyChecking")))
+								.isTrue();
+			}
+
+		}
+
+	}
+
+	private static class DummySshTransport extends SshTransport {
+
+		DummySshTransport(String uri) throws URISyntaxException {
+			super(new URIish(uri));
+		}
+
+		@Override
+		public FetchConnection openFetch() {
+			return null;
+		}
+
+		@Override
+		public PushConnection openPush() {
+			return null;
+		}
+
+		public static SshTransport newInstance() {
+			try {
+				return new DummySshTransport("git+ssh://git@uri");
+			}
+			catch (URISyntaxException e) {
+				throw new IllegalStateException("Not expected", e);
+			}
 		}
 
 	}

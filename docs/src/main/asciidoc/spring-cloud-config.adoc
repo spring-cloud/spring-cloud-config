@@ -428,7 +428,7 @@ The following table describes the SSH configuration properties.
 |Valid SSH host key. Must be set if `hostKeyAlgorithm` is also set.
 
 |*hostKeyAlgorithm*
-|One of `ssh-dss, ssh-rsa, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384, or ecdsa-sha2-nistp521`. Must be set if `hostKey` is also set.
+|One of `ssh-dss, ssh-rsa, ssh-ed25519, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384, or ecdsa-sha2-nistp521`. Must be set if `hostKey` is also set.
 
 |*strictHostKeyChecking*
 |`true` or `false`. If false, ignore errors with host key.

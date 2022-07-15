@@ -81,7 +81,7 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void supportedParametersSuccesful() throws Exception {
+	public void supportedParametersSuccessful() {
 		MultipleJGitEnvironmentProperties validSettings = new MultipleJGitEnvironmentProperties();
 		validSettings.setUri(SSH_URI);
 		validSettings.setIgnoreLocalSshSettings(true);
@@ -95,7 +95,19 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void invalidPrivateKeyFails() throws Exception {
+	public void invalidPrivateKeyFails() {
+		MultipleJGitEnvironmentProperties invalidKey = new MultipleJGitEnvironmentProperties();
+		invalidKey.setUri(SSH_URI);
+		invalidKey.setIgnoreLocalSshSettings(true);
+		invalidKey.setPrivateKey("-----BEGIN OPENSSH PRIVATE KEY-----\nFOOBAR");
+
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
+				.validate(invalidKey);
+		assertThat(constraintViolations).hasSize(1);
+	}
+
+	@Test
+	public void dummyPrivateKeyFails() {
 		MultipleJGitEnvironmentProperties invalidKey = new MultipleJGitEnvironmentProperties();
 		invalidKey.setUri(SSH_URI);
 		invalidKey.setIgnoreLocalSshSettings(true);
@@ -107,7 +119,7 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void missingPrivateKeyFails() throws Exception {
+	public void missingPrivateKeyFails() {
 		MultipleJGitEnvironmentProperties missingKey = new MultipleJGitEnvironmentProperties();
 		missingKey.setUri(SSH_URI);
 		missingKey.setIgnoreLocalSshSettings(true);
@@ -118,7 +130,7 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void hostKeyWithMissingAlgoFails() throws Exception {
+	public void hostKeyWithMissingAlgoFails() {
 		MultipleJGitEnvironmentProperties missingAlgo = new MultipleJGitEnvironmentProperties();
 		missingAlgo.setUri(SSH_URI);
 		missingAlgo.setIgnoreLocalSshSettings(true);
@@ -131,7 +143,7 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void algoWithMissingHostKeyFails() throws Exception {
+	public void algoWithMissingHostKeyFails() {
 		MultipleJGitEnvironmentProperties missingHostKey = new MultipleJGitEnvironmentProperties();
 		missingHostKey.setUri(SSH_URI);
 		missingHostKey.setIgnoreLocalSshSettings(true);
@@ -144,7 +156,7 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void unsupportedAlgoFails() throws Exception {
+	public void unsupportedAlgoFails() {
 		MultipleJGitEnvironmentProperties unsupportedAlgo = new MultipleJGitEnvironmentProperties();
 		unsupportedAlgo.setUri(SSH_URI);
 		unsupportedAlgo.setIgnoreLocalSshSettings(true);
@@ -158,7 +170,7 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void validatorNotRunIfIgnoreLocalSettingsFalse() throws Exception {
+	public void validatorNotRunIfIgnoreLocalSettingsFalse() {
 		MultipleJGitEnvironmentProperties useLocal = new MultipleJGitEnvironmentProperties();
 		useLocal.setUri(SSH_URI);
 		useLocal.setIgnoreLocalSshSettings(false);
@@ -170,7 +182,7 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void validatorNotRunIfHttpsUri() throws Exception {
+	public void validatorNotRunIfHttpsUri() {
 		MultipleJGitEnvironmentProperties httpsUri = new MultipleJGitEnvironmentProperties();
 		httpsUri.setUri("https://somerepo.com/team/project.git");
 		httpsUri.setIgnoreLocalSshSettings(true);
@@ -182,7 +194,7 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void preferredAuthenticationsIsValidated() throws Exception {
+	public void preferredAuthenticationsIsValidated() {
 		MultipleJGitEnvironmentProperties sshUriProperties = new MultipleJGitEnvironmentProperties();
 		assertThat(validator.validate(sshUriProperties)).hasSize(0);
 
@@ -194,7 +206,7 @@ public class SshPropertyValidatorTest {
 	}
 
 	@Test
-	public void knowHostsFileIsValidated() throws Exception {
+	public void knowHostsFileIsValidated() {
 		MultipleJGitEnvironmentProperties sshUriProperties = new MultipleJGitEnvironmentProperties();
 		assertThat(validator.validate(sshUriProperties)).hasSize(0);
 

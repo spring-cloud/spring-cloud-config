@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.jcraft.jsch.Session;
 import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
@@ -152,11 +151,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private boolean tryMasterBranch;
 
-	private final ObservationRegistry observationRegistry;
-
-	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties,
-			ObservationRegistry observationRegistry) {
-		super(environment, properties, observationRegistry);
+	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties) {
+		super(environment, properties);
 		this.cloneOnStart = properties.isCloneOnStart();
 		this.defaultLabel = properties.getDefaultLabel();
 		this.forcePull = properties.isForcePull();
@@ -166,7 +162,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.skipSslValidation = properties.isSkipSslValidation();
 		this.gitFactory = new JGitFactory(properties.isCloneSubmodules());
 		this.tryMasterBranch = properties.isTryMasterBranch();
-		this.observationRegistry = observationRegistry;
 	}
 
 	public boolean isTryMasterBranch() {
