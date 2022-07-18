@@ -40,6 +40,7 @@ import org.eclipse.jgit.internal.transport.ssh.OpenSshConfigFile;
 import org.eclipse.jgit.internal.transport.sshd.OpenSshServerKeyDatabase;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.SshConfigStore;
+import org.eclipse.jgit.transport.SshConstants;
 import org.eclipse.jgit.transport.sshd.JGitKeyCache;
 import org.eclipse.jgit.transport.sshd.ProxyData;
 import org.eclipse.jgit.transport.sshd.ProxyDataFactory;
@@ -84,6 +85,18 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 			@Override
 			public HostConfig lookup(@NonNull String hostName, int port, String userName) {
 				OpenSshConfigFile.HostEntry hostEntry = new OpenSshConfigFile.HostEntry();
+
+				return updateIfNeeded(hostEntry, hostName);
+			}
+
+			@Override
+			public HostConfig lookupDefault(String hostName, int port, String userName) {
+				OpenSshConfigFile.HostEntry hostEntry = new OpenSshConfigFile.HostEntry();
+
+				hostEntry.setValue(SshConstants.HOST_NAME, hostName);
+				hostEntry.setValue(SshConstants.PORT,
+						Integer.toString(port > 0 ? port : SshConstants.SSH_DEFAULT_PORT));
+				hostEntry.setValue(SshConstants.USER, userName);
 
 				return updateIfNeeded(hostEntry, hostName);
 			}
