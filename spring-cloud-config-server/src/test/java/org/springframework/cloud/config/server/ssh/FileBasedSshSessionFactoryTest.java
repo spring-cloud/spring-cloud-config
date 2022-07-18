@@ -17,6 +17,8 @@
 package org.springframework.cloud.config.server.ssh;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jgit.transport.SshConfigStore;
 import org.junit.Test;
@@ -59,6 +61,17 @@ public class FileBasedSshSessionFactoryTest {
 	}
 
 	@Test
+	public void sshConfigurationIsDoneForRelevantHostOnly() {
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		setupSessionFactory(sshKey);
+
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("another.host");
+
+		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isNull();
+	}
+
+	@Test
 	public void handlesNullConfigFile() {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
 		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
@@ -75,7 +88,9 @@ public class FileBasedSshSessionFactoryTest {
 	}
 
 	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {
-		this.factory = new FileBasedSshSessionFactory(sshKey);
+		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new HashMap<>();
+		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()), sshKey);
+		this.factory = new FileBasedSshSessionFactory(sshKeysByHostname);
 	}
 
 }
