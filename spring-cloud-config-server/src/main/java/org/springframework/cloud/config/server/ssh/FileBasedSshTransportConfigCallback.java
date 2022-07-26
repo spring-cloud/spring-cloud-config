@@ -43,7 +43,8 @@ public class FileBasedSshTransportConfigCallback implements TransportConfigCallb
 	@Override
 	public void configure(Transport transport) {
 		if (transport instanceof SshTransport) {
-			((SshTransport) transport).setSshSessionFactory(new FileBasedSshSessionFactory(sshUriProperties));
+			((SshTransport) transport).setSshSessionFactory(new FileBasedSshSessionFactory(
+					new SshUriPropertyProcessor(this.sshUriProperties).getSshKeysByHostname()));
 		}
 	}
 
