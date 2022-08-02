@@ -49,13 +49,8 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 	private String endpoint;
 
 	/**
-	 * The flag indicating enabled support of the labels. Defaults to false for backward
-	 * compatibility.
-	 */
-	private boolean labelEnabled;
-
-	/**
-	 * The default label to be suffixed (if defined) to the secret names.
+	 * The default staging label to be used to fetch the secret values. If unset, an
+	 * active version of the secret will be fetched (AWSCURRENT).
 	 */
 	private String defaultLabel;
 
@@ -100,14 +95,6 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 
 	public void setEndpoint(String endpoint) {
 		this.endpoint = endpoint;
-	}
-
-	public boolean isLabelEnabled() {
-		return labelEnabled;
-	}
-
-	public void setLabelEnabled(boolean labelEnabled) {
-		this.labelEnabled = labelEnabled;
 	}
 
 	public String getDefaultLabel() {

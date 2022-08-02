@@ -70,11 +70,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 	public Environment findOne(String application, String profileList, String label) {
 		final String defaultApplication = configServerProperties.getDefaultApplicationName();
 		final String defaultProfile = configServerProperties.getDefaultProfile();
-		if (environmentProperties.isLabelEnabled()) {
-			if (label == null) {
-				label = environmentProperties.getDefaultLabel();
-			}
-		}
+		final String defaultLabel = environmentProperties.getDefaultLabel();
 
 		if (StringUtils.isEmpty(application)) {
 			application = defaultApplication;
@@ -82,6 +78,10 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 		if (StringUtils.isEmpty(profileList)) {
 			profileList = defaultProfile;
+		}
+
+		if (StringUtils.isEmpty(label)) {
+			label = defaultLabel;
 		}
 
 		String[] profiles = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(profileList));
@@ -117,37 +117,30 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 	}
 
 	private void addPropertySource(Environment environment, String application, String profile, String label) {
-		String path = buildPath(application, profile, label);
+		String path = buildPath(application, profile);
 
-		Map<Object, Object> properties = findProperties(path);
+		Map<Object, Object> properties = findProperties(path, label);
 		if (!properties.isEmpty()) {
 			environment.add(new PropertySource(environmentProperties.getOrigin() + path, properties));
 		}
 	}
 
-	private String buildPath(String application, String profile, String label) {
+	private String buildPath(String application, String profile) {
 		String prefix = environmentProperties.getPrefix();
 		String profileSeparator = environmentProperties.getProfileSeparator();
 
-		StringBuilder path = new StringBuilder().append(prefix).append(DEFAULT_PATH_SEPARATOR).append(application);
-
-		if (StringUtils.hasText(profile)) {
-			path.append(profileSeparator).append(profile);
+		if (profile == null || profile.isEmpty()) {
+			return prefix + DEFAULT_PATH_SEPARATOR + application + DEFAULT_PATH_SEPARATOR;
 		}
-
-		path.append(DEFAULT_PATH_SEPARATOR);
-
-		if (environmentProperties.isLabelEnabled() && StringUtils.hasText(label)) {
-			path.append(label).append(DEFAULT_PATH_SEPARATOR);
+		else {
+			return prefix + DEFAULT_PATH_SEPARATOR + application + profileSeparator + profile + DEFAULT_PATH_SEPARATOR;
 		}
-
-		return path.toString();
 	}
 
-	private Map<Object, Object> findProperties(String path) {
+	private Map<Object, Object> findProperties(String path, String label) {
 		Map<Object, Object> properties = new HashMap<>();
 
-		GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(path).build();
+		GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(path).versionStage(label).build();
 		try {
 			GetSecretValueResponse response = awsSmClient.getSecretValue(request);
 
