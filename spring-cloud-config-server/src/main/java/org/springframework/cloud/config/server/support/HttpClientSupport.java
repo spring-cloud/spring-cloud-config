@@ -65,6 +65,8 @@ public final class HttpClientSupport {
 			httpClientBuilder.setDefaultCredentialsProvider(new SystemDefaultCredentialsProvider());
 		}
 
+		httpClientBuilder.disableRedirectHandling();
+
 		int timeout = environmentProperties.getTimeout() * 1000;
 		return httpClientBuilder.setSSLContext(sslContextBuilder.build()).setDefaultRequestConfig(
 				RequestConfig.custom().setSocketTimeout(timeout).setConnectTimeout(timeout).build());
