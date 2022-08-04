@@ -808,6 +808,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		AwsParameterStoreEnvironmentRepositoryFactory factory = new AwsParameterStoreEnvironmentRepositoryFactory(
 				new ConfigServerProperties());
 		AwsParameterStoreEnvironmentProperties properties = new AwsParameterStoreEnvironmentProperties();
+		properties.setRegion("us-east-1");
+		properties.setEndpoint("https://myawsendpoint/");
 		properties.setOrder(expectedOrder);
 		AwsParameterStoreEnvironmentRepository repository = factory.build(properties);
 		int actualOrder = repository.getOrder();
