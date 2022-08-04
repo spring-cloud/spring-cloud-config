@@ -46,8 +46,6 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties
 public class DefaultTextEncryptionAutoConfiguration {
 
-	private static final Log LOG = LogFactory.getLog(DefaultTextEncryptionAutoConfiguration.class);
-
 	@Autowired
 	ApplicationContext context;
 
