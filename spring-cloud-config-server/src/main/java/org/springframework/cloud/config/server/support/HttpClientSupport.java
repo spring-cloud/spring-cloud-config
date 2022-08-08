@@ -64,7 +64,9 @@ public final class HttpClientSupport {
 			httpClientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
 			httpClientBuilder.setDefaultCredentialsProvider(new SystemDefaultCredentialsProvider());
 		}
-
+		
+		/* According to https://git.eclipse.org/c/jgit/jgit.git/commit/?id=e17bfc96f293744cc5c0cef306e100f53d63bb3d
+		   jGit does its own redirect handling and disables HttpClient's redirect handing.  */
 		httpClientBuilder.disableRedirectHandling();
 
 		int timeout = environmentProperties.getTimeout() * 1000;
