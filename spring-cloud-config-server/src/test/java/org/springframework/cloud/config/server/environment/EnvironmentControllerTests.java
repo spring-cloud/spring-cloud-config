@@ -643,11 +643,11 @@ class EnvironmentControllerTests {
 
 		@Test
 		public void handleEnvironmentException() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne(eq("exception"), eq("bad_syntax.ext"), any(),
+			when(EnvironmentControllerTests.this.repository.findOne(eq("exception"), eq("bad_syntax"), any(),
 					eq(false)))
 							.thenThrow(new FailedToConstructEnvironmentException("Cannot construct",
 									new RuntimeException("underlier")));
-			MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/exception/bad_syntax.ext"))
+			MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/exception/bad_syntax"))
 					.andExpect(MockMvcResultMatchers.status().is(500)).andReturn();
 			assertThat(result.getResponse().getErrorMessage()).isEqualTo("Cannot construct");
 		}
