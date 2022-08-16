@@ -70,7 +70,13 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 	@Override
 	public HttpConnection create(URL url, Proxy proxy) throws IOException {
 		HttpClientBuilder builder = lookupHttpClientBuilder(url);
-		return new HttpClientConnection(url.toString(), null, builder != null ? builder.build() : null);
+		if (builder != null) {
+			return new HttpClientConnection(url.toString(), null, builder.build());
+		}
+		else {
+			/* No matching builder found: let jGit handle the creation of the HttpClient */
+			return new HttpClientConnection(url.toString());
+		}
 	}
 
 	private void addHttpClient(JGitEnvironmentProperties properties) throws GeneralSecurityException {
