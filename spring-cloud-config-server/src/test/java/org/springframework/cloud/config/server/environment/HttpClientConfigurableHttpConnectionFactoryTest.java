@@ -198,10 +198,8 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		HttpConnection actualConnection = this.connectionFactory.create(
 				new URL(properties2.getUri().replace("{placeholder1}", "value1").replace("{placeholder2}", "value2")));
 
-		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
-				.get(properties2.getUri());
-		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
-		assertThat(actualHttpClientBuilder).isNotSameAs(expectedHttpClientBuilder);
+		HttpClient actualHttpClient = getActualHttpClient(actualConnection);
+		assertThat(actualHttpClient).isNull();
 	}
 
 	@Test
