@@ -61,6 +61,7 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  * @author Ivan Corrales Solera
  * @author Daniel Frey
  * @author Ian Bondoc
+ * @author Kornel Skorka
  *
  */
 @RestController
@@ -377,7 +378,7 @@ public class EnvironmentController {
 		@SuppressWarnings("unchecked")
 		private void setMapValue(Map<String, Object> map, Object value) {
 			String key = getKey();
-			if (NodeType.MAP.equals(this.valueType)) {
+			if (NodeType.MAP.equals(this.valueType) || NodeType.ESCAPED.equals(this.valueType)) {
 				Map<String, Object> nestedMap;
 				if (map.get(key) instanceof Map) {
 					nestedMap = (Map<String, Object>) map.get(key);
@@ -479,6 +480,9 @@ public class EnvironmentController {
 		}
 
 		private String getKey() {
+			if (NodeType.ESCAPED.equals(this.valueType)) {
+				return getEscapedKey();
+			}
 			// Consider initial value or previous char '.' or '['
 			int start = this.currentPos + 1;
 			for (int i = start; i < this.propertyKey.length(); i++) {
@@ -488,8 +492,13 @@ public class EnvironmentController {
 					this.currentPos = i;
 					break;
 				}
-				else if (currentChar == '[') {
+				else if (currentChar == '[' && isArrayIndex(this.propertyKey, i + 1)) {
 					this.valueType = NodeType.ARRAY;
+					this.currentPos = i;
+					break;
+				}
+				else if (currentChar == '[' && !isArrayIndex(this.propertyKey, i + 1)) {
+					this.valueType = NodeType.ESCAPED;
 					this.currentPos = i;
 					break;
 				}
@@ -498,8 +507,11 @@ public class EnvironmentController {
 			if (this.currentPos < start) {
 				this.currentPos = this.propertyKey.length();
 				this.valueType = NodeType.LEAF;
-				// Else if we encounter '..' or '.[' or start of the property is . or [
+				// Else if we encounter '..' or '.[' or start of the property is .
 				// then it's invalid
+			}
+			else if (this.currentPos == start && NodeType.ESCAPED.equals(this.valueType)) {
+				return getEscapedKey();
 			}
 			else if (this.currentPos == start) {
 				throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
@@ -507,10 +519,39 @@ public class EnvironmentController {
 			return this.propertyKey.substring(start, this.currentPos);
 		}
 
+		private boolean isArrayIndex(String key, int position) {
+			// invalid if bracket is not closed or if empty
+			if (position >= key.length() || key.charAt(position) == ']') {
+				throw new IllegalArgumentException("Invalid key: " + key);
+			}
+			else {
+				return Character.isDigit(key.charAt(position));
+			}
+		}
+
+		private String getEscapedKey() {
+			int start = this.currentPos;
+			for (int i = start; i < this.propertyKey.length(); i++) {
+				if (this.propertyKey.charAt(i) == '.' && this.propertyKey.charAt(i - 1) == ']') {
+					this.valueType = NodeType.MAP;
+					this.currentPos = i;
+					break;
+				}
+			}
+			if (this.currentPos == start) {
+				if (this.propertyKey.charAt(this.propertyKey.length() - 1) == ']') {
+					this.valueType = NodeType.LEAF;
+					this.currentPos = this.propertyKey.length();
+				}
+				else {
+					throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
+				}
+			}
+			return this.propertyKey.substring(start, this.currentPos);
+		}
+
 		private enum NodeType {
-
-			LEAF, MAP, ARRAY
-
+			LEAF, MAP, ARRAY, ESCAPED
 		}
 
 	}
