@@ -74,7 +74,9 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 			return new HttpClientConnection(url.toString(), null, builder.build());
 		}
 		else {
-			/* No matching builder found: let jGit handle the creation of the HttpClient */
+			/*
+			 * No matching builder found: let jGit handle the creation of the HttpClient
+			 */
 			return new HttpClientConnection(url.toString());
 		}
 	}
