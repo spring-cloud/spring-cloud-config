@@ -1,0 +1,3 @@
+org.springframework.cloud.config.server.config.ConfigServerAutoConfiguration
+org.springframework.cloud.config.server.config.EncryptionAutoConfiguration
+org.springframework.cloud.config.server.config.VaultEncryptionAutoConfiguration
