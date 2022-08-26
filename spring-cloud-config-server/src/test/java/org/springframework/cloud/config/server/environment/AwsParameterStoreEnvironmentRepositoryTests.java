@@ -16,99 +16,76 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SSM;
+
+import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomUtils;
-import org.junit.Test;
-import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.GetParametersByPathRequest;
-import software.amazon.awssdk.services.ssm.model.GetParametersByPathResponse;
-import software.amazon.awssdk.services.ssm.model.Parameter;
-import software.amazon.awssdk.services.ssm.model.ParameterType;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
+import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
+import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.awssdk.services.ssm.model.ParameterType;
+import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 
 /**
  * @author Iulian Antohe
  */
+@Testcontainers
+@Tag("DockerRequired")
 public class AwsParameterStoreEnvironmentRepositoryTests {
 
-	private static final Map<String, String> SHARED_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("logging.level.root", "warn");
-			put("spring.cache.redis.time-to-live", "0");
-		}
-	};
+	@Container
+	private static final LocalStackContainer localstack = new LocalStackContainer(
+			DockerImageName.parse("localstack/localstack:0.14.2")).withServices(SSM)
+					.withReuse(true);
 
-	private static final Map<String, String> SHARED_DEFAULT_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("logging.level.root", "error");
-			put("spring.cache.redis.time-to-live", "1000");
-		}
-	};
+	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
+			.create(AwsBasicCredentials.create(localstack.getAccessKey(),
+					localstack.getSecretKey()));
 
-	private static final Map<String, String> SHARED_PRODUCTION_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("logging.level.root", "fatal");
-			put("spring.cache.redis.time-to-live", "5000");
-		}
-	};
-
-	private static final Map<String, String> APPLICATION_SPECIFIC_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("logging.level.com.example.service", "trace");
-			put("spring.cache.redis.time-to-live", "30000");
-		}
-	};
-
-	private static final Map<String, String> APPLICATION_SPECIFIC_DEFAULT_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("logging.level.com.example.service", "debug");
-			put("spring.cache.redis.time-to-live", "60000");
-		}
-	};
-
-	private static final Map<String, String> APPLICATION_SPECIFIC_PRODUCTION_PROPERTIES = new HashMap<String, String>() {
-		{
-			put("logging.level.com.example.service", "info");
-			put("spring.cache.redis.time-to-live", "300000");
-		}
-	};
-
-	private final SsmClient awsSsmClientMock = mock(SsmClient.class, "aws-ssm-client-mock");
+	private final SsmClient ssmClient = SsmClient.builder()
+			.region(Region.of(localstack.getRegion()))
+			.credentialsProvider(staticCredentialsProvider)
+			.endpointOverride(localstack.getEndpointOverride(SSM)).build();
 
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
 
 	private final AwsParameterStoreEnvironmentProperties environmentProperties = new AwsParameterStoreEnvironmentProperties();
 
 	private final AwsParameterStoreEnvironmentRepository repository = new AwsParameterStoreEnvironmentRepository(
-			awsSsmClientMock, configServerProperties, environmentProperties);
+			ssmClient, configServerProperties, environmentProperties);
+
+	private final List<String> toBeRemoved = new ArrayList<>();
+
+	@AfterEach
+	public void cleanUp() {
+		toBeRemoved.forEach(value -> ssmClient
+				.deleteParameter(DeleteParameterRequest.builder().name(value).build()));
+		toBeRemoved.clear();
+	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void testFindOneWithNullApplicationAndNullProfile() {
 		// Arrange
 		String application = null;
@@ -118,25 +95,27 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(defaultApp, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedDefaultParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void testFindOneWithNullApplicationAndDefaultProfile() {
 		// Arrange
 		String application = null;
@@ -145,25 +124,27 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(defaultApp, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedDefaultParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void testFindOneWithNullApplicationAndNonExistentProfile() {
 		// Arrange
 		String application = null;
@@ -177,17 +158,17 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		Environment expected = new Environment(defaultApp, profiles, null, null, null);
 		expected.add(ps);
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void testFindOneWithNullApplicationAndExistentProfile() {
 		// Arrange
 		String application = null;
@@ -196,25 +177,27 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String sharedProdParamsPsName = "aws:ssm:parameter:/config/application-production/";
-		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName, SHARED_PRODUCTION_PROPERTIES);
+		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName,
+				SHARED_PRODUCTION_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(defaultApp, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedProdParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void testFindOneWithDefaultApplicationAndNullProfile() {
 		// Arrange
 		String application = configServerProperties.getDefaultApplicationName();
@@ -223,21 +206,24 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedDefaultParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -248,21 +234,24 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedDefaultParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -278,13 +267,14 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.add(ps);
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -295,25 +285,27 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String sharedProdParamsPsName = "aws:ssm:parameter:/config/application-production/";
-		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName, SHARED_PRODUCTION_PROPERTIES);
+		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName,
+				SHARED_PRODUCTION_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedProdParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void testFindOneWithNonExistentApplicationAndNullProfile() {
 		// Arrange
 		String application = randomAlphabetic(RandomUtils.nextInt(3, 33));
@@ -322,21 +314,24 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedDefaultParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -347,21 +342,24 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedDefaultParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -377,13 +375,14 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.add(ps);
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -394,25 +393,27 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String sharedProdParamsPsName = "aws:ssm:parameter:/config/application-production/";
-		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName, SHARED_PRODUCTION_PROPERTIES);
+		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName,
+				SHARED_PRODUCTION_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedProdParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
-	@SuppressWarnings("ConstantConditions")
 	public void testFindOneWithExistentApplicationAndNullProfile() {
 		// Arrange
 		String application = "service";
@@ -421,31 +422,34 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String appSpecificDefaultParamsPsName = "aws:ssm:parameter:/config/service-default/";
-		PropertySource appSpecificDefaultParamsPs = new PropertySource(appSpecificDefaultParamsPsName,
-				APPLICATION_SPECIFIC_DEFAULT_PROPERTIES);
+		PropertySource appSpecificDefaultParamsPs = new PropertySource(
+				appSpecificDefaultParamsPsName, APPLICATION_SPECIFIC_DEFAULT_PROPERTIES);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String appSpecificParamsPsName = "aws:ssm:parameter:/config/service/";
 		PropertySource appSpecificParamsPs = new PropertySource(appSpecificParamsPsName,
 				APPLICATION_SPECIFIC_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 
-		expected.addAll(
-				Arrays.asList(appSpecificDefaultParamsPs, sharedDefaultParamsPs, appSpecificParamsPs, sharedParamsPs));
+		expected.addAll(Arrays.asList(appSpecificDefaultParamsPs, sharedDefaultParamsPs,
+				appSpecificParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -456,31 +460,34 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String appSpecificDefaultParamsPsName = "aws:ssm:parameter:/config/service-default/";
-		PropertySource appSpecificDefaultParamsPs = new PropertySource(appSpecificDefaultParamsPsName,
-				APPLICATION_SPECIFIC_DEFAULT_PROPERTIES);
+		PropertySource appSpecificDefaultParamsPs = new PropertySource(
+				appSpecificDefaultParamsPsName, APPLICATION_SPECIFIC_DEFAULT_PROPERTIES);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String appSpecificParamsPsName = "aws:ssm:parameter:/config/service/";
 		PropertySource appSpecificParamsPs = new PropertySource(appSpecificParamsPsName,
 				APPLICATION_SPECIFIC_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 
-		expected.addAll(
-				Arrays.asList(appSpecificDefaultParamsPs, sharedDefaultParamsPs, appSpecificParamsPs, sharedParamsPs));
+		expected.addAll(Arrays.asList(appSpecificDefaultParamsPs, sharedDefaultParamsPs,
+				appSpecificParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -495,18 +502,20 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 				APPLICATION_SPECIFIC_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.addAll(Arrays.asList(appSpecificParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -517,31 +526,34 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String appSpecificProdParamsPsName = "aws:ssm:parameter:/config/service-production/";
-		PropertySource appSpecificProdParamsPs = new PropertySource(appSpecificProdParamsPsName,
-				APPLICATION_SPECIFIC_PRODUCTION_PROPERTIES);
+		PropertySource appSpecificProdParamsPs = new PropertySource(
+				appSpecificProdParamsPsName, APPLICATION_SPECIFIC_PRODUCTION_PROPERTIES);
 
 		String sharedProdParamsPsName = "aws:ssm:parameter:/config/application-production/";
-		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName, SHARED_PRODUCTION_PROPERTIES);
+		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName,
+				SHARED_PRODUCTION_PROPERTIES);
 
 		String appSpecificParamsPsName = "aws:ssm:parameter:/config/service/";
 		PropertySource appSpecificParamsPs = new PropertySource(appSpecificParamsPsName,
 				APPLICATION_SPECIFIC_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 
-		expected.addAll(
-				Arrays.asList(appSpecificProdParamsPs, sharedProdParamsPs, appSpecificParamsPs, sharedParamsPs));
+		expected.addAll(Arrays.asList(appSpecificProdParamsPs, sharedProdParamsPs,
+				appSpecificParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -552,38 +564,43 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String appSpecificProdParamsPsName = "aws:ssm:parameter:/config/service-production/";
-		PropertySource appSpecificProdParamsPs = new PropertySource(appSpecificProdParamsPsName,
-				APPLICATION_SPECIFIC_PRODUCTION_PROPERTIES);
+		PropertySource appSpecificProdParamsPs = new PropertySource(
+				appSpecificProdParamsPsName, APPLICATION_SPECIFIC_PRODUCTION_PROPERTIES);
 
 		String sharedProdParamsPsName = "aws:ssm:parameter:/config/application-production/";
-		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName, SHARED_PRODUCTION_PROPERTIES);
+		PropertySource sharedProdParamsPs = new PropertySource(sharedProdParamsPsName,
+				SHARED_PRODUCTION_PROPERTIES);
 
 		String appSpecificDefaultParamsPsName = "aws:ssm:parameter:/config/service-default/";
-		PropertySource appSpecificDefaultParamsPs = new PropertySource(appSpecificDefaultParamsPsName,
-				APPLICATION_SPECIFIC_DEFAULT_PROPERTIES);
+		PropertySource appSpecificDefaultParamsPs = new PropertySource(
+				appSpecificDefaultParamsPsName, APPLICATION_SPECIFIC_DEFAULT_PROPERTIES);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String appSpecificParamsPsName = "aws:ssm:parameter:/config/service/";
 		PropertySource appSpecificParamsPs = new PropertySource(appSpecificParamsPsName,
 				APPLICATION_SPECIFIC_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 
-		expected.addAll(Arrays.asList(appSpecificProdParamsPs, sharedProdParamsPs, appSpecificDefaultParamsPs,
-				sharedDefaultParamsPs, appSpecificParamsPs, sharedParamsPs));
+		expected.addAll(Arrays.asList(appSpecificProdParamsPs, sharedProdParamsPs,
+				appSpecificDefaultParamsPs, sharedDefaultParamsPs, appSpecificParamsPs,
+				sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -606,22 +623,26 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		PropertySource overridesPs = new PropertySource("overrides", overrides);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 
-		expected.addAll(Arrays.asList(overridesPs, sharedDefaultParamsPs, sharedParamsPs));
+		expected.addAll(
+				Arrays.asList(overridesPs, sharedDefaultParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected);
+		putParameters(expected);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -632,48 +653,24 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(
+				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
+				SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedDefaultParamsPs, sharedParamsPs));
 
-		setupAwsSsmClientMocks(expected, true, false);
+		putParameters(expected, true);
 
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
-	}
-
-	@Test
-	public void testFindOneWithPaginatedAwsSsmClientResponse() {
-		// Arrange
-		String application = configServerProperties.getDefaultApplicationName();
-		String profile = configServerProperties.getDefaultProfile();
-		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
-
-		environmentProperties.setMaxResults(1);
-
-		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
-
-		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
-
-		Environment expected = new Environment(application, profiles, null, null, null);
-		expected.addAll(Arrays.asList(sharedDefaultParamsPs, sharedParamsPs));
-
-		setupAwsSsmClientMocks(expected, false, true);
-
-		// Act
-		Environment result = repository.findOne(application, profile, null);
-
-		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -685,14 +682,12 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 
-		when(awsSsmClientMock.getParametersByPath(any(GetParametersByPathRequest.class)))
-				.thenReturn(GetParametersByPathResponse.builder().build());
-
 		// Act
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
+				.isEqualTo(expected);
 	}
 
 	@Test
@@ -716,89 +711,36 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		assertThat(repository).isNotNull();
 	}
 
-	private void setupAwsSsmClientMocks(Environment environment) {
-		setupAwsSsmClientMocks(environment, false, false);
+	private void putParameters(Environment environment) {
+		putParameters(environment, false);
 	}
 
-	private void setupAwsSsmClientMocks(Environment environment, boolean withSlashesForPropertyName,
-			boolean paginatedResponse) {
+	private void putParameters(Environment environment,
+			boolean withSlashesForPropertyName) {
 		for (PropertySource ps : environment.getPropertySources()) {
-			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
-
-			GetParametersByPathRequest request = GetParametersByPathRequest.builder().path(path)
-					.recursive(environmentProperties.isRecursive())
-					.withDecryption(environmentProperties.isDecryptValues())
-					.maxResults(environmentProperties.getMaxResults()).build();
-
-			Set<Parameter> parameters = getParameters(ps, path, withSlashesForPropertyName);
-
-			GetParametersByPathResponse response = GetParametersByPathResponse.builder().parameters(parameters).build();
-
-			if (paginatedResponse && environmentProperties.getMaxResults() < parameters.size()) {
-				List<Set<Parameter>> chunks = splitParametersIntoChunks(parameters);
-
-				String nextToken = null;
-
-				for (int i = 0; i < chunks.size(); i++) {
-					Set<Parameter> chunk = chunks.get(i);
-
-					if (i == 0) {
-						nextToken = generateNextToken();
-
-						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
-								.nextToken(nextToken).build();
-
-						when(awsSsmClientMock.getParametersByPath(eq(request))).thenReturn(responseClone);
-					}
-					else if (i == chunks.size() - 1) {
-						GetParametersByPathRequest requestClone = request.toBuilder().nextToken(nextToken).build();
-						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk).build();
-
-						when(awsSsmClientMock.getParametersByPath(eq(requestClone))).thenReturn(responseClone);
-					}
-					else {
-						String newNextToken = generateNextToken();
-
-						GetParametersByPathRequest requestClone = request.toBuilder().nextToken(nextToken).build();
-
-						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
-								.nextToken(newNextToken).build();
-
-						when(awsSsmClientMock.getParametersByPath(eq(requestClone))).thenReturn(responseClone);
-
-						nextToken = newNextToken;
-					}
-				}
-			}
-			else {
-				when(awsSsmClientMock.getParametersByPath(eq(request))).thenReturn(response);
-			}
+			String path = StringUtils.delete(ps.getName(),
+					environmentProperties.getOrigin());
+			Set<Parameter> parameters = getParameters(ps, path,
+					withSlashesForPropertyName);
+			parameters.forEach(value -> {
+				ssmClient.putParameter(PutParameterRequest.builder().name(value.name())
+						.dataType("text").value(value.value()).build());
+				toBeRemoved.add(value.name());
+			});
 		}
 	}
 
 	private Set<Parameter> getParameters(PropertySource propertySource, String path,
 			boolean withSlashesForPropertyName) {
-		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter
-				.builder().name(path + (withSlashesForPropertyName
-						? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR) : p.getKey()))
-				.type(ParameterType.STRING).value((String) p.getValue()).version(1L).build();
+		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter.builder()
+				.name(path + (withSlashesForPropertyName
+						? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR)
+						: p.getKey()))
+				.type(ParameterType.STRING).value((String) p.getValue()).version(1L)
+				.build();
 
-		return propertySource.getSource().entrySet().stream().map(mapper).collect(Collectors.toSet());
-	}
-
-	private List<Set<Parameter>> splitParametersIntoChunks(Set<Parameter> parameters) {
-		AtomicInteger counter = new AtomicInteger();
-
-		Collector<Parameter, ?, Map<Integer, Set<Parameter>>> collector = Collectors
-				.groupingBy(p -> counter.getAndIncrement() / environmentProperties.getMaxResults(), Collectors.toSet());
-
-		return new ArrayList<>(parameters.stream().collect(collector).values());
-	}
-
-	private String generateNextToken() {
-		String random = randomAlphabetic(RandomUtils.nextInt(3, 33));
-
-		return Base64.getEncoder().encodeToString(random.getBytes(StandardCharsets.UTF_8));
+		return propertySource.getSource().entrySet().stream().map(mapper)
+				.collect(Collectors.toSet());
 	}
 
 	@Test
@@ -815,4 +757,45 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		assertThat(actualOrder).isEqualTo(expectedOrder);
 	}
 
+	private final Map<String, String> SHARED_PROPERTIES = new HashMap<String, String>() {
+		{
+			put("logging.level.root", "warn");
+			put("spring.cache.redis.time-to-live", "0");
+		}
+	};
+
+	private final Map<String, String> SHARED_DEFAULT_PROPERTIES = new HashMap<String, String>() {
+		{
+			put("logging.level.root", "error");
+			put("spring.cache.redis.time-to-live", "1000");
+		}
+	};
+
+	private final Map<String, String> SHARED_PRODUCTION_PROPERTIES = new HashMap<String, String>() {
+		{
+			put("logging.level.root", "fatal");
+			put("spring.cache.redis.time-to-live", "5000");
+		}
+	};
+
+	private final Map<String, String> APPLICATION_SPECIFIC_PROPERTIES = new HashMap<String, String>() {
+		{
+			put("logging.level.com.example.service", "trace");
+			put("spring.cache.redis.time-to-live", "30000");
+		}
+	};
+
+	private final Map<String, String> APPLICATION_SPECIFIC_DEFAULT_PROPERTIES = new HashMap<String, String>() {
+		{
+			put("logging.level.com.example.service", "debug");
+			put("spring.cache.redis.time-to-live", "60000");
+		}
+	};
+
+	private final Map<String, String> APPLICATION_SPECIFIC_PRODUCTION_PROPERTIES = new HashMap<String, String>() {
+		{
+			put("logging.level.com.example.service", "info");
+			put("spring.cache.redis.time-to-live", "300000");
+		}
+	};
 }

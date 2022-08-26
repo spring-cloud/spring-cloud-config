@@ -203,6 +203,18 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>localstack</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- AWS SDK v1 is required by testcontainers-localstack -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-core</artifactId>
+			<version>1.12.287</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>io.zipkin.brave</groupId>
 			<artifactId>brave-tests</artifactId>
 			<scope>test</scope>
