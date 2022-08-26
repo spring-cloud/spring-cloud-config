@@ -45,6 +45,7 @@ import software.amazon.awssdk.services.s3.model.*;
 
 /**
  * @author Clay McCoy
+ * @author Matej Nedić
  */
 @Testcontainers
 @Tag("DockerRequired")

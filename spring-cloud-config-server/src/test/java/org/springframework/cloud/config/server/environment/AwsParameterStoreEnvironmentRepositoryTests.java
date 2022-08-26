@@ -50,6 +50,7 @@ import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 
 /**
  * @author Iulian Antohe
+ * @author Matej Nedic
  */
 @Testcontainers
 @Tag("DockerRequired")

@@ -27,6 +27,11 @@ import software.amazon.awssdk.services.ssm.model.GetParametersByPathResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterType;
 
+/**
+ * Unit test is must for testing paginated logic, since doing it with integration test is not that easy.
+ *
+ * @author Iulian Antohe
+ */
 public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 
 	private static final Map<String, String> SHARED_PROPERTIES = new HashMap<String, String>() {
