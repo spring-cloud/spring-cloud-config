@@ -53,8 +53,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Container
 	private static final LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:0.14.2")).withServices(S3)
-					.withReuse(true);
+			DockerImageName.parse("localstack/localstack:0.14.2")).withServices(S3);
 
 	private final ConfigServerProperties server = new ConfigServerProperties();
 

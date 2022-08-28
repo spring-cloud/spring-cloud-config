@@ -59,7 +59,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Container
 	private static final LocalStackContainer localstack = new LocalStackContainer(
 			DockerImageName.parse("localstack/localstack:0.14.2"))
-					.withServices(SECRETSMANAGER).withReuse(true);
+					.withServices(SECRETSMANAGER);
 
 	private static final Log log = LogFactory
 			.getLog(AwsSecretsManagerEnvironmentRepository.class);
