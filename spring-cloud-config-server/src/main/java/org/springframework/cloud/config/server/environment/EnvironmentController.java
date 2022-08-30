@@ -551,7 +551,9 @@ public class EnvironmentController {
 		}
 
 		private enum NodeType {
+
 			LEAF, MAP, ARRAY, ESCAPED
+
 		}
 
 	}
