@@ -77,7 +77,7 @@ public class HttpClientSupportTest {
 		wireMockProxyServer.start();
 		wireMockServer.start();
 		WireMock.configureFor("https", "localhost", wireMockServer.httpsPort());
-		stubFor(get("/test/proxy").willReturn(aResponse().withStatus(200)));
+		wireMockServer.stubFor(get("/test/proxy").willReturn(aResponse().withStatus(200)));
 
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
