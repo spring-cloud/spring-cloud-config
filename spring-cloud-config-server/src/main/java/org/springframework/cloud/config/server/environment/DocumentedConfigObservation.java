@@ -54,7 +54,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 		 */
 		ENVIRONMENT_CLASS {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.cloud.config.environment.class";
 			}
 		},
@@ -64,7 +64,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 		 */
 		PROFILE {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.cloud.config.environment.profile";
 			}
 		},
@@ -74,7 +74,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 		 */
 		LABEL {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.cloud.config.environment.label";
 			}
 		},
@@ -84,7 +84,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 		 */
 		APPLICATION {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.cloud.config.environment.application";
 			}
 		}

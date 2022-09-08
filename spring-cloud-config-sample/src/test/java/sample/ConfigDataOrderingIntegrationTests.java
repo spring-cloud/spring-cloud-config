@@ -45,7 +45,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		// hence no spring.config.import here and config name change
 		properties = { "spring.application.name=profilesample", "spring.cloud.config.enabled=true",
 				"spring.config.name=orderingtest", "management.security.enabled=false", "spring.profiles.active=dev",
-				"management.endpoints.web.exposure.include=*" },
+				"management.endpoints.web.exposure.include=*", "management.endpoint.env.show-values=ALWAYS" },
 		webEnvironment = RANDOM_PORT)
 public class ConfigDataOrderingIntegrationTests {
 

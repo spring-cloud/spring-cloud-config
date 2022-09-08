@@ -53,7 +53,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		properties = { "spring.application.name=retryapp", "spring.cloud.config.fail-fast=true",
 				"spring.cloud.config.enabled=true", "spring.config.import=configserver:",
 				"management.security.enabled=false", "management.endpoints.web.exposure.include=*",
-				"logging.level.org.springframework.retry=TRACE" },
+				"logging.level.org.springframework.retry=TRACE", "management.endpoint.env.show-values=ALWAYS" },
 		webEnvironment = RANDOM_PORT)
 public class ConfigDataRetryIntegrationTests {
 

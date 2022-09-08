@@ -44,7 +44,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		properties = { "spring.cloud.config.enabled:true",
 				// FIXME: configdata why is this needed here?
 				"spring.config.use-legacy-processing=true", "management.security.enabled=false",
-				"management.endpoints.web.exposure.include=*" },
+				"management.endpoints.web.exposure.include=*", "management.endpoint.env.show-values=ALWAYS" },
 		webEnvironment = RANDOM_PORT)
 public class ApplicationTests {
 

@@ -46,7 +46,7 @@ class ObservationEnvironmentRepositoryObservationConvention
 
 	private KeyValues appendIfPresent(KeyValues keyValues, KeyName profile, String value) {
 		if (StringUtils.hasText(value)) {
-			keyValues = keyValues.and(profile.of(value));
+			keyValues = keyValues.and(profile.withValue(value));
 		}
 		return keyValues;
 	}
