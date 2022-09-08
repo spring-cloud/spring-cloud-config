@@ -28,7 +28,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnJre;
 import org.junit.jupiter.api.condition.JRE;
@@ -70,7 +69,6 @@ public class HttpClientSupportTest {
 
 	@Test
 	@EnabledOnJre(JRE.JAVA_8)
-	@Disabled // https://github.com/spring-cloud/spring-cloud-config/issues/2142
 	public void httpsProxy() throws GeneralSecurityException, IOException {
 		WireMockServer wireMockProxyServer = new WireMockServer(
 				options().httpDisabled(true).dynamicHttpsPort().enableBrowserProxying(true).trustAllProxyTargets(true));
