@@ -46,12 +46,12 @@ public final class VaultKvAccessStrategyFactory {
 	public static VaultKvAccessStrategy forVersion(RestOperations rest, String baseUrl, int version, String pathToKey) {
 
 		switch (version) {
-		case 1:
-			return new V1VaultKvAccessStrategy(baseUrl, rest);
-		case 2:
-			return new V2VaultKvAccessStrategy(baseUrl, pathToKey, rest);
-		default:
-			throw new IllegalArgumentException("No support for given Vault k/v backend version " + version);
+			case 1:
+				return new V1VaultKvAccessStrategy(baseUrl, rest);
+			case 2:
+				return new V2VaultKvAccessStrategy(baseUrl, pathToKey, rest);
+			default:
+				throw new IllegalArgumentException("No support for given Vault k/v backend version " + version);
 		}
 	}
 

@@ -464,14 +464,14 @@ public class EnvironmentController {
 				}
 				else {
 					switch (this.propertyKey.charAt(this.currentPos)) {
-					case '.':
-						this.valueType = NodeType.MAP;
-						break;
-					case '[':
-						this.valueType = NodeType.ARRAY;
-						break;
-					default:
-						throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
+						case '.':
+							this.valueType = NodeType.MAP;
+							break;
+						case '[':
+							this.valueType = NodeType.ARRAY;
+							break;
+						default:
+							throw new IllegalArgumentException("Invalid key: " + this.propertyKey);
 					}
 				}
 				return index;
