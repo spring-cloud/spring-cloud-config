@@ -115,6 +115,15 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findYamlObject() throws UnsupportedEncodingException {
+		setupS3("foo-bar.yaml", yamlContent);
+
+		final Environment env = envRepo.findOne("foo", "bar", null);
+
+		assertExpectedEnvironment(env, "foo", null, null, 1, "bar");
+	}
+
+	@Test
+	public void findYmlObject() throws UnsupportedEncodingException {
 		setupS3("foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
