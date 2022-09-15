@@ -132,28 +132,35 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private S3ConfigFile getS3ConfigFile(S3ObjectIdBuilder s3ObjectIdBuilder, String keyPrefix) {
 		try {
-			final S3Object properties = s3Client
-					.getObject(new GetObjectRequest(s3ObjectIdBuilder.withKey(keyPrefix + ".properties").build()));
+			final S3Object properties = getObject(s3ObjectIdBuilder, keyPrefix + ".properties");
 			return new PropertyS3ConfigFile(properties.getObjectMetadata().getVersionId(),
 					properties.getObjectContent());
 		}
 		catch (Exception eProperties) {
 			try {
-				final S3Object yaml = s3Client
-						.getObject(new GetObjectRequest(s3ObjectIdBuilder.withKey(keyPrefix + ".yml").build()));
+				final S3Object yaml = getObject(s3ObjectIdBuilder, keyPrefix + ".yaml");
 				return new YamlS3ConfigFile(yaml.getObjectMetadata().getVersionId(), yaml.getObjectContent());
 			}
 			catch (Exception eYaml) {
 				try {
-					final S3Object json = s3Client
-							.getObject(new GetObjectRequest(s3ObjectIdBuilder.withKey(keyPrefix + ".json").build()));
-					return new JsonS3ConfigFile(json.getObjectMetadata().getVersionId(), json.getObjectContent());
+					final S3Object json = getObject(s3ObjectIdBuilder, keyPrefix + ".yml");
+					return new YamlS3ConfigFile(json.getObjectMetadata().getVersionId(), json.getObjectContent());
 				}
-				catch (Exception eJson) {
-					return null;
+				catch (Exception eYml) {
+					try {
+						final S3Object json = getObject(s3ObjectIdBuilder, keyPrefix + ".json");
+						return new JsonS3ConfigFile(json.getObjectMetadata().getVersionId(), json.getObjectContent());
+					}
+					catch (Exception eJson) {
+						return null;
+					}
 				}
 			}
 		}
+	}
+
+	private S3Object getObject(S3ObjectIdBuilder s3ObjectIdBuilder, String key) throws Exception {
+		return s3Client.getObject(new GetObjectRequest(s3ObjectIdBuilder.withKey(key).build()));
 	}
 
 	@Override
