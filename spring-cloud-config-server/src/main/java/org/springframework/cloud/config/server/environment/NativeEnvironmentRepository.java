@@ -270,6 +270,8 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 					locations = new String[] { matcher.group(2) };
 				}
 			}
+			name = name.replace("\\", "/"); // change windows path '\' into '/'
+			name = name.replaceAll("\\[(?=\\w:)", "[/"); // change [D:/path] into [/D:/path]
 			name = name.replace("applicationConfig: [", "");
 			name = name.replace("file [", "file:");
 			name = name.replace("class path resource [", "classpath:/");
