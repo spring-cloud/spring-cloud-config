@@ -160,7 +160,6 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 							this.logger.debug("Cannot load configuration from " + candidate.getUri() + ", cause: ("
 									+ e.getClass().getSimpleName() + ") " + e.getMessage(), e);
 						}
-						continue;
 					}
 				}
 			}
@@ -174,9 +173,11 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 		catch (Exception e) {
 			if (MultipleJGitEnvironmentProperties.MAIN_LABEL.equals(label) && isTryMasterBranch()) {
+				logger.info("Cannot find Environment with default label " + getDefaultLabel(), e);
+				logger.info("Will try to find Environment master label instead.");
 				candidate = getRepository(this, application, profile, MultipleJGitEnvironmentProperties.MASTER_LABEL);
 				return findOneFromCandidate(candidate, application, profile,
-						MultipleJGitEnvironmentProperties.MASTER_LABEL, includeOrigin);
+					MultipleJGitEnvironmentProperties.MASTER_LABEL, includeOrigin);
 			}
 			throw e;
 		}
