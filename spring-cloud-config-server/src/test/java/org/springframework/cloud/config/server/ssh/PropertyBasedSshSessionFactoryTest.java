@@ -232,6 +232,21 @@ public class PropertyBasedSshSessionFactoryTest {
 	}
 
 	@Test
+	public void proxyFactoryHandlesUnknownHost() {
+		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> map = new HashMap<>();
+		map.put(ProxyHostProperties.ProxyForScheme.HTTP, new ProxyHostProperties());
+
+		JGitEnvironmentProperties sshProperties = new JGitEnvironmentProperties();
+		sshProperties.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		sshProperties.setProxy(map);
+		setupSessionFactory(sshProperties);
+
+		ProxyData proxyData = getSshProxyData("unknown.host");
+
+		assertThat(proxyData).isNull();
+	}
+
+	@Test
 	public void defaultSshConfigIsSet() {
 		setupSessionFactory(new JGitEnvironmentProperties());
 
