@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.eclipse.jgit.transport.http.HttpConnection;
 import org.eclipse.jgit.transport.http.apache.HttpClientConnection;
 
@@ -70,7 +69,16 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 
 	@Override
 	public HttpConnection create(URL url, Proxy proxy) throws IOException {
-		return new HttpClientConnection(url.toString(), null, lookupHttpClientBuilder(url).build());
+		HttpClientBuilder builder = lookupHttpClientBuilder(url);
+		if (builder != null) {
+			return new HttpClientConnection(url.toString(), null, builder.build());
+		}
+		else {
+			/*
+			 * No matching builder found: let jGit handle the creation of the HttpClient
+			 */
+			return new HttpClientConnection(url.toString());
+		}
 	}
 
 	private void addHttpClient(JGitEnvironmentProperties properties) throws GeneralSecurityException {
@@ -99,7 +107,7 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 
 		if (builderMap.isEmpty()) {
 			this.log.warn(String.format("No custom http config found for URL: %s", url));
-			return HttpClients.custom();
+			return null;
 		}
 		if (builderMap.size() > 1) {
 			/*
@@ -118,7 +126,7 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 					"More than one git repo URL template matched URL:"
 							+ " %s, proxy and skipSslValidation config won't be applied. Matched templates: %s",
 					url, builderMap.keySet().stream().collect(Collectors.joining(", "))));
-			return HttpClients.custom();
+			return null;
 		}
 		return new ArrayList<>(builderMap.values()).get(0);
 	}

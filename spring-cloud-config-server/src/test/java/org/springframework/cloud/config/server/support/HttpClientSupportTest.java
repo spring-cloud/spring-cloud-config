@@ -45,7 +45,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
@@ -77,7 +76,7 @@ public class HttpClientSupportTest {
 		wireMockProxyServer.start();
 		wireMockServer.start();
 		WireMock.configureFor("https", "localhost", wireMockServer.httpsPort());
-		stubFor(get("/test/proxy").willReturn(aResponse().withStatus(200)));
+		wireMockServer.stubFor(get("/test/proxy").willReturn(aResponse().withStatus(200)));
 
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();

@@ -231,6 +231,20 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testBranchEndsWithTag() throws IOException {
+		String uri = ConfigServerTestUtils.prepareLocalRepo("branch-with-slash-repo");
+		this.repository.setUri(uri);
+
+		// exists branch "feature/foo"
+		Environment environment = this.repository.findOne("bar", "staging", "feature/foo");
+		assertVersion(environment);
+
+		// try tag "foo"
+		environment = this.repository.findOne("bar", "staging", "foo");
+		assertThat(environment.getPropertySources().get(0).getSource().get("key")).isEqualTo("value from tag");
+	}
+
+	@Test
 	public void afterPropertiesSet_CloneOnStartTrue_CloneAndFetchCalled() throws Exception {
 		Git mockGit = mock(Git.class);
 		CloneCommand mockCloneCommand = mock(CloneCommand.class);
@@ -744,7 +758,7 @@ public class JGitEnvironmentRepositoryTests {
 		when(checkoutCommand.call()).thenReturn(ref);
 		when(listBranchCommand.call()).thenReturn(Arrays.asList(branch1Ref));
 		when(fetchCommand.call()).thenReturn(fetchResult);
-		when(branch1Ref.getName()).thenReturn("origin/master");
+		when(branch1Ref.getName()).thenReturn("refs/remotes/origin/master");
 		when(status.isClean()).thenReturn(true);
 
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
@@ -1207,12 +1221,12 @@ public class JGitEnvironmentRepositoryTests {
 		// Mock master branch
 		Ref mockMasterRef = mock(Ref.class);
 		repositoryRefsList.add(mockMasterRef);
-		when(mockMasterRef.getName()).thenReturn("/master");
+		when(mockMasterRef.getName()).thenReturn("refs/remotes/origin/master");
 
 		// Mock release branch.
 		Ref mockReleaseRef = mock(Ref.class);
 		repositoryRefsList.add(mockReleaseRef);
-		when(mockReleaseRef.getName()).thenReturn("/release");
+		when(mockReleaseRef.getName()).thenReturn("refs/remotes/origin/release");
 
 		// Mock calls on list and checkout commands
 		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
@@ -1261,7 +1275,7 @@ public class JGitEnvironmentRepositoryTests {
 		// Mock master branch
 		Ref mockMasterRef = mock(Ref.class);
 		repositoryRefsList.add(mockMasterRef);
-		when(mockMasterRef.getName()).thenReturn("/master");
+		when(mockMasterRef.getName()).thenReturn("refs/remotes/origin/master");
 
 		// Mock calls on list and checkout commands
 		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);

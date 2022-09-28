@@ -31,10 +31,10 @@ import org.springframework.security.rsa.crypto.RsaAlgorithm;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 
 /**
- * Auto-configuration for RSA encryption.
+ * Autoconfiguration for RSA encryption.
  *
  * @author Olga Maciaszek-Sharma
- * @since 3.1.2
+ * @since 4.0.0
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "encrypt.key-store", value = "location")

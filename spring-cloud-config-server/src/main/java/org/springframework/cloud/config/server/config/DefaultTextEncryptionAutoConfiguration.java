@@ -39,7 +39,7 @@ import org.springframework.util.StringUtils;
  * Default text encryption auto-configuration.
  *
  * @author Olga Maciaszek-Sharma
- * @since 3.1.2
+ * @since 4.0.0
  */
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(RsaEncryptionAutoConfiguration.class)
