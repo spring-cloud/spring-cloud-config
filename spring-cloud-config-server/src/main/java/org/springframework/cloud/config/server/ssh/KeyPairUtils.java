@@ -23,10 +23,13 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Collection;
 
+import org.apache.sshd.common.config.keys.FilePasswordProvider;
 import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.common.util.io.resource.AbstractIoResource;
 import org.apache.sshd.common.util.security.SecurityUtils;
+
+import org.springframework.util.StringUtils;
 
 final class KeyPairUtils {
 
@@ -36,14 +39,18 @@ final class KeyPairUtils {
 
 	}
 
-	static Collection<KeyPair> load(SessionContext session, String privateKey)
+	static Collection<KeyPair> load(SessionContext session, String privateKey, String passphrase)
 			throws IOException, GeneralSecurityException {
-		return loader.loadKeyPairs(session, new StringResource(privateKey), null);
+
+		FilePasswordProvider passwordProvider = StringUtils.hasText(passphrase) ? FilePasswordProvider.of(passphrase)
+				: FilePasswordProvider.EMPTY;
+
+		return loader.loadKeyPairs(session, new StringResource(privateKey), passwordProvider);
 	}
 
-	static boolean isValid(String privateKey) {
+	static boolean isValid(String privateKey, String passphrase) {
 		try {
-			return !KeyPairUtils.load(null, privateKey).isEmpty();
+			return !KeyPairUtils.load(null, privateKey, passphrase).isEmpty();
 		}
 		catch (IOException | GeneralSecurityException ignored) {
 			return false;
