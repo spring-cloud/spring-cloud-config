@@ -21,17 +21,12 @@ import java.io.File;
 import org.eclipse.jgit.annotations.NonNull;
 import org.eclipse.jgit.internal.transport.ssh.OpenSshConfigFile;
 import org.eclipse.jgit.transport.SshConfigStore;
+import org.eclipse.jgit.transport.SshConstants;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 
 public class FileBasedSshSessionFactory extends SshdSessionFactory {
-
-	private static final String STRICT_HOST_KEY_CHECKING = "StrictHostKeyChecking";
-
-	private static final String YES_OPTION = "yes";
-
-	private static final String NO_OPTION = "no";
 
 	private final JGitEnvironmentProperties sshUriProperties;
 
@@ -47,8 +42,8 @@ public class FileBasedSshSessionFactory extends SshdSessionFactory {
 			public HostEntry lookup(@NonNull String hostName, int port, String userName) {
 				HostEntry hostEntry = super.lookup(hostName, port, userName);
 
-				hostEntry.setValue(STRICT_HOST_KEY_CHECKING,
-						sshUriProperties.isStrictHostKeyChecking() ? YES_OPTION : NO_OPTION);
+				hostEntry.setValue(SshConstants.STRICT_HOST_KEY_CHECKING,
+						sshUriProperties.isStrictHostKeyChecking() ? SshConstants.YES : SshConstants.NO);
 
 				return hostEntry;
 			}
