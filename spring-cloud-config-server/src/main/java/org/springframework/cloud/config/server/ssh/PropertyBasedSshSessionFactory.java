@@ -212,7 +212,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 			JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(remoteAddress.getHostName());
 
 			return sshProperties == null ? Collections.emptyList()
-					: KeyPairUtils.load(session, sshProperties.getPrivateKey());
+					: KeyPairUtils.load(session, sshProperties.getPrivateKey(), sshProperties.getPassphrase());
 		}
 
 	}
