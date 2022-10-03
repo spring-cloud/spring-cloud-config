@@ -30,8 +30,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 /**
- * Autoconfiguration for text encryptors and environment encryptors (non-web stuff).
- * Users can provide beans of the same type as any or all of the beans defined here in
+ * Autoconfiguration for text encryptors and environment encryptors (non-web stuff). Users
+ * can provide beans of the same type as any or all of the beans defined here in
  * application code to override the default behaviour.
  *
  * @author Bartosz Wojtkiewicz
