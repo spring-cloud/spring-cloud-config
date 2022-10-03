@@ -158,7 +158,23 @@ public class PropertyBasedSshSessionFactoryTest {
 		PrivateKey privateKey = getSshPrivateKey("gitlab.example.local");
 
 		assertThat(privateKey).isNotNull();
-		assertThat(privateKey).isEqualTo(toPrivateKey(PRIVATE_KEY));
+		assertThat(privateKey).isEqualTo(toPrivateKey(PRIVATE_KEY, null));
+	}
+
+	@Test
+	public void privateKeyWithPassphraseIsUsed() {
+		String keyWithPassphrase = getResourceAsString("/ssh/key-with-passphrase");
+
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("git@gitlab.example.local:someorg/somerepo.git");
+		sshKey.setPrivateKey(keyWithPassphrase);
+		sshKey.setPassphrase("secret");
+		setupSessionFactory(sshKey);
+
+		PrivateKey privateKey = getSshPrivateKey("gitlab.example.local");
+
+		assertThat(privateKey).isNotNull();
+		assertThat(privateKey).isEqualTo(toPrivateKey(keyWithPassphrase, "secret"));
 	}
 
 	@Test
@@ -272,9 +288,9 @@ public class PropertyBasedSshSessionFactoryTest {
 		}
 	}
 
-	private PrivateKey toPrivateKey(String key) {
+	private PrivateKey toPrivateKey(String key, String passphrase) {
 		try {
-			Collection<KeyPair> keyPairs = KeyPairUtils.load(null, key);
+			Collection<KeyPair> keyPairs = KeyPairUtils.load(null, key, passphrase);
 
 			return keyPairs.isEmpty() ? null : keyPairs.iterator().next().getPrivate();
 		}
