@@ -28,7 +28,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.config.ConfigDataLocation;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -120,8 +122,20 @@ class ConfigClientHints implements RuntimeHintsRegistrar {
 				classLoader)) {
 			return;
 		}
-		hints.reflection().registerType(TypeReference.of(ConfigClientAutoConfiguration.class),
-				hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
+		hints.reflection()
+				.registerType(TypeReference.of(ConfigClientAutoConfiguration.class),
+						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS))
+				.registerType(TypeReference.of(ConfigDataLocation.class),
+						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS))
+				.registerType(TypeReference.of("org.springframework.boot.context.config.ConfigDataProperties"),
+						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+								MemberCategory.DECLARED_FIELDS, MemberCategory.INTROSPECT_DECLARED_METHODS))
+				.registerType(TypeReference.of(org.springframework.cloud.config.environment.Environment.class),
+						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+								MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS))
+				.registerType(TypeReference.of(PropertySource.class),
+						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+								MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS));
 	}
 
 }
