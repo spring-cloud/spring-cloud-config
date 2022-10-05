@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.config.client;
 
+import org.springframework.aot.hint.MemberCategory;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.aot.hint.TypeReference;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
@@ -32,6 +36,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.util.ClassUtils;
 
 /**
  * Expose a ConfigClientProperties just so that there is a way to inspect the properties
@@ -103,6 +108,20 @@ public class ConfigClientAutoConfiguration {
 			}
 		}
 
+	}
+
+}
+
+class ConfigClientHints implements RuntimeHintsRegistrar {
+
+	@Override
+	public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+		if (!ClassUtils.isPresent("org.springframework.cloud.config.client.ConfigServerConfigDataLoader",
+				classLoader)) {
+			return;
+		}
+		hints.reflection().registerType(TypeReference.of(ConfigClientAutoConfiguration.class),
+				hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
 	}
 
 }
