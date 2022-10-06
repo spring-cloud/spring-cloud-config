@@ -40,6 +40,7 @@ import org.eclipse.jgit.internal.transport.ssh.OpenSshConfigFile;
 import org.eclipse.jgit.internal.transport.sshd.OpenSshServerKeyDatabase;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.SshConfigStore;
+import org.eclipse.jgit.transport.SshConstants;
 import org.eclipse.jgit.transport.sshd.JGitKeyCache;
 import org.eclipse.jgit.transport.sshd.ProxyData;
 import org.eclipse.jgit.transport.sshd.ProxyDataFactory;
@@ -59,14 +60,6 @@ import org.springframework.util.StringUtils;
  * @author Ollie Hughes
  */
 public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
-
-	private static final String STRICT_HOST_KEY_CHECKING = "StrictHostKeyChecking";
-
-	private static final String PREFERRED_AUTHENTICATIONS = "PreferredAuthentications";
-
-	private static final String YES_OPTION = "yes";
-
-	private static final String NO_OPTION = "no";
 
 	private final Map<String, JGitEnvironmentProperties> sshKeysByHostname;
 
@@ -90,20 +83,17 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
 			private OpenSshConfigFile.HostEntry updateIfNeeded(OpenSshConfigFile.HostEntry hostEntry, String hostName) {
 				JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(hostName);
-				if (sshProperties == null) {
-					return hostEntry;
-				}
 
 				if (sshProperties.getHostKey() == null || !sshProperties.isStrictHostKeyChecking()) {
-					hostEntry.setValue(STRICT_HOST_KEY_CHECKING, NO_OPTION);
+					hostEntry.setValue(SshConstants.STRICT_HOST_KEY_CHECKING, SshConstants.NO);
 				}
 				else {
-					hostEntry.setValue(STRICT_HOST_KEY_CHECKING, YES_OPTION);
+					hostEntry.setValue(SshConstants.STRICT_HOST_KEY_CHECKING, SshConstants.YES);
 				}
 
 				String preferredAuthentications = sshProperties.getPreferredAuthentications();
 				if (preferredAuthentications != null) {
-					hostEntry.setValue(PREFERRED_AUTHENTICATIONS, preferredAuthentications);
+					hostEntry.setValue(SshConstants.PREFERRED_AUTHENTICATIONS, preferredAuthentications);
 				}
 				return hostEntry;
 			}
@@ -123,10 +113,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 			public List<PublicKey> lookup(String connectAddress, InetSocketAddress remoteAddress,
 					Configuration config) {
 
-				JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(remoteAddress.getHostName());
-				if (sshProperties == null) {
-					return Collections.emptyList();
-				}
+				JGitEnvironmentProperties sshProperties = findEnvironmentProperties(sshKeysByHostname, remoteAddress);
 
 				List<Path> knownHostFiles = getKnownHostFiles(sshProperties);
 				List<PublicKey> publicKeys = new OpenSshServerKeyDatabase(false, knownHostFiles).lookup(connectAddress,
@@ -143,21 +130,14 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 			@Override
 			public boolean accept(String connectAddress, InetSocketAddress remoteAddress, PublicKey serverKey,
 					Configuration config, CredentialsProvider provider) {
-				if (isNotStrictHostKeyChecking(remoteAddress.getHostName())) {
+
+				if (config.getStrictHostKeyChecking() == Configuration.StrictHostKeyChecking.ACCEPT_ANY) {
 					return true;
 				}
 
 				List<PublicKey> knownServerKeys = lookup(connectAddress, remoteAddress, config);
 
 				return KeyUtils.findMatchingKey(serverKey, knownServerKeys) != null;
-			}
-
-			private boolean isNotStrictHostKeyChecking(String hostName) {
-				JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(hostName);
-				if (sshProperties == null) {
-					return false;
-				}
-				return !sshProperties.isStrictHostKeyChecking();
 			}
 
 			private PublicKey getHostKey(JGitEnvironmentProperties sshProperties) {
@@ -193,6 +173,18 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 		return new SingleKeyIdentityProvider(sshKeysByHostname);
 	}
 
+	private static JGitEnvironmentProperties findEnvironmentProperties(
+			Map<String, JGitEnvironmentProperties> sshKeysByHostname, InetSocketAddress socketAddress) {
+
+		JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(socketAddress.getHostString());
+
+		if (sshProperties == null && socketAddress.getAddress() != null) {
+			sshProperties = sshKeysByHostname.get(socketAddress.getAddress().getHostAddress());
+		}
+
+		return sshProperties;
+	}
+
 	private final static class SingleKeyIdentityProvider implements KeyIdentityProvider, Iterable<KeyPair> {
 
 		private final Map<String, JGitEnvironmentProperties> sshKeysByHostname;
@@ -208,11 +200,10 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
 		@Override
 		public Iterable<KeyPair> loadKeys(SessionContext session) throws IOException, GeneralSecurityException {
-			SshdSocketAddress remoteAddress = SshdSocketAddress.toSshdSocketAddress(session.getRemoteAddress());
-			JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(remoteAddress.getHostName());
+			InetSocketAddress remoteAddress = SshdSocketAddress.toInetSocketAddress(session.getRemoteAddress());
+			JGitEnvironmentProperties sshProperties = findEnvironmentProperties(sshKeysByHostname, remoteAddress);
 
-			return sshProperties == null ? Collections.emptyList()
-					: KeyPairUtils.load(session, sshProperties.getPrivateKey(), sshProperties.getPassphrase());
+			return KeyPairUtils.load(session, sshProperties.getPrivateKey(), sshProperties.getPassphrase());
 		}
 
 	}
@@ -227,7 +218,8 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
 		@Override
 		public ProxyData get(InetSocketAddress remoteAddress) {
-			JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(remoteAddress.getHostName());
+			JGitEnvironmentProperties sshProperties = findEnvironmentProperties(sshKeysByHostname, remoteAddress);
+
 			ProxyHostProperties proxyHostProperties = sshProperties.getProxy()
 					.get(ProxyHostProperties.ProxyForScheme.HTTP);
 
@@ -237,8 +229,10 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
 			Proxy proxy = new Proxy(Proxy.Type.HTTP,
 					new InetSocketAddress(proxyHostProperties.getHost(), proxyHostProperties.getPort()));
-			return new ProxyData(proxy, proxyHostProperties.getUsername(),
-					proxyHostProperties.getPassword().toCharArray());
+
+			char[] proxyPassword = proxyHostProperties.getPassword() != null
+					? proxyHostProperties.getPassword().toCharArray() : null;
+			return new ProxyData(proxy, proxyHostProperties.getUsername(), proxyPassword);
 		}
 
 	}
