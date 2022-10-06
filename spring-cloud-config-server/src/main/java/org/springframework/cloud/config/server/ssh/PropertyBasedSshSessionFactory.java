@@ -231,6 +231,9 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 		@Override
 		public ProxyData get(InetSocketAddress remoteAddress) {
 			JGitEnvironmentProperties sshProperties = findEnvironmentProperties(sshKeysByHostname, remoteAddress);
+			if (sshProperties == null) {
+				return null;
+			}
 
 			ProxyHostProperties proxyHostProperties = sshProperties.getProxy()
 					.get(ProxyHostProperties.ProxyForScheme.HTTP);
