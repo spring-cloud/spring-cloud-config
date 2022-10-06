@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -54,6 +55,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -121,16 +123,10 @@ public class PropertyBasedSshSessionFactoryTest {
 	public void sshConfigIsUsedForRelevantHostOnly() {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
 		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
-		sshKey.setHostKeyAlgorithm(HOST_KEY_ALGORITHM);
-		sshKey.setHostKey(HOST_KEY);
 		sshKey.setPrivateKey(PRIVATE_KEY);
 		setupSessionFactory(sshKey);
-		PublicKey configuredKey = toPublicKey(HOST_KEY, HOST_KEY_ALGORITHM);
 
-		SshConfigStore.HostConfig sshConfig = getSshHostConfig("another.host");
-
-		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isNull();
-		assertThat(isKnownKeyForHost(configuredKey, "another.host")).isFalse();
+		assertThatThrownBy(() -> getSshHostConfig("another.host")).isInstanceOf(NullPointerException.class);
 	}
 
 	@Test
@@ -162,6 +158,19 @@ public class PropertyBasedSshSessionFactoryTest {
 	}
 
 	@Test
+	public void privateKeyIsUsedWithRepoIp() {
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("git@127.0.0.1:someorg/somerepo.git");
+		sshKey.setPrivateKey(PRIVATE_KEY);
+		setupSessionFactory(sshKey);
+
+		PrivateKey privateKey = getSshPrivateKey("gitlab.example.local");
+
+		assertThat(privateKey).isNotNull();
+		assertThat(privateKey).isEqualTo(toPrivateKey(PRIVATE_KEY, null));
+	}
+
+	@Test
 	public void privateKeyWithPassphraseIsUsed() {
 		String keyWithPassphrase = getResourceAsString("/ssh/key-with-passphrase");
 
@@ -181,6 +190,24 @@ public class PropertyBasedSshSessionFactoryTest {
 	public void hostKeyIsUsed() {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
 		sshKey.setUri("git@gitlab.example.local:someorg/somerepo.git");
+		sshKey.setHostKeyAlgorithm(HOST_KEY_ALGORITHM);
+		sshKey.setHostKey(HOST_KEY);
+		sshKey.setStrictHostKeyChecking(true);
+		sshKey.setPrivateKey(PRIVATE_KEY);
+		setupSessionFactory(sshKey);
+		PublicKey configuredKey = toPublicKey(HOST_KEY, HOST_KEY_ALGORITHM);
+
+		PublicKey knownHostKey = getSshHostKey("gitlab.example.local");
+
+		assertThat(knownHostKey).isNotNull();
+		assertThat(knownHostKey).isEqualTo(configuredKey);
+		assertThat(isKnownKeyForHost(configuredKey, "gitlab.example.local")).isTrue();
+	}
+
+	@Test
+	public void hostKeyIsUsedWithRepoIp() {
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("git@127.0.0.1:someorg/somerepo.git");
 		sshKey.setHostKeyAlgorithm(HOST_KEY_ALGORITHM);
 		sshKey.setHostKey(HOST_KEY);
 		sshKey.setPrivateKey(PRIVATE_KEY);
@@ -241,6 +268,7 @@ public class PropertyBasedSshSessionFactoryTest {
 
 		ProxyData proxyData = getSshProxyData("gitlab.example.local");
 
+		assertThat(proxyData).isNotNull();
 		assertThat(proxyData.getUser()).isEqualTo("user");
 		assertThat(new String(proxyData.getPassword())).isEqualTo("password");
 		assertThat(proxyData.getProxy().type().toString()).isEqualTo("HTTP");
@@ -251,11 +279,28 @@ public class PropertyBasedSshSessionFactoryTest {
 	public void defaultSshConfigIsSet() {
 		setupSessionFactory(new JGitEnvironmentProperties());
 
-		SshConfigStore.HostConfig sshConfig = getDefaultSshHostConfig("host.name", 123, "user.name");
+		assertThatThrownBy(() -> getDefaultSshHostConfig("host.name", 123, "user.name"))
+				.isInstanceOf(NullPointerException.class);
+	}
 
-		assertThat(sshConfig.getValue("HostName")).isEqualTo("host.name");
-		assertThat(sshConfig.getValue("Port")).isEqualTo("123");
-		assertThat(sshConfig.getValue("User")).isEqualTo("user.name");
+	@Test
+	public void proxySettingsIsUsedWithRepoIp() {
+		JGitEnvironmentProperties sshProperties = new JGitEnvironmentProperties();
+		sshProperties.setUri("ssh://127.0.0.1:3322/somerepo.git");
+		sshProperties.setPrivateKey(PRIVATE_KEY);
+		Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> map = new HashMap<>();
+		ProxyHostProperties proxyHostProperties = new ProxyHostProperties();
+		proxyHostProperties.setHost("host.domain");
+		proxyHostProperties.setPort(8080);
+		map.put(ProxyHostProperties.ProxyForScheme.HTTP, proxyHostProperties);
+		sshProperties.setProxy(map);
+		setupSessionFactory(sshProperties);
+
+		ProxyData proxyData = getSshProxyData("gitlab.example.local");
+
+		assertThat(proxyData).isNotNull();
+		assertThat(proxyData.getProxy().type().toString()).isEqualTo("HTTP");
+		assertThat(proxyData.getProxy().address().toString()).containsPattern("host\\.domain.*:8080");
 	}
 
 	@Test
@@ -271,7 +316,7 @@ public class PropertyBasedSshSessionFactoryTest {
 			proxies.setAccessible(true);
 			ProxyDataFactory proxyDataFactory = (ProxyDataFactory) proxies.get(factory);
 			proxies.setAccessible(false);
-			return proxyDataFactory.get(new InetSocketAddress(hostname, 22));
+			return proxyDataFactory.get(setupSocketAddress(hostname));
 		}
 		catch (NoSuchFieldException | IllegalAccessException e) {
 			throw new RuntimeException(e);
@@ -299,9 +344,10 @@ public class PropertyBasedSshSessionFactoryTest {
 		}
 	}
 
-	private PrivateKey getSshPrivateKey(String hostName) {
+	private PrivateKey getSshPrivateKey(String hostname) {
+		InetSocketAddress address = setupSocketAddress(hostname);
 		SessionContext session = mock(SessionContext.class);
-		when(session.getRemoteAddress()).thenReturn(new InetSocketAddress(hostName, 22));
+		when(session.getRemoteAddress()).thenReturn(address);
 
 		List<KeyPair> kayPairs;
 		try {
@@ -317,22 +363,22 @@ public class PropertyBasedSshSessionFactoryTest {
 		return kayPairs.isEmpty() ? null : kayPairs.get(0).getPrivate();
 	}
 
-	private PublicKey getSshHostKey(String hostName) {
-		InetSocketAddress address = new InetSocketAddress(hostName, 22);
+	private PublicKey getSshHostKey(String hostname) {
+		InetSocketAddress address = setupSocketAddress(hostname);
 		List<PublicKey> publicKeys = factory.getServerKeyDatabase(null, null).lookup("address", address,
 				mock(ServerKeyDatabase.Configuration.class));
 
 		return publicKeys.isEmpty() ? null : publicKeys.get(0);
 	}
 
-	private boolean isKnownKeyForHost(PublicKey publicKey, String hostName) {
-		InetSocketAddress address = new InetSocketAddress(hostName, 22);
+	private boolean isKnownKeyForHost(PublicKey publicKey, String hostname) {
+		InetSocketAddress address = setupSocketAddress(hostname);
 		return factory.getServerKeyDatabase(null, null).accept("address", address, publicKey,
 				mock(ServerKeyDatabase.Configuration.class), null);
 	}
 
-	private SshConfigStore.HostConfig getSshHostConfig(String hostName) {
-		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName").lookup(hostName, 22,
+	private SshConfigStore.HostConfig getSshHostConfig(String hostname) {
+		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName").lookup(hostname, 22,
 				"userName");
 	}
 
@@ -345,6 +391,19 @@ public class PropertyBasedSshSessionFactoryTest {
 		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new HashMap<>();
 		sshKeysByHostname.put(SshUriPropertyProcessor.getHostname(sshKey.getUri()), sshKey);
 		this.factory = new PropertyBasedSshSessionFactory(sshKeysByHostname);
+	}
+
+	private InetSocketAddress setupSocketAddress(String hostname) {
+		InetAddress address = mock(InetAddress.class);
+		when(address.getHostAddress()).thenReturn("127.0.0.1");
+
+		InetSocketAddress socketAddress = mock(InetSocketAddress.class);
+		when(socketAddress.getAddress()).thenReturn(address);
+		when(socketAddress.getHostString()).thenReturn(hostname);
+		when(socketAddress.getHostName()).thenReturn(hostname);
+		when(socketAddress.getPort()).thenReturn(22);
+
+		return socketAddress;
 	}
 
 }
