@@ -277,10 +277,15 @@ public class PropertyBasedSshSessionFactoryTest {
 
 	@Test
 	public void defaultSshConfigIsSet() {
-		setupSessionFactory(new JGitEnvironmentProperties());
+		JGitEnvironmentProperties sshProperties = new JGitEnvironmentProperties();
+		sshProperties.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		setupSessionFactory(sshProperties);
 
-		assertThatThrownBy(() -> getDefaultSshHostConfig("host.name", 123, "user.name"))
-				.isInstanceOf(NullPointerException.class);
+		SshConfigStore.HostConfig sshConfig = getDefaultSshHostConfig("gitlab.example.local", 123, "user.name");
+
+		assertThat(sshConfig.getValue("HostName")).isEqualTo("gitlab.example.local");
+		assertThat(sshConfig.getValue("Port")).isEqualTo("123");
+		assertThat(sshConfig.getValue("User")).isEqualTo("user.name");
 	}
 
 	@Test
