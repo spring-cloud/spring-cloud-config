@@ -286,6 +286,7 @@ public class PropertyBasedSshSessionFactoryTest {
 		assertThat(sshConfig.getValue("HostName")).isEqualTo("gitlab.example.local");
 		assertThat(sshConfig.getValue("Port")).isEqualTo("123");
 		assertThat(sshConfig.getValue("User")).isEqualTo("user.name");
+		assertThat(sshConfig.getValue("ConnectionAttempts")).isEqualTo("1");
 	}
 
 	@Test

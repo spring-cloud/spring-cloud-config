@@ -89,6 +89,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 				hostEntry.setValue(SshConstants.PORT,
 						Integer.toString(port > 0 ? port : SshConstants.SSH_DEFAULT_PORT));
 				hostEntry.setValue(SshConstants.USER, userName);
+				hostEntry.setValue(SshConstants.CONNECTION_ATTEMPTS, "1");
 
 				return updateIfNeeded(hostEntry, hostName);
 			}
@@ -231,9 +232,6 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 		@Override
 		public ProxyData get(InetSocketAddress remoteAddress) {
 			JGitEnvironmentProperties sshProperties = findEnvironmentProperties(sshKeysByHostname, remoteAddress);
-			if (sshProperties == null) {
-				return null;
-			}
 
 			ProxyHostProperties proxyHostProperties = sshProperties.getProxy()
 					.get(ProxyHostProperties.ProxyForScheme.HTTP);
