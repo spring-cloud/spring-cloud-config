@@ -69,6 +69,8 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private boolean configIncomplete;
 
+	private String defaultLabel;
+
 	@Deprecated
 	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
 		this(jdbc, properties, new PropertiesResultSetExtractor());
@@ -83,6 +85,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		this.failOnError = properties.isFailOnError();
 		this.extractor = extractor;
 		this.configIncomplete = properties.isConfigIncomplete();
+		this.defaultLabel = properties.getDefaultLabel();
 	}
 
 	public String getSql() {
@@ -97,7 +100,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 	public Environment findOne(String application, String profile, String label) {
 		String config = application;
 		if (StringUtils.isEmpty(label)) {
-			label = "master";
+			label = this.defaultLabel;
 		}
 		if (!StringUtils.hasText(profile)) {
 			profile = "default";
