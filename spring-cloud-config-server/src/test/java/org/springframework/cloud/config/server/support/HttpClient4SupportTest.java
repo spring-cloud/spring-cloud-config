@@ -49,9 +49,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
-@SpringBootTest(classes = HttpClientSupportTest.TestConfiguration.class,
+@SpringBootTest(classes = HttpClient4SupportTest.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class HttpClientSupportTest {
+public class HttpClient4SupportTest {
 
 	@LocalServerPort
 	private String localServerPort;
@@ -60,7 +60,7 @@ public class HttpClientSupportTest {
 	public void setsTimeout() throws GeneralSecurityException, IOException {
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		properties.setTimeout(1);
-		CloseableHttpClient httpClient = HttpClientSupport.builder(properties).build();
+		CloseableHttpClient httpClient = HttpClient4Support.builder(properties).build();
 
 		Assertions.assertThatThrownBy(() -> {
 			httpClient.execute(new HttpGet(String.format("http://127.0.0.1:%s/test/endpoint", this.localServerPort)));
@@ -89,7 +89,7 @@ public class HttpClientSupportTest {
 		CloseableHttpClient httpClient = null;
 		CloseableHttpResponse response = null;
 		try {
-			httpClient = HttpClientSupport.builder(properties).build();
+			httpClient = HttpClient4Support.builder(properties).build();
 			response = httpClient
 					.execute(new HttpGet("https://localhost:" + wireMockServer.httpsPort() + "/test/proxy"));
 		}

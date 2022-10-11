@@ -35,7 +35,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.eclipse.jgit.transport.http.HttpConnection;
 import org.eclipse.jgit.transport.http.apache.HttpClientConnection;
 
-import org.springframework.cloud.config.server.support.HttpClientSupport;
+import org.springframework.cloud.config.server.support.HttpClient4Support;
 import org.springframework.util.StringUtils;
 
 import static java.util.stream.Collectors.toMap;
@@ -83,7 +83,7 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 
 	private void addHttpClient(JGitEnvironmentProperties properties) throws GeneralSecurityException {
 		if (properties.getUri() != null && properties.getUri().startsWith("http")) {
-			this.httpClientBuildersByUri.put(properties.getUri(), HttpClientSupport.builder(properties));
+			this.httpClientBuildersByUri.put(properties.getUri(), HttpClient4Support.builder(properties));
 		}
 	}
 
