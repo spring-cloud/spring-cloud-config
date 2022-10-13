@@ -63,6 +63,8 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private String sql;
 
+	private String sqlWithoutProfile;
+
 	private boolean failOnError;
 
 	@Deprecated
@@ -75,6 +77,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		this.jdbc = jdbc;
 		this.order = properties.getOrder();
 		this.sql = properties.getSql();
+		this.sqlWithoutProfile = properties.getSqlWithoutProfile();
 		this.failOnError = properties.isFailOnError();
 		this.extractor = extractor;
 	}
@@ -96,9 +99,6 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		if (StringUtils.isEmpty(profile)) {
 			profile = "default";
 		}
-		if (!profile.startsWith("default")) {
-			profile = "default," + profile;
-		}
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		Environment environment = new Environment(application, profiles, label, null, null);
 		if (!config.startsWith("application")) {
@@ -111,25 +111,40 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		Collections.reverse(envs);
 		for (String app : applications) {
 			for (String env : envs) {
-				try {
-					Map<String, Object> next = this.jdbc.query(this.sql, this.extractor, app, env, label);
-					if (next != null && !next.isEmpty()) {
-						environment.add(new PropertySource(app + "-" + env, next));
-					}
-				}
-				catch (DataAccessException e) {
-					if (!failOnError) {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Failed to retrieve configuration from JDBC Repository", e);
-						}
-					}
-					else {
-						throw e;
-					}
-				}
+				addPropertySource(environment, app, env, label);
 			}
+			// add properties without profile, equivalent to foo.yml, application.yml
+			addPropertySource(environment, app, null, label);
 		}
 		return environment;
+	}
+
+	private void addPropertySource(Environment environment, String application, String profile, String label) {
+		try {
+			Map<String, Object> source;
+			String name;
+			if (profile != null) {
+				source = this.jdbc.query(this.sql, this.extractor, application, profile, label);
+				name = application + "-" + profile;
+			}
+			else {
+				source = this.jdbc.query(this.sqlWithoutProfile, this.extractor, application, label);
+				name = application;
+			}
+			if (source != null && !source.isEmpty()) {
+				environment.add(new PropertySource(name, source));
+			}
+		}
+		catch (DataAccessException e) {
+			if (!failOnError) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Failed to retrieve configuration from JDBC Repository", e);
+				}
+			}
+			else {
+				throw e;
+			}
+		}
 	}
 
 	@Override
