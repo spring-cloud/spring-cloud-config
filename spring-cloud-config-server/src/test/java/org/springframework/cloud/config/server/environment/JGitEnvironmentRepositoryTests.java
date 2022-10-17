@@ -67,6 +67,7 @@ import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -165,6 +166,7 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	@Ignore // see https://github.com/spring-projects/spring-framework/issues/29333
 	public void nestedPattern() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
