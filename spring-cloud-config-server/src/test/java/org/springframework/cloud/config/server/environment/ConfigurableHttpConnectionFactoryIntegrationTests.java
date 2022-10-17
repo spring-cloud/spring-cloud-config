@@ -250,7 +250,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 	private void makeRequest(HttpClient httpClient, String url) {
 		try {
 			httpClient.execute(new HttpGet(url));
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
