@@ -18,8 +18,8 @@ package org.springframework.cloud.config.server.proxy;
 
 import java.util.Map;
 
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.Credentials;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.test.util.ReflectionTestUtils;
@@ -44,7 +44,7 @@ class ProxyHostCredentialsProviderTest {
 		assertThat(entry.getKey().getHost()).isEqualTo("good.proxy");
 		assertThat(entry.getKey().getPort()).isEqualTo(888);
 		assertThat(entry.getValue().getUserPrincipal().getName()).isEqualTo("user");
-		assertThat(entry.getValue().getPassword()).isEqualTo("P@s$W0rd!");
+		assertThat(new String(entry.getValue().getPassword())).isEqualTo("P@s$W0rd!");
 	}
 
 	private ProxyHostProperties proxyHost(String host, int port, String username, String password) {
