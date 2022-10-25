@@ -62,4 +62,9 @@ class ObservationEnvironmentRepositoryObservationConvention
 		return "spring.cloud.config.environment.find";
 	}
 
+	@Override
+	public String getContextualName(ObservationEnvironmentRepositoryContext context) {
+		return "env find";
+	}
+
 }

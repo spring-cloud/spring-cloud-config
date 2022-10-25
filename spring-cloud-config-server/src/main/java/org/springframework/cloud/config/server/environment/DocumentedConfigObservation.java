@@ -33,11 +33,6 @@ enum DocumentedConfigObservation implements ObservationDocumentation {
 		}
 
 		@Override
-		public String getContextualName() {
-			return "env find";
-		}
-
-		@Override
 		public KeyName[] getLowCardinalityKeyNames() {
 			return LowCardinalityTags.values();
 		}
