@@ -726,7 +726,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		}
 		List<Ref> branches = command.call();
 		for (Ref ref : branches) {
-			if (ref.getName().endsWith("/" + label)) {
+			if (ref.getName().equals("refs/heads/" + label) || ref.getName().equals("refs/remotes/origin/" + label)) {
 				return true;
 			}
 		}

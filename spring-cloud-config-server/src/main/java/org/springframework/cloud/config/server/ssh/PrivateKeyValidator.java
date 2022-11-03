@@ -83,7 +83,7 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 
 	private boolean isPrivateKeyFormatCorrect(JGitEnvironmentProperties sshUriProperties,
 			ConstraintValidatorContext context) {
-		if (KeyPairUtils.isValid(sshUriProperties.getPrivateKey())) {
+		if (KeyPairUtils.isValid(sshUriProperties.getPrivateKey(), sshUriProperties.getPassphrase())) {
 			return true;
 		}
 

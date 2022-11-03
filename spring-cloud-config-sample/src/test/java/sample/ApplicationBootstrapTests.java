@@ -53,7 +53,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		// config
 		// server on the classpath we need to set it explicitly
 		properties = { "spring.cloud.config.enabled:true", "", "spring.config.use-legacy-processing=true",
-				"management.security.enabled=false", "management.endpoints.web.exposure.include=*" },
+				"management.security.enabled=false", "management.endpoints.web.exposure.include=*",
+				"management.endpoint.env.show-values=ALWAYS" },
 		webEnvironment = RANDOM_PORT)
 public class ApplicationBootstrapTests {
 

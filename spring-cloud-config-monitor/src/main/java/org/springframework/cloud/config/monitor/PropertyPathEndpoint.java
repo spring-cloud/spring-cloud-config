@@ -107,24 +107,17 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 		if (path != null) {
 			String stem = StringUtils.stripFilenameExtension(StringUtils.getFilename(StringUtils.cleanPath(path)));
 			// TODO: correlate with service registry
-			int index = stem.indexOf("-");
-			while (index >= 0) {
-				String name = stem.substring(0, index);
-				String profile = stem.substring(index + 1);
+			String name = stem + "-";
+			int index;
+			// support application name with dashes
+			while ((index = name.lastIndexOf("-")) >= 0) {
+				name = name.substring(0, index);
 				if ("application".equals(name)) {
-					services.add("*:" + profile);
+					services.add("*");
 				}
-				else if (!name.startsWith("application")) {
-					services.add(name + ":" + profile);
+				else {
+					services.add(name);
 				}
-				index = stem.indexOf("-", index + 1);
-			}
-			String name = stem;
-			if ("application".equals(name)) {
-				services.add("*");
-			}
-			else if (!name.startsWith("application")) {
-				services.add(name);
 			}
 		}
 		return services;

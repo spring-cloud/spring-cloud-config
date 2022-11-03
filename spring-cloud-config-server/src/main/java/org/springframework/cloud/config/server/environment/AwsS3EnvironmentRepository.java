@@ -130,27 +130,35 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private S3ConfigFile getS3ConfigFile(String keyPrefix) {
 		try {
-			final ResponseInputStream<GetObjectResponse> responseInputStream = s3Client
-					.getObject(GetObjectRequest.builder().bucket(bucketName).key(keyPrefix + ".properties").build());
+			final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(keyPrefix + ".properties");
 			return new PropertyS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 		}
 		catch (Exception eProperties) {
 			try {
-				final ResponseInputStream<GetObjectResponse> responseInputStream = s3Client
-						.getObject(GetObjectRequest.builder().bucket(bucketName).key(keyPrefix + ".yml").build());
+				final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(keyPrefix + ".yml");
 				return new YamlS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 			}
-			catch (Exception eYaml) {
+			catch (Exception eYml) {
 				try {
-					final ResponseInputStream<GetObjectResponse> responseInputStream = s3Client
-							.getObject(GetObjectRequest.builder().bucket(bucketName).key(keyPrefix + ".json").build());
-					return new JsonS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
+					final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(keyPrefix + ".yaml");
+					return new YamlS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 				}
-				catch (Exception eJson) {
-					return null;
+				catch (Exception eYaml) {
+					try {
+						final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(
+								keyPrefix + ".json");
+						return new JsonS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
+					}
+					catch (Exception eJson) {
+						return null;
+					}
 				}
 			}
 		}
+	}
+
+	private ResponseInputStream<GetObjectResponse> getObject(String key) throws Exception {
+		return s3Client.getObject(GetObjectRequest.builder().bucket(bucketName).key(key).build());
 	}
 
 	@Override

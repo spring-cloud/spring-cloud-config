@@ -18,22 +18,18 @@ package org.springframework.cloud.config.server.environment;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
-import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.ObservationConvention;
+import io.micrometer.observation.docs.ObservationDocumentation;
 
-enum DocumentedConfigObservation implements DocumentedObservation {
+enum DocumentedConfigObservation implements ObservationDocumentation {
 
 	/**
 	 * Observation created around an EnvironmentRepository.
 	 */
 	ENVIRONMENT_REPOSITORY {
 		@Override
-		public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+		public Class<? extends ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
 			return ObservationEnvironmentRepositoryObservationConvention.class;
-		}
-
-		@Override
-		public String getContextualName() {
-			return "env find";
 		}
 
 		@Override
@@ -54,7 +50,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 		 */
 		ENVIRONMENT_CLASS {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.cloud.config.environment.class";
 			}
 		},
@@ -64,7 +60,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 		 */
 		PROFILE {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.cloud.config.environment.profile";
 			}
 		},
@@ -74,7 +70,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 		 */
 		LABEL {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.cloud.config.environment.label";
 			}
 		},
@@ -84,7 +80,7 @@ enum DocumentedConfigObservation implements DocumentedObservation {
 		 */
 		APPLICATION {
 			@Override
-			public String getKeyName() {
+			public String asString() {
 				return "spring.cloud.config.environment.application";
 			}
 		}

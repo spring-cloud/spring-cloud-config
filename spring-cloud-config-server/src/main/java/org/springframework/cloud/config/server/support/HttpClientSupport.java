@@ -18,14 +18,19 @@ package org.springframework.cloud.config.server.support;
 
 import java.net.ProxySelector;
 import java.security.GeneralSecurityException;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.SystemDefaultCredentialsProvider;
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.auth.SystemDefaultCredentialsProvider;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.impl.routing.SystemDefaultRoutePlanner;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
 
 import org.springframework.cloud.config.server.proxy.ProxyHostCredentialsProvider;
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
@@ -43,12 +48,16 @@ public final class HttpClientSupport {
 
 	public static HttpClientBuilder builder(HttpEnvironmentRepositoryProperties environmentProperties)
 			throws GeneralSecurityException {
-		SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 		HttpClientBuilder httpClientBuilder = HttpClients.custom();
+		PoolingHttpClientConnectionManagerBuilder connectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder
+				.create();
 
 		if (environmentProperties.isSkipSslValidation()) {
+			SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 			sslContextBuilder.loadTrustMaterial(null, (certificate, authType) -> true);
-			httpClientBuilder.setSSLHostnameVerifier(new NoopHostnameVerifier());
+			SSLConnectionSocketFactory sslConnectionSocketFactory = SSLConnectionSocketFactoryBuilder.create()
+					.setSslContext(sslContextBuilder.build()).setHostnameVerifier(new NoopHostnameVerifier()).build();
+			connectionManagerBuilder.setSSLSocketFactory(sslConnectionSocketFactory);
 		}
 
 		if (!CollectionUtils.isEmpty(environmentProperties.getProxy())) {
@@ -73,8 +82,10 @@ public final class HttpClientSupport {
 		httpClientBuilder.disableRedirectHandling();
 
 		int timeout = environmentProperties.getTimeout() * 1000;
-		return httpClientBuilder.setSSLContext(sslContextBuilder.build()).setDefaultRequestConfig(
-				RequestConfig.custom().setSocketTimeout(timeout).setConnectTimeout(timeout).build());
+		connectionManagerBuilder
+				.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(timeout, TimeUnit.MILLISECONDS).build());
+		return httpClientBuilder.setConnectionManager(connectionManagerBuilder.build()).setDefaultRequestConfig(
+				RequestConfig.custom().setConnectTimeout(timeout, TimeUnit.MILLISECONDS).build());
 	}
 
 }

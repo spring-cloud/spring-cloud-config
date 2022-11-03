@@ -61,7 +61,8 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 	public Environment findOne(String application, String profile, String label) {
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
 				this.delegate.getClass(), application, profile, label);
-		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY.observation(null, CONVENTION, context, this.registry)
+		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY
+				.observation(null, CONVENTION, () -> context, this.registry)
 				.observe(() -> this.delegate.findOne(application, profile, label));
 	}
 
@@ -69,7 +70,8 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
 				this.delegate.getClass(), application, profile, label);
-		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY.observation(null, CONVENTION, context, this.registry)
+		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY
+				.observation(null, CONVENTION, () -> context, this.registry)
 				.observe(() -> this.delegate.findOne(application, profile, label, includeOrigin));
 	}
 

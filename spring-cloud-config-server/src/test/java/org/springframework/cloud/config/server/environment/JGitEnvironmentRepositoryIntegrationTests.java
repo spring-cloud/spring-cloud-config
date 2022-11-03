@@ -43,6 +43,7 @@ import org.eclipse.jgit.util.SystemReader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -232,6 +233,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	}
 
 	@Test
+	@Ignore // see https://github.com/spring-projects/spring-framework/issues/29333
 	public void verifyPropertySourceOrdering() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("ordering-repo");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)

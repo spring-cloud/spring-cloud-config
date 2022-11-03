@@ -61,12 +61,12 @@ public class SpringVaultEnvironmentRepositoryFactory
 		int version = vaultProperties.getKvVersion();
 
 		switch (version) {
-		case 1:
-			return vaultTemplate.opsForKeyValue(backend, VaultKeyValueOperationsSupport.KeyValueBackend.KV_1);
-		case 2:
-			return vaultTemplate.opsForKeyValue(backend, VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
-		default:
-			throw new IllegalArgumentException("No support for given Vault k/v backend version " + version);
+			case 1:
+				return vaultTemplate.opsForKeyValue(backend, VaultKeyValueOperationsSupport.KeyValueBackend.KV_1);
+			case 2:
+				return vaultTemplate.opsForKeyValue(backend, VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
+			default:
+				throw new IllegalArgumentException("No support for given Vault k/v backend version " + version);
 		}
 	}
 

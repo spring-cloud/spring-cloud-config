@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import io.micrometer.common.KeyValues;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
 
 import org.springframework.util.StringUtils;
 
@@ -29,7 +30,7 @@ import org.springframework.util.StringUtils;
  * @since 4.0.0
  */
 class ObservationEnvironmentRepositoryObservationConvention
-		implements Observation.ObservationConvention<ObservationEnvironmentRepositoryContext> {
+		implements ObservationConvention<ObservationEnvironmentRepositoryContext> {
 
 	@Override
 	public KeyValues getLowCardinalityKeyValues(ObservationEnvironmentRepositoryContext context) {
@@ -46,7 +47,7 @@ class ObservationEnvironmentRepositoryObservationConvention
 
 	private KeyValues appendIfPresent(KeyValues keyValues, KeyName profile, String value) {
 		if (StringUtils.hasText(value)) {
-			keyValues = keyValues.and(profile.of(value));
+			keyValues = keyValues.and(profile.withValue(value));
 		}
 		return keyValues;
 	}
@@ -59,6 +60,11 @@ class ObservationEnvironmentRepositoryObservationConvention
 	@Override
 	public String getName() {
 		return "spring.cloud.config.environment.find";
+	}
+
+	@Override
+	public String getContextualName(ObservationEnvironmentRepositoryContext context) {
+		return "env find";
 	}
 
 }
