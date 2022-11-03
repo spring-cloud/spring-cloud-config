@@ -137,7 +137,7 @@ spring:
 
 ===== Setting HTTP Connection Timeout
 
-You can configure the time, in seconds, that the configuration server will wait to acquire an HTTP connection. Use the `git.timeout` property.
+You can configure the time, in seconds, that the configuration server will wait to acquire an HTTP connection. Use the `git.timeout` property (default is `5`).
 
 [source,yaml]
 ----
