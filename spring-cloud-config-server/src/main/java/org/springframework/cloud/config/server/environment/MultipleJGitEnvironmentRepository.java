@@ -160,6 +160,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 							this.logger.debug("Cannot load configuration from " + candidate.getUri() + ", cause: ("
 									+ e.getClass().getSimpleName() + ") " + e.getMessage(), e);
 						}
+						continue;
 					}
 				}
 			}
