@@ -173,6 +173,15 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void findYmlObject() throws UnsupportedEncodingException {
+		String versionId = putFiles("foo-bar.yml", yamlContent);
+
+		final Environment env = envRepo.findOne("foo", "bar", null);
+
+		assertExpectedEnvironment(env, "foo", null, null, 1, "bar");
+	}
+
+	@Test
 	public void findWithDefaultProfile() throws UnsupportedEncodingException {
 		String versionId = putFiles("foo.yml", yamlContent);
 
