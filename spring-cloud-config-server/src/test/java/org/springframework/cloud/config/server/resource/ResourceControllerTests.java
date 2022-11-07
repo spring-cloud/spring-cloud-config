@@ -293,7 +293,7 @@ public class ResourceControllerTests {
 	}
 
 	private String replaceNewLines(String text) {
-		return text.replace("\n", "").replace("\t", "");
+		return text.replace("\r", "").replace("\n", "").replace("\t", "");
 	}
 
 	@Test

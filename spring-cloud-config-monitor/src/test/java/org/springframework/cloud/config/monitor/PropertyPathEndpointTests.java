@@ -72,7 +72,7 @@ public class PropertyPathEndpointTests {
 	public void testNotifyAllWithProfile() {
 		assertThat(this.endpoint
 				.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "application-local.yml")).toString())
-						.isEqualTo("[*]");
+						.isEqualTo("[application-local, *]");
 	}
 
 	@Test
@@ -92,13 +92,13 @@ public class PropertyPathEndpointTests {
 	@Test
 	public void testNotifyOneWithProfile() {
 		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo-local.yml"))
-				.toString()).isEqualTo("[foo]");
+				.toString()).isEqualTo("[foo-local, foo]");
 	}
 
 	@Test
 	public void testNotifyMultiDash() {
 		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo-local-dev.yml"))
-				.toString()).isEqualTo("[foo]");
+				.toString()).isEqualTo("[foo-local-dev, foo-local, foo]");
 	}
 
 }
