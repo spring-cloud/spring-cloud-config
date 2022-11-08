@@ -264,7 +264,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			if (this.defaultLabel.equals(label) && JGitEnvironmentProperties.MAIN_LABEL.equals(this.defaultLabel)
 					&& tryMasterBranch) {
 				logger.info("Could not refresh default label " + label, e);
-				logger.info("Will try to checkout master label instead.");
+				logger.info("Will try to refresh master label instead.");
 				version = refresh(JGitEnvironmentProperties.MASTER_LABEL);
 			}
 			else {
