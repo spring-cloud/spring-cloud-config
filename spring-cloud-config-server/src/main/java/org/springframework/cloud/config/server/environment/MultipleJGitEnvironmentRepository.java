@@ -183,7 +183,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 				logger.info("Will try to find Environment master label instead.");
 				candidate = getRepository(this, application, profile, MultipleJGitEnvironmentProperties.MASTER_LABEL);
 				return findOneFromCandidate(candidate, application, profile,
-					MultipleJGitEnvironmentProperties.MASTER_LABEL, includeOrigin);
+						MultipleJGitEnvironmentProperties.MASTER_LABEL, includeOrigin);
 			}
 			throw e;
 		}
