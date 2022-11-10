@@ -24,7 +24,6 @@ import java.util.Properties;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotEmpty;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -69,7 +68,7 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 	protected int order;
 
 	public AbstractVaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-			VaultEnvironmentProperties properties) {
+		VaultEnvironmentProperties properties) {
 		this.defaultKey = properties.getDefaultKey();
 		this.profileSeparator = properties.getProfileSeparator();
 		this.order = properties.getOrder();
