@@ -25,6 +25,9 @@ import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotEmpty;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
@@ -43,6 +46,8 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.STA
  * @author Scott Frederick
  */
 public abstract class AbstractVaultEnvironmentRepository implements EnvironmentRepository, Ordered {
+
+	private static Log log = LogFactory.getLog(AbstractVaultEnvironmentRepository.class);
 
 	// TODO: move to watchState:String on findOne?
 	protected final ObjectProvider<HttpServletRequest> request;
@@ -104,8 +109,14 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 	private String getWatchState() {
 		HttpServletRequest servletRequest = this.request.getIfAvailable();
 		if (servletRequest != null) {
-			String state = servletRequest.getHeader(STATE_HEADER);
-			return this.watch.watch(state);
+			try {
+				String state = servletRequest.getHeader(STATE_HEADER);
+				return this.watch.watch(state);
+			}
+			catch (IllegalStateException e) {
+				log.debug("Could not get state.", e);
+				return null;
+			}
 		}
 		return null;
 	}
