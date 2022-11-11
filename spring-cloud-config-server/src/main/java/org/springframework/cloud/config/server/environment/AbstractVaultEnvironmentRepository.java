@@ -68,7 +68,7 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 	protected int order;
 
 	public AbstractVaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-		VaultEnvironmentProperties properties) {
+			VaultEnvironmentProperties properties) {
 		this.defaultKey = properties.getDefaultKey();
 		this.profileSeparator = properties.getProfileSeparator();
 		this.order = properties.getOrder();
