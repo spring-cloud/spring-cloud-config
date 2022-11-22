@@ -170,7 +170,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findYamlObject() throws UnsupportedEncodingException {
-		String versionId = putFiles("foo-bar.yml", yamlContent);
+		String versionId = putFiles("foo-bar.yaml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
@@ -183,7 +183,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
 
 	@Test
