@@ -63,34 +63,27 @@ public class AwsS3EnvironmentRepositoryTests {
 	private final ConfigServerProperties server = new ConfigServerProperties();
 
 	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
-			.create(AwsBasicCredentials.create(localstack.getAccessKey(),
-					localstack.getSecretKey()));
+			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
 
-	private final S3Client s3Client = S3Client.builder()
-			.region(Region.of(localstack.getRegion()))
-			.credentialsProvider(staticCredentialsProvider)
-			.endpointOverride(localstack.getEndpointOverride(S3)).build();
+	private final S3Client s3Client = S3Client.builder().region(Region.of(localstack.getRegion()))
+			.credentialsProvider(staticCredentialsProvider).endpointOverride(localstack.getEndpointOverride(S3))
+			.build();
 
-	private final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client,
-			"bucket1", server);
+	private final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
 
 	private final List<String> toBeRemoved = new ArrayList<>();
 
-	final String yamlContent = "cloudfoundry:\n" + "  enabled: true\n" + "  accounts:\n"
-			+ "    - name: acc1\n" + "      user: 'user1'\n"
-			+ "      password: 'password1'\n" + "      api: api.sys.acc1.cf-app.com\n"
-			+ "      environment: test1\n" + "    - name: acc2\n"
-			+ "      user: 'user2'\n" + "      password: 'password2'\n"
-			+ "      api: api.sys.acc2.cf-app.com\n" + "      environment: test2\n";
+	final String yamlContent = "cloudfoundry:\n" + "  enabled: true\n" + "  accounts:\n" + "    - name: acc1\n"
+			+ "      user: 'user1'\n" + "      password: 'password1'\n" + "      api: api.sys.acc1.cf-app.com\n"
+			+ "      environment: test1\n" + "    - name: acc2\n" + "      user: 'user2'\n"
+			+ "      password: 'password2'\n" + "      api: api.sys.acc2.cf-app.com\n" + "      environment: test2\n";
 
-	final String jsonContent = "{\n" + " \"cloudfoundry\": {\n" + "  \"enabled\": true,\n"
-			+ "  \"accounts\": [{\n" + "   \"name\": \"acc1\",\n"
-			+ "   \"user\": \"user1\",\n" + "   \"password\": \"password1\",\n"
-			+ "   \"api\": \"api.sys.acc1.cf-app.com\",\n"
-			+ "   \"environment\": \"test1\"\n" + "  }, {\n" + "   \"name\": \"acc2\",\n"
-			+ "   \"user\": \"user2\",\n" + "   \"password\": \"password2\",\n"
-			+ "   \"api\": \"api.sys.acc2.cf-app.com\",\n"
-			+ "   \"environment\": \"test2\"\n" + "  }]\n" + " }\n" + "}";
+	final String jsonContent = "{\n" + " \"cloudfoundry\": {\n" + "  \"enabled\": true,\n" + "  \"accounts\": [{\n"
+			+ "   \"name\": \"acc1\",\n" + "   \"user\": \"user1\",\n" + "   \"password\": \"password1\",\n"
+			+ "   \"api\": \"api.sys.acc1.cf-app.com\",\n" + "   \"environment\": \"test1\"\n" + "  }, {\n"
+			+ "   \"name\": \"acc2\",\n" + "   \"user\": \"user2\",\n" + "   \"password\": \"password2\",\n"
+			+ "   \"api\": \"api.sys.acc2.cf-app.com\",\n" + "   \"environment\": \"test2\"\n" + "  }]\n" + " }\n"
+			+ "}";
 
 	final Properties expectedProperties = new Properties();
 
@@ -111,22 +104,22 @@ public class AwsS3EnvironmentRepositoryTests {
 	@BeforeAll
 	public static void createBucket() {
 		StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
-				.create(AwsBasicCredentials.create(localstack.getAccessKey(),
-						localstack.getSecretKey()));
+				.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
 		S3Client s3Client = S3Client.builder().region(Region.of(localstack.getRegion()))
-				.credentialsProvider(staticCredentialsProvider)
-				.endpointOverride(localstack.getEndpointOverride(S3)).build();
+				.credentialsProvider(staticCredentialsProvider).endpointOverride(localstack.getEndpointOverride(S3))
+				.build();
 		s3Client.createBucket(CreateBucketRequest.builder().bucket("bucket1").build());
-		s3Client.putBucketVersioning(PutBucketVersioningRequest.builder()
-				.bucket("bucket1").versioningConfiguration(VersioningConfiguration
-						.builder().status(BucketVersioningStatus.ENABLED).build())
-				.build());
+		s3Client.putBucketVersioning(
+				PutBucketVersioningRequest.builder().bucket("bucket1")
+						.versioningConfiguration(
+								VersioningConfiguration.builder().status(BucketVersioningStatus.ENABLED).build())
+						.build());
 	}
 
 	@AfterEach
 	public void cleanUp() {
-		toBeRemoved.forEach(value -> s3Client.deleteObject(
-				DeleteObjectRequest.builder().bucket("bucket1").key(value).build()));
+		toBeRemoved.forEach(
+				value -> s3Client.deleteObject(DeleteObjectRequest.builder().bucket("bucket1").key(value).build()));
 		toBeRemoved.clear();
 	}
 
@@ -138,15 +131,11 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findPropertiesObject() throws UnsupportedEncodingException {
-		String propertyContent = "cloudfoundry.enabled=true\n"
-				+ "cloudfoundry.accounts[0].name=acc1\n"
-				+ "cloudfoundry.accounts[0].user=user1\n"
-				+ "cloudfoundry.accounts[0].password=password1\n"
+		String propertyContent = "cloudfoundry.enabled=true\n" + "cloudfoundry.accounts[0].name=acc1\n"
+				+ "cloudfoundry.accounts[0].user=user1\n" + "cloudfoundry.accounts[0].password=password1\n"
 				+ "cloudfoundry.accounts[0].api=api.sys.acc1.cf-app.com\n"
-				+ "cloudfoundry.accounts[0].environment=test1\n"
-				+ "cloudfoundry.accounts[1].name=acc2\n"
-				+ "cloudfoundry.accounts[1].user=user2\n"
-				+ "cloudfoundry.accounts[1].password=password2\n"
+				+ "cloudfoundry.accounts[0].environment=test1\n" + "cloudfoundry.accounts[1].name=acc2\n"
+				+ "cloudfoundry.accounts[1].user=user2\n" + "cloudfoundry.accounts[1].password=password2\n"
 				+ "cloudfoundry.accounts[1].api=api.sys.acc2.cf-app.com\n"
 				+ "cloudfoundry.accounts[1].environment=test2\n";
 		String versionId = putFiles("foo-bar.properties", propertyContent);
@@ -242,8 +231,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithMultipleApplicationAllFound()
-			throws UnsupportedEncodingException {
+	public void findWithMultipleApplicationAllFound() throws UnsupportedEncodingException {
 		putFiles("foo-profile1.yml", jsonContent);
 		String versionId = putFiles("bar-profile1.yml", jsonContent);
 
@@ -254,8 +242,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void factoryCustomizable() {
-		AwsS3EnvironmentRepositoryFactory factory = new AwsS3EnvironmentRepositoryFactory(
-				new ConfigServerProperties());
+		AwsS3EnvironmentRepositoryFactory factory = new AwsS3EnvironmentRepositoryFactory(new ConfigServerProperties());
 		AwsS3EnvironmentProperties properties = new AwsS3EnvironmentProperties();
 		properties.setRegion("us-east-1");
 		properties.setEndpoint("https://myawsendpoint/");
@@ -265,14 +252,13 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	private String putFiles(String fileName, String propertyContent) {
 		toBeRemoved.add(fileName);
-		return s3Client.putObject(
-				PutObjectRequest.builder().bucket("bucket1").key(fileName).build(),
+		return s3Client.putObject(PutObjectRequest.builder().bucket("bucket1").key(fileName).build(),
 				RequestBody.fromString((propertyContent))).versionId();
 
 	}
 
-	private void assertExpectedEnvironment(Environment env, String applicationName,
-			String label, String versionId, int propertySourceCount, String... profiles) {
+	private void assertExpectedEnvironment(Environment env, String applicationName, String label, String versionId,
+			int propertySourceCount, String... profiles) {
 		assertThat(env.getName()).isEqualTo(applicationName);
 		assertThat(env.getProfiles()).isEqualTo(profiles);
 		assertThat(env.getLabel()).isEqualTo(label);

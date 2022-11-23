@@ -50,7 +50,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
 
 /**
- * Unit test is must for testing paginated logic, since doing it with integration test is not that easy.
+ * Unit test is must for testing paginated logic, since doing it with integration test is
+ * not that easy.
  *
  * @author Iulian Antohe
  */
@@ -62,15 +63,20 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 			put("spring.cache.redis.time-to-live", "0");
 		}
 	};
+
 	private static final Map<String, String> SHARED_DEFAULT_PROPERTIES = new HashMap<String, String>() {
 		{
 			put("logging.level.root", "error");
 			put("spring.cache.redis.time-to-live", "1000");
 		}
 	};
+
 	private final SsmClient ssmClient = mock(SsmClient.class, "aws-ssm-client-mock");
+
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
+
 	private final AwsParameterStoreEnvironmentProperties environmentProperties = new AwsParameterStoreEnvironmentProperties();
+
 	private final AwsParameterStoreEnvironmentRepository repository = new AwsParameterStoreEnvironmentRepository(
 			ssmClient, configServerProperties, environmentProperties);
 
@@ -84,12 +90,10 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 		environmentProperties.setMaxResults(1);
 
 		String sharedDefaultParamsPsName = "aws:ssm:parameter:/config/application-default/";
-		PropertySource sharedDefaultParamsPs = new PropertySource(
-				sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
+		PropertySource sharedDefaultParamsPs = new PropertySource(sharedDefaultParamsPsName, SHARED_DEFAULT_PROPERTIES);
 
 		String sharedParamsPsName = "aws:ssm:parameter:/config/application/";
-		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName,
-				SHARED_PROPERTIES);
+		PropertySource sharedParamsPs = new PropertySource(sharedParamsPsName, SHARED_PROPERTIES);
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 		expected.addAll(Arrays.asList(sharedDefaultParamsPs, sharedParamsPs));
@@ -100,29 +104,24 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 		Environment result = repository.findOne(application, profile, null);
 
 		// Assert
-		assertThat(result).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(expected);
+		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
 	}
 
-	private void setupAwsSsmClientMocks(Environment environment,
-			boolean withSlashesForPropertyName, boolean paginatedResponse) {
+	private void setupAwsSsmClientMocks(Environment environment, boolean withSlashesForPropertyName,
+			boolean paginatedResponse) {
 		for (PropertySource ps : environment.getPropertySources()) {
-			String path = StringUtils.delete(ps.getName(),
-					environmentProperties.getOrigin());
+			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 
-			GetParametersByPathRequest request = GetParametersByPathRequest.builder()
-					.path(path).recursive(environmentProperties.isRecursive())
+			GetParametersByPathRequest request = GetParametersByPathRequest.builder().path(path)
+					.recursive(environmentProperties.isRecursive())
 					.withDecryption(environmentProperties.isDecryptValues())
 					.maxResults(environmentProperties.getMaxResults()).build();
 
-			Set<Parameter> parameters = getParameters(ps, path,
-					withSlashesForPropertyName);
+			Set<Parameter> parameters = getParameters(ps, path, withSlashesForPropertyName);
 
-			GetParametersByPathResponse response = GetParametersByPathResponse.builder()
-					.parameters(parameters).build();
+			GetParametersByPathResponse response = GetParametersByPathResponse.builder().parameters(parameters).build();
 
-			if (paginatedResponse
-					&& environmentProperties.getMaxResults() < parameters.size()) {
+			if (paginatedResponse && environmentProperties.getMaxResults() < parameters.size()) {
 				List<Set<Parameter>> chunks = splitParametersIntoChunks(parameters);
 
 				String nextToken = null;
@@ -133,32 +132,26 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 					if (i == 0) {
 						nextToken = generateNextToken();
 
-						GetParametersByPathResponse responseClone = response.toBuilder()
-								.parameters(chunk).nextToken(nextToken).build();
+						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
+								.nextToken(nextToken).build();
 
-						when(ssmClient.getParametersByPath(eq(request)))
-								.thenReturn(responseClone);
+						when(ssmClient.getParametersByPath(eq(request))).thenReturn(responseClone);
 					}
 					else if (i == chunks.size() - 1) {
-						GetParametersByPathRequest requestClone = request.toBuilder()
-								.nextToken(nextToken).build();
-						GetParametersByPathResponse responseClone = response.toBuilder()
-								.parameters(chunk).build();
+						GetParametersByPathRequest requestClone = request.toBuilder().nextToken(nextToken).build();
+						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk).build();
 
-						when(ssmClient.getParametersByPath(eq(requestClone)))
-								.thenReturn(responseClone);
+						when(ssmClient.getParametersByPath(eq(requestClone))).thenReturn(responseClone);
 					}
 					else {
 						String newNextToken = generateNextToken();
 
-						GetParametersByPathRequest requestClone = request.toBuilder()
-								.nextToken(nextToken).build();
+						GetParametersByPathRequest requestClone = request.toBuilder().nextToken(nextToken).build();
 
-						GetParametersByPathResponse responseClone = response.toBuilder()
-								.parameters(chunk).nextToken(newNextToken).build();
+						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
+								.nextToken(newNextToken).build();
 
-						when(ssmClient.getParametersByPath(eq(requestClone)))
-								.thenReturn(responseClone);
+						when(ssmClient.getParametersByPath(eq(requestClone))).thenReturn(responseClone);
 
 						nextToken = newNextToken;
 					}
@@ -172,25 +165,19 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 
 	private Set<Parameter> getParameters(PropertySource propertySource, String path,
 			boolean withSlashesForPropertyName) {
-		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter.builder()
-				.name(path + (withSlashesForPropertyName
-						? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR)
-						: p.getKey()))
-				.type(ParameterType.STRING).value((String) p.getValue()).version(1L)
-				.build();
+		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter
+				.builder().name(path + (withSlashesForPropertyName
+						? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR) : p.getKey()))
+				.type(ParameterType.STRING).value((String) p.getValue()).version(1L).build();
 
-		return propertySource.getSource().entrySet().stream().map(mapper)
-				.collect(Collectors.toSet());
+		return propertySource.getSource().entrySet().stream().map(mapper).collect(Collectors.toSet());
 	}
 
 	private List<Set<Parameter>> splitParametersIntoChunks(Set<Parameter> parameters) {
 		AtomicInteger counter = new AtomicInteger();
 
 		Collector<Parameter, ?, Map<Integer, Set<Parameter>>> collector = Collectors
-				.groupingBy(
-						p -> counter.getAndIncrement()
-								/ environmentProperties.getMaxResults(),
-						Collectors.toSet());
+				.groupingBy(p -> counter.getAndIncrement() / environmentProperties.getMaxResults(), Collectors.toSet());
 
 		return new ArrayList<>(parameters.stream().collect(collector).values());
 	}
@@ -198,8 +185,7 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 	private String generateNextToken() {
 		String random = randomAlphabetic(RandomUtils.nextInt(3, 33));
 
-		return Base64.getEncoder()
-				.encodeToString(random.getBytes(StandardCharsets.UTF_8));
+		return Base64.getEncoder().encodeToString(random.getBytes(StandardCharsets.UTF_8));
 	}
 
 }

@@ -61,19 +61,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Container
 	private static final LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:0.14.2"))
-					.withServices(SECRETSMANAGER);
+			DockerImageName.parse("localstack/localstack:0.14.2")).withServices(SECRETSMANAGER);
 
-	private static final Log log = LogFactory
-			.getLog(AwsSecretsManagerEnvironmentRepository.class);
+	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
 	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
-			.create(AwsBasicCredentials.create(localstack.getAccessKey(),
-					localstack.getSecretKey()));
+			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
 
 	private final SecretsManagerClient smClient = SecretsManagerClient.builder()
-			.region(Region.of(localstack.getRegion()))
-			.credentialsProvider(staticCredentialsProvider)
+			.region(Region.of(localstack.getRegion())).credentialsProvider(staticCredentialsProvider)
 			.endpointOverride(localstack.getEndpointOverride(SECRETSMANAGER)).build();
 
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
@@ -83,15 +79,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	private final AwsSecretsManagerEnvironmentRepository repository = new AwsSecretsManagerEnvironmentRepository(
 			smClient, configServerProperties, environmentProperties);
 
-	private final ObjectMapper objectMapper = new ObjectMapper()
-			.configure(SerializationFeature.INDENT_OUTPUT, true);
+	private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
 
 	private final List<String> toBeRemoved = new ArrayList<>();
 
 	@AfterEach
 	public void cleanUp() {
-		toBeRemoved.forEach(value -> smClient.deleteSecret(DeleteSecretRequest.builder()
-				.secretId(value).forceDeleteWithoutRecovery(true).build()));
+		toBeRemoved.forEach(value -> smClient
+				.deleteSecret(DeleteSecretRequest.builder().secretId(value).forceDeleteWithoutRecovery(true).build()));
 		toBeRemoved.clear();
 	}
 
@@ -104,24 +99,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(defaultApplication, profiles, null,
-				null, null);
-		environment.addAll(
-				Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -132,24 +124,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(defaultApplication, profiles, null,
-				null, null);
-		environment.addAll(
-				Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -160,24 +149,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(defaultApplication, profiles, null,
-				null, null);
-		environment.addAll(
-				Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -188,28 +174,26 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, getApplicationProdProperties());
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(defaultApplication, profiles, null,
-				null, null);
-		environment.addAll(Arrays.asList(applicationProdProperties,
-				applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
+		environment
+				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -220,24 +204,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(
-				Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -247,24 +228,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(
-				Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -274,24 +252,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(
-				Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -301,28 +276,26 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, getApplicationProdProperties());
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(applicationProdProperties,
-				applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment
+				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -333,24 +306,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(
-				Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -360,24 +330,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(
-				Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -387,24 +354,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(
-				Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -414,28 +378,26 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, getApplicationProdProperties());
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(applicationProdProperties,
-				applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment
+				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -446,32 +408,28 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				getFooProperties());
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				getFooDefaultProperties());
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, getFooDefaultProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(fooDefaultProperties,
-				applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties,
+				applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -481,32 +439,28 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				getFooProperties());
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				getFooDefaultProperties());
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, getFooDefaultProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(fooDefaultProperties,
-				applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties,
+				applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -516,32 +470,28 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				getFooProperties());
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				getFooDefaultProperties());
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, getFooDefaultProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(fooDefaultProperties,
-				applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties,
+				applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -551,23 +501,20 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				getFooProperties());
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
+		Environment environment = new Environment(application, profiles, null, null, null);
 		environment.addAll(Arrays.asList(fooProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -577,28 +524,24 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				getFooProperties());
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(applicationDefaultProperties, fooProperties,
-				applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, fooProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -608,41 +551,35 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
-		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
-				getFooProdProperties());
+		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName, getFooProdProperties());
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				getFooProperties());
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				getFooDefaultProperties());
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, getFooDefaultProperties());
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, getApplicationProdProperties());
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties,
-				fooDefaultProperties, applicationDefaultProperties, fooProperties,
-				applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooDefaultProperties,
+				applicationDefaultProperties, fooProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -652,32 +589,28 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
-		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
-				getFooProdProperties());
+		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName, getFooProdProperties());
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				getFooProperties());
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, getApplicationProdProperties());
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties,
-				fooProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(
+				Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -687,49 +620,43 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
-		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
-				getFooProdProperties());
+		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName, getFooProdProperties());
 
 		String fooEastPropertiesName = "aws:secrets:/secret/foo-east/";
-		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName,
-				getFooEastProperties());
+		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName, getFooEastProperties());
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				getFooProperties());
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
-		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-				getFooDefaultProperties());
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName, getFooDefaultProperties());
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, getApplicationProdProperties());
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
 		String applicationEastPropertiesName = "aws:secrets:/secret/application-east/";
-		PropertySource applicationEastProperties = new PropertySource(
-				applicationEastPropertiesName, getApplicationEastProperties());
+		PropertySource applicationEastProperties = new PropertySource(applicationEastPropertiesName,
+				getApplicationEastProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties,
-				fooEastProperties, applicationEastProperties, fooDefaultProperties,
-				applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
+				applicationEastProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
+				applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -739,41 +666,35 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
-		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName,
-				getFooProdProperties());
+		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName, getFooProdProperties());
 
 		String fooEastPropertiesName = "aws:secrets:/secret/foo-east/";
-		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName,
-				getFooEastProperties());
+		PropertySource fooEastProperties = new PropertySource(fooEastPropertiesName, getFooEastProperties());
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
-		PropertySource fooProperties = new PropertySource(fooPropertiesName,
-				getFooProperties());
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(
-				applicationProdPropertiesName, getApplicationProdProperties());
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
 		String applicationEastPropertiesName = "aws:secrets:/secret/application-east/";
-		PropertySource applicationEastProperties = new PropertySource(
-				applicationEastPropertiesName, getApplicationEastProperties());
+		PropertySource applicationEastProperties = new PropertySource(applicationEastPropertiesName,
+				getApplicationEastProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties,
-				fooEastProperties, applicationEastProperties, fooProperties,
-				applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
+				applicationEastProperties, fooProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -793,24 +714,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource overrideProperties = new PropertySource("overrides", overrides);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
-		PropertySource applicationDefaultProperties = new PropertySource(
-				applicationDefaultPropertiesName, getApplicationDefaultProperties());
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(
-				applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
-		environment.addAll(Arrays.asList(overrideProperties, applicationDefaultProperties,
-				applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(overrideProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -819,14 +737,12 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String profile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
-		Environment environment = new Environment(application, profiles, null, null,
-				null);
+		Environment environment = new Environment(application, profiles, null, null, null);
 		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking()
-				.isEqualTo(environment);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -852,11 +768,9 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	private void putSecrets(Environment environment) {
 		for (PropertySource ps : environment.getPropertySources()) {
-			String path = StringUtils.delete(ps.getName(),
-					environmentProperties.getOrigin());
+			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 			String secrets = getSecrets(ps);
-			smClient.createSecret(CreateSecretRequest.builder().name(path)
-					.secretString(secrets).build());
+			smClient.createSecret(CreateSecretRequest.builder().name(path).secretString(secrets).build());
 			toBeRemoved.add(path);
 		}
 	}
