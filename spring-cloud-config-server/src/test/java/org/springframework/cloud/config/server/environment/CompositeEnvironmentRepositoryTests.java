@@ -33,6 +33,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -175,6 +176,36 @@ public class CompositeEnvironmentRepositoryTests {
 		assertThat(propertySources.get(0).getName()).isEqualTo("p1");
 	}
 
+	@Test
+	public void testFailOnErrorFlagFalseForGetLocations() {
+		String sLoc1 = "loc1";
+		Environment e1 = new Environment("app", "dev");
+		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev", "label", "version",
+				new String[] { sLoc1 });
+		List<EnvironmentRepository> repos = new ArrayList<EnvironmentRepository>();
+		repos.add(new TestFailingLocationRepository(1, e1, loc1));
+
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				false);
+		SearchPathLocator.Locations locations = compositeRepo.getLocations("app", "dev", "label");
+		assertThat(locations.getLocations()).isEmpty();
+	}
+
+	@Test
+	public void testFailOnErrorFlagTrueForGetLocations() {
+		String sLoc1 = "loc1";
+		Environment e1 = new Environment("app", "dev");
+		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev", "label", "version",
+				new String[] { sLoc1 });
+		List<EnvironmentRepository> repos = new ArrayList<EnvironmentRepository>();
+		repos.add(new TestFailingLocationRepository(1, e1, loc1));
+
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				true);
+		assertThatExceptionOfType(RepositoryException.class)
+				.isThrownBy(() -> compositeRepo.getLocations("app", "dev", "label"));
+	}
+
 	private static class TestOrderedEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
 
 		private Environment env;
@@ -225,6 +256,19 @@ public class CompositeEnvironmentRepositoryTests {
 		@Override
 		public Environment findOne(String application, String profile, String label) {
 			throw new IllegalArgumentException("Failing for some reason");
+		}
+
+	}
+
+	private static class TestFailingLocationRepository extends TestOrderedEnvironmentRepository {
+
+		TestFailingLocationRepository(int order, Environment env, Locations locations) {
+			super(order, env, locations);
+		}
+
+		@Override
+		public Locations getLocations(String application, String profile, String label) {
+			throw new RepositoryException("Failing for some reason");
 		}
 
 	}
