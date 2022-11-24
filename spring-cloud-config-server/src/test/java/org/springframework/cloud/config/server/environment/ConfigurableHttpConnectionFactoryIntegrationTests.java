@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.eclipse.jgit.transport.HttpTransport;
 import org.eclipse.jgit.transport.http.HttpConnection;
 import org.eclipse.jgit.transport.http.HttpConnectionFactory;
@@ -47,9 +48,7 @@ import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfi
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -249,8 +248,12 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 	}
 
 	private void makeRequest(HttpClient httpClient, String url) {
-		RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
-		restTemplate.getForObject(url, String.class);
+		try {
+			httpClient.execute(new HttpGet(url));
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private HttpClient getHttpClientForUrl(String repoUrl) throws IOException {

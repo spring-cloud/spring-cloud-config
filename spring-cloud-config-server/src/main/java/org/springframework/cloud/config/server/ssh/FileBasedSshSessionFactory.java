@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.ssh;
 
 import java.io.File;
+import java.util.Map;
 
 import org.eclipse.jgit.annotations.NonNull;
 import org.eclipse.jgit.internal.transport.ssh.OpenSshConfigFile;
@@ -28,10 +29,11 @@ import org.springframework.cloud.config.server.environment.JGitEnvironmentProper
 
 public class FileBasedSshSessionFactory extends SshdSessionFactory {
 
-	private final JGitEnvironmentProperties sshUriProperties;
+	private final Map<String, JGitEnvironmentProperties> sshKeysByHostname;
 
-	public FileBasedSshSessionFactory(JGitEnvironmentProperties sshUriProperties) {
-		this.sshUriProperties = sshUriProperties;
+	public FileBasedSshSessionFactory(Map<String, JGitEnvironmentProperties> sshKeysByHostname) {
+		this.sshKeysByHostname = sshKeysByHostname;
+		assert this.sshKeysByHostname.entrySet().size() > 0;
 	}
 
 	@Override
@@ -42,8 +44,13 @@ public class FileBasedSshSessionFactory extends SshdSessionFactory {
 			public HostEntry lookup(@NonNull String hostName, int port, String userName) {
 				HostEntry hostEntry = super.lookup(hostName, port, userName);
 
+				JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(hostName);
+				if (sshProperties == null) {
+					return hostEntry;
+				}
+
 				hostEntry.setValue(SshConstants.STRICT_HOST_KEY_CHECKING,
-						sshUriProperties.isStrictHostKeyChecking() ? SshConstants.YES : SshConstants.NO);
+						sshProperties.isStrictHostKeyChecking() ? SshConstants.YES : SshConstants.NO);
 
 				return hostEntry;
 			}

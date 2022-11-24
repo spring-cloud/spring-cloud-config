@@ -29,7 +29,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.EnableConfigServer;
@@ -76,7 +76,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate()
-					.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
+					.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
@@ -128,7 +128,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate()
-					.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
+					.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());

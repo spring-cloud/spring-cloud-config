@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import java.io.File;
 import java.io.IOException;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +45,7 @@ public class SVNKitEnvironmentRepositoryTests {
 	private StandardEnvironment environment = new StandardEnvironment();
 
 	private SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment,
-			new SvnKitEnvironmentProperties());
+			new SvnKitEnvironmentProperties(), ObservationRegistry.NOOP);
 
 	private File basedir = new File("target/config");
 

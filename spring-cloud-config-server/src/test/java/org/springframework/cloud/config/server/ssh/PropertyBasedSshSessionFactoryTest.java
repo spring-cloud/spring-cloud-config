@@ -276,6 +276,20 @@ public class PropertyBasedSshSessionFactoryTest {
 	}
 
 	@Test
+	public void defaultSshConfigIsSet() {
+		JGitEnvironmentProperties sshProperties = new JGitEnvironmentProperties();
+		sshProperties.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		setupSessionFactory(sshProperties);
+
+		SshConfigStore.HostConfig sshConfig = getDefaultSshHostConfig("gitlab.example.local", 123, "user.name");
+
+		assertThat(sshConfig.getValue("HostName")).isEqualTo("gitlab.example.local");
+		assertThat(sshConfig.getValue("Port")).isEqualTo("123");
+		assertThat(sshConfig.getValue("User")).isEqualTo("user.name");
+		assertThat(sshConfig.getValue("ConnectionAttempts")).isEqualTo("1");
+	}
+
+	@Test
 	public void proxySettingsIsUsedWithRepoIp() {
 		JGitEnvironmentProperties sshProperties = new JGitEnvironmentProperties();
 		sshProperties.setUri("ssh://127.0.0.1:3322/somerepo.git");
@@ -372,6 +386,11 @@ public class PropertyBasedSshSessionFactoryTest {
 	private SshConfigStore.HostConfig getSshHostConfig(String hostname) {
 		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName").lookup(hostname, 22,
 				"userName");
+	}
+
+	private SshConfigStore.HostConfig getDefaultSshHostConfig(String hostName, int port, String username) {
+		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName")
+				.lookupDefault(hostName, port, username);
 	}
 
 	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {

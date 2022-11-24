@@ -25,8 +25,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -119,6 +117,12 @@ public class ConfigClientProperties {
 	private String[] uri = { "http://localhost:8888" };
 
 	/**
+	 * The strategy to use when call to server fails and there are multiple URLs
+	 * configured on the uri property (default {@link MultipleUriStrategy#ALWAYS}).
+	 */
+	private MultipleUriStrategy multipleUriStrategy = MultipleUriStrategy.ALWAYS;
+
+	/**
 	 * The Accept header media type to send to config server.
 	 */
 	private String mediaType = EnvironmentMediaType.V2_JSON;
@@ -190,6 +194,14 @@ public class ConfigClientProperties {
 		this.uri = url;
 	}
 
+	public MultipleUriStrategy getMultipleUriStrategy() {
+		return multipleUriStrategy;
+	}
+
+	public void setMultipleUriStrategy(MultipleUriStrategy multipleUriStrategy) {
+		this.multipleUriStrategy = multipleUriStrategy;
+	}
+
 	public String getName() {
 		return this.name;
 	}
@@ -256,11 +268,6 @@ public class ConfigClientProperties {
 
 	public void setTls(TlsProperties tls) {
 		this.tls = tls;
-	}
-
-	@PostConstruct
-	public void checkTlsStoreType() {
-		tls.postConstruct();
 	}
 
 	public boolean isFailFast() {
@@ -462,6 +469,24 @@ public class ConfigClientProperties {
 		public void setServiceId(String serviceId) {
 			this.serviceId = serviceId;
 		}
+
+	}
+
+	/**
+	 * Enumerates possible strategies to use when multiple URLs are provided and an error
+	 * occurs.
+	 */
+	public enum MultipleUriStrategy {
+
+		/**
+		 * Try the next URL in the list on any error.
+		 */
+		ALWAYS,
+
+		/**
+		 * Try the next URL in the list only if no response was received.
+		 */
+		CONNECTION_TIMEOUT_ONLY
 
 	}
 

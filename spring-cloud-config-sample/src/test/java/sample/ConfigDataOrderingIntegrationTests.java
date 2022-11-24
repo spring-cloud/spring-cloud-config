@@ -27,12 +27,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.cloud.test.TestSocketUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.SocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -45,13 +45,13 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		// hence no spring.config.import here and config name change
 		properties = { "spring.application.name=profilesample", "spring.cloud.config.enabled=true",
 				"spring.config.name=orderingtest", "management.security.enabled=false", "spring.profiles.active=dev",
-				"management.endpoints.web.exposure.include=*" },
+				"management.endpoints.web.exposure.include=*", "management.endpoint.env.show-values=ALWAYS" },
 		webEnvironment = RANDOM_PORT)
 public class ConfigDataOrderingIntegrationTests {
 
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
-	private static final int configPort = SocketUtils.findAvailableTcpPort();
+	private static final int configPort = TestSocketUtils.findAvailableTcpPort();
 
 	private static ConfigurableApplicationContext server;
 

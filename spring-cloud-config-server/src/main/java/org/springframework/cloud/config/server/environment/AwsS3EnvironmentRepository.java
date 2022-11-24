@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectIdBuilder;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
@@ -43,7 +43,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private static final String PATH_SEPARATOR = "/";
 
-	private final AmazonS3 s3Client;
+	private final S3Client s3Client;
 
 	private final String bucketName;
 
@@ -51,7 +51,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	protected int order = Ordered.LOWEST_PRECEDENCE;
 
-	public AwsS3EnvironmentRepository(AmazonS3 s3Client, String bucketName, ConfigServerProperties server) {
+	public AwsS3EnvironmentRepository(S3Client s3Client, String bucketName, ConfigServerProperties server) {
 		this.s3Client = s3Client;
 		this.bucketName = bucketName;
 		this.serverProperties = server;
@@ -68,11 +68,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	@Override
 	public Environment findOne(String specifiedApplication, String specifiedProfiles, String specifiedLabel) {
-		final String application = StringUtils.isEmpty(specifiedApplication)
+		final String application = !StringUtils.hasText(specifiedApplication)
 				? serverProperties.getDefaultApplicationName() : specifiedApplication;
-		final String profiles = StringUtils.isEmpty(specifiedProfiles) ? serverProperties.getDefaultProfile()
+		final String profiles = !StringUtils.hasText(specifiedProfiles) ? serverProperties.getDefaultProfile()
 				: specifiedProfiles;
-		final String label = StringUtils.isEmpty(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
+		final String label = !StringUtils.hasText(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
 
 		String[] profileArray = parseProfiles(profiles);
 		String[] apps = new String[] { application };
@@ -113,9 +113,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	private S3ConfigFile getS3ConfigFile(String application, String profile, String label) {
 		String objectKeyPrefix = buildObjectKeyPrefix(application, profile, label);
 
-		final S3ObjectIdBuilder s3ObjectIdBuilder = new S3ObjectIdBuilder().withBucket(bucketName);
-
-		return getS3ConfigFile(s3ObjectIdBuilder, objectKeyPrefix);
+		return getS3ConfigFile(objectKeyPrefix);
 	}
 
 	private String buildObjectKeyPrefix(String application, String profile, String label) {
@@ -130,26 +128,26 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		return objectKeyPrefix.toString();
 	}
 
-	private S3ConfigFile getS3ConfigFile(S3ObjectIdBuilder s3ObjectIdBuilder, String keyPrefix) {
+	private S3ConfigFile getS3ConfigFile(String keyPrefix) {
 		try {
-			final S3Object properties = getObject(s3ObjectIdBuilder, keyPrefix + ".properties");
-			return new PropertyS3ConfigFile(properties.getObjectMetadata().getVersionId(),
-					properties.getObjectContent());
+			final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(keyPrefix + ".properties");
+			return new PropertyS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 		}
 		catch (Exception eProperties) {
 			try {
-				final S3Object yaml = getObject(s3ObjectIdBuilder, keyPrefix + ".yaml");
-				return new YamlS3ConfigFile(yaml.getObjectMetadata().getVersionId(), yaml.getObjectContent());
+				final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(keyPrefix + ".yml");
+				return new YamlS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 			}
-			catch (Exception eYaml) {
+			catch (Exception eYml) {
 				try {
-					final S3Object json = getObject(s3ObjectIdBuilder, keyPrefix + ".yml");
-					return new YamlS3ConfigFile(json.getObjectMetadata().getVersionId(), json.getObjectContent());
+					final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(keyPrefix + ".yaml");
+					return new YamlS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 				}
-				catch (Exception eYml) {
+				catch (Exception eYaml) {
 					try {
-						final S3Object json = getObject(s3ObjectIdBuilder, keyPrefix + ".json");
-						return new JsonS3ConfigFile(json.getObjectMetadata().getVersionId(), json.getObjectContent());
+						final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(
+								keyPrefix + ".json");
+						return new JsonS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 					}
 					catch (Exception eJson) {
 						return null;
@@ -159,8 +157,8 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 	}
 
-	private S3Object getObject(S3ObjectIdBuilder s3ObjectIdBuilder, String key) throws Exception {
-		return s3Client.getObject(new GetObjectRequest(s3ObjectIdBuilder.withKey(key).build()));
+	private ResponseInputStream<GetObjectResponse> getObject(String key) throws Exception {
+		return s3Client.getObject(GetObjectRequest.builder().bucket(bucketName).key(key).build());
 	}
 
 	@Override

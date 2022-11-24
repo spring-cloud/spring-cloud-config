@@ -18,8 +18,8 @@ package org.springframework.cloud.config.server.ssh;
 
 import java.io.File;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.validation.annotation.Validated;

@@ -24,7 +24,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.config.CustomEnvironmentRepositoryTests.TestApplication;
@@ -54,7 +54,7 @@ public class CustomEnvironmentRepositoryTests {
 	@Test
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate()
-				.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
+				.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 	}
 

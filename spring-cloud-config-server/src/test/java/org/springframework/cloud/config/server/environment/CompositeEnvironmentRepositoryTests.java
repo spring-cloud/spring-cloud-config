@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.Test;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -33,6 +34,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -77,7 +79,7 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestOrderedEnvironmentRepository(2, e3, loc2));
 		repos.add(new TestOrderedEnvironmentRepository(1, e2, loc3));
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
-				true);
+				ObservationRegistry.NOOP, true);
 		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world", false);
 		List<PropertySource> propertySources = compositeEnv.getPropertySources();
 		assertThat(propertySources.size()).isEqualTo(5);
@@ -123,9 +125,9 @@ public class CompositeEnvironmentRepositoryTests {
 		repos2.add(new TestOrderedEnvironmentRepository(3, e1, loc1));
 		repos2.add(new TestOrderedEnvironmentRepository(3, e2, loc2));
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
-				true);
+				ObservationRegistry.NOOP, true);
 		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(
-				repos2, true);
+				repos2, ObservationRegistry.NOOP, true);
 		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		assertThat(env.getVersion()).isEqualTo("1");
 		assertThat(env.getState()).isEqualTo("state");
@@ -168,11 +170,41 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestFailingEnvironmentRepository(1, e2, loc2));
 
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
-				false);
+				ObservationRegistry.NOOP, false);
 		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		List<PropertySource> propertySources = env.getPropertySources();
 		assertThat(propertySources.size()).isEqualTo(1);
 		assertThat(propertySources.get(0).getName()).isEqualTo("p1");
+	}
+
+	@Test
+	public void testFailOnErrorFlagFalseForGetLocations() {
+		String sLoc1 = "loc1";
+		Environment e1 = new Environment("app", "dev");
+		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev", "label", "version",
+				new String[] { sLoc1 });
+		List<EnvironmentRepository> repos = new ArrayList<EnvironmentRepository>();
+		repos.add(new TestFailingLocationRepository(1, e1, loc1));
+
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				ObservationRegistry.NOOP, false);
+		SearchPathLocator.Locations locations = compositeRepo.getLocations("app", "dev", "label");
+		assertThat(locations.getLocations()).isEmpty();
+	}
+
+	@Test
+	public void testFailOnErrorFlagTrueForGetLocations() {
+		String sLoc1 = "loc1";
+		Environment e1 = new Environment("app", "dev");
+		SearchPathLocator.Locations loc1 = new SearchPathLocator.Locations("app", "dev", "label", "version",
+				new String[] { sLoc1 });
+		List<EnvironmentRepository> repos = new ArrayList<EnvironmentRepository>();
+		repos.add(new TestFailingLocationRepository(1, e1, loc1));
+
+		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
+				ObservationRegistry.NOOP, true);
+		assertThatExceptionOfType(RepositoryException.class)
+				.isThrownBy(() -> compositeRepo.getLocations("app", "dev", "label"));
 	}
 
 	private static class TestOrderedEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {
@@ -229,14 +261,29 @@ public class CompositeEnvironmentRepositoryTests {
 
 	}
 
+	private static class TestFailingLocationRepository extends TestOrderedEnvironmentRepository {
+
+		TestFailingLocationRepository(int order, Environment env, Locations locations) {
+			super(order, env, locations);
+		}
+
+		@Override
+		public Locations getLocations(String application, String profile, String label) {
+			throw new RepositoryException("Failing for some reason");
+		}
+
+	}
+
 	@Configuration(proxyBeanMethods = false)
 	static class OverrideCompositeConfig {
 
 		@Bean
 		@Primary
 		CompositeEnvironmentRepository customCompositeEnvironmentRepository() {
-			return new CompositeEnvironmentRepository(Arrays.<EnvironmentRepository>asList(
-					new TestOrderedEnvironmentRepository(1, new Environment("app", "dev"), null)), true);
+			return new CompositeEnvironmentRepository(
+					Arrays.<EnvironmentRepository>asList(
+							new TestOrderedEnvironmentRepository(1, new Environment("app", "dev"), null)),
+					ObservationRegistry.NOOP, true);
 		}
 
 	}

@@ -123,7 +123,7 @@ public class GitCredentialsProviderFactory {
 	 */
 	private boolean awsAvailable() {
 		return this.awsCodeCommitEnabled
-				&& ClassUtils.isPresent("com.amazonaws.auth.DefaultAWSCredentialsProviderChain", null);
+				&& ClassUtils.isPresent("software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain", null);
 	}
 
 	/**

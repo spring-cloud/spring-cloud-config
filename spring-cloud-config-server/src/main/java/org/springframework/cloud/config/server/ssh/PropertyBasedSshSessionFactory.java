@@ -81,6 +81,19 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 				return updateIfNeeded(hostEntry, hostName);
 			}
 
+			@Override
+			public HostConfig lookupDefault(String hostName, int port, String userName) {
+				OpenSshConfigFile.HostEntry hostEntry = new OpenSshConfigFile.HostEntry();
+
+				hostEntry.setValue(SshConstants.HOST_NAME, hostName);
+				hostEntry.setValue(SshConstants.PORT,
+						Integer.toString(port > 0 ? port : SshConstants.SSH_DEFAULT_PORT));
+				hostEntry.setValue(SshConstants.USER, userName);
+				hostEntry.setValue(SshConstants.CONNECTION_ATTEMPTS, "1");
+
+				return updateIfNeeded(hostEntry, hostName);
+			}
+
 			private OpenSshConfigFile.HostEntry updateIfNeeded(OpenSshConfigFile.HostEntry hostEntry, String hostName) {
 				JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(hostName);
 

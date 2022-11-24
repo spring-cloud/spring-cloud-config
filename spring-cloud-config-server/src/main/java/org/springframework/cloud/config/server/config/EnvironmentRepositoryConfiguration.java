@@ -19,15 +19,15 @@ package org.springframework.cloud.config.server.config;
 import java.util.List;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
-
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
+import io.micrometer.observation.ObservationRegistry;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
@@ -211,7 +211,7 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(AmazonS3.class)
+	@ConditionalOnClass(S3Client.class)
 	static class AwsS3FactoryConfig {
 
 		@Bean
@@ -222,7 +222,7 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(AWSSecretsManager.class)
+	@ConditionalOnClass(SecretsManagerClient.class)
 	static class AwsSecretsManagerFactoryConfig {
 
 		@Bean
@@ -234,7 +234,7 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(AWSSimpleSystemsManagement.class)
+	@ConditionalOnClass(SsmClient.class)
 	static class AwsParameterStoreFactoryConfig {
 
 		@Bean
@@ -251,8 +251,9 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-				ConfigServerProperties server) {
-			return new SvnEnvironmentRepositoryFactory(environment, server);
+				ConfigServerProperties server, ObjectProvider<ObservationRegistry> observationRegistry) {
+			return new SvnEnvironmentRepositoryFactory(environment, server,
+					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP));
 		}
 
 	}
@@ -360,8 +361,10 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public NativeEnvironmentRepositoryFactory nativeEnvironmentRepositoryFactory(
-				ConfigurableEnvironment environment, ConfigServerProperties properties) {
-			return new NativeEnvironmentRepositoryFactory(environment, properties);
+				ConfigurableEnvironment environment, ConfigServerProperties properties,
+				ObjectProvider<ObservationRegistry> observationRegistry) {
+			return new NativeEnvironmentRepositoryFactory(environment, properties,
+					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP));
 		}
 
 	}
@@ -534,8 +537,10 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnSearchPathLocator
 	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties) {
+			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties,
+			ObjectProvider<ObservationRegistry> observationRegistry) {
 		return new SearchPathCompositeEnvironmentRepository(environmentRepositories,
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
 				properties.isFailOnCompositeError());
 	}
 
@@ -543,8 +548,11 @@ class CompositeRepositoryConfiguration {
 	@Bean
 	@ConditionalOnMissingSearchPathLocator
 	public CompositeEnvironmentRepository compositeEnvironmentRepository(
-			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties) {
-		return new CompositeEnvironmentRepository(environmentRepositories, properties.isFailOnCompositeError());
+			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties,
+			ObjectProvider<ObservationRegistry> observationRegistry) {
+		return new CompositeEnvironmentRepository(environmentRepositories,
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
+				properties.isFailOnCompositeError());
 	}
 
 }

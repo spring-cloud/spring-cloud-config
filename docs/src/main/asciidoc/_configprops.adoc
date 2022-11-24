@@ -9,6 +9,7 @@
 |spring.cloud.config.headers |  | Additional headers used to create the client request.
 |spring.cloud.config.label |  | The label name to use to pull remote configuration properties. The default is set on the server (generally "master" for a git based server).
 |spring.cloud.config.media-type |  | The Accept header media type to send to config server.
+|spring.cloud.config.multiple-uri-strategy |  | The strategy to use when call to server fails and there are multiple URLs configured on the uri property (default {@link MultipleUriStrategy#ALWAYS}).
 |spring.cloud.config.name |  | Name of application used to fetch remote properties.
 |spring.cloud.config.override-none | `+++false+++` | Flag to indicate that when {@link #setAllowOverride(boolean) allowOverride} is true, external properties should take lowest priority and should not override any existing property sources (including local config files). Default false.
 |spring.cloud.config.override-system-properties | `+++true+++` | Flag to indicate that the external properties should override system properties. Default true.

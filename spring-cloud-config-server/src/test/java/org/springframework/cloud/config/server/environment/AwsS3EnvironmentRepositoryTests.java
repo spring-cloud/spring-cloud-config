@@ -17,17 +17,19 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectId;
-import com.amazonaws.util.StringInputStream;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.http.AbortableInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.utils.StringInputStream;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -45,7 +47,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	final ConfigServerProperties server = new ConfigServerProperties();
 
-	final AmazonS3 s3Client = mock(AmazonS3.class, "config");
+	final S3Client s3Client = mock(S3Client.class, "config");
 
 	final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
 
@@ -209,19 +211,21 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	private void setupS3(String fileName, String version, String propertyContent) throws UnsupportedEncodingException {
-		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", fileName);
-		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
+		final GetObjectRequest request = GetObjectRequest.builder().bucket("bucket1").key(fileName).build();
 
-		final S3Object s3Object = new S3Object();
-		s3Object.setObjectContent(new StringInputStream(propertyContent));
+		GetObjectResponse.Builder s3Object = GetObjectResponse.builder();
 
 		if (version != null) {
-			final ObjectMetadata metadata = new ObjectMetadata();
-			metadata.setHeader("x-amz-version-id", version);
-			s3Object.setObjectMetadata(metadata);
+			final Map<String, String> metadata = new HashMap<>();
+			metadata.put("x-amz-version-id", version);
+			s3Object.metadata(metadata);
+			s3Object.versionId(version);
 		}
 
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request)))).thenReturn(s3Object);
+		ResponseInputStream<GetObjectResponse> response = new ResponseInputStream<GetObjectResponse>(s3Object.build(),
+				AbortableInputStream.create(new StringInputStream(propertyContent)));
+
+		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request)))).thenReturn(response);
 	}
 
 	private void assertExpectedEnvironment(Environment env, String applicationName, String label, String version,
@@ -249,9 +253,8 @@ public class AwsS3EnvironmentRepositoryTests {
 			if (actual == null) {
 				return false;
 			}
-			return Objects.equals(actual.getBucketName(), expected.getBucketName())
-					&& Objects.equals(actual.getKey(), expected.getKey())
-					&& Objects.equals(actual.getVersionId(), expected.getVersionId());
+			return Objects.equals(actual.bucket(), expected.bucket()) && Objects.equals(actual.key(), expected.key())
+					&& Objects.equals(actual.versionId(), expected.versionId());
 		}
 
 	}

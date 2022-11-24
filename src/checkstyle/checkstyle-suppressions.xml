@@ -13,4 +13,5 @@
 	<suppress files=".*EnvironmentRepositoryFactory\.java" checks="LineLengthCheck"/>
 	<suppress files=".*VaultEnvironmentRepositoryIntegrationTests\.java" checks="LineLengthCheck"/>
 	<suppress files=".*HttpClientSupportTest\.java" checks="LineLengthCheck"/>
+	<suppress files=".*Tests.*" checks="JavadocVariable"/>
 </suppressions>

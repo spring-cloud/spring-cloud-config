@@ -20,14 +20,18 @@ import org.junit.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentConfigTokenProvider;
+import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class EnvironmentRepositoryConfigurationTests {
 
@@ -64,13 +68,26 @@ public class EnvironmentRepositoryConfigurationTests {
 				});
 	}
 
+	@Test
+	public void configServerActuatorConfigurationWithCustomHealthStatus() {
+		new ApplicationContextRunner()
+				.withConfiguration(AutoConfigurations.of(
+						EnvironmentRepositoryConfigurationTests.EnableConfigurationPropertiesBeans.class,
+						EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class))
+				.withPropertyValues("spring.cloud.config.server.health.down-health-status=CUSTOMIZED")
+				.run((context) -> {
+					ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
+					assertThat(ReflectionTestUtils.getField(healthIndicator, "downHealthStatus"))
+							.isEqualTo("CUSTOMIZED");
+				});
+	}
+
 	@TestConfiguration
 	public static class TestBeans {
 
 		@Bean
-		public ConfigServerProperties vaultConfigServerProperties() {
-			ConfigServerProperties configServerProperties = new ConfigServerProperties();
-			return configServerProperties;
+		public ConfigServerProperties configServerProperties() {
+			return new ConfigServerProperties();
 		}
 
 	}
@@ -86,6 +103,17 @@ public class EnvironmentRepositoryConfigurationTests {
 
 		public static class CustomGitCredentialsProviderFactory extends GitCredentialsProviderFactory {
 
+		}
+
+	}
+
+	@TestConfiguration
+	@EnableConfigurationProperties
+	public static class EnableConfigurationPropertiesBeans {
+
+		@Bean
+		public EnvironmentRepository environmentRepository() {
+			return mock(EnvironmentRepository.class);
 		}
 
 	}

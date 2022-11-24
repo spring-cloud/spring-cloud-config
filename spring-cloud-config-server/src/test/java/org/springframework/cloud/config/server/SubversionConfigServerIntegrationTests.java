@@ -26,7 +26,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
@@ -70,7 +70,7 @@ public class SubversionConfigServerIntegrationTests {
 	@Test
 	public void contextLoads() {
 		ResponseEntity<Environment> exchange = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
 		Environment environment = exchange.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();

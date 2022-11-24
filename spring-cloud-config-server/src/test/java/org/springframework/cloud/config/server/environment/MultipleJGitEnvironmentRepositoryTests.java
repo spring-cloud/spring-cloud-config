@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
@@ -67,7 +68,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void init() throws Exception {
 		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		this.repository = new MultipleJGitEnvironmentRepository(this.environment,
-				new MultipleJGitEnvironmentProperties());
+				new MultipleJGitEnvironmentProperties(), ObservationRegistry.NOOP);
 		this.repository.setUri(defaultUri);
 		this.repository.setRepos(createRepositories());
 	}
@@ -81,7 +82,8 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	}
 
 	private PatternMatchingJGitEnvironmentRepository createRepository(String name, String pattern, String uri) {
-		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository();
+		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository(
+				ObservationRegistry.NOOP);
 		repo.setEnvironment(this.environment);
 		repo.setName(name);
 		repo.setPattern(new String[] { pattern });
@@ -323,7 +325,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	public void exceptionNotThrownIfRelativeBasedirIsPassedByProperties() throws Exception {
 		MultipleJGitEnvironmentProperties props = new MultipleJGitEnvironmentProperties();
 		props.setBasedir(new File("relative"));
-		this.repository = new MultipleJGitEnvironmentRepository(this.environment, props);
+		this.repository = new MultipleJGitEnvironmentRepository(this.environment, props, ObservationRegistry.NOOP);
 		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		this.repository.setUri(defaultUri);
 		this.repository.setRepos(createRepositories());

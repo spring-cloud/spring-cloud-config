@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.context.ApplicationContext;
@@ -64,7 +64,7 @@ public class ConfigClientBackwardsCompatibilityIntegrationTests {
 
 	@Test
 	public void testBackwardsCompatibleFormat() {
-		Map environment = new TestRestTemplate().getForObject("http://localhost:" + this.port + "/foo/development/",
+		Map environment = new TestRestTemplate().getForObject("http://localhost:" + this.port + "/foo/development",
 				Map.class);
 		Object value = getPropertySourceValue(environment);
 		assertThat(value).isInstanceOf(String.class).isEqualTo("true");
@@ -81,7 +81,7 @@ public class ConfigClientBackwardsCompatibilityIntegrationTests {
 	@Test
 	public void testNewFormat() {
 		ResponseEntity<Map> response = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(), Map.class);
+				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(), Map.class);
 		Object value = getPropertySourceValue(response.getBody());
 		assertThat(value).isInstanceOf(Map.class);
 		Map valueMap = Map.class.cast(value);
@@ -99,9 +99,10 @@ public class ConfigClientBackwardsCompatibilityIntegrationTests {
 		assertThat(valueMap).containsEntry("value", "true");
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object getPropertySourceValue(Map environment) {
 		assertThat(environment).isNotNull();
-		assertThat(environment.containsKey("propertySources"));
+		assertThat(environment.containsKey("propertySources")).isTrue();
 		List propertySources = (List) environment.get("propertySources");
 		assertThat(propertySources).hasSizeGreaterThan(1);
 		Map source = (Map) propertySources.get(0);

@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
@@ -44,8 +44,10 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestConfigServerApplication.class, properties = { "spring.config.name:configserver",
-		"spring.cloud.config.server.git.uri:file:./target/repos/config-repo" }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = TestConfigServerApplication.class,
+		properties = { "spring.config.name:configserver",
+				"spring.cloud.config.server.git.uri:file:./target/repos/config-repo" },
+		webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 public class VanillaConfigServerIntegrationTests {
 
@@ -63,7 +65,7 @@ public class VanillaConfigServerIntegrationTests {
 	@Test
 	public void contextLoads() {
 		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
 		Environment environment = response.getBody();
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();

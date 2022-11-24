@@ -19,7 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.Pattern;
 
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;

@@ -20,9 +20,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,13 +32,13 @@ import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointPr
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.test.TestSocketUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.SocketUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -54,13 +53,13 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		properties = { "spring.application.name=retryapp", "spring.cloud.config.fail-fast=true",
 				"spring.cloud.config.enabled=true", "spring.config.import=configserver:",
 				"management.security.enabled=false", "management.endpoints.web.exposure.include=*",
-				"logging.level.org.springframework.retry=TRACE" },
+				"logging.level.org.springframework.retry=TRACE", "management.endpoint.env.show-values=ALWAYS" },
 		webEnvironment = RANDOM_PORT)
 public class ConfigDataRetryIntegrationTests {
 
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
-	private static int configPort = SocketUtils.findAvailableTcpPort();
+	private static int configPort = TestSocketUtils.findAvailableTcpPort();
 
 	private static ConfigurableApplicationContext server;
 

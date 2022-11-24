@@ -16,9 +16,8 @@
 
 package org.springframework.cloud.config.server.proxy;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,7 +35,7 @@ class SchemeBasedRoutePlannerTest {
 		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(SECURED_PROXY_PROPERTIES,
 				UNSECURED_PROXY_PROPERTIES);
 
-		final HttpHost result = planner.determineProxy(target("https"), anyRequest(), anyContext());
+		final HttpHost result = planner.determineProxy(target("https"), anyContext());
 
 		assertThat(result.getSchemeName()).isEqualTo("https");
 		assertThat(result.getHostName()).isEqualTo(SECURED_PROXY_PROPERTIES.getHost());
@@ -47,7 +46,7 @@ class SchemeBasedRoutePlannerTest {
 	void determineProxy_should_return_https_proxy_when_target_scheme_name_is_http_and_no_http_proxy_specified() {
 		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(SECURED_PROXY_PROPERTIES, null);
 
-		final HttpHost result = planner.determineProxy(target("http"), anyRequest(), anyContext());
+		final HttpHost result = planner.determineProxy(target("http"), anyContext());
 
 		assertThat(result.getSchemeName()).isEqualTo("https");
 		assertThat(result.getHostName()).isEqualTo(SECURED_PROXY_PROPERTIES.getHost());
@@ -59,7 +58,7 @@ class SchemeBasedRoutePlannerTest {
 		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(SECURED_PROXY_PROPERTIES,
 				UNSECURED_PROXY_PROPERTIES);
 
-		final HttpHost result = planner.determineProxy(target("http"), anyRequest(), anyContext());
+		final HttpHost result = planner.determineProxy(target("http"), anyContext());
 
 		assertThat(result.getSchemeName()).isEqualTo("http");
 		assertThat(result.getHostName()).isEqualTo(UNSECURED_PROXY_PROPERTIES.getHost());
@@ -70,7 +69,7 @@ class SchemeBasedRoutePlannerTest {
 	void determineProxy_should_return_http_proxy_when_target_scheme_name_is_https_and_https_proxy_provided() {
 		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(null, UNSECURED_PROXY_PROPERTIES);
 
-		final HttpHost result = planner.determineProxy(target("https"), anyRequest(), anyContext());
+		final HttpHost result = planner.determineProxy(target("https"), anyContext());
 
 		assertThat(result.getSchemeName()).isEqualTo("http");
 		assertThat(result.getHostName()).isEqualTo(UNSECURED_PROXY_PROPERTIES.getHost());
@@ -82,7 +81,7 @@ class SchemeBasedRoutePlannerTest {
 		SchemeBasedRoutePlanner planner = new SchemeBasedRoutePlanner(buildProxyProperties("", 777),
 				buildProxyProperties("host", 0));
 
-		final HttpHost result = planner.determineProxy(target("https"), anyRequest(), anyContext());
+		final HttpHost result = planner.determineProxy(target("https"), anyContext());
 
 		assertThat(result).isNull();
 	}
@@ -91,10 +90,6 @@ class SchemeBasedRoutePlannerTest {
 		HttpHost host = mock(HttpHost.class);
 		when(host.getSchemeName()).thenReturn(scheme);
 		return host;
-	}
-
-	private HttpRequest anyRequest() {
-		return mock(HttpRequest.class);
 	}
 
 	private HttpContext anyContext() {

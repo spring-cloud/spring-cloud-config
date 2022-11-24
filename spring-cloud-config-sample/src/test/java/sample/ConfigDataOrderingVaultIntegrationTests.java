@@ -30,8 +30,8 @@ import org.testcontainers.vault.VaultContainer;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
+import org.springframework.cloud.test.TestSocketUtils;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.util.SocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,9 +44,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 public class ConfigDataOrderingVaultIntegrationTests {
 
-	private static final int configServerPort = SocketUtils.findAvailableTcpPort();
+	private static final int configServerPort = TestSocketUtils.findAvailableTcpPort();
 
-	private static final int configClientPort = SocketUtils.findAvailableTcpPort();
+	private static final int configClientPort = TestSocketUtils.findAvailableTcpPort();
 
 	private static ConfigurableApplicationContext client;
 

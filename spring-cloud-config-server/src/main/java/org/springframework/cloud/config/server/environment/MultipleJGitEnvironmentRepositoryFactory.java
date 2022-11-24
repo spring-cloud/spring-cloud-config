@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.Optional;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.transport.HttpTransport;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
@@ -76,7 +77,7 @@ public class MultipleJGitEnvironmentRepositoryFactory
 		}
 
 		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
-				environmentProperties);
+				environmentProperties, ObservationRegistry.NOOP);
 		repository.setTransportConfigCallback(transportConfigCallbackFactory.build(environmentProperties));
 		if (this.server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.server.getDefaultLabel());

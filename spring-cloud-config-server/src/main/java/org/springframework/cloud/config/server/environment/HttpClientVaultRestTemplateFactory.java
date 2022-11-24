@@ -18,7 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.security.GeneralSecurityException;
 
-import org.apache.http.client.HttpClient;
+import org.apache.hc.client5.http.classic.HttpClient;
 
 import org.springframework.cloud.config.server.support.HttpClientSupport;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;

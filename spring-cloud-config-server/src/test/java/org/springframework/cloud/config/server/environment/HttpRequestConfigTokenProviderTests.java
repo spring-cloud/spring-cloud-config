@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import javax.servlet.http.HttpServletRequest;
-
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.Before;
 import org.junit.Test;
 

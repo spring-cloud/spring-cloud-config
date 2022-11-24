@@ -30,7 +30,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.RefreshableConfigServerIntegrationTests.TestConfiguration;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
@@ -94,7 +94,7 @@ public class RefreshableConfigServerIntegrationTests {
 	@Test
 	public void refreshOverrides() {
 		ResponseEntity<Environment> entity = new TestRestTemplate().exchange(
-				"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
 		Environment environment = entity.getBody();
 		assertThat(environment.getPropertySources()).isEmpty();
@@ -111,7 +111,7 @@ public class RefreshableConfigServerIntegrationTests {
 		response = new TestRestTemplate().postForEntity(actuatorEndpoint + "/refresh", null, Void.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-		entity = new TestRestTemplate().exchange("http://localhost:" + this.port + "/foo/development/", HttpMethod.GET,
+		entity = new TestRestTemplate().exchange("http://localhost:" + this.port + "/foo/development", HttpMethod.GET,
 				getV2AcceptEntity(), Environment.class);
 		environment = entity.getBody();
 		assertThat(environment.getPropertySources()).isNotEmpty();

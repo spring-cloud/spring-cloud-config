@@ -28,11 +28,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.test.TestSocketUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.SocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -42,13 +42,14 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
 		// config server on the classpath we need to set it explicitly
 		properties = { "spring.cloud.config.enabled=true", "spring.config.import=configserver:",
-				"management.security.enabled=false", "management.endpoints.web.exposure.include=*" },
+				"management.security.enabled=false", "management.endpoints.web.exposure.include=*",
+				"management.endpoint.env.show-values=ALWAYS" },
 		webEnvironment = RANDOM_PORT)
 public class ConfigDataIntegrationTests {
 
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
-	private static int configPort = SocketUtils.findAvailableTcpPort();
+	private static int configPort = TestSocketUtils.findAvailableTcpPort();
 
 	private static ConfigurableApplicationContext server;
 

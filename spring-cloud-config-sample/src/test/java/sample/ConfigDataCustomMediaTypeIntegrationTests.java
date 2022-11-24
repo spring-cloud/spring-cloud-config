@@ -29,13 +29,13 @@ import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointPr
 import org.springframework.boot.origin.Origin;
 import org.springframework.boot.origin.OriginLookup;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.test.TestSocketUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.SocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -52,7 +52,7 @@ public class ConfigDataCustomMediaTypeIntegrationTests {
 
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
-	private static int configPort = SocketUtils.findAvailableTcpPort();
+	private static int configPort = TestSocketUtils.findAvailableTcpPort();
 
 	private static ConfigurableApplicationContext server;
 
