@@ -39,7 +39,7 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 
 	protected List<EnvironmentRepository> environmentRepositories;
 
-	private boolean failOnError;
+	protected boolean failOnError;
 
 	/**
 	 * Creates a new {@link CompositeEnvironmentRepository}.

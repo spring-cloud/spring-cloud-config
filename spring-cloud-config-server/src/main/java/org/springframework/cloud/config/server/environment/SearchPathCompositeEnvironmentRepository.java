@@ -46,13 +46,23 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 	public Locations getLocations(String application, String profile, String label) {
 		List<String> locations = new ArrayList<>();
 		for (EnvironmentRepository repo : this.environmentRepositories) {
-			if (repo instanceof SearchPathLocator searchPathLocator) {
-				addForSearchPathLocators(application, profile, label, locations, searchPathLocator);
+			try {
+				if (repo instanceof SearchPathLocator searchPathLocator) {
+					addForSearchPathLocators(application, profile, label, locations, searchPathLocator);
+				}
+				else if (repo instanceof ObservationEnvironmentRepositoryWrapper wrapper
+						&& wrapper.getDelegate() instanceof SearchPathLocator searchPathLocator) {
+					addForSearchPathLocators(application, profile, label, locations, searchPathLocator);
+				}
 			}
-			else if (repo instanceof ObservationEnvironmentRepositoryWrapper wrapper
-					&& wrapper.getDelegate() instanceof SearchPathLocator searchPathLocator) {
-				addForSearchPathLocators(application, profile, label, locations, searchPathLocator);
-			}
+			catch (RepositoryException ex) {
+					if (failOnError) {
+						throw ex;
+					}
+					else {
+						log.info("Error finding locations for " + repo, ex);
+					}
+				}
 		}
 		return new Locations(application, profile, label, null, locations.toArray(new String[locations.size()]));
 	}
