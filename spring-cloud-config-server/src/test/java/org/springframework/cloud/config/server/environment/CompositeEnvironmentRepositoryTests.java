@@ -187,7 +187,7 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestFailingLocationRepository(1, e1, loc1));
 
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
-				false);
+				ObservationRegistry.NOOP, false);
 		SearchPathLocator.Locations locations = compositeRepo.getLocations("app", "dev", "label");
 		assertThat(locations.getLocations()).isEmpty();
 	}
@@ -202,7 +202,7 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestFailingLocationRepository(1, e1, loc1));
 
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
-				true);
+				ObservationRegistry.NOOP, true);
 		assertThatExceptionOfType(RepositoryException.class)
 				.isThrownBy(() -> compositeRepo.getLocations("app", "dev", "label"));
 	}
