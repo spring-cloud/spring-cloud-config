@@ -56,13 +56,13 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 				}
 			}
 			catch (RepositoryException ex) {
-					if (failOnError) {
-						throw ex;
-					}
-					else {
-						log.info("Error finding locations for " + repo, ex);
-					}
+				if (failOnError) {
+					throw ex;
 				}
+				else {
+					log.info("Error finding locations for " + repo, ex);
+				}
+			}
 		}
 		return new Locations(application, profile, label, null, locations.toArray(new String[locations.size()]));
 	}
