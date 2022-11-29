@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.cloud.test.TestSocketUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.util.TestSocketUtils;
 
 public class AppRunner implements AutoCloseable {
 

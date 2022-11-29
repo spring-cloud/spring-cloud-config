@@ -30,8 +30,8 @@ import org.testcontainers.vault.VaultContainer;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
-import org.springframework.cloud.test.TestSocketUtils;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.util.TestSocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
