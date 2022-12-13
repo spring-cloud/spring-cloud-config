@@ -54,9 +54,10 @@ public class JdbcEnvironmentRepositoryTests {
 
 	@Test
 	public void basicProperties() {
-		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
-				new JdbcEnvironmentProperties(), new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
-						.findOne("foo", "bar", "");
+		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		properties.setEnableSqlWithoutProfile(true);
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -73,9 +74,10 @@ public class JdbcEnvironmentRepositoryTests {
 
 	@Test
 	public void testDefaultProfile() {
-		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
-				new JdbcEnvironmentProperties(), new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
-						.findOne("foo", "", "");
+		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		properties.setEnableSqlWithoutProfile(true);
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -92,9 +94,10 @@ public class JdbcEnvironmentRepositoryTests {
 
 	@Test
 	public void testProfileNotExist() {
-		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
-				new JdbcEnvironmentProperties(), new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
-						.findOne("foo", "not_exist", "");
+		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		properties.setEnableSqlWithoutProfile(true);
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "not_exist", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "not_exist" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -107,9 +110,10 @@ public class JdbcEnvironmentRepositoryTests {
 
 	@Test
 	public void testApplicationNotExist() {
-		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
-				new JdbcEnvironmentProperties(), new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
-						.findOne("not_exist", "bar", "");
+		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		properties.setEnableSqlWithoutProfile(true);
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("not_exist", "bar", "");
 		assertThat(env.getName()).isEqualTo("not_exist");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -122,9 +126,10 @@ public class JdbcEnvironmentRepositoryTests {
 
 	@Test
 	public void testApplicationProfileBothNotExist() {
-		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
-				new JdbcEnvironmentProperties(), new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
-						.findOne("not_exist", "not_exist", "");
+		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		properties.setEnableSqlWithoutProfile(true);
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("not_exist", "not_exist", "");
 		assertThat(env.getName()).isEqualTo("not_exist");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "not_exist" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -136,6 +141,7 @@ public class JdbcEnvironmentRepositoryTests {
 	@Test
 	public void testCustomSql() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		properties.setEnableSqlWithoutProfile(true);
 		properties.setSql("SELECT MY_KEY, MY_VALUE from MY_PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=?");
 		properties.setSqlWithoutProfile(
 				"SELECT MY_KEY, MY_VALUE from MY_PROPERTIES where APPLICATION=? and PROFILE is null and LABEL=?");
@@ -159,6 +165,7 @@ public class JdbcEnvironmentRepositoryTests {
 	public void testNotFailOnError() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		properties.setFailOnError(false);
+		properties.setEnableSqlWithoutProfile(true);
 		// when sql is customized but forgot to customize sqlWithoutProfile then
 		// sqlWithoutProfile should fail but sql with profile should still working when
 		// failOnError is off
