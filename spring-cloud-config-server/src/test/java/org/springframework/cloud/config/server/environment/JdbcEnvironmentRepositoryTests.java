@@ -187,6 +187,7 @@ public class JdbcEnvironmentRepositoryTests {
 	@Test
 	public void testFailOnError() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		properties.setEnableSqlWithoutProfile(true);
 		properties.setSqlWithoutProfile(
 				"SELECT SHOULD_FAIL from TABLE_NOTEXIST where APPLICATION=? and PROFILE is null and LABEL=?");
 		JdbcEnvironmentRepository repository = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),

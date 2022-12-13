@@ -129,7 +129,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		try {
 			Map<String, Object> source;
 			String name;
-			if (enableSqlWithoutProfie && profile != null) {
+			if (!enableSqlWithoutProfie || (enableSqlWithoutProfie && profile != null)) {
 				source = this.jdbc.query(this.sql, this.extractor, application, profile, label);
 				name = application + "-" + profile;
 			}
