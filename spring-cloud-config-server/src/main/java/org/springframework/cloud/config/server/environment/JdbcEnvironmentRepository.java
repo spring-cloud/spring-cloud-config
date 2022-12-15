@@ -67,7 +67,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private boolean failOnError;
 
-	private boolean enableSqlWithoutProfile;
+	private boolean configIncomplete;
 
 	@Deprecated
 	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
@@ -82,7 +82,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		this.sqlWithoutProfile = properties.getSqlWithoutProfile();
 		this.failOnError = properties.isFailOnError();
 		this.extractor = extractor;
-		this.enableSqlWithoutProfile = properties.isEnableSqlWithoutProfile();
+		this.configIncomplete = properties.isConfigIncomplete();
 	}
 
 	public String getSql() {
@@ -102,7 +102,8 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		if (!StringUtils.hasText(profile)) {
 			profile = "default";
 		}
-		if (!enableSqlWithoutProfile && !profile.startsWith("default")) {
+		// fallback to previous logic: always include profile "default"
+		if (configIncomplete && !profile.startsWith("default")) {
 			profile = "default," + profile;
 		}
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
@@ -120,7 +121,9 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 				addPropertySource(environment, app, env, label);
 			}
 			// add properties without profile, equivalent to foo.yml, application.yml
-			addPropertySource(environment, app, null, label);
+			if (!configIncomplete) {
+				addPropertySource(environment, app, null, label);
+			}
 		}
 		return environment;
 	}
@@ -129,7 +132,7 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		try {
 			Map<String, Object> source;
 			String name;
-			if (!enableSqlWithoutProfile || (enableSqlWithoutProfile && profile != null)) {
+			if (profile != null) {
 				source = this.jdbc.query(this.sql, this.extractor, application, profile, label);
 				name = application + "-" + profile;
 			}
