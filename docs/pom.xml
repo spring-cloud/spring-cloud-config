@@ -24,7 +24,7 @@
 		<configprops.inclusionPattern>spring.cloud.config.*</configprops.inclusionPattern>
 
 		<!-- Observability -->
-		<micrometer-docs-generator.version>1.0.0-RC1</micrometer-docs-generator.version>
+		<micrometer-docs-generator.version>1.0.0</micrometer-docs-generator.version>
 		<micrometer-docs-generator.inputPath>${maven.multiModuleProjectDirectory}/spring-cloud-config-server/</micrometer-docs-generator.inputPath>
 		<micrometer-docs-generator.inclusionPattern>.*</micrometer-docs-generator.inclusionPattern>
 		<micrometer-docs-generator.outputPath>${maven.multiModuleProjectDirectory}/target/</micrometer-docs-generator.outputPath>
