@@ -43,8 +43,6 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	/** SQL used to query database for keys and values. */
 	private String sql = DEFAULT_SQL;
 
-	private boolean enableSqlWithoutProfile = false;
-
 	/** SQL used to query database for keys and values when profile is null. */
 	private String sqlWithoutProfile = DEFAULT_SQL_WITHOUT_PROFILE;
 
@@ -94,12 +92,9 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 		this.failOnError = failOnError;
 	}
 
-	public boolean isEnableSqlWithoutProfile() {
-		return enableSqlWithoutProfile;
-	}
-
-	public void setEnableSqlWithoutProfile(boolean enableSqlWithoutProfile) {
-		this.enableSqlWithoutProfile = enableSqlWithoutProfile;
+	public boolean isConfigIncomplete() {
+		// sql and sqlWithoutProfile should be customized at the same time
+		return !this.sql.equals(DEFAULT_SQL) && this.sqlWithoutProfile.equals(DEFAULT_SQL_WITHOUT_PROFILE);
 	}
 
 }
