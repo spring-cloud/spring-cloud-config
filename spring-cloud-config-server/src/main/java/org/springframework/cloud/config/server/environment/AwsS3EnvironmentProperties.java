@@ -50,11 +50,11 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 		this.region = region;
 	}
 
-	String getEndpoint() {
+	public String getEndpoint() {
 		return endpoint;
 	}
 
-	void setEndpoint(String endpoint) {
+	public void setEndpoint(String endpoint) {
 		this.endpoint = endpoint;
 	}
 
