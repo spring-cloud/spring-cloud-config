@@ -891,6 +891,8 @@ The database needs to have a table called `PROPERTIES` with columns called `APPL
 All fields are of type String in Java, so you can make them `VARCHAR` of whatever length you need.
 Property values behave in the same way as they would if they came from Spring Boot properties files named `{application}-{profile}.properties`, including all the encryption and decryption, which will be applied as post-processing steps (that is, not in the repository implementation directly).
 
+NOTE: The default label used for JDBC is `master`.  You can change that by setting `spring.cloud.config.server.jdbc.defaultLabel`.
+
 ==== Redis Backend
 
 Spring Cloud Config Server supports Redis as a backend for configuration properties.
