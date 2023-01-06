@@ -207,6 +207,22 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThatThrownBy(() -> repository.findOne("foo", "bar", "")).isInstanceOf(DataAccessException.class);
 	}
 
+	@Test
+	public void testCustomLabel() {
+		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		properties.setDefaultLabel("main");
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+		assertThat(env.getName()).isEqualTo("foo");
+		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
+		assertThat(env.getLabel()).isEqualTo("main");
+		assertThat(env.getPropertySources()).isNotEmpty();
+		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("foo-bar");
+		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c")).isEqualTo("foo-bar");
+		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("application-bar");
+	}
+
 	@ImportAutoConfiguration(SqlInitializationAutoConfiguration.class)
 	@Configuration(proxyBeanMethods = false)
 	protected static class ApplicationConfiguration {

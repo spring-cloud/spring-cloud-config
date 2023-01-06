@@ -51,6 +51,8 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	 */
 	private boolean failOnError = true;
 
+	private String defaultLabel = "master";
+
 	public boolean isEnabled() {
 		return enabled;
 	}
@@ -95,6 +97,14 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	public boolean isConfigIncomplete() {
 		// sql and sqlWithoutProfile should be customized at the same time
 		return !this.sql.equals(DEFAULT_SQL) && this.sqlWithoutProfile.equals(DEFAULT_SQL_WITHOUT_PROFILE);
+	}
+
+	public String getDefaultLabel() {
+		return this.defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 }
