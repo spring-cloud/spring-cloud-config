@@ -119,12 +119,14 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		List<String> envs = new ArrayList<>(new LinkedHashSet<>(Arrays.asList(profiles)));
 		Collections.reverse(applications);
 		Collections.reverse(envs);
-		for (String app : applications) {
-			for (String env : envs) {
+		for (String env : envs) {
+			for (String app : applications) {
 				addPropertySource(environment, app, env, label);
 			}
-			// add properties without profile, equivalent to foo.yml, application.yml
-			if (!configIncomplete) {
+		}
+		// add properties without profile, equivalent to foo.yml, application.yml
+		if (!configIncomplete) {
+			for (String app : applications) {
 				addPropertySource(environment, app, null, label);
 			}
 		}
