@@ -63,10 +63,10 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getPropertySources()).isNotEmpty();
 		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("foo-bar");
 		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c")).isEqualTo("foo-bar");
-		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("foo");
-		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("foo-null");
-		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("application-bar");
-		assertThat(env.getPropertySources().get(2).getSource().get("a.b.c")).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("foo");
+		assertThat(env.getPropertySources().get(2).getSource().get("a.b.c")).isEqualTo("foo-null");
 		assertThat(env.getPropertySources().get(3).getName()).isEqualTo("application");
 		assertThat(env.getPropertySources().get(3).getSource().get("a.b.c")).isEqualTo("application-null");
 	}
@@ -82,10 +82,10 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getPropertySources()).isNotEmpty();
 		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("foo-default");
 		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c")).isEqualTo("foo-default");
-		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("foo");
-		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("foo-null");
-		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("application-default");
-		assertThat(env.getPropertySources().get(2).getSource().get("a.b.c")).isEqualTo("application-default");
+		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("application-default");
+		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("application-default");
+		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("foo");
+		assertThat(env.getPropertySources().get(2).getSource().get("a.b.c")).isEqualTo("foo-null");
 		assertThat(env.getPropertySources().get(3).getName()).isEqualTo("application");
 		assertThat(env.getPropertySources().get(3).getSource().get("a.b.c")).isEqualTo("application-null");
 	}
@@ -147,10 +147,10 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getPropertySources()).isNotEmpty();
 		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("foo-bar");
 		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c")).isEqualTo("foo-bar");
-		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("foo");
-		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("foo-null");
-		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("application-bar");
-		assertThat(env.getPropertySources().get(2).getSource().get("a.b.c")).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("foo");
+		assertThat(env.getPropertySources().get(2).getSource().get("a.b.c")).isEqualTo("foo-null");
 		assertThat(env.getPropertySources().get(3).getName()).isEqualTo("application");
 		assertThat(env.getPropertySources().get(3).getSource().get("a.b.c")).isEqualTo("application-null");
 	}
@@ -167,10 +167,10 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getPropertySources()).isNotEmpty();
 		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("foo-bar");
 		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c")).isEqualTo("foo-bar");
-		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("foo-default");
-		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("foo-default");
-		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("application-bar");
-		assertThat(env.getPropertySources().get(2).getSource().get("a.b.c")).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("application-bar");
+		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("foo-default");
+		assertThat(env.getPropertySources().get(2).getSource().get("a.b.c")).isEqualTo("foo-default");
 		assertThat(env.getPropertySources().get(3).getName()).isEqualTo("application-default");
 		assertThat(env.getPropertySources().get(3).getSource().get("a.b.c")).isEqualTo("application-default");
 	}
