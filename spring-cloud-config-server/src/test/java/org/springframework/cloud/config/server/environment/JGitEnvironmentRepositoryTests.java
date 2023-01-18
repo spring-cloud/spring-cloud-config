@@ -916,12 +916,11 @@ public class JGitEnvironmentRepositoryTests {
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		assertThat(provider.isInteractive()).isFalse();
 
-		CredentialItem.StringType stringCredential = new CredentialItem.StringType(PassphraseCredentialsProvider.PROMPT,
-				true);
+		CredentialItem.Password credential = new CredentialItem.Password(PassphraseCredentialsProvider.PROMPT);
 
-		assertThat(provider.supports(stringCredential)).isTrue();
-		provider.get(new URIish(), stringCredential);
-		assertThat(passphrase).isEqualTo(stringCredential.getValue());
+		assertThat(provider.supports(credential)).isTrue();
+		provider.get(new URIish(), credential);
+		assertThat(passphrase.toCharArray()).isEqualTo(credential.getValue());
 	}
 
 	@Test
@@ -945,13 +944,12 @@ public class JGitEnvironmentRepositoryTests {
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		assertThat(provider.isInteractive()).isFalse();
 
-		CredentialItem.StringType stringCredential = new CredentialItem.StringType(PassphraseCredentialsProvider.PROMPT,
-				true);
+		CredentialItem.Password credential = new CredentialItem.Password(PassphraseCredentialsProvider.PROMPT);
+		CredentialItem.InformationalMessage message = new CredentialItem.InformationalMessage("any prompt");
 
-		assertThat(provider.supports(stringCredential)).isTrue();
-		provider.get(new URIish(), stringCredential);
-		assertThat(passphrase).isEqualTo(stringCredential.getValue());
-
+		assertThat(provider.supports(message, credential)).isTrue();
+		provider.get(new URIish(), message, credential);
+		assertThat(passphrase.toCharArray()).isEqualTo(credential.getValue());
 	}
 
 	@Test
