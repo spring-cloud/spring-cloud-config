@@ -40,7 +40,7 @@ public class ConfigServerBootstrapOverridesAutoConfiguration {
 	 * SmartLifecycle that refreshes and rebinds beans needed for
 	 * spring.cloud.config.server.overrides to work.
 	 */
-	private static class ConfigServerBootstrapOverridesLifecycle implements SmartLifecycle {
+	static class ConfigServerBootstrapOverridesLifecycle implements SmartLifecycle {
 
 		private final ApplicationContext context;
 
