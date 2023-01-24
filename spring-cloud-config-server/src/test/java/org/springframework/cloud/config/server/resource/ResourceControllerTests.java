@@ -19,10 +19,10 @@ package org.springframework.cloud.config.server.resource;
 import java.util.Map;
 
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.boot.WebApplicationType;
@@ -59,14 +59,14 @@ public class ResourceControllerTests {
 	@SuppressWarnings("unchecked")
 	private Map<String, ResourceEncryptor> resourceEncryptorMap = Mockito.mock(Map.class);
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();
 		}
 	}
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
 				.run();
@@ -80,7 +80,7 @@ public class ResourceControllerTests {
 	}
 
 	@Test
-	@Ignore // FIXME: configdata
+	@Disabled // FIXME: configdata
 	public void templateReplacement() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", true);

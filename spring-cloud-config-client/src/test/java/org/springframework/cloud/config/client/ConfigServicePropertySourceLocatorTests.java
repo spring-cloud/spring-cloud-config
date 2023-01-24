@@ -27,10 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.LogFactory;
-import org.hamcrest.core.IsInstanceOf;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.assertj.core.api.AbstractThrowableAssert;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -65,9 +64,6 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.AUT
 import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
 
 public class ConfigServicePropertySourceLocatorTests {
-
-	@Rule
-	public ExpectedException expected = ExpectedException.none();
 
 	private ConfigurableEnvironment environment = new StandardEnvironment();
 
@@ -140,16 +136,16 @@ public class ConfigServicePropertySourceLocatorTests {
 
 	@Test
 	public void sunnyDayWithNoSuchLabelAndFailFast() {
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setFailFast(true);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
-		mockRequestResponseWithLabel(new ResponseEntity<>((Void) null, HttpStatus.NOT_FOUND), "release(_)v1.0.0");
-		this.locator.setRestTemplate(this.restTemplate);
-		TestPropertyValues.of("spring.cloud.config.label:release/v1.0.1").applyTo(this.environment);
-		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
-		this.expected.expectMessage(
+		Assertions.assertThatThrownBy(() -> {
+			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+			defaults.setFailFast(true);
+			this.locator = new ConfigServicePropertySourceLocator(defaults);
+			mockRequestResponseWithLabel(new ResponseEntity<>((Void) null, HttpStatus.NOT_FOUND), "release(_)v1.0.0");
+			this.locator.setRestTemplate(this.restTemplate);
+			TestPropertyValues.of("spring.cloud.config.label:release/v1.0.1").applyTo(this.environment);
+			this.locator.locateCollection(this.environment);
+		}).isInstanceOf(IllegalStateException.class).hasMessageContaining(
 				"Could not locate PropertySource and the fail fast property is set, failing: None of labels [release/v1.0.1] found");
-		this.locator.locateCollection(this.environment);
 	}
 
 	@Test
@@ -161,61 +157,62 @@ public class ConfigServicePropertySourceLocatorTests {
 
 	@Test
 	public void failFast() throws Exception {
-		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
-		mockRequestResponse(requestFactory, null, HttpStatus.INTERNAL_SERVER_ERROR);
-		RestTemplate restTemplate = new RestTemplate(requestFactory);
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setFailFast(true);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
-		this.locator.setRestTemplate(restTemplate);
-		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
-		this.expected.expectCause(IsInstanceOf.instanceOf(HttpServerErrorException.class));
-		this.expected.expectMessage("fail fast property is set");
-		this.locator.locateCollection(this.environment);
+		Assertions.assertThatThrownBy(() -> {
+			ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+			mockRequestResponse(requestFactory, null, HttpStatus.INTERNAL_SERVER_ERROR);
+			RestTemplate restTemplate = new RestTemplate(requestFactory);
+			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+			defaults.setFailFast(true);
+			this.locator = new ConfigServicePropertySourceLocator(defaults);
+			this.locator.setRestTemplate(restTemplate);
+			this.locator.locateCollection(this.environment);
+		}).isInstanceOf(IllegalStateException.class).hasCauseInstanceOf(HttpServerErrorException.class)
+				.hasMessageContaining("fail fast property is set");
 	}
 
 	@Test
 	public void failFastWhenNotFound() throws Exception {
-		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
-		mockRequestResponse(requestFactory, null, HttpStatus.NOT_FOUND);
-		RestTemplate restTemplate = new RestTemplate(requestFactory);
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setFailFast(true);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
-		this.locator.setRestTemplate(restTemplate);
-		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
-		this.expected.expectMessage("fail fast property is set, failing: None of labels [] found");
-		this.locator.locateCollection(this.environment);
+		Assertions.assertThatThrownBy(() -> {
+			ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+			mockRequestResponse(requestFactory, null, HttpStatus.NOT_FOUND);
+			RestTemplate restTemplate = new RestTemplate(requestFactory);
+			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+			defaults.setFailFast(true);
+			this.locator = new ConfigServicePropertySourceLocator(defaults);
+			this.locator.setRestTemplate(restTemplate);
+			this.locator.locateCollection(this.environment);
+		}).isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("fail fast property is set, failing: None of labels [] found");
 	}
 
 	@Test
 	public void failFastWhenRequestTimesOut() {
-		mockRequestTimedOut();
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setFailFast(true);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
-		this.locator.setRestTemplate(this.restTemplate);
-		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
-		this.expected.expectCause(IsInstanceOf.instanceOf(ResourceAccessException.class));
-		this.expected.expectMessage("fail fast property is set");
-		this.locator.locateCollection(this.environment);
+		Assertions.assertThatThrownBy(() -> {
+			mockRequestTimedOut();
+			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+			defaults.setFailFast(true);
+			this.locator = new ConfigServicePropertySourceLocator(defaults);
+			this.locator.setRestTemplate(this.restTemplate);
+			this.locator.locateCollection(this.environment);
+		}).isInstanceOf(IllegalStateException.class).hasMessageContaining("fail fast property is set");
 	}
 
 	@Test
 	public void failFastWhenBothPasswordAndAuthorizationPropertiesSet() throws Exception {
-		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
-		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
-		Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
-				.thenReturn(request);
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setFailFast(true);
-		defaults.setUsername("username");
-		defaults.setPassword("password");
-		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
-		this.expected.expect(IllegalStateException.class);
-		this.expected.expectMessage("Could not locate PropertySource and the fail fast property is set, failing");
-		this.locator.locateCollection(this.environment);
+		Assertions.assertThatThrownBy(() -> {
+			ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+			ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
+			Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
+					.thenReturn(request);
+			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+			defaults.setFailFast(true);
+			defaults.setUsername("username");
+			defaults.setPassword("password");
+			defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
+			this.locator = new ConfigServicePropertySourceLocator(defaults);
+			this.locator.locateCollection(this.environment);
+		}).isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Could not locate PropertySource and the fail fast property is set, failing");
 	}
 
 	@Test
@@ -253,32 +250,33 @@ public class ConfigServicePropertySourceLocatorTests {
 
 	@Test
 	public void shouldThrowExceptionWhenPasswordAndAuthorizationBothSet() {
-		HttpHeaders headers = new HttpHeaders();
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
-		String username = "user";
-		String password = "pass";
-		this.expected.expect(IllegalStateException.class);
-		this.expected.expectMessage("You must set either 'password' or 'authorization'");
-		factory(defaults).addAuthorizationToken(headers, username, password);
+		Assertions.assertThatThrownBy(() -> {
+			HttpHeaders headers = new HttpHeaders();
+			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+			defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
+			String username = "user";
+			String password = "pass";
+			factory(defaults).addAuthorizationToken(headers, username, password);
+		}).isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("You must set either 'password' or 'authorization'");
 	}
 
 	@Test
 	public void shouldThrowExceptionWhenNegativeReadTimeoutSet() {
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setRequestReadTimeout(-1);
-		this.expected.expect(IllegalStateException.class);
-		this.expected.expectMessage("Invalid Value for Read Timeout set.");
-		factory(defaults).create();
+		Assertions.assertThatThrownBy(() -> {
+			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+			defaults.setRequestReadTimeout(-1);
+			factory(defaults).create();
+		}).isInstanceOf(IllegalStateException.class).hasMessageContaining("Invalid Value for Read Timeout set.");
 	}
 
 	@Test
 	public void shouldThrowExceptionWhenNegativeConnectTimeoutSet() {
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setRequestConnectTimeout(-1);
-		this.expected.expect(IllegalStateException.class);
-		this.expected.expectMessage("Invalid Value for Connect Timeout set.");
-		factory(defaults).create();
+		Assertions.assertThatThrownBy(() -> {
+			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+			defaults.setRequestConnectTimeout(-1);
+			factory(defaults).create();
+		}).isInstanceOf(IllegalStateException.class).hasMessageContaining("Invalid Value for Connect Timeout set.");
 	}
 
 	@Test
@@ -440,29 +438,32 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	private void assertNextUriIsNotTried(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy,
-			HttpStatus firstUriResponse, Class<? extends Exception> expectedCause) throws Exception {
-		// Set up with two URIs.
-		ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
-		String badURI = "http://baduri";
-		String goodURI = "http://localhost:8888";
-		String[] uris = new String[] { badURI, goodURI };
-		clientProperties.setUri(uris);
-		clientProperties.setFailFast(true);
-		// Strategy is CONNECTION_TIMEOUT_ONLY, so it should not try the next URI for
-		// INTERNAL_SERVER_ERROR
-		clientProperties.setMultipleUriStrategy(multipleUriStrategy);
-		this.locator = new ConfigServicePropertySourceLocator(clientProperties);
-		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
-		RestTemplate restTemplate = new RestTemplate(requestFactory);
-		mockRequestResponse(requestFactory, badURI, firstUriResponse);
-		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
-		this.locator.setRestTemplate(restTemplate);
-		this.expected.expect(IsInstanceOf.instanceOf(IllegalStateException.class));
-		if (expectedCause != null) {
-			this.expected.expectCause(IsInstanceOf.instanceOf(expectedCause));
+			HttpStatus firstUriResponse, Class<? extends Exception> expectedCause) {
+		AbstractThrowableAssert throwableAssert = Assertions.assertThatThrownBy(() -> {
+			// Set up with two URIs.
+			ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
+			String badURI = "http://baduri";
+			String goodURI = "http://localhost:8888";
+			String[] uris = new String[] { badURI, goodURI };
+			clientProperties.setUri(uris);
+			clientProperties.setFailFast(true);
+			// Strategy is CONNECTION_TIMEOUT_ONLY, so it should not try the next URI for
+			// INTERNAL_SERVER_ERROR
+			clientProperties.setMultipleUriStrategy(multipleUriStrategy);
+			this.locator = new ConfigServicePropertySourceLocator(clientProperties);
+			ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+			RestTemplate restTemplate = new RestTemplate(requestFactory);
+			mockRequestResponse(requestFactory, badURI, firstUriResponse);
+			mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+			this.locator.setRestTemplate(restTemplate);
+			this.locator.locateCollection(this.environment);
+		});
+		if (expectedCause == null) {
+			throwableAssert.hasNoCause().hasMessageContaining("fail fast property is set");
 		}
-		this.expected.expectMessage("fail fast property is set");
-		this.locator.locateCollection(this.environment);
+		else {
+			throwableAssert.hasCauseInstanceOf(expectedCause).hasMessageContaining("fail fast property is set");
+		}
 	}
 
 	@SuppressWarnings("SameParameterValue")

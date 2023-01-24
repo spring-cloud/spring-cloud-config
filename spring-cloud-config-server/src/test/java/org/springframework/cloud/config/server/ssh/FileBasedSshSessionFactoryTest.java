@@ -21,9 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jgit.transport.SshConfigStore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Unit tests for file based SSH config processor.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class FileBasedSshSessionFactoryTest {
 
 	private FileBasedSshSessionFactory factory;

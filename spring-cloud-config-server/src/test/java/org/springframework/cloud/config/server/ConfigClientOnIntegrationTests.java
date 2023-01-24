@@ -20,10 +20,9 @@ import java.io.IOException;
 
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
@@ -45,14 +44,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class,
 		properties = { "spring.config.use-legacy-processing=true", "spring.cloud.config.enabled:true" },
 		webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -68,7 +65,7 @@ public class ConfigClientOnIntegrationTests {
 	@Autowired
 	private ApplicationContext context;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws IOException {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
@@ -76,7 +73,7 @@ public class ConfigClientOnIntegrationTests {
 		localRepo = ConfigServerTestUtils.prepareLocalRepo();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void after() throws IOException {
 		ConfigServerTestUtils.deleteLocalRepo(localRepo);
 	}

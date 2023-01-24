@@ -18,19 +18,18 @@ package org.springframework.cloud.config.server.composite;
 
 import java.util.List;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(OutputCaptureExtension.class)
 public class CompositUtilsTests {
-
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
 
 	@Test
 	public void getCompositeTypeListWorks() {
@@ -49,18 +48,18 @@ public class CompositUtilsTests {
 
 	@Test
 	public void getCompositeTypeListFails() {
-		this.thrown.expect(IllegalStateException.class);
-
-		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-				.withPropertyValues("spring.profiles.active:test,composite", "spring.config.name:compositeconfigserver",
-						"spring.jmx.enabled=false",
-						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
-						"spring.cloud.config.server.composite[0].type:git",
-						"spring.cloud.config.server.composite[2].uri:file:///./target/repos/svn-config-repo",
-						"spring.cloud.config.server.composite[2].type:svn")
-				.run(context -> {
-					CompositeUtils.getCompositeTypeList(context.getEnvironment());
-				});
+		Assertions.assertThatThrownBy(() -> {
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
+					.withPropertyValues("spring.profiles.active:test,composite",
+							"spring.config.name:compositeconfigserver", "spring.jmx.enabled=false",
+							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+							"spring.cloud.config.server.composite[0].type:git",
+							"spring.cloud.config.server.composite[2].uri:file:///./target/repos/svn-config-repo",
+							"spring.cloud.config.server.composite[2].type:svn")
+					.run(context -> {
+						CompositeUtils.getCompositeTypeList(context.getEnvironment());
+					});
+		}).isInstanceOf(IllegalStateException.class);
 	}
 
 }

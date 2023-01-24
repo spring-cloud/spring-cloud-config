@@ -19,10 +19,9 @@ package sample;
 import java.io.IOException;
 import java.util.Map;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
@@ -32,7 +31,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.TestSocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,7 +45,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  *
  * @author Spencer Gibb
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
 		// config
@@ -67,7 +64,7 @@ public class ApplicationBootstrapTests {
 	@LocalServerPort
 	private int port;
 
-	@BeforeClass
+	@BeforeAll
 	public static void startConfigServer() throws IOException {
 		System.setProperty("spring.cloud.bootstrap.name", "bootstrapservercomposite");
 		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
@@ -80,7 +77,7 @@ public class ApplicationBootstrapTests {
 		System.setProperty("config.port", "" + configPort);
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void close() {
 		System.clearProperty("config.port");
 		System.clearProperty("spring.cloud.bootstrap.name");

@@ -44,10 +44,10 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -75,13 +75,13 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 
 	private File basedir = new File("target/config");
 
-	@BeforeClass
+	@BeforeAll
 	public static void initClass() {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
 	}
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE);
@@ -89,7 +89,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 		ConfigServerTestUtils.deleteLocalRepo("config-copy");
 	}
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();

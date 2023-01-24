@@ -21,9 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
@@ -48,7 +48,7 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 
 	private Environment environment = new Environment("foo", "master");
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.controller = new EnvironmentEncryptorEnvironmentRepository(this.repository, ObservationRegistry.NOOP);
 	}

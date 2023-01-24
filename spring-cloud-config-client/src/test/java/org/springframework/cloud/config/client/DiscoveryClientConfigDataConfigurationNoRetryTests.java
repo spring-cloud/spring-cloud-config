@@ -21,9 +21,8 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.boot.BootstrapRegistry;
@@ -36,7 +35,6 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.test.ClassPathExclusions;
-import org.springframework.cloud.test.ModifiedClassPathRunner;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,7 +46,6 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.Dis
 /**
  * @author Dave Syer
  */
-@RunWith(ModifiedClassPathRunner.class)
 @ClassPathExclusions({ "spring-retry-*.jar", "spring-boot-starter-aop-*.jar" })
 public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 
@@ -58,7 +55,7 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 
 	protected ServiceInstance info = new DefaultServiceInstance("app:8877", "app", "foo", 8877, false);
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();

@@ -21,7 +21,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.security.KeyStore;
 
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
 public abstract class AbstractTlsSetup {
 
@@ -41,7 +41,7 @@ public abstract class AbstractTlsSetup {
 
 	protected static File wrongClientCert;
 
-	@BeforeClass
+	@BeforeAll
 	public static void createCertificates() throws Exception {
 		KeyTool tool = new KeyTool();
 

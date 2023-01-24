@@ -45,9 +45,11 @@ import org.eclipse.jgit.transport.sshd.ProxyData;
 import org.eclipse.jgit.transport.sshd.ProxyDataFactory;
 import org.eclipse.jgit.transport.sshd.ServerKeyDatabase;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
@@ -65,7 +67,8 @@ import static org.mockito.Mockito.when;
  * @author William Tran
  * @author Ollie Hughes
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class PropertyBasedSshSessionFactoryTest {
 
 	private static final String HOST_KEY = "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAAB"

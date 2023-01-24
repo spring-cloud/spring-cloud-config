@@ -20,10 +20,9 @@ import java.io.IOException;
 
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,13 +35,11 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.assertOriginTrackedValue;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfigServerApplication.class, properties = { "spring.cloud.bootstrap.enabled=true",
 		"logging.level.org.springframework.boot.context.config=TRACE", "spring.cloud.bootstrap.name:enable-bootstrap",
 		"encrypt.rsa.algorithm=DEFAULT", "encrypt.rsa.strong=false" },
@@ -56,7 +53,7 @@ public class BootstrapConfigServerIntegrationTests {
 	@Autowired
 	ConfigurableEnvironment env;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws IOException {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
@@ -76,7 +73,7 @@ public class BootstrapConfigServerIntegrationTests {
 	}
 
 	@Test
-	@Ignore // FIXME: configdata
+	@Disabled // FIXME: configdata
 	public void environmentBootstraps() {
 		assertThat(this.env.getProperty("info.foo", "")).isEqualTo("bar");
 		assertThat(this.env.getProperty("config.foo", "")).isEqualTo("foo");

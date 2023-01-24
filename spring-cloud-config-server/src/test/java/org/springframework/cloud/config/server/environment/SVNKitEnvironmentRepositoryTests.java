@@ -20,9 +20,10 @@ import java.io.File;
 import java.io.IOException;
 
 import io.micrometer.observation.ObservationRegistry;
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.util.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -49,7 +50,7 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	private File basedir = new File("target/config");
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/" + REPOSITORY_NAME,
 				"target/repos/" + REPOSITORY_NAME);
@@ -114,10 +115,12 @@ public class SVNKitEnvironmentRepositoryTests {
 		assertThat(environment.getPropertySources().get(1).getName().contains("application.yml")).isTrue();
 	}
 
-	@Test(expected = NoSuchLabelException.class)
+	@Test
 	public void invalidLabel() {
-		Environment environment = this.repository.findOne("bar", "staging", "unknownlabel");
-		assertThat(environment.getPropertySources().size()).isEqualTo(0);
+		Assertions.assertThatThrownBy(() -> {
+			Environment environment = this.repository.findOne("bar", "staging", "unknownlabel");
+			assertThat(environment.getPropertySources().size()).isEqualTo(0);
+		}).isInstanceOf(NoSuchLabelException.class);
 	}
 
 	@Test

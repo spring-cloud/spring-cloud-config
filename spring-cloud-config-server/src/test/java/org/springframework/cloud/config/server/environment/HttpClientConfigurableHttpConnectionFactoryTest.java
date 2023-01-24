@@ -25,8 +25,8 @@ import java.util.Objects;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.eclipse.jgit.transport.http.HttpConnection;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.util.ReflectionUtils;
 
@@ -36,7 +36,7 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 
 	private HttpClientConfigurableHttpConnectionFactory connectionFactory;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		this.connectionFactory = new HttpClientConfigurableHttpConnectionFactory();
 	}

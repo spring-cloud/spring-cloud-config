@@ -19,9 +19,7 @@ package org.springframework.cloud.config.client;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
 import org.mockito.Mockito;
 
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -41,16 +39,13 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.Dis
 
 public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {
 
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
-
 	protected AnnotationConfigApplicationContext context;
 
 	protected DiscoveryClient client = Mockito.mock(DiscoveryClient.class);
 
 	protected ServiceInstance info = new DefaultServiceInstance("app:8877", "app", "foo", 8877, false);
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();
@@ -72,11 +67,6 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 	void givenDiscoveryClientReturnsInfoOnThirdTry() {
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Collections.<ServiceInstance>emptyList())
 				.willReturn(Collections.<ServiceInstance>emptyList()).willReturn(Collections.singletonList(this.info));
-	}
-
-	void expectNoInstancesOfConfigServerException() {
-		this.expectedException.expect(IllegalStateException.class);
-		this.expectedException.expectMessage("No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
 	}
 
 	void expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup() {

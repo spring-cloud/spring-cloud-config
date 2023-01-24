@@ -18,7 +18,7 @@ package org.springframework.cloud.config.client;
 
 import java.util.Collections;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
@@ -178,13 +178,12 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 	}
 
 	@Test
-	public void shouldRetryAndFailWithExceptionGetConfigServerInstanceFromDiscoveryClient() throws Exception {
-		givenDiscoveryClientReturnsNoInfo();
-
-		expectNoInstancesOfConfigServerException();
-
-		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true");
+	public void shouldRetryAndFailWithExceptionGetConfigServerInstanceFromDiscoveryClient() {
+		org.assertj.core.api.Assertions.assertThatThrownBy(() -> {
+			givenDiscoveryClientReturnsNoInfo();
+			setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.retry.maxAttempts=3",
+					"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true");
+		}).isInstanceOf(IllegalStateException.class);
 	}
 
 	@Test

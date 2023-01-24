@@ -29,7 +29,8 @@ import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import com.google.cloud.secretmanager.v1.SecretPayload;
 import com.google.cloud.secretmanager.v1.SecretVersion;
 import com.google.protobuf.ByteString;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -57,12 +58,14 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 				mock) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testGetUnsupportedStrategy() {
-		GoogleSecretManagerEnvironmentProperties properties = new GoogleSecretManagerEnvironmentProperties();
-		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
-		properties.setVersion(2);
-		GoogleSecretManagerAccessStrategyFactory.forVersion(null, null, properties, mock);
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			GoogleSecretManagerEnvironmentProperties properties = new GoogleSecretManagerEnvironmentProperties();
+			SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
+			properties.setVersion(2);
+			GoogleSecretManagerAccessStrategyFactory.forVersion(null, null, properties, mock);
+		});
 	}
 
 	@Test

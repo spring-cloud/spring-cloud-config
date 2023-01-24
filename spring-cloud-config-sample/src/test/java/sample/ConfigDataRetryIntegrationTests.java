@@ -22,10 +22,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
@@ -37,7 +36,6 @@ import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.TestSocketUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -46,7 +44,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
 		// config server on the classpath we need to set it explicitly
@@ -66,7 +63,7 @@ public class ConfigDataRetryIntegrationTests {
 	@LocalServerPort
 	private int port;
 
-	@BeforeClass
+	@BeforeAll
 	public static void startConfigServer() throws IOException {
 		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
 		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
@@ -76,7 +73,7 @@ public class ConfigDataRetryIntegrationTests {
 		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void close() {
 		System.clearProperty("spring.cloud.config.uri");
 		if (server != null) {

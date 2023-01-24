@@ -20,9 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.runners.Parameterized.Parameters;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -34,17 +33,12 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
+/**
+ * Converted all the tests to parameterized tests.
+ *
+ * @author Siva Krishna Battu
+ */
 public class CipherEnvironmentEncryptorTests {
-
-	TextEncryptor textEncryptor = new EncryptorFactory().create("foo");
-
-	EnvironmentEncryptor encryptor;
-
-	public CipherEnvironmentEncryptorTests(String salt, String key) {
-		this.textEncryptor = new EncryptorFactory(salt).create(key);
-		this.encryptor = new CipherEnvironmentEncryptor(keys -> CipherEnvironmentEncryptorTests.this.textEncryptor);
-	}
 
 	@Parameters
 	public static List<Object[]> params() {
@@ -54,66 +48,75 @@ public class CipherEnvironmentEncryptorTests {
 		return list;
 	}
 
-	@Test
-	public void shouldDecryptEnvironment() {
+	@ParameterizedTest
+	@MethodSource("params")
+	public void shouldDecryptEnvironment(String salt, String key) {
+		TextEncryptor textEncryptor = new EncryptorFactory(salt).create(key);
+		EnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(keys -> textEncryptor);
 		// given
 		String secret = randomUUID().toString();
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
-				"{cipher}" + this.textEncryptor.encrypt(secret))));
+				"{cipher}" + textEncryptor.encrypt(secret))));
 
 		// then
-		assertThat(
-				this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-						.isEqualTo(secret);
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+				.isEqualTo(secret);
 	}
 
-	@Test
-	public void shouldDecryptEnvironmentWithKey() {
+	@ParameterizedTest
+	@MethodSource("params")
+	public void shouldDecryptEnvironmentWithKey(String salt, String key) {
+
+		TextEncryptor textEncryptor = new EncryptorFactory(salt).create(key);
+		EnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(keys -> textEncryptor);
+
 		// given
 		String secret = randomUUID().toString();
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
-				"{cipher}{key:test}" + this.textEncryptor.encrypt(secret))));
+				"{cipher}{key:test}" + textEncryptor.encrypt(secret))));
 
 		// then
-		assertThat(
-				this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-						.isEqualTo(secret);
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+				.isEqualTo(secret);
 	}
 
-	@Test
-	public void shouldBeAbleToUseNullAsPropertyValue() {
-
+	@ParameterizedTest
+	@MethodSource("params")
+	public void shouldBeAbleToUseNullAsPropertyValue(String salt, String key) {
+		TextEncryptor textEncryptor = new EncryptorFactory(salt).create(key);
+		EnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(keys -> textEncryptor);
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), null)));
 
 		// then
-		assertThat(
-				this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-						.isEqualTo(null);
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+				.isEqualTo(null);
 	}
 
-	@Test
-	public void shouldDecryptEnvironmentIncludeOrigin() {
+	@ParameterizedTest
+	@MethodSource("params")
+	public void shouldDecryptEnvironmentIncludeOrigin(String salt, String key) {
+		TextEncryptor textEncryptor = new EncryptorFactory(salt).create(key);
+		EnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(keys -> textEncryptor);
 		// given
 		String secret = randomUUID().toString();
 
 		// when
 		Environment environment = new Environment("name", "profile", "label");
-		String encrypted = "{cipher}" + this.textEncryptor.encrypt(secret);
+		String encrypted = "{cipher}" + textEncryptor.encrypt(secret);
 		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
 				new PropertyValueDescriptor(encrypted, "encrypted value"))));
 
 		// then
-		assertThat(
-				this.encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-						.isEqualTo(secret);
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+				.isEqualTo(secret);
 	}
 
 }

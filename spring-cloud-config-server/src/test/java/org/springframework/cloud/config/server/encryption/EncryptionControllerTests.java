@@ -18,7 +18,8 @@ package org.springframework.cloud.config.server.encryption;
 
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import org.springframework.http.MediaType;
@@ -42,27 +43,33 @@ public class EncryptionControllerTests {
 	private EncryptionController controller = new EncryptionController(
 			new SingleTextEncryptorLocator(Encryptors.noOpText()));
 
-	@Test(expected = EncryptionTooWeakException.class)
+	@Test
 	public void cannotDecryptWithoutKey() {
-		this.controller.decrypt("foo", MediaType.TEXT_PLAIN);
+		Assertions.assertThrows(EncryptionTooWeakException.class,
+				() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
 	}
 
-	@Test(expected = EncryptionTooWeakException.class)
+	@Test
 	public void cannotDecryptWithNoopEncryptor() {
-		this.controller.decrypt("foo", MediaType.TEXT_PLAIN);
+		Assertions.assertThrows(EncryptionTooWeakException.class,
+				() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
 	}
 
-	@Test(expected = InvalidCipherException.class)
+	@Test
 	public void shouldThrowExceptionOnDecryptInvalidData() {
-		this.controller = new EncryptionController(new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
-		this.controller.decrypt("foo", MediaType.TEXT_PLAIN);
+		Assertions.assertThrows(InvalidCipherException.class, () -> {
+			this.controller = new EncryptionController(new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
+			this.controller.decrypt("foo", MediaType.TEXT_PLAIN);
+		});
 	}
 
-	@Test(expected = InvalidCipherException.class)
+	@Test
 	public void shouldThrowExceptionOnDecryptWrongKey() {
-		RsaSecretEncryptor encryptor = new RsaSecretEncryptor();
-		this.controller = new EncryptionController(new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
-		this.controller.decrypt(encryptor.encrypt("foo"), MediaType.TEXT_PLAIN);
+		Assertions.assertThrows(InvalidCipherException.class, () -> {
+			RsaSecretEncryptor encryptor = new RsaSecretEncryptor();
+			this.controller = new EncryptionController(new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
+			this.controller.decrypt(encryptor.encrypt("foo"), MediaType.TEXT_PLAIN);
+		});
 	}
 
 	@Test
@@ -134,7 +141,7 @@ public class EncryptionControllerTests {
 	public void addEnvironment() {
 		TextEncryptorLocator locator = new TextEncryptorLocator() {
 
-			private RsaSecretEncryptor encryptor = new RsaSecretEncryptor();
+			private final RsaSecretEncryptor encryptor = new RsaSecretEncryptor();
 
 			@Override
 			public TextEncryptor locate(Map<String, String> keys) {

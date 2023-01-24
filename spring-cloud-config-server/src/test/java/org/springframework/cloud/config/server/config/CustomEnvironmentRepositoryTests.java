@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.config.server.config;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -33,7 +32,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,7 +39,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Dave Syer
  *
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestApplication.class, properties = { "spring.config.name:configserver" },
 		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")

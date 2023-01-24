@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategy.VaultResponse;
 

@@ -40,11 +40,12 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.boot.WebApplicationType;
@@ -77,13 +78,13 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 	private File basedir = new File("target/config");
 
-	@BeforeClass
+	@BeforeAll
 	public static void initClass() {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
 	}
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE);
@@ -91,7 +92,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		ConfigServerTestUtils.deleteLocalRepo("");
 	}
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();
@@ -111,15 +112,17 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThat(environment.getLabel()).isEqualTo("master");
 	}
 
-	@Test(expected = NoSuchLabelException.class)
-	public void shouldFailIfNotTryingMaster() throws IOException {
-		String uri = ConfigServerTestUtils.prepareLocalRepo();
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties("spring.cloud.config.server.git.uri:" + uri,
-						"spring.cloud.config.server.git.tryMasterBranch:false")
-				.run();
-		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("bar", "staging", null);
+	@Test
+	public void shouldFailIfNotTryingMaster() {
+		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+			String uri = ConfigServerTestUtils.prepareLocalRepo();
+			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties("spring.cloud.config.server.git.uri:" + uri,
+							"spring.cloud.config.server.git.tryMasterBranch:false")
+					.run();
+			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+			Environment environment = repository.findOne("bar", "staging", null);
+		});
 	}
 
 	@Test
@@ -233,7 +236,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	}
 
 	@Test
-	@Ignore // see https://github.com/spring-projects/spring-framework/issues/29333
+	@Disabled // see https://github.com/spring-projects/spring-framework/issues/29333
 	public void verifyPropertySourceOrdering() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("ordering-repo");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
@@ -280,13 +283,15 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThat(repository.getDefaultLabel()).isEqualTo(JGitEnvironmentProperties.MAIN_LABEL);
 	}
 
-	@Test(expected = NoSuchLabelException.class)
-	public void invalidLabel() throws IOException {
-		String uri = ConfigServerTestUtils.prepareLocalRepo();
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties("spring.cloud.config.server.git.uri:" + uri).run();
-		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "unknownlabel");
+	@Test
+	public void invalidLabel() {
+		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+			String uri = ConfigServerTestUtils.prepareLocalRepo();
+			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties("spring.cloud.config.server.git.uri:" + uri).run();
+			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+			repository.findOne("bar", "staging", "unknownlabel");
+		});
 	}
 
 	@Test
@@ -335,15 +340,17 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThat(environment.getPropertySources().size()).isEqualTo(2);
 	}
 
-	@Test(expected = NoSuchLabelException.class)
+	@Test
 	public void findOne_FindInvalidLabel_IllegalStateExceptionThrown() throws IOException {
-		String uri = ConfigServerTestUtils.prepareLocalRepo();
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties("spring.cloud.config.server.git.uri:" + uri,
-						"--spring.cloud.config.server.git.cloneOnStart=true")
-				.run();
-		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		repository.findOne("bar", "staging", "unknownlabel");
+		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+			String uri = ConfigServerTestUtils.prepareLocalRepo();
+			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties("spring.cloud.config.server.git.uri:" + uri,
+							"--spring.cloud.config.server.git.cloneOnStart=true")
+					.run();
+			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+			repository.findOne("bar", "staging", "unknownlabel");
+		});
 	}
 
 	@Test
@@ -549,11 +556,13 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThat("bar").isEqualTo(fooProperty);
 	}
 
-	@Test(expected = NoSuchLabelException.class)
+	@Test
 	public void testUnknownLabelWithRemote() throws Exception {
-		JGitConfigServerTestData testData = JGitConfigServerTestData
-				.prepareClonedGitRepository(TestConfiguration.class);
-		testData.getRepository().findOne("bar", "staging", "BADLabel");
+		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+			JGitConfigServerTestData testData = JGitConfigServerTestData
+					.prepareClonedGitRepository(TestConfiguration.class);
+			testData.getRepository().findOne("bar", "staging", "BADLabel");
+		});
 	}
 
 	private String getCommitID(Git git, String label) throws GitAPIException {
@@ -610,24 +619,26 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThat(environment).isNotNull();
 	}
 
-	@Test(expected = NoSuchLabelException.class)
+	@Test
 	public void testShouldFailIfRemoteBranchWasDeleted() throws Exception {
-		JGitConfigServerTestData testData = JGitConfigServerTestData.prepareClonedGitRepository(
-				Collections.singleton("spring.cloud.config.server.git.deleteUntrackedBranches=true"),
-				TestConfiguration.class);
+		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+			JGitConfigServerTestData testData = JGitConfigServerTestData.prepareClonedGitRepository(
+					Collections.singleton("spring.cloud.config.server.git.deleteUntrackedBranches=true"),
+					TestConfiguration.class);
 
-		String branchToDelete = "branchToDelete";
-		testData.getServerGit().getGit().branchCreate().setName(branchToDelete).call();
+			String branchToDelete = "branchToDelete";
+			testData.getServerGit().getGit().branchCreate().setName(branchToDelete).call();
 
-		// checkout and simulate regular flow
-		Environment environment = testData.getRepository().findOne("bar", "staging", "branchToDelete");
-		assertThat(environment).isNotNull();
+			// checkout and simulate regular flow
+			Environment environment = testData.getRepository().findOne("bar", "staging", "branchToDelete");
+			assertThat(environment).isNotNull();
 
-		// remove branch
-		testData.getServerGit().getGit().branchDelete().setBranchNames(branchToDelete).call();
+			// remove branch
+			testData.getServerGit().getGit().branchDelete().setBranchNames(branchToDelete).call();
 
-		// test
-		testData.getRepository().findOne("bar", "staging", "branchToDelete");
+			// test
+			testData.getRepository().findOne("bar", "staging", "branchToDelete");
+		});
 	}
 
 	@Configuration(proxyBeanMethods = false)

@@ -18,9 +18,10 @@ package org.springframework.cloud.config.client.tls;
 
 import java.io.File;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -32,12 +33,12 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	protected static TlsConfigServerRunner server;
 
-	@BeforeClass
+	@BeforeAll
 	public static void setupAll() throws Exception {
 		startConfigServer();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void tearDownAll() {
 		stopConfigServer();
 	}
@@ -96,20 +97,24 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 		}
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void wrongPasswordCauseFailure() {
-		TlsConfigClientRunner client = createConfigClient(false);
-		enableTlsClient(client);
-		client.setKeyStore(clientCert, WRONG_PASSWORD, WRONG_PASSWORD);
-		client.start();
+		Assertions.assertThrows(IllegalStateException.class, () -> {
+			TlsConfigClientRunner client = createConfigClient(false);
+			enableTlsClient(client);
+			client.setKeyStore(clientCert, WRONG_PASSWORD, WRONG_PASSWORD);
+			client.start();
+		});
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void nonExistKeyStoreCauseFailure() {
-		TlsConfigClientRunner client = createConfigClient(false);
-		enableTlsClient(client);
-		client.setKeyStore(new File("nonExistFile"));
-		client.start();
+		Assertions.assertThrows(IllegalStateException.class, () -> {
+			TlsConfigClientRunner client = createConfigClient(false);
+			enableTlsClient(client);
+			client.setKeyStore(new File("nonExistFile"));
+			client.start();
+		});
 	}
 
 	@Test
