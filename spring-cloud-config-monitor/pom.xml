@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-config</artifactId>
-		<version>4.0.1-SNAPSHOT</version>
+		<version>4.0.1</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>spring-cloud-config-monitor</artifactId>
@@ -14,7 +14,7 @@
 	<description>Spring Cloud Config Monitor</description>
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
-		<spring-cloud-bus.version>4.0.1-SNAPSHOT</spring-cloud-bus.version>
+		<spring-cloud-bus.version>4.0.1</spring-cloud-bus.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
