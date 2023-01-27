@@ -86,13 +86,13 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-test-support</artifactId>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-launcher</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.junit.platform</groupId>
-			<artifactId>junit-platform-launcher</artifactId>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-test-support</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
