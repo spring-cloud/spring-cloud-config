@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Strategy for locating a search path for resource (e.g. in the file system or
@@ -76,6 +77,28 @@ public interface SearchPathLocator {
 		public String toString() {
 			return "Locations [application=" + this.application + ", profile=" + this.profile + ", label=" + this.label
 					+ ", locations=" + Arrays.toString(this.locations) + ", version=" + this.version + "]";
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Locations locations1 = (Locations) o;
+			return getApplication().equals(locations1.getApplication()) && getProfile().equals(locations1.getProfile())
+					&& Objects.equals(getLabel(), locations1.getLabel())
+					&& Arrays.equals(getLocations(), locations1.getLocations())
+					&& Objects.equals(getVersion(), locations1.getVersion());
+		}
+
+		@Override
+		public int hashCode() {
+			int result = Objects.hash(getApplication(), getProfile(), getLabel(), getVersion());
+			result = 31 * result + Arrays.hashCode(getLocations());
+			return result;
 		}
 
 	}
