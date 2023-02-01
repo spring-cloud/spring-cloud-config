@@ -163,9 +163,16 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	@Override
 	public Locations getLocations(String application, String profiles, String label) {
-		String baseLocation = AWS_S3_RESOURCE_SCHEME + bucketName + PATH_SEPARATOR + application;
+		StringBuilder baseLocation = new StringBuilder(AWS_S3_RESOURCE_SCHEME + bucketName + PATH_SEPARATOR);
+		if (!StringUtils.hasText(label) && StringUtils.hasText(serverProperties.getDefaultLabel())) {
+			label = serverProperties.getDefaultLabel();
+		}
+		// both the passed in label and the default label property could be null
+		if (StringUtils.hasText(label)) {
+			baseLocation.append(label);
+		}
 
-		return new Locations(application, profiles, label, null, new String[] { baseLocation });
+		return new Locations(application, profiles, label, null, new String[] { baseLocation.toString() });
 	}
 
 }
