@@ -204,6 +204,35 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(repository).isNotNull();
 	}
 
+	@Test
+	public void getLocationsTest() {
+		AwsS3EnvironmentRepositoryFactory factory = new AwsS3EnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsS3EnvironmentProperties properties = new AwsS3EnvironmentProperties();
+		properties.setRegion("us-east-1");
+		properties.setBucket("test");
+		AwsS3EnvironmentRepository repository = factory.build(properties);
+
+		assertThat(repository.getLocations("app", "default", "main")).isEqualTo(
+				new SearchPathLocator.Locations("app", "default", "main", null, new String[] { "s3://test/main" }));
+
+		assertThat(repository.getLocations("app", "default", null)).isEqualTo(
+				new SearchPathLocator.Locations("app", "default", null, null, new String[] { "s3://test/" }));
+
+		assertThat(repository.getLocations("app", "default", ""))
+				.isEqualTo(new SearchPathLocator.Locations("app", "default", "", null, new String[] { "s3://test/" }));
+
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setDefaultLabel("defaultlabel");
+		factory = new AwsS3EnvironmentRepositoryFactory(configServerProperties);
+		repository = factory.build(properties);
+
+		assertThat(repository.getLocations("app", "default", null)).isEqualTo(new SearchPathLocator.Locations("app",
+				"default", "defaultlabel", null, new String[] { "s3://test/defaultlabel" }));
+
+		assertThat(repository.getLocations("app", "default", "")).isEqualTo(new SearchPathLocator.Locations("app",
+				"default", "defaultlabel", null, new String[] { "s3://test/defaultlabel" }));
+	}
+
 	private void setupS3(String fileName, String propertyContent) throws UnsupportedEncodingException {
 		setupS3(fileName, null, propertyContent);
 	}

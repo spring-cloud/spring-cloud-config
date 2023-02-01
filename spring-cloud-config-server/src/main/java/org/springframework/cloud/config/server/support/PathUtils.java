@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.support;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -266,7 +267,10 @@ public abstract class PathUtils {
 			return true;
 		}
 		locationPath = (locationPath.endsWith("/") || locationPath.isEmpty() ? locationPath : locationPath + "/");
-		return (resourcePath.startsWith(locationPath) && !isInvalidEncodedPath(resourcePath));
+		String encodedLocationPath = locationPath.endsWith("/")
+				? locationPath.substring(0, locationPath.length() - 1) + URLEncoder.encode("/", "UTF-8") : locationPath;
+		return ((resourcePath.startsWith(locationPath) || resourcePath.startsWith(encodedLocationPath))
+				&& !isInvalidEncodedPath(resourcePath));
 	}
 
 }
