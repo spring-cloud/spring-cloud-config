@@ -18,9 +18,9 @@ package org.springframework.cloud.config.client;
 
 import java.lang.reflect.Field;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -41,12 +41,12 @@ public class ConfigServiceBootstrapConfigurationTest {
 
 	private AnnotationConfigApplicationContext context;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		if (this.context != null) {
 			this.context.close();

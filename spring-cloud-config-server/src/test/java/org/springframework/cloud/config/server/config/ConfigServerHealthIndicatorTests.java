@@ -18,8 +18,8 @@ package org.springframework.cloud.config.server.config;
 
 import java.util.Collections;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -49,7 +49,7 @@ public class ConfigServerHealthIndicatorTests {
 
 	private ConfigServerHealthIndicator indicator;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		initMocks(this);
 		this.indicator = new ConfigServerHealthIndicator(this.repository);

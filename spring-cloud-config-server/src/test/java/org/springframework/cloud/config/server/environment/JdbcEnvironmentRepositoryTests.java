@@ -18,8 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import javax.sql.DataSource;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -32,7 +31,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,7 +39,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author Dave Syer
  *
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = ApplicationConfiguration.class,
 		properties = { "logging.level.root=debug", "spring.sql.init.schema-locations=classpath:schema-jdbc.sql",
 				"spring.sql.init.data-locations=classpath:data-jdbc.sql" })

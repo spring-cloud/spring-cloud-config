@@ -20,9 +20,8 @@ import java.io.IOException;
 
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -34,14 +33,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.prepareLocalRepo;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfigServerApplication.class, properties = { "spring.config.name:configserver" },
 		webEnvironment = RANDOM_PORT)
 @ActiveProfiles({ "test", "native" })
@@ -50,7 +47,7 @@ public class NativeConfigServerIntegrationTests {
 	@LocalServerPort
 	private int port;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws IOException {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());

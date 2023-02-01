@@ -16,24 +16,23 @@
 
 package org.springframework.cloud.config.client;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.test.ClassPathExclusions;
-import org.springframework.cloud.test.ModifiedClassPathRunner;
 
-@RunWith(ModifiedClassPathRunner.class)
+import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
+
 @ClassPathExclusions({ "spring-retry-*.jar", "spring-boot-starter-aop-*.jar" })
 public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTests
 		extends BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {
 
 	@Test
 	public void shouldFailWithExceptionGetConfigServerInstanceFromDiscoveryClient() throws Exception {
-		givenDiscoveryClientReturnsNoInfo();
-
-		expectNoInstancesOfConfigServerException();
-
-		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true");
+		org.assertj.core.api.Assertions.assertThatThrownBy(() -> {
+			givenDiscoveryClientReturnsNoInfo();
+			setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true");
+		}).isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
 	}
 
 	@Test

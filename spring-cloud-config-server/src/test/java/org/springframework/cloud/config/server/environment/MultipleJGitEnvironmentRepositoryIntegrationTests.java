@@ -25,13 +25,10 @@ import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.internal.matchers.ThrowableMessageMatcher;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -46,7 +43,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
 
 /**
  * @author Andy Chan (iceycake)
@@ -55,20 +51,17 @@ import static org.hamcrest.CoreMatchers.containsString;
  */
 public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 
-	@Rule
-	public ExpectedException expected = ExpectedException.none();
-
 	private ConfigurableApplicationContext context;
 
 	private File basedir = new File("target/config");
 
-	@BeforeClass
+	@BeforeAll
 	public static void initClass() {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
 	}
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE);
@@ -76,7 +69,7 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		ConfigServerTestUtils.deleteLocalRepo("config-copy");
 	}
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();
@@ -190,13 +183,14 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 	}
 
 	@Test
-	public void nonWritableBasedir() throws IOException {
-		String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
-		this.expected.expectCause(ThrowableMessageMatcher.hasMessage(containsString("Cannot write parent")));
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri,
-						"spring.cloud.config.server.git.basedir:/tmp")
-				.run();
+	public void nonWritableBasedir() {
+		Assertions.assertThatThrownBy(() -> {
+			String defaultRepoUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
+			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri,
+							"spring.cloud.config.server.git.basedir:/tmp")
+					.run();
+		}).hasMessageContaining("Cannot write parent");
 	}
 
 	@Test

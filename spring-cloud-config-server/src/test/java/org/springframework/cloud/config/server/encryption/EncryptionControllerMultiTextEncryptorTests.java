@@ -16,7 +16,8 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.security.crypto.encrypt.Encryptors;
 
@@ -52,26 +53,22 @@ public class EncryptionControllerMultiTextEncryptorTests {
 				.isEqualTo(this.data);
 	}
 
-	@Test(expected = EncryptionTooWeakException.class)
+	@Test
 	public void shouldNotEncryptUsingNoOp() {
 		// given
-		String application = "unknown";
-
-		// when
-		this.controller.encrypt(application, this.profiles, this.data, TEXT_PLAIN);
-
-		// then exception is thrown
+		Assertions.assertThatThrownBy(() -> {
+			String application = "unknown";
+			this.controller.encrypt(application, this.profiles, this.data, TEXT_PLAIN);
+		}).isInstanceOf(EncryptionTooWeakException.class);
 	}
 
-	@Test(expected = EncryptionTooWeakException.class)
+	@Test
 	public void shouldNotDecryptUsingNoOp() {
-		// given
-		String application = "unknown";
 
-		// when
-		this.controller.decrypt(application, this.profiles, this.data, TEXT_PLAIN);
-
-		// then exception is thrown
+		Assertions.assertThatThrownBy(() -> {
+			String application = "unknown";
+			this.controller.decrypt(application, this.profiles, this.data, TEXT_PLAIN);
+		}).isInstanceOf(EncryptionTooWeakException.class);
 	}
 
 }

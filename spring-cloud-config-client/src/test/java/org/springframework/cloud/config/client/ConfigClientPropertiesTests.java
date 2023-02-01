@@ -16,9 +16,8 @@
 
 package org.springframework.cloud.config.client;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
@@ -34,9 +33,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  */
 public class ConfigClientPropertiesTests {
-
-	@Rule
-	public ExpectedException expected = ExpectedException.none();
 
 	private ConfigClientProperties locator = new ConfigClientProperties(new StandardEnvironment());
 
@@ -149,26 +145,26 @@ public class ConfigClientPropertiesTests {
 
 	@Test
 	public void checkIfExceptionThrownForNegativeIndex() {
-		this.locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
-		this.expected.expect(IllegalStateException.class);
-		this.expected.expectMessage("Trying to access an invalid array index");
-		Credentials credentials = this.locator.getCredentials(-1);
+		Assertions.assertThatThrownBy(() -> {
+			this.locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
+			Credentials credentials = this.locator.getCredentials(-1);
+		}).isInstanceOf(IllegalStateException.class).hasMessageContaining("Trying to access an invalid array index");
 	}
 
 	@Test
 	public void checkIfExceptionThrownForPositiveInvalidIndex() {
-		this.locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
-		this.expected.expect(IllegalStateException.class);
-		this.expected.expectMessage("Trying to access an invalid array index");
-		Credentials credentials = this.locator.getCredentials(3);
+		Assertions.assertThatThrownBy(() -> {
+			this.locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
+			Credentials credentials = this.locator.getCredentials(3);
+		}).isInstanceOf(IllegalStateException.class).hasMessageContaining("Trying to access an invalid array index");
 	}
 
 	@Test
 	public void checkIfExceptionThrownForIndexEqualToLength() {
-		this.locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
-		this.expected.expect(IllegalStateException.class);
-		this.expected.expectMessage("Trying to access an invalid array index");
-		Credentials credentials = this.locator.getCredentials(2);
+		Assertions.assertThatThrownBy(() -> {
+			this.locator.setUri(new String[] { "http://localhost:8888", "http://localhost:8889" });
+			Credentials credentials = this.locator.getCredentials(2);
+		}).isInstanceOf(IllegalStateException.class).hasMessageContaining("Trying to access an invalid array index");
 	}
 
 	@Test

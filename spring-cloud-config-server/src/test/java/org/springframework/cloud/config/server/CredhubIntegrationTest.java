@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.config.server;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -39,7 +39,7 @@ public class CredhubIntegrationTest {
 	@MockBean
 	private CredHubOperations credHubOperations;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		CredHubCredentialOperations credhubCredentialOperations = Mockito.mock(CredHubCredentialOperations.class);
 

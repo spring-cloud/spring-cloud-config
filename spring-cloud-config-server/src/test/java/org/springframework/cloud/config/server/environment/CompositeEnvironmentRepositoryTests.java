@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;

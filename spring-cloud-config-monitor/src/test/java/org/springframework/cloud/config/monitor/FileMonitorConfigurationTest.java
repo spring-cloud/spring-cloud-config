@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Set;
 
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.environment.AbstractScmEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
@@ -54,12 +54,12 @@ public class FileMonitorConfigurationTest {
 
 	private List<AbstractScmEnvironmentRepository> repositories = new ArrayList<>();
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		fileMonitorConfiguration.setResourceLoader(new FileSystemResourceLoader());
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		fileMonitorConfiguration.stop();
 	}

@@ -23,9 +23,9 @@ import java.util.Map;
 import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
@@ -48,13 +48,13 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 	private MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
 			new MultipleJGitEnvironmentProperties(), ObservationRegistry.NOOP);
 
-	@BeforeClass
+	@BeforeAll
 	public static void initClass() {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
 	}
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		this.repository.setUri(defaultUri);

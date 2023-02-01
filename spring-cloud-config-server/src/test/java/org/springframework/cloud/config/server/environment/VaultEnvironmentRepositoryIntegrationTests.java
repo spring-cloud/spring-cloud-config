@@ -21,10 +21,8 @@ import java.util.Optional;
 import javax.net.ssl.SSLHandshakeException;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringApplication;
@@ -33,40 +31,35 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
  * @author Dylan Roberts
  */
-@RunWith(SpringRunner.class)
+
 @SpringBootTest(classes = VaultEnvironmentRepositoryIntegrationTests.TestApplication.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		properties = { "server.ssl.key-store=classpath:ssl-test.jks", "server.ssl.key-store-password=password",
 				"server.ssl.key-password=password", "server.key-alias=ssl-test" })
 public class VaultEnvironmentRepositoryIntegrationTests {
 
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
-
 	@LocalServerPort
 	private String localServerPort;
 
 	@Test
 	public void withSslValidation() throws Exception {
-		ObjectProvider<HttpServletRequest> request = withRequest();
-		VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory = new VaultEnvironmentRepositoryFactory(
-				request, new EnvironmentWatch.Default(), Optional.of(new HttpClientVaultRestTemplateFactory()),
-				withTokenProvider(request));
-		VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
-				.build(withEnvironmentProperties(false));
-		this.expectedException.expectCause(instanceOf(SSLHandshakeException.class));
-
-		vaultEnvironmentRepository.findOne("application", "profile", "label");
+		Assertions.assertThatThrownBy(() -> {
+			ObjectProvider<HttpServletRequest> request = withRequest();
+			VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory = new VaultEnvironmentRepositoryFactory(
+					request, new EnvironmentWatch.Default(), Optional.of(new HttpClientVaultRestTemplateFactory()),
+					withTokenProvider(request));
+			VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
+					.build(withEnvironmentProperties(false));
+			vaultEnvironmentRepository.findOne("application", "profile", "label");
+		}).hasCauseInstanceOf(SSLHandshakeException.class);
 	}
 
 	@Test

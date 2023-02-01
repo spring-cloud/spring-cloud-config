@@ -17,8 +17,9 @@
 package org.springframework.cloud.config.server.environment;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -35,23 +36,28 @@ public class HttpRequestConfigTokenProviderTests {
 
 	private HttpRequestConfigTokenProvider tokenProvider;
 
-	@Before
+	@BeforeEach
 	@SuppressWarnings("unchecked")
 	public void setUp() {
 		httpRequestProvider = mock(ObjectProvider.class);
 		tokenProvider = new HttpRequestConfigTokenProvider(httpRequestProvider);
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void missingHttpRequest() {
-		when(httpRequestProvider.getIfAvailable()).thenReturn(null);
-		tokenProvider.getToken();
+		Assertions.assertThrows(IllegalStateException.class, () -> {
+			when(httpRequestProvider.getIfAvailable()).thenReturn(null);
+			tokenProvider.getToken();
+		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void missingTokenHeader() {
-		when(httpRequestProvider.getIfAvailable()).thenReturn(new MockHttpServletRequest());
-		tokenProvider.getToken();
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			when(httpRequestProvider.getIfAvailable()).thenReturn(new MockHttpServletRequest());
+			tokenProvider.getToken();
+		});
+
 	}
 
 }

@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -37,7 +37,7 @@ public class PropertyPathEndpointTests {
 	private PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
 			new CompositePropertyPathNotificationExtractor(Collections.emptyList()), "abc1");
 
-	@Before
+	@BeforeEach
 	public void init() {
 		StaticApplicationContext publisher = new StaticApplicationContext();
 		this.endpoint.setApplicationEventPublisher(publisher);

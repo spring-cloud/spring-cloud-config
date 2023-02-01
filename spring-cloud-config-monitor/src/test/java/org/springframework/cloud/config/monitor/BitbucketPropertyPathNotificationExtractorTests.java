@@ -21,8 +21,8 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
@@ -41,7 +41,7 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 
 	private HttpHeaders headers;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.headers = new HttpHeaders();
 	}

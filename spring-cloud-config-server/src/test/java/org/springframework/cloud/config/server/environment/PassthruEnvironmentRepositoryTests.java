@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.cloud.config.environment.Environment;

@@ -19,9 +19,8 @@ package org.springframework.cloud.config.server.resource;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +40,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -59,7 +57,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Daniel Lavoie
  *
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = ControllerConfiguration.class, webEnvironment = RANDOM_PORT)
 @DirtiesContext
 public class ResourceControllerIntegrationTests {
@@ -78,7 +75,7 @@ public class ResourceControllerIntegrationTests {
 	@LocalServerPort
 	int port;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		Mockito.reset(this.repository, this.resources);
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).build();
