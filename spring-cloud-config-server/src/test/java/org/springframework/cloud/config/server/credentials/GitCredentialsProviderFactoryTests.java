@@ -18,8 +18,8 @@ package org.springframework.cloud.config.server.credentials;
 
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
@@ -48,7 +48,7 @@ public class GitCredentialsProviderFactoryTests {
 
 	private GitCredentialsProviderFactory factory;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.factory = new GitCredentialsProviderFactory();
 	}

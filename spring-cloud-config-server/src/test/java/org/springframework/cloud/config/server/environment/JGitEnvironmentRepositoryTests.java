@@ -65,11 +65,11 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
@@ -109,13 +109,13 @@ public class JGitEnvironmentRepositoryTests {
 
 	private File basedir = new File("target/config");
 
-	@BeforeClass
+	@BeforeAll
 	public static void initClass() {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
 	}
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		this.repository = new JGitEnvironmentRepository(this.environment, new JGitEnvironmentProperties(),
@@ -166,7 +166,7 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
-	@Ignore // see https://github.com/spring-projects/spring-framework/issues/29333
+	@Disabled // see https://github.com/spring-projects/spring-framework/issues/29333
 	public void nestedPattern() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);

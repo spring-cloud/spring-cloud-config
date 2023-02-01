@@ -19,10 +19,9 @@ package sample;
 import java.io.IOException;
 import java.util.Map;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
@@ -31,13 +30,11 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.TestSocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
 		// config server on the classpath we need to set it explicitly
@@ -56,7 +53,7 @@ public class ConfigDataIntegrationTests {
 	@LocalServerPort
 	private int port;
 
-	@BeforeClass
+	@BeforeAll
 	public static void startConfigServer() throws IOException {
 		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
 		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
@@ -67,7 +64,7 @@ public class ConfigDataIntegrationTests {
 		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void close() {
 		System.clearProperty("spring.cloud.config.uri");
 		if (server != null) {

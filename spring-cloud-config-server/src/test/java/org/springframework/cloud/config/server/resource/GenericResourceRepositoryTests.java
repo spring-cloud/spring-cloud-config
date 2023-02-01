@@ -20,16 +20,17 @@ import java.io.IOException;
 import java.net.URL;
 
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.test.system.OutputCaptureRule;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
@@ -41,7 +42,6 @@ import org.springframework.core.io.ResourceLoader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -50,13 +50,9 @@ import static org.mockito.Mockito.when;
  * @author Dave Syer
  *
  */
+
+@ExtendWith(OutputCaptureExtension.class)
 public class GenericResourceRepositoryTests {
-
-	@Rule
-	public OutputCaptureRule output = new OutputCaptureRule();
-
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	private GenericResourceRepository repository;
 
@@ -64,14 +60,14 @@ public class GenericResourceRepositoryTests {
 
 	private NativeEnvironmentRepository nativeRepository;
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();
 		}
 	}
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
 				.run();
@@ -98,50 +94,57 @@ public class GenericResourceRepositoryTests {
 		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt")).isNotNull();
 	}
 
-	@Test(expected = NoSuchResourceException.class)
+	@Test
 	public void locateMissingResource() {
-		assertThat(this.repository.findOne("blah", "default", "master", "foo.txt")).isNotNull();
+		Assertions
+				.assertThatThrownBy(
+						() -> assertThat(this.repository.findOne("blah", "default", "master", "foo.txt")).isNotNull())
+				.isInstanceOf(NoSuchResourceException.class);
 	}
 
 	@Test
-	public void invalidPath() {
-		this.exception.expect(NoSuchResourceException.class);
-		this.nativeRepository.setSearchLocations("file:./src/test/resources/test/{profile}");
-		this.output.expect(containsString("Path contains \"../\" after call to StringUtils#cleanPath"));
-		this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql");
+	public void invalidPath(CapturedOutput capturedOutput) {
+		Assertions.assertThatThrownBy(() -> {
+			this.nativeRepository.setSearchLocations("file:./src/test/resources/test/{profile}");
+			this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql");
+		}).isInstanceOf(NoSuchResourceException.class);
+		Assertions.assertThat(capturedOutput.getAll())
+				.contains("Path contains \"../\" after call to StringUtils#cleanPath");
 	}
 
 	@Test
-	public void invalidPathWithPreviousDirectory() {
-		testInvalidPath("../");
+	public void invalidPathWithPreviousDirectory(CapturedOutput capturedOutput) {
+		testInvalidPath("../", capturedOutput);
 	}
 
 	@Test
-	public void invalidPathWithPreviousDirectoryEncodedSlash() {
-		testInvalidPath("..%2F");
+	public void invalidPathWithPreviousDirectoryEncodedSlash(CapturedOutput capturedOutput) {
+		testInvalidPath("..%2F", capturedOutput);
 	}
 
 	@Test
-	public void invalidPathWithPreviousDirectoryAllEncoded() {
-		testInvalidPath("%2E%2E%2F");
+	public void invalidPathWithPreviousDirectoryAllEncoded(CapturedOutput capturedOutput) {
+		testInvalidPath("%2E%2E%2F", capturedOutput);
 	}
 
 	@Test
-	public void invalidPathEncodedSlash() {
-		String file = System.getProperty("user.dir");
-		file = file.replaceFirst("\\/", "%2f");
-		file += "/src/test/resources/ssh/key";
-		this.exception.expect(NoSuchResourceException.class);
-		this.nativeRepository.setSearchLocations("file:./");
-		this.output.expect(containsString("is neither under the current location"));
-		this.repository.findOne("blah", "local", "master", file);
+	public void invalidPathEncodedSlash(CapturedOutput capturedOutput) {
+		Assertions.assertThatThrownBy(() -> {
+			String file = System.getProperty("user.dir");
+			file = file.replaceFirst("\\/", "%2f");
+			file += "/src/test/resources/ssh/key";
+			this.nativeRepository.setSearchLocations("file:./");
+			this.repository.findOne("blah", "local", "master", file);
+		}).isInstanceOf(NoSuchResourceException.class);
+		Assertions.assertThat(capturedOutput.getAll()).contains("is neither under the current location");
 	}
 
-	private void testInvalidPath(String label) {
-		this.exception.expect(NoSuchResourceException.class);
-		this.nativeRepository.setSearchLocations("file:./src/test/resources/test/local");
-		this.output.expect(containsString("Location contains \"..\""));
-		this.repository.findOne("blah", "local", label, "foo.properties");
+	private void testInvalidPath(String label, CapturedOutput capturedOutput) {
+		Assertions.assertThatThrownBy(() -> {
+			this.nativeRepository.setSearchLocations("file:./src/test/resources/test/local");
+			this.repository.findOne("blah", "local", label, "foo.properties");
+		}).isInstanceOf(NoSuchResourceException.class);
+		Assertions.assertThat(capturedOutput.getAll()).contains("Location contains \"..\"");
 	}
 
 	@Test

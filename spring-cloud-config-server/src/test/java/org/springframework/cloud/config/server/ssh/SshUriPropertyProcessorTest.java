@@ -19,8 +19,8 @@ package org.springframework.cloud.config.server.ssh;
 import java.util.Map;
 
 import org.eclipse.jgit.transport.SshSessionFactory;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
@@ -57,7 +57,7 @@ public class SshUriPropertyProcessorTest {
 
 	private static final String HOST3 = "gitlab3.test.local";
 
-	@After
+	@AfterEach
 	public void cleanup() {
 		SshSessionFactory.setInstance(null);
 	}

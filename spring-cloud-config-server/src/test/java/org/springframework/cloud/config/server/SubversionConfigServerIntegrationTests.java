@@ -19,9 +19,8 @@ package org.springframework.cloud.config.server;
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,7 +34,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -47,7 +45,6 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
  * @author Dave Syer
  * @author Roy Clarkson
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfigServerApplication.class,
 		properties = { "spring.config.name:configserver",
 				"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
@@ -62,7 +59,7 @@ public class SubversionConfigServerIntegrationTests {
 	@Autowired
 	private ApplicationContext context;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws Exception {
 		ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/repos/svn-config-repo");
 	}

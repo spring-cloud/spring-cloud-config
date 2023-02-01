@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.boot.WebApplicationType;

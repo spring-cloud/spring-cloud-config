@@ -22,9 +22,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.wc2.SvnCheckout;
@@ -58,7 +59,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 
 	private File workingDir;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.workingDir = new File("target/repos/svn-config-repo-update");
 		if (this.workingDir.exists()) {
@@ -66,7 +67,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		}
 	}
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();
@@ -122,14 +123,17 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		assertThat(repository.getDefaultLabel()).isEqualTo("trunk");
 	}
 
-	@Test(expected = NoSuchLabelException.class)
-	public void invalidLabel() throws Exception {
-		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
-		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("bar", "staging", "unknownlabel");
-		assertThat(environment.getPropertySources().size()).isEqualTo(0);
+	@Test
+	public void invalidLabel() {
+		Assertions.assertThatThrownBy(() -> {
+			String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
+					"target/config");
+			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
+			Environment environment = repository.findOne("bar", "staging", "unknownlabel");
+			assertThat(environment.getPropertySources().size()).isEqualTo(0);
+		}).isInstanceOf(NoSuchLabelException.class);
 	}
 
 	@Test

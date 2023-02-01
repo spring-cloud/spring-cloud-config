@@ -20,10 +20,9 @@ import java.io.IOException;
 
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -46,7 +45,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.isA;
@@ -55,7 +53,6 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.assertOriginTrackedValue;
 import static org.springframework.cloud.config.server.test.ConfigServerTestUtils.getV2AcceptEntity;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class,
 		properties = { "spring.cloud.config.enabled=true", "spring.cloud.bootstrap.enabled=true",
 				"management.endpoint.env.post.enabled=true", "management.endpoints.web.exposure.include=env, refresh" },
@@ -69,7 +66,7 @@ public class RefreshableConfigServerIntegrationTests {
 	@LocalServerPort
 	private int port;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws IOException {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
@@ -77,7 +74,7 @@ public class RefreshableConfigServerIntegrationTests {
 		localRepo = ConfigServerTestUtils.prepareLocalRepo();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void after() throws IOException {
 		ConfigServerTestUtils.deleteLocalRepo(localRepo);
 	}

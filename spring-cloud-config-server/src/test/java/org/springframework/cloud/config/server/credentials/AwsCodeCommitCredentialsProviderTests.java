@@ -21,8 +21,8 @@ import java.net.URISyntaxException;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.URIish;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
@@ -53,7 +53,7 @@ public class AwsCodeCommitCredentialsProviderTests {
 
 	private AwsCodeCommitCredentialProvider provider;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		GitCredentialsProviderFactory factory = new GitCredentialsProviderFactory();
 		this.provider = (AwsCodeCommitCredentialProvider) factory.createFor(AWS_REPO, USER, PASSWORD, null, false);

@@ -17,7 +17,7 @@
 package org.springframework.cloud.config.server.environment;
 
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.env.StandardEnvironment;

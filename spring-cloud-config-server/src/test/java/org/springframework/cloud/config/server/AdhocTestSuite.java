@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.config.server;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -85,7 +85,7 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
 		ConfigServerHealthIndicatorTests.class, CustomCompositeEnvironmentRepositoryTests.class,
 		CustomEnvironmentRepositoryTests.class, BootstrapConfigServerIntegrationTests.class,
 		AwsS3EnvironmentRepositoryTests.class, AwsParameterStoreEnvironmentRepositoryTests.class })
-@Ignore
+@Disabled
 public class AdhocTestSuite {
 
 }

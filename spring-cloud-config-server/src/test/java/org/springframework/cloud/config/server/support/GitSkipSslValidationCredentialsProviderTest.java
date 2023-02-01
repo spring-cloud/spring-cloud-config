@@ -24,11 +24,12 @@ import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -37,7 +38,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author Gareth Clay
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class GitSkipSslValidationCredentialsProviderTest {
 
 	@Mock
@@ -45,7 +46,7 @@ public class GitSkipSslValidationCredentialsProviderTest {
 
 	private GitSkipSslValidationCredentialsProvider skipSslValidationCredentialsProvider;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.skipSslValidationCredentialsProvider = new GitSkipSslValidationCredentialsProvider(null);
 	}
@@ -152,13 +153,15 @@ public class GitSkipSslValidationCredentialsProviderTest {
 				.isTrue();
 	}
 
-	@Test(expected = UnsupportedCredentialItem.class)
+	@Test
 	public void testGetUnrelatedCredentialItemTypes() throws URISyntaxException {
-		URIish uri = new URIish("https://example.com/repo.git");
-		CredentialItem usernameCredentialItem = new CredentialItem.Username();
-		CredentialItem passwordCredentialItem = new CredentialItem.Password();
+		Assertions.assertThrows(UnsupportedCredentialItem.class, () -> {
+			URIish uri = new URIish("https://example.com/repo.git");
+			CredentialItem usernameCredentialItem = new CredentialItem.Username();
+			CredentialItem passwordCredentialItem = new CredentialItem.Password();
 
-		this.skipSslValidationCredentialsProvider.get(uri, usernameCredentialItem, passwordCredentialItem);
+			this.skipSslValidationCredentialsProvider.get(uri, usernameCredentialItem, passwordCredentialItem);
+		});
 	}
 
 	@Test
