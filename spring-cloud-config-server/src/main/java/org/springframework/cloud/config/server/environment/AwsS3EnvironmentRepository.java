@@ -143,8 +143,8 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			}
 			catch (Exception eYaml) {
 				try {
-					final S3Object json = getObject(s3ObjectIdBuilder, keyPrefix + ".yml");
-					return new YamlS3ConfigFile(json.getObjectMetadata().getVersionId(), json.getObjectContent());
+					final S3Object yml = getObject(s3ObjectIdBuilder, keyPrefix + ".yml");
+					return new YamlS3ConfigFile(yml.getObjectMetadata().getVersionId(), yml.getObjectContent());
 				}
 				catch (Exception eYml) {
 					try {
