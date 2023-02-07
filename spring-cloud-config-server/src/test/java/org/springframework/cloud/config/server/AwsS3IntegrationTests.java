@@ -22,6 +22,7 @@ import io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -84,6 +85,9 @@ public class AwsS3IntegrationTests {
 	}
 
 	@Test
+	@Disabled
+	// TODO uncomment when we have an RC or GA release of Spring Cloud AWS with this fix
+	// https://github.com/awspring/spring-cloud-aws/pull/652
 	public void context() throws IOException {
 		RestTemplate rest = new RestTemplateBuilder().build();
 		String configServerUrl = "http://localhost:" + configServerPort;
