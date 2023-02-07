@@ -63,7 +63,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 
 	@Container
 	private static final LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:0.14.2")).withServices(SSM);
+			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(SSM);
 
 	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
 			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
