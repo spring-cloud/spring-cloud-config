@@ -18,7 +18,6 @@ package org.springframework.cloud.config.server;
 
 import java.io.IOException;
 
-import io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -60,7 +59,7 @@ public class AwsS3IntegrationTests {
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {
-		server = SpringApplication.run(new Class[] { TestConfigServerApplication.class, S3AutoConfiguration.class },
+		server = SpringApplication.run(new Class[] { TestConfigServerApplication.class },
 				new String[] { "--spring.config.name=server", "--spring.profiles.active=awss3",
 						"--server.port=" + configServerPort,
 						"--spring.cloud.config.server.awss3.endpoint="
@@ -73,14 +72,16 @@ public class AwsS3IntegrationTests {
 						"--spring.cloud.aws.credentials.secret-key=" + localstack.getSecretKey(),
 						"--spring.cloud.aws.region.static=" + localstack.getRegion() });
 
-		s3Client = server.getBean(S3Client.class);
-		s3Client.createBucket((request) -> request.bucket("test-bucket"));
-		s3Client.putObject((request) -> request.bucket("test-bucket").key("data.txt"),
-				RequestBody.fromString("this is a test"));
-		s3Client.putObject((request) -> request.bucket("test-bucket").key("main/data.txt"),
-				RequestBody.fromString("this is a test in main"));
-		s3Client.putObject((request) -> request.bucket("test-bucket").key("application.properties"),
-				RequestBody.fromString("foo=1"));
+		if (server.containsBean(S3Client.class.getName())) {
+			s3Client = server.getBean(S3Client.class);
+			s3Client.createBucket((request) -> request.bucket("test-bucket"));
+			s3Client.putObject((request) -> request.bucket("test-bucket").key("data.txt"),
+					RequestBody.fromString("this is a test"));
+			s3Client.putObject((request) -> request.bucket("test-bucket").key("main/data.txt"),
+					RequestBody.fromString("this is a test in main"));
+			s3Client.putObject((request) -> request.bucket("test-bucket").key("application.properties"),
+					RequestBody.fromString("foo=1"));
+		}
 
 	}
 
