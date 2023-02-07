@@ -18,6 +18,7 @@
 		<jgit.version>6.4.0.202211300538-r</jgit.version>
 		<spring-vault.version>3.0.0</spring-vault.version>
 		<spring-credhub.version>2.1.1.RELEASE</spring-credhub.version>
+		<spring-cloud-aws.version>2.4.4</spring-cloud-aws.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -70,6 +71,11 @@
 				<groupId>org.eclipse.jgit</groupId>
 				<artifactId>org.eclipse.jgit.ssh.apache</artifactId>
 				<version>${jgit.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.awspring.cloud</groupId>
+				<artifactId>spring-cloud-aws-context</artifactId>
+				<version>${spring-cloud-aws.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.tmatesoft.svnkit</groupId>

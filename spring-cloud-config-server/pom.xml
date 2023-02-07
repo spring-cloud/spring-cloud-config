@@ -233,6 +233,11 @@
 			<artifactId>zipkin-sender-urlconnection</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>io.awspring.cloud</groupId>
+			<artifactId>spring-cloud-aws-starter-s3</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<properties>
