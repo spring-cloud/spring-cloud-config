@@ -30,6 +30,9 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	private static final String DEFAULT_SQL = "SELECT \"KEY\", \"VALUE\" from PROPERTIES"
 			+ " where APPLICATION=? and PROFILE=? and LABEL=?";
 
+	private static final String DEFAULT_SQL_WITHOUT_PROFILE = "SELECT \"KEY\", \"VALUE\" from PROPERTIES"
+			+ " where APPLICATION=? and PROFILE is null and LABEL=?";
+
 	/**
 	 * Flag to indicate that JDBC environment repository configuration is enabled.
 	 */
@@ -40,10 +43,15 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	/** SQL used to query database for keys and values. */
 	private String sql = DEFAULT_SQL;
 
+	/** SQL used to query database for keys and values when profile is null. */
+	private String sqlWithoutProfile = DEFAULT_SQL_WITHOUT_PROFILE;
+
 	/**
 	 * Flag to determine how to handle query exceptions.
 	 */
 	private boolean failOnError = true;
+
+	private String defaultLabel = "master";
 
 	public boolean isEnabled() {
 		return enabled;
@@ -70,12 +78,33 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 		this.sql = sql;
 	}
 
+	public String getSqlWithoutProfile() {
+		return this.sqlWithoutProfile;
+	}
+
+	public void setSqlWithoutProfile(String sqlWithoutProfile) {
+		this.sqlWithoutProfile = sqlWithoutProfile;
+	}
+
 	public boolean isFailOnError() {
 		return failOnError;
 	}
 
 	public void setFailOnError(boolean failOnError) {
 		this.failOnError = failOnError;
+	}
+
+	public boolean isConfigIncomplete() {
+		// sql and sqlWithoutProfile should be customized at the same time
+		return !this.sql.equals(DEFAULT_SQL) && this.sqlWithoutProfile.equals(DEFAULT_SQL_WITHOUT_PROFILE);
+	}
+
+	public String getDefaultLabel() {
+		return this.defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 }

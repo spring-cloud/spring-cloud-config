@@ -18,19 +18,18 @@ package org.springframework.cloud.config.server;
 
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -42,8 +41,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
  */
 public class CompositeIntegrationTests {
 
-	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = ConfigServerApplication.class,
+	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
 					"spring.cloud.config.server.svn.order:2",
@@ -56,7 +54,7 @@ public class CompositeIntegrationTests {
 		@LocalServerPort
 		private int port;
 
-		@BeforeClass
+		@BeforeAll
 		public static void init() throws Exception {
 			// mock Git configuration to make tests independent of local Git configuration
 			SystemReader.setInstance(new MockSystemReader());
@@ -69,7 +67,7 @@ public class CompositeIntegrationTests {
 		@Test
 		public void contextLoads() {
 			ResponseEntity<Environment> response = new TestRestTemplate().exchange(
-					"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+					"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 					Environment.class);
 			Environment environment = response.getBody();
 			assertThat(3).isEqualTo(environment.getPropertySources().size());
@@ -93,8 +91,7 @@ public class CompositeIntegrationTests {
 
 	}
 
-	@RunWith(SpringRunner.class)
-	@SpringBootTest(classes = ConfigServerApplication.class,
+	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
 					"spring.cloud.config.server.composite[0].type:git",
@@ -107,7 +104,7 @@ public class CompositeIntegrationTests {
 		@LocalServerPort
 		private int port;
 
-		@BeforeClass
+		@BeforeAll
 		public static void init() throws Exception {
 			// mock Git configuration to make tests independent of local Git configuration
 			SystemReader.setInstance(new MockSystemReader());
@@ -120,7 +117,7 @@ public class CompositeIntegrationTests {
 		@Test
 		public void contextLoads() {
 			ResponseEntity<Environment> response = new TestRestTemplate().exchange(
-					"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+					"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 					Environment.class);
 			Environment environment = response.getBody();
 			assertThat(environment.getPropertySources()).hasSize(3);

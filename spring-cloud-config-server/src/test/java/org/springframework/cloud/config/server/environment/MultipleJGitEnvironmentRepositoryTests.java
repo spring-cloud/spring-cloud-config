@@ -23,14 +23,14 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.micrometer.observation.ObservationRegistry;
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository;
@@ -50,24 +50,21 @@ import static org.mockito.Mockito.when;
  */
 public class MultipleJGitEnvironmentRepositoryTests {
 
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
-
 	private StandardEnvironment environment = new StandardEnvironment();
 
 	private MultipleJGitEnvironmentRepository repository;
 
-	@BeforeClass
+	@BeforeAll
 	public static void initClass() {
 		// mock Git configuration to make tests independent of local Git configuration
 		SystemReader.setInstance(new MockSystemReader());
 	}
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		this.repository = new MultipleJGitEnvironmentRepository(this.environment,
-				new MultipleJGitEnvironmentProperties());
+				new MultipleJGitEnvironmentProperties(), ObservationRegistry.NOOP);
 		this.repository.setUri(defaultUri);
 		this.repository.setRepos(createRepositories());
 	}
@@ -81,7 +78,8 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	}
 
 	private PatternMatchingJGitEnvironmentRepository createRepository(String name, String pattern, String uri) {
-		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository();
+		PatternMatchingJGitEnvironmentRepository repo = new PatternMatchingJGitEnvironmentRepository(
+				ObservationRegistry.NOOP);
 		repo.setEnvironment(this.environment);
 		repo.setName(name);
 		repo.setPattern(new String[] { pattern });
@@ -304,26 +302,26 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	@Test
 	// test for gh-700
 	public void exceptionThrownIfBasedirDoesnotExistAndCannotBeCreated() throws Exception {
-		File basedir = mock(File.class);
-		File absoluteBasedir = mock(File.class);
-		when(basedir.getAbsoluteFile()).thenReturn(absoluteBasedir);
+		Assertions.assertThatThrownBy(() -> {
+			File basedir = mock(File.class);
+			File absoluteBasedir = mock(File.class);
+			when(basedir.getAbsoluteFile()).thenReturn(absoluteBasedir);
 
-		when(absoluteBasedir.exists()).thenReturn(false);
-		when(absoluteBasedir.mkdir()).thenReturn(false);
+			when(absoluteBasedir.exists()).thenReturn(false);
+			when(absoluteBasedir.mkdir()).thenReturn(false);
 
-		this.repository.setBasedir(basedir);
+			this.repository.setBasedir(basedir);
 
-		this.exception.expect(IllegalStateException.class);
-		this.exception.expectMessage("Basedir does not exist and can not be created:");
-
-		this.repository.afterPropertiesSet();
+			this.repository.afterPropertiesSet();
+		}).isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Basedir does not exist and can not be created:");
 	}
 
 	@Test
 	public void exceptionNotThrownIfRelativeBasedirIsPassedByProperties() throws Exception {
 		MultipleJGitEnvironmentProperties props = new MultipleJGitEnvironmentProperties();
 		props.setBasedir(new File("relative"));
-		this.repository = new MultipleJGitEnvironmentRepository(this.environment, props);
+		this.repository = new MultipleJGitEnvironmentRepository(this.environment, props, ObservationRegistry.NOOP);
 		String defaultUri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		this.repository.setUri(defaultUri);
 		this.repository.setRepos(createRepositories());

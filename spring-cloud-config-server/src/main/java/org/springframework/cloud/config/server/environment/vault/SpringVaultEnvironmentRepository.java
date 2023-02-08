@@ -24,6 +24,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.server.environment.AbstractVaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.vault.core.VaultKeyValueOperations;
 import org.springframework.vault.support.VaultResponse;
@@ -38,15 +39,20 @@ public class SpringVaultEnvironmentRepository extends AbstractVaultEnvironmentRe
 
 	private final ObjectMapper objectMapper;
 
+	private String path = "";
+
 	public SpringVaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
 			VaultEnvironmentProperties properties, VaultKeyValueOperations keyValueTemplate) {
 		super(request, watch, properties);
 		this.keyValueTemplate = keyValueTemplate;
+		if (properties.getKvVersion() == 2 && StringUtils.hasText(properties.getPathToKey())) {
+			path = properties.getPathToKey() + "/";
+		}
 		this.objectMapper = new ObjectMapper();
 	}
 
 	protected String read(String key) {
-		VaultResponse response = this.keyValueTemplate.get(key);
+		VaultResponse response = this.keyValueTemplate.get(this.path + key);
 		if (response != null) {
 			try {
 				return objectMapper.writeValueAsString(response.getData());

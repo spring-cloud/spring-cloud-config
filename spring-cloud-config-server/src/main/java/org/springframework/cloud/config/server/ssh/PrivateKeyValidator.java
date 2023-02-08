@@ -20,9 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.KeyPair;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -37,7 +34,7 @@ import static org.springframework.util.StringUtils.hasText;
 /**
  * JSR-303 Cross Field validator that ensures that an
  * {@link MultipleJGitEnvironmentProperties} bean for the constraints: - Private key is
- * present and can be correctly parsed using {@link com.jcraft.jsch.KeyPair}
+ * present and can be correctly parsed using {@link java.security.KeyPair}
  *
  * Beans annotated with {@link PrivateKeyValidator} and {@link Validated} will have the
  * constraints applied.
@@ -86,16 +83,14 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 
 	private boolean isPrivateKeyFormatCorrect(JGitEnvironmentProperties sshUriProperties,
 			ConstraintValidatorContext context) {
-		try {
-			KeyPair.load(new JSch(), sshUriProperties.getPrivateKey().getBytes(), null);
+		if (KeyPairUtils.isValid(sshUriProperties.getPrivateKey(), sshUriProperties.getPassphrase())) {
 			return true;
 		}
-		catch (JSchException e) {
-			context.buildConstraintViolationWithTemplate(
-					format("Property '%sprivateKey' is not a valid private key", GIT_PROPERTY_PREFIX))
-					.addConstraintViolation();
-			return false;
-		}
+
+		context.buildConstraintViolationWithTemplate(
+				format("Property '%sprivateKey' is not a valid private key", GIT_PROPERTY_PREFIX))
+				.addConstraintViolation();
+		return false;
 	}
 
 }

@@ -32,16 +32,17 @@ public final class GoogleSecretManagerAccessStrategyFactory {
 			GoogleSecretManagerEnvironmentProperties properties) {
 
 		switch (properties.getVersion()) {
-		case 1:
-			try {
-				return new GoogleSecretManagerV1AccessStrategy(rest, configProvider, properties.getServiceAccount());
-			}
-			catch (Exception e) {
-				throw new RepositoryException("Cannot create service client", e);
-			}
-		default:
-			throw new IllegalArgumentException(
-					"No support for given Google Secret manager backend version " + properties.getVersion());
+			case 1:
+				try {
+					return new GoogleSecretManagerV1AccessStrategy(rest, configProvider,
+							properties.getServiceAccount());
+				}
+				catch (Exception e) {
+					throw new RepositoryException("Cannot create service client", e);
+				}
+			default:
+				throw new IllegalArgumentException(
+						"No support for given Google Secret manager backend version " + properties.getVersion());
 		}
 
 	}
@@ -50,11 +51,11 @@ public final class GoogleSecretManagerAccessStrategyFactory {
 			GoogleSecretManagerEnvironmentProperties properties, SecretManagerServiceClient client) {
 
 		switch (properties.getVersion()) {
-		case 1:
-			return new GoogleSecretManagerV1AccessStrategy(rest, configProvider, client);
-		default:
-			throw new IllegalArgumentException(
-					"No support for given Google Secret manager backend version " + properties.getVersion());
+			case 1:
+				return new GoogleSecretManagerV1AccessStrategy(rest, configProvider, client);
+			default:
+				throw new IllegalArgumentException(
+						"No support for given Google Secret manager backend version " + properties.getVersion());
 		}
 	}
 

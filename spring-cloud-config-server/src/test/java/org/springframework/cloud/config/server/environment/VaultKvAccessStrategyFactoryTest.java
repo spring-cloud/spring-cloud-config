@@ -16,7 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategyFactory.V1VaultKvAccessStrategy;
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategyFactory.V2VaultKvAccessStrategy;
@@ -40,9 +41,10 @@ public class VaultKvAccessStrategyFactoryTest {
 		assertThat(vaultKvAccessStrategy instanceof V2VaultKvAccessStrategy).isTrue();
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testGetUnsupportedStrategy() {
-		VaultKvAccessStrategyFactory.forVersion(null, "foo", 0, "");
+		Assertions.assertThatThrownBy(() -> VaultKvAccessStrategyFactory.forVersion(null, "foo", 0, ""))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 }

@@ -138,7 +138,7 @@ class SpringVaultClientConfigurationTests {
 	@Test
 	public void awsIamAuthentication() {
 		System.setProperty("aws.accessKeyId", "access-key-id");
-		System.setProperty("aws.secretKey", "secret-key");
+		System.setProperty("aws.secretAccessKey", "secret-key");
 
 		properties.setAuthentication(AWS_IAM);
 		properties.getAwsIam().setRole("server");

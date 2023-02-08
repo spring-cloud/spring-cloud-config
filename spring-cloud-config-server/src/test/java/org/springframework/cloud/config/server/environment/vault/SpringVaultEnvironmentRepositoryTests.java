@@ -20,12 +20,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
+import org.springframework.util.StringUtils;
 import org.springframework.vault.core.VaultKeyValueOperations;
 import org.springframework.vault.support.VaultResponse;
 
@@ -47,12 +48,32 @@ public class SpringVaultEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneNoDefaultKey() {
-		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
-		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
-		when(keyValueTemplate.get("application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		defaultKeyTest("", 2);
+	}
 
+	@Test
+	public void testPathKey() {
+		defaultKeyTest("mypath", 2);
+	}
+
+	@Test
+	public void testPathKeyNotUsedWithVersionOne() {
+		defaultKeyTest("mypath", 1);
+	}
+
+	private void defaultKeyTest(String myPathKey, int version) {
+		String path = "";
+		if (StringUtils.hasText(myPathKey) && version == 2) {
+			path = myPathKey + "/";
+		}
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+		when(keyValueTemplate.get(path + "myapp")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get(path + "application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		properties.setPathToKey(myPathKey);
+		properties.setKvVersion(version);
 		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), new VaultEnvironmentProperties(), keyValueTemplate);
+				new EnvironmentWatch.Default(), properties, keyValueTemplate);
 
 		Environment e = repo.findOne("myapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");

@@ -25,8 +25,8 @@ import java.util.Objects;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.eclipse.jgit.transport.http.HttpConnection;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.util.ReflectionUtils;
 
@@ -36,7 +36,7 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 
 	private HttpClientConfigurableHttpConnectionFactory connectionFactory;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		this.connectionFactory = new HttpClientConfigurableHttpConnectionFactory();
 	}
@@ -198,10 +198,8 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		HttpConnection actualConnection = this.connectionFactory.create(
 				new URL(properties2.getUri().replace("{placeholder1}", "value1").replace("{placeholder2}", "value2")));
 
-		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
-				.get(properties2.getUri());
-		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
-		assertThat(actualHttpClientBuilder).isNotSameAs(expectedHttpClientBuilder);
+		HttpClient actualHttpClient = getActualHttpClient(actualConnection);
+		assertThat(actualHttpClient).isNull();
 	}
 
 	@Test

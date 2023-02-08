@@ -18,8 +18,8 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.HashMap;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -47,7 +47,7 @@ public class CredhubEnvironmentRepositoryTests {
 
 	private CredHubCredentialOperations credhubCredentialOperations;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		CredHubOperations credhubOperations = Mockito.mock(CredHubOperations.class);
 		this.credhubCredentialOperations = Mockito.mock(CredHubCredentialOperations.class);

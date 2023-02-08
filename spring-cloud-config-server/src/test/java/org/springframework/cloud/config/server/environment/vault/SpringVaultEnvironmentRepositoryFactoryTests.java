@@ -17,7 +17,7 @@
 package org.springframework.cloud.config.server.environment.vault;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;

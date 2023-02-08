@@ -29,9 +29,9 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.vault.VaultContainer;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.cloud.config.server.ConfigServerApplication;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.util.SocketUtils;
+import org.springframework.test.util.TestSocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,9 +44,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 public class ConfigDataOrderingVaultIntegrationTests {
 
-	private static final int configServerPort = SocketUtils.findAvailableTcpPort();
+	private static final int configServerPort = TestSocketUtils.findAvailableTcpPort();
 
-	private static final int configClientPort = SocketUtils.findAvailableTcpPort();
+	private static final int configClientPort = TestSocketUtils.findAvailableTcpPort();
 
 	private static ConfigurableApplicationContext client;
 
@@ -59,7 +59,7 @@ public class ConfigDataOrderingVaultIntegrationTests {
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {
-		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
+		server = SpringApplication.run(TestConfigServerApplication.class,
 				"--spring.config.location=classpath:/vaultordering/", "--spring.config.name=server",
 				"--server.port=" + configServerPort,
 				"--spring.cloud.config.server.vault.port=" + vaultContainer.getFirstMappedPort());
@@ -81,7 +81,7 @@ public class ConfigDataOrderingVaultIntegrationTests {
 
 	@Test
 	void propertyFromVaultIsUsed() {
-		client = SpringApplication.run(ConfigServerApplication.class, "--server.port=" + configClientPort,
+		client = SpringApplication.run(TestConfigServerApplication.class, "--server.port=" + configClientPort,
 				"--spring.config.location=classpath:/vaultordering/", "--spring.config.name=client",
 				"--spring.profiles.active=dev", "--spring.application.name=client-app",
 				"--spring.cloud.config.enabled=true", "--spring.cloud.config.server.enabled=false",

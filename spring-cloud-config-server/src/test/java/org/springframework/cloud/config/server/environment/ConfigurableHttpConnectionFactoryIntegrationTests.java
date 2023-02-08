@@ -30,13 +30,13 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.transport.HttpTransport;
 import org.eclipse.jgit.transport.http.HttpConnection;
 import org.eclipse.jgit.transport.http.HttpConnectionFactory;
 import org.eclipse.jgit.transport.http.apache.HttpClientConnection;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -47,15 +47,9 @@ import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfi
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
 
 /**
  * @author Dylan Roberts
@@ -94,130 +88,120 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		HTTPS_PROXY.setPort(8081);
 	}
 
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
-
 	@Test
 	public void authenticatedHttpsProxy() throws Exception {
-		String repoUrl = "https://myrepo/repo.git";
-		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties(repoUrl, null, AUTHENTICATED_HTTPS_PROXY)).run();
-		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(AUTHENTICATED_HTTPS_PROXY.getHost()))));
+		Assertions.assertThatThrownBy(() -> {
+			String repoUrl = "https://myrepo/repo.git";
+			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties(gitProperties(repoUrl, null, AUTHENTICATED_HTTPS_PROXY)).run();
+			HttpClient httpClient = getHttpClientForUrl(repoUrl);
+			makeRequest(httpClient, "https://somehost");
+		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(AUTHENTICATED_HTTPS_PROXY.getHost());
 
-		makeRequest(httpClient, "https://somehost");
 	}
 
 	@Test
 	public void httpsProxy() throws Exception {
-		String repoUrl = "https://myrepo/repo.git";
-		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
-		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
-
-		makeRequest(httpClient, "https://somehost");
+		Assertions.assertThatThrownBy(() -> {
+			String repoUrl = "https://myrepo/repo.git";
+			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
+			HttpClient httpClient = getHttpClientForUrl(repoUrl);
+			makeRequest(httpClient, "https://somehost");
+		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTPS_PROXY.getHost());
 	}
 
 	@Test
 	public void httpsProxy_placeholderUrl() throws Exception {
-		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties("https://myrepo/{placeholder1}/{placeholder2}-repo.git", null, HTTPS_PROXY))
-				.run();
-		HttpClient httpClient = getHttpClientForUrl(
-				"https://myrepo/someplaceholdervalue/anotherplaceholdervalue-repo.git");
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
-
-		makeRequest(httpClient, "https://somehost");
+		Assertions.assertThatThrownBy(() -> {
+			String repoUrl = "https://myrepo/{placeholder1}/{placeholder2}-repo.git";
+			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
+			HttpClient httpClient = getHttpClientForUrl(
+					"https://myrepo/someplaceholdervalue/anotherplaceholdervalue-repo.git");
+			makeRequest(httpClient, "https://somehost");
+		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTPS_PROXY.getHost());
 	}
 
 	@Test
 	public void httpsProxy_called_for_http_request_when_no_httpProxy_specified() throws Exception {
-		String repoUrl = "https://myrepo/repo.git";
-		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
-		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(HTTPS_PROXY.getHost()))));
-
-		makeRequest(httpClient, "http://somehost");
+		Assertions.assertThatThrownBy(() -> {
+			String repoUrl = "https://myrepo/repo.git";
+			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
+			HttpClient httpClient = getHttpClientForUrl(repoUrl);
+			makeRequest(httpClient, "http://somehost");
+		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTPS_PROXY.getHost());
 	}
 
 	@Test
 	public void authenticatedHttpProxy() throws Exception {
-		String repoUrl = "https://myrepo/repo.git";
-		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties(repoUrl, AUTHENTICATED_HTTP_PROXY, null)).run();
-		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(AUTHENTICATED_HTTP_PROXY.getHost()))));
-
-		makeRequest(httpClient, "http://somehost");
+		Assertions.assertThatThrownBy(() -> {
+			String repoUrl = "https://myrepo/repo.git";
+			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties(gitProperties(repoUrl, AUTHENTICATED_HTTP_PROXY, null)).run();
+			HttpClient httpClient = getHttpClientForUrl(repoUrl);
+			makeRequest(httpClient, "http://somehost");
+		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(AUTHENTICATED_HTTP_PROXY.getHost());
 	}
 
 	@Test
 	public void httpProxy() throws Exception {
-		String repoUrl = "https://myrepo/repo.git";
-		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
-		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(HTTP_PROXY.getHost()))));
-
-		makeRequest(httpClient, "http://somehost");
+		Assertions.assertThatThrownBy(() -> {
+			String repoUrl = "https://myrepo/repo.git";
+			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
+			HttpClient httpClient = getHttpClientForUrl(repoUrl);
+			makeRequest(httpClient, "http://somehost");
+		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTP_PROXY.getHost());
 	}
 
 	@Test
 	public void httpProxy_placeholderUrl() throws Exception {
-		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties("https://myrepo/{placeholder}-repo.git", HTTP_PROXY, null)).run();
-		HttpClient httpClient = getHttpClientForUrl("https://myrepo/someplaceholdervalue-repo.git");
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(HTTP_PROXY.getHost()))));
-
-		makeRequest(httpClient, "http://somehost");
+		Assertions.assertThatThrownBy(() -> {
+			String repoUrl = "https://myrepo/{placeholder}-repo.git";
+			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
+			HttpClient httpClient = getHttpClientForUrl("https://myrepo/someplaceholdervalue-repo.git");
+			makeRequest(httpClient, "http://somehost");
+		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTP_PROXY.getHost());
 	}
 
 	@Test
 	public void httpProxy_called_for_https_request_when_no_httpsProxy_specified() throws Exception {
-		String repoUrl = "https://myrepo/repo.git";
-		new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
-		HttpClient httpClient = getHttpClientForUrl(repoUrl);
-		this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-				hasProperty("message", containsString(HTTP_PROXY.getHost()))));
-
-		makeRequest(httpClient, "https://somehost");
+		Assertions.assertThatThrownBy(() -> {
+			String repoUrl = "https://myrepo/repo.git";
+			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+					.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
+			HttpClient httpClient = getHttpClientForUrl(repoUrl);
+			makeRequest(httpClient, "https://somehost");
+		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTP_PROXY.getHost());
 	}
 
 	@Test
 	public void httpProxy_fromSystemProperty() throws Exception {
 		ProxySelector defaultProxySelector = ProxySelector.getDefault();
 		try {
-			ProxySelector.setDefault(new ProxySelector() {
-				@Override
-				public List<Proxy> select(URI uri) {
-					InetSocketAddress address = new InetSocketAddress(HTTP_PROXY.getHost(), HTTP_PROXY.getPort());
-					Proxy proxy = new Proxy(Proxy.Type.HTTP, address);
-					return Collections.singletonList(proxy);
-				}
+			Assertions.assertThatThrownBy(() -> {
+				ProxySelector.setDefault(new ProxySelector() {
+					@Override
+					public List<Proxy> select(URI uri) {
+						InetSocketAddress address = new InetSocketAddress(HTTP_PROXY.getHost(), HTTP_PROXY.getPort());
+						Proxy proxy = new Proxy(Proxy.Type.HTTP, address);
+						return Collections.singletonList(proxy);
+					}
 
-				@Override
-				public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+					@Override
+					public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
 
-				}
-			});
-			String repoUrl = "https://myrepo/repo.git";
-			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties(new String[] { "spring.cloud.config.server.git.uri=" + repoUrl }).run();
-			HttpClient httpClient = getHttpClientForUrl(repoUrl);
-			this.expectedException.expectCause(allOf(instanceOf(UnknownHostException.class),
-					hasProperty("message", containsString(HTTP_PROXY.getHost()))));
-
-			makeRequest(httpClient, "http://somehost");
+					}
+				});
+				String repoUrl = "https://myrepo/repo.git";
+				new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+						.properties(new String[] { "spring.cloud.config.server.git.uri=" + repoUrl }).run();
+				HttpClient httpClient = getHttpClientForUrl(repoUrl);
+				makeRequest(httpClient, "http://somehost");
+			}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTP_PROXY.getHost());
 		}
 		finally {
 			ProxySelector.setDefault(defaultProxySelector);
@@ -249,8 +233,12 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 	}
 
 	private void makeRequest(HttpClient httpClient, String url) {
-		RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
-		restTemplate.getForObject(url, String.class);
+		try {
+			httpClient.execute(new HttpGet(url));
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private HttpClient getHttpClientForUrl(String repoUrl) throws IOException {

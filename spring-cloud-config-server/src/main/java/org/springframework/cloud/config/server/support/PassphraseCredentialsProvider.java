@@ -31,9 +31,9 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 	/**
 	 * Prompt to skip iteration for.
 	 */
-	public static final String PROMPT = "Passphrase for";
+	public static final String PROMPT = "Passphrase";
 
-	private final String passphrase;
+	private final char[] passphrase;
 
 	/**
 	 * Initialize the provider with a the ssh passphrase.
@@ -41,7 +41,7 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 	 */
 	public PassphraseCredentialsProvider(String passphrase) {
 		super();
-		this.passphrase = passphrase;
+		this.passphrase = passphrase.toCharArray();
 	}
 
 	/**
@@ -58,12 +58,13 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 	@Override
 	public boolean supports(CredentialItem... items) {
 		for (final CredentialItem item : items) {
-			if (item instanceof CredentialItem.StringType && item.getPromptText().startsWith(PROMPT)) {
+			if (item instanceof CredentialItem.InformationalMessage) {
 				continue;
 			}
-			else {
-				return false;
+			if (item instanceof CredentialItem.Password && item.getPromptText().equals(PROMPT)) {
+				continue;
 			}
+			return false;
 		}
 		return true;
 	}
@@ -80,8 +81,11 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 	@Override
 	public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
 		for (final CredentialItem item : items) {
-			if (item instanceof CredentialItem.StringType && item.getPromptText().startsWith(PROMPT)) {
-				((CredentialItem.StringType) item).setValue(this.passphrase);
+			if (item instanceof CredentialItem.InformationalMessage) {
+				continue;
+			}
+			if (item instanceof CredentialItem.Password && item.getPromptText().equals(PROMPT)) {
+				((CredentialItem.Password) item).setValue(this.passphrase);
 				continue;
 			}
 			throw new UnsupportedCredentialItem(uri, item.getClass().getName() + ":" + item.getPromptText());

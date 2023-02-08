@@ -1,0 +1,6 @@
+org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapOverridesAutoConfiguration
+org.springframework.cloud.config.server.config.ConfigServerAutoConfiguration
+org.springframework.cloud.config.server.config.RsaEncryptionAutoConfiguration
+org.springframework.cloud.config.server.config.DefaultTextEncryptionAutoConfiguration
+org.springframework.cloud.config.server.config.EncryptionAutoConfiguration
+org.springframework.cloud.config.server.config.VaultEncryptionAutoConfiguration

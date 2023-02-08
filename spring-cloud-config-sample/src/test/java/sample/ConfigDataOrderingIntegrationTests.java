@@ -18,26 +18,23 @@ package sample;
 
 import java.util.Map;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.SocketUtils;
+import org.springframework.test.util.TestSocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
 		// Normally spring.cloud.config.enabled:true is the default but since we have the
 		// config server on the classpath we need to set it explicitly
@@ -45,28 +42,28 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		// hence no spring.config.import here and config name change
 		properties = { "spring.application.name=profilesample", "spring.cloud.config.enabled=true",
 				"spring.config.name=orderingtest", "management.security.enabled=false", "spring.profiles.active=dev",
-				"management.endpoints.web.exposure.include=*" },
+				"management.endpoints.web.exposure.include=*", "management.endpoint.env.show-values=ALWAYS" },
 		webEnvironment = RANDOM_PORT)
 public class ConfigDataOrderingIntegrationTests {
 
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
 
-	private static final int configPort = SocketUtils.findAvailableTcpPort();
+	private static final int configPort = TestSocketUtils.findAvailableTcpPort();
 
 	private static ConfigurableApplicationContext server;
 
 	@LocalServerPort
 	private int port;
 
-	@BeforeClass
+	@BeforeAll
 	public static void startConfigServer() {
-		server = SpringApplication.run(org.springframework.cloud.config.server.ConfigServerApplication.class,
+		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
 				"--spring.profiles.active=native", "--server.port=" + configPort, "--spring.config.name=server");
 
 		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void close() {
 		System.clearProperty("spring.cloud.config.uri");
 		if (server != null) {

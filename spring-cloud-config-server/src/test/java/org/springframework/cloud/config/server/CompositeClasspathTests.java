@@ -16,25 +16,23 @@
 
 package org.springframework.cloud.config.server;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.cloud.config.server.composite.CompositeUtils;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.cloud.test.ClassPathExclusions;
-import org.springframework.cloud.test.ModifiedClassPathRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CompositeClasspathTests {
 
-	@RunWith(ModifiedClassPathRunner.class)
 	@ClassPathExclusions({ "spring-jdbc-*.jar", "spring-data-redis-*.jar" })
 	public static class JdbcTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -48,13 +46,12 @@ public class CompositeClasspathTests {
 
 	}
 
-	@RunWith(ModifiedClassPathRunner.class)
 	@ClassPathExclusions({ "spring-jdbc-*.jar", "spring-data-redis-*.jar", "spring-boot-actuator-*.jar" })
 	public static class NoActuatorTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -67,13 +64,12 @@ public class CompositeClasspathTests {
 
 	}
 
-	@RunWith(ModifiedClassPathRunner.class)
 	@ClassPathExclusions("httpclient-*.jar")
 	public static class HttpClientTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -87,13 +83,12 @@ public class CompositeClasspathTests {
 
 	}
 
-	@RunWith(ModifiedClassPathRunner.class)
 	@ClassPathExclusions("svnkit-*.jar")
 	public static class SvnTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -107,13 +102,12 @@ public class CompositeClasspathTests {
 
 	}
 
-	@RunWith(ModifiedClassPathRunner.class)
 	@ClassPathExclusions("org.eclipse.jgit-*.jar")
 	public static class JGitTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:compositeconfigserver",
 							"spring.cloud.config.server.composite[0].uri:file:///./target/repos/svn-config-repo",
@@ -127,13 +121,12 @@ public class CompositeClasspathTests {
 
 	}
 
-	@RunWith(ModifiedClassPathRunner.class)
 	@ClassPathExclusions("google-auth-library-oauth2-http-*.jar")
 	public static class GoogleAuthTests {
 
 		@Test
 		public void contextLoads() {
-			new WebApplicationContextRunner().withUserConfiguration(ConfigServerApplication.class)
+			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
 							"spring.config.name:configserver",
 							"spring.cloud.config.server.composite[0].uri:https://source.developers.google.com",

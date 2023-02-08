@@ -16,7 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import org.junit.Test;
+import io.micrometer.observation.ObservationRegistry;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.env.StandardEnvironment;
@@ -33,18 +34,19 @@ public class NativeEnvironmentRepositoryFactoryTest {
 		ConfigServerProperties props = new ConfigServerProperties();
 		props.setDefaultLabel("mylabel");
 		NativeEnvironmentRepositoryFactory factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(),
-				props);
+				props, ObservationRegistry.NOOP);
 		NativeEnvironmentProperties environmentProperties = new NativeEnvironmentProperties();
 		NativeEnvironmentRepository repo = factory.build(environmentProperties);
 		assertThat(repo.getDefaultLabel()).isEqualTo("mylabel");
 
-		factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(), props);
+		factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(), props, ObservationRegistry.NOOP);
 		environmentProperties = new NativeEnvironmentProperties();
 		environmentProperties.setDefaultLabel("mynewlabel");
 		repo = factory.build(environmentProperties);
 		assertThat(repo.getDefaultLabel()).isEqualTo("mylabel");
 
-		factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(), new ConfigServerProperties());
+		factory = new NativeEnvironmentRepositoryFactory(new StandardEnvironment(), new ConfigServerProperties(),
+				ObservationRegistry.NOOP);
 		environmentProperties = new NativeEnvironmentProperties();
 		environmentProperties.setDefaultLabel("mynewlabel");
 		repo = factory.build(environmentProperties);

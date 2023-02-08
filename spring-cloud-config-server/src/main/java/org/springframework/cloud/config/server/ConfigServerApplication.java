@@ -24,10 +24,12 @@ import org.springframework.context.annotation.Configuration;
  * Configuration server application.
  *
  * @author Dave Syer
+ * @deprecated Will be removed in 4.0.0.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableAutoConfiguration
 @EnableConfigServer
+@Deprecated
 public class ConfigServerApplication {
 
 	public static void main(String[] args) {

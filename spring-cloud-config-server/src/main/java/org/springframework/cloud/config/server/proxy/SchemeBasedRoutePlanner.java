@@ -16,10 +16,9 @@
 
 package org.springframework.cloud.config.server.proxy;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.impl.conn.DefaultRoutePlanner;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.client5.http.impl.routing.DefaultRoutePlanner;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.protocol.HttpContext;
 
 /**
  * @author Dylan Roberts
@@ -33,11 +32,11 @@ public class SchemeBasedRoutePlanner extends DefaultRoutePlanner {
 	public SchemeBasedRoutePlanner(ProxyHostProperties httpsProxy, ProxyHostProperties httpProxy) {
 		super(null);
 		this.httpsProxy = buildProxy(httpsProxy, "https");
-		this.defaultSchemeProxy = buildProxy(httpProxy, HttpHost.DEFAULT_SCHEME_NAME);
+		this.defaultSchemeProxy = buildProxy(httpProxy, HttpHost.DEFAULT_SCHEME.getId());
 	}
 
 	@Override
-	protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context) {
+	protected HttpHost determineProxy(HttpHost target, HttpContext context) {
 		return "https".equals(target.getSchemeName()) ? determineProxy(this.httpsProxy, this.defaultSchemeProxy)
 				: determineProxy(this.defaultSchemeProxy, this.httpsProxy);
 	}
@@ -47,10 +46,10 @@ public class SchemeBasedRoutePlanner extends DefaultRoutePlanner {
 	}
 
 	private HttpHost buildProxy(ProxyHostProperties properties, String scheme) {
-		if (properties == null) {
+		if (properties == null || !properties.connectionInformationProvided()) {
 			return null;
 		}
-		return new HttpHost(properties.getHost(), properties.getPort(), scheme);
+		return new HttpHost(scheme, properties.getHost(), properties.getPort());
 	}
 
 }

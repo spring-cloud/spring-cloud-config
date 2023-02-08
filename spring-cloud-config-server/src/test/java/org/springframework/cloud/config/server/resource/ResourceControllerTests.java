@@ -18,10 +18,11 @@ package org.springframework.cloud.config.server.resource;
 
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import io.micrometer.observation.ObservationRegistry;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.boot.WebApplicationType;
@@ -58,19 +59,19 @@ public class ResourceControllerTests {
 	@SuppressWarnings("unchecked")
 	private Map<String, ResourceEncryptor> resourceEncryptorMap = Mockito.mock(Map.class);
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();
 		}
 	}
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
 				.run();
 		this.environmentRepository = new NativeEnvironmentRepository(this.context.getEnvironment(),
-				new NativeEnvironmentProperties());
+				new NativeEnvironmentProperties(), ObservationRegistry.NOOP);
 		this.repository = new GenericResourceRepository(this.environmentRepository);
 		this.repository.setResourceLoader(this.context);
 		this.controller = new ResourceController(this.repository, this.environmentRepository,
@@ -79,7 +80,7 @@ public class ResourceControllerTests {
 	}
 
 	@Test
-	@Ignore // FIXME: configdata
+	@Disabled // FIXME: configdata
 	public void templateReplacement() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", true);
@@ -293,7 +294,7 @@ public class ResourceControllerTests {
 	}
 
 	private String replaceNewLines(String text) {
-		return text.replace("\n", "").replace("\t", "");
+		return text.replace("\r", "").replace("\n", "").replace("\t", "");
 	}
 
 	@Test
@@ -348,7 +349,8 @@ public class ResourceControllerTests {
 	public void setSearchLocationsAppendSlashByConstructor() {
 		final NativeEnvironmentProperties properties = new NativeEnvironmentProperties();
 		properties.setSearchLocations(new String[] { "classpath:/test" });
-		NativeEnvironmentRepository repo = new NativeEnvironmentRepository(this.context.getEnvironment(), properties);
+		NativeEnvironmentRepository repo = new NativeEnvironmentRepository(this.context.getEnvironment(), properties,
+				ObservationRegistry.NOOP);
 		assertThat(repo.getSearchLocations()[0]).isEqualTo("classpath:/test/");
 	}
 

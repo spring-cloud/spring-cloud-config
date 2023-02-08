@@ -22,8 +22,9 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
@@ -55,7 +56,7 @@ public class VaultEnvironmentRepositoryTests {
 
 	private ObjectMapper objectMapper;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.objectMapper = new ObjectMapper();
 	}
@@ -285,15 +286,17 @@ public class VaultEnvironmentRepositoryTests {
 				.as("Properties should be returned for specified application").isEqualTo(result);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void missingConfigToken() {
-		ConfigTokenProvider tokenProvider = mock(ConfigTokenProvider.class);
-		when(tokenProvider.getToken()).thenReturn(null);
+		Assertions.assertThatThrownBy(() -> {
+			ConfigTokenProvider tokenProvider = mock(ConfigTokenProvider.class);
+			when(tokenProvider.getToken()).thenReturn(null);
 
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), mock(RestTemplate.class), new VaultEnvironmentProperties(),
-				tokenProvider);
-		repo.findOne("myapp", null, null);
+			VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
+					new EnvironmentWatch.Default(), mock(RestTemplate.class), new VaultEnvironmentProperties(),
+					tokenProvider);
+			repo.findOne("myapp", null, null);
+		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test

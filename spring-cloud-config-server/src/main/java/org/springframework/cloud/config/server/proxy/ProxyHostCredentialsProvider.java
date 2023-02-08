@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.config.server.proxy;
 
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
 
 /**
  * @author Dylan Roberts
@@ -29,10 +29,10 @@ public class ProxyHostCredentialsProvider extends BasicCredentialsProvider {
 
 		for (ProxyHostProperties proxy : proxyHostProperties) {
 
-			if (proxy != null && proxy.getUsername() != null && proxy.getPassword() != null) {
+			if (proxy != null && proxy.connectionInformationProvided() && proxy.authenticationProvided()) {
 				AuthScope authscope = new AuthScope(proxy.getHost(), proxy.getPort());
 				UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(proxy.getUsername(),
-						proxy.getPassword());
+						proxy.getPassword().toCharArray());
 				setCredentials(authscope, credentials);
 			}
 		}

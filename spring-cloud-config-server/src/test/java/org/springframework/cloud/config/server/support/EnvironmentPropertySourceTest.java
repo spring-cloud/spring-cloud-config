@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.config.server.support;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.core.env.StandardEnvironment;
 

@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -37,7 +37,7 @@ public class PropertyPathEndpointTests {
 	private PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
 			new CompositePropertyPathNotificationExtractor(Collections.emptyList()), "abc1");
 
-	@Before
+	@BeforeEach
 	public void init() {
 		StaticApplicationContext publisher = new StaticApplicationContext();
 		this.endpoint.setApplicationEventPublisher(publisher);
@@ -72,7 +72,7 @@ public class PropertyPathEndpointTests {
 	public void testNotifyAllWithProfile() {
 		assertThat(this.endpoint
 				.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "application-local.yml")).toString())
-						.isEqualTo("[*:local]");
+						.isEqualTo("[application-local, *]");
 	}
 
 	@Test
@@ -92,13 +92,13 @@ public class PropertyPathEndpointTests {
 	@Test
 	public void testNotifyOneWithProfile() {
 		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo-local.yml"))
-				.toString()).isEqualTo("[foo:local, foo-local]");
+				.toString()).isEqualTo("[foo-local, foo]");
 	}
 
 	@Test
 	public void testNotifyMultiDash() {
 		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo-local-dev.yml"))
-				.toString()).isEqualTo("[foo:local-dev, foo-local:dev, foo-local-dev]");
+				.toString()).isEqualTo("[foo-local-dev, foo-local, foo]");
 	}
 
 }

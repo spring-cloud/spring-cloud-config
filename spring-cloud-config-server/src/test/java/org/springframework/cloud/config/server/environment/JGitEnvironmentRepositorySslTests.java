@@ -26,10 +26,11 @@ import java.util.List;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.junit.http.SimpleHttpServer;
 import org.eclipse.jgit.lib.Repository;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -42,12 +43,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 // FIXME: 4.0.0 https://bugs.eclipse.org/bugs/show_bug.cgi?id=570447
-@Ignore("SimpleHttpServer does not use jakarta.servlet")
+@Disabled("SimpleHttpServer does not use jakarta.servlet")
 public class JGitEnvironmentRepositorySslTests {
 
 	private static SimpleHttpServer server;
 
-	@BeforeClass
+	@BeforeAll
 	public static void setup() throws Exception {
 		URL repoUrl = JGitEnvironmentRepositorySslTests.class.getResource("/test1-config-repo/git");
 		Repository repo = new FileRepository(new File(repoUrl.toURI()));
@@ -55,7 +56,7 @@ public class JGitEnvironmentRepositorySslTests {
 		server.start();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void teardown() throws Exception {
 		server.stop();
 	}
@@ -68,25 +69,27 @@ public class JGitEnvironmentRepositorySslTests {
 		return properties.toArray(new String[0]);
 	}
 
-	@Test(expected = CertificateException.class)
-	public void selfSignedCertIsRejected() throws Throwable {
-		ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfiguration.class)
-				.properties(configServerProperties()).web(WebApplicationType.NONE).run();
+	@Test
+	public void selfSignedCertIsRejected() {
+		Assertions.assertThrows(CertificateException.class, () -> {
+			ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfiguration.class)
+					.properties(configServerProperties()).web(WebApplicationType.NONE).run();
 
-		JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
+			JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
 
-		try {
-			repository.findOne("bar", "staging", "master");
-		}
-		catch (Throwable e) {
-			while (e.getCause() != null) {
-				e = e.getCause();
-				if (e instanceof CertificateException) {
-					break;
-				}
+			try {
+				repository.findOne("bar", "staging", "master");
 			}
-			throw e;
-		}
+			catch (Throwable e) {
+				while (e.getCause() != null) {
+					e = e.getCause();
+					if (e instanceof CertificateException) {
+						break;
+					}
+				}
+				throw e;
+			}
+		});
 	}
 
 	@Test

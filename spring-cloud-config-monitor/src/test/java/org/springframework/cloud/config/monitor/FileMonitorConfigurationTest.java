@@ -22,9 +22,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import io.micrometer.observation.ObservationRegistry;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.environment.AbstractScmEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
@@ -53,12 +54,12 @@ public class FileMonitorConfigurationTest {
 
 	private List<AbstractScmEnvironmentRepository> repositories = new ArrayList<>();
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		fileMonitorConfiguration.setResourceLoader(new FileSystemResourceLoader());
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		fileMonitorConfiguration.stop();
 	}
@@ -153,14 +154,14 @@ public class FileMonitorConfigurationTest {
 		ConfigurableEnvironment environment = createConfigurableEnvironment();
 		NativeEnvironmentProperties properties = new NativeEnvironmentProperties();
 		properties.setSearchLocations(new String[] { "classpath:pathsamples" });
-		return new NativeEnvironmentRepository(environment, properties);
+		return new NativeEnvironmentRepository(environment, properties, ObservationRegistry.NOOP);
 	}
 
 	private AbstractScmEnvironmentRepository createScmEnvironmentRepository(String uri) {
 		ConfigurableEnvironment environment = createConfigurableEnvironment();
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		properties.setUri(uri);
-		return new JGitEnvironmentRepository(environment, properties);
+		return new JGitEnvironmentRepository(environment, properties, ObservationRegistry.NOOP);
 	}
 
 	private void assertOnDirectory(int expectedDirectorySize) {

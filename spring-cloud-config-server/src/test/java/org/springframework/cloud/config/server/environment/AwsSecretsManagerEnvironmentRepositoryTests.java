@@ -16,20 +16,31 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -38,27 +49,46 @@ import org.springframework.util.StringUtils;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SECRETSMANAGER;
 
 /**
  * @author Tejas Pandilwar
+ * @author Matej Nedić
  */
+@Testcontainers
+@Tag("DockerRequired")
 public class AwsSecretsManagerEnvironmentRepositoryTests {
+
+	@Container
+	private static final LocalStackContainer localstack = new LocalStackContainer(
+			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(SECRETSMANAGER);
 
 	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
-	private final AWSSecretsManager awsSmClientMock = mock(AWSSecretsManager.class, "aws-sm-client-mock");
+	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
+			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
+
+	private final SecretsManagerClient smClient = SecretsManagerClient.builder()
+			.region(Region.of(localstack.getRegion())).credentialsProvider(staticCredentialsProvider)
+			.endpointOverride(localstack.getEndpointOverride(SECRETSMANAGER)).build();
 
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
 
 	private final AwsSecretsManagerEnvironmentProperties environmentProperties = new AwsSecretsManagerEnvironmentProperties();
 
 	private final AwsSecretsManagerEnvironmentRepository repository = new AwsSecretsManagerEnvironmentRepository(
-			awsSmClientMock, configServerProperties, environmentProperties);
+			smClient, configServerProperties, environmentProperties);
 
 	private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
+
+	private final List<String> toBeRemoved = new ArrayList<>();
+
+	@AfterEach
+	public void cleanUp() {
+		toBeRemoved.forEach(value -> smClient
+				.deleteSecret(DeleteSecretRequest.builder().secretId(value).forceDeleteWithoutRecovery(true).build()));
+		toBeRemoved.clear();
+	}
 
 	@Test
 	public void testFindOneWithNullApplicationAndNullProfile() {
@@ -76,14 +106,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(defaultApplication, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -101,14 +131,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(defaultApplication, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -126,14 +156,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(defaultApplication, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -155,15 +185,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(defaultApplication, profiles, null, null, null);
-		expectedEnv
+		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
+		environment
 				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -181,14 +211,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -205,14 +235,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -229,14 +259,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -257,15 +287,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment
 				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -283,14 +313,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -307,14 +337,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -331,14 +361,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -359,15 +389,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment
 				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -391,15 +421,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties,
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -422,15 +452,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties,
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -453,15 +483,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties,
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -477,14 +507,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -504,14 +534,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, fooProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, fooProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -541,15 +571,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooDefaultProperties,
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooDefaultProperties,
 				applicationDefaultProperties, fooProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -572,15 +602,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(
 				Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -617,16 +647,16 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationEastProperties = new PropertySource(applicationEastPropertiesName,
 				getApplicationEastProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
 				applicationEastProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -656,15 +686,15 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationEastProperties = new PropertySource(applicationEastPropertiesName,
 				getApplicationEastProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
 				applicationEastProperties, fooProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -691,14 +721,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
 				getApplicationProperties());
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(overrideProperties, applicationDefaultProperties, applicationProperties));
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(overrideProperties, applicationDefaultProperties, applicationProperties));
 
-		setupAwsSmClientMocks(expectedEnv);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -707,12 +737,12 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String profile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
-		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		setupAwsSmClientMocks(expectedEnv);
+		Environment environment = new Environment(application, profiles, null, null, null);
+		putSecrets(environment);
 
 		Environment resultEnv = repository.findOne(application, profile, null);
 
-		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
 
 	@Test
@@ -736,15 +766,12 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		assertThat(repository).isNotNull();
 	}
 
-	private void setupAwsSmClientMocks(Environment environment) {
+	private void putSecrets(Environment environment) {
 		for (PropertySource ps : environment.getPropertySources()) {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
-			GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(path);
-
 			String secrets = getSecrets(ps);
-			GetSecretValueResult response = new GetSecretValueResult().withSecretString(secrets);
-
-			when(awsSmClientMock.getSecretValue(eq(request))).thenReturn(response);
+			smClient.createSecret(CreateSecretRequest.builder().name(path).secretString(secrets).build());
+			toBeRemoved.add(path);
 		}
 	}
 

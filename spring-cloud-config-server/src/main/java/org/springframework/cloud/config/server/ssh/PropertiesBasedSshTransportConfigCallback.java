@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.config.server.ssh;
 
-import com.jcraft.jsch.JSch;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
@@ -44,9 +43,8 @@ public class PropertiesBasedSshTransportConfigCallback implements TransportConfi
 	@Override
 	public void configure(Transport transport) {
 		if (transport instanceof SshTransport) {
-			SshTransport sshTransport = (SshTransport) transport;
-			sshTransport.setSshSessionFactory(new PropertyBasedSshSessionFactory(
-					new SshUriPropertyProcessor(this.sshUriProperties).getSshKeysByHostname(), new JSch()));
+			((SshTransport) transport).setSshSessionFactory(new PropertyBasedSshSessionFactory(
+					new SshUriPropertyProcessor(this.sshUriProperties).getSshKeysByHostname()));
 		}
 	}
 

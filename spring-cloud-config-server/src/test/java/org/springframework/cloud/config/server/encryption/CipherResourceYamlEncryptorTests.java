@@ -20,7 +20,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;

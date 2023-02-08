@@ -16,14 +16,13 @@
 
 package org.springframework.cloud.config.server;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -31,8 +30,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 /**
  * @author Alberto C. Ríos
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = ConfigServerApplication.class, properties = { "spring.profiles.active:credhub",
+@SpringBootTest(classes = TestConfigServerApplication.class, properties = { "spring.profiles.active:credhub",
 		"spring.cloud.config.server.credhub.url:https://credhub:8844" }, webEnvironment = RANDOM_PORT)
 public class CredhubConfigServerIntegrationTests extends CredhubIntegrationTest {
 

@@ -21,6 +21,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.micrometer.observation.ObservationRegistry;
+
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.environment.PropertyValueDescriptor;
@@ -41,13 +43,14 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 
 	private Map<String, String> overrides = new LinkedHashMap<>();
 
-	public EnvironmentEncryptorEnvironmentRepository(EnvironmentRepository delegate) {
-		this(delegate, null);
+	public EnvironmentEncryptorEnvironmentRepository(EnvironmentRepository delegate,
+			ObservationRegistry observationRegistry) {
+		this(delegate, null, observationRegistry);
 	}
 
 	public EnvironmentEncryptorEnvironmentRepository(EnvironmentRepository delegate,
-			List<EnvironmentEncryptor> environmentEncryptors) {
-		this.delegate = delegate;
+			List<EnvironmentEncryptor> environmentEncryptors, ObservationRegistry observationRegistry) {
+		this.delegate = ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, delegate);
 		this.environmentEncryptors = environmentEncryptors;
 	}
 

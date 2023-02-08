@@ -26,14 +26,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParametersByPathRequest;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParametersByPathResult;
-import com.amazonaws.services.simplesystemsmanagement.model.Parameter;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.GetParametersByPathRequest;
+import software.amazon.awssdk.services.ssm.model.GetParametersByPathResponse;
+import software.amazon.awssdk.services.ssm.model.Parameter;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
 import static org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
@@ -41,20 +42,22 @@ import static org.springframework.cloud.config.server.environment.AwsParameterSt
 /**
  * @author Iulian Antohe
  */
-public class AwsParameterStoreEnvironmentRepository implements EnvironmentRepository {
+public class AwsParameterStoreEnvironmentRepository implements EnvironmentRepository, Ordered {
 
-	private final AWSSimpleSystemsManagement awsSsmClient;
+	private final SsmClient awsSsmClient;
 
 	private final ConfigServerProperties configServerProperties;
 
 	private final AwsParameterStoreEnvironmentProperties environmentProperties;
 
-	public AwsParameterStoreEnvironmentRepository(AWSSimpleSystemsManagement awsSsmClient,
-			ConfigServerProperties configServerProperties,
+	private final int order;
+
+	public AwsParameterStoreEnvironmentRepository(SsmClient awsSsmClient, ConfigServerProperties configServerProperties,
 			AwsParameterStoreEnvironmentProperties environmentProperties) {
 		this.awsSsmClient = awsSsmClient;
 		this.configServerProperties = configServerProperties;
 		this.environmentProperties = environmentProperties;
+		this.order = environmentProperties.getOrder();
 	}
 
 	@Override
@@ -137,20 +140,20 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 	private Map<String, String> getPropertiesByParameterPath(String path) {
 		Map<String, String> result = new HashMap<>();
 
-		GetParametersByPathRequest request = new GetParametersByPathRequest().withPath(path)
-				.withRecursive(environmentProperties.isRecursive())
-				.withWithDecryption(environmentProperties.isDecryptValues())
-				.withMaxResults(environmentProperties.getMaxResults());
+		GetParametersByPathRequest request = GetParametersByPathRequest.builder().path(path)
+				.recursive(environmentProperties.isRecursive()).withDecryption(environmentProperties.isDecryptValues())
+				.maxResults(environmentProperties.getMaxResults()).build();
 
-		GetParametersByPathResult response = awsSsmClient.getParametersByPath(request);
+		GetParametersByPathResponse response = awsSsmClient.getParametersByPath(request);
 
 		if (response != null) {
-			addParametersToProperties(path, response.getParameters(), result);
+			addParametersToProperties(path, response.parameters(), result);
 
-			while (StringUtils.hasLength(response.getNextToken())) {
-				response = awsSsmClient.getParametersByPath(request.withNextToken(response.getNextToken()));
+			while (StringUtils.hasLength(response.nextToken())) {
+				response = awsSsmClient
+						.getParametersByPath(request.toBuilder().nextToken(response.nextToken()).build());
 
-				addParametersToProperties(path, response.getParameters(), result);
+				addParametersToProperties(path, response.parameters(), result);
 			}
 		}
 
@@ -159,10 +162,15 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 
 	private void addParametersToProperties(String path, List<Parameter> parameters, Map<String, String> properties) {
 		for (Parameter parameter : parameters) {
-			String name = StringUtils.delete(parameter.getName(), path).replace(DEFAULT_PATH_SEPARATOR, ".");
+			String name = StringUtils.delete(parameter.name(), path).replace(DEFAULT_PATH_SEPARATOR, ".");
 
-			properties.put(name, parameter.getValue());
+			properties.put(name, parameter.value());
 		}
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
 	}
 
 }

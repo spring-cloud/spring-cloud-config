@@ -24,6 +24,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import io.micrometer.observation.ObservationRegistry;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -54,11 +56,14 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	private Map<String, JGitEnvironmentRepository> placeholders = new LinkedHashMap<>();
 
+	private final ObservationRegistry observationRegistry;
+
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment,
-			MultipleJGitEnvironmentProperties properties) {
-		super(environment, properties);
+			MultipleJGitEnvironmentProperties properties, ObservationRegistry observationRegistry) {
+		super(environment, properties, observationRegistry);
+		this.observationRegistry = observationRegistry;
 		properties.getRepos().forEach((name, props) -> this.repos.put(name,
-				new PatternMatchingJGitEnvironmentRepository(environment, props)));
+				new PatternMatchingJGitEnvironmentRepository(environment, props, this.observationRegistry)));
 	}
 
 	@Override
@@ -174,6 +179,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 		catch (Exception e) {
 			if (MultipleJGitEnvironmentProperties.MAIN_LABEL.equals(label) && isTryMasterBranch()) {
+				logger.info("Cannot find Environment with default label " + getDefaultLabel(), e);
+				logger.info("Will try to find Environment master label instead.");
 				candidate = getRepository(this, application, profile, MultipleJGitEnvironmentProperties.MASTER_LABEL);
 				return findOneFromCandidate(candidate, application, profile,
 						MultipleJGitEnvironmentProperties.MASTER_LABEL, includeOrigin);
@@ -229,7 +236,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	}
 
 	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository source, String uri) {
-		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(null, new JGitEnvironmentProperties());
+		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(null, new JGitEnvironmentProperties(),
+				observationRegistry);
 		File basedir = repository.getBasedir();
 		BeanUtils.copyProperties(source, repository);
 		repository.setUri(uri);
@@ -257,13 +265,18 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		 */
 		private String name;
 
-		public PatternMatchingJGitEnvironmentRepository() {
-			super(null, new JGitEnvironmentProperties());
+		private final ObservationRegistry observationRegistry;
+
+		public PatternMatchingJGitEnvironmentRepository(ObservationRegistry observationRegistry) {
+			super(null, new JGitEnvironmentProperties(), observationRegistry);
+			this.observationRegistry = observationRegistry;
 		}
 
 		public PatternMatchingJGitEnvironmentRepository(ConfigurableEnvironment environment,
-				MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties properties) {
-			super(environment, properties);
+				MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties properties,
+				ObservationRegistry observationRegistry) {
+			super(environment, properties, observationRegistry);
+			this.observationRegistry = observationRegistry;
 			this.setPattern(properties.getPattern());
 			this.name = properties.getName();
 		}

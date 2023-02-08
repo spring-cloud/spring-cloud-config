@@ -19,9 +19,10 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Collections;
 import java.util.regex.Matcher;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import io.micrometer.observation.ObservationRegistry;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -43,12 +44,13 @@ public class NativeEnvironmentRepositoryTests {
 
 	private NativeEnvironmentRepository repository;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class)
 				.properties("logging.level.org.springframework.boot.context.config=TRACE").web(WebApplicationType.NONE)
 				.run();
-		this.repository = new NativeEnvironmentRepository(context.getEnvironment(), new NativeEnvironmentProperties());
+		this.repository = new NativeEnvironmentRepository(context.getEnvironment(), new NativeEnvironmentProperties(),
+				ObservationRegistry.NOOP);
 		this.repository.setVersion("myversion");
 		this.repository.setDefaultLabel(null);
 		context.close();
@@ -148,7 +150,7 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
-	@Ignore // FIXME: configdata
+	@Disabled // FIXME: configdata
 	public void labelled() {
 		this.repository.setSearchLocations("classpath:/test");
 		Environment environment = this.repository.findOne("foo", "development", "dev", false);

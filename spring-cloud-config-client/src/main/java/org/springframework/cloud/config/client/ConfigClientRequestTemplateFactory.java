@@ -25,8 +25,11 @@ import java.util.Map;
 import javax.net.ssl.SSLContext;
 
 import org.apache.commons.logging.Log;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 
 import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.http.HttpHeaders;
@@ -85,7 +88,12 @@ public class ConfigClientRequestTemplateFactory {
 			try {
 				SSLContextFactory factory = new SSLContextFactory(client.getTls());
 				SSLContext sslContext = factory.createSSLContext();
-				HttpClient httpClient = HttpClients.custom().setSSLContext(sslContext).build();
+				SSLConnectionSocketFactoryBuilder sslConnectionSocketFactoryBuilder = SSLConnectionSocketFactoryBuilder
+						.create();
+				sslConnectionSocketFactoryBuilder.setSslContext(sslContext);
+				PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder
+						.create().setSSLSocketFactory(sslConnectionSocketFactoryBuilder.build()).build();
+				HttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager).build();
 				HttpComponentsClientHttpRequestFactory result = new HttpComponentsClientHttpRequestFactory(httpClient);
 
 				result.setReadTimeout(client.getRequestReadTimeout());

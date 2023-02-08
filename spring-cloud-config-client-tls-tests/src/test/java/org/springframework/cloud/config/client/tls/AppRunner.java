@@ -24,7 +24,7 @@ import java.util.Map;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.util.SocketUtils;
+import org.springframework.test.util.TestSocketUtils;
 
 public class AppRunner implements AutoCloseable {
 
@@ -55,7 +55,7 @@ public class AppRunner implements AutoCloseable {
 	}
 
 	private int availabeTcpPort() {
-		return SocketUtils.findAvailableTcpPort();
+		return TestSocketUtils.findAvailableTcpPort();
 	}
 
 	private String[] props() {

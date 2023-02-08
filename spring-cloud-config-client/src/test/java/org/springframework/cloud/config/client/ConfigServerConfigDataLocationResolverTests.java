@@ -51,7 +51,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 	void setup() {
 		this.environment = new MockEnvironment();
 		this.environmentBinder = Binder.get(this.environment);
-		this.resolver = new ConfigServerConfigDataLocationResolver(new DeferredLog());
+		this.resolver = new ConfigServerConfigDataLocationResolver(destination -> new DeferredLog());
 		when(context.getBinder()).thenReturn(environmentBinder);
 	}
 

@@ -8,3 +8,4 @@
 ad5e0cb7036ed11ddd4b7be6ed86ad3565c8a3fc bd414a6cc8653d7e282df0a257babc6283b83596 Marcin Grzejszczak <marcin@grzejszczak.pl> 1549357702 +0100	commit: Updated
 bd414a6cc8653d7e282df0a257babc6283b83596 fd07d827993aaf6ed7ef1b979767ee9277d1d409 Tim Ysewyn <tysewyn@pivotal.io> 1564492480 +0200	commit: Added server overrides
 fd07d827993aaf6ed7ef1b979767ee9277d1d409 fd07d827993aaf6ed7ef1b979767ee9277d1d409 Ryan Baxter <rbaxter@vmware.com> 1636990355 -0500	checkout: moving from master to main
+fd07d827993aaf6ed7ef1b979767ee9277d1d409 fb1a59a90f034288d14dc4b607f9f76697aa972d spencergibb <spencer@gibb.us> 1652114959 -0400	commit: changed spring.profiles to spring.config.activate.on-profile

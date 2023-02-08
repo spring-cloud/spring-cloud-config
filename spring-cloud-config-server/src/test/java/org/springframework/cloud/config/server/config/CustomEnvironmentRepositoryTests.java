@@ -16,15 +16,14 @@
 
 package org.springframework.cloud.config.server.config;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.config.CustomEnvironmentRepositoryTests.TestApplication;
@@ -33,7 +32,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,7 +39,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Dave Syer
  *
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestApplication.class, properties = { "spring.config.name:configserver" },
 		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -54,7 +51,7 @@ public class CustomEnvironmentRepositoryTests {
 	@Test
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate()
-				.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
+				.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 		assertThat(environment.getPropertySources().isEmpty()).isFalse();
 	}
 

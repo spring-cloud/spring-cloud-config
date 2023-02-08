@@ -21,15 +21,14 @@ import java.util.List;
 
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.EnableConfigServer;
@@ -43,7 +42,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -52,7 +50,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class CustomCompositeEnvironmentRepositoryTests {
 
-	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.StaticTests.Config.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
@@ -65,7 +62,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@LocalServerPort
 		private int port;
 
-		@BeforeClass
+		@BeforeAll
 		public static void init() throws Exception {
 			// mock Git configuration to make tests independent of local Git configuration
 			SystemReader.setInstance(new MockSystemReader());
@@ -76,7 +73,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate()
-					.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
+					.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
@@ -102,7 +99,6 @@ public class CustomCompositeEnvironmentRepositoryTests {
 
 	}
 
-	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = CustomCompositeEnvironmentRepositoryTests.ListTests.Config.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.composite[0].type:git",
@@ -117,7 +113,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@LocalServerPort
 		private int port;
 
-		@BeforeClass
+		@BeforeAll
 		public static void init() throws Exception {
 			// mock Git configuration to make tests independent of local Git configuration
 			SystemReader.setInstance(new MockSystemReader());
@@ -128,7 +124,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate()
-					.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
+					.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());

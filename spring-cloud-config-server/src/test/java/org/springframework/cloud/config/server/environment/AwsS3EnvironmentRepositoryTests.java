@@ -17,44 +17,61 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectId;
-import com.amazonaws.util.StringInputStream;
-import org.junit.Test;
-import org.mockito.ArgumentMatcher;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.BucketVersioningStatus;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutBucketVersioningRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.VersioningConfiguration;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 /**
  * @author Clay McCoy
+ * @author Matej Nedić
  */
+@Testcontainers
+@Tag("DockerRequired")
 public class AwsS3EnvironmentRepositoryTests {
 
-	final ConfigServerProperties server = new ConfigServerProperties();
+	@Container
+	private static final LocalStackContainer localstack = new LocalStackContainer(
+			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(S3);
 
-	final AmazonS3 s3Client = mock(AmazonS3.class, "config");
+	private final ConfigServerProperties server = new ConfigServerProperties();
 
-	final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
+	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
+			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
 
-	final String propertyContent = "cloudfoundry.enabled=true\n" + "cloudfoundry.accounts[0].name=acc1\n"
-			+ "cloudfoundry.accounts[0].user=user1\n" + "cloudfoundry.accounts[0].password=password1\n"
-			+ "cloudfoundry.accounts[0].api=api.sys.acc1.cf-app.com\n" + "cloudfoundry.accounts[0].environment=test1\n"
-			+ "cloudfoundry.accounts[1].name=acc2\n" + "cloudfoundry.accounts[1].user=user2\n"
-			+ "cloudfoundry.accounts[1].password=password2\n" + "cloudfoundry.accounts[1].api=api.sys.acc2.cf-app.com\n"
-			+ "cloudfoundry.accounts[1].environment=test2\n";
+	private final S3Client s3Client = S3Client.builder().region(Region.of(localstack.getRegion()))
+			.credentialsProvider(staticCredentialsProvider).endpointOverride(localstack.getEndpointOverride(S3))
+			.build();
+
+	private final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
+
+	private final List<String> toBeRemoved = new ArrayList<>();
 
 	final String yamlContent = "cloudfoundry:\n" + "  enabled: true\n" + "  accounts:\n" + "    - name: acc1\n"
 			+ "      user: 'user1'\n" + "      password: 'password1'\n" + "      api: api.sys.acc1.cf-app.com\n"
@@ -84,6 +101,28 @@ public class AwsS3EnvironmentRepositoryTests {
 		expectedProperties.put("cloudfoundry.accounts[1].environment", "test2");
 	}
 
+	@BeforeAll
+	public static void createBucket() {
+		StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
+				.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
+		S3Client s3Client = S3Client.builder().region(Region.of(localstack.getRegion()))
+				.credentialsProvider(staticCredentialsProvider).endpointOverride(localstack.getEndpointOverride(S3))
+				.build();
+		s3Client.createBucket(CreateBucketRequest.builder().bucket("bucket1").build());
+		s3Client.putBucketVersioning(
+				PutBucketVersioningRequest.builder().bucket("bucket1")
+						.versioningConfiguration(
+								VersioningConfiguration.builder().status(BucketVersioningStatus.ENABLED).build())
+						.build());
+	}
+
+	@AfterEach
+	public void cleanUp() {
+		toBeRemoved.forEach(
+				value -> s3Client.deleteObject(DeleteObjectRequest.builder().bucket("bucket1").key(value).build()));
+		toBeRemoved.clear();
+	}
+
 	@Test
 	public void failToFindNonexistentObject() {
 		Environment env = envRepo.findOne("foo", "bar", null);
@@ -92,97 +131,113 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findPropertiesObject() throws UnsupportedEncodingException {
-		setupS3("foo-bar.properties", propertyContent);
+		String propertyContent = "cloudfoundry.enabled=true\n" + "cloudfoundry.accounts[0].name=acc1\n"
+				+ "cloudfoundry.accounts[0].user=user1\n" + "cloudfoundry.accounts[0].password=password1\n"
+				+ "cloudfoundry.accounts[0].api=api.sys.acc1.cf-app.com\n"
+				+ "cloudfoundry.accounts[0].environment=test1\n" + "cloudfoundry.accounts[1].name=acc2\n"
+				+ "cloudfoundry.accounts[1].user=user2\n" + "cloudfoundry.accounts[1].password=password2\n"
+				+ "cloudfoundry.accounts[1].api=api.sys.acc2.cf-app.com\n"
+				+ "cloudfoundry.accounts[1].environment=test2\n";
+		String versionId = putFiles("foo-bar.properties", propertyContent);
 
 		// Pulling content from a .properties file forces a boolean into a String
 		expectedProperties.put("cloudfoundry.enabled", "true");
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
 
 	@Test
 	public void findJsonObject() throws UnsupportedEncodingException {
-		setupS3("foo-bar.json", jsonContent);
+		String versionId = putFiles("foo-bar.json", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
 
 	@Test
 	public void findYamlObject() throws UnsupportedEncodingException {
-		setupS3("foo-bar.yml", yamlContent);
+		String versionId = putFiles("foo-bar.yaml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+	}
+
+	@Test
+	public void findYmlObject() throws UnsupportedEncodingException {
+		String versionId = putFiles("foo-bar.yml", yamlContent);
+
+		final Environment env = envRepo.findOne("foo", "bar", null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
 
 	@Test
 	public void findWithDefaultProfile() throws UnsupportedEncodingException {
-		setupS3("foo.yml", yamlContent);
+		String versionId = putFiles("foo.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", null, null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, "default", null);
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default", null);
 	}
 
 	@Test
 	public void findWithDefaultProfileUsingSuffix() throws UnsupportedEncodingException {
-		setupS3("foo-default.yml", yamlContent);
+		String versionId = putFiles("foo-default.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", null, null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, "default", null);
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default", null);
 	}
 
 	@Test
 	public void findWithMultipleProfilesAllFound() throws UnsupportedEncodingException {
-		setupS3("foo-profile1.yml", yamlContent);
-		setupS3("foo-profile2.yml", jsonContent);
+		putFiles("foo-profile1.yml", yamlContent);
+		String versionId = putFiles("foo-profile2.yml", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 2, "profile1", "profile2");
+		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1", "profile2");
 	}
 
 	@Test
 	public void findWithMultipleProfilesOneFound() throws UnsupportedEncodingException {
-		setupS3("foo-profile2.yml", jsonContent);
+		String versionId = putFiles("foo-profile2.yml", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, "profile1", "profile2");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "profile1", "profile2");
 	}
 
 	@Test
 	public void findWithLabel() throws UnsupportedEncodingException {
-		setupS3("label1/foo-bar.yml", yamlContent);
+		String versionId = putFiles("label1/foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", "label1");
 
-		assertExpectedEnvironment(env, "foo", "label1", null, 1, "bar");
+		assertExpectedEnvironment(env, "foo", "label1", versionId, 1, "bar");
 	}
 
 	@Test
 	public void findWithVersion() throws UnsupportedEncodingException {
-		setupS3("foo-bar.yml", "v1", yamlContent);
+		String versionId = putFiles("foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, "v1", 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
 
 	@Test
 	public void findWithMultipleApplicationAllFound() throws UnsupportedEncodingException {
-		setupS3("foo-profile1.yml", jsonContent);
-		setupS3("bar-profile1.yml", jsonContent);
+		putFiles("foo-profile1.yml", jsonContent);
+		String versionId = putFiles("bar-profile1.yml", jsonContent);
 
 		final Environment env = envRepo.findOne("foo,bar", "profile1", null);
 
-		assertExpectedEnvironment(env, "foo,bar", null, null, 2, "profile1");
+		assertExpectedEnvironment(env, "foo,bar", null, versionId, 2, "profile1");
 	}
 
 	@Test
@@ -195,56 +250,51 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(repository).isNotNull();
 	}
 
-	private void setupS3(String fileName, String propertyContent) throws UnsupportedEncodingException {
-		setupS3(fileName, null, propertyContent);
+	@Test
+	public void getLocationsTest() {
+		AwsS3EnvironmentRepositoryFactory factory = new AwsS3EnvironmentRepositoryFactory(new ConfigServerProperties());
+		AwsS3EnvironmentProperties properties = new AwsS3EnvironmentProperties();
+		properties.setRegion("us-east-1");
+		properties.setBucket("test");
+		AwsS3EnvironmentRepository repository = factory.build(properties);
+
+		assertThat(repository.getLocations("app", "default", "main")).isEqualTo(
+				new SearchPathLocator.Locations("app", "default", "main", null, new String[] { "s3://test/main" }));
+
+		assertThat(repository.getLocations("app", "default", null)).isEqualTo(
+				new SearchPathLocator.Locations("app", "default", null, null, new String[] { "s3://test/" }));
+
+		assertThat(repository.getLocations("app", "default", ""))
+				.isEqualTo(new SearchPathLocator.Locations("app", "default", "", null, new String[] { "s3://test/" }));
+
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setDefaultLabel("defaultlabel");
+		factory = new AwsS3EnvironmentRepositoryFactory(configServerProperties);
+		repository = factory.build(properties);
+
+		assertThat(repository.getLocations("app", "default", null)).isEqualTo(new SearchPathLocator.Locations("app",
+				"default", "defaultlabel", null, new String[] { "s3://test/defaultlabel" }));
+
+		assertThat(repository.getLocations("app", "default", "")).isEqualTo(new SearchPathLocator.Locations("app",
+				"default", "defaultlabel", null, new String[] { "s3://test/defaultlabel" }));
 	}
 
-	private void setupS3(String fileName, String version, String propertyContent) throws UnsupportedEncodingException {
-		final S3ObjectId s3ObjectId = new S3ObjectId("bucket1", fileName);
-		final GetObjectRequest request = new GetObjectRequest(s3ObjectId);
-
-		final S3Object s3Object = new S3Object();
-		s3Object.setObjectContent(new StringInputStream(propertyContent));
-
-		if (version != null) {
-			final ObjectMetadata metadata = new ObjectMetadata();
-			metadata.setHeader("x-amz-version-id", version);
-			s3Object.setObjectMetadata(metadata);
-		}
-
-		when(s3Client.getObject(argThat(new GetObjectRequestMatcher(request)))).thenReturn(s3Object);
+	private String putFiles(String fileName, String propertyContent) {
+		toBeRemoved.add(fileName);
+		return s3Client.putObject(PutObjectRequest.builder().bucket("bucket1").key(fileName).build(),
+				RequestBody.fromString((propertyContent))).versionId();
 	}
 
-	private void assertExpectedEnvironment(Environment env, String applicationName, String label, String version,
+	private void assertExpectedEnvironment(Environment env, String applicationName, String label, String versionId,
 			int propertySourceCount, String... profiles) {
 		assertThat(env.getName()).isEqualTo(applicationName);
 		assertThat(env.getProfiles()).isEqualTo(profiles);
 		assertThat(env.getLabel()).isEqualTo(label);
-		assertThat(env.getVersion()).isEqualTo(version);
+		assertThat(env.getVersion()).isEqualTo(versionId);
 		assertThat(env.getPropertySources().size()).isEqualTo(propertySourceCount);
 		for (PropertySource ps : env.getPropertySources()) {
 			assertThat(ps.getSource()).isEqualTo(expectedProperties);
 		}
-	}
-
-	private static class GetObjectRequestMatcher implements ArgumentMatcher<GetObjectRequest> {
-
-		private final GetObjectRequest expected;
-
-		GetObjectRequestMatcher(GetObjectRequest expected) {
-			this.expected = expected;
-		}
-
-		@Override
-		public boolean matches(GetObjectRequest actual) {
-			if (actual == null) {
-				return false;
-			}
-			return Objects.equals(actual.getBucketName(), expected.getBucketName())
-					&& Objects.equals(actual.getKey(), expected.getKey())
-					&& Objects.equals(actual.getVersionId(), expected.getVersionId());
-		}
-
 	}
 
 }

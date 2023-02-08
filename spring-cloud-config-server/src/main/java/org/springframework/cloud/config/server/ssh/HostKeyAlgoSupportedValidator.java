@@ -48,8 +48,8 @@ public class HostKeyAlgoSupportedValidator
 
 	private static final String GIT_PROPERTY_PREFIX = "spring.cloud.config.server.git.";
 
-	private static final Set<String> VALID_HOST_KEY_ALGORITHMS = new LinkedHashSet<>(
-			Arrays.asList("ssh-dss", "ssh-rsa", "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384", "ecdsa-sha2-nistp521"));
+	private static final Set<String> VALID_HOST_KEY_ALGORITHMS = new LinkedHashSet<>(Arrays.asList("ssh-dss", "ssh-rsa",
+			"ssh-ed25519", "ecdsa-sha2-nistp256", "ecdsa-sha2-nistp384", "ecdsa-sha2-nistp521"));
 
 	private final SshPropertyValidator sshPropertyValidator = new SshPropertyValidator();
 

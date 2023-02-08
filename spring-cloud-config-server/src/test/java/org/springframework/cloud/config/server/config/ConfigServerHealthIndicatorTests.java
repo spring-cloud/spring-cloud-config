@@ -18,8 +18,8 @@ package org.springframework.cloud.config.server.config;
 
 import java.util.Collections;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -28,6 +28,7 @@ import org.springframework.boot.actuate.health.Status;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerHealthIndicator.Repository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -48,7 +49,7 @@ public class ConfigServerHealthIndicatorTests {
 
 	private ConfigServerHealthIndicator indicator;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		initMocks(this);
 		this.indicator = new ConfigServerHealthIndicator(this.repository);
@@ -63,10 +64,18 @@ public class ConfigServerHealthIndicatorTests {
 	}
 
 	@Test
-	public void exceptionStatusIsDown() {
+	public void exceptionStatusIsDownByDefault() {
 		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
 				.thenThrow(new RuntimeException());
 		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(Status.DOWN);
+	}
+
+	@Test
+	public void exceptionDownStatusMayBeCustomized() {
+		ReflectionTestUtils.setField(this.indicator, "downHealthStatus", "CUSTOM");
+		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
+				.thenThrow(new RuntimeException());
+		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(new Status(("CUSTOM")));
 	}
 
 	@Test

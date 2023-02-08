@@ -20,6 +20,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestOperations;
@@ -70,7 +71,7 @@ abstract class VaultKvAccessStrategySupport implements VaultKvAccessStrategy {
 
 			ResponseEntity<VaultResponse> response = this.rest.exchange(urlTemplate, HttpMethod.GET,
 					new HttpEntity<>(headers), VaultResponse.class, key);
-			HttpStatus status = response.getStatusCode();
+			HttpStatusCode status = response.getStatusCode();
 			if (status == HttpStatus.OK) {
 				return extractDataFromBody(response.getBody());
 			}

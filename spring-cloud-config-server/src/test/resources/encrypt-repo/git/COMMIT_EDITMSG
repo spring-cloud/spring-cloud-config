@@ -1,1 +1,1 @@
-Added server overrides
+changed spring.profiles to spring.config.activate.on-profile

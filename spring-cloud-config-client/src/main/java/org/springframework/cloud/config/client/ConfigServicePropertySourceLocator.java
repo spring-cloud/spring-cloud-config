@@ -33,6 +33,7 @@ import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropertySource;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
+import org.springframework.cloud.config.client.ConfigClientProperties.MultipleUriStrategy;
 import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -60,7 +61,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
 /**
  * @author Dave Syer
  * @author Mathieu Ouellet
- *
+ * @author Marnee DeRider
  */
 @Order(0)
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
@@ -254,7 +255,13 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity, Environment.class, args);
 			}
-			catch (HttpClientErrorException e) {
+			catch (HttpClientErrorException | HttpServerErrorException e) {
+				if (i < noOfUrls - 1 && defaultProperties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info("Failed to fetch configs from server at  : " + uri
+							+ ". Will try the next url if available. Error : " + e.getMessage());
+					continue;
+				}
+
 				if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
 					throw e;
 				}
