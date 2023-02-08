@@ -17,7 +17,13 @@
 package org.springframework.cloud.config.server;
 
 import java.io.IOException;
+import java.util.Optional;
 
+import io.awspring.cloud.s3.InMemoryBufferingS3OutputStreamProvider;
+import io.awspring.cloud.s3.PropertiesS3ObjectContentTypeResolver;
+import io.awspring.cloud.s3.S3ObjectContentTypeResolver;
+import io.awspring.cloud.s3.S3OutputStreamProvider;
+import io.awspring.cloud.s3.S3ProtocolResolver;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,7 +33,9 @@ import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import org.springframework.boot.SpringApplication;
@@ -35,6 +43,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.util.TestSocketUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -59,7 +69,7 @@ public class AwsS3IntegrationTests {
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {
-		server = SpringApplication.run(new Class[] { TestConfigServerApplication.class },
+		server = SpringApplication.run(new Class[] { TestConfigServerApplication.class, S3AutoConfiguration.class },
 				new String[] { "--spring.config.name=server", "--spring.profiles.active=awss3",
 						"--server.port=" + configServerPort,
 						"--spring.cloud.config.server.awss3.endpoint="
@@ -72,7 +82,7 @@ public class AwsS3IntegrationTests {
 						"--spring.cloud.aws.credentials.secret-key=" + localstack.getSecretKey(),
 						"--spring.cloud.aws.region.static=" + localstack.getRegion() });
 
-		if (server.containsBean(S3Client.class.getName())) {
+		if (server.getBeanNamesForType(S3Client.class).length > 0) {
 			s3Client = server.getBean(S3Client.class);
 			s3Client.createBucket((request) -> request.bucket("test-bucket"));
 			s3Client.putObject((request) -> request.bucket("test-bucket").key("data.txt"),
@@ -87,8 +97,6 @@ public class AwsS3IntegrationTests {
 
 	@Test
 	@Disabled
-	// TODO uncomment when we have an RC or GA release of Spring Cloud AWS with this fix
-	// https://github.com/awspring/spring-cloud-aws/pull/652
 	public void context() throws IOException {
 		RestTemplate rest = new RestTemplateBuilder().build();
 		String configServerUrl = "http://localhost:" + configServerPort;
@@ -103,6 +111,27 @@ public class AwsS3IntegrationTests {
 	@AfterAll
 	public static void after() {
 		server.close();
+	}
+
+	@Import(S3ProtocolResolver.class)
+	static class S3AutoConfiguration {
+
+		@Bean
+		S3Client s3Client() {
+			return S3Client.builder()
+					.credentialsProvider(
+							() -> AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()))
+					.region(Region.of(localstack.getRegion()))
+					.endpointOverride(localstack.getEndpointOverride(LocalStackContainer.Service.S3)).build();
+		}
+
+		@Bean
+		S3OutputStreamProvider inMemoryBufferingS3StreamProvider(S3Client s3Client,
+				Optional<S3ObjectContentTypeResolver> contentTypeResolver) {
+			return new InMemoryBufferingS3OutputStreamProvider(s3Client,
+					contentTypeResolver.orElseGet(PropertiesS3ObjectContentTypeResolver::new));
+		}
+
 	}
 
 }
