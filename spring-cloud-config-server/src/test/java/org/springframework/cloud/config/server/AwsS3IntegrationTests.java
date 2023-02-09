@@ -18,6 +18,9 @@ package org.springframework.cloud.config.server;
 
 import java.io.IOException;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -36,6 +39,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.util.SocketUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -55,14 +60,14 @@ public class AwsS3IntegrationTests {
 
 	@Container
 	static LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(LocalStackContainer.Service.S3)
-					.withReuse(true);
+			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(LocalStackContainer.Service.S3);
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {
 		server = SpringApplication.run(
-				new Class[] { TestConfigServerApplication.class, ContextResourceLoaderConfiguration.class },
+				new Class[] { TestConfigServerApplication.class, ContextResourceLoaderConfiguration.class, CredentialsProvider.class },
 				new String[] { "--spring.config.name=server", "--spring.profiles.active=awss3",
+					"--spring.main.allow-bean-definition-overriding=true",
 						"--server.port=" + configServerPort,
 						"--spring.cloud.config.server.awss3.endpoint="
 								+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
@@ -70,8 +75,6 @@ public class AwsS3IntegrationTests {
 						"--spring.cloud.config.server.awss3.region=" + localstack.getRegion(),
 						"--cloud.aws.s3.endpoint="
 								+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
-						"--cloud.aws.credentials.access-key=" + localstack.getAccessKey(),
-						"--cloud.aws.credentials.secret-key=" + localstack.getSecretKey(),
 						"--cloud.aws.region.static=" + localstack.getRegion() });
 
 		AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard();
@@ -101,6 +104,15 @@ public class AwsS3IntegrationTests {
 	@AfterAll
 	public static void after() {
 		server.close();
+	}
+	@Configuration
+	static class CredentialsProvider {
+
+		//Override the bean from spring cloud aws to provide our own credentials for localstack
+		@Bean("io.awspring.cloud.core.credentials.CredentialsProviderFactoryBean.BEAN_NAME")
+		public AWSCredentialsProvider provider() {
+			return new AWSStaticCredentialsProvider(new BasicAWSCredentials(localstack.getAccessKey(), localstack.getSecretKey()));
+		}
 	}
 
 }
