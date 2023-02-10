@@ -65,10 +65,10 @@ public class AwsS3IntegrationTests {
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {
 		server = SpringApplication.run(
-				new Class[] { TestConfigServerApplication.class, ContextResourceLoaderConfiguration.class, CredentialsProvider.class },
+				new Class[] { TestConfigServerApplication.class, ContextResourceLoaderConfiguration.class,
+						CredentialsProvider.class },
 				new String[] { "--spring.config.name=server", "--spring.profiles.active=awss3",
-					"--spring.main.allow-bean-definition-overriding=true",
-						"--server.port=" + configServerPort,
+						"--spring.main.allow-bean-definition-overriding=true", "--server.port=" + configServerPort,
 						"--spring.cloud.config.server.awss3.endpoint="
 								+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
 						"--spring.cloud.config.server.awss3.bucket=test-bucket",
@@ -105,14 +105,18 @@ public class AwsS3IntegrationTests {
 	public static void after() {
 		server.close();
 	}
+
 	@Configuration
 	static class CredentialsProvider {
 
-		//Override the bean from spring cloud aws to provide our own credentials for localstack
+		// Override the bean from spring cloud aws to provide our own credentials for
+		// localstack
 		@Bean("io.awspring.cloud.core.credentials.CredentialsProviderFactoryBean.BEAN_NAME")
 		public AWSCredentialsProvider provider() {
-			return new AWSStaticCredentialsProvider(new BasicAWSCredentials(localstack.getAccessKey(), localstack.getSecretKey()));
+			return new AWSStaticCredentialsProvider(
+					new BasicAWSCredentials(localstack.getAccessKey(), localstack.getSecretKey()));
 		}
+
 	}
 
 }
