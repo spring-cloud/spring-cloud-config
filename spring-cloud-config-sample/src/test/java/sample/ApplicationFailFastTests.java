@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@ package sample;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.stereotype.Component;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,16 +41,24 @@ public class ApplicationFailFastTests {
 	}
 
 	@Test
-	public void configDataContextFails(CapturedOutput output) {
+	public void configDataContextFailsFast(CapturedOutput output) {
 		assertThatThrownBy(() -> {
-			new SpringApplicationBuilder().sources(Application.class).run("--server.port=0",
-					"--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
+			new SpringApplicationBuilder().sources(Application.class, PropertyInjectionConfiguration.class).run(
+					"--server.port=0", "--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
 					"--spring.config.import=optional:configserver:http://serverhostdoesnotexist:1234",
 					"--spring.cloud.config.server.enabled=false", "--logging.level.org.springframework.retry=TRACE",
 					"--logging.level.org.springframework.cloud.config=TRACE",
 					"--logging.level.org.springframework.boot.context.config=TRACE");
 		}).as("Exception not caused by fail fast").hasMessageContaining("fail fast");
-		assertThat(output).contains("Retry: count=5");
+		assertThat(output).contains("Retry: count=5").doesNotContain("Could not resolve placeholder");
+	}
+
+	@Component
+	private static class PropertyInjectionConfiguration {
+
+		@Value("${some.property}")
+		private String someProperty;
+
 	}
 
 }

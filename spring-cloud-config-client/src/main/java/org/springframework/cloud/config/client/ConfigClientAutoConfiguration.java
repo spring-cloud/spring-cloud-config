@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.aot.hint.TypeReference;
 import org.springframework.beans.factory.BeanFactoryUtils;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -29,11 +28,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.config.ConfigDataLocation;
-import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -91,23 +88,6 @@ public class ConfigClientAutoConfiguration {
 		@Bean
 		public ConfigClientWatch configClientWatch(ContextRefresher contextRefresher) {
 			return new ConfigClientWatch(contextRefresher);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	protected class ConfigClientFailFastListener implements ApplicationListener<ApplicationStartedEvent> {
-
-		@Override
-		public void onApplicationEvent(ApplicationStartedEvent event) {
-			try {
-				ConfigClientFailFastException exception = event.getApplicationContext()
-						.getBean(ConfigClientFailFastException.class);
-				throw exception;
-			}
-			catch (NoSuchBeanDefinitionException e) {
-				// ignore
-			}
 		}
 
 	}
