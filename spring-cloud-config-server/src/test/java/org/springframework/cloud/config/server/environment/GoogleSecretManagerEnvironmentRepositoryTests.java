@@ -88,7 +88,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testGetSecretValues() throws IOException {
+	public void testGetSecretValues() {
 		RestTemplate rest = mock(RestTemplate.class);
 		GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
 		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER, true)).thenReturn("test-project");
@@ -97,11 +97,13 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 				SecretManagerServiceClient.ListSecretVersionsPagedResponse.class);
 		SecretVersion secret1 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/1")
 				.setState(SecretVersion.State.ENABLED).build();
-		SecretVersion secret2 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/2")
-				.setState(SecretVersion.State.DISABLED).build();
-		List<SecretVersion> secrets = new ArrayList<SecretVersion>();
-		secrets.add(secret1);
-		secrets.add(secret2);
+		SecretVersion secret2 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/4")
+				.setState(SecretVersion.State.ENABLED).build();
+		SecretVersion secret3 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/9")
+				.setState(SecretVersion.State.ENABLED).build();
+		SecretVersion secret4 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/12")
+				.setState(SecretVersion.State.ENABLED).build();
+		List<SecretVersion> secrets = List.of(secret1, secret2, secret3, secret4);
 		when(response.iterateAll()).thenReturn(secrets);
 		Mockito.doReturn(response).when(mock).listSecretVersions(any(ListSecretVersionsRequest.class));
 		GoogleSecretManagerV1AccessStrategy strategy = new GoogleSecretManagerV1AccessStrategy(rest, provider, mock);
@@ -114,7 +116,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		ArgumentMatcher<AccessSecretVersionRequest> matcher = new ArgumentMatcher<AccessSecretVersionRequest>() {
 			@Override
 			public boolean matches(AccessSecretVersionRequest accessSecretVersionRequest) {
-				if (accessSecretVersionRequest.getName().equals("projects/test-project/secrets/test/versions/1")) {
+				if (accessSecretVersionRequest.getName().equals("projects/test-project/secrets/test/versions/12")) {
 					return true;
 				}
 				return false;
