@@ -31,6 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.configuration.TlsProperties;
 import org.springframework.core.env.Environment;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -333,7 +334,7 @@ public class ConfigClientProperties {
 			URL url = new URL(uri);
 			String userInfo = url.getUserInfo();
 			// no credentials in url, return explicit credentials
-			if (StringUtils.isEmpty(userInfo) || ":".equals(userInfo)) {
+			if (ObjectUtils.isEmpty(userInfo) || ":".equals(userInfo)) {
 				return result;
 			}
 			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build().toUriString();

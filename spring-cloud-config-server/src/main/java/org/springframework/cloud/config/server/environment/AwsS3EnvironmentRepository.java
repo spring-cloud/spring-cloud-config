@@ -31,6 +31,7 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -118,11 +119,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private String buildObjectKeyPrefix(String application, String profile, String label) {
 		StringBuilder objectKeyPrefix = new StringBuilder();
-		if (!StringUtils.isEmpty(label)) {
+		if (!ObjectUtils.isEmpty(label)) {
 			objectKeyPrefix.append(label).append(PATH_SEPARATOR);
 		}
 		objectKeyPrefix.append(application);
-		if (!StringUtils.isEmpty(profile)) {
+		if (!ObjectUtils.isEmpty(profile)) {
 			objectKeyPrefix.append("-").append(profile);
 		}
 		return objectKeyPrefix.toString();

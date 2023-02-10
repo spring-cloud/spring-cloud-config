@@ -34,6 +34,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import static org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
@@ -71,11 +72,11 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		final String defaultApplication = configServerProperties.getDefaultApplicationName();
 		final String defaultProfile = configServerProperties.getDefaultProfile();
 
-		if (StringUtils.isEmpty(application)) {
+		if (ObjectUtils.isEmpty(application)) {
 			application = defaultApplication;
 		}
 
-		if (StringUtils.isEmpty(profileList)) {
+		if (ObjectUtils.isEmpty(profileList)) {
 			profileList = defaultProfile;
 		}
 

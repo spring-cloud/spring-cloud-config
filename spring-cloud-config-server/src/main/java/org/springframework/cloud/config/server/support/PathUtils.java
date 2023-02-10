@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -44,7 +45,7 @@ public abstract class PathUtils {
 	 * @return {@code true} if the path is invalid, {@code false} otherwise
 	 */
 	public static boolean isInvalidEncodedLocation(String location) {
-		if (StringUtils.isEmpty(location)) {
+		if (ObjectUtils.isEmpty(location)) {
 			return false;
 		}
 		if (location.contains("%")) {

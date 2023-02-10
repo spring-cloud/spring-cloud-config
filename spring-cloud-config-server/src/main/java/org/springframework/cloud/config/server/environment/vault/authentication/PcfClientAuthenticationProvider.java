@@ -20,7 +20,7 @@ import org.springframework.cloud.config.server.environment.VaultEnvironmentPrope
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientAuthenticationProvider;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.PcfAuthentication;
 import org.springframework.vault.authentication.PcfAuthenticationOptions;
@@ -67,7 +67,7 @@ public class PcfClientAuthenticationProvider extends SpringVaultClientAuthentica
 
 		String value = System.getenv(name);
 
-		if (StringUtils.isEmpty(value)) {
+		if (ObjectUtils.isEmpty(value)) {
 			throw new IllegalStateException(String.format("Environment variable %s not set", name));
 		}
 
