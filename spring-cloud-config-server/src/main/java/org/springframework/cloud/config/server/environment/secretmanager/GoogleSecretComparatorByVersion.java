@@ -30,7 +30,11 @@ public class GoogleSecretComparatorByVersion implements Comparator<SecretVersion
 		if (leftVersion == null) {
 			return -1;
 		}
-		return leftVersion.getName().compareTo(rightVersion.getName());
+		String leftVersionName = leftVersion.getName();
+		String rightVersionName = rightVersion.getName();
+		Integer leftVersionNumber = Integer.valueOf(leftVersionName.substring(leftVersionName.lastIndexOf("/") + 1));
+		Integer rightVersionNumber = Integer.valueOf(rightVersionName.substring(rightVersionName.lastIndexOf("/") + 1));
+		return leftVersionNumber.compareTo(rightVersionNumber);
 	}
 
 }
