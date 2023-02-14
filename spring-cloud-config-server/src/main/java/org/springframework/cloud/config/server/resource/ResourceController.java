@@ -22,12 +22,15 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.RepositoryException;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -223,6 +226,11 @@ public class ResourceController {
 	@ExceptionHandler(NoSuchResourceException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public void notFound(NoSuchResourceException e) {
+	}
+
+	@ExceptionHandler(RepositoryException.class)
+	public void noSuchLabel(HttpServletResponse response) throws IOException {
+		response.sendError(HttpStatus.NOT_FOUND.value());
 	}
 
 }
