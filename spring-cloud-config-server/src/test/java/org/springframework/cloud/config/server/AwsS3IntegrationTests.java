@@ -18,24 +18,25 @@ package org.springframework.cloud.config.server;
 
 import java.io.IOException;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import io.awspring.cloud.context.config.annotation.ContextResourceLoaderConfiguration;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.util.TestSocketUtils;
+import org.springframework.util.SocketUtils;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,9 +47,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 public class AwsS3IntegrationTests {
 
-	private static final int configServerPort = TestSocketUtils.findAvailableTcpPort();
+	private static final int configServerPort = SocketUtils.findAvailableTcpPort();
 
-	private static S3Client s3Client;
+	private static AmazonS3 s3Client;
 
 	private static ConfigurableApplicationContext server;
 
@@ -59,36 +60,33 @@ public class AwsS3IntegrationTests {
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {
-		server = SpringApplication.run(new Class[] { TestConfigServerApplication.class },
+		server = SpringApplication.run(
+				new Class[] { TestConfigServerApplication.class, ContextResourceLoaderConfiguration.class },
 				new String[] { "--spring.config.name=server", "--spring.profiles.active=awss3",
 						"--server.port=" + configServerPort,
 						"--spring.cloud.config.server.awss3.endpoint="
 								+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
 						"--spring.cloud.config.server.awss3.bucket=test-bucket",
 						"--spring.cloud.config.server.awss3.region=" + localstack.getRegion(),
-						"--spring.cloud.aws.endpoint="
+						"--cloud.aws.s3.endpoint="
 								+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
-						"--spring.cloud.aws.credentials.access-key=" + localstack.getAccessKey(),
-						"--spring.cloud.aws.credentials.secret-key=" + localstack.getSecretKey(),
-						"--spring.cloud.aws.region.static=" + localstack.getRegion() });
+						"--cloud.aws.credentials.access-key=" + localstack.getAccessKey(),
+						"--cloud.aws.credentials.secret-key=" + localstack.getSecretKey(),
+						"--cloud.aws.region.static=" + localstack.getRegion() });
 
-		if (server.containsBean(S3Client.class.getName())) {
-			s3Client = server.getBean(S3Client.class);
-			s3Client.createBucket((request) -> request.bucket("test-bucket"));
-			s3Client.putObject((request) -> request.bucket("test-bucket").key("data.txt"),
-					RequestBody.fromString("this is a test"));
-			s3Client.putObject((request) -> request.bucket("test-bucket").key("main/data.txt"),
-					RequestBody.fromString("this is a test in main"));
-			s3Client.putObject((request) -> request.bucket("test-bucket").key("application.properties"),
-					RequestBody.fromString("foo=1"));
-		}
+		AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard();
+		AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(
+				localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(), "us-east-1");
+		builder.withEndpointConfiguration(endpointConfiguration);
+		s3Client = builder.build();
+		s3Client.createBucket("test-bucket");
+		s3Client.putObject("test-bucket", "data.txt", "this is a test");
+		s3Client.putObject("test-bucket", "main/data.txt", "this is a test in main");
+		s3Client.putObject("test-bucket", "application.properties", "foo=1");
 
 	}
 
 	@Test
-	@Disabled
-	// TODO uncomment when we have an RC or GA release of Spring Cloud AWS with this fix
-	// https://github.com/awspring/spring-cloud-aws/pull/652
 	public void context() throws IOException {
 		RestTemplate rest = new RestTemplateBuilder().build();
 		String configServerUrl = "http://localhost:" + configServerPort;
