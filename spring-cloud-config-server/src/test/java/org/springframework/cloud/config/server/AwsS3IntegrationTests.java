@@ -103,5 +103,4 @@ public class AwsS3IntegrationTests {
 	public static void after() {
 		server.close();
 	}
-
 }

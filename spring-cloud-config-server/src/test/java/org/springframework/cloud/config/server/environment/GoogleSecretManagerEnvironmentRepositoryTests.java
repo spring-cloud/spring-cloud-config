@@ -55,7 +55,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		properties.setVersion(1);
 		assertThat(GoogleSecretManagerAccessStrategyFactory.forVersion(null, null, properties,
-				mock) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
+			mock) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
 	}
 
 	@Test
@@ -76,7 +76,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER, true)).thenReturn("test-project");
 		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		SecretManagerServiceClient.ListSecretsPagedResponse response = mock(
-				SecretManagerServiceClient.ListSecretsPagedResponse.class);
+			SecretManagerServiceClient.ListSecretsPagedResponse.class);
 		Secret secret = Secret.newBuilder().setName("projects/test-project/secrets/test").build();
 		List<Secret> secrets = new ArrayList<Secret>();
 		secrets.add(secret);
@@ -88,20 +88,26 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void testGetSecretValues() throws IOException {
+	public void testGetSecretValues() {
 		RestTemplate rest = mock(RestTemplate.class);
 		GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
 		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER, true)).thenReturn("test-project");
 		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		SecretManagerServiceClient.ListSecretVersionsPagedResponse response = mock(
-				SecretManagerServiceClient.ListSecretVersionsPagedResponse.class);
+			SecretManagerServiceClient.ListSecretVersionsPagedResponse.class);
 		SecretVersion secret1 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/1")
-				.setState(SecretVersion.State.ENABLED).build();
-		SecretVersion secret2 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/2")
-				.setState(SecretVersion.State.DISABLED).build();
+			.setState(SecretVersion.State.ENABLED).build();
+		SecretVersion secret2 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/4")
+			.setState(SecretVersion.State.ENABLED).build();
+		SecretVersion secret3 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/9")
+			.setState(SecretVersion.State.ENABLED).build();
+		SecretVersion secret4 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/12")
+			.setState(SecretVersion.State.ENABLED).build();
 		List<SecretVersion> secrets = new ArrayList<SecretVersion>();
 		secrets.add(secret1);
 		secrets.add(secret2);
+		secrets.add(secret3);
+		secrets.add(secret4);
 		when(response.iterateAll()).thenReturn(secrets);
 		Mockito.doReturn(response).when(mock).listSecretVersions(any(ListSecretVersionsRequest.class));
 		GoogleSecretManagerV1AccessStrategy strategy = new GoogleSecretManagerV1AccessStrategy(rest, provider, mock);
@@ -114,7 +120,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		ArgumentMatcher<AccessSecretVersionRequest> matcher = new ArgumentMatcher<AccessSecretVersionRequest>() {
 			@Override
 			public boolean matches(AccessSecretVersionRequest accessSecretVersionRequest) {
-				if (accessSecretVersionRequest.getName().equals("projects/test-project/secrets/test/versions/1")) {
+				if (accessSecretVersionRequest.getName().equals("projects/test-project/secrets/test/versions/12")) {
 					return true;
 				}
 				return false;
@@ -122,7 +128,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		};
 		Mockito.doReturn(accessSecretVersionResponse).when(mock).accessSecretVersion(ArgumentMatchers.argThat(matcher));
 		assertThat(strategy.getSecretValue(Secret.newBuilder().setName("projects/test-project/secrets/test").build(),
-				new GoogleSecretComparatorByVersion())).isEqualTo("test-value");
+			new GoogleSecretComparatorByVersion())).isEqualTo("test-value");
 	}
 
 }
