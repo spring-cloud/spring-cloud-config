@@ -19,26 +19,20 @@ package org.springframework.cloud.config.client;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.boot.origin.Origin;
-import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropertySource;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
 import org.springframework.cloud.config.environment.Environment;
-import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.CompositePropertySource;
-import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -71,13 +65,15 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private ConfigClientProperties defaultProperties;
 
-	private final String ACTIVE_PROFILES_PROPERTY_NAME = "spring.profiles.active";
+	private RemoteEnvironmentFetcher remoteEnvironmentFetcher;
 
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
 		this.defaultProperties = defaultProperties;
+		this.remoteEnvironmentFetcher = new RemoteEnvironmentFetcher();
 	}
 
 	@Override
+	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		// TODO this logic needs to apply in both methods or make the below locate private
@@ -95,8 +91,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		return locate(properties);
 	}
 
-	@Retryable(interceptor = "configServerRetryInterceptor")
-	public org.springframework.core.env.PropertySource<?> locate(ConfigClientProperties properties) {
+	private org.springframework.core.env.PropertySource<?> locate(ConfigClientProperties properties) {
 		CompositePropertySource composite = new OriginTrackedCompositePropertySource("configService");
 		ConfigClientRequestTemplateFactory requestTemplateFactory = new ConfigClientRequestTemplateFactory(logger,
 				properties);
@@ -111,41 +106,10 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			String state = ConfigClientStateHolder.getState();
 			// Try all the labels until one works
 			for (String label : labels) {
-				Environment result = getRemoteEnvironment(requestTemplateFactory, label.trim(), state);
-				if (result != null) {
-					log(result);
+				remoteEnvironmentFetcher.fetch(() -> getRemoteEnvironment(requestTemplateFactory, label.trim(), state),
+						properties, propertySource -> composite.addFirstPropertySource(propertySource));
 
-					// result.getPropertySources() can be null if using xml
-					if (result.getPropertySources() != null) {
-						for (PropertySource source : result.getPropertySources()) {
-							@SuppressWarnings("unchecked")
-							Map<String, Object> map = translateOrigins(source.getName(),
-									(Map<String, Object>) source.getSource());
-
-							// if different profile is activated within the default
-							// profile
-							boolean relocate = checkIfProfileIsActivatedInDefault(result.getProfiles(), map);
-							if (relocate) {
-								OriginTrackedValue newProfiles = (OriginTrackedValue) map
-										.get(ACTIVE_PROFILES_PROPERTY_NAME);
-								properties.setProfile(newProfiles.getValue().toString());
-								return this.locate(properties); // relocate again
-							}
-
-							composite.addPropertySource(new OriginTrackedMapPropertySource(source.getName(), map));
-						}
-					}
-
-					HashMap<String, Object> map = new HashMap<>();
-					if (StringUtils.hasText(result.getState())) {
-						putValue(map, "config.client.state", result.getState());
-					}
-					if (StringUtils.hasText(result.getVersion())) {
-						putValue(map, "config.client.version", result.getVersion());
-					}
-					// the existence of this property source confirms a successful
-					// response from config server
-					composite.addFirstPropertySource(new MapPropertySource("configClient", map));
+				if (!composite.getPropertySources().isEmpty()) {
 					return composite;
 				}
 			}
@@ -169,69 +133,11 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	}
 
-	// to check if different profile is activated within the default profile
-	private boolean checkIfProfileIsActivatedInDefault(String[] profiles, Map<String, Object> map) {
-		List<String> profilesList = Arrays.asList(profiles);
-		return (profilesList.size() == 1 && profilesList.get(0).equalsIgnoreCase("default")
-				&& map.containsKey(ACTIVE_PROFILES_PROPERTY_NAME)
-				&& !(((OriginTrackedValue) map.get(ACTIVE_PROFILES_PROPERTY_NAME))).getValue().toString()
-						.equalsIgnoreCase("default"));
-	}
-
 	@Override
 	@Retryable(interceptor = "configServerRetryInterceptor")
 	public Collection<org.springframework.core.env.PropertySource<?>> locateCollection(
 			org.springframework.core.env.Environment environment) {
 		return PropertySourceLocator.locateCollection(this, environment);
-	}
-
-	private void log(Environment result) {
-		if (logger.isInfoEnabled()) {
-			logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
-					result.getName(), result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
-					result.getLabel(), result.getVersion(), result.getState()));
-		}
-		if (logger.isDebugEnabled()) {
-			List<PropertySource> propertySourceList = result.getPropertySources();
-			if (propertySourceList != null) {
-				int propertyCount = 0;
-				for (PropertySource propertySource : propertySourceList) {
-					propertyCount += propertySource.getSource().size();
-				}
-				logger.debug(String.format("Environment %s has %d property sources with %d properties.",
-						result.getName(), result.getPropertySources().size(), propertyCount));
-			}
-
-		}
-	}
-
-	private Map<String, Object> translateOrigins(String name, Map<String, Object> source) {
-		Map<String, Object> withOrigins = new LinkedHashMap<>();
-		for (Map.Entry<String, Object> entry : source.entrySet()) {
-			boolean hasOrigin = false;
-
-			if (entry.getValue() instanceof Map) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> value = (Map<String, Object>) entry.getValue();
-				if (value.size() == 2 && value.containsKey("origin") && value.containsKey("value")) {
-					Origin origin = new ConfigServiceOrigin(name, value.get("origin"));
-					OriginTrackedValue trackedValue = OriginTrackedValue.of(value.get("value"), origin);
-					withOrigins.put(entry.getKey(), trackedValue);
-					hasOrigin = true;
-				}
-			}
-
-			if (!hasOrigin) {
-				withOrigins.put(entry.getKey(), entry.getValue());
-			}
-		}
-		return withOrigins;
-	}
-
-	private void putValue(HashMap<String, Object> map, String key, String value) {
-		if (StringUtils.hasText(value)) {
-			map.put(key, value);
-		}
 	}
 
 	private Environment getRemoteEnvironment(ConfigClientRequestTemplateFactory requestTemplateFactory, String label,

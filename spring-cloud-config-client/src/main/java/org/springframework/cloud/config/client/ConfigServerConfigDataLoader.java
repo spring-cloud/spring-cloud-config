@@ -20,10 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 
@@ -33,15 +30,11 @@ import org.springframework.boot.context.config.ConfigData.Options;
 import org.springframework.boot.context.config.ConfigDataLoader;
 import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.boot.context.properties.bind.Binder;
-import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.boot.logging.DeferredLogFactory;
-import org.springframework.boot.origin.Origin;
-import org.springframework.boot.origin.OriginTrackedValue;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoadContext;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoaderInterceptor;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.Ordered;
-import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -69,8 +62,11 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 
 	protected final Log logger;
 
+	private RemoteEnvironmentFetcher remoteEnvironmentFetcher;
+
 	public ConfigServerConfigDataLoader(DeferredLogFactory logFactory) {
 		this.logger = logFactory.getLog(getClass());
+		this.remoteEnvironmentFetcher = new RemoteEnvironmentFetcher(logFactory.getLog(RemoteEnvironmentFetcher.class));
 	}
 
 	@Override
@@ -115,32 +111,11 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 			String state = ConfigClientStateHolder.getState();
 			// Try all the labels until one works
 			for (String label : labels) {
-				Environment result = getRemoteEnvironment(context, resource, label.trim(), state);
-				if (result != null) {
-					log(result);
 
-					// result.getPropertySources() can be null if using xml
-					if (result.getPropertySources() != null) {
-						for (org.springframework.cloud.config.environment.PropertySource source : result
-								.getPropertySources()) {
-							@SuppressWarnings("unchecked")
-							Map<String, Object> map = translateOrigins(source.getName(),
-									(Map<String, Object>) source.getSource());
-							propertySources.add(0,
-									new OriginTrackedMapPropertySource("configserver:" + source.getName(), map));
-						}
-					}
+				remoteEnvironmentFetcher.fetch(() -> getRemoteEnvironment(context, resource, label.trim(), state),
+						resource.getProperties(), propertySource -> propertySources.add(0, propertySource));
 
-					HashMap<String, Object> map = new HashMap<>();
-					if (StringUtils.hasText(result.getState())) {
-						putValue(map, "config.client.state", result.getState());
-					}
-					if (StringUtils.hasText(result.getVersion())) {
-						putValue(map, "config.client.version", result.getVersion());
-					}
-					// the existence of this property source confirms a successful
-					// response from config server
-					propertySources.add(0, new MapPropertySource(CONFIG_CLIENT_PROPERTYSOURCE_NAME, map));
+				if (propertySources.size() > 0) {
 					if (ALL_OPTIONS.size() == 1) {
 						// boot 2.4.2 and prior
 						return new ConfigData(propertySources);
@@ -202,6 +177,8 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		return null;
 	}
 
+	// This has been moved to RemoteEnvironmentFetcher
+	@Deprecated
 	protected void log(Environment result) {
 		if (logger.isInfoEnabled()) {
 			logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
@@ -220,36 +197,6 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 						result.getName(), result.getPropertySources().size(), propertyCount));
 			}
 
-		}
-	}
-
-	protected Map<String, Object> translateOrigins(String name, Map<String, Object> source) {
-		Map<String, Object> withOrigins = new LinkedHashMap<>();
-		for (Map.Entry<String, Object> entry : source.entrySet()) {
-			boolean hasOrigin = false;
-
-			if (entry.getValue() instanceof Map) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> value = (Map<String, Object>) entry.getValue();
-				if (value.size() == 2 && value.containsKey("origin") && value.containsKey("value")) {
-					Origin origin = new ConfigServicePropertySourceLocator.ConfigServiceOrigin(name,
-							value.get("origin"));
-					OriginTrackedValue trackedValue = OriginTrackedValue.of(value.get("value"), origin);
-					withOrigins.put(entry.getKey(), trackedValue);
-					hasOrigin = true;
-				}
-			}
-
-			if (!hasOrigin) {
-				withOrigins.put(entry.getKey(), entry.getValue());
-			}
-		}
-		return withOrigins;
-	}
-
-	protected void putValue(HashMap<String, Object> map, String key, String value) {
-		if (StringUtils.hasText(value)) {
-			map.put(key, value);
 		}
 	}
 
