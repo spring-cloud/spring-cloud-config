@@ -71,6 +71,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 	public Environment findOne(String application, String profileList, String label) {
 		final String defaultApplication = configServerProperties.getDefaultApplicationName();
 		final String defaultProfile = configServerProperties.getDefaultProfile();
+		final String defaultLabel = environmentProperties.getDefaultLabel();
 
 		if (ObjectUtils.isEmpty(application)) {
 			application = defaultApplication;
@@ -78,6 +79,10 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 		if (ObjectUtils.isEmpty(profileList)) {
 			profileList = defaultProfile;
+		}
+
+		if (StringUtils.isEmpty(label)) {
+			label = defaultLabel;
 		}
 
 		String[] profiles = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(profileList));
@@ -89,33 +94,33 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		}
 
 		for (String profile : profiles) {
-			addPropertySource(environment, application, profile);
+			addPropertySource(environment, application, profile, label);
 			if (!defaultApplication.equals(application)) {
-				addPropertySource(environment, defaultApplication, profile);
+				addPropertySource(environment, defaultApplication, profile, label);
 			}
 		}
 
 		if (!Arrays.asList(profiles).contains(defaultProfile)) {
-			addPropertySource(environment, application, defaultProfile);
+			addPropertySource(environment, application, defaultProfile, label);
 		}
 
 		if (!Arrays.asList(profiles).contains(defaultProfile) && !defaultApplication.equals(application)) {
-			addPropertySource(environment, defaultApplication, defaultProfile);
+			addPropertySource(environment, defaultApplication, defaultProfile, label);
 		}
 
 		if (!defaultApplication.equals(application)) {
-			addPropertySource(environment, application, null);
+			addPropertySource(environment, application, null, label);
 		}
 
-		addPropertySource(environment, defaultApplication, null);
+		addPropertySource(environment, defaultApplication, null, label);
 
 		return environment;
 	}
 
-	private void addPropertySource(Environment environment, String application, String profile) {
+	private void addPropertySource(Environment environment, String application, String profile, String label) {
 		String path = buildPath(application, profile);
 
-		Map<Object, Object> properties = findProperties(path);
+		Map<Object, Object> properties = findProperties(path, label);
 		if (!properties.isEmpty()) {
 			environment.add(new PropertySource(environmentProperties.getOrigin() + path, properties));
 		}
@@ -133,10 +138,10 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		}
 	}
 
-	private Map<Object, Object> findProperties(String path) {
+	private Map<Object, Object> findProperties(String path, String label) {
 		Map<Object, Object> properties = new HashMap<>();
 
-		GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(path).build();
+		GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(path).versionStage(label).build();
 		try {
 			GetSecretValueResponse response = awsSmClient.getSecretValue(request);
 
