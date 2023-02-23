@@ -49,6 +49,12 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 	private String endpoint;
 
 	/**
+	 * The default staging label to be used to fetch the secret values. If unset, an
+	 * active version of the secret will be fetched (AWSCURRENT).
+	 */
+	private String defaultLabel;
+
+	/**
 	 * The order of the environment repository.
 	 */
 	private int order = Ordered.LOWEST_PRECEDENCE;
@@ -89,6 +95,14 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 
 	public void setEndpoint(String endpoint) {
 		this.endpoint = endpoint;
+	}
+
+	public String getDefaultLabel() {
+		return defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 	public int getOrder() {
