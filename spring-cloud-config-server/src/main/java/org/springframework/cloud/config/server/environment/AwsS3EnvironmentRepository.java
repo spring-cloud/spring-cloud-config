@@ -110,13 +110,13 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private String[] parseProfiles(String profiles) {
 		if (ObjectUtils.isEmpty(profiles)) {
-			return new String[] { null };
+			return new String[] { "" };
 		}
 		List<String> parsedProfiles = Arrays.stream(profiles.split(","))
-			.collect(Collectors.collectingAndThen(Collectors.toList(), p -> {
-				p.add(null);
-				return p;
-			}));
+				.collect(Collectors.collectingAndThen(Collectors.toList(), p -> {
+					p.add("");
+					return p;
+				}));
 		return parsedProfiles.toArray(new String[0]);
 	}
 

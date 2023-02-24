@@ -41,7 +41,6 @@ import software.amazon.awssdk.services.s3.model.PutBucketVersioningRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.VersioningConfiguration;
 
-
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
@@ -146,7 +145,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar", "");
 	}
 
 	@Test
@@ -155,7 +154,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar", "");
 	}
 
 	@Test
@@ -164,7 +163,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar", "");
 	}
 
 	@Test
@@ -173,7 +172,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar", "");
 	}
 
 	@Test
@@ -182,7 +181,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", null, null);
 
-		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default", null);
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default", "");
 	}
 
 	@Test
@@ -191,7 +190,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", null, null);
 
-		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default", null);
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default", "");
 	}
 
 	@Test
@@ -201,7 +200,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
 
-		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1", "profile2");
+		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1", "profile2", "");
 	}
 
 	@Test
@@ -210,27 +209,27 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
 
-		assertExpectedEnvironment(env, "foo", null, versionId, 1, "profile1", "profile2");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "profile1", "profile2", "");
 	}
 
 	@Test
 	public void findWithOneProfileDefaultOneFound() throws UnsupportedEncodingException {
 		putFiles("foo-profile1.yml", jsonContent);
-		putFiles("foo.yml", yamlContent);
+		String versionId = putFiles("foo.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "profile1", null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 2, "profile1", null);
+		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1", "");
 	}
 
 	@Test
 	public void findWithNoProfileAndNoServerDefaultOneFound() throws UnsupportedEncodingException {
 		server.setDefaultProfile(null);
-		putFiles("foo.yml", yamlContent);
+		String versionId = putFiles("foo.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", null, null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, (String) null);
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "");
 
 	}
 
@@ -240,7 +239,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", "bar", "label1");
 
-		assertExpectedEnvironment(env, "foo", "label1", versionId, 1, "bar");
+		assertExpectedEnvironment(env, "foo", "label1", versionId, 1, "bar", "");
 	}
 
 	@Test
@@ -249,7 +248,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
 
-		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar", "");
 	}
 
 	@Test
@@ -259,7 +258,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo,bar", "profile1", null);
 
-		assertExpectedEnvironment(env, "foo,bar", null, versionId, 2, "profile1");
+		assertExpectedEnvironment(env, "foo,bar", null, versionId, 2, "profile1", "");
 
 	}
 
