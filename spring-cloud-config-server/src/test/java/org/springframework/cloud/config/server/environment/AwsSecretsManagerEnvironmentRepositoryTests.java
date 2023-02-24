@@ -2532,8 +2532,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 			CreateSecretResponse response = smClient
 					.createSecret(CreateSecretRequest.builder().name(path).secretString(secrets).build());
 			if (!ObjectUtils.isEmpty(label)) {
-				smClient
-					.updateSecretVersionStage(UpdateSecretVersionStageRequest.builder().secretId(path)
+				smClient.updateSecretVersionStage(UpdateSecretVersionStageRequest.builder().secretId(path)
 						.moveToVersionId(response.versionId()).versionStage(label).build());
 			}
 			toBeRemoved.add(path);
