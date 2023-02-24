@@ -18,7 +18,10 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -37,6 +40,7 @@ import org.springframework.util.StringUtils;
 /**
  * @author Clay McCoy
  * @author Scott Frederick
+ * @author Daniel Aiken
  */
 public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordered, SearchPathLocator {
 
@@ -105,10 +109,15 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private String[] parseProfiles(String profiles) {
-		if (profiles.equals(serverProperties.getDefaultProfile())) {
-			return new String[] { profiles, null };
+		if (ObjectUtils.isEmpty(profiles)) {
+			return new String[] { "" };
 		}
-		return StringUtils.commaDelimitedListToStringArray(profiles);
+		List<String> parsedProfiles = Arrays.stream(profiles.split(","))
+				.collect(Collectors.collectingAndThen(Collectors.toList(), p -> {
+					p.add("");
+					return p;
+				}));
+		return parsedProfiles.toArray(new String[0]);
 	}
 
 	private S3ConfigFile getS3ConfigFile(String application, String profile, String label) {
