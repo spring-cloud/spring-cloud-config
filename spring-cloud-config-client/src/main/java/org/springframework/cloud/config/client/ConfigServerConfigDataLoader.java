@@ -128,7 +128,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 							Map<String, Object> map = translateOrigins(source.getName(),
 									(Map<String, Object>) source.getSource());
 							propertySources.add(0,
-									new OriginTrackedMapPropertySource("configserver:" + source.getName(), map));
+									new OriginTrackedMapPropertySource("configserver:" + source.getName(), map, true));
 						}
 					}
 
