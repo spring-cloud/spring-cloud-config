@@ -18,15 +18,19 @@ package org.springframework.cloud.config.server.resource;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.environment.SearchPathLocator;
 import org.springframework.cloud.config.server.support.PathUtils;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -40,8 +44,15 @@ public class GenericResourceRepository implements ResourceRepository, ResourceLo
 
 	private SearchPathLocator service;
 
+	private ConfigServerProperties properties;
+
 	public GenericResourceRepository(SearchPathLocator service) {
 		this.service = service;
+	}
+
+	public GenericResourceRepository(SearchPathLocator service, ConfigServerProperties properties) {
+		this(service);
+		this.properties = properties;
 	}
 
 	@Override
@@ -54,6 +65,9 @@ public class GenericResourceRepository implements ResourceRepository, ResourceLo
 
 		if (StringUtils.hasText(path)) {
 			String[] locations = this.service.getLocations(application, profile, label).getLocations();
+			if (!ObjectUtils.isEmpty(properties) && properties.isReverseLocationOrder()) {
+				Collections.reverse(Arrays.asList(locations));
+			}
 			ArrayList<Resource> locationResources = new ArrayList<>();
 			for (String location : locations) {
 				if (!PathUtils.isInvalidEncodedLocation(location)) {
