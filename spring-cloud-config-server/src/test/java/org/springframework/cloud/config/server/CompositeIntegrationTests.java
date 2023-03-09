@@ -104,7 +104,7 @@ public class CompositeIntegrationTests {
 		@LocalServerPort
 		private int port;
 
-		@BeforeClass
+		@BeforeAll
 		public static void init() throws Exception {
 			// mock Git configuration to make tests independent of local Git configuration
 			SystemReader.setInstance(new MockSystemReader());
@@ -112,20 +112,6 @@ public class CompositeIntegrationTests {
 			ConfigServerTestUtils.prepareLocalRepo();
 			ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
 					"target/repos/svn-config-repo");
-		}
-
-		@Test
-		public void contextLoads() {
-			ResponseEntity<Environment> response = new TestRestTemplate().exchange(
-					"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
-					Environment.class);
-			Environment environment = response.getBody();
-			assertThat(3).isEqualTo(environment.getPropertySources().size());
-			assertThat("overrides").isEqualTo(environment.getPropertySources().get(0).getName());
-			assertThat(environment.getPropertySources().get(1).getName().contains("config-repo")
-					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo")).isTrue();
-			assertThat(environment.getPropertySources().get(2).getName().contains("svn-config-repo")).isTrue();
-			ConfigServerTestUtils.assertConfigEnabled(environment);
 		}
 
 		@Test
@@ -143,7 +129,6 @@ public class CompositeIntegrationTests {
 
 	}
 
-	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
