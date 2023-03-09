@@ -34,8 +34,8 @@ public class ResourceRepositoryConfiguration {
 
 	@Bean
 	@ConditionalOnBean(SearchPathLocator.class)
-	public ResourceRepository resourceRepository(SearchPathLocator service) {
-		return new GenericResourceRepository(service);
+	public ResourceRepository resourceRepository(SearchPathLocator service, ConfigServerProperties properties) {
+		return new GenericResourceRepository(service, properties);
 	}
 
 }
