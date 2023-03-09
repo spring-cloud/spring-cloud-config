@@ -97,6 +97,59 @@ public class CompositeIntegrationTests {
 	@RunWith(SpringRunner.class)
 	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
+					"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
+					"spring.cloud.config.server.svn.order:2",
+					"spring.cloud.config.server.git.uri:file:./target/repos/config-repo",
+					"spring.cloud.config.server.git.order:1", "spring.cloud.config.server.reverseLocationOrder:true" },
+			webEnvironment = RANDOM_PORT)
+	@ActiveProfiles({ "test", "git", "subversion" })
+	public static class ReverseLocationOrderTest {
+
+		@LocalServerPort
+		private int port;
+
+		@BeforeClass
+		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
+			ConfigServerTestUtils.prepareLocalRepo();
+			ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
+					"target/repos/svn-config-repo");
+		}
+
+		@Test
+		public void contextLoads() {
+			ResponseEntity<Environment> response = new TestRestTemplate().exchange(
+					"http://localhost:" + this.port + "/foo/development/", HttpMethod.GET, getV2AcceptEntity(),
+					Environment.class);
+			Environment environment = response.getBody();
+			assertThat(3).isEqualTo(environment.getPropertySources().size());
+			assertThat("overrides").isEqualTo(environment.getPropertySources().get(0).getName());
+			assertThat(environment.getPropertySources().get(1).getName().contains("config-repo")
+					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo")).isTrue();
+			assertThat(environment.getPropertySources().get(2).getName().contains("svn-config-repo")).isTrue();
+			ConfigServerTestUtils.assertConfigEnabled(environment);
+		}
+
+		@Test
+		public void resourceEndpointsWork() {
+			// This request will get the file from the Git Repo because its order is first
+			// However since spring.cloud.config.server.reverseLocationOrder is true, the
+			// SVN repo
+			// will be searched first and return the file from that repo
+			String text = new TestRestTemplate().getForObject(
+					"http://localhost:" + this.port + "/foo/development/composite/bar.properties", String.class);
+
+			String expected = "foo: bar";
+			assertThat(expected).isEqualTo(text).as("invalid content");
+		}
+
+	}
+
+	@RunWith(SpringRunner.class)
+	@SpringBootTest(classes = TestConfigServerApplication.class,
+			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
 					"spring.cloud.config.server.composite[0].type:git",
 					"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",

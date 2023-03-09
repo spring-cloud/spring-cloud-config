@@ -96,6 +96,14 @@ public class ConfigServerProperties {
 	private boolean failOnCompositeError = true;
 
 	/**
+	 * By default the location order we use in GenericResourceRepository is the order in
+	 * which they are listed. Prior to Hoxton.SR11 the order used to be reverse. If this
+	 * property is set to true then we will reverse ther order like it used to be prior to
+	 * Hoxton.SR11.
+	 */
+	private boolean reverseLocationOrder = false;
+
+	/**
 	 * Decryption configuration for when server handles encrypted properties before
 	 * sending them to clients.
 	 */
@@ -185,13 +193,22 @@ public class ConfigServerProperties {
 		this.failOnCompositeError = failOnCompositeError;
 	}
 
+	public boolean isReverseLocationOrder() {
+		return reverseLocationOrder;
+	}
+
+	public void setReverseLocationOrder(boolean reverseLocationOrder) {
+		this.reverseLocationOrder = reverseLocationOrder;
+	}
+
 	@Override
 	public String toString() {
 		return new ToStringCreator(this).append("enabled", enabled).append("bootstrap", bootstrap)
 				.append("prefix", prefix).append("defaultLabel", defaultLabel).append("overrides", overrides)
 				.append("stripDocumentFromYaml", stripDocumentFromYaml).append("acceptEmpty", acceptEmpty)
 				.append("defaultApplicationName", defaultApplicationName).append("defaultProfile", defaultProfile)
-				.append("failOnCompositeError", failOnCompositeError).append("encrypt", encrypt).toString();
+				.append("failOnCompositeError", failOnCompositeError).append("encrypt", encrypt)
+				.append("reverseLocationOrder", reverseLocationOrder).toString();
 
 	}
 
