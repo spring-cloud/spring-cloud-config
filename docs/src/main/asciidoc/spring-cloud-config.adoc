@@ -1363,6 +1363,61 @@ However, in properties files, you do need to escape the backslash, when you conf
 
 You can change the priority of all overrides in the client to be more like default values, letting applications supply their own values in environment variables or System properties, by setting the  `spring.cloud.config.overrideNone=true` flag (the default is false) in the remote repository.
 
+==== Using Bootstrap To Override Properties
+
+If you enable <<config-first-bootstrap, config first bootstrap>>, you can allow client applications to override configuration from the config server by placing two properties within
+the applications configuration coming from the config server.
+
+[source,properties]
+----
+spring.cloud.config.allowOverride=true
+spring.cloud.config.overrideNone=true
+----
+
+With Bootstrap enabled and these two properties set to true you will be able to override configuration from the config server
+within the clients application configuration.
+
+==== Overriding Properties Using Placeholders
+
+A cleaner way to override properties without enabling config first bootstrap is to use property placeholders in the configuration coming from the config server.
+
+For example if the configuration coming from the config server contains the following property
+
+[source,properties]
+----
+hello=${app.hello:Hello From Config Server!}
+----
+
+You can override the value of `hello` coming from the config server by setting `app.hello` in your local application configuration
+
+[source,properties]
+----
+app.hello=Hello From Application!
+----
+
+==== Overriding Properties Using Profiles
+
+The final way to override properties coming from the config server is to specify them in profile specific configuration file within the client
+application.
+
+For example, if you have the following configuration from the config server
+
+[source,properties]
+----
+hello="Hello From Config Server!"
+----
+
+You can override the value of `hello` in the client application by setting `hello` in a profile specific configuration file and
+then enabling that profile.
+
+.application-overrides.properties
+[source,properties]
+----
+hello="Hello From Application!"
+----
+
+In the above example you would have to enable the `overrides` profile.
+
 === Health Indicator
 
 Config Server comes with a Health Indicator that checks whether the configured `EnvironmentRepository` is working.
