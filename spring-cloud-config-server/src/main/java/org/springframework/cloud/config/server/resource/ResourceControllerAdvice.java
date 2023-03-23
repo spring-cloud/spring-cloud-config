@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.config.server.resource;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.springframework.cloud.config.server.environment.NoSuchLabelException;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,9 +33,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Order
 class ResourceControllerAdvice {
 
+	private static Log logger = LogFactory.getLog(ResourceControllerAdvice.class);
+
 	@ExceptionHandler(NoSuchResourceException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	void notFound(NoSuchResourceException e) {
+	}
+
+	@ExceptionHandler(NoSuchLabelException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	void noSuchLabel(NoSuchLabelException e) {
+		logger.debug("Error when fetching resource", e);
 	}
 
 }

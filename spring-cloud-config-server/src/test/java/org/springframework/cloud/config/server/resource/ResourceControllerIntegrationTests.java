@@ -194,6 +194,11 @@ public class ResourceControllerIntegrationTests {
 			return new ResourceController(resourceRepository(), environmentRepository(), resourceEncryptorMap);
 		}
 
+		@Bean
+		public ResourceControllerAdvice resourceControllerAdvice() {
+			return new ResourceControllerAdvice();
+		}
+
 	}
 
 }
