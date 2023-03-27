@@ -1661,6 +1661,10 @@ The following sections show how each one works:
 * <<spring-cloud-config-serving-plain-text-git-svn-native-backends>>
 * <<spring-cloud-config-serving-plain-text-aws-s3>>
 
+== Serving Binary Files
+
+In order to serve binary files from the config server you will need to send an `Accept` header of `application/octet-stream`.
+
 [[spring-cloud-config-serving-plain-text-git-svn-native-backends]]
 ==== Git, SVN, and Native Backends
 
