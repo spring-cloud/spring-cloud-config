@@ -2097,3 +2097,8 @@ WARNING: While building a project that contains Spring Cloud Config Client, you 
 WARNING: Since in AOT and native mode, configuration is being processed and the context is being optimised at build time, any properties that would influence bean creation (such as the ones used within bootstrap context) should be set to the same values at build time and runtime to avoid unexpected behaviour.
 
 WARNING: Since Config Client connects to a running data source (such as Config Server) while starting up from native image, the quick startup time will be slowed down by the time required for this network communication to take place.
+
+[[appendix]]
+= Appendices
+
+include::_observability.adoc[]
