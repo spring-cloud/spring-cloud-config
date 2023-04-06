@@ -61,6 +61,7 @@ import static org.springframework.cloud.config.server.support.EnvironmentPropert
  * @author Ivan Corrales Solera
  * @author Daniel Frey
  * @author Ian Bondoc
+ * @author Chen Li
  *
  */
 @RestController
@@ -291,45 +292,32 @@ public class EnvironmentController {
 	}
 
 	private Map<String, Object> convertToProperties(Environment profiles) {
-
-		// Map of unique keys containing full map of properties for each unique
-		// key
-		Map<String, Map<String, Object>> map = new LinkedHashMap<>();
 		List<PropertySource> sources = new ArrayList<>(profiles.getPropertySources());
 		Collections.reverse(sources);
 		Map<String, Object> combinedMap = new LinkedHashMap<>();
+		Map<String, Map<String, Object>> arrayMap = new LinkedHashMap<>();
 		for (PropertySource source : sources) {
-
 			@SuppressWarnings("unchecked")
 			Map<String, Object> value = (Map<String, Object>) source.getSource();
-			for (String key : value.keySet()) {
+			Map<String, Map<String, Object>> currentArrayMap = new LinkedHashMap<>();
 
-				if (!key.contains("[")) {
-
-					// Not an array, add unique key to the map
-					combinedMap.put(key, value.get(key));
-
+			for (Entry<String, Object> entry : value.entrySet()) {
+				if (!entry.getKey().contains("[")) {
+					combinedMap.put(entry.getKey(), entry.getValue());
 				}
 				else {
-
-					// An existing array might have already been added to the property map
-					// of an unequal size to the current array. Replace the array key in
-					// the current map.
-					key = key.substring(0, key.indexOf("["));
-					Map<String, Object> filtered = new LinkedHashMap<>();
-					for (String index : value.keySet()) {
-						if (index.startsWith(key + "[")) {
-							filtered.put(index, value.get(index));
-						}
-					}
-					map.put(key, filtered);
+					String prefixKey = entry.getKey().substring(0,
+							entry.getKey().indexOf("["));
+					currentArrayMap.computeIfAbsent(prefixKey, k -> new LinkedHashMap<>())
+							.put(entry.getKey(), entry.getValue());
 				}
 			}
-
+			// Override array properties by prefix key
+			arrayMap.putAll(currentArrayMap);
 		}
 
 		// Combine all unique keys for array values into the combined map
-		for (Entry<String, Map<String, Object>> entry : map.entrySet()) {
+		for (Entry<String, Map<String, Object>> entry : arrayMap.entrySet()) {
 			combinedMap.putAll(entry.getValue());
 		}
 
