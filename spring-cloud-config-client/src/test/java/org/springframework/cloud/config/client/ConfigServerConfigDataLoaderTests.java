@@ -517,13 +517,13 @@ public class ConfigServerConfigDataLoaderTests {
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithoutLabel(ResponseEntity<?> response) {
 		when(this.restTemplate.exchange(any(String.class), any(HttpMethod.class), any(HttpEntity.class),
-				any(Class.class), ArgumentMatchers.<Object>any())).thenReturn(response);
+				any(Class.class), anyString(), anyString())).thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestTimedOut() {
 		when(this.restTemplate.exchange(any(String.class), any(HttpMethod.class), any(HttpEntity.class),
-				any(Class.class), ArgumentMatchers.<Object>any())).thenThrow(ResourceAccessException.class);
+				any(Class.class), anyString(), anyString(), anyString())).thenThrow(ResourceAccessException.class);
 	}
 
 	private void mockRequestTimedOut(ClientHttpRequestFactory requestFactory, String baseURI) throws Exception {
