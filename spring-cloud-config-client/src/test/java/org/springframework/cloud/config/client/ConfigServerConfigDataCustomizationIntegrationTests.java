@@ -113,14 +113,19 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 			hasBinder = context.getBinder() != null;
 			ConfigData configData = context.getInvocation().apply(context.getLoaderContext(), context.getResource());
 			assertThat(configData).as("ConfigData was null for location %s", context.getResource()).isNotNull();
-			assertThat(configData.getPropertySources()).hasSize(1);
-			PropertySource<?> propertySource = configData.getPropertySources().iterator().next();
-			Options options = configData.getOptions(propertySource);
-			assertThat(options).as("ConfigData.options was null for location %s property source %s",
-					context.getResource(), propertySource.getName()).isNotNull();
-			assertThat(options.contains(Option.IGNORE_IMPORTS)).isTrue();
-			assertThat(options.contains(Option.IGNORE_PROFILES)).isTrue();
-			assertThat(options.contains(Option.PROFILE_SPECIFIC)).isFalse();
+			if (!context.getResource().isProfileSpecific()) {
+				assertThat(configData.getPropertySources()).hasSize(1);
+
+				PropertySource<?> propertySource = configData.getPropertySources().iterator().next();
+				Options options = configData.getOptions(propertySource);
+				assertThat(options).as("ConfigData.options was null for location %s property source %s",
+						context.getResource(), propertySource.getName()).isNotNull();
+				assertThat(options.contains(Option.IGNORE_IMPORTS)).isTrue();
+				assertThat(options.contains(Option.PROFILE_SPECIFIC)).isFalse();
+			}
+			else {
+				assertThat(configData.getPropertySources()).hasSize(0);
+			}
 			return configData;
 		}
 

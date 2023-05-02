@@ -73,33 +73,52 @@ public class ConfigServerConfigDataLocationResolverTests {
 
 	@Test
 	void defaultSpringProfiles() {
-		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		ConfigServerConfigDataResource resource = testResolveProfileSpecific();
 		assertThat(resource.getProfiles()).isEqualTo("default");
 	}
 
 	@Test
 	void configClientProfilesOverridesSpringProfilesActive() {
 		this.environment.setProperty(ConfigClientProperties.PREFIX + ".profile", "myprofile");
-		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		ConfigServerConfigDataResource resource = testResolveProfileSpecific();
 		assertThat(resource.getProfiles()).isEqualTo("myprofile");
 	}
 
 	@Test
+	void configClientProfilesAcceptedProfiles() {
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".profile", "myprofile");
+		ConfigServerConfigDataResource resource = testResolve();
+		assertThat(resource.getAcceptedProfiles()).contains("myprofile");
+	}
+
+	@Test
+	void configClientProfilesDefaultAcceptedProfiles() {
+		ConfigServerConfigDataResource resource = testResolve();
+		assertThat(resource.getAcceptedProfiles()).contains("default");
+	}
+
+	@Test
 	void configClientSpringProfilesActiveOverridesDefaultClientProfiles() {
-		ConfigServerConfigDataResource resource = testResolveProvileSpecific("myactiveprofile");
+		ConfigServerConfigDataResource resource = testResolveProfileSpecific("myactiveprofile");
 		assertThat(resource.getProfiles()).isEqualTo("myactiveprofile");
 	}
 
 	@Test
+	void assertConfigDataResourceHasNullProfiles() {
+		ConfigServerConfigDataResource resource = testResolve();
+		assertThat(resource.isProfileSpecific()).isFalse();
+	}
+
+	@Test
 	void configNameDefaultsToApplication() {
-		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		ConfigServerConfigDataResource resource = testResolveProfileSpecific();
 		assertThat(resource.getProperties().getName()).isEqualTo("application");
 	}
 
 	@Test
 	void configNameDefaultsToSpringApplicationName() {
 		this.environment.setProperty("spring.application.name", "myapp");
-		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		ConfigServerConfigDataResource resource = testResolveProfileSpecific();
 		assertThat(resource.getProperties().getName()).isEqualTo("myapp");
 	}
 
@@ -107,13 +126,13 @@ public class ConfigServerConfigDataLocationResolverTests {
 	void configNameOverridesSpringApplicationName() {
 		this.environment.setProperty("spring.application.name", "myapp");
 		this.environment.setProperty(ConfigClientProperties.PREFIX + ".name", "myconfigname");
-		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		ConfigServerConfigDataResource resource = testResolveProfileSpecific();
 		assertThat(resource.getProperties().getName()).isEqualTo("myconfigname");
 	}
 
 	@Test
 	void retryPropertiesShouldBeDefaultByDefault() {
-		ConfigServerConfigDataResource resource = testResolveProvileSpecific();
+		ConfigServerConfigDataResource resource = testResolveProfileSpecific();
 		RetryProperties defaultRetry = new RetryProperties();
 		assertThat(resource.getRetryProperties().getMaxAttempts()).isEqualTo(defaultRetry.getMaxAttempts());
 		assertThat(resource.getRetryProperties().getMaxInterval()).isEqualTo(defaultRetry.getMaxInterval());
@@ -211,11 +230,11 @@ public class ConfigServerConfigDataLocationResolverTests {
 		return resources.get(0);
 	}
 
-	private ConfigServerConfigDataResource testResolveProvileSpecific() {
-		return testResolveProvileSpecific("default");
+	private ConfigServerConfigDataResource testResolveProfileSpecific() {
+		return testResolveProfileSpecific("default");
 	}
 
-	private ConfigServerConfigDataResource testResolveProvileSpecific(String activeProfile) {
+	private ConfigServerConfigDataResource testResolveProfileSpecific(String activeProfile) {
 		when(context.getBootstrapContext()).thenReturn(mock(ConfigurableBootstrapContext.class));
 		Profiles profiles = mock(Profiles.class);
 		if (activeProfile != null) {
@@ -224,6 +243,15 @@ public class ConfigServerConfigDataLocationResolverTests {
 
 		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
 				ConfigDataLocation.of("configserver:"), profiles);
+		assertThat(resources).hasSize(1);
+		return resources.get(0);
+	}
+
+	private ConfigServerConfigDataResource testResolve() {
+		when(context.getBootstrapContext()).thenReturn(mock(ConfigurableBootstrapContext.class));
+
+		List<ConfigServerConfigDataResource> resources = this.resolver.resolve(context,
+				ConfigDataLocation.of("configserver:"));
 		assertThat(resources).hasSize(1);
 		return resources.get(0);
 	}
