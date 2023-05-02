@@ -18,6 +18,9 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import com.amazonaws.services.s3.AmazonS3;
@@ -31,6 +34,7 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -68,16 +72,17 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	@Override
 	public Environment findOne(String specifiedApplication, String specifiedProfiles, String specifiedLabel) {
-		final String application = StringUtils.isEmpty(specifiedApplication)
+		final String application = ObjectUtils.isEmpty(specifiedApplication)
 				? serverProperties.getDefaultApplicationName() : specifiedApplication;
-		final String profiles = StringUtils.isEmpty(specifiedProfiles) ? serverProperties.getDefaultProfile()
+		final String profiles = ObjectUtils.isEmpty(specifiedProfiles) ? serverProperties.getDefaultProfile()
 				: specifiedProfiles;
-		final String label = StringUtils.isEmpty(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
+		final String label = ObjectUtils.isEmpty(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
 
 		String[] profileArray = parseProfiles(profiles);
-		String[] apps = new String[] { application };
-		if (application != null) {
-			apps = StringUtils.commaDelimitedListToStringArray(application.replace(" ", ""));
+		List<String> apps = Arrays.asList(StringUtils.commaDelimitedListToStringArray(application.replace(" ", "")));
+		if (!apps.contains(serverProperties.getDefaultApplicationName())) {
+			apps = new ArrayList<>(apps);
+			apps.add(serverProperties.getDefaultApplicationName());
 		}
 
 		final Environment environment = new Environment(application, profileArray);
@@ -85,28 +90,35 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 		for (String profile : profileArray) {
 			for (String app : apps) {
-				S3ConfigFile s3ConfigFile = getS3ConfigFile(app, profile, label);
-				if (s3ConfigFile != null) {
-					environment.setVersion(s3ConfigFile.getVersion());
-
-					final Properties config = s3ConfigFile.read();
-					config.putAll(serverProperties.getOverrides());
-					StringBuilder propertySourceName = new StringBuilder().append("s3:").append(app);
-					if (profile != null) {
-						propertySourceName.append("-").append(profile);
-					}
-					environment.add(new PropertySource(propertySourceName.toString(), config));
-				}
+				addPropertySource(environment, app, profile, label);
 			}
+		}
+
+		// Add propertysources without profiles as well
+		for (String app : apps) {
+			addPropertySource(environment, app, null, label);
 		}
 
 		return environment;
 	}
 
-	private String[] parseProfiles(String profiles) {
-		if (profiles.equals(serverProperties.getDefaultProfile())) {
-			return new String[] { profiles, null };
+	private void addPropertySource(Environment environment, String app, String profile, String label) {
+		S3ConfigFile s3ConfigFile = getS3ConfigFile(app, profile, label);
+		if (s3ConfigFile != null) {
+			environment.setVersion(s3ConfigFile.getVersion());
+
+			final Properties config = s3ConfigFile.read();
+			config.putAll(serverProperties.getOverrides());
+			StringBuilder propertySourceName = new StringBuilder().append("s3:").append(app);
+			if (profile != null) {
+				propertySourceName.append("-").append(profile);
+			}
+			environment.add(new PropertySource(propertySourceName.toString(), config));
 		}
+	}
+
+	private String[] parseProfiles(String profiles) {
+
 		return StringUtils.commaDelimitedListToStringArray(profiles);
 	}
 
@@ -120,11 +132,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private String buildObjectKeyPrefix(String application, String profile, String label) {
 		StringBuilder objectKeyPrefix = new StringBuilder();
-		if (!StringUtils.isEmpty(label)) {
+		if (!ObjectUtils.isEmpty(label)) {
 			objectKeyPrefix.append(label).append(PATH_SEPARATOR);
 		}
 		objectKeyPrefix.append(application);
-		if (!StringUtils.isEmpty(profile)) {
+		if (!ObjectUtils.isEmpty(profile)) {
 			objectKeyPrefix.append("-").append(profile);
 		}
 		return objectKeyPrefix.toString();
