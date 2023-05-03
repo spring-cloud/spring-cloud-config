@@ -194,6 +194,15 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void placeholdersApplicationWithPrefixAndProfile() {
+		this.repository.setSearchLocations("classpath:/test/{profile}/{application}/");
+		// gh-2259 application name starts with "application"
+		Environment environment = this.repository.findOne("applicationxyz", "dev", "master");
+		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("default-app");
+	}
+
+	@Test
 	public void locationPlaceholdersApplication() {
 		this.repository.setSearchLocations("classpath:/test/{application}");
 		Locations locations = this.repository.getLocations("foo", "dev", "master");

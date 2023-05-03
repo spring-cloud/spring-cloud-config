@@ -225,7 +225,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		Map<String, Object> map = new HashMap<>();
 		map.put("spring.profiles.active", profile);
 		String config = application;
-		if (!config.startsWith("application")) {
+		if (!config.equals("application")) {
 			config = "application," + config;
 		}
 		map.put("spring.config.name", config);
