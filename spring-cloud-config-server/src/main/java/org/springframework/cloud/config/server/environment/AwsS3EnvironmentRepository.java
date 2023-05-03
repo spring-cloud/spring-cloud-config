@@ -18,10 +18,10 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -73,16 +73,17 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	@Override
 	public Environment findOne(String specifiedApplication, String specifiedProfiles, String specifiedLabel) {
-		final String application = !StringUtils.hasText(specifiedApplication)
+		final String application = ObjectUtils.isEmpty(specifiedApplication)
 				? serverProperties.getDefaultApplicationName() : specifiedApplication;
-		final String profiles = !StringUtils.hasText(specifiedProfiles) ? serverProperties.getDefaultProfile()
+		final String profiles = ObjectUtils.isEmpty(specifiedProfiles) ? serverProperties.getDefaultProfile()
 				: specifiedProfiles;
-		final String label = !StringUtils.hasText(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
+		final String label = ObjectUtils.isEmpty(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
 
 		String[] profileArray = parseProfiles(profiles);
-		String[] apps = new String[] { application };
-		if (application != null) {
-			apps = StringUtils.commaDelimitedListToStringArray(application.replace(" ", ""));
+		List<String> apps = Arrays.asList(StringUtils.commaDelimitedListToStringArray(application.replace(" ", "")));
+		if (!apps.contains(serverProperties.getDefaultApplicationName())) {
+			apps = new ArrayList<>(apps);
+			apps.add(serverProperties.getDefaultApplicationName());
 		}
 
 		final Environment environment = new Environment(application, profileArray);
@@ -90,34 +91,36 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 		for (String profile : profileArray) {
 			for (String app : apps) {
-				S3ConfigFile s3ConfigFile = getS3ConfigFile(app, profile, label);
-				if (s3ConfigFile != null) {
-					environment.setVersion(s3ConfigFile.getVersion());
-
-					final Properties config = s3ConfigFile.read();
-					config.putAll(serverProperties.getOverrides());
-					StringBuilder propertySourceName = new StringBuilder().append("s3:").append(app);
-					if (profile != null) {
-						propertySourceName.append("-").append(profile);
-					}
-					environment.add(new PropertySource(propertySourceName.toString(), config));
-				}
+				addPropertySource(environment, app, profile, label);
 			}
+		}
+
+		// Add propertysources without profiles as well
+		for (String app : apps) {
+			addPropertySource(environment, app, null, label);
 		}
 
 		return environment;
 	}
 
-	private String[] parseProfiles(String profiles) {
-		if (ObjectUtils.isEmpty(profiles)) {
-			return new String[] { "" };
+	private void addPropertySource(Environment environment, String app, String profile, String label) {
+		S3ConfigFile s3ConfigFile = getS3ConfigFile(app, profile, label);
+		if (s3ConfigFile != null) {
+			environment.setVersion(s3ConfigFile.getVersion());
+
+			final Properties config = s3ConfigFile.read();
+			config.putAll(serverProperties.getOverrides());
+			StringBuilder propertySourceName = new StringBuilder().append("s3:").append(app);
+			if (profile != null) {
+				propertySourceName.append("-").append(profile);
+			}
+			environment.add(new PropertySource(propertySourceName.toString(), config));
 		}
-		List<String> parsedProfiles = Arrays.stream(profiles.split(","))
-				.collect(Collectors.collectingAndThen(Collectors.toList(), p -> {
-					p.add("");
-					return p;
-				}));
-		return parsedProfiles.toArray(new String[0]);
+	}
+
+	private String[] parseProfiles(String profiles) {
+
+		return StringUtils.commaDelimitedListToStringArray(profiles);
 	}
 
 	private S3ConfigFile getS3ConfigFile(String application, String profile, String label) {
