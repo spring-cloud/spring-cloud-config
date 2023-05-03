@@ -135,7 +135,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", null, null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, "default", null);
+		assertExpectedEnvironment(env, "foo", null, null, 1, "default");
 	}
 
 	@Test
@@ -144,7 +144,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		final Environment env = envRepo.findOne("foo", null, null);
 
-		assertExpectedEnvironment(env, "foo", null, null, 1, "default", null);
+		assertExpectedEnvironment(env, "foo", null, null, 1, "default");
 	}
 
 	@Test

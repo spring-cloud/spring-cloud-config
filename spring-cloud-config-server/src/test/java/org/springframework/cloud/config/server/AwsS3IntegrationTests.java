@@ -86,6 +86,8 @@ public class AwsS3IntegrationTests {
 		s3Client.putObject("test-bucket", "data.txt", "this is a test");
 		s3Client.putObject("test-bucket", "main/data.txt", "this is a test in main");
 		s3Client.putObject("test-bucket", "application.properties", "foo=1");
+		s3Client.putObject("test-bucket", "data.properties", "bar=1");
+		s3Client.putObject("test-bucket", "data-dev.properties", "bar=1");
 
 	}
 
@@ -99,6 +101,17 @@ public class AwsS3IntegrationTests {
 				.isEqualTo("this is a test in main");
 		assertThat(rest.getForObject(configServerUrl + "/application/default/data.txt?useDefaultLabel", String.class))
 				.isEqualTo("this is a test");
+	}
+
+	@Test
+	public void defaultApplicationAndProfileIncluded() throws IOException {
+		RestTemplate rest = new RestTemplateBuilder().build();
+		String configServerUrl = "http://localhost:" + configServerPort;
+		Environment env = rest.getForObject(configServerUrl + "/data/dev", Environment.class);
+		assertThat(env.getPropertySources().size()).isEqualTo(3);
+		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("s3:data-dev");
+		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("s3:data");
+		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("s3:application");
 	}
 
 	@AfterAll
