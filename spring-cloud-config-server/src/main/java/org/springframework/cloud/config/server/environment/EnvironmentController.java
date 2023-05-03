@@ -103,12 +103,14 @@ public class EnvironmentController {
 		this.acceptEmpty = acceptEmpty;
 	}
 
-	@GetMapping(path = "/{name}/{profiles:[^\\.]*}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(path = "/{name}/{profiles:(?!.*\\b\\.(?:ya?ml|properties|json)\\b).*}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	public Environment defaultLabel(@PathVariable String name, @PathVariable String profiles) {
 		return getEnvironment(name, profiles, null, false);
 	}
 
-	@GetMapping(path = "/{name}/{profiles:[^\\.]*}", produces = EnvironmentMediaType.V2_JSON)
+	@GetMapping(path = "/{name}/{profiles:(?!.*\\b\\.(?:ya?ml|properties|json)\\b).*}",
+			produces = EnvironmentMediaType.V2_JSON)
 	public Environment defaultLabelIncludeOrigin(@PathVariable String name, @PathVariable String profiles) {
 		return getEnvironment(name, profiles, null, true);
 	}
@@ -479,6 +481,7 @@ public class EnvironmentController {
 		private String getKey() {
 			// Consider initial value or previous char '.' or '['
 			int start = this.currentPos + 1;
+			int openingBracketPosition = -1;
 			for (int i = start; i < this.propertyKey.length(); i++) {
 				char currentChar = this.propertyKey.charAt(i);
 				if (currentChar == '.') {
@@ -487,9 +490,20 @@ public class EnvironmentController {
 					break;
 				}
 				else if (currentChar == '[') {
-					this.valueType = NodeType.ARRAY;
-					this.currentPos = i;
-					break;
+					openingBracketPosition = i;
+				}
+				else if (currentChar == ']') {
+					String bracketContents = this.propertyKey.substring(openingBracketPosition + 1, i);
+					try {
+						Integer.parseInt(bracketContents);
+						this.valueType = NodeType.ARRAY;
+						this.currentPos = openingBracketPosition;
+						break;
+					}
+					catch (NumberFormatException e) {
+						// This means the key contains a [ and a ] but the contents were
+						// not an integer so it's not an array
+					}
 				}
 			}
 			// If there's no delimiter then it's a key of a leaf

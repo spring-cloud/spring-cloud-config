@@ -26,6 +26,7 @@ import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.credhub.support.CredentialDetails;
 import org.springframework.credhub.support.SimpleCredentialName;
 import org.springframework.credhub.support.json.JsonCredential;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import static java.util.stream.Collectors.toMap;
@@ -52,10 +53,10 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 
 	@Override
 	public Environment findOne(String application, String profilesList, String label) {
-		if (StringUtils.isEmpty(profilesList)) {
+		if (ObjectUtils.isEmpty(profilesList)) {
 			profilesList = DEFAULT_PROFILE;
 		}
-		if (StringUtils.isEmpty(label)) {
+		if (ObjectUtils.isEmpty(label)) {
 			label = DEFAULT_LABEL;
 		}
 

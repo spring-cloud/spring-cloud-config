@@ -183,6 +183,19 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void yamlWithBrackets() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a.test", "e");
+		map.put("a.b[hello]", "c");
+		map.put("a.b[world]", "d");
+		map.put("a.b[world]d", "f");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a:\n  test: e\n  b[hello]: c\n  b[world]: d\n  b[world]d: f\n");
+	}
+
+	@Test
 	public void arrayOverridenInEnvironment() throws Exception {
 		// Add original values first source
 		Map<String, Object> oneMap = new LinkedHashMap<String, Object>();
@@ -643,11 +656,11 @@ class EnvironmentControllerTests {
 
 		@Test
 		public void handleEnvironmentException() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne(eq("exception"), eq("bad_syntax"), any(),
+			when(EnvironmentControllerTests.this.repository.findOne(eq("exception"), eq("bad_syntax.ext"), any(),
 					eq(false)))
 							.thenThrow(new FailedToConstructEnvironmentException("Cannot construct",
 									new RuntimeException("underlier")));
-			MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/exception/bad_syntax"))
+			MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/exception/bad_syntax.ext"))
 					.andExpect(MockMvcResultMatchers.status().is(500)).andReturn();
 			assertThat(result.getResponse().getErrorMessage()).isEqualTo("Cannot construct");
 		}

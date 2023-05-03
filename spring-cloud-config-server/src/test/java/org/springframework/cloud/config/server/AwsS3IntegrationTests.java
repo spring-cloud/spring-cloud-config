@@ -64,8 +64,7 @@ public class AwsS3IntegrationTests {
 
 	@Container
 	static LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(LocalStackContainer.Service.S3)
-					.withReuse(true);
+			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(LocalStackContainer.Service.S3);
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {

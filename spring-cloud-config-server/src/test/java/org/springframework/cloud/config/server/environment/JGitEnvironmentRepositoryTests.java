@@ -109,6 +109,8 @@ public class JGitEnvironmentRepositoryTests {
 
 	private File basedir = new File("target/config");
 
+	private final ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
+
 	@BeforeAll
 	public static void initClass() {
 		// mock Git configuration to make tests independent of local Git configuration
@@ -600,14 +602,6 @@ public class JGitEnvironmentRepositoryTests {
 		// here is our exception we are testing
 		when(mergeCommand.call()).thenThrow(new NotMergedException());
 
-		// refresh()->return
-		// git.getRepository().findRef("HEAD").getObjectId().getName();
-		Ref headRef = mock(Ref.class);
-		when(this.database.findRef(anyString())).thenReturn(headRef);
-
-		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
-		when(headRef.getObjectId()).thenReturn(newObjectId);
-
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", null);
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
@@ -636,7 +630,17 @@ public class JGitEnvironmentRepositoryTests {
 
 			@Override
 			public RefDatabase getRefDatabase() {
-				return JGitEnvironmentRepositoryTests.this.database;
+				RefDatabase database = mock(RefDatabase.class);
+				Ref headRef = mock(Ref.class);
+				ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
+				when(headRef.getObjectId()).thenReturn(newObjectId);
+				try {
+					when(database.findRef(anyString())).thenReturn(headRef);
+				}
+				catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				return database;
 			}
 
 			@Override
@@ -712,13 +716,6 @@ public class JGitEnvironmentRepositoryTests {
 		when(mergeCommand.call()).thenThrow(new NotMergedException()); // here is our
 																		// exception we
 																		// are testing
-
-		// refresh()->return git.getRepository().findRef("HEAD").getObjectId().getName();
-		Ref headRef = mock(Ref.class);
-		when(this.database.findRef(anyString())).thenReturn(headRef);
-
-		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
-		when(headRef.getObjectId()).thenReturn(newObjectId);
 
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
@@ -831,14 +828,6 @@ public class JGitEnvironmentRepositoryTests {
 		ResetCommand resetCommand = mock(ResetCommand.class);
 		when(git.reset()).thenReturn(resetCommand);
 		when(resetCommand.call()).thenReturn(ref);
-
-		// refresh()->return
-		// git.getRepository().findRef("HEAD").getObjectId().getName();
-		Ref headRef = mock(Ref.class);
-		when(this.database.findRef(anyString())).thenReturn(headRef);
-
-		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
-		when(headRef.getObjectId()).thenReturn(newObjectId);
 
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
@@ -1173,14 +1162,6 @@ public class JGitEnvironmentRepositoryTests {
 		when(mergeCommand.call()).thenReturn(mergeResult);
 		when(mergeResult.getMergeStatus()).thenReturn(mergeStatus);
 		when(mergeStatus.isSuccessful()).thenReturn(true);
-
-		// refresh()->return
-		// git.getRepository().findRef("HEAD").getObjectId().getName();
-		Ref headRef = mock(Ref.class);
-		when(this.database.findRef(anyString())).thenReturn(headRef);
-
-		ObjectId newObjectId = ObjectId.fromRaw(new int[] { 1, 2, 3, 4, 5 });
-		when(headRef.getObjectId()).thenReturn(newObjectId);
 
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());

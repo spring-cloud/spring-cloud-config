@@ -29,17 +29,14 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.util.UrlPathHelper;
@@ -218,11 +215,6 @@ public class ResourceController {
 			// Ignore the exception since caching is optional.
 		}
 		return false;
-	}
-
-	@ExceptionHandler(NoSuchResourceException.class)
-	@ResponseStatus(HttpStatus.NOT_FOUND)
-	public void notFound(NoSuchResourceException e) {
 	}
 
 }

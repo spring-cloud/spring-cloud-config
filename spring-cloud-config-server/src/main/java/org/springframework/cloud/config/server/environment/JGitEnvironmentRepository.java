@@ -61,6 +61,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import static java.lang.String.format;
@@ -366,14 +367,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 			// Check if git points to valid repository and default label is not empty or
 			// null.
-			if (null != git && git.getRepository() != null && !StringUtils.isEmpty(getDefaultLabel())) {
+			if (null != git && git.getRepository() != null && !ObjectUtils.isEmpty(getDefaultLabel())) {
 				// Checkout the default branch set for repo in git. This may not always be
 				// master. It depends on the
 				// admin and organization settings.
 				String defaultBranchInGit = git.getRepository().getBranch();
 				// If default branch is not empty and NOT equal to defaultLabel, then
 				// checkout the branch/tag/commit-id.
-				if (!StringUtils.isEmpty(defaultBranchInGit)
+				if (!ObjectUtils.isEmpty(defaultBranchInGit)
 						&& !getDefaultLabel().equalsIgnoreCase(defaultBranchInGit)) {
 					checkoutDefaultBranchWithRetry(git);
 				}

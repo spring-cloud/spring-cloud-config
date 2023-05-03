@@ -33,6 +33,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentController;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.NoSuchLabelException;
 import org.springframework.cloud.config.server.resource.ResourceControllerIntegrationTests.ControllerConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
@@ -156,6 +157,14 @@ public class ResourceControllerIntegrationTests {
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
 
+	@Test
+	public void resourceWithMissingLabel() throws Exception {
+		when(this.resources.findOne("foo", "default", "missing", "foo.txt"))
+				.thenThrow(new NoSuchLabelException("Planned"));
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/missing/foo.txt"))
+				.andExpect(MockMvcResultMatchers.status().isNotFound());
+	}
+
 	@SpringBootConfiguration
 	@EnableAutoConfiguration
 	public static class ControllerConfiguration {
@@ -183,6 +192,11 @@ public class ResourceControllerIntegrationTests {
 		@Bean
 		public ResourceController resourceController() {
 			return new ResourceController(resourceRepository(), environmentRepository(), resourceEncryptorMap);
+		}
+
+		@Bean
+		public ResourceControllerAdvice resourceControllerAdvice() {
+			return new ResourceControllerAdvice();
 		}
 
 	}

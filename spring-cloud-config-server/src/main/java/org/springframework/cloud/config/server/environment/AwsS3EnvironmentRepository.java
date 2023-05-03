@@ -18,7 +18,10 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -31,11 +34,13 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Clay McCoy
  * @author Scott Frederick
+ * @author Daniel Aiken
  */
 public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordered, SearchPathLocator {
 
@@ -104,10 +109,15 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private String[] parseProfiles(String profiles) {
-		if (profiles.equals(serverProperties.getDefaultProfile())) {
-			return new String[] { profiles, null };
+		if (ObjectUtils.isEmpty(profiles)) {
+			return new String[] { "" };
 		}
-		return StringUtils.commaDelimitedListToStringArray(profiles);
+		List<String> parsedProfiles = Arrays.stream(profiles.split(","))
+				.collect(Collectors.collectingAndThen(Collectors.toList(), p -> {
+					p.add("");
+					return p;
+				}));
+		return parsedProfiles.toArray(new String[0]);
 	}
 
 	private S3ConfigFile getS3ConfigFile(String application, String profile, String label) {
@@ -118,11 +128,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private String buildObjectKeyPrefix(String application, String profile, String label) {
 		StringBuilder objectKeyPrefix = new StringBuilder();
-		if (!StringUtils.isEmpty(label)) {
+		if (!ObjectUtils.isEmpty(label)) {
 			objectKeyPrefix.append(label).append(PATH_SEPARATOR);
 		}
 		objectKeyPrefix.append(application);
-		if (!StringUtils.isEmpty(profile)) {
+		if (!ObjectUtils.isEmpty(profile)) {
 			objectKeyPrefix.append("-").append(profile);
 		}
 		return objectKeyPrefix.toString();

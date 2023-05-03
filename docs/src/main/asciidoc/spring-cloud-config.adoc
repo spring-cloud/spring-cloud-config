@@ -104,7 +104,9 @@ If there are profile-specific YAML (or properties) files, these are also applied
 Higher precedence translates to a `PropertySource` listed earlier in the `Environment`.
 (These same rules apply in a standalone Spring Boot application.)
 
-You can set spring.cloud.config.server.accept-empty to false so that Server would return a HTTP 404 status, if the application is not found.By default, this flag is set to true.
+You can set `spring.cloud.config.server.accept-empty` to `false` so that Server would return a HTTP 404 status, if the application is not found.  By default, this flag is set to `true`.
+
+NOTE:  You cannot place `spring.main.*` properties in a remote `EnvironmentRepository`.  These properties are used as part of the application initialization.
 
 ==== Git Backend
 
@@ -866,7 +868,54 @@ secret value =
 }
 ----
 
-===== AWS Parameter Store
+===== Labelled Versions
+
+AWS Secrets Manager repository allows to keep labelled versions of the configuration environments the same way Git backend does.
+
+The repository implementation maps the `{label}` parameter of the HTTP resource to https://docs.aws.amazon.com/secretsmanager/latest/userguide/getting-started.html#term_version[AWS Secrets Manager secret's staging label^]. To create a labelled secret, create a secret or update its content and define a staging label for it (sometimes it's called version stage in the AWS documentation). For example:
+
+[source,sh]
+----
+$ aws secretsmanager create-secret \
+      --name /secret/test/ \
+      --secret-string '{"version":"1"}'
+{
+    "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:/secret/test/-a1b2c3",
+    "Name": "/secret/test/",
+    "VersionId": "cd291674-de2f-41de-8f3b-37dbf4880d69"
+}
+
+$ aws secretsmanager update-secret-version-stage \
+      --secret-id /secret/test/ \
+      --version-stage 1.0.0 \
+      --move-to-version-id cd291674-de2f-41de-8f3b-37dbf4880d69
+
+{
+    "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:/secret/test/-a1b2c3",
+    "Name": "/secret/test/",
+}
+----
+
+Use `spring.cloud.config.server.aws-secretsmanager.default-label` property to set the default label. If the property is not defined, the backend uses AWSCURRENT as a staging label.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: aws-secretsmanager
+  cloud:
+    config:
+      server:
+        aws-secretsmanager:
+          region: us-east-1
+          default-label: 1.0.0
+----
+
+Note that if the default label is not set and a request does not define a label, the repository will use secrets as if labelled version support is disabled. Also, the default label will be used only if the labelled support is enabled. Otherwise, defining this property is pointless.
+
+Note that if the staging label contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `({special-string})` (to avoid ambiguity with other URL paths) the same way <<_git_backend,Git backend's section>> describes it.
+
+==== AWS Parameter Store
 
 When using AWS Parameter Store as a backend, you can share configuration with all applications by placing properties within the `/application` hierarchy.
 
@@ -1316,6 +1365,61 @@ However, in properties files, you do need to escape the backslash, when you conf
 
 You can change the priority of all overrides in the client to be more like default values, letting applications supply their own values in environment variables or System properties, by setting the  `spring.cloud.config.overrideNone=true` flag (the default is false) in the remote repository.
 
+==== Using Bootstrap To Override Properties
+
+If you enable <<config-first-bootstrap, config first bootstrap>>, you can allow client applications to override configuration from the config server by placing two properties within
+the applications configuration coming from the config server.
+
+[source,properties]
+----
+spring.cloud.config.allowOverride=true
+spring.cloud.config.overrideNone=true
+----
+
+With Bootstrap enabled and these two properties set to true you will be able to override configuration from the config server
+within the clients application configuration.
+
+==== Overriding Properties Using Placeholders
+
+A cleaner way to override properties without enabling config first bootstrap is to use property placeholders in the configuration coming from the config server.
+
+For example if the configuration coming from the config server contains the following property
+
+[source,properties]
+----
+hello=${app.hello:Hello From Config Server!}
+----
+
+You can override the value of `hello` coming from the config server by setting `app.hello` in your local application configuration
+
+[source,properties]
+----
+app.hello=Hello From Application!
+----
+
+==== Overriding Properties Using Profiles
+
+The final way to override properties coming from the config server is to specify them in profile specific configuration file within the client
+application.
+
+For example, if you have the following configuration from the config server
+
+[source,properties]
+----
+hello="Hello From Config Server!"
+----
+
+You can override the value of `hello` in the client application by setting `hello` in a profile specific configuration file and
+then enabling that profile.
+
+.application-overrides.properties
+[source,properties]
+----
+hello="Hello From Application!"
+----
+
+In the above example you would have to enable the `overrides` profile.
+
 === Health Indicator
 
 Config Server comes with a Health Indicator that checks whether the configured `EnvironmentRepository` is working.
@@ -1558,6 +1662,10 @@ The following sections show how each one works:
 
 * <<spring-cloud-config-serving-plain-text-git-svn-native-backends>>
 * <<spring-cloud-config-serving-plain-text-aws-s3>>
+
+=== Serving Binary Files
+
+In order to serve binary files from the config server you will need to send an `Accept` header of `application/octet-stream`.
 
 [[spring-cloud-config-serving-plain-text-git-svn-native-backends]]
 ==== Git, SVN, and Native Backends
@@ -1991,3 +2099,8 @@ WARNING: While building a project that contains Spring Cloud Config Client, you 
 WARNING: Since in AOT and native mode, configuration is being processed and the context is being optimised at build time, any properties that would influence bean creation (such as the ones used within bootstrap context) should be set to the same values at build time and runtime to avoid unexpected behaviour.
 
 WARNING: Since Config Client connects to a running data source (such as Config Server) while starting up from native image, the quick startup time will be slowed down by the time required for this network communication to take place.
+
+[[appendix]]
+= Appendices
+
+include::_observability.adoc[]

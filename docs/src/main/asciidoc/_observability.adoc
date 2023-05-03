@@ -1,4 +1,4 @@
-:root-target: ../../../../target/
+:root-target: ../../../target/
 
 [[observability]]
 == Observability metadata
