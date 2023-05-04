@@ -80,8 +80,6 @@ public class AwsS3IntegrationTests {
 				"--spring.cloud.config.server.awss3.region=" + localstack.getRegion(),
 				"--spring.cloud.aws.endpoint="
 					+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
-				"--spring.cloud.aws.credentials.access-key=" + localstack.getAccessKey(),
-				"--spring.cloud.aws.credentials.secret-key=" + localstack.getSecretKey(),
 				"--spring.cloud.aws.region.static=" + localstack.getRegion(),
 				"--logging.level.org.springframework.cloud.config.server.environment=DEBUG",
 				"--debug=true"});
@@ -142,8 +140,6 @@ public class AwsS3IntegrationTests {
 		@Bean
 		S3Client s3Client() {
 			return S3Client.builder()
-				.credentialsProvider(
-					() -> AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()))
 				.region(Region.of(localstack.getRegion()))
 				.endpointOverride(localstack.getEndpointOverride(LocalStackContainer.Service.S3)).build();
 		}
