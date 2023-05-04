@@ -24,12 +24,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 
 import org.springframework.boot.context.config.ConfigData;
 import org.springframework.boot.context.config.ConfigData.Option;
-import org.springframework.boot.context.config.ConfigData.Options;
 import org.springframework.boot.context.config.ConfigDataLoader;
 import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -50,6 +50,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -104,6 +105,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 	}
 
 	public ConfigData doLoad(ConfigDataLoaderContext context, ConfigServerConfigDataResource resource) {
+
 		ConfigClientProperties properties = resource.getProperties();
 		List<PropertySource<?>> propertySources = new ArrayList<>();
 		Exception error = null;
@@ -152,27 +154,15 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					}
 					else if (ALL_OPTIONS.size() > 2) {
 						// boot 2.4.5+
-						return new ConfigData(propertySources, propertySource -> {
-							String propertySourceName = propertySource.getName();
-							List<Option> options = new ArrayList<>();
-							options.add(Option.IGNORE_IMPORTS);
-							options.add(Option.IGNORE_PROFILES);
-							// TODO: the profile is now available on the backend
-							// in a future minor, add the profile associated with a
-							// PropertySource see
-							// https://github.com/spring-cloud/spring-cloud-config/issues/1874
-							for (String profile : resource.getAcceptedProfiles()) {
-								// TODO: switch to match
-								// , is used as a profile-separator for property sources
-								// from vault
-								// - is the default profile-separator for property sources
-								if (propertySourceName.matches(".*[-,]" + profile + ".*")) {
-									// // TODO: switch to Options.with() when implemented
-									options.add(Option.PROFILE_SPECIFIC);
-								}
-							}
-							return Options.of(options.toArray(new Option[0]));
-						});
+						if (resource.isProfileSpecific()) {
+							List<PropertySource<?>> filteredSources = propertySources.stream()
+									.filter(propertySource -> resource.getAcceptedProfiles().stream()
+											.anyMatch(profile -> isProfileSpecificPropertySource(
+													resource.getProperties().getName(), propertySource, profile)))
+									.collect(Collectors.toList());
+							return new ConfigData(filteredSources, Option.IGNORE_IMPORTS, Option.PROFILE_SPECIFIC);
+						}
+						return new ConfigData(propertySources, Option.IGNORE_IMPORTS);
 					}
 				}
 			}
@@ -201,6 +191,36 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		logger.warn("Could not locate PropertySource (" + resource + "): "
 				+ (error != null ? error.getMessage() : errorBody));
 		return null;
+	}
+
+	private boolean isProfileSpecificPropertySource(String applicationName, PropertySource<?> propertySource,
+			String profile) {
+		// Application names can have - so before checking if the application name
+		// contains a -
+		// check to see if the application name matches the property source name, if so
+		// its not a profile specific property source.
+
+		// TODO: switch to match
+		// , is used as a profile-separator for property sources
+		// from vault
+		// - is the default profile-separator for property sources
+		return !applicationName.equals(extractApplicationName(propertySource))
+				&& propertySource.getName().matches(".*[-,]" + profile + ".*");
+	}
+
+	private String extractApplicationName(PropertySource<?> propertySource) {
+		if (ObjectUtils.isEmpty(propertySource.getName())) {
+			return "";
+		}
+		int lastSlash = propertySource.getName().lastIndexOf("/");
+		int lastPeriod = propertySource.getName().lastIndexOf(".");
+		if (lastSlash == -1) {
+			lastSlash = 0;
+		}
+		if (lastPeriod == -1) {
+			lastPeriod = propertySource.getName().length();
+		}
+		return propertySource.getName().substring(lastSlash + 1, lastPeriod);
 	}
 
 	protected void log(Environment result) {
