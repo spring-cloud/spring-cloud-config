@@ -27,7 +27,6 @@ import io.awspring.cloud.s3.S3ProtocolResolver;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -99,7 +98,6 @@ public class AwsS3IntegrationTests {
 	}
 
 	@Test
-	@Disabled
 	public void context() throws IOException {
 		RestTemplate rest = new RestTemplateBuilder().build();
 		String configServerUrl = "http://localhost:" + configServerPort;
