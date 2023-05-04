@@ -186,7 +186,8 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 					}
 					catch (Exception eJson) {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug("Did not find S3 config file with properties, yml, yaml, or json extension for " + keyPrefix, eJson);
+							LOG.debug("Did not find S3 config file with properties, yml, yaml, or json extension for "
+									+ keyPrefix, eJson);
 						}
 						return null;
 					}
