@@ -161,23 +161,32 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 		catch (Exception eProperties) {
 			try {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Did not find " + keyPrefix + ".properties.  Trying yml extension", eProperties);
+				}
 				final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(keyPrefix + ".yml");
 				return new YamlS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 			}
 			catch (Exception eYml) {
 				try {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Did not find " + keyPrefix + ".yml.  Trying yaml extension", eYml);
+					}
 					final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(keyPrefix + ".yaml");
 					return new YamlS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 				}
 				catch (Exception eYaml) {
 					try {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Did not find " + keyPrefix + ".yaml.  Trying json extension", eYaml);
+						}
 						final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(
 								keyPrefix + ".json");
 						return new JsonS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 					}
 					catch (Exception eJson) {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug("Did not find S3 config file for " + keyPrefix);
+							LOG.debug("Did not find S3 config file with properties, yml, yaml, or json extension for " + keyPrefix, eJson);
 						}
 						return null;
 					}
