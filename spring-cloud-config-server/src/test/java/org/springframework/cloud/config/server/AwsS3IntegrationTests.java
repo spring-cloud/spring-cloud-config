@@ -69,6 +69,8 @@ public class AwsS3IntegrationTests {
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {
+		System.setProperty("aws.accessKeyId", localstack.getAccessKey());
+		System.setProperty("aws.secretAccessKey", localstack.getSecretKey());
 		server = SpringApplication.run(new Class[] {TestConfigServerApplication.class, S3AutoConfiguration.class},
 			new String[] {"--spring.config.name=server", "--spring.profiles.active=awss3",
 				"--server.port=" + configServerPort,
@@ -107,6 +109,8 @@ public class AwsS3IntegrationTests {
 	@AfterAll
 	public static void after() {
 		server.close();
+		System.clearProperty("aws.accessKeyId");
+		System.clearProperty("aws.secretAccessKey");
 	}
 
 	@Test
