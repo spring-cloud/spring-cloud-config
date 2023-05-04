@@ -103,12 +103,12 @@ public class EncryptionController {
 	@PostMapping("/encrypt/{name}/{profiles}")
 	public String encrypt(@PathVariable String name, @PathVariable String profiles, @RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
-		TextEncryptor encryptor = getEncryptor(name, profiles, "");
-		validateEncryptionWeakness(encryptor);
 		String input = stripFormData(data, type, false);
+		TextEncryptor encryptor = getEncryptor(name, profiles, input);
+		validateEncryptionWeakness(encryptor);
 		Map<String, String> keys = helper.getEncryptorKeys(name, profiles, input);
 		String textToEncrypt = helper.stripPrefix(input);
-		String encrypted = helper.addPrefix(keys, encryptorLocator.locate(keys).encrypt(textToEncrypt));
+		String encrypted = helper.addPrefix(keys, encryptor.encrypt(textToEncrypt));
 		if (logger.isInfoEnabled()) {
 			logger.info("Encrypted data");
 		}
@@ -123,11 +123,10 @@ public class EncryptionController {
 	@PostMapping("/decrypt/{name}/{profiles}")
 	public String decrypt(@PathVariable String name, @PathVariable String profiles, @RequestBody String data,
 			@RequestHeader("Content-Type") MediaType type) {
-		TextEncryptor encryptor = getEncryptor(name, profiles, "");
-		checkDecryptionPossible(encryptor);
-		validateEncryptionWeakness(encryptor);
 		try {
-			encryptor = getEncryptor(name, profiles, data);
+			TextEncryptor encryptor = getEncryptor(name, profiles, data);
+			checkDecryptionPossible(encryptor);
+			validateEncryptionWeakness(encryptor);
 			String input = stripFormData(helper.stripPrefix(data), type, true);
 			String decrypted = encryptor.decrypt(input);
 			if (logger.isInfoEnabled()) {

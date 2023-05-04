@@ -145,12 +145,14 @@ public class EncryptionControllerTests {
 
 			@Override
 			public TextEncryptor locate(Map<String, String> keys) {
+				assertThat(keys.containsKey("key")).as("Missing encryptor key").isTrue();
+				assertThat(keys.get("key")).as("Bad encryptor key value").isEqualTo("value");
 				return this.encryptor;
 			}
 		};
 		this.controller = new EncryptionController(locator);
 		// Add space to input
-		String cipher = this.controller.encrypt("app", "default", "foo bar", MediaType.TEXT_PLAIN);
+		String cipher = this.controller.encrypt("app", "default", "{key:value}foo bar", MediaType.TEXT_PLAIN);
 		assertThat(cipher.contains("{name:app}")).as("Wrong cipher: " + cipher).isFalse();
 		String decrypt = this.controller.decrypt("app", "default", cipher, MediaType.TEXT_PLAIN);
 		assertThat(decrypt).as("Wrong decrypted plaintext: " + decrypt).isEqualTo("foo bar");
