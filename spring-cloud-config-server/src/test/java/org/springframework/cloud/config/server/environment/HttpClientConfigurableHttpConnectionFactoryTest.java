@@ -221,6 +221,51 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
 
+	@Test
+	public void applicationNameAlsoOccursInBaseURL() throws Exception {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri("http://server.com/{placeholder}-test.git");
+		this.connectionFactory.addConfiguration(properties);
+
+		HttpConnection actualConnection = this.connectionFactory
+				.create(new URL("http://server.com/server-test.git" + "/some/path.properties"));
+
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
+				.findFirst().get();
+		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
+		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+	}
+
+	@Test
+	public void applicationNameAlsoOccursInBaseURLMultiplePlaceholders() throws Exception {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri("http://server.com/{placeholder}-foo/{placeholder}-test.git");
+		this.connectionFactory.addConfiguration(properties);
+
+		HttpConnection actualConnection = this.connectionFactory
+				.create(new URL("http://server.com/hello-foo/server-test.git" + "/some/path.properties"));
+
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
+				.findFirst().get();
+		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
+		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+	}
+
+	@Test
+	public void applicationNameAlsoOccursLaterInPath() throws Exception {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri("http://localhost/{placeholder}-testval.git");
+		this.connectionFactory.addConfiguration(properties);
+
+		HttpConnection actualConnection = this.connectionFactory
+				.create(new URL("http://localhost/val-testval.git" + "/some/path.properties"));
+
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
+				.findFirst().get();
+		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
+		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+	}
+
 	private HttpClient getActualHttpClient(HttpConnection actualConnection) {
 		Field clientField = ReflectionUtils.findField(actualConnection.getClass(), "client");
 		ReflectionUtils.makeAccessible(clientField);
