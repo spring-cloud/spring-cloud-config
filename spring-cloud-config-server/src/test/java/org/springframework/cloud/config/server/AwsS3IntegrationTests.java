@@ -56,47 +56,46 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AwsS3IntegrationTests {
 
 	private static final int configServerPort = TestSocketUtils.findAvailableTcpPort();
-
-	private static S3Client s3Client;
-
-	private static ConfigurableApplicationContext server;
-
 	@Container
 	static LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(LocalStackContainer.Service.S3);
+		DockerImageName.parse("localstack/localstack:1.3.1")).withServices(LocalStackContainer.Service.S3);
+	private static S3Client s3Client;
+	private static ConfigurableApplicationContext server;
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {
-		server = SpringApplication.run(new Class[] { TestConfigServerApplication.class, S3AutoConfiguration.class },
-				new String[] { "--spring.config.name=server", "--spring.profiles.active=awss3",
-						"--server.port=" + configServerPort,
-						"--spring.cloud.config.server.awss3.endpoint="
-								+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
-						"--spring.cloud.config.server.awss3.bucket=test-bucket",
-						"--spring.cloud.config.server.awss3.region=" + localstack.getRegion(),
-						"--spring.cloud.aws.endpoint="
-								+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
-						"--spring.cloud.aws.credentials.access-key=" + localstack.getAccessKey(),
-						"--spring.cloud.aws.credentials.secret-key=" + localstack.getSecretKey(),
-						"--spring.cloud.aws.region.static=" + localstack.getRegion(),
-						"--logging.level.org.springframework.cloud.config.server.environment=DEBUG",
-						"--debug=true"});
+		server = SpringApplication.run(new Class[] {TestConfigServerApplication.class, S3AutoConfiguration.class},
+			new String[] {"--spring.config.name=server", "--spring.profiles.active=awss3",
+				"--server.port=" + configServerPort,
+				"--spring.cloud.config.server.awss3.endpoint="
+					+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
+				"--spring.cloud.config.server.awss3.bucket=test-bucket",
+				"--spring.cloud.config.server.awss3.region=" + localstack.getRegion(),
+				"--spring.cloud.aws.endpoint="
+					+ localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString(),
+				"--spring.cloud.aws.credentials.access-key=" + localstack.getAccessKey(),
+				"--spring.cloud.aws.credentials.secret-key=" + localstack.getSecretKey(),
+				"--spring.cloud.aws.region.static=" + localstack.getRegion(),
+				"--logging.level.org.springframework.cloud.config.server.environment=DEBUG",
+				"--debug=true"});
 
-		if (server.getBeanNamesForType(S3Client.class).length > 0) {
-			s3Client = server.getBean(S3Client.class);
-			s3Client.createBucket((request) -> request.bucket("test-bucket"));
-			s3Client.putObject((request) -> request.bucket("test-bucket").key("data.txt"),
-					RequestBody.fromString("this is a test"));
-			s3Client.putObject((request) -> request.bucket("test-bucket").key("main/data.txt"),
-					RequestBody.fromString("this is a test in main"));
-			s3Client.putObject((request) -> request.bucket("test-bucket").key("application.properties"),
-					RequestBody.fromString("foo=1"));
-			s3Client.putObject((request) -> request.bucket("test-bucket").key("data.properties"),
-					RequestBody.fromString("bar=1"));
-			s3Client.putObject((request) -> request.bucket("test-bucket").key("data-dev.properties"),
-					RequestBody.fromString("bar=1"));
-		}
+		s3Client = server.getBean(S3Client.class);
+		s3Client.createBucket((request) -> request.bucket("test-bucket"));
+		s3Client.putObject((request) -> request.bucket("test-bucket").key("data.txt"),
+			RequestBody.fromString("this is a test"));
+		s3Client.putObject((request) -> request.bucket("test-bucket").key("main/data.txt"),
+			RequestBody.fromString("this is a test in main"));
+		s3Client.putObject((request) -> request.bucket("test-bucket").key("application.properties"),
+			RequestBody.fromString("foo=1"));
+		s3Client.putObject((request) -> request.bucket("test-bucket").key("data.properties"),
+			RequestBody.fromString("bar=1"));
+		s3Client.putObject((request) -> request.bucket("test-bucket").key("data-dev.properties"),
+			RequestBody.fromString("bar=1"));
+	}
 
+	@AfterAll
+	public static void after() {
+		server.close();
 	}
 
 	@Test
@@ -106,9 +105,9 @@ public class AwsS3IntegrationTests {
 		Environment env = rest.getForObject(configServerUrl + "/application/default", Environment.class);
 		assertThat(env.getPropertySources().get(0).getSource().get("foo")).isEqualTo("1");
 		assertThat(rest.getForObject(configServerUrl + "/application/default/main/data.txt", String.class))
-				.isEqualTo("this is a test in main");
+			.isEqualTo("this is a test in main");
 		assertThat(rest.getForObject(configServerUrl + "/application/default/data.txt?useDefaultLabel", String.class))
-				.isEqualTo("this is a test");
+			.isEqualTo("this is a test");
 	}
 
 	@Test
@@ -122,28 +121,23 @@ public class AwsS3IntegrationTests {
 		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("s3:application");
 	}
 
-	@AfterAll
-	public static void after() {
-		server.close();
-	}
-
 	@Import(S3ProtocolResolver.class)
 	static class S3AutoConfiguration {
 
 		@Bean
 		S3Client s3Client() {
 			return S3Client.builder()
-					.credentialsProvider(
-							() -> AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()))
-					.region(Region.of(localstack.getRegion()))
-					.endpointOverride(localstack.getEndpointOverride(LocalStackContainer.Service.S3)).build();
+				.credentialsProvider(
+					() -> AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()))
+				.region(Region.of(localstack.getRegion()))
+				.endpointOverride(localstack.getEndpointOverride(LocalStackContainer.Service.S3)).build();
 		}
 
 		@Bean
 		S3OutputStreamProvider inMemoryBufferingS3StreamProvider(S3Client s3Client,
-				Optional<S3ObjectContentTypeResolver> contentTypeResolver) {
+			Optional<S3ObjectContentTypeResolver> contentTypeResolver) {
 			return new InMemoryBufferingS3OutputStreamProvider(s3Client,
-					contentTypeResolver.orElseGet(PropertiesS3ObjectContentTypeResolver::new));
+				contentTypeResolver.orElseGet(PropertiesS3ObjectContentTypeResolver::new));
 		}
 
 	}
