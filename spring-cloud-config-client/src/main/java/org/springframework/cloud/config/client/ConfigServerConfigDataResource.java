@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,6 +39,8 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 
 	private Log log;
 
+	private boolean isProfileSpecific = false;
+
 	public ConfigServerConfigDataResource(ConfigClientProperties properties, boolean optional, Profiles profiles) {
 		this.properties = properties;
 		this.optional = optional;
@@ -46,6 +49,14 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 
 	public ConfigClientProperties getProperties() {
 		return this.properties;
+	}
+
+	public boolean isProfileSpecific() {
+		return isProfileSpecific;
+	}
+
+	public void setProfileSpecific(boolean profileSpecific) {
+		isProfileSpecific = profileSpecific;
 	}
 
 	public boolean isOptional() {
@@ -61,6 +72,10 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 	}
 
 	List<String> getAcceptedProfiles() {
+		if (profiles == null) {
+			return Collections.singletonList(!properties.getProfile().equals(ConfigClientProperties.DEFAULT_PROFILE)
+					? properties.getProfile() : ConfigClientProperties.DEFAULT_PROFILE);
+		}
 		return this.profiles.getAccepted();
 	}
 
@@ -101,7 +116,7 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 	@Override
 	public String toString() {
 		return new ToStringCreator(this).append("uris", properties.getUri()).append("optional", optional)
-				.append("profiles", profiles.getAccepted()).toString();
+				.append("profiles", getAcceptedProfiles()).toString();
 
 	}
 

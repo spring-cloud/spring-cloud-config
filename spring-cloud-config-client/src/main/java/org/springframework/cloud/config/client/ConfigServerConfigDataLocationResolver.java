@@ -17,7 +17,6 @@
 package org.springframework.cloud.config.client;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -40,6 +39,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -157,7 +157,7 @@ public class ConfigServerConfigDataLocationResolver
 	public List<ConfigServerConfigDataResource> resolve(ConfigDataLocationResolverContext context,
 			ConfigDataLocation location)
 			throws ConfigDataLocationNotFoundException, ConfigDataResourceNotFoundException {
-		return Collections.emptyList();
+		return resolveProfileSpecific(context, location, null);
 	}
 
 	@Override
@@ -188,6 +188,7 @@ public class ConfigServerConfigDataLocationResolver
 
 		ConfigServerConfigDataResource resource = new ConfigServerConfigDataResource(properties, location.isOptional(),
 				profiles);
+		resource.setProfileSpecific(!ObjectUtils.isEmpty(profiles));
 		resource.setLog(log);
 		resource.setRetryProperties(propertyHolder.retryProperties);
 
