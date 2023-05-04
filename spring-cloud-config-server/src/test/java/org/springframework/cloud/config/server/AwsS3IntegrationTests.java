@@ -24,6 +24,8 @@ import io.awspring.cloud.s3.PropertiesS3ObjectContentTypeResolver;
 import io.awspring.cloud.s3.S3ObjectContentTypeResolver;
 import io.awspring.cloud.s3.S3OutputStreamProvider;
 import io.awspring.cloud.s3.S3ProtocolResolver;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,6 +38,8 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -55,11 +59,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 public class AwsS3IntegrationTests {
 
+	private static final Log LOG = LogFactory.getLog(AwsS3IntegrationTests.class);
+
 	private static final int configServerPort = TestSocketUtils.findAvailableTcpPort();
 	@Container
 	static LocalStackContainer localstack = new LocalStackContainer(
 		DockerImageName.parse("localstack/localstack:1.3.1")).withServices(LocalStackContainer.Service.S3);
-	private static S3Client s3Client;
 	private static ConfigurableApplicationContext server;
 
 	@BeforeAll
@@ -79,18 +84,24 @@ public class AwsS3IntegrationTests {
 				"--logging.level.org.springframework.cloud.config.server.environment=DEBUG",
 				"--debug=true"});
 
-		s3Client = server.getBean(S3Client.class);
-		s3Client.createBucket((request) -> request.bucket("test-bucket"));
-		s3Client.putObject((request) -> request.bucket("test-bucket").key("data.txt"),
+		S3Client s3Client = server.getBean(S3Client.class);
+		CreateBucketResponse bucketResponse = s3Client.createBucket((request) -> request.bucket("test-bucket"));
+		LOG.info("bucket response " + bucketResponse);
+		PutObjectResponse objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("data.txt"),
 			RequestBody.fromString("this is a test"));
-		s3Client.putObject((request) -> request.bucket("test-bucket").key("main/data.txt"),
+		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("main/data.txt"),
 			RequestBody.fromString("this is a test in main"));
-		s3Client.putObject((request) -> request.bucket("test-bucket").key("application.properties"),
+		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("application.properties"),
 			RequestBody.fromString("foo=1"));
-		s3Client.putObject((request) -> request.bucket("test-bucket").key("data.properties"),
+		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("data.properties"),
 			RequestBody.fromString("bar=1"));
-		s3Client.putObject((request) -> request.bucket("test-bucket").key("data-dev.properties"),
+		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("data-dev.properties"),
 			RequestBody.fromString("bar=1"));
+		LOG.info("object response " + objectResponse);
 	}
 
 	@AfterAll
