@@ -79,6 +79,7 @@ public class AwsS3IntegrationTests {
 						"--spring.cloud.aws.credentials.access-key=" + localstack.getAccessKey(),
 						"--spring.cloud.aws.credentials.secret-key=" + localstack.getSecretKey(),
 						"--spring.cloud.aws.region.static=" + localstack.getRegion(),
+						"--logging.level.org.springframework.cloud.config.server.environment=DEBUG",
 						"--debug=true"});
 
 		if (server.getBeanNamesForType(S3Client.class).length > 0) {
