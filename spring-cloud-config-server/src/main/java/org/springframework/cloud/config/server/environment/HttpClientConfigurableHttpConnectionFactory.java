@@ -137,11 +137,18 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 		// if token[0] equals url then there was no placeholder in the the url, so
 		// matching needed
 		if (tokens.length >= 1 && !tokens[0].equals(url.toString())) {
-			List<String> placeholders = getPlaceholders(key);
+			List<Placeholder> placeholders = getPlaceholders(key);
 			List<String> values = getValues(spec, tokens);
 			if (placeholders.size() == values.size()) {
 				for (int i = 0; i < values.size(); i++) {
-					spec = spec.replace(values.get(i), String.format("{%s}", placeholders.get(i)));
+					// if the key does not start with first part of the spec before the
+					// place holder then its
+					// not a match
+					String specBeforePlaceholder = spec.substring(0, placeholders.get(i).start);
+					if (key.startsWith(specBeforePlaceholder)) {
+						spec = specBeforePlaceholder + "{" + placeholders.get(i).group + "}"
+								+ spec.substring(placeholders.get(i).start + values.get(i).length());
+					}
 				}
 			}
 		}
@@ -165,14 +172,30 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 		return values;
 	}
 
-	private List<String> getPlaceholders(String key) {
+	private List<Placeholder> getPlaceholders(String key) {
 		Pattern pattern = Pattern.compile(PLACEHOLDER_PATTERN_STRING);
 		Matcher matcher = pattern.matcher(key);
-		List<String> placeholders = new LinkedList<>();
+		List<Placeholder> placeholders = new LinkedList<>();
 		while (matcher.find()) {
-			placeholders.add(matcher.group(1));
+			placeholders.add(new Placeholder(matcher.group(1), matcher.start(), matcher.end()));
 		}
 		return placeholders;
+	}
+
+	private static class Placeholder {
+
+		String group;
+
+		int start;
+
+		int end;
+
+		Placeholder(String group, int start, int end) {
+			this.start = start;
+			this.end = end;
+			this.group = group;
+		}
+
 	}
 
 }
