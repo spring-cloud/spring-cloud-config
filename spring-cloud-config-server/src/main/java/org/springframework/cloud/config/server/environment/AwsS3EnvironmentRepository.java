@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -43,6 +45,8 @@ import org.springframework.util.StringUtils;
  * @author Daniel Aiken
  */
 public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordered, SearchPathLocator {
+
+	private static final Log LOG = LogFactory.getLog(AwsS3EnvironmentRepository.class);
 
 	private static final String AWS_S3_RESOURCE_SCHEME = "s3://";
 
@@ -100,6 +104,10 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			addPropertySource(environment, app, null, label);
 		}
 
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Returning Environment: " + environment);
+		}
+
 		return environment;
 	}
 
@@ -114,18 +122,20 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			if (profile != null) {
 				propertySourceName.append("-").append(profile);
 			}
-			environment.add(new PropertySource(propertySourceName.toString(), config));
+			PropertySource propertySource = new PropertySource(propertySourceName.toString(), config);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Adding property source to environment " + propertySource);
+			}
+			environment.add(propertySource);
 		}
 	}
 
 	private String[] parseProfiles(String profiles) {
-
 		return StringUtils.commaDelimitedListToStringArray(profiles);
 	}
 
 	private S3ConfigFile getS3ConfigFile(String application, String profile, String label) {
 		String objectKeyPrefix = buildObjectKeyPrefix(application, profile, label);
-
 		return getS3ConfigFile(objectKeyPrefix);
 	}
 
@@ -142,6 +152,9 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private S3ConfigFile getS3ConfigFile(String keyPrefix) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Getting S3 config file for prefix " + keyPrefix);
+		}
 		try {
 			final ResponseInputStream<GetObjectResponse> responseInputStream = getObject(keyPrefix + ".properties");
 			return new PropertyS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
@@ -163,6 +176,9 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 						return new JsonS3ConfigFile(responseInputStream.response().versionId(), responseInputStream);
 					}
 					catch (Exception eJson) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Did not find S3 config file for " + keyPrefix);
+						}
 						return null;
 					}
 				}
@@ -171,6 +187,9 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private ResponseInputStream<GetObjectResponse> getObject(String key) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Getting object with key " + key);
+		}
 		return s3Client.getObject(GetObjectRequest.builder().bucket(bucketName).key(key).build());
 	}
 
@@ -191,6 +210,8 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 }
 
 abstract class S3ConfigFile {
+
+	protected static final Log LOG = LogFactory.getLog(S3ConfigFile.class);
 
 	private final String version;
 
@@ -222,6 +243,7 @@ class PropertyS3ConfigFile extends S3ConfigFile {
 			props.load(in);
 		}
 		catch (IOException e) {
+			LOG.warn("Exception thrown when reading property file", e);
 			throw new IllegalStateException("Cannot load environment", e);
 		}
 		return props;
@@ -246,6 +268,7 @@ class YamlS3ConfigFile extends S3ConfigFile {
 			return yaml.getObject();
 		}
 		catch (IOException e) {
+			LOG.warn("Could not read YAML file", e);
 			throw new IllegalStateException("Cannot load environment", e);
 		}
 	}
