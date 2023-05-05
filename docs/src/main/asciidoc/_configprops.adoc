@@ -7,6 +7,7 @@
 |spring.cloud.config.enabled | `+++true+++` | Flag to say that remote configuration is enabled. Default true;
 |spring.cloud.config.fail-fast | `+++false+++` | Flag to indicate that failure to connect to the server is fatal (default false).
 |spring.cloud.config.headers |  | Additional headers used to create the client request.
+|spring.cloud.config.initialize-on-context-refresh | `+++false+++` | Flag to initialize bootstrap configuration on context refresh event. Default false.
 |spring.cloud.config.label |  | The label name to use to pull remote configuration properties. The default is set on the server (generally "master" for a git based server).
 |spring.cloud.config.media-type |  | The Accept header media type to send to config server.
 |spring.cloud.config.multiple-uri-strategy |  | The strategy to use when call to server fails and there are multiple URLs configured on the uri property (default {@link MultipleUriStrategy#ALWAYS}).
