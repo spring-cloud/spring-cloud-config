@@ -1966,10 +1966,45 @@ To change that value, set the `health.config.time-to-live` property (in millisec
 
 In some cases, you might need to customize the requests made to the config server from the client.
 Typically, doing so involves passing special `Authorization` headers to authenticate requests to the server.
-To provide a custom `RestTemplate`:
+
+===== Providing A Custom RestTemplate Using Config Data
+
+To provide a custom `RestTemplate` when using Config Data:
+
+1. Create a class which implements `BootstrapRegistryInitializer`
++
+.CustomBootstrapRegistryInitializer.java
+[source,java]
+----
+public class CustomBootstrapRegistryInitializer implements BootstrapRegistryInitializer {
+
+	@Override
+	public void initialize(BootstrapRegistry registry) {
+		registry.register(RestTemplate.class, context -> {
+			RestTemplate restTemplate = new RestTemplate();
+			// Customize RestTemplate here
+			return restTemplate;
+		});
+	}
+
+}
+----
+
+2. In `resources/META-INF`, create a file called
+`spring.factories` and specify your custom configuration, as shown in the following example:
++
+.spring.factories
+[source,properties]
+----
+org.springframework.boot.BootstrapRegistryInitializer=com.my.config.client.CustomBootstrapRegistryInitializer
+----
+
+===== Providing A Custom RestTemplate Using Bootstrap
+
+To provide a custom `RestTemplate` when using Bootstrap:
 
 1. Create a new configuration bean with an implementation of `PropertySourceLocator`, as shown in the following example:
-
++
 .CustomConfigServiceBootstrapConfiguration.java
 [source,java]
 ----
@@ -1984,12 +2019,12 @@ public class CustomConfigServiceBootstrapConfiguration {
     }
 }
 ----
-
++
 NOTE: For a simplified approach to adding `Authorization` headers, the `spring.cloud.config.headers.*` property can be used instead.
 
 2. In `resources/META-INF`, create a file called
 `spring.factories` and specify your custom configuration, as shown in the following example:
-
++
 .spring.factories
 [source,properties]
 ----
