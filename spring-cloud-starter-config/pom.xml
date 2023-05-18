@@ -18,6 +18,7 @@
 		<url>https://www.spring.io</url>
 	</organization>
 	<properties>
+		<jackson.version.databind>2.14.3</jackson.version.databind>
 		<main.basedir>${basedir}/../..</main.basedir>
 	</properties>
 	<dependencies>
