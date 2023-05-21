@@ -210,7 +210,8 @@ public class ConfigServerConfigDataLocationResolver
 				if (ConfigClientRetryBootstrapper.RETRY_IS_PRESENT && retryEnabled) {
 					log.debug(LogMessage.format("discovery plus retry enabled"));
 					RetryTemplate retryTemplate = RetryTemplateFactory.create(propertyHolder.retryProperties, log);
-					instanceProvider = new ConfigServerInstanceProvider(function) {
+					instanceProvider = new ConfigServerInstanceProvider(function, resolverContext.getBinder(),
+							getBindHandler(resolverContext)) {
 						@Override
 						public List<ServiceInstance> getConfigServerInstances(String serviceId) {
 							return retryTemplate.execute(retryContext -> super.getConfigServerInstances(serviceId));
@@ -218,7 +219,8 @@ public class ConfigServerConfigDataLocationResolver
 					};
 				}
 				else {
-					instanceProvider = new ConfigServerInstanceProvider(function);
+					instanceProvider = new ConfigServerInstanceProvider(function, resolverContext.getBinder(),
+							getBindHandler(resolverContext));
 				}
 				instanceProvider.setLog(log);
 
