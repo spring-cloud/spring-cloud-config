@@ -2138,4 +2138,3 @@ WARNING: Since Config Client connects to a running data source (such as Config S
 [[appendix]]
 = Appendices
 
-include::_observability.adoc[]
