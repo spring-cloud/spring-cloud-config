@@ -14,7 +14,7 @@
 	<description>Spring Cloud Config Monitor</description>
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
-		<spring-cloud-bus.version>3.0.3</spring-cloud-bus.version>
+		<spring-cloud-bus.version>3.0.4-SNAPSHOT</spring-cloud-bus.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
