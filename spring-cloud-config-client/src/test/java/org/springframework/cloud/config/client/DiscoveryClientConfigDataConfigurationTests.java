@@ -91,9 +91,9 @@ public class DiscoveryClientConfigDataConfigurationTests {
 
 	@Test
 	public void onWhenHeartbeat() {
+		givenDiscoveryClientReturnsInfo();
 		setupAndRun();
 
-		givenDiscoveryClientReturnsInfo();
 		verifyDiscoveryClientCalledOnce();
 
 		this.context.publishEvent(new HeartbeatEvent(this.context, "new"));

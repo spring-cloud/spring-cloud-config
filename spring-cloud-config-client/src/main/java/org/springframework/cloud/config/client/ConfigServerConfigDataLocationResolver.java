@@ -23,6 +23,7 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.boot.BootstrapRegistry;
 import org.springframework.boot.BootstrapRegistry.InstanceSupplier;
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.context.config.ConfigDataLocation;
@@ -71,7 +72,9 @@ public class ConfigServerConfigDataLocationResolver
 
 		ConfigClientProperties configClientProperties;
 		if (context.getBootstrapContext().isRegistered(ConfigClientProperties.class)) {
-			configClientProperties = new ConfigClientProperties();
+			configClientProperties = binder
+					.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
+					.orElseGet(ConfigClientProperties::new);
 			BeanUtils.copyProperties(context.getBootstrapContext().get(ConfigClientProperties.class),
 					configClientProperties);
 		}
@@ -80,7 +83,8 @@ public class ConfigServerConfigDataLocationResolver
 					.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
 					.orElseGet(ConfigClientProperties::new);
 		}
-		if (!StringUtils.hasText(configClientProperties.getName())) {
+		if (!StringUtils.hasText(configClientProperties.getName())
+				|| "application".equals(configClientProperties.getName())) {
 			// default to spring.application.name if name isn't set
 			String applicationName = binder.bind("spring.application.name", Bindable.of(String.class), bindHandler)
 					.orElse("application");
@@ -170,7 +174,8 @@ public class ConfigServerConfigDataLocationResolver
 		ConfigClientProperties properties = propertyHolder.properties;
 
 		ConfigurableBootstrapContext bootstrapContext = resolverContext.getBootstrapContext();
-		bootstrapContext.registerIfAbsent(ConfigClientProperties.class, InstanceSupplier.of(properties));
+		bootstrapContext.register(ConfigClientProperties.class,
+				InstanceSupplier.of(properties).withScope(BootstrapRegistry.Scope.PROTOTYPE));
 		bootstrapContext.addCloseListener(event -> event.getApplicationContext().getBeanFactory().registerSingleton(
 				"configDataConfigClientProperties", event.getBootstrapContext().get(ConfigClientProperties.class)));
 
