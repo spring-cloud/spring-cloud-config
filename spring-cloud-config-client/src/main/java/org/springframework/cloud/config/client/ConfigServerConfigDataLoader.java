@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -203,23 +204,38 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		// , is used as a profile-separator for property sources
 		// from vault
 		// - is the default profile-separator for property sources
-		return !applicationName.equals(extractApplicationName(propertySource))
-				&& propertySource.getName().matches(".*[-,]" + profile + ".*");
+		return propertySource.containsProperty("spring.config.activate.on-profile")
+				|| propertySource.containsProperty("spring.config.activate.onProfile")
+				|| (!applicationName.equals(extractApplicationName(propertySource))
+						&& propertySource.getName().matches(".*[-,]" + profile + ".*"));
 	}
 
 	private String extractApplicationName(PropertySource<?> propertySource) {
-		if (ObjectUtils.isEmpty(propertySource.getName())) {
-			return "";
+		String propertySourceName = propertySource.getName();
+		String suffix = "";
+		if (propertySourceName.contains(".yaml")) {
+			suffix = ".yaml";
 		}
-		int lastSlash = propertySource.getName().lastIndexOf("/");
-		int lastPeriod = propertySource.getName().lastIndexOf(".");
-		if (lastSlash == -1) {
-			lastSlash = 0;
+		else if (propertySourceName.contains(".yml")) {
+			suffix = ".yml";
 		}
-		if (lastPeriod == -1) {
-			lastPeriod = propertySource.getName().length();
+		else if (propertySourceName.contains(".properties")) {
+			suffix = ".properties";
 		}
-		return propertySource.getName().substring(lastSlash + 1, lastPeriod);
+		if (ObjectUtils.isEmpty(suffix)) {
+			return propertySourceName;
+		}
+		int suffixIndex = propertySourceName.indexOf(suffix);
+		int start = suffixIndex;
+		int slashindex = -1;
+		while (start != 0) {
+			if (propertySourceName.charAt(start) == File.separatorChar) {
+				slashindex = start;
+				break;
+			}
+			start--;
+		}
+		return propertySource.getName().substring(slashindex + 1, suffixIndex);
 	}
 
 	protected void log(Environment result) {
