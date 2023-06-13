@@ -122,6 +122,17 @@ public class ResourceControllerIntegrationTests {
 	}
 
 	@Test
+	public void resourceHttpDoesNotExist() throws Exception {
+		when(this.resources.findOne("foo", "default", "master", "doesNotExist.txt"))
+			.thenThrow(new NoSuchResourceException("Does not exist"));
+
+		ResponseEntity<String> response = new TestRestTemplate()
+			.getForEntity("http://localhost:" + port + "/foo/default/master/doesNotExist.txt", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+		verify(this.resources).findOne("foo", "default", "master", "doesNotExist.txt");
+	}
+
+	@Test
 	public void resourceNoLabel() throws Exception {
 		when(this.repository.findOne("foo", "default", null, false))
 				.thenReturn(new Environment("foo", "default", "master"));
@@ -176,6 +187,11 @@ public class ResourceControllerIntegrationTests {
 		public ResourceRepository resourceRepository() {
 			ResourceRepository repository = Mockito.mock(ResourceRepository.class);
 			return repository;
+		}
+
+		@Bean
+		public ResourceControllerAdvice resourceControllerAdvice() {
+			return new ResourceControllerAdvice();
 		}
 
 		@Bean
