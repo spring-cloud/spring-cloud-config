@@ -21,6 +21,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.boot.context.properties.bind.BindHandler;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.retry.annotation.Retryable;
@@ -36,6 +38,10 @@ public class ConfigServerInstanceProvider {
 
 	private final Function function;
 
+	private BindHandler bindHandler;
+
+	private Binder binder;
+
 	@Deprecated
 	public ConfigServerInstanceProvider(DiscoveryClient client) {
 		this.function = client::getInstances;
@@ -43,6 +49,12 @@ public class ConfigServerInstanceProvider {
 
 	public ConfigServerInstanceProvider(Function function) {
 		this.function = function;
+	}
+
+	public ConfigServerInstanceProvider(Function function, Binder binder, BindHandler bindHandler) {
+		this.function = function;
+		this.binder = binder;
+		this.bindHandler = bindHandler;
 	}
 
 	void setLog(Log log) {
@@ -54,7 +66,13 @@ public class ConfigServerInstanceProvider {
 		if (log.isDebugEnabled()) {
 			log.debug("Locating configserver (" + serviceId + ") via discovery");
 		}
-		List<ServiceInstance> instances = this.function.apply(serviceId);
+		List<ServiceInstance> instances;
+		if (binder == null || bindHandler == null) {
+			instances = this.function.apply(serviceId);
+		}
+		else {
+			instances = this.function.apply(serviceId, binder, bindHandler, log);
+		}
 		if (instances.isEmpty()) {
 			throw new IllegalStateException("No instances found of configserver (" + serviceId + ")");
 		}
@@ -69,6 +87,10 @@ public class ConfigServerInstanceProvider {
 	public interface Function {
 
 		List<ServiceInstance> apply(String serviceId);
+
+		default List<ServiceInstance> apply(String serviceId, Binder binder, BindHandler bindHandler, Log log) {
+			return apply(serviceId);
+		};
 
 	}
 

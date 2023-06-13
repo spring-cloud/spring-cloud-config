@@ -21,15 +21,17 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import org.springframework.boot.BootstrapRegistry;
 import org.springframework.boot.BootstrapRegistryInitializer;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.properties.bind.BindHandler;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -39,8 +41,14 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
 
 /**
@@ -51,7 +59,7 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 
 	protected ConfigurableApplicationContext context;
 
-	protected DiscoveryClient client = Mockito.mock(DiscoveryClient.class);
+	protected DiscoveryClient client = mock(DiscoveryClient.class);
 
 	protected ServiceInstance info = new DefaultServiceInstance("app:8877", "app", "foo", 8877, false);
 
@@ -65,43 +73,54 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 	@Test
 	public void shouldFailWithExceptionGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsNoInfo();
-
-		assertThatThrownBy(() -> context = setup("spring.cloud.config.discovery.enabled=true",
+		ConfigServerInstanceProvider.Function function = mock(ConfigServerInstanceProvider.Function.class);
+		when(function.apply(anyString(), any(Binder.class), any(BindHandler.class), any(Log.class)))
+				.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
+		assertThatThrownBy(() -> context = setup(true, function, "spring.cloud.config.discovery.enabled=true",
 				"spring.cloud.config.fail-fast=true").run()).isInstanceOf(IllegalStateException.class)
 						.hasMessageContaining("No instances found of configserver");
+		verify(function).apply(eq(DEFAULT_CONFIG_SERVER), any(Binder.class), any(BindHandler.class), any(Log.class));
+		verify(function, never()).apply(eq(DEFAULT_CONFIG_SERVER));
 	}
 
 	@Test
 	public void shouldFailWithMessageGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsNoInfo();
-
-		context = setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=false").run();
+		ConfigServerInstanceProvider.Function function = mock(ConfigServerInstanceProvider.Function.class);
+		when(function.apply(anyString(), any(Binder.class), any(BindHandler.class), any(Log.class)))
+				.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
+		context = setup(true, function, "spring.cloud.config.discovery.enabled=true",
+				"spring.cloud.config.fail-fast=false").run();
 
 		// expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasDefaultConfiguration();
 		verifyDiscoveryClientCalledOnce();
+		verify(function).apply(eq(DEFAULT_CONFIG_SERVER), any(Binder.class), any(BindHandler.class), any(Log.class));
+		verify(function, never()).apply(eq(DEFAULT_CONFIG_SERVER));
 	}
 
 	@Test
 	public void shouldSucceedGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsInfo();
-
-		context = setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true").run();
+		ConfigServerInstanceProvider.Function function = mock(ConfigServerInstanceProvider.Function.class);
+		when(function.apply(eq(DEFAULT_CONFIG_SERVER), any(Binder.class), any(BindHandler.class), any(Log.class)))
+				.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
+		context = setup(true, function, "spring.cloud.config.discovery.enabled=true",
+				"spring.cloud.config.fail-fast=true").run();
 
 		// expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		// expectConfigClientPropertiesHasConfigurationFromEureka();
 		verifyDiscoveryClientCalledOnce();
+		verify(function).apply(eq(DEFAULT_CONFIG_SERVER), any(Binder.class), any(BindHandler.class), any(Log.class));
+		verify(function, never()).apply(eq(DEFAULT_CONFIG_SERVER));
 	}
 
-	SpringApplicationBuilder setup(String... env) {
-		return setup(true, env);
-	}
-
-	SpringApplicationBuilder setup(boolean addInstanceProvider, String... env) {
+	SpringApplicationBuilder setup(boolean addInstanceProvider, ConfigServerInstanceProvider.Function function,
+			String... env) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(TestConfig.class)
 				.properties(addDefaultEnv(env));
 		if (addInstanceProvider) {
-			builder.addBootstrapRegistryInitializer(instanceProviderBootstrapper());
+			builder.addBootstrapRegistryInitializer(instanceProviderBootstrapper(function));
 			// ignore actual calls to config server since we're just testing discovery
 			// client.
 			builder.addBootstrapRegistryInitializer(registry -> registry
@@ -113,9 +132,10 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 		}));
 	}
 
-	protected BootstrapRegistryInitializer instanceProviderBootstrapper() {
+	protected BootstrapRegistryInitializer instanceProviderBootstrapper(
+			ConfigServerInstanceProvider.Function function) {
 		return registry -> registry.register(ConfigServerInstanceProvider.Function.class,
-				BootstrapRegistry.InstanceSupplier.from(() -> this.client::getInstances));
+				BootstrapRegistry.InstanceSupplier.from(() -> function));
 	}
 
 	private String[] addDefaultEnv(String[] env) {
