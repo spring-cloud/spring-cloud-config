@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice(basePackages = { "org.springframework.cloud.config.server.resource" })
 @Order
-class ResourceControllerAdvice {
+public class ResourceControllerAdvice {
 
 	@ExceptionHandler(NoSuchResourceException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
