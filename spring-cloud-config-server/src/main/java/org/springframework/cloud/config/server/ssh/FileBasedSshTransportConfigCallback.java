@@ -16,10 +16,13 @@
 
 package org.springframework.cloud.config.server.ssh;
 
+import java.util.Map;
+
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 
 /**
@@ -32,8 +35,19 @@ public class FileBasedSshTransportConfigCallback implements TransportConfigCallb
 
 	private final MultipleJGitEnvironmentProperties sshUriProperties;
 
+	private final FileBasedSshSessionFactory sshdSessionFactory;
+
 	public FileBasedSshTransportConfigCallback(MultipleJGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
+		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new SshUriPropertyProcessor(this.sshUriProperties)
+				.getSshKeysByHostname();
+		if (sshKeysByHostname.isEmpty()) {
+			this.sshdSessionFactory = null;
+		}
+		else {
+			this.sshdSessionFactory = new FileBasedSshSessionFactory(sshKeysByHostname);
+		}
+
 	}
 
 	public MultipleJGitEnvironmentProperties getSshUriProperties() {
@@ -42,9 +56,8 @@ public class FileBasedSshTransportConfigCallback implements TransportConfigCallb
 
 	@Override
 	public void configure(Transport transport) {
-		if (transport instanceof SshTransport) {
-			((SshTransport) transport).setSshSessionFactory(new FileBasedSshSessionFactory(
-					new SshUriPropertyProcessor(this.sshUriProperties).getSshKeysByHostname()));
+		if (this.sshdSessionFactory != null && transport instanceof SshTransport) {
+			((SshTransport) transport).setSshSessionFactory(this.sshdSessionFactory);
 		}
 	}
 
