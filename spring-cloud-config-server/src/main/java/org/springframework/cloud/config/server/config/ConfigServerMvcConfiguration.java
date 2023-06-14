@@ -33,6 +33,7 @@ import org.springframework.cloud.config.server.environment.EnvironmentController
 import org.springframework.cloud.config.server.environment.EnvironmentEncryptorEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.resource.ResourceController;
+import org.springframework.cloud.config.server.resource.ResourceControllerAdvice;
 import org.springframework.cloud.config.server.resource.ResourceRepository;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -97,6 +98,12 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 			controller.setEncryptEnabled(server.getEncrypt().isEnabled());
 			controller.setPlainTextEncryptEnabled(server.getEncrypt().isPlainTextEncrypt());
 			return controller;
+		}
+
+		@Bean
+		@ConditionalOnBean(ResourceController.class)
+		public ResourceControllerAdvice resourceControllerAdvice() {
+			return new ResourceControllerAdvice();
 		}
 
 		private EnvironmentRepository encrypted(EnvironmentRepository envRepository, ConfigServerProperties server) {

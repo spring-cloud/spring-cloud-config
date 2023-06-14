@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice(basePackages = { "org.springframework.cloud.config.server.resource" })
 @Order
-class ResourceControllerAdvice {
+public class ResourceControllerAdvice {
 
 	private static Log logger = LogFactory.getLog(ResourceControllerAdvice.class);
 
