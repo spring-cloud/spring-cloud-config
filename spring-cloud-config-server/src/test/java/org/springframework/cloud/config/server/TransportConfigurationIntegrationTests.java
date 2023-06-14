@@ -24,6 +24,7 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.FetchConnection;
 import org.eclipse.jgit.transport.PushConnection;
 import org.eclipse.jgit.transport.SshConfigStore;
+import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
@@ -323,6 +324,69 @@ public class TransportConfigurationIntegrationTests {
 				assertThat("yes"
 						.equals(configStore.lookup("gitserver.com", 22, "username").getValue("StrictHostKeyChecking")))
 								.isTrue();
+			}
+
+		}
+
+	}
+
+	public static class CallbackWithHttpUrlsOnly {
+
+		@SpringBootTest(classes = { TestConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = { "spring.cloud.config.server.git.uri=https://gitserver.com/team/repo.git" })
+		@ActiveProfiles({ "test", "git" })
+		public static class StaticTest {
+
+			@Autowired
+			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+
+			@Test
+			public void sshTransportCallbackIsConfigured() {
+				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
+						.getTransportConfigCallback();
+				assertThat(transportConfigCallback).isNotNull();
+			}
+
+			@Test
+			public void noSessionFactoryIsConfiguredForSshTransports() throws Exception {
+				this.jGitEnvironmentRepository.afterPropertiesSet();
+
+				SshTransport sshTransport = DummySshTransport.newInstance();
+				SshSessionFactory defaultSessionFactory = sshTransport.getSshSessionFactory();
+				this.jGitEnvironmentRepository.getTransportConfigCallback().configure(sshTransport);
+
+				assertThat(sshTransport.getSshSessionFactory()).isSameAs(defaultSessionFactory);
+			}
+
+		}
+
+		@SpringBootTest(classes = { TestConfigServerApplication.class, SshPropertyValidator.class },
+				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+				properties = { "spring.cloud.config.server.composite[0].type=git",
+						"spring.cloud.config.server.composite[0].uri=https://gitserver.com/team/repo.git" })
+		@ActiveProfiles({ "test", "composite" })
+		public static class ListTest {
+
+			@Autowired
+			private MultipleJGitEnvironmentRepository jGitEnvironmentRepository;
+
+			@Test
+			public void sshTransportCallbackIsConfigured() {
+				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
+						.getTransportConfigCallback();
+				assertThat(transportConfigCallback).isNotNull();
+			}
+
+			@Test
+			public void noSessionFactoryIsConfiguredForSshTransports() throws Exception {
+				this.jGitEnvironmentRepository.afterPropertiesSet();
+
+				SshTransport sshTransport = DummySshTransport.newInstance();
+				SshSessionFactory defaultSessionFactory = sshTransport.getSshSessionFactory();
+				this.jGitEnvironmentRepository.getTransportConfigCallback().configure(sshTransport);
+
+				assertThat(sshTransport.getSshSessionFactory()).isSameAs(defaultSessionFactory);
 			}
 
 		}
