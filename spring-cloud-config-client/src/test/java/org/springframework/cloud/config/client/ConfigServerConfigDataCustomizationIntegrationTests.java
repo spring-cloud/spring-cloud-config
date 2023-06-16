@@ -124,7 +124,7 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 				assertThat(options.contains(Option.PROFILE_SPECIFIC)).isFalse();
 			}
 			else {
-				assertThat(configData.getPropertySources()).hasSize(0);
+				assertThat(configData.getPropertySources()).hasSize(1);
 			}
 			return configData;
 		}
