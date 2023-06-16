@@ -20,8 +20,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 
@@ -65,7 +67,9 @@ class ConfigServerConfigDataLoaderTests {
 
 	}
 
+	@Disabled
 	@Test
+	// TODO Enable once we have https://github.com/spring-cloud/spring-cloud-config/issues/2291
 	void filterPropertySourcesThatAreNotProfileSpecific() {
 		PropertySource p1 = new PropertySource("p1", Collections.singletonMap("foo", "bar"));
 		PropertySource p2 = new PropertySource("p2", Collections.singletonMap("hello", "world"));
@@ -74,7 +78,9 @@ class ConfigServerConfigDataLoaderTests {
 
 	}
 
+	@Disabled
 	@Test
+	// TODO Enable once we have https://github.com/spring-cloud/spring-cloud-config/issues/2291
 	void returnPropertySourcesThatAreProfileSpecific() {
 		PropertySource p1 = new PropertySource("p1-dev", Collections.singletonMap("foo", "bar"));
 		PropertySource p2 = new PropertySource("p2-dev", Collections.singletonMap("hello", "world"));
@@ -85,6 +91,48 @@ class ConfigServerConfigDataLoaderTests {
 				.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
 		assertThat(configData.getOptions(configData.getPropertySources().get(1))
 				.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
+
+	}
+
+	@Disabled
+	@Test
+	// TODO Enable once we have https://github.com/spring-cloud/spring-cloud-config/issues/2291
+	void filterPropertySourcesWithDocuments() {
+		PropertySource p1 = new PropertySource(
+			"configserver:git@github.com:demo/support-configuration-repo.git/application.yml",
+			Collections.singletonMap("foo", "bar"));
+		PropertySource p2 = new PropertySource(
+			"configserver:git@github.com:demo/support-configuration-repo.git/application-foo.yml",
+			Collections.singletonMap("foo", "bar"));
+		PropertySource p3 = new PropertySource(
+			"configserver:git@github.com:demo/support-configuration-repo.git/Config resource 'file [/var/folders/k3/zv8hzdm17vv69j485fv3cf9r0000gp/T/config-repo-14772121892716396795/commons/application.properties' via location 'commons/' (document #0)",
+			Collections.singletonMap("hello", "world"));
+		PropertySource p4 = new PropertySource(
+			"configserver:git@github.com:demo/support-configuration-repo.git/Config resource 'file [/var/folders/k3/zv8hzdm17vv69j485fv3cf9r0000gp/T/config-repo-14772121892716396795/commons/application-foo.properties' via location 'commons/' (document #0)",
+			Collections.singletonMap("hello", "world"));
+		Map<String, Object> activatesOnProfileCamelCase = new HashMap<>();
+		activatesOnProfileCamelCase.put("spring.config.activate.onProfile", "foo");
+		PropertySource p5 = new PropertySource(
+			"configserver:git@github.com:demo/support-configuration-repo.git/Config resource 'file [/var/folders/k3/zv8hzdm17vv69j485fv3cf9r0000gp/T/config-repo-14772121892716396795/commons/application.properties' via location 'commons/' (document #1)",
+			activatesOnProfileCamelCase);
+		Map<String, Object> activatesOnProfile = new HashMap<>();
+		activatesOnProfile.put("spring.config.activate.on-profile", "foo");
+		PropertySource p6 = new PropertySource(
+			"configserver:git@github.com:demo/support-configuration-repo.git/Config resource 'file [/var/folders/k3/zv8hzdm17vv69j485fv3cf9r0000gp/T/config-repo-14772121892716396795/commons/application.properties' via location 'commons/' (document #2)",
+			activatesOnProfile);
+		PropertySource p7 = new PropertySource(
+			"configserver:git@github.com:demo/support-configuration-repo.git/application-foo.yaml",
+			Collections.singletonMap("hello", "world"));
+		PropertySource p8 = new PropertySource(
+			"configserver:git@github.com:demo/support-configuration-repo.git/Config resource 'file [/var/folders/k3/zv8hzdm17vv69j485fv3cf9r0000gp/T/config-repo-14772121892716396795/commons/application-foo.yaml' via location 'commons/' (document #0)",
+			Collections.singletonMap("hello", "world"));
+		PropertySource p9 = new PropertySource(
+			"configserver:git@github.com:demo/support-configuration-repo.git/Config resource 'file [/var/folders/k3/zv8hzdm17vv69j485fv3cf9r0000gp/T/config-repo-14772121892716396795/commons/application-foo.yaml' via location 'commons/' (document #1)",
+			Collections.singletonMap("hello", "world"));
+
+		ConfigData configData = setupConfigServerConfigDataLoader(Arrays.asList(p1, p2, p3, p4, p5, p6, p7, p8, p9),
+			"application-slash", "foo");
+		assertThat(configData.getPropertySources().size()).isEqualTo(7);
 
 	}
 
