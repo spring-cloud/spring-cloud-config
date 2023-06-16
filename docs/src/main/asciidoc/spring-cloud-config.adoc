@@ -2135,7 +2135,9 @@ WARNING: Since in AOT and native mode, configuration is being processed and the 
 
 WARNING: Since Config Client connects to a running data source (such as Config Server) while starting up from native image, the quick startup time will be slowed down by the time required for this network communication to take place.
 
+ifndef::releaseTrain[]
 [[appendix]]
 = Appendices
 
 include::_observability.adoc[]
+endif::[]
