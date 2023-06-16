@@ -71,7 +71,7 @@ public class HttpClient4SupportTest {
 	@EnabledOnJre(JRE.JAVA_8)
 	public void httpsProxy() throws GeneralSecurityException, IOException {
 		WireMockServer wireMockProxyServer = new WireMockServer(
-				options().httpDisabled(true).dynamicHttpsPort().enableBrowserProxying(true).trustAllProxyTargets(true));
+			options().httpDisabled(true).dynamicHttpsPort().enableBrowserProxying(true).trustAllProxyTargets(true));
 		WireMockServer wireMockServer = new WireMockServer(options().httpDisabled(true).dynamicHttpsPort());
 		wireMockProxyServer.start();
 		wireMockServer.start();
@@ -91,7 +91,7 @@ public class HttpClient4SupportTest {
 		try {
 			httpClient = HttpClient4Support.builder(properties).build();
 			response = httpClient
-					.execute(new HttpGet("https://localhost:" + wireMockServer.httpsPort() + "/test/proxy"));
+				.execute(new HttpGet("https://localhost:" + wireMockServer.httpsPort() + "/test/proxy"));
 		}
 		finally {
 			if (response != null) {

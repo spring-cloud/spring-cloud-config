@@ -22,7 +22,6 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.boot.BootstrapRegistry;
 import org.springframework.boot.BootstrapRegistry.InstanceSupplier;
 import org.springframework.boot.ConfigurableBootstrapContext;
@@ -75,8 +74,21 @@ public class ConfigServerConfigDataLocationResolver
 			configClientProperties = binder
 					.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
 					.orElseGet(ConfigClientProperties::new);
-			BeanUtils.copyProperties(context.getBootstrapContext().get(ConfigClientProperties.class),
-					configClientProperties);
+			boolean discoveryEnabled = context.getBinder()
+					.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(context)).orElse(false);
+			// In the case where discovery is enabled we need to extract the config server
+			// uris, username, and password
+			// from the properties from the context. These are set in
+			// ConfigServerInstanceMonitor.refresh which will only
+			// be called the first time we fetch configuration.
+			if (discoveryEnabled) {
+				ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()
+						.get(ConfigClientProperties.class);
+
+				configClientProperties.setUri(bootstrapConfigClientProperties.getUri());
+				configClientProperties.setPassword(bootstrapConfigClientProperties.getPassword());
+				configClientProperties.setUsername(bootstrapConfigClientProperties.getUsername());
+			}
 		}
 		else {
 			configClientProperties = binder
