@@ -46,7 +46,7 @@ import static org.mockito.Mockito.when;
  * spring.application.name will be set.
  *
  * At this point Boot has collected all active profiles so it will load all
- * spring.config.import statements again with active profiles. The subsequent 2 calls then
+ * spring.config.import statements again with active profiles. The subsequent call then
  * will not have spring.application.name set in the context so the config server config
  * data loader will make a request to the config server with the correct application name.
  *
@@ -73,7 +73,7 @@ public class ConfigClientConfigDataLoaderTest {
 		verify(rest).exchange(eq("http://localhost:8888/{name}/{profile}"), eq(HttpMethod.GET),
 				ArgumentMatchers.any(HttpEntity.class), eq(Environment.class), eq("application"),
 				ArgumentMatchers.<String>any());
-		verify(rest, times(2)).exchange(eq("http://localhost:8888/{name}/{profile}"), eq(HttpMethod.GET),
+		verify(rest, times(1)).exchange(eq("http://localhost:8888/{name}/{profile}"), eq(HttpMethod.GET),
 				ArgumentMatchers.any(HttpEntity.class), eq(Environment.class), eq("foo"),
 				ArgumentMatchers.<String>any());
 	}
