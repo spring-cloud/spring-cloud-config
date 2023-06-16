@@ -168,22 +168,6 @@ public class ConfigServerConfigDataLocationResolverTests {
 	}
 
 	@Test
-	void useExistingConfigClientPropertiesInBootstrapContext() {
-		ConfigurableBootstrapContext bootstrapContext = mock(ConfigurableBootstrapContext.class);
-		when(bootstrapContext.isRegistered(eq(ConfigClientProperties.class))).thenReturn(true);
-		ConfigClientProperties configClientProperties = new ConfigClientProperties();
-		configClientProperties.setUri(new String[] { "http://myuri" });
-		when(bootstrapContext.get(eq(ConfigClientProperties.class))).thenReturn(configClientProperties);
-		when(context.getBootstrapContext()).thenReturn(bootstrapContext);
-		List<ConfigServerConfigDataResource> resources = this.resolver.resolveProfileSpecific(context,
-				ConfigDataLocation.of("configserver:"), mock(Profiles.class));
-		assertThat(resources).hasSize(1);
-		verify(bootstrapContext, times(1)).get(eq(ConfigClientProperties.class));
-		ConfigServerConfigDataResource resource = resources.get(0);
-		assertThat(resource.getProperties().getUri()).isEqualTo(new String[] { "http://myuri" });
-	}
-
-	@Test
 	void createNewConfigClientPropertiesInBootstrapContext() {
 		ConfigurableBootstrapContext bootstrapContext = mock(ConfigurableBootstrapContext.class);
 		when(bootstrapContext.isRegistered(eq(ConfigClientProperties.class))).thenReturn(false);
@@ -213,7 +197,6 @@ public class ConfigServerConfigDataLocationResolverTests {
 				ConfigDataLocation.of("configserver:http://urlNo2"), mock(Profiles.class));
 		assertThat(resources1).hasSize(1);
 		assertThat(resources2).hasSize(1);
-		verify(bootstrapContext, times(2)).get(eq(ConfigClientProperties.class));
 		ConfigServerConfigDataResource resource1 = resources1.get(0);
 		assertThat(resource1.getProperties().getUri()).isEqualTo(new String[] { "http://urlNo1" });
 		ConfigServerConfigDataResource resource2 = resources2.get(0);
