@@ -50,7 +50,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 @SpringBootTest(classes = HttpClientSupportTest.TestConfiguration.class,
-	webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class HttpClientSupportTest {
 
 	@LocalServerPort
@@ -71,7 +71,7 @@ public class HttpClientSupportTest {
 	@EnabledOnJre(JRE.JAVA_8)
 	public void httpsProxy() throws GeneralSecurityException, IOException {
 		WireMockServer wireMockProxyServer = new WireMockServer(
-			options().httpDisabled(true).dynamicHttpsPort().enableBrowserProxying(true).trustAllProxyTargets(true));
+				options().httpDisabled(true).dynamicHttpsPort().enableBrowserProxying(true).trustAllProxyTargets(true));
 		WireMockServer wireMockServer = new WireMockServer(options().httpDisabled(true).dynamicHttpsPort());
 		wireMockProxyServer.start();
 		wireMockServer.start();
@@ -91,7 +91,7 @@ public class HttpClientSupportTest {
 		try {
 			httpClient = HttpClientSupport.builder(properties).build();
 			response = httpClient
-				.execute(new HttpGet("https://localhost:" + wireMockServer.httpsPort() + "/test/proxy"));
+					.execute(new HttpGet("https://localhost:" + wireMockServer.httpsPort() + "/test/proxy"));
 		}
 		finally {
 			if (response != null) {
