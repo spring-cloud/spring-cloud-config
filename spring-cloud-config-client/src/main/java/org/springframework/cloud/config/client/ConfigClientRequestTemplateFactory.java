@@ -21,6 +21,7 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
@@ -30,6 +31,8 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.util.Timeout;
 
 import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.http.HttpHeaders;
@@ -83,20 +86,13 @@ public class ConfigClientRequestTemplateFactory {
 		return template;
 	}
 
-	private ClientHttpRequestFactory createHttpRequestFactory(ConfigClientProperties client) {
+	protected ClientHttpRequestFactory createHttpRequestFactory(ConfigClientProperties client) {
 		if (client.getTls().isEnabled()) {
 			try {
-				SSLContextFactory factory = new SSLContextFactory(client.getTls());
-				SSLContext sslContext = factory.createSSLContext();
-				SSLConnectionSocketFactoryBuilder sslConnectionSocketFactoryBuilder = SSLConnectionSocketFactoryBuilder
-						.create();
-				sslConnectionSocketFactoryBuilder.setSslContext(sslContext);
-				PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder
-						.create().setSSLSocketFactory(sslConnectionSocketFactoryBuilder.build()).build();
+				PoolingHttpClientConnectionManager connectionManager = createConnectionManagerForTls(client);
 				HttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager).build();
 				HttpComponentsClientHttpRequestFactory result = new HttpComponentsClientHttpRequestFactory(httpClient);
 
-				result.setReadTimeout(client.getRequestReadTimeout());
 				result.setConnectTimeout(client.getRequestConnectTimeout());
 				return result;
 
@@ -111,6 +107,26 @@ public class ConfigClientRequestTemplateFactory {
 		result.setReadTimeout(client.getRequestReadTimeout());
 		result.setConnectTimeout(client.getRequestConnectTimeout());
 		return result;
+	}
+
+	protected PoolingHttpClientConnectionManager createConnectionManagerForTls(ConfigClientProperties client)
+			throws GeneralSecurityException, IOException {
+		SSLContextFactory factory = new SSLContextFactory(client.getTls());
+		SSLContext sslContext = factory.createSSLContext();
+		SSLConnectionSocketFactoryBuilder sslConnectionSocketFactoryBuilder = SSLConnectionSocketFactoryBuilder
+				.create();
+		sslConnectionSocketFactoryBuilder.setSslContext(sslContext);
+		SocketConfig.Builder socketBuilder = createSocketBuilderForTls(client);
+		PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+				.setDefaultSocketConfig(socketBuilder.build())
+				.setSSLSocketFactory(sslConnectionSocketFactoryBuilder.build()).build();
+		return connectionManager;
+	}
+
+	protected SocketConfig.Builder createSocketBuilderForTls(ConfigClientProperties client) {
+		SocketConfig.Builder socketBuilder = SocketConfig.custom()
+				.setSoTimeout(Timeout.of(client.getRequestReadTimeout(), TimeUnit.MILLISECONDS));
+		return socketBuilder;
 	}
 
 	public void addAuthorizationToken(HttpHeaders httpHeaders, String username, String password) {

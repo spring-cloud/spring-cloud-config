@@ -18,6 +18,8 @@ package org.springframework.cloud.config.client.tls;
 
 import java.io.File;
 
+import org.apache.commons.logging.LogFactory;
+import org.apache.hc.core5.http.io.SocketConfig;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,6 +27,8 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.cloud.config.client.ConfigClientProperties;
+import org.springframework.cloud.config.client.ConfigClientRequestTemplateFactory;
 import org.springframework.cloud.config.server.EnableConfigServer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,6 +69,23 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 			client.property("logging.level.org.springframework.cloud.config.client", "DEBUG");
 			client.start();
 			assertThat(client.getProperty("dumb.key")).isEqualTo("dumb-value");
+		}
+	}
+
+	@Test
+	@SuppressWarnings({ "unchecked" })
+	public void tlsSetsRequestReadTimeout() {
+		try (TlsConfigClientRunner client = createConfigClient()) {
+			enableTlsClient(client);
+			client.property("logging.level.org.springframework.boot.context.config", "TRACE");
+			client.property("logging.level.org.springframework.cloud.config.client", "DEBUG");
+			int timeoutMillis = (60 * 1000 * 3) + 5001;
+			client.property("spring.cloud.config.request-read-timeout", String.valueOf(timeoutMillis));
+			client.start();
+			ConfigClientProperties configClientProperties = client.app().getBean(ConfigClientProperties.class);
+			TestFactory factory = new TestFactory(configClientProperties);
+			SocketConfig.Builder socketBuilder = factory.getSocketBuilderForTls();
+			assertThat(socketBuilder.build().getSoTimeout().toMilliseconds()).isEqualTo(timeoutMillis);
 		}
 	}
 
@@ -155,6 +176,18 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 	@EnableAutoConfiguration
 	@EnableConfigServer
 	public static class TestConfigServer {
+
+	}
+
+	static class TestFactory extends ConfigClientRequestTemplateFactory {
+
+		TestFactory(ConfigClientProperties properties) {
+			super(LogFactory.getLog(TestFactory.class), properties);
+		}
+
+		public SocketConfig.Builder getSocketBuilderForTls() {
+			return createSocketBuilderForTls(getProperties());
+		}
 
 	}
 
