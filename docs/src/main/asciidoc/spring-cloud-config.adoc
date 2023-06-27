@@ -1833,6 +1833,15 @@ spring.config.import=optional:configserver:
 
 This will connect to the Config Server at the default location of "http://localhost:8888". Removing the `optional:` prefix will cause the Config Client to fail if it is unable to connect to Config Server. To change the location of Config Server either set `spring.cloud.config.uri` or add the url to the `spring.config.import` statement such as, `spring.config.import=optional:configserver:http://myhost:8888`. The location in the import property has precedence over the uri property.
 
+Spring Boot Config Data resolves configuration in a two step process.  First it loads all configuration using the `default`
+profile.  This allows Spring Boot to gather all configuration which may activate any additional profiles.
+After it has gathered all activated profiles it will load any additional configuration for the active profiles.
+Due to this you may see multiple requests being made to the Spring Cloud Config Server to fetch configuration.  This
+is normal and is a side effect of how Spring Boot loads configuration when using `spring.config.import`.  In previous
+versions of Spring Cloud Config there was only a single request made but this meant you could not activate profiles
+from configuration coming from the Config Server.  The additional request with just the 'default` profile now makes
+this possible.
+
 NOTE: A `bootstrap` file (properties or yaml) is *not* needed for the Spring Boot Config Data method of import via `spring.config.import`.
 
 [[config-first-bootstrap]]
