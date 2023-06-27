@@ -53,7 +53,7 @@ public class ConfigDataOrderingVaultIntegrationTests {
 	private static ConfigurableApplicationContext server;
 
 	@Container
-	public static VaultContainer vaultContainer = new VaultContainer<>(DockerImageName.parse("vault"))
+	public static VaultContainer vaultContainer = new VaultContainer<>(DockerImageName.parse("vault:1.13.3"))
 			.withVaultToken("my-root-token").withClasspathResourceMapping("vaultordering/vault_test_policy.txt",
 					"/tmp/vault_test_policy.txt", BindMode.READ_ONLY);
 
