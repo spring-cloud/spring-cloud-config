@@ -123,17 +123,27 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 	}
 
 	private boolean uriEqual(String thisUriString, String thatUriString) {
-		UriComponents thisUri = UriComponentsBuilder.fromHttpUrl(thisUriString).build();
-		UriComponents thatUri = UriComponentsBuilder.fromHttpUrl(thatUriString).build();
-		return Objects.equals(thisUri.getHost(), thatUri.getHost())
-				&& Objects.equals(thisUri.getPort(), thatUri.getPort())
-				&& Objects.equals(thisUri.getPath(), thatUri.getPath());
+		try {
+			UriComponents thisUri = UriComponentsBuilder.fromHttpUrl(thisUriString).build();
+			UriComponents thatUri = UriComponentsBuilder.fromHttpUrl(thatUriString).build();
+			return Objects.equals(thisUri.getHost(), thatUri.getHost())
+					&& Objects.equals(thisUri.getPort(), thatUri.getPort())
+					&& Objects.equals(thisUri.getPath(), thatUri.getPath());
+		}
+		catch (Exception e) {
+			return Objects.equals(thisUriString, thatUriString);
+		}
 	}
 
 	private int urisHashCode(String[] uris) {
 		return Arrays.stream(uris).mapToInt(uriString -> {
-			UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(uriString).build();
-			return Objects.hash(uriComponents.getHost(), uriComponents.getPath(), uriComponents.getPort());
+			try {
+				UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(uriString).build();
+				return Objects.hash(uriComponents.getHost(), uriComponents.getPath(), uriComponents.getPort());
+			}
+			catch (Exception e) {
+				return Arrays.hashCode(uris);
+			}
 		}).sum();
 	}
 

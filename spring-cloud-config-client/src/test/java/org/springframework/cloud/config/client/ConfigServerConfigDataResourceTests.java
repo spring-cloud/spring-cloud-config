@@ -318,4 +318,15 @@ class ConfigServerConfigDataResourceTests {
 		assertThat(r1.hashCode()).isNotEqualTo(r2.hashCode());
 	}
 
+	@Test
+	void testInvalidUri() {
+		ConfigClientProperties r1Properties = new ConfigClientProperties();
+		r1Properties.setUri(new String[] { "//" });
+		ConfigServerConfigDataResource r1 = new ConfigServerConfigDataResource(r1Properties, true, null);
+		ConfigClientProperties r2Properties = new ConfigClientProperties();
+		r2Properties.setUri(new String[] { "//" });
+		ConfigServerConfigDataResource r2 = new ConfigServerConfigDataResource(r2Properties, true, null);
+		assertThat(r1).isEqualTo(r2);
+	}
+
 }
