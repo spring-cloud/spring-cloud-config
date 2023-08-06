@@ -59,22 +59,22 @@ public class EnvironmentPrefixHelperTests {
 	@Test
 	public void testKeysDefaults() {
 		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar", "spam");
-		assertThat(keys.get("name")).isEqualTo("foo");
-		assertThat(keys.get("profiles")).isEqualTo("bar");
+		assertThat(keys).containsEntry("name", "foo");
+		assertThat(keys).containsEntry("profiles", "bar");
 	}
 
 	@Test
 	public void testKeysWithPrefix() {
 		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar", "{key:mykey}foo");
-		assertThat(keys.size()).isEqualTo(3);
-		assertThat(keys.get("key")).isEqualTo("mykey");
+		assertThat(keys).hasSize(3);
+		assertThat(keys).containsEntry("key", "mykey");
 	}
 
 	@Test
 	public void testKeysWithPrefixAndEscape() {
 		Map<String, String> keys = this.helper.getEncryptorKeys("foo", "bar", "{key:mykey}{plain}{foo:bar}foo");
-		assertThat(keys.size()).isEqualTo(3);
-		assertThat(keys.get("key")).isEqualTo("mykey");
+		assertThat(keys).hasSize(3);
+		assertThat(keys).containsEntry("key", "mykey");
 	}
 
 	@Test

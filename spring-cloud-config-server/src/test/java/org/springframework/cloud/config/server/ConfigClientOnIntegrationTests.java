@@ -82,7 +82,7 @@ public class ConfigClientOnIntegrationTests {
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate()
 				.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
-		assertThat(environment.getPropertySources().isEmpty()).isTrue();
+		assertThat(environment.getPropertySources()).isEmpty();
 	}
 
 	// FIXME: configdata config client on tests

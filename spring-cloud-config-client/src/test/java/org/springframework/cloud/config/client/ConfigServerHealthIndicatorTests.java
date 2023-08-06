@@ -66,10 +66,10 @@ public class ConfigServerHealthIndicatorTests {
 		setupPropertySources();
 		Map<String, Object> details = this.indicator.getHealth(true).getDetails();
 		List<String> propertySources = (List) details.get("propertySources");
-		assertThat(propertySources.contains("bootstrapProperties-test")).isTrue();
-		assertThat(propertySources.contains("configserver:test")).isTrue();
-		assertThat(propertySources.contains("configClient")).isTrue();
-		assertThat(propertySources.size()).isEqualTo(3);
+		assertThat(propertySources).contains("bootstrapProperties-test");
+		assertThat(propertySources).contains("configserver:test");
+		assertThat(propertySources).contains("configClient");
+		assertThat(propertySources).hasSize(3);
 		assertThat(this.indicator.health().getStatus()).isEqualTo(Status.UP);
 	}
 

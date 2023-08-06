@@ -60,13 +60,13 @@ public class NativeEnvironmentRepositoryTests {
 	public void emptySearchLocations() {
 		this.repository.setSearchLocations((String[]) null);
 		Environment environment = this.repository.findOne("foo", "development", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
 	@Test
 	public void vanilla() {
 		Environment environment = this.repository.findOne("foo", "development", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 	}
 
@@ -74,7 +74,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void ignoresExistingProfile() {
 		System.setProperty("spring.profiles.active", "cloud");
 		Environment environment = this.repository.findOne("foo", "main", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 	}
 
@@ -82,7 +82,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void prefixed() {
 		this.repository.setSearchLocations("classpath:/test");
 		Environment environment = this.repository.findOne("foo", "development", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -93,7 +93,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void prefixedYaml() {
 		this.repository.setSearchLocations("classpath:/test");
 		Environment environment = this.repository.findOne("bar", "development", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -104,7 +104,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void prefixedMultiDocProperties() {
 		this.repository.setSearchLocations("classpath:/test");
 		Environment environment = this.repository.findOne("baz", "development", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
@@ -115,7 +115,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void prefixedWithFile() {
 		this.repository.setSearchLocations("file:./src/test/resources/test");
 		Environment environment = this.repository.findOne("foo", "development", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 	}
 
@@ -125,7 +125,7 @@ public class NativeEnvironmentRepositoryTests {
 		environment.add(new PropertySource(
 				"Config resource 'file [/tmp/config-repo-7780026223759117699/application-dev.yml]' via location 'file:/tmp/config-repo-7780026223759117699/'",
 				Collections.singletonMap("foo", "bar")));
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName().contains("application-dev.yml"));
 	}
 
@@ -135,7 +135,7 @@ public class NativeEnvironmentRepositoryTests {
 		environment.add(new PropertySource(
 				"Config resource 'classpath:/configs/application-myprofile.yml' via location 'classpath:/configs/' (document #0)",
 				Collections.singletonMap("foo", "bar")));
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName().contains("application-myprofile.yml"));
 	}
 
@@ -145,7 +145,7 @@ public class NativeEnvironmentRepositoryTests {
 		environment.add(new PropertySource(
 				"Config resource 'class path resource [configs/application.yml]' via location 'classpath:/configs/' (document #0)",
 				Collections.singletonMap("foo", "bar")));
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName().contains("application-myprofile.yml"));
 	}
 
@@ -154,7 +154,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void labelled() {
 		this.repository.setSearchLocations("classpath:/test");
 		Environment environment = this.repository.findOne("foo", "development", "dev", false);
-		assertThat(environment.getPropertySources().size()).isEqualTo(3);
+		assertThat(environment.getPropertySources()).hasSize(3);
 		// position 1 because it has higher precedence than anything except the
 		// foo-development.properties
 		assertThat(environment.getPropertySources().get(1).getSource().get("foo")).isEqualTo("dev_bar");
@@ -165,7 +165,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void placeholdersLabel() {
 		this.repository.setSearchLocations("classpath:/test/{label}/");
 		Environment environment = this.repository.findOne("foo", "development", "dev");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("dev_bar");
 	}
 
@@ -173,7 +173,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void placeholdersProfile() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/");
 		Environment environment = this.repository.findOne("foo", "dev", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("dev_bar");
 	}
 
@@ -181,7 +181,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void placeholdersProfiles() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/");
 		Environment environment = this.repository.findOne("foo", "dev,mysql", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("mysql");
 	}
 
@@ -189,7 +189,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void placeholdersApplicationAndProfile() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/{application}/");
 		Environment environment = this.repository.findOne("app", "dev", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("app");
 	}
 
@@ -198,7 +198,7 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("classpath:/test/{profile}/{application}/");
 		// gh-2259 application name starts with "application"
 		Environment environment = this.repository.findOne("applicationxyz", "dev", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("default-app");
 	}
 
@@ -231,7 +231,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void placeholdersNoTrailingSlash() {
 		this.repository.setSearchLocations("classpath:/test/{label}");
 		Environment environment = this.repository.findOne("foo", "development", "dev");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("dev_bar");
 	}
 
@@ -239,7 +239,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void locationAddLabelLocations() {
 		this.repository.setSearchLocations("classpath:/test/dev/");
 		Environment environment = this.repository.findOne("foo", "development", "ignore");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isNotEqualTo("dev_bar");
 	}
 
@@ -247,7 +247,7 @@ public class NativeEnvironmentRepositoryTests {
 	public void tryToStartReactive() {
 		this.repository.setSearchLocations("classpath:/test/reactive/");
 		Environment environment = this.repository.findOne("foo", "master", "default");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("reactive");
 	}
 
@@ -256,7 +256,7 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("classpath:/test/dev/");
 		this.repository.setAddLabelLocations(false);
 		Environment environment = this.repository.findOne("foo", "development", "ignore");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("dev_bar");
 	}
 
@@ -306,7 +306,7 @@ public class NativeEnvironmentRepositoryTests {
 	private void testImport() {
 		Environment environment = this.repository.findOne("import", "default", "master");
 		// TODO should be 4, bar.yml contains 2 yaml documents
-		assertThat(environment.getPropertySources().size()).isEqualTo(3);
+		assertThat(environment.getPropertySources()).hasSize(3);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("imported");
 		assertThat(environment.getPropertySources().get(2).getSource().get("foo")).isEqualTo("importing");
 	}

@@ -77,7 +77,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
-			assertThat(propertySources.get(1).getName().contains("config-repo")).isTrue();
+			assertThat(propertySources.get(1).getName()).contains("config-repo");
 			assertThat("p").isEqualTo(propertySources.get(2).getName());
 		}
 
@@ -128,7 +128,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
-			assertThat(propertySources.get(1).getName().contains("config-repo")).isTrue();
+			assertThat(propertySources.get(1).getName()).contains("config-repo");
 			assertThat("p").isEqualTo(propertySources.get(2).getName());
 		}
 

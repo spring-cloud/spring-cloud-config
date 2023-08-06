@@ -63,18 +63,18 @@ public class SVNKitEnvironmentRepositoryTests {
 	@Test
 	public void vanilla() {
 		Environment environment = this.findOne();
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName().contains("application.yml")).isTrue();
+		assertThat(environment.getPropertySources()).hasSize(2);
+		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
+		assertThat(environment.getPropertySources().get(1).getName()).contains("application.yml");
 	}
 
 	@Test
 	public void basedir() {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.findOne();
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName().contains("application.yml")).isTrue();
+		assertThat(environment.getPropertySources()).hasSize(2);
+		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
+		assertThat(environment.getPropertySources().get(1).getName()).contains("application.yml");
 	}
 
 	@Test
@@ -87,39 +87,39 @@ public class SVNKitEnvironmentRepositoryTests {
 		this.repository.setBasedir(basedirWithSpace);
 
 		Environment environment = this.findOne();
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName().contains("application.yml")).isTrue();
+		assertThat(environment.getPropertySources()).hasSize(2);
+		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
+		assertThat(environment.getPropertySources().get(1).getName()).contains("application.yml");
 	}
 
 	@Test
 	public void branch() {
 		Environment environment = this.repository.findOne("bar", "staging", "branches/demobranch");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
-		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources()).hasSize(1);
+		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
 	}
 
 	@Test
 	public void branch_no_folder() {
 		Environment environment = this.repository.findOne("bar", "staging", "demobranch", false);
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
-		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
+		assertThat(environment.getPropertySources()).hasSize(1);
+		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
 	}
 
 	@Test
 	public void vanilla_with_update() {
 		this.findOne();
 		Environment environment = this.findOne();
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
-		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().get(1).getName().contains("application.yml")).isTrue();
+		assertThat(environment.getPropertySources()).hasSize(2);
+		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
+		assertThat(environment.getPropertySources().get(1).getName()).contains("application.yml");
 	}
 
 	@Test
 	public void invalidLabel() {
 		Assertions.assertThatThrownBy(() -> {
 			Environment environment = this.repository.findOne("bar", "staging", "unknownlabel");
-			assertThat(environment.getPropertySources().size()).isEqualTo(0);
+			assertThat(environment.getPropertySources()).isEmpty();
 		}).isInstanceOf(NoSuchLabelException.class);
 	}
 
