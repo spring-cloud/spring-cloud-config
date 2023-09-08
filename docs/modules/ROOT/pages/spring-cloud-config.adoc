@@ -3,7 +3,6 @@
 :github: https://github.com/spring-cloud/spring-cloud-config
 :githubmaster: {github}/tree/master
 :docslink: {githubmaster}/docs/src/main/asciidoc
-:toc:
 :nofooter:
 :special-string: _
 
