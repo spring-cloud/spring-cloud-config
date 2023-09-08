@@ -1,6 +1,0 @@
-[[-aot-and-native-image-support]]
-=  AOT and Native Image Support
-:page-section-summary-toc: 1
-
-Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. However, for the time being, GraalVM native images are not supported. Implementing native image support is blocked by https://github.com/oracle/graal/issues/5134[graal#5134] and will likely require the completion of the work on https://github.com/graalvm/taming-build-time-initialization[https://github.com/graalvm/taming-build-time-initialization] to be fixed.
-

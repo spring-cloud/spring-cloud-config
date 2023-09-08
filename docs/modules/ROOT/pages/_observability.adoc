@@ -1,9 +1,0 @@
-:root-target: ../../../target/
-
-[[observability]]
-= Observability metadata
-:page-section-summary-toc: 1
-
-include::{root-target}_metrics.adoc[]
-
-include::{root-target}_spans.adoc[]

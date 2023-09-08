@@ -1,3 +1,0 @@
-spring:
-  config:
-    import: configserver:http://localhost:${config.server.port}

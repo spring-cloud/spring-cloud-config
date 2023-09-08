@@ -1,269 +1,70 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xmlns="http://maven.apache.org/POM/4.0.0"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
+
 	<groupId>org.springframework.cloud</groupId>
-	<artifactId>spring-cloud-config</artifactId>
-	<version>4.1.0-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>Spring Cloud Config</name>
-	<description>Spring Cloud Config</description>
-	<url>https://projects.spring.io/spring-cloud/</url>
-	<parent>
-		<groupId>org.springframework.cloud</groupId>
-		<artifactId>spring-cloud-build</artifactId>
-		<version>4.1.0-SNAPSHOT</version>
-		<relativePath/> <!-- lookup parent from repository -->
-	</parent>
+	<artifactId>spring-cloud-config-docs-build</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<name>Spring Cloud Config Docs Build</name>
+	<description>Builds Spring Cloud Config Docs.</description>
+	<url>https://spring.io/projects/spring-cloud-config</url>
 	<scm>
-		<url>https://github.com/spring-cloud/spring-cloud-config</url>
-		<connection>scm:git:git://github.com/spring-cloud/spring-cloud-config.git
+		<connection>scm:git:https://github.com/spring-cloud/spring-cloud-config.git
 		</connection>
 		<developerConnection>
-			scm:git:ssh://git@github.com/spring-cloud/spring-cloud-config.git
+			scm:git:git@github.com:spring-cloud/spring-cloud-config.git
 		</developerConnection>
-		<tag>HEAD</tag>
+		<url>https://github.com/spring-cloud/spring-cloud-config</url>
 	</scm>
+	<issueManagement>
+		<url>https://github.com/spring-cloud/spring-cloud-config/issues</url>
+	</issueManagement>
+
 	<properties>
-		<bintray.package>config</bintray.package>
-		<spring-cloud-commons.version>4.1.0-SNAPSHOT</spring-cloud-commons.version>
-		<aws-java-sdk.version>2.17.195</aws-java-sdk.version>
-		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
-		<testcontainers.version>1.17.3</testcontainers.version>
-		<wiremock.version>2.31.0</wiremock.version>
-		<spring-cloud-aws.version>3.0.0</spring-cloud-aws.version>
-		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
-		<maven-checkstyle-plugin.failsOnViolation>true
-		</maven-checkstyle-plugin.failsOnViolation>
-		<maven-checkstyle-plugin.includeTestSourceDirectory>true
-		</maven-checkstyle-plugin.includeTestSourceDirectory>
+		<io.spring.maven.antora-version>0.0.3</io.spring.maven.antora-version>
 	</properties>
-	<modules>
-		<module>spring-cloud-config-dependencies</module>
-		<module>spring-cloud-config-client</module>
-		<module>spring-cloud-config-server</module>
-		<module>spring-cloud-config-monitor</module>
-		<module>spring-cloud-config-sample</module>
-		<module>spring-cloud-starter-config</module>
-		<module>spring-cloud-config-client-tls-tests</module>
-		<module>docs</module>
-	</modules>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-config-dependencies</artifactId>
-				<version>${project.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-commons-dependencies</artifactId>
-				<version>${spring-cloud-commons.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-test-support</artifactId>
-				<scope>test</scope>
-				<version>${spring-cloud-commons.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>software.amazon.awssdk</groupId>
-				<artifactId>bom</artifactId>
-				<version>${aws-java-sdk.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.google.apis</groupId>
-				<artifactId>google-api-services-iam</artifactId>
-				<version>${google-api-services-iam.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.google.auth</groupId>
-				<artifactId>google-auth-library-oauth2-http</artifactId>
-				<version>0.22.0</version>
-			</dependency>
-			<dependency>
-				<groupId>com.google.cloud</groupId>
-				<artifactId>google-cloud-secretmanager</artifactId>
-				<version>1.0.1</version>
-			</dependency>
-			<dependency>
-				<groupId>com.google.apis</groupId>
-				<artifactId>google-api-services-cloudresourcemanager</artifactId>
-				<version>v1-rev20200210-1.30.9</version>
-			</dependency>
-			<dependency>
-				<groupId>org.testcontainers</groupId>
-				<artifactId>testcontainers-bom</artifactId>
-				<version>${testcontainers.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.github.tomakehurst</groupId>
-				<artifactId>wiremock-jre8-standalone</artifactId>
-				<version>${wiremock.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.awspring.cloud</groupId>
-				<artifactId>spring-cloud-aws-dependencies</artifactId>
-				<version>${spring-cloud-aws.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-	<profiles>
-		<profile>
-			<id>spring</id>
-			<repositories>
-				<repository>
-					<id>spring-snapshots</id>
-					<name>Spring Snapshots</name>
-					<url>https://repo.spring.io/snapshot</url>
-					<snapshots>
-						<enabled>true</enabled>
-					</snapshots>
-					<releases>
-						<enabled>false</enabled>
-					</releases>
-				</repository>
-				<repository>
-					<id>spring-milestones</id>
-					<name>Spring Milestones</name>
-					<url>https://repo.spring.io/milestone</url>
-					<snapshots>
-						<enabled>false</enabled>
-					</snapshots>
-				</repository>
-				<repository>
-					<id>spring-releases</id>
-					<name>Spring Releases</name>
-					<url>https://repo.spring.io/release</url>
-					<snapshots>
-						<enabled>false</enabled>
-					</snapshots>
-				</repository>
-			</repositories>
-			<pluginRepositories>
-				<pluginRepository>
-					<id>spring-snapshots</id>
-					<name>Spring Snapshots</name>
-					<url>https://repo.spring.io/snapshot</url>
-					<snapshots>
-						<enabled>true</enabled>
-					</snapshots>
-					<releases>
-						<enabled>false</enabled>
-					</releases>
-				</pluginRepository>
-				<pluginRepository>
-					<id>spring-milestones</id>
-					<name>Spring Milestones</name>
-					<url>https://repo.spring.io/milestone</url>
-					<snapshots>
-						<enabled>false</enabled>
-					</snapshots>
-				</pluginRepository>
-				<pluginRepository>
-					<id>spring-releases</id>
-					<name>Spring Releases</name>
-					<url>https://repo.spring.io/release</url>
-					<snapshots>
-						<enabled>false</enabled>
-					</snapshots>
-				</pluginRepository>
-			</pluginRepositories>
-		</profile>
-		<profile>
-			<id>sonar</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.jacoco</groupId>
-						<artifactId>jacoco-maven-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>pre-unit-test</id>
-								<goals>
-									<goal>prepare-agent</goal>
-								</goals>
-								<configuration>
-									<propertyName>surefireArgLine</propertyName>
-									<destFile>${project.build.directory}/jacoco.exec
-									</destFile>
-								</configuration>
-							</execution>
-							<execution>
-								<id>post-unit-test</id>
-								<phase>test</phase>
-								<goals>
-									<goal>report</goal>
-								</goals>
-								<configuration>
-									<!-- Sets the path to the file which contains the execution data. -->
-									<dataFile>${project.build.directory}/jacoco.exec
-									</dataFile>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<configuration>
-							<!-- Sets the VM argument line used when unit tests are run. -->
-							<argLine>${surefireArgLine}</argLine>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>withoutDockerTests</id>
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<configuration>
-							<excludedGroups>DockerRequired</excludedGroups>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+
 
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>flatten-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>io.spring.javaformat</groupId>
-				<artifactId>spring-javaformat-maven-plugin</artifactId>
+				<groupId>io.spring.maven.antora</groupId>
+				<artifactId>antora-maven-plugin</artifactId>
+				<version>${io.spring.maven.antora-version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<options>
+						<option>--to-dir=target/antora/site</option>
+						<option>--stacktrace</option>
+						<option>--fetch</option>
+					</options>
+					<environment>
+						<ALGOLIA_API_KEY>9d489079e5ec46dbb238909fee5c9c29</ALGOLIA_API_KEY>
+						<ALGOLIA_APP_ID>WB1FQYI187</ALGOLIA_APP_ID>
+						<ALGOLIA_INDEX_NAME>springcloudconfig</ALGOLIA_INDEX_NAME>
+					</environment>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
 
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</reporting>
+	<repositories>
+		<repository>
+			<id>spring-snapshot</id>
+			<url>https://repo.spring.io/snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+		<repository>
+			<id>spring-milestone</id>
+			<url>https://repo.spring.io/milestone</url>
+		</repository>
+	</repositories>
 
 </project>
