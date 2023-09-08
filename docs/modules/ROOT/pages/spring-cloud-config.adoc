@@ -8,5 +8,4 @@
 
 *{spring-cloud-version}*
 
-include::intro.adoc[]
 
