@@ -1,6 +1,6 @@
-name: PROJECT_WITHOUT_SPRING
+name: cloud-config
 version: true
-title: PROJECT_NAME
+title: spring-cloud-config
 nav:
   - modules/ROOT/nav.adoc
 ext:

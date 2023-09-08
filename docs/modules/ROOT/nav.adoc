@@ -39,7 +39,3 @@
 ** xref:spring-cloud-config/client.adoc[]
 * xref:intro.adoc[]
 * xref:quickstart.adoc[]
-* xref:_observability.adoc[]
-* xref:README.adoc[]
-* xref:_configprops.adoc[]
-* xref:sagan-index.adoc[]

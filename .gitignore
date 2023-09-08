@@ -21,3 +21,9 @@ _site/
 .vscode/
 .flattened-pom.xml
 IntelliJ_Spring_Boot_Java_Conventions.xml
+
+node
+node_modules
+build
+package.json
+package-lock.json
