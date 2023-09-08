@@ -77,6 +77,7 @@ spring:
 
 Other sources are any JDBC compatible database, Subversion, Hashicorp Vault, Credhub and local filesystems.
 
+[[client-side-usage]]
 === Client Side Usage
 
 To use these features in an application, you can build it as a Spring Boot application that depends on spring-cloud-config-client (for an example, see the test cases for the config-client or the sample application).

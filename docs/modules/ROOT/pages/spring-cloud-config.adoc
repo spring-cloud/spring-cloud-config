@@ -1,3 +1,4 @@
+[[spring-cloud-config]]
 = Spring Cloud Config
 :github: https://github.com/spring-cloud/spring-cloud-config
 :githubmaster: {github}/tree/master
@@ -10,10 +11,12 @@
 
 include::intro.adoc[]
 
+[[quick-start]]
 == Quick Start
 
 include::quickstart.adoc[]
 
+[[spring-cloud-config-server]]
 == Spring Cloud Config Server
 
 Spring Cloud Config Server provides an HTTP resource-based API for external configuration (name-value pairs or equivalent YAML content).
@@ -68,6 +71,7 @@ You should use a server to host your configuration repositories in production.
 WARNING: The initial clone of your configuration repository can be quick and efficient if you keep only text files in it.
 If you store binary files, especially large ones, you may experience delays on the first request for configuration or encounter out of memory errors in the server.
 
+[[environment-repository]]
 === Environment Repository
 
 Where should you store the configuration data for the Config Server?
@@ -108,6 +112,7 @@ You can set `spring.cloud.config.server.accept-empty` to `false` so that Server 
 
 NOTE:  You cannot place `spring.main.*` properties in a remote `EnvironmentRepository`.  These properties are used as part of the application initialization.
 
+[[git-backend]]
 ==== Git Backend
 
 The default implementation of `EnvironmentRepository` uses a Git backend, which is very convenient for managing upgrades and physical environments and for auditing changes.
@@ -122,6 +127,7 @@ For example, if the label is `foo/bar`, replacing the slash would result in the 
 The inclusion of the special string `({special-string})` can also be applied to the `{application}` parameter.
 If you use a command-line client such as curl, be careful with the brackets in the URL -- you should escape them from the shell with single quotes ('').
 
+[[skipping-ssl-certificate-validation]]
 ===== Skipping SSL Certificate Validation
 
 The configuration server's validation of the Git server's SSL certificate can be disabled by setting the `git.skipSslValidation` property to `true` (default is `false`).
@@ -137,6 +143,7 @@ spring:
           skipSslValidation: true
 ----
 
+[[setting-http-connection-timeout]]
 ===== Setting HTTP Connection Timeout
 
 You can configure the time, in seconds, that the configuration server will wait to acquire an HTTP connection. Use the `git.timeout` property (default is `5`).
@@ -152,6 +159,7 @@ spring:
           timeout: 4
 ----
 
+[[placeholders-in-git-uri]]
 ===== Placeholders in Git URI
 
 Spring Cloud Config Server supports a git repository URL with placeholders for the `{application}` and `{profile}` (and `{label}` if you need it, but remember that the label is applied as a git label anyway).
@@ -185,6 +193,7 @@ spring:
 
 where `{application}` is provided at request time in the following format: `organization({special-string})application`.
 
+[[pattern-matching-and-multiple-repositories]]
 ===== Pattern Matching and Multiple Repositories
 
 Spring Cloud Config also includes support for more complex requirements with pattern
@@ -294,6 +303,7 @@ All other repositories are not cloned until configuration from the repository is
 NOTE: Setting a repository to be cloned when the Config Server starts up can help to identify a misconfigured configuration source (such as an invalid repository URI) quickly, while the Config Server is starting up.
 With `cloneOnStart` not enabled for a configuration source, the Config Server may start successfully with a misconfigured or invalid configuration source and not detect an error until an application requests configuration from that configuration source.
 
+[[authentication]]
 ===== Authentication
 
 To use HTTP basic authentication on the remote repository, add the `username` and `password` properties separately (not in the URL), as shown in the following example:
@@ -334,6 +344,7 @@ Warning: When working with SSH keys, the expected ssh private-key must begin wit
 
 To correct the above error the RSA key must be converted to PEM format. An example using openssh is provided above for generating a new key in the appropriate format.
 
+[[authentication-with-aws-codecommit]]
 ===== Authentication with AWS CodeCommit
 
 Spring Cloud Config Server also supports https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html[AWS CodeCommit] authentication.
@@ -354,6 +365,7 @@ AWS EC2 instances may use https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ia
 NOTE: The `software.amazon.awssdk:auth` jar is an optional dependency.
 If the `software.amazon.awssdk:auth` jar is not on your classpath, the AWS Code Commit credential provider is not created, regardless of the git server URI.
 
+[[authentication-with-google-cloud-source]]
 ===== Authentication with Google Cloud Source
 
 Spring Cloud Config Server also supports authenticating against https://cloud.google.com/source-repositories/[Google Cloud Source] repositories.
@@ -365,6 +377,7 @@ The Google Cloud Source credentials provider will use Google Cloud Platform appl
 NOTE: `com.google.auth:google-auth-library-oauth2-http` is an optional dependency.
 If the `google-auth-library-oauth2-http` jar is not on your classpath, the Google Cloud Source credential provider is not created, regardless of the git server URI.
 
+[[git-ssh-configuration-using-properties]]
 ===== Git SSH configuration using properties
 
 By default, the JGit library used by Spring Cloud Config Server uses SSH configuration files such as `~/.ssh/known_hosts` and `/etc/ssh/ssh_config` when connecting to Git repositories by using an SSH URI.
@@ -442,6 +455,7 @@ The following table describes the SSH configuration properties.
 |Override server authentication method order. This should allow for evading login prompts if server has keyboard-interactive authentication before the `publickey` method.
 |===
 
+[[placeholders-in-git-search-paths]]
 ===== Placeholders in Git Search Paths
 
 Spring Cloud Config Server also supports a search path with placeholders for the `{application}` and `{profile}` (and `{label}` if
@@ -461,6 +475,7 @@ spring:
 The preceding listing causes a search of the repository for files in the same name as the directory (as well as the top level).
 Wildcards are also valid in a search path with placeholders (any matching directory is included in the search).
 
+[[force-pull-in-git-repositories]]
 ===== Force pull in Git Repositories
 
 As mentioned earlier, Spring Cloud Config Server makes a clone of the remote git repository in case the local copy gets dirty (for example,
@@ -507,6 +522,7 @@ spring:
 
 NOTE: The default value for `force-pull` property is `false`.
 
+[[deleting-untracked-branches-in-git-repositories]]
 ===== Deleting untracked branches in Git Repositories
 
 As Spring Cloud Config Server has a clone of the remote git repository
@@ -534,6 +550,7 @@ spring:
 
 NOTE: The default value for `deleteUntrackedBranches` property is `false`.
 
+[[git-refresh-rate]]
 ===== Git Refresh Rate
 
 You can control how often the config server will fetch updated configuration data
@@ -542,6 +559,7 @@ value of this property is specified in seconds.  By default the value is 0, mean
 the config server will fetch updated configuration from the Git repo every time it
 is requested.
 
+[[default-label]]
 ===== Default Label
 
 The default label used for Git is `main`.  If you do not set `spring.cloud.config.server.git.defaultLabel` and a branch named `main`
@@ -549,6 +567,7 @@ does not exist, the config server will by default also try to checkout a branch 
 you would like to disable to the fallback branch behavior you can set
 `spring.cloud.config.server.git.tryMasterBranch` to `false`.
 
+[[version-control-backend-filesystem-use]]
 ==== Version Control Backend Filesystem Use
 
 WARNING: With VCS-based backends (git, svn), files are checked out or cloned to the local filesystem.
@@ -558,6 +577,7 @@ Some operating systems https://serverfault.com/questions/377348/when-does-tmp-ge
 This can lead to unexpected behavior, such as missing properties.
 To avoid this problem, change the directory that Config Server uses by setting `spring.cloud.config.server.git.basedir` or `spring.cloud.config.server.svn.basedir` to a directory that does not reside in the system temp structure.
 
+[[file-system-backend]]
 ==== File System Backend
 
 There is also a "`native`" profile in the Config Server that does not use Git but loads the config files from the local classpath or file system (any static URL you want to point to with `spring.cloud.config.server.native.searchLocations`).
@@ -723,6 +743,7 @@ See the https://cloud.spring.io/spring-cloud-vault/reference/html/#vault.config.
 IMPORTANT: If you omit the X-Config-Token header and use a server property to set the authentication, the Config Server application needs an additional dependency on Spring Vault to enable the additional authentication options.
 See the https://docs.spring.io/spring-vault/docs/current/reference/html/#dependencies[Spring Vault Reference Guide] for how to add that dependency.
 
+[[multiple-properties-sources]]
 ===== Multiple Properties Sources
 
 When using Vault, you can provide your applications with multiple properties sources.
@@ -740,6 +761,7 @@ Properties written to `secret/application` are available to <<_vault_server,all 
 An application with the name, `myApp`, would have any properties written to `secret/myApp` and `secret/application` available to it.
 When `myApp` has the `dev` profile enabled, properties written to all of the above paths would be available to it, with properties in the first path in the list taking priority over the others.
 
+[[accessing-backends-through-a-proxy]]
 ==== Accessing Backends Through a Proxy
 
 The configuration server can access a Git or Vault backend through an HTTP or HTTPS proxy.
@@ -791,6 +813,7 @@ spring:
               nonProxyHosts: example.com
 ----
 
+[[sharing-configuration-with-all-applications]]
 ==== Sharing Configuration With All Applications
 
 Sharing configuration between all applications varies according to which approach you take, as described in the following topics:
@@ -821,6 +844,7 @@ For example, if you run the following Vault command, all applications using the 
 $ vault write secret/application foo=bar baz=bam
 ----
 
+[[credhub-server]]
 ===== CredHub Server
 
 When using CredHub as a backend, you can share configuration with all applications by placing configuration in `/application/` or by placing it in the `default` profile for the application.
@@ -838,6 +862,7 @@ credhub set --name "/my-app/default/master/more-shared" --type=json
 value: {"shared.word1": "hello", "shared.word2": "world"}
 ----
 
+[[aws-secrets-manager]]
 ==== AWS Secrets Manager
 When using AWS Secrets Manager as a backend, you can share configuration with all applications by placing configuration in `/application/` or by placing it in the `default` profile for the application.
 For example, if you add secrets with the following keys, all application using the config server will have the properties `shared.foo` and `shared.bar` available to them:
@@ -868,6 +893,7 @@ secret value =
 }
 ----
 
+[[labelled-versions]]
 ===== Labelled Versions
 
 AWS Secrets Manager repository allows to keep labelled versions of the configuration environments the same way Git backend does.
@@ -915,6 +941,7 @@ Note that if the default label is not set and a request does not define a label,
 
 Note that if the staging label contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `({special-string})` (to avoid ambiguity with other URL paths) the same way <<_git_backend,Git backend's section>> describes it.
 
+[[aws-parameter-store]]
 ==== AWS Parameter Store
 
 When using AWS Parameter Store as a backend, you can share configuration with all applications by placing properties within the `/application` hierarchy.
@@ -927,6 +954,7 @@ For example, if you add parameters with the following names, all applications us
 /config/application-default/fred.baz
 ----
 
+[[jdbc-backend]]
 ==== JDBC Backend
 
 Spring Cloud Config Server supports JDBC (relational database) as a backend for configuration properties.
@@ -942,6 +970,7 @@ Property values behave in the same way as they would if they came from Spring Bo
 
 NOTE: The default label used for JDBC is `master`.  You can change that by setting `spring.cloud.config.server.jdbc.defaultLabel`.
 
+[[redis-backend]]
 ==== Redis Backend
 
 Spring Cloud Config Server supports Redis as a backend for configuration properties.
@@ -988,6 +1017,7 @@ HGETALL sample-app
 
 NOTE: When no profile is specified `default` will be used.
 
+[[aws-s3-backend]]
 ==== AWS S3 Backend
 
 Spring Cloud Config Server supports AWS S3 as a backend for configuration properties.
@@ -1027,6 +1057,7 @@ Configuration files are stored in your bucket as `{application}-{profile}.proper
 
 NOTE: When no profile is specified `default` will be used.
 
+[[aws-parameter-store-backend]]
 ==== AWS Parameter Store Backend
 
 Spring Cloud Config Server supports AWS Parameter Store as a backend for configuration properties. You can enable this feature by adding a dependency to the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/examples-ssm.html[AWS Java SDK for SSM].
@@ -1120,6 +1151,7 @@ Versioned parameters are already supported with the default behaviour of returni
 - Valid values for `awsparamstore.max-results` must be within the *[1, 10]* range.
 ====
 
+[[aws-secrets-manager-backend]]
 ==== AWS Secrets Manager Backend
 
 Spring Cloud Config Server supports link:https://aws.amazon.com/secrets-manager/[AWS Secrets Manager] as a backend for configuration properties.
@@ -1160,6 +1192,7 @@ AWS Secrets Manager API credentials are determined using link:https://docs.aws.a
 - When no application is specified `application` is the default, and when no profile is specified `default` is used.
 ====
 
+[[credhub-backend]]
 ==== CredHub Backend
 
 Spring Cloud Config Server supports link:https://docs.cloudfoundry.org/credhub[CredHub] as a backend for configuration properties.
@@ -1216,6 +1249,7 @@ All client applications with the name `spring.cloud.config.name=demo-app` will h
 NOTE: When no profile is specified `default` will be used and when no label is specified `master` will be used as a default value.
 NOTE: Values added to `application` will be shared by all the applications.
 
+[[oauth-2-0]]
 ===== OAuth 2.0
 You can authenticate with link:https://oauth.net/2/[OAuth 2.0] using link:https://docs.cloudfoundry.org/concepts/architecture/uaa.html[UAA] as a provider.
 
@@ -1327,6 +1361,7 @@ If you would like the composite to continue even when a repository fails you can
 NOTE: When using a composite environment, it is important that all repositories contain the same labels.
 If you have an environment similar to those in the preceding examples and you request configuration data with the `master` label but the Subversion repository does not contain a branch called `master`, the entire request fails.
 
+[[custom-composite-environment-repositories]]
 ===== Custom Composite Environment Repositories
 
 In addition to using one of the environment repositories from Spring Cloud, you can also provide your own `EnvironmentRepository` bean to be included as part of a composite environment.
@@ -1365,6 +1400,7 @@ However, in properties files, you do need to escape the backslash, when you conf
 
 You can change the priority of all overrides in the client to be more like default values, letting applications supply their own values in environment variables or System properties, by setting the  `spring.cloud.config.overrideNone=true` flag (the default is false) in the remote repository.
 
+[[using-bootstrap-to-override-properties]]
 ==== Using Bootstrap To Override Properties
 
 If you enable <<config-first-bootstrap, config first bootstrap>>, you can allow client applications to override configuration from the config server by placing two properties within
@@ -1379,6 +1415,7 @@ spring.cloud.config.overrideNone=true
 With Bootstrap enabled and these two properties set to true you will be able to override configuration from the config server
 within the clients application configuration.
 
+[[overriding-properties-using-placeholders]]
 ==== Overriding Properties Using Placeholders
 
 A cleaner way to override properties without enabling config first bootstrap is to use property placeholders in the configuration coming from the config server.
@@ -1397,6 +1434,7 @@ You can override the value of `hello` coming from the config server by setting `
 app.hello=Hello From Application!
 ----
 
+[[overriding-properties-using-profiles]]
 ==== Overriding Properties Using Profiles
 
 The final way to override properties coming from the config server is to specify them in profile specific configuration file within the client
@@ -1420,6 +1458,7 @@ hello="Hello From Application!"
 
 In the above example you would have to enable the `overrides` profile.
 
+[[health-indicator]]
 === Health Indicator
 
 Config Server comes with a Health Indicator that checks whether the configured `EnvironmentRepository` is working.
@@ -1446,6 +1485,7 @@ You can disable the Health Indicator by setting `management.health.config.enable
 
 Also, you can provide a custom `down` status of your own by setting property `spring.cloud.config.server.health.down-health-status` (valued to `"DOWN'` by default).
 
+[[security]]
 === Security
 
 You can secure your Config Server in any way that makes sense to you (from physical network security to OAuth2 bearer tokens), because Spring Security and Spring Boot offer support for many security arrangements.
@@ -1453,10 +1493,12 @@ You can secure your Config Server in any way that makes sense to you (from physi
 To use the default Spring Boot-configured HTTP Basic security, include Spring Security on the classpath (for example, through `spring-boot-starter-security`).
 The default is a username of `user` and a randomly generated password. A random password is not useful in practice, so we recommend you configure the password (by setting `spring.security.user.password`) and encrypt it (see below for instructions on how to do that).
 
+[[actuator-and-security]]
 === Actuator and Security
 
 IMPORTANT: Some platforms configure health checks or something similar and point to `/actuator/health` or other actuator endpoints. If actuator is not a dependency of config server, requests to `/actuator/**` would match the config server API `/{application}/{label}` possibly leaking secure information. Remember to add the `spring-boot-starter-actuator` dependency in this case and configure the users such that the user that makes calls to `/actuator/**` does not have access to the config server API at `/{application}/{label}`.
 
+[[encryption-and-decryption]]
 === Encryption and Decryption
 
 IMPORTANT: To use the encryption and decryption features you need the full-strength JCE installed in your JVM (it is not included by default).
@@ -1535,6 +1577,7 @@ AQAjPgt3eFZQXwt8tsHAVv/QHiY5sI2dRcR+...
 
 NOTE: The `--key` argument is mandatory (despite having a `--` prefix).
 
+[[key-management]]
 === Key Management
 
 The Config Server can use a symmetric (shared) key or an asymmetric one (RSA key pair).
@@ -1566,6 +1609,7 @@ In practice, you might not want to do decrypt locally, because it spreads the ke
 concentrating it in the server.
 On the other hand, it can be a useful option if your config server is relatively insecure and only a handful of clients need the encrypted properties.
 
+[[creating-a-key-store-for-testing]]
 === Creating a Key Store for Testing
 
 To create a keystore for testing, you can use a command resembling the following:
@@ -1595,6 +1639,7 @@ encrypt:
     secret: changeme
 ----
 
+[[using-multiple-keys-and-key-rotation]]
 === Using Multiple Keys and Key Rotation
 
 In addition to the `{cipher}` prefix in encrypted property values, the Config Server looks for zero or more `{name:value}` prefixes before the start of the (Base64 encoded) cipher text.
@@ -1619,12 +1664,14 @@ Note that the clients need to first check that the key alias is available in the
 
 TIP: If you want to let the Config Server handle all encryption as well as decryption, the `{name:value}` prefixes can also be added as plain text posted to the `/encrypt` endpoint.
 
+[[serving-encrypted-properties]]
 === Serving Encrypted Properties
 
 Sometimes you want the clients to decrypt the configuration locally, instead of doing it in the server.
 In that case, if you provide the `encrypt.*` configuration to locate a key, you can still have `/encrypt` and `/decrypt` endpoints, but you need to explicitly switch off the decryption of outgoing properties by placing `spring.cloud.config.server.encrypt.enabled=false` in `bootstrap.[yml|properties]`.
 If you do not care about the endpoints, it should work if you do not configure either the key or the enabled flag.
 
+[[serving-alternative-formats]]
 === Serving Alternative Formats
 
 The default JSON format from the environment endpoints is perfect for consumption by Spring applications, because it maps directly onto the `Environment` abstraction.
@@ -1639,6 +1686,7 @@ For example, the JSON is structured as an ordered list of property sources, with
 The YAML and properties forms are coalesced into a single map, even if the origin of the values has multiple sources, and the names of the original source files are lost.
 Also, the YAML representation is not necessarily a faithful representation of the YAML source in a backing repository either. It is constructed from a list of flat property sources, and assumptions have to be made about the form of the keys.
 
+[[serving-plain-text]]
 === Serving Plain Text
 
 Instead of using the `Environment` abstraction (or one of the alternative representations of it in YAML or properties format), your applications might need generic plain-text configuration files that are tailored to their environment.
@@ -1663,6 +1711,7 @@ The following sections show how each one works:
 * <<spring-cloud-config-serving-plain-text-git-svn-native-backends>>
 * <<spring-cloud-config-serving-plain-text-aws-s3>>
 
+[[serving-binary-files]]
 === Serving Binary Files
 
 In order to serve binary files from the config server you will need to send an `Accept` header of `application/octet-stream`.
@@ -1743,6 +1792,7 @@ In addition, when using Spring Cloud AWS with Spring Boot it is useful to includ
 Then you need to configure Spring Cloud AWS, as described in the
 https://docs.awspring.io/spring-cloud-aws/docs/2.4.3/reference/html/index.html#configuring-credentials[Spring Cloud AWS Reference Guide].
 
+[[decrypting-plain-text]]
 ==== Decrypting Plain Text
 
 By default, encrypted values in plain text files are not decrypted. In order to enable decryption for plain text files, set `spring.cloud.config.server.encrypt.enabled=true` and `spring.cloud.config.server.encrypt.plainTextEncrypt=true` in `bootstrap.[yml|properties]`
@@ -1751,6 +1801,7 @@ NOTE: Decrypting plain text files is only supported for YAML, JSON, and properti
 
 If this feature is enabled, and an unsupported file extention is requested, any encrypted values in the file will not be decrypted.
 
+[[embedding-the-config-server]]
 === Embedding the Config Server
 
 The Config Server runs best as a standalone application.
@@ -1789,6 +1840,7 @@ If you want to read the configuration for an application directly from the backe
 basically want an embedded config server with no endpoints.
 You can switch off the endpoints entirely by not using the `@EnableConfigServer` annotation (set `spring.cloud.config.server.bootstrap=true`).
 
+[[push-notifications-and-spring-cloud-bus]]
 === Push Notifications and Spring Cloud Bus
 
 Many source code repository providers (such as Github, Gitlab, Gitea, Gitee, Gogs, or Bitbucket) notify you of changes in a repository through a webhook.
@@ -1809,10 +1861,12 @@ NOTE: The `RefreshRemoteApplicationEvent` is transmitted only if the `spring-clo
 
 NOTE: The default configuration also detects filesystem changes in local git repositories. In that case, the webhook is not used. However, as soon as you edit a config file, a refresh is broadcast.
 
+[[-aot-and-native-image-support]]
 ===  AOT and Native Image Support
 
 Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. However, for the time being, GraalVM native images are not supported. Implementing native image support is blocked by https://github.com/oracle/graal/issues/5134[graal#5134] and will likely require the completion of the work on https://github.com/graalvm/taming-build-time-initialization[https://github.com/graalvm/taming-build-time-initialization] to be fixed.
 
+[[spring-cloud-config-client]]
 == Spring Cloud Config Client
 
 A Spring Boot application can take immediate advantage of the Spring Config Server (or other external property sources provided by the application developer).
@@ -1884,6 +1938,7 @@ eureka:
       configPath: /config
 ----
 
+[[discovery-first-bootstrap-using-eureka-and-webclient]]
 ==== Discovery First Bootstrap Using Eureka And WebClient
 
 If you use the Eureka `DiscoveryClient` from Spring Cloud Netflix and also want to use `WebClient` instead of Jersey or `RestTemplate`,
@@ -1910,6 +1965,7 @@ You can configure these properties (and others) by setting the `spring.cloud.con
 TIP: To take full control of the retry behavior and are using legacy bootstrap, add a `@Bean` of type `RetryOperationsInterceptor` with an ID of `configServerRetryInterceptor`.
 Spring Retry has a `RetryInterceptorBuilder` that supports creating one.
 
+[[config-client-retry-with-spring-config-import]]
 === Config Client Retry with spring.config.import
 
 Retry works with the Spring Boot `spring.config.import` statement and the normal properties work. However, if the import statement is in a profile, such as `application-prod.properties`, then you need a different way to configure retry. Configuration needs to be placed as url parameters on the import statement.
@@ -1922,6 +1978,7 @@ spring.config.import=configserver:http://configserver.example.com?fail-fast=true
 
 This sets `spring.cloud.config.fail-fast=true` (notice the missing prefix above) and all the available `spring.cloud.config.retry.*` configuration properties.
 
+[[locating-remote-configuration-resources]]
 === Locating Remote Configuration Resources
 
 The Config Service serves property sources from `/{application}/{profile}/{label}`, where the default bindings in the client app are as follows:
@@ -1940,6 +1997,7 @@ In that case, the items in the list are tried one by one until one succeeds.
 This behavior can be useful when working on a feature branch.
 For instance, you might want to align the config label with your branch but make it optional (in that case, use `spring.cloud.config.label=myfeature,develop`).
 
+[[specifying-multiple-urls-for-the-config-server]]
 === Specifying Multiple URLs for the Config Server
 
 To ensure high availability when you have multiple instances of Config Server deployed and expect one or more instances to be unavailable or unable to honor requests from time to time (such as if the Git server is down), you can either specify multiple URLs (as a comma-separated list under the `spring.cloud.config.uri` property) or have all your instances register in a Service Registry like Eureka (if using Discovery-First Bootstrap mode).
@@ -1952,6 +2010,7 @@ Several locations can be specified under a single `spring.config.import` key ins
 
 If you use HTTP basic security on your Config Server, it is currently possible to support per-Config Server auth credentials only if you embed the credentials in each URL you specify under the `spring.cloud.config.uri` property. If you use any other kind of security mechanism, you cannot (currently) support per-Config Server authentication and authorization.
 
+[[configuring-timeouts]]
 === Configuring Timeouts
 
 If you want to configure timeout thresholds:
@@ -1959,6 +2018,7 @@ If you want to configure timeout thresholds:
 * Read timeouts can be configured by using the property `spring.cloud.config.request-read-timeout`.
 * Connection timeouts can be configured by using the property `spring.cloud.config.request-connect-timeout`.
 
+[[security]]
 === Security
 
 If you use HTTP Basic security on the server, clients need to know the password (and username if it is not the default).
@@ -2021,6 +2081,7 @@ The `spring.cloud.config.tls.enabled` needs to be true to enable config client s
 
 If you use another form of security, you might need to <<custom-rest-template,provide a `RestTemplate`>> to the `ConfigServicePropertySourceLocator` (for example, by grabbing it in the bootstrap context and injecting it).
 
+[[health-indicator]]
 ==== Health Indicator
 
 The Config Client supplies a Spring Boot Health Indicator that attempts to load configuration from the Config Server.
@@ -2035,6 +2096,7 @@ To change that value, set the `health.config.time-to-live` property (in millisec
 In some cases, you might need to customize the requests made to the config server from the client.
 Typically, doing so involves passing special `Authorization` headers to authenticate requests to the server.
 
+[[providing-a-custom-resttemplate-using-config-data]]
 ===== Providing A Custom RestTemplate Using Config Data
 
 To provide a custom `RestTemplate` when using Config Data:
@@ -2067,6 +2129,7 @@ public class CustomBootstrapRegistryInitializer implements BootstrapRegistryInit
 org.springframework.boot.BootstrapRegistryInitializer=com.my.config.client.CustomBootstrapRegistryInitializer
 ----
 
+[[providing-a-custom-resttemplate-using-bootstrap]]
 ===== Providing A Custom RestTemplate Using Bootstrap
 
 To provide a custom `RestTemplate` when using Bootstrap:
@@ -2099,6 +2162,7 @@ NOTE: For a simplified approach to adding `Authorization` headers, the `spring.c
 org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration
 ----
 
+[[vault]]
 ==== Vault
 
 When using Vault as a backend to your config server, the client needs to supply a token for the server to retrieve values from Vault.
@@ -2113,6 +2177,7 @@ spring:
       token: YourVaultToken
 ----
 
+[[nested-keys-in-vault]]
 === Nested Keys In Vault
 
 Vault supports the ability to nest keys in a value stored in Vault, as shown in the following example:
@@ -2130,6 +2195,7 @@ String name = "World";
 
 The preceding code would sets the value of the `name` variable to `appAsecret`.
 
+[[-aot-and-native-image-support]]
 ===  AOT and Native Image Support
 
 Since `4.0.0`, Spring Cloud Config Client supports Spring AOT transformations and GraalVM native images.
