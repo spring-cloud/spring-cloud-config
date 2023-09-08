@@ -42,7 +42,7 @@ The net result of this behavior is that all client applications that want to con
 [[discovery-first-bootstrap]]
 === Discovery First Lookup
 
-WARNING: Unless you are using <<config-first-bootstrap, config first bootstrap>>, you will need to have a `spring.config.import` property in your configuration properties with an `optional:` prefix.
+WARNING: Unless you are using xref:spring-cloud-config/client.adoc#config-first-bootstrap[config first bootstrap], you will need to have a `spring.config.import` property in your configuration properties with an `optional:` prefix.
 For example, `spring.config.import=optional:configserver:`.
 
 If you use a `DiscoveryClient` implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
@@ -211,7 +211,7 @@ spring:
 
 The `spring.cloud.config.tls.enabled` needs to be true to enable config client side TLS. When `spring.cloud.config.tls.trust-store` is omitted, a JVM default trust store is used. The default value for `spring.cloud.config.tls.key-store-type` and `spring.cloud.config.tls.trust-store-type` is PKCS12. When password properties are omitted, empty password is assumed.
 
-If you use another form of security, you might need to <<custom-rest-template,provide a `RestTemplate`>> to the `ConfigServicePropertySourceLocator` (for example, by grabbing it in the bootstrap context and injecting it).
+If you use another form of security, you might need to xref:spring-cloud-config/client.adoc#custom-rest-template[provide a `RestTemplate`] to the `ConfigServicePropertySourceLocator` (for example, by grabbing it in the bootstrap context and injecting it).
 
 [[health-indicator]]
 === Health Indicator
@@ -332,7 +332,7 @@ The preceding code would sets the value of the `name` variable to `appAsecret`.
 
 Since `4.0.0`, Spring Cloud Config Client supports Spring AOT transformations and GraalVM native images.
 
-WARNING: AOT and native image support is not available for <<config-first-bootstrap, config first bootstrap>> (with `spring.config.use-legacy-processing=true`).
+WARNING: AOT and native image support is not available for xref:spring-cloud-config/client.adoc#config-first-bootstrap[config first bootstrap] (with `spring.config.use-legacy-processing=true`).
 
 WARNING: Refresh scope is not supported with native images. If you are going to run your config client application as a native image, make sure to set `spring.cloud.refresh.enabled` property to `false`.
 

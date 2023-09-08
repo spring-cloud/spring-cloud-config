@@ -54,7 +54,7 @@ You can use the `order` property to specify the priority order for all your repo
 The lower the numerical value of the `order` property, the higher priority it has.
 The priority order of a repository helps resolve any potential conflicts between repositories that contain values for the same properties.
 
-NOTE: If your composite environment includes a Vault server as in the previous example, you must include a Vault token in every request made to the configuration server. See <<vault-backend,Vault Backend>>.
+NOTE: If your composite environment includes a Vault server as in the previous example, you must include a Vault token in every request made to the configuration server. See xref:spring-cloud-config/server/environment-repository/vault-backend.adoc[Vault Backend].
 
 NOTE: Any type of failure when retrieving values from an environment repository results in a failure for the entire composite environment.
 If you would like the composite to continue even when a repository fails you can set `spring.cloud.config.server.failOnCompositeError` to `false`.
