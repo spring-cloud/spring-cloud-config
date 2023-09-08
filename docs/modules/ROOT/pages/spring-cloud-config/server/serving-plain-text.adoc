@@ -20,6 +20,6 @@ At present, Spring Cloud Config can serve plaintext for git, SVN, native backend
 The support for git, SVN, and native backends is identical. AWS S3 works a bit differently.
 The following sections show how each one works:
 
-* <<spring-cloud-config-serving-plain-text-git-svn-native-backends>>
-* <<spring-cloud-config-serving-plain-text-aws-s3>>
+* xref:spring-cloud-config/server/serving-binary-files.adoc#spring-cloud-config-serving-plain-text-git-svn-native-backends[Git, SVN, and Native Backends]
+* xref:spring-cloud-config/server/serving-binary-files.adoc#spring-cloud-config-serving-plain-text-aws-s3[AWS S3]
 

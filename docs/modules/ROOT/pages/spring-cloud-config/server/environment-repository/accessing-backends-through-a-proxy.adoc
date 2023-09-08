@@ -3,7 +3,7 @@
 
 The configuration server can access a Git or Vault backend through an HTTP or HTTPS proxy.
 This behavior is controlled for either Git or Vault by settings under `proxy.http` and `proxy.https`.
-These settings are per repository, so if you are using a <<composite-environment-repositories,composite environment repository>> you must configure proxy settings for each backend in the composite individually.
+These settings are per repository, so if you are using a xref:spring-cloud-config/server/environment-repository/composite-repositories.adoc[composite environment repository] you must configure proxy settings for each backend in the composite individually.
 If using a network which requires separate proxy servers for HTTP and HTTPS URLs, you can configure both the HTTP and the HTTPS proxy settings for a single backend: in this case `http` access will use `http` proxy and `https` access the `https` one.
 Also, you may specify one sole proxy that will be used for both protocols using the proxy definition protocol between application and proxy.
 

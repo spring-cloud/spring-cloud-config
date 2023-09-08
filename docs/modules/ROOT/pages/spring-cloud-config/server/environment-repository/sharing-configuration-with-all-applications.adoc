@@ -3,8 +3,8 @@
 
 Sharing configuration between all applications varies according to which approach you take, as described in the following topics:
 
-* <<spring-cloud-config-server-file-based-repositories>>
-* <<spring-cloud-config-server-vault-server>>
+* xref:spring-cloud-config/server/environment-repository/sharing-configuration-with-all-applications.adoc#spring-cloud-config-server-file-based-repositories[File Based Repositories]
+* xref:spring-cloud-config/server/environment-repository/sharing-configuration-with-all-applications.adoc#spring-cloud-config-server-vault-server[Vault Server]
 
 [[spring-cloud-config-server-file-based-repositories]]
 == File Based Repositories
@@ -12,7 +12,7 @@ Sharing configuration between all applications varies according to which approac
 With file-based (git, svn, and native) repositories, resources with file names in `application*` (`application.properties`, `application.yml`, `application-*.properties`, and so on) are shared between all client applications.
 You can use resources with these file names to configure global defaults and have them be overridden by application-specific files as necessary.
 
-The <<property-overrides,property overrides>> feature can also be used for setting global defaults, with placeholders applications
+The xref:spring-cloud-config/server/environment-repository/property-overrides.adoc[property overrides] feature can also be used for setting global defaults, with placeholders applications
 allowed to override them locally.
 
 TIP: With the "`native`" profile (a local file system backend) , you should use an explicit search location that is not part of the server's own configuration.
