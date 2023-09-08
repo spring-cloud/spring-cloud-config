@@ -1,5 +1,6 @@
 [[overriding-properties-using-profiles]]
 = Overriding Properties Using Profiles
+:page-section-summary-toc: 1
 
 The final way to override properties coming from the config server is to specify them in profile specific configuration file within the client
 application.

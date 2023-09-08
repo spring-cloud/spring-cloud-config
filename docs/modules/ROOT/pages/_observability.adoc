@@ -2,6 +2,7 @@
 
 [[observability]]
 = Observability metadata
+:page-section-summary-toc: 1
 
 include::{root-target}_metrics.adoc[]
 

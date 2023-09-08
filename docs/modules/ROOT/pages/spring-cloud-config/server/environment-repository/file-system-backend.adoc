@@ -1,5 +1,6 @@
 [[file-system-backend]]
 = File System Backend
+:page-section-summary-toc: 1
 
 There is also a "`native`" profile in the Config Server that does not use Git but loads the config files from the local classpath or file system (any static URL you want to point to with `spring.cloud.config.server.native.searchLocations`).
 To use the native profile, launch the Config Server with `spring.profiles.active=native`.

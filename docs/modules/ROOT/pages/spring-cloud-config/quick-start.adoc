@@ -1,5 +1,6 @@
 [[quick-start]]
 = Quick Start
+:page-section-summary-toc: 1
 
 include:../:quickstart.adoc[]
 

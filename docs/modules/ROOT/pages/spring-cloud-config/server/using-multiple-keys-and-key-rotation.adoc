@@ -1,5 +1,6 @@
 [[using-multiple-keys-and-key-rotation]]
 = Using Multiple Keys and Key Rotation
+:page-section-summary-toc: 1
 
 In addition to the `{cipher}` prefix in encrypted property values, the Config Server looks for zero or more `{name:value}` prefixes before the start of the (Base64 encoded) cipher text.
 The keys are passed to a `TextEncryptorLocator`, which can do whatever logic it needs to locate a `TextEncryptor` for the cipher.
