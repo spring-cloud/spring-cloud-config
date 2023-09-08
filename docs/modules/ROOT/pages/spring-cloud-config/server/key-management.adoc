@@ -1,0 +1,32 @@
+[[key-management]]
+= Key Management
+
+The Config Server can use a symmetric (shared) key or an asymmetric one (RSA key pair).
+The asymmetric choice is superior in terms of security, but it is often more convenient to use a symmetric key since it is a single property value to configure in the `application.properties`.
+
+To configure a symmetric key, you need to set `encrypt.key` to a secret String (or use the `ENCRYPT_KEY` environment variable to keep it out of plain-text configuration files).
+
+NOTE: If you include `spring-cloud-starter-bootstrap` on the classpath or set `spring.cloud.bootstrap.enabled=true` as a system property, you will need to set `encrypt.key` in `bootstrap.properties`.
+
+NOTE: You cannot configure an asymmetric key using `encrypt.key`.
+
+To configure an asymmetric key use a keystore (e.g. as
+created by the `keytool` utility that comes with the JDK). The
+keystore properties are `encrypt.keyStore.\*` with `*` equal to
+
+[options="header"]
+|===
+^|Property ^|Description
+|`encrypt.keyStore.location`|Contains a `Resource` location
+|`encrypt.keyStore.password`|Holds the password that unlocks the keystore
+|`encrypt.keyStore.alias`|Identifies which key in the store to use
+|`encrypt.keyStore.type`|The type of KeyStore to create.  Defaults to `jks`.
+|===
+
+The encryption is done with the public key, and a private key is
+needed for decryption.
+Thus, in principle, you can configure only the public key in the server if you want to only encrypt (and are prepared to decrypt the values yourself locally with the private key).
+In practice, you might not want to do decrypt locally, because it spreads the key management process around all the clients, instead of
+concentrating it in the server.
+On the other hand, it can be a useful option if your config server is relatively insecure and only a handful of clients need the encrypted properties.
+

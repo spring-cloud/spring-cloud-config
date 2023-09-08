@@ -1,0 +1,47 @@
+[[redis-backend]]
+= Redis Backend
+
+Spring Cloud Config Server supports Redis as a backend for configuration properties.
+You can enable this feature by adding a dependency to link:https://spring.io/projects/spring-data-redis[Spring Data Redis].
+
+[source,xml,indent=0]
+.pom.xml
+----
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+	</dependencies>
+----
+
+The following configuration uses Spring Data `RedisTemplate` to access a Redis. We can use `spring.redis.*` properties to override default connection settings.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: redis
+  redis:
+    host: redis
+    port: 16379
+----
+
+The properties should be stored as fields in a hash. The name of hash should be the same as `spring.application.name` property or conjunction of `spring.application.name` and `spring.profiles.active[n]`.
+[source,sh]
+----
+HMSET sample-app server.port "8100" sample.topic.name "test" test.property1 "property1"
+----
+
+After running the command visible above a hash should contain the following keys with values:
+----
+HGETALL sample-app
+{
+  "server.port": "8100",
+  "sample.topic.name": "test",
+  "test.property1": "property1"
+}
+----
+
+NOTE: When no profile is specified `default` will be used.
+

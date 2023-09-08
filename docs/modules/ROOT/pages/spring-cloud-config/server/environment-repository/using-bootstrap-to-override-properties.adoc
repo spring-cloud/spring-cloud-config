@@ -1,0 +1,15 @@
+[[using-bootstrap-to-override-properties]]
+= Using Bootstrap To Override Properties
+
+If you enable <<config-first-bootstrap, config first bootstrap>>, you can allow client applications to override configuration from the config server by placing two properties within
+the applications configuration coming from the config server.
+
+[source,properties]
+----
+spring.cloud.config.allowOverride=true
+spring.cloud.config.overrideNone=true
+----
+
+With Bootstrap enabled and these two properties set to true you will be able to override configuration from the config server
+within the clients application configuration.
+

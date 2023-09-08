@@ -1,0 +1,30 @@
+[[creating-a-key-store-for-testing]]
+= Creating a Key Store for Testing
+
+To create a keystore for testing, you can use a command resembling the following:
+
+----
+$ keytool -genkeypair -alias mytestkey -keyalg RSA \
+  -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" \
+  -keypass changeme -keystore server.jks -storepass letmein
+----
+
+NOTE:  When using JDK 11 or above you may get the following warning when using the command above.  In this case
+you probably want to make sure the `keypass` and `storepass` values match.
+----
+Warning:  Different store and key passwords not supported for PKCS12 KeyStores. Ignoring user-specified -keypass value.
+----
+
+Put the `server.jks` file in the classpath (for instance) and then, in
+your `bootstrap.yml`, for the Config Server, create the following settings:
+
+[source,yaml]
+----
+encrypt:
+  keyStore:
+    location: classpath:/server.jks
+    password: letmein
+    alias: mytestkey
+    secret: changeme
+----
+

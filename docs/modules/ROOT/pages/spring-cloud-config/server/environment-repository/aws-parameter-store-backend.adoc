@@ -1,0 +1,94 @@
+[[aws-parameter-store-backend]]
+= AWS Parameter Store Backend
+
+Spring Cloud Config Server supports AWS Parameter Store as a backend for configuration properties. You can enable this feature by adding a dependency to the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/examples-ssm.html[AWS Java SDK for SSM].
+
+[source,xml,indent=0]
+.pom.xml
+----
+    <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>ssm</artifactId>
+    </dependency>
+----
+
+The following configuration uses the AWS SSM client to access parameters.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: awsparamstore
+  cloud:
+    config:
+      server:
+        awsparamstore:
+          region: eu-west-2
+          endpoint: https://ssm.eu-west-2.amazonaws.com
+          origin: aws:parameter:
+          prefix: /config/service
+          profile-separator: _
+          recursive: true
+          decrypt-values: true
+          max-results: 5
+----
+
+The following table describes the AWS Parameter Store configuration properties.
+
+.AWS Parameter Store Configuration Properties
+|===
+|Property Name |Required |Default Value |Remarks
+
+|*region*
+|no
+|
+|The region to be used by the AWS Parameter Store client. If it's not explicitly set, the SDK tries to determine the region to use by using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/region-selection.html#default-region-provider-chain[Default Region Provider Chain].
+
+|*endpoint*
+|no
+|
+|The URL of the entry point for the AWS SSM client. This can be used to specify an alternate endpoint for the API requests.
+
+|*origin*
+|no
+|`aws:ssm:parameter:`
+|The prefix that is added to the property source's name to show their provenance.
+
+|*prefix*
+|no
+|`/config`
+|Prefix indicating L1 level in the parameter hierarchy for every property loaded from the AWS Parameter Store.
+
+|*profile-separator*
+|no
+|`-`
+|String that separates an appended profile from the context name.
+
+|*recursive*
+|no
+|`true`
+|Flag to indicate the retrieval of all AWS parameters within a hierarchy.
+
+|*decrypt-values*
+|no
+|`true`
+|Flag to indicate the retrieval of all AWS parameters with their value decrypted.
+
+|*max-results*
+|no
+|`10`
+|The maximum number of items to return for an AWS Parameter Store API call.
+
+|===
+
+AWS Parameter Store API credentials are determined using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html#credentials-default[Default Credential Provider Chain].
+Versioned parameters are already supported with the default behaviour of returning the latest version.
+
+[NOTE]
+====
+- When no application is specified `application` is the default, and when no profile is specified `default` is used.
+- Valid values for `awsparamstore.prefix` must start with a forward slash followed by one or more valid path segments or be empty.
+- Valid values for `awsparamstore.profile-separator` can only contain dots, dashes and underscores.
+- Valid values for `awsparamstore.max-results` must be within the *[1, 10]* range.
+====
+

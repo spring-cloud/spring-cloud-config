@@ -1,0 +1,31 @@
+[[property-overrides]]
+= Property Overrides
+
+The Config Server has an "`overrides`" feature that lets the operator provide configuration properties to all applications.
+The overridden properties cannot be accidentally changed by the application with the normal Spring Boot hooks.
+To declare overrides, add a map of name-value pairs to `spring.cloud.config.server.overrides`, as shown in the following example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        overrides:
+          foo: bar
+----
+
+The preceding examples causes all applications that are config clients to read `foo=bar`, independent of their own configuration.
+
+NOTE: A configuration system cannot force an application to use configuration data in any particular way.
+Consequently, overrides are not enforceable.
+However, they do provide useful default behavior for Spring Cloud Config clients.
+
+TIP: Normally, Spring environment placeholders with `${}` can be escaped (and resolved on the client) by using backslash (`\`) to escape the `$` or the `{`.
+For example, `\${app.foo:bar}` resolves to `bar`, unless the app provides its own `app.foo`.
+
+NOTE: In YAML, you do not need to escape the backslash itself.
+However, in properties files, you do need to escape the backslash, when you configure the overrides on the server.
+
+You can change the priority of all overrides in the client to be more like default values, letting applications supply their own values in environment variables or System properties, by setting the  `spring.cloud.config.overrideNone=true` flag (the default is false) in the remote repository.
+
