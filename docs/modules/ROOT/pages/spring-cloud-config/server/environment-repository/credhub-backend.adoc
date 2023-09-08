@@ -1,0 +1,105 @@
+[[credhub-backend]]
+= CredHub Backend
+
+Spring Cloud Config Server supports link:https://docs.cloudfoundry.org/credhub[CredHub] as a backend for configuration properties.
+You can enable this feature by adding a dependency to link:https://spring.io/projects/spring-credhub[Spring CredHub].
+
+[source,xml,indent=0]
+.pom.xml
+----
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.credhub</groupId>
+			<artifactId>spring-credhub-starter</artifactId>
+		</dependency>
+	</dependencies>
+----
+
+The following configuration uses mutual TLS to access a CredHub:
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: credhub
+  cloud:
+    config:
+      server:
+        credhub:
+          url: https://credhub:8844
+----
+
+The properties should be stored as JSON, such as:
+[source,sh]
+----
+credhub set --name "/demo-app/default/master/toggles" --type=json
+value: {"toggle.button": "blue", "toggle.link": "red"}
+----
+[source,sh]
+----
+credhub set --name "/demo-app/default/master/abs" --type=json
+value: {"marketing.enabled": true, "external.enabled": false}
+----
+
+All client applications with the name `spring.cloud.config.name=demo-app` will have the following properties available to them:
+
+----
+{
+    toggle.button: "blue",
+    toggle.link: "red",
+    marketing.enabled: true,
+    external.enabled: false
+}
+----
+
+NOTE: When no profile is specified `default` will be used and when no label is specified `master` will be used as a default value.
+NOTE: Values added to `application` will be shared by all the applications.
+
+[[oauth-2-0]]
+== OAuth 2.0
+You can authenticate with link:https://oauth.net/2/[OAuth 2.0] using link:https://docs.cloudfoundry.org/concepts/architecture/uaa.html[UAA] as a provider.
+
+[source,xml,indent=0]
+.pom.xml
+----
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-client</artifactId>
+		</dependency>
+	</dependencies>
+----
+
+The following configuration uses OAuth 2.0 and UAA to access a CredHub:
+[source,yaml]
+----
+spring:
+  profiles:
+    active: credhub
+  cloud:
+    config:
+      server:
+        credhub:
+          url: https://credhub:8844
+          oauth2:
+            registration-id: credhub-client
+  security:
+    oauth2:
+      client:
+        registration:
+          credhub-client:
+            provider: uaa
+            client-id: credhub_config_server
+            client-secret: asecret
+            authorization-grant-type: client_credentials
+        provider:
+          uaa:
+            token-uri: https://uaa:8443/oauth/token
+----
+
+NOTE: The used UAA client-id should have `credhub.read` as scope.
+

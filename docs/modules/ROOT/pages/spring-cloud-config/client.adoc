@@ -1,0 +1,350 @@
+[[spring-cloud-config-client]]
+= Spring Cloud Config Client
+
+A Spring Boot application can take immediate advantage of the Spring Config Server (or other external property sources provided by the application developer).
+It also picks up some additional useful features related to `Environment` change events.
+
+[[config-data-import]]
+== Spring Boot Config Data Import
+
+Spring Boot 2.4 introduced a new way to import configuration data via the `spring.config.import` property. This is now the default way to bind to Config Server.
+
+To optionally connect to config server set the following in application.properties:
+
+.application.properties
+[source,properties]
+----
+spring.config.import=optional:configserver:
+----
+
+This will connect to the Config Server at the default location of "http://localhost:8888". Removing the `optional:` prefix will cause the Config Client to fail if it is unable to connect to Config Server. To change the location of Config Server either set `spring.cloud.config.uri` or add the url to the `spring.config.import` statement such as, `spring.config.import=optional:configserver:http://myhost:8888`. The location in the import property has precedence over the uri property.
+
+Spring Boot Config Data resolves configuration in a two step process.  First it loads all configuration using the `default`
+profile.  This allows Spring Boot to gather all configuration which may activate any additional profiles.
+After it has gathered all activated profiles it will load any additional configuration for the active profiles.
+Due to this you may see multiple requests being made to the Spring Cloud Config Server to fetch configuration.  This
+is normal and is a side effect of how Spring Boot loads configuration when using `spring.config.import`.  In previous
+versions of Spring Cloud Config there was only a single request made but this meant you could not activate profiles
+from configuration coming from the Config Server.  The additional request with just the 'default` profile now makes
+this possible.
+
+NOTE: A `bootstrap` file (properties or yaml) is *not* needed for the Spring Boot Config Data method of import via `spring.config.import`.
+
+[[config-first-bootstrap]]
+== Config First Bootstrap
+
+To use the legacy bootstrap way of connecting to Config Server, bootstrap must be enabled via a property or the `spring-cloud-starter-bootstrap` starter. The property is `spring.cloud.bootstrap.enabled=true`. It must be set as a System Property or environment variable.
+Once bootstrap has been enabled any application with Spring Cloud Config Client on the classpath will connect to Config Server as follows:
+When a config client starts, it binds to the Config Server (through the `spring.cloud.config.uri` bootstrap configuration property) and initializes Spring `Environment` with remote property sources.
+
+The net result of this behavior is that all client applications that want to consume the Config Server need a `bootstrap.yml` (or an environment variable) with the server address set in `spring.cloud.config.uri` (it defaults to "http://localhost:8888").
+
+[[discovery-first-bootstrap]]
+=== Discovery First Lookup
+
+WARNING: Unless you are using <<config-first-bootstrap, config first bootstrap>>, you will need to have a `spring.config.import` property in your configuration properties with an `optional:` prefix.
+For example, `spring.config.import=optional:configserver:`.
+
+If you use a `DiscoveryClient` implementation, such as Spring Cloud Netflix and Eureka Service Discovery or Spring Cloud Consul, you can have the Config Server register with the Discovery Service.
+
+If you prefer to use `DiscoveryClient` to locate the Config Server, you can do so by setting `spring.cloud.config.discovery.enabled=true` (the default is `false`).
+For example, with Spring Cloud Netflix, you need to define the Eureka server address (for example, in `eureka.client.serviceUrl.defaultZone`).
+The price for using this option is an extra network round trip on startup, to locate the service registration.
+The benefit is that, as long as the Discovery Service is a fixed point, the Config Server can change its coordinates.
+The default service ID is `configserver`, but you can change that on the client by setting `spring.cloud.config.discovery.serviceId` (and on the server, in the usual way for a service, such as by setting `spring.application.name`).
+
+The discovery client implementations all support some kind of metadata map (for example, we have `eureka.instance.metadataMap` for Eureka).
+Some additional properties of the Config Server may need to be configured in its service registration metadata so that clients can connect correctly.
+If the Config Server is secured with HTTP Basic, you can configure the credentials as `user` and `password`.
+Also, if the Config Server has a context path, you can set `configPath`.
+For example, the following YAML file is for a Config Server that is a Eureka client:
+
+[source,yaml]
+----
+eureka:
+  instance:
+    ...
+    metadataMap:
+      user: osufhalskjrtl
+      password: lviuhlszvaorhvlo5847
+      configPath: /config
+----
+
+[[discovery-first-bootstrap-using-eureka-and-webclient]]
+=== Discovery First Bootstrap Using Eureka And WebClient
+
+If you use the Eureka `DiscoveryClient` from Spring Cloud Netflix and also want to use `WebClient` instead of Jersey or `RestTemplate`,
+you need to include `WebClient` on your classpath as well as set `eureka.client.webclient.enabled=true`.
+
+
+[[config-client-fail-fast]]
+== Config Client Fail Fast
+
+In some cases, you may want to fail startup of a service if it cannot connect to the Config Server.
+If this is the desired behavior, set the bootstrap configuration property `spring.cloud.config.fail-fast=true` to make the client halt with an Exception.
+
+NOTE: To get similar functionality using `spring.config.import`, simply omit the `optional:` prefix.
+
+[[config-client-retry]]
+== Config Client Retry
+
+If you expect that the config server may occasionally be unavailable when your application starts, you can make it keep trying after a failure.
+First, you need to set `spring.cloud.config.fail-fast=true`.
+Then you need to add `spring-retry` and `spring-boot-starter-aop` to your classpath.
+The default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs.
+You can configure these properties (and others) by setting the `spring.cloud.config.retry.*` configuration properties.
+
+TIP: To take full control of the retry behavior and are using legacy bootstrap, add a `@Bean` of type `RetryOperationsInterceptor` with an ID of `configServerRetryInterceptor`.
+Spring Retry has a `RetryInterceptorBuilder` that supports creating one.
+
+[[config-client-retry-with-spring-config-import]]
+== Config Client Retry with spring.config.import
+
+Retry works with the Spring Boot `spring.config.import` statement and the normal properties work. However, if the import statement is in a profile, such as `application-prod.properties`, then you need a different way to configure retry. Configuration needs to be placed as url parameters on the import statement.
+
+.application-prod.properties
+[source,properties]
+----
+spring.config.import=configserver:http://configserver.example.com?fail-fast=true&max-attempts=10&max-interval=1500&multiplier=1.2&initial-interval=1100"
+----
+
+This sets `spring.cloud.config.fail-fast=true` (notice the missing prefix above) and all the available `spring.cloud.config.retry.*` configuration properties.
+
+[[locating-remote-configuration-resources]]
+== Locating Remote Configuration Resources
+
+The Config Service serves property sources from `/{application}/{profile}/{label}`, where the default bindings in the client app are as follows:
+
+* "application" = `${spring.application.name}`
+* "profile" = `${spring.profiles.active}` (actually `Environment.getActiveProfiles()`)
+* "label" = "master"
+
+NOTE: When setting the property `${spring.application.name}` do not prefix your app name with the reserved word `application-` to prevent issues resolving the correct property source.
+
+You can override all of them by setting `spring.cloud.config.\*` (where `*` is `name`, `profile` or `label`).
+The `label` is useful for rolling back to previous versions of configuration.
+With the default Config Server implementation, it can be a git label, branch name, or commit ID.
+Label can also be provided as a comma-separated list.
+In that case, the items in the list are tried one by one until one succeeds.
+This behavior can be useful when working on a feature branch.
+For instance, you might want to align the config label with your branch but make it optional (in that case, use `spring.cloud.config.label=myfeature,develop`).
+
+[[specifying-multiple-urls-for-the-config-server]]
+== Specifying Multiple URLs for the Config Server
+
+To ensure high availability when you have multiple instances of Config Server deployed and expect one or more instances to be unavailable or unable to honor requests from time to time (such as if the Git server is down), you can either specify multiple URLs (as a comma-separated list under the `spring.cloud.config.uri` property) or have all your instances register in a Service Registry like Eureka (if using Discovery-First Bootstrap mode).
+
+The URLs listed under `spring.cloud.config.uri` are tried in the order listed. By default, the Config Client will try to fetch properties from each URL until an attempt is successful to ensure high availability.
+
+However, if you want to ensure high availability only when the Config Server is not running (that is, when the application has exited) or when a connection timeout has occurred, set `spring.cloud.config.multiple-uri-strategy` to `connection-timeout-only`. (The default value of `spring.cloud.config.multiple-uri-strategy` is `always`.) For example, if the Config Server returns a 500 (Internal Server Error) response or the Config Client receives a 401 from the Config Server (due to bad credentials or other causes), the Config Client does not try to fetch properties from other URLs. A 400 error (except possibly 404) indicates a user issue rather than an availability problem. Note that if the Config Server is set to use a Git server and the call to Git server fails, a 404 error may occur.
+
+Several locations can be specified under a single `spring.config.import` key instead of `spring.cloud.config.uri`. Locations will be processed in the order that they are defined, with later imports taking precedence. However, if `spring.cloud.config.fail-fast` is `true`, the Config Client will fail if the first Config Server call is unsuccessful for any reason. If `fail-fast` is `false`, it will try all URLs until one call is successful, regardless of the reason for failure. (The `spring.cloud.config.multiple-uri-strategy` does not apply when specifying URLs under `spring.config.import`.)
+
+If you use HTTP basic security on your Config Server, it is currently possible to support per-Config Server auth credentials only if you embed the credentials in each URL you specify under the `spring.cloud.config.uri` property. If you use any other kind of security mechanism, you cannot (currently) support per-Config Server authentication and authorization.
+
+[[configuring-timeouts]]
+== Configuring Timeouts
+
+If you want to configure timeout thresholds:
+
+* Read timeouts can be configured by using the property `spring.cloud.config.request-read-timeout`.
+* Connection timeouts can be configured by using the property `spring.cloud.config.request-connect-timeout`.
+
+[[security]]
+== Security
+
+If you use HTTP Basic security on the server, clients need to know the password (and username if it is not the default).
+You can specify the username and password through the config server URI or via separate username and password properties, as shown in the following example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+     uri: https://user:secret@myconfig.mycompany.com
+----
+
+The following example shows an alternate way to pass the same information:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+     uri: https://myconfig.mycompany.com
+     username: user
+     password: secret
+----
+
+The `spring.cloud.config.password` and `spring.cloud.config.username` values override anything that is provided in the URI.
+
+If you deploy your apps on Cloud Foundry, the best way to provide the password is through service credentials (such as in the URI, since it does not need to be in a config file).
+The following example works locally and for a user-provided service on Cloud Foundry named `configserver`:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+     uri: ${vcap.services.configserver.credentials.uri:http://user:password@localhost:8888}
+
+----
+
+If config server requires client side TLS certificate, you can configure client side TLS certificate and trust store via properties, as shown in following example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      uri: https://myconfig.myconfig.com
+      tls:
+        enabled: true
+        key-store: <path-of-key-store>
+        key-store-type: PKCS12
+        key-store-password: <key-store-password>
+        key-password: <key-password>
+        trust-store: <path-of-trust-store>
+        trust-store-type: PKCS12
+        trust-store-password: <trust-store-password>
+----
+
+The `spring.cloud.config.tls.enabled` needs to be true to enable config client side TLS. When `spring.cloud.config.tls.trust-store` is omitted, a JVM default trust store is used. The default value for `spring.cloud.config.tls.key-store-type` and `spring.cloud.config.tls.trust-store-type` is PKCS12. When password properties are omitted, empty password is assumed.
+
+If you use another form of security, you might need to <<custom-rest-template,provide a `RestTemplate`>> to the `ConfigServicePropertySourceLocator` (for example, by grabbing it in the bootstrap context and injecting it).
+
+[[health-indicator]]
+=== Health Indicator
+
+The Config Client supplies a Spring Boot Health Indicator that attempts to load configuration from the Config Server.
+The health indicator can be disabled by setting `health.config.enabled=false`.
+The response is also cached for performance reasons.
+The default cache time to live is 5 minutes.
+To change that value, set the `health.config.time-to-live` property (in milliseconds).
+
+[[custom-rest-template]]
+=== Providing A Custom RestTemplate
+
+In some cases, you might need to customize the requests made to the config server from the client.
+Typically, doing so involves passing special `Authorization` headers to authenticate requests to the server.
+
+[[providing-a-custom-resttemplate-using-config-data]]
+==== Providing A Custom RestTemplate Using Config Data
+
+To provide a custom `RestTemplate` when using Config Data:
+
+1. Create a class which implements `BootstrapRegistryInitializer`
++
+.CustomBootstrapRegistryInitializer.java
+[source,java]
+----
+public class CustomBootstrapRegistryInitializer implements BootstrapRegistryInitializer {
+
+	@Override
+	public void initialize(BootstrapRegistry registry) {
+		registry.register(RestTemplate.class, context -> {
+			RestTemplate restTemplate = new RestTemplate();
+			// Customize RestTemplate here
+			return restTemplate;
+		});
+	}
+
+}
+----
+
+2. In `resources/META-INF`, create a file called
+`spring.factories` and specify your custom configuration, as shown in the following example:
++
+.spring.factories
+[source,properties]
+----
+org.springframework.boot.BootstrapRegistryInitializer=com.my.config.client.CustomBootstrapRegistryInitializer
+----
+
+[[providing-a-custom-resttemplate-using-bootstrap]]
+==== Providing A Custom RestTemplate Using Bootstrap
+
+To provide a custom `RestTemplate` when using Bootstrap:
+
+1. Create a new configuration bean with an implementation of `PropertySourceLocator`, as shown in the following example:
++
+.CustomConfigServiceBootstrapConfiguration.java
+[source,java]
+----
+@Configuration
+public class CustomConfigServiceBootstrapConfiguration {
+    @Bean
+    public ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
+        ConfigClientProperties clientProperties = configClientProperties();
+       ConfigServicePropertySourceLocator configServicePropertySourceLocator =  new ConfigServicePropertySourceLocator(clientProperties);
+        configServicePropertySourceLocator.setRestTemplate(customRestTemplate(clientProperties));
+        return configServicePropertySourceLocator;
+    }
+}
+----
++
+NOTE: For a simplified approach to adding `Authorization` headers, the `spring.cloud.config.headers.*` property can be used instead.
+
+2. In `resources/META-INF`, create a file called
+`spring.factories` and specify your custom configuration, as shown in the following example:
++
+.spring.factories
+[source,properties]
+----
+org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.client.CustomConfigServiceBootstrapConfiguration
+----
+
+[[vault]]
+=== Vault
+
+When using Vault as a backend to your config server, the client needs to supply a token for the server to retrieve values from Vault.
+This token can be provided within the client by setting `spring.cloud.config.token`
+in `bootstrap.yml`, as shown in the following example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      token: YourVaultToken
+----
+
+[[nested-keys-in-vault]]
+== Nested Keys In Vault
+
+Vault supports the ability to nest keys in a value stored in Vault, as shown in the following example:
+
+`echo -n '{"appA": {"secret": "appAsecret"}, "bar": "baz"}' | vault write secret/myapp -`
+
+This command writes a JSON object to your Vault.
+To access these values in Spring, you would use the traditional dot(`.`) annotation, as shown in the following example
+
+[source,java]
+----
+@Value("${appA.secret}")
+String name = "World";
+----
+
+The preceding code would sets the value of the `name` variable to `appAsecret`.
+
+[[-aot-and-native-image-support]]
+==  AOT and Native Image Support
+
+Since `4.0.0`, Spring Cloud Config Client supports Spring AOT transformations and GraalVM native images.
+
+WARNING: AOT and native image support is not available for <<config-first-bootstrap, config first bootstrap>> (with `spring.config.use-legacy-processing=true`).
+
+WARNING: Refresh scope is not supported with native images. If you are going to run your config client application as a native image, make sure to set `spring.cloud.refresh.enabled` property to `false`.
+
+WARNING: While building a project that contains Spring Cloud Config Client, you must make sure that the configuration data source that it connects to (such as, Spring Cloud Config Server, Consul, Zookeeper, Vault, and others) is available. For example, if you retrieve configuration data from Spring Cloud Config Server, make sure you have its instance running and available at the port indicated in the Config Client setup. This is necessary because the application context is being optimized at build time and requires the target environment to be resolved.
+
+WARNING: Since in AOT and native mode, configuration is being processed and the context is being optimised at build time, any properties that would influence bean creation (such as the ones used within bootstrap context) should be set to the same values at build time and runtime to avoid unexpected behaviour.
+
+WARNING: Since Config Client connects to a running data source (such as Config Server) while starting up from native image, the quick startup time will be slowed down by the time required for this network communication to take place.
+
+ifndef::releaseTrain[]
+[[appendix]]
+= Appendices
+
+include:../:_observability.adoc[]
+endif::[]
