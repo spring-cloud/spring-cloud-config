@@ -1,5 +1,6 @@
 [[serving-alternative-formats]]
 = Serving Alternative Formats
+:page-section-summary-toc: 1
 
 The default JSON format from the environment endpoints is perfect for consumption by Spring applications, because it maps directly onto the `Environment` abstraction.
 If you prefer, you can consume the same data as YAML or Java properties by adding a suffix (".yml", ".yaml" or ".properties") to the resource path.

@@ -1,5 +1,6 @@
 [[overriding-properties-using-placeholders]]
 = Overriding Properties Using Placeholders
+:page-section-summary-toc: 1
 
 A cleaner way to override properties without enabling config first bootstrap is to use property placeholders in the configuration coming from the config server.
 

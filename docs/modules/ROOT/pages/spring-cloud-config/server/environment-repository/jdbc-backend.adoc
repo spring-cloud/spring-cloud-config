@@ -1,5 +1,6 @@
 [[jdbc-backend]]
 = JDBC Backend
+:page-section-summary-toc: 1
 
 Spring Cloud Config Server supports JDBC (relational database) as a backend for configuration properties.
 You can enable this feature by adding `spring-boot-starter-data-jdbc` to the classpath and using the `jdbc` profile or by adding a bean of type `JdbcEnvironmentRepository`.

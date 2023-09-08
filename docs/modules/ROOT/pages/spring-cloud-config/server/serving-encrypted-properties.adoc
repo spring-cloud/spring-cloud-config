@@ -1,5 +1,6 @@
 [[serving-encrypted-properties]]
 = Serving Encrypted Properties
+:page-section-summary-toc: 1
 
 Sometimes you want the clients to decrypt the configuration locally, instead of doing it in the server.
 In that case, if you provide the `encrypt.*` configuration to locate a key, you can still have `/encrypt` and `/decrypt` endpoints, but you need to explicitly switch off the decryption of outgoing properties by placing `spring.cloud.config.server.encrypt.enabled=false` in `bootstrap.[yml|properties]`.

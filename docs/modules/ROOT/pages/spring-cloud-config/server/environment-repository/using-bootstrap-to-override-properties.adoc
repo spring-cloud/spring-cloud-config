@@ -1,5 +1,6 @@
 [[using-bootstrap-to-override-properties]]
 = Using Bootstrap To Override Properties
+:page-section-summary-toc: 1
 
 If you enable xref:spring-cloud-config/client.adoc#config-first-bootstrap[config first bootstrap], you can allow client applications to override configuration from the config server by placing two properties within
 the applications configuration coming from the config server.

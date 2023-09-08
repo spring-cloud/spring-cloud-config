@@ -1,5 +1,6 @@
 [[push-notifications-and-spring-cloud-bus]]
 = Push Notifications and Spring Cloud Bus
+:page-section-summary-toc: 1
 
 Many source code repository providers (such as Github, Gitlab, Gitea, Gitee, Gogs, or Bitbucket) notify you of changes in a repository through a webhook.
 You can configure the webhook through the provider's user interface as a URL and a set of events in which you are interested.

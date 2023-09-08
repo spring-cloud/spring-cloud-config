@@ -1,5 +1,6 @@
 [[security]]
 = Security
+:page-section-summary-toc: 1
 
 You can secure your Config Server in any way that makes sense to you (from physical network security to OAuth2 bearer tokens), because Spring Security and Spring Boot offer support for many security arrangements.
 

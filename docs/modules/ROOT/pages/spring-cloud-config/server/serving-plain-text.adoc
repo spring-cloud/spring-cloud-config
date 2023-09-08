@@ -1,5 +1,6 @@
 [[serving-plain-text]]
 = Serving Plain Text
+:page-section-summary-toc: 1
 
 Instead of using the `Environment` abstraction (or one of the alternative representations of it in YAML or properties format), your applications might need generic plain-text configuration files that are tailored to their environment.
 The Config Server provides these through an additional endpoint at `/{application}/{profile}/{label}/{path}`, where `application`, `profile`, and `label` have the same meaning as the regular environment endpoint, but `path` is a path to a file name (such as `log.xml`).

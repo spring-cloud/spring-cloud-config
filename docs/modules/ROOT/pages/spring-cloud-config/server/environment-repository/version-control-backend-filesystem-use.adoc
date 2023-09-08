@@ -1,5 +1,6 @@
 [[version-control-backend-filesystem-use]]
 = Version Control Backend Filesystem Use
+:page-section-summary-toc: 1
 
 WARNING: With VCS-based backends (git, svn), files are checked out or cloned to the local filesystem.
 By default, they are put in the system temporary directory with a prefix of `config-repo-`.
