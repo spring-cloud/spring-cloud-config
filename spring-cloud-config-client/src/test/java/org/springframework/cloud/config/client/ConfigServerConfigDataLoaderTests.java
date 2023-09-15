@@ -402,7 +402,7 @@ public class ConfigServerConfigDataLoaderTests {
 		PropertySource p1 = new PropertySource("p1", new HashMap<>());
 		PropertySource p2 = new PropertySource("p2", new HashMap<>());
 		ConfigData configData = setupConfigServerConfigDataLoader(Arrays.asList(p1, p2), "application-slash", null);
-		assertThat(configData.getPropertySources().size()).isEqualTo(3);
+		assertThat(configData.getPropertySources()).hasSize(3);
 		assertThat(configData.getOptions(configData.getPropertySources().get(0))
 				.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
 		assertThat(configData.getOptions(configData.getPropertySources().get(1))
@@ -420,7 +420,7 @@ public class ConfigServerConfigDataLoaderTests {
 		PropertySource p1 = new PropertySource("p1", Collections.singletonMap("foo", "bar"));
 		PropertySource p2 = new PropertySource("p2", Collections.singletonMap("hello", "world"));
 		ConfigData configData = setupConfigServerConfigDataLoader(Arrays.asList(p1, p2), "application-slash", "dev");
-		assertThat(configData.getPropertySources().size()).isEqualTo(0);
+		assertThat(configData.getPropertySources()).isEmpty();
 
 	}
 
@@ -433,7 +433,7 @@ public class ConfigServerConfigDataLoaderTests {
 		PropertySource p2 = new PropertySource("p2-dev", Collections.singletonMap("hello", "world"));
 		List<PropertySource> propertySources = Arrays.asList(p1, p2);
 		ConfigData configData = setupConfigServerConfigDataLoader(propertySources, "application-slash", "dev");
-		assertThat(configData.getPropertySources().size()).isEqualTo(2);
+		assertThat(configData.getPropertySources()).hasSize(2);
 		assertThat(configData.getOptions(configData.getPropertySources().get(0))
 				.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
 		assertThat(configData.getOptions(configData.getPropertySources().get(1))
@@ -480,7 +480,7 @@ public class ConfigServerConfigDataLoaderTests {
 
 		ConfigData configData = setupConfigServerConfigDataLoader(Arrays.asList(p1, p2, p3, p4, p5, p6, p7, p8, p9),
 				"application-slash", "foo");
-		assertThat(configData.getPropertySources().size()).isEqualTo(7);
+		assertThat(configData.getPropertySources()).hasSize(7);
 
 	}
 

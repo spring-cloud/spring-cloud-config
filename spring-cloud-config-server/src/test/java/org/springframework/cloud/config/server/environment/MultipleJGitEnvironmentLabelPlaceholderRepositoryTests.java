@@ -58,7 +58,7 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 	@Test
 	public void defaultRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo(this.defaultUri + "application.yml");
 		assertVersion(environment);
 	}
@@ -74,7 +74,7 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 	@Test
 	public void defaultLabelRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", null);
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo(this.defaultUri + "application.yml");
 		assertVersion(environment);
 	}

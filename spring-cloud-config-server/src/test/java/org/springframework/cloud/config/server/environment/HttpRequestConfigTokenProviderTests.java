@@ -17,13 +17,13 @@
 package org.springframework.cloud.config.server.environment;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +45,7 @@ public class HttpRequestConfigTokenProviderTests {
 
 	@Test
 	public void missingHttpRequest() {
-		Assertions.assertThrows(IllegalStateException.class, () -> {
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> {
 			when(httpRequestProvider.getIfAvailable()).thenReturn(null);
 			tokenProvider.getToken();
 		});
@@ -53,7 +53,7 @@ public class HttpRequestConfigTokenProviderTests {
 
 	@Test
 	public void missingTokenHeader() {
-		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
 			when(httpRequestProvider.getIfAvailable()).thenReturn(new MockHttpServletRequest());
 			tokenProvider.getToken();
 		});

@@ -81,7 +81,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "trunk");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
 	@Test
@@ -132,7 +132,7 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 					.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
 			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 			Environment environment = repository.findOne("bar", "staging", "unknownlabel");
-			assertThat(environment.getPropertySources().size()).isEqualTo(0);
+			assertThat(environment.getPropertySources()).isEmpty();
 		}).isInstanceOf(NoSuchLabelException.class);
 	}
 
@@ -143,8 +143,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "demobranch");
-		assertThat(environment.getPropertySources().get(0).getName().contains("bar.properties")).isTrue();
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
+		assertThat(environment.getPropertySources()).hasSize(1);
 	}
 
 	@Configuration(proxyBeanMethods = false)

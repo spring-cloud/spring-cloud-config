@@ -21,7 +21,6 @@ import java.io.File;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +31,7 @@ import org.springframework.cloud.config.client.ConfigClientRequestTemplateFactor
 import org.springframework.cloud.config.server.EnableConfigServer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 public class ConfigClientTlsTests extends AbstractTlsSetup {
 
@@ -120,7 +120,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test
 	public void wrongPasswordCauseFailure() {
-		Assertions.assertThrows(IllegalStateException.class, () -> {
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> {
 			TlsConfigClientRunner client = createConfigClient(false);
 			enableTlsClient(client);
 			client.setKeyStore(clientCert, WRONG_PASSWORD, WRONG_PASSWORD);
@@ -130,7 +130,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test
 	public void nonExistKeyStoreCauseFailure() {
-		Assertions.assertThrows(IllegalStateException.class, () -> {
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> {
 			TlsConfigClientRunner client = createConfigClient(false);
 			enableTlsClient(client);
 			client.setKeyStore(new File("nonExistFile"));

@@ -41,7 +41,6 @@ import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -65,6 +64,7 @@ import org.springframework.util.StreamUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * @author Dave Syer
@@ -106,7 +106,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.properties("spring.cloud.config.server.git.uri:" + uri).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getName()).isEqualTo("bar");
 		assertThat(environment.getProfiles()).isEqualTo(new String[] { "staging" });
 		assertThat(environment.getLabel()).isEqualTo("master");
@@ -114,7 +114,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void shouldFailIfNotTryingMaster() {
-		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			String uri = ConfigServerTestUtils.prepareLocalRepo();
 			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 					.properties("spring.cloud.config.server.git.uri:" + uri,
@@ -220,7 +220,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=sub");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
 	@Test
@@ -232,7 +232,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.searchPaths={application}");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("foo,bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(3);
+		assertThat(environment.getPropertySources()).hasSize(3);
 	}
 
 	@Test
@@ -243,7 +243,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 				.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=**");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("application", "test", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("file:././target/repos/ordering-repo//project/sub/application-test.yml");
 		assertThat(environment.getPropertySources().get(1).getName())
@@ -259,7 +259,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.searchPaths={profile}");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("staging", "foo,bar", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(3);
+		assertThat(environment.getPropertySources()).hasSize(3);
 	}
 
 	@Test
@@ -285,7 +285,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void invalidLabel() {
-		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			String uri = ConfigServerTestUtils.prepareLocalRepo();
 			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 					.properties("spring.cloud.config.server.git.uri:" + uri).run();
@@ -303,7 +303,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		EnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertThat(((JGitEnvironmentRepository) repository).isCloneOnStart()).isTrue();
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getName()).isEqualTo("bar");
 		assertThat(environment.getProfiles()).isEqualTo(new String[] { "staging" });
 		assertThat(environment.getLabel()).isEqualTo("master");
@@ -337,12 +337,12 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 						"--spring.cloud.config.server.git.cloneOnStart=true");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
 	@Test
 	public void findOne_FindInvalidLabel_IllegalStateExceptionThrown() throws IOException {
-		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			String uri = ConfigServerTestUtils.prepareLocalRepo();
 			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 					.properties("spring.cloud.config.server.git.uri:" + uri,
@@ -558,7 +558,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void testUnknownLabelWithRemote() throws Exception {
-		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			JGitConfigServerTestData testData = JGitConfigServerTestData
 					.prepareClonedGitRepository(TestConfiguration.class);
 			testData.getRepository().findOne("bar", "staging", "BADLabel");
@@ -621,7 +621,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 
 	@Test
 	public void testShouldFailIfRemoteBranchWasDeleted() throws Exception {
-		Assertions.assertThrows(NoSuchLabelException.class, () -> {
+		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			JGitConfigServerTestData testData = JGitConfigServerTestData.prepareClonedGitRepository(
 					Collections.singleton("spring.cloud.config.server.git.deleteUntrackedBranches=true"),
 					TestConfiguration.class);

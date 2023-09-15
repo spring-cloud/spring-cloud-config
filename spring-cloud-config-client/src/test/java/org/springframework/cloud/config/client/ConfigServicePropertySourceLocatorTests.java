@@ -386,7 +386,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		while (iterator.hasNext()) {
 			GenericRequestHeaderInterceptor genericRequestHeaderInterceptor = (GenericRequestHeaderInterceptor) iterator
 					.next();
-			assertThat(genericRequestHeaderInterceptor.getHeaders().get(AUTHORIZATION)).isEqualTo(null);
+			assertThat(genericRequestHeaderInterceptor.getHeaders()).doesNotContainKeys(AUTHORIZATION);
 		}
 	}
 

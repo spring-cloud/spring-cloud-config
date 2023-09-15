@@ -65,7 +65,7 @@ public class VanillaConfigServerIntegrationTests {
 				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
 		Environment environment = response.getBody();
-		assertThat(environment.getPropertySources().isEmpty()).isFalse();
+		assertThat(environment.getPropertySources()).isNotEmpty();
 		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("overrides");
 		ConfigServerTestUtils.assertConfigEnabled(environment);
 	}

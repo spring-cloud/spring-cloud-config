@@ -45,7 +45,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 				ServerProperties.class, PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1").run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
 		assertThat(((Collection<?>) ReflectionTestUtils.getField(ReflectionTestUtils.getField(endpoint, "extractor"),
-				"extractors")).size()).isEqualTo(7);
+				"extractors"))).hasSize(7);
 		context.close();
 	}
 
@@ -57,7 +57,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1").run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
 		assertThat(((Collection<?>) ReflectionTestUtils.getField(ReflectionTestUtils.getField(endpoint, "extractor"),
-				"extractors")).size()).isEqualTo(8);
+				"extractors"))).hasSize(8);
 		context.close();
 	}
 

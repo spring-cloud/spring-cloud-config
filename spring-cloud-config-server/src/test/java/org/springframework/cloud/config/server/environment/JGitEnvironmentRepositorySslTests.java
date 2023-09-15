@@ -27,7 +27,6 @@ import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.junit.http.SimpleHttpServer;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -41,6 +40,8 @@ import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfi
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 // FIXME: 4.0.0 https://bugs.eclipse.org/bugs/show_bug.cgi?id=570447
 @Disabled("SimpleHttpServer does not use jakarta.servlet")
@@ -71,7 +72,7 @@ public class JGitEnvironmentRepositorySslTests {
 
 	@Test
 	public void selfSignedCertIsRejected() {
-		Assertions.assertThrows(CertificateException.class, () -> {
+		assertThatExceptionOfType(CertificateException.class).isThrownBy(() -> {
 			ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfiguration.class)
 					.properties(configServerProperties()).web(WebApplicationType.NONE).run();
 

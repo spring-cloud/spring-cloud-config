@@ -70,7 +70,7 @@ public class SubversionConfigServerIntegrationTests {
 				"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
 		Environment environment = exchange.getBody();
-		assertThat(environment.getPropertySources().isEmpty()).isFalse();
+		assertThat(environment.getPropertySources()).isNotEmpty();
 		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("overrides");
 		ConfigServerTestUtils.assertConfigEnabled(environment);
 	}

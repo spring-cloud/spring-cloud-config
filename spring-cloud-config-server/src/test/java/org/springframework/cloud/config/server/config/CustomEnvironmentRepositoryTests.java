@@ -52,7 +52,7 @@ public class CustomEnvironmentRepositoryTests {
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate()
 				.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
-		assertThat(environment.getPropertySources().isEmpty()).isFalse();
+		assertThat(environment.getPropertySources()).isNotEmpty();
 	}
 
 	@Configuration(proxyBeanMethods = false)
