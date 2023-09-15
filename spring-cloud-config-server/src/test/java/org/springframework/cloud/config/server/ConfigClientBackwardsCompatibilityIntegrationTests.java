@@ -99,7 +99,7 @@ public class ConfigClientBackwardsCompatibilityIntegrationTests {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object getPropertySourceValue(Map environment) {
 		assertThat(environment).isNotNull();
-		assertThat(environment.containsKey("propertySources")).isTrue();
+		assertThat(environment).containsKey("propertySources");
 		List propertySources = (List) environment.get("propertySources");
 		assertThat(propertySources).hasSizeGreaterThan(1);
 		Map source = (Map) propertySources.get(0);

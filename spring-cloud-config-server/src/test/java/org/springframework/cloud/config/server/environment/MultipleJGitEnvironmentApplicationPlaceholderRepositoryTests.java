@@ -82,7 +82,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	@Test
 	public void defaultRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
@@ -100,7 +100,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	@Test
 	public void mappingRepo() {
 		Environment environment = this.repository.findOne("test1-config-repo", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(getUri("*").replace("{application}", "test1-config-repo") + "/application.yml");
 		assertVersion(environment);
@@ -109,7 +109,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 	@Test
 	public void otherMappingRepo() {
 		Environment environment = this.repository.findOne("test2-config-repo", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(getUri("*").replace("{application}", "test2-config-repo") + "/application.properties");
 		assertVersion(environment);

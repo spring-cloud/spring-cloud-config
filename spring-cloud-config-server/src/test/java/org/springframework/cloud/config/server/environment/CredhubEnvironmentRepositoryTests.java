@@ -66,7 +66,7 @@ public class CredhubEnvironmentRepositoryTests {
 		assertThat(environment.getProfiles()).containsExactly("production");
 		assertThat(environment.getLabel()).isEqualTo("mylabel");
 
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEmpty();
@@ -82,7 +82,7 @@ public class CredhubEnvironmentRepositoryTests {
 		assertThat(environment.getProfiles()).containsExactly("default");
 		assertThat(environment.getLabel()).isEqualTo("master");
 
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("credhub-my-application-default-master");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));
@@ -98,7 +98,7 @@ public class CredhubEnvironmentRepositoryTests {
 		assertThat(environment.getProfiles()).containsExactly("production");
 		assertThat(environment.getLabel()).isEqualTo("mylabel");
 
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));
@@ -116,7 +116,7 @@ public class CredhubEnvironmentRepositoryTests {
 		assertThat(environment.getProfiles()).containsExactly("production", "cloud");
 		assertThat(environment.getLabel()).isEqualTo("mylabel");
 
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));
@@ -150,7 +150,7 @@ public class CredhubEnvironmentRepositoryTests {
 		assertThat(environment.getProfiles()).containsExactly("production");
 		assertThat(environment.getLabel()).isEqualTo("mylabel");
 
-		assertThat(environment.getPropertySources().size()).isEqualTo(1);
+		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("credhub-my-application-production-mylabel");
 		HashMap<Object, Object> expectedValues = new HashMap<>();
@@ -170,7 +170,7 @@ public class CredhubEnvironmentRepositoryTests {
 		assertThat(environment.getProfiles()).containsExactly("production");
 		assertThat(environment.getLabel()).isEqualTo("mylabel");
 
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));
@@ -192,7 +192,7 @@ public class CredhubEnvironmentRepositoryTests {
 		assertThat(environment.getProfiles()).contains("production");
 		assertThat(environment.getLabel()).isEqualTo("mylabel");
 
-		assertThat(environment.getPropertySources().size()).isEqualTo(4);
+		assertThat(environment.getPropertySources()).hasSize(4);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));

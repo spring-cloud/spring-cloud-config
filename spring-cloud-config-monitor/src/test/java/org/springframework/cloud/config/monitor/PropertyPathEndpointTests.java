@@ -51,7 +51,7 @@ public class PropertyPathEndpointTests {
 
 	@Test
 	public void testNotifyByForm() {
-		assertThat(this.endpoint.notifyByForm(new HttpHeaders(), new ArrayList<>()).size()).isEqualTo(0);
+		assertThat(this.endpoint.notifyByForm(new HttpHeaders(), new ArrayList<>())).isEmpty();
 	}
 
 	@Test

@@ -116,7 +116,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 			future.get();
 		}
 		Environment environment = repository.findOne("bar", "staging", "master");
-		assertThat(environment.getPropertySources().size()).isEqualTo(2);
+		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getName()).isEqualTo("bar");
 		assertThat(environment.getProfiles()).isEqualTo(new String[] { "staging" });
 		assertThat(environment.getLabel()).isEqualTo("master");

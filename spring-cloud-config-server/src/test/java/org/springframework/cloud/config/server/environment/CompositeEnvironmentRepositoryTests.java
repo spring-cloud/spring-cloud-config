@@ -82,7 +82,7 @@ public class CompositeEnvironmentRepositoryTests {
 				ObservationRegistry.NOOP, true);
 		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world", false);
 		List<PropertySource> propertySources = compositeEnv.getPropertySources();
-		assertThat(propertySources.size()).isEqualTo(5);
+		assertThat(propertySources).hasSize(5);
 		assertThat(propertySources.get(0).getName()).isEqualTo("p2");
 		assertThat(propertySources.get(1).getName()).isEqualTo("p3");
 		assertThat(propertySources.get(2).getName()).isEqualTo("p4");
@@ -173,7 +173,7 @@ public class CompositeEnvironmentRepositoryTests {
 				ObservationRegistry.NOOP, false);
 		Environment env = compositeRepo.findOne("app", "dev", "label", false);
 		List<PropertySource> propertySources = env.getPropertySources();
-		assertThat(propertySources.size()).isEqualTo(1);
+		assertThat(propertySources).hasSize(1);
 		assertThat(propertySources.get(0).getName()).isEqualTo("p1");
 	}
 

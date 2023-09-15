@@ -42,7 +42,7 @@ public class CredhubConfigServerIntegrationTests extends CredhubIntegrationTest 
 		Environment environment = new TestRestTemplate()
 				.getForObject("http://localhost:" + this.port + "/myapp/master/default", Environment.class);
 
-		assertThat(environment.getPropertySources().isEmpty()).isFalse();
+		assertThat(environment.getPropertySources()).isNotEmpty();
 		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("credhub-myapp-master-default");
 		assertThat(environment.getPropertySources().get(0).getSource().toString()).isEqualTo("{key=value}");
 	}

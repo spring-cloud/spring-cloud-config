@@ -24,7 +24,6 @@ import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -155,7 +155,7 @@ public class GitSkipSslValidationCredentialsProviderTest {
 
 	@Test
 	public void testGetUnrelatedCredentialItemTypes() throws URISyntaxException {
-		Assertions.assertThrows(UnsupportedCredentialItem.class, () -> {
+		assertThatExceptionOfType(UnsupportedCredentialItem.class).isThrownBy(() -> {
 			URIish uri = new URIish("https://example.com/repo.git");
 			CredentialItem usernameCredentialItem = new CredentialItem.Username();
 			CredentialItem passwordCredentialItem = new CredentialItem.Password();

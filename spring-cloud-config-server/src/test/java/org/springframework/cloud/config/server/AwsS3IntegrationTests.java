@@ -128,7 +128,7 @@ public class AwsS3IntegrationTests {
 		RestTemplate rest = new RestTemplateBuilder().build();
 		String configServerUrl = "http://localhost:" + configServerPort;
 		Environment env = rest.getForObject(configServerUrl + "/data/dev", Environment.class);
-		assertThat(env.getPropertySources().size()).isEqualTo(3);
+		assertThat(env.getPropertySources()).hasSize(3);
 		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("s3:data-dev");
 		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("s3:data");
 		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("s3:application");
