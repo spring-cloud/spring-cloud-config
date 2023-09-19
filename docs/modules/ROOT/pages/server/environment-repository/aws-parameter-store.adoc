@@ -1,0 +1,14 @@
+[[aws-parameter-store]]
+= AWS Parameter Store
+:page-section-summary-toc: 1
+
+When using AWS Parameter Store as a backend, you can share configuration with all applications by placing properties within the `/application` hierarchy.
+
+For example, if you add parameters with the following names, all applications using the config server will have the properties `foo.bar` and `fred.baz` available to them:
+
+[source]
+----
+/config/application/foo.bar
+/config/application-default/fred.baz
+----
+

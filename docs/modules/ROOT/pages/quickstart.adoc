@@ -1,3 +1,6 @@
+[[quickstart]]
+= Quick Start
+
 This quick start walks through using both the server and the client of Spring Cloud Config Server.
 
 First, start the server, as follows:
@@ -43,11 +46,11 @@ The mini-application's `Environment` is used to enumerate property sources and p
 The HTTP service has resources in the following form:
 
 ----
-/{application}/{profile}[/{label}]
-/{application}-{profile}.yml
-/{label}/{application}-{profile}.yml
-/{application}-{profile}.properties
-/{label}/{application}-{profile}.properties
+/\{application}/\{profile}[/\{label}]
+/\{application}-\{profile}.yml
+/\{label}/\{application}-\{profile}.yml
+/\{application}-\{profile}.properties
+/\{label}/\{application}-\{profile}.properties
 ----
 
 For example:
@@ -77,7 +80,8 @@ spring:
 
 Other sources are any JDBC compatible database, Subversion, Hashicorp Vault, Credhub and local filesystems.
 
-=== Client Side Usage
+[[client-side-usage]]
+== Client Side Usage
 
 To use these features in an application, you can build it as a Spring Boot application that depends on spring-cloud-config-client (for an example, see the test cases for the config-client or the sample application).
 The most convenient way to add the dependency is with a Spring Boot starter `org.springframework.cloud:spring-cloud-starter-config`.

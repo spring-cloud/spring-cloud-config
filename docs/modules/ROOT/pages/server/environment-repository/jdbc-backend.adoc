@@ -1,0 +1,17 @@
+[[jdbc-backend]]
+= JDBC Backend
+:page-section-summary-toc: 1
+
+Spring Cloud Config Server supports JDBC (relational database) as a backend for configuration properties.
+You can enable this feature by adding `spring-boot-starter-data-jdbc` to the classpath and using the `jdbc` profile or by adding a bean of type `JdbcEnvironmentRepository`.
+If you include the right dependencies on the classpath (see the user guide for more details on that), Spring Boot configures a data source.
+// TODO Which user guide? When we know that, we should add a link to it.
+
+You can disable autoconfiguration for `JdbcEnvironmentRepository` by setting the `spring.cloud.config.server.jdbc.enabled` property to `false`.
+
+The database needs to have a table called `PROPERTIES` with columns called `APPLICATION`, `PROFILE`, and `LABEL` (with the usual `Environment` meaning), plus `KEY` and `VALUE` for the key and value pairs in `Properties` style.
+All fields are of type String in Java, so you can make them `VARCHAR` of whatever length you need.
+Property values behave in the same way as they would if they came from Spring Boot properties files named `\{application}-\{profile}.properties`, including all the encryption and decryption, which will be applied as post-processing steps (that is, not in the repository implementation directly).
+
+NOTE: The default label used for JDBC is `master`.  You can change that by setting `spring.cloud.config.server.jdbc.defaultLabel`.
+

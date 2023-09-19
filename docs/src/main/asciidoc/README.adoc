@@ -2,11 +2,12 @@ image::https://circleci.com/gh/spring-cloud/spring-cloud-config/tree/master.svg?
 image::https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/master/graph/badge.svg["Codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/master"]
 image::https://api.codacy.com/project/badge/Grade/f064024a072c477e97dca6ed5a70fccd?branch=master["Codacy code quality", link="https://www.codacy.com/app/Spring-Cloud/spring-cloud-config?branch=master&utm_source=github.com&utm_medium=referral&utm_content=spring-cloud/spring-cloud-config&utm_campaign=Badge_Grade"]
 
-include::intro.adoc[]
 
-== Features
+[[features]]
+= Features
 
-=== Spring Cloud Config Server
+[[spring-cloud-config-server]]
+== Spring Cloud Config Server
 
 Spring Cloud Config Server offers the following benefits:
 
@@ -14,7 +15,8 @@ Spring Cloud Config Server offers the following benefits:
 * Encrypt and decrypt property values (symmetric or asymmetric)
 * Embeddable easily in a Spring Boot application using `@EnableConfigServer`
 
-=== Spring Cloud Config Client
+[[spring-cloud-config-client]]
+== Spring Cloud Config Client
 
 Specifically for Spring applications, Spring Cloud Config Client lets you:
 
@@ -28,11 +30,12 @@ Specifically for Spring applications, Spring Cloud Config Client lets you:
 ** `/pause` and `/resume` for calling the `Lifecycle` methods (`stop()` and `start()` on the `ApplicationContext`).
 * Bootstrap application context: a parent context for the main application that can be trained to do anything (by default, it binds to the Config Server and decrypts property values).
 
-== Quick Start
+[[quick-start]]
+= Quick Start
 
-include::quickstart.adoc[]
 
-=== Sample Application
+[[sample-application]]
+== Sample Application
 
 You can find a sample application https://github.com/spring-cloud/spring-cloud-config/tree/master/spring-cloud-config-sample[here].
 It is a Spring Boot application, so you can run it by using the usual mechanisms (for instance, `mvn spring-boot:run`).
@@ -58,11 +61,13 @@ sampleValue
 
 The refresh endpoint reports that the "sample" property changed.
 
-== Building
+[[building]]
+= Building
 
 include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/main/docs/modules/ROOT/partials/building.adoc[]
 
-=== JCE
+[[jce]]
+== JCE
 
 If you get an exception due to "Illegal key size" and you are using Sun’s JDK, you need to install the Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files.
 See the following links for more information:
@@ -75,6 +80,7 @@ https://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.h
 
 Extract the JCE files into the `JDK/jre/lib/security` folder for whichever version of JRE/JDK x64/x86 you use.
 
-== Contributing
+[[contributing]]
+= Contributing
 
 include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/main/docs/modules/ROOT/partials/contributing.adoc[]

@@ -1,0 +1,26 @@
+[[serving-plain-text]]
+= Serving Plain Text
+:page-section-summary-toc: 1
+
+Instead of using the `Environment` abstraction (or one of the alternative representations of it in YAML or properties format), your applications might need generic plain-text configuration files that are tailored to their environment.
+The Config Server provides these through an additional endpoint at `/\{application}/\{profile}/\{label}/\{path}`, where `application`, `profile`, and `label` have the same meaning as the regular environment endpoint, but `path` is a path to a file name (such as `log.xml`).
+The source files for this endpoint are located in the same way as for the environment endpoints.
+The same search path is used for properties and YAML files.
+However, instead of aggregating all matching resources, only the first one to match is returned.
+
+After a resource is located, placeholders in the normal format (`${...}`) are resolved by using the effective `Environment` for the supplied application name, profile, and label.
+In this way, the resource endpoint is tightly integrated with the environment endpoints.
+
+NOTE: As with the source files for environment configuration, the `profile` is used to resolve the file name.
+So, if you want a profile-specific file, `/\*/development/*/logback.xml` can be resolved by a file called `logback-development.xml` (in preference to `logback.xml`).
+
+NOTE: If you do not want to supply the `label` and let the server use the default label, you can supply a `useDefaultLabel` request parameter.
+Consequently, the preceding example for the `default` profile could be `/sample/default/nginx.conf?useDefaultLabel`.
+
+At present, Spring Cloud Config can serve plaintext for git, SVN, native backends, and AWS S3.
+The support for git, SVN, and native backends is identical. AWS S3 works a bit differently.
+The following sections show how each one works:
+
+* xref:server/serving-binary-files.adoc#spring-cloud-config-serving-plain-text-git-svn-native-backends[Git, SVN, and Native Backends]
+* xref:server/serving-binary-files.adoc#spring-cloud-config-serving-plain-text-aws-s3[AWS S3]
+

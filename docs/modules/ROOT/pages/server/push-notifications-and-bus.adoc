@@ -1,0 +1,22 @@
+[[push-notifications-and-spring-cloud-bus]]
+= Push Notifications and Spring Cloud Bus
+:page-section-summary-toc: 1
+
+Many source code repository providers (such as Github, Gitlab, Gitea, Gitee, Gogs, or Bitbucket) notify you of changes in a repository through a webhook.
+You can configure the webhook through the provider's user interface as a URL and a set of events in which you are interested.
+For instance, https://developer.github.com/v3/activity/events/types/#pushevent[Github] uses a POST to the webhook with a JSON body containing a list of commits and a header (`X-Github-Event`) set to `push`.
+If you add a dependency on the `spring-cloud-config-monitor` library and activate the Spring Cloud Bus in your Config Server, then a `/monitor` endpoint is enabled.
+
+When the webhook is activated, the Config Server sends a `RefreshRemoteApplicationEvent` targeted at the applications it thinks might have changed.
+The change detection can be strategized.
+However, by default, it looks for changes in files that match the application name (for example, `foo.properties` is targeted at the `foo` application, while `application.properties` is targeted at all applications).
+The strategy to use when you want to override the behavior is `PropertyPathNotificationExtractor`, which accepts the request headers and body as parameters and returns a list of file paths that changed.
+
+The default configuration works out of the box with Github, Gitlab, Gitea, Gitee, Gogs or Bitbucket.
+In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to `/monitor` with form-encoded body parameters in the pattern of `path=\{application}`.
+Doing so broadcasts to applications matching the `\{application}` pattern (which can contain wildcards).
+
+NOTE: The `RefreshRemoteApplicationEvent` is transmitted only if the `spring-cloud-bus` is activated in both the Config Server and in the client application.
+
+NOTE: The default configuration also detects filesystem changes in local git repositories. In that case, the webhook is not used. However, as soon as you edit a config file, a refresh is broadcast.
+

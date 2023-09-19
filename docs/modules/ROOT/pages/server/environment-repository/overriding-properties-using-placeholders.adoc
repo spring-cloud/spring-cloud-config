@@ -1,0 +1,20 @@
+[[overriding-properties-using-placeholders]]
+= Overriding Properties Using Placeholders
+:page-section-summary-toc: 1
+
+A cleaner way to override properties without enabling config first bootstrap is to use property placeholders in the configuration coming from the config server.
+
+For example if the configuration coming from the config server contains the following property
+
+[source,properties]
+----
+hello=${app.hello:Hello From Config Server!}
+----
+
+You can override the value of `hello` coming from the config server by setting `app.hello` in your local application configuration
+
+[source,properties]
+----
+app.hello=Hello From Application!
+----
+

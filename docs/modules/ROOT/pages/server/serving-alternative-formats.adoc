@@ -1,0 +1,16 @@
+[[serving-alternative-formats]]
+= Serving Alternative Formats
+:page-section-summary-toc: 1
+
+The default JSON format from the environment endpoints is perfect for consumption by Spring applications, because it maps directly onto the `Environment` abstraction.
+If you prefer, you can consume the same data as YAML or Java properties by adding a suffix (".yml", ".yaml" or ".properties") to the resource path.
+This can be useful for consumption by applications that do not care about the structure of the JSON endpoints or the extra metadata they provide (for example, an application that is not using Spring might benefit from the simplicity of this approach).
+
+The YAML and properties representations have an additional flag (provided as a boolean query parameter called `resolvePlaceholders`) to signal that placeholders in the source documents (in the standard Spring `${...}` form) should be resolved in the output before rendering, where possible.
+This is a useful feature for consumers that do not know about the Spring placeholder conventions.
+
+NOTE: There are limitations in using the YAML or properties formats, mainly in relation to the loss of metadata.
+For example, the JSON is structured as an ordered list of property sources, with names that correlate with the source.
+The YAML and properties forms are coalesced into a single map, even if the origin of the values has multiple sources, and the names of the original source files are lost.
+Also, the YAML representation is not necessarily a faithful representation of the YAML source in a backing repository either. It is constructed from a list of flat property sources, and assumptions have to be made about the form of the keys.
+

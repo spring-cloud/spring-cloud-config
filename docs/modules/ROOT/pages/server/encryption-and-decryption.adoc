@@ -1,0 +1,79 @@
+[[encryption-and-decryption]]
+= Encryption and Decryption
+
+IMPORTANT: To use the encryption and decryption features you need the full-strength JCE installed in your JVM (it is not included by default).
+You can download the "`Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files`" from Oracle and follow the installation instructions (essentially, you need to replace the two policy files in the JRE lib/security directory with the ones that you downloaded).
+
+If the remote property sources contain encrypted content (values starting with `\{cipher}`), they are decrypted before sending to clients over HTTP.
+The main advantage of this setup is that the property values need not be in plain text when they are "`at rest`" (for example, in a git repository).
+If a value cannot be decrypted, it is removed from the property source and an additional property is added with the same key but prefixed with `invalid` and a value that means "`not applicable`" (usually `<n/a>`).
+This is largely to prevent cipher text being used as a password and accidentally leaking.
+
+If you set up a remote config repository for config client applications, it might contain an `application.yml` similar to the following:
+
+.application.yml
+[source,yaml]
+----
+spring:
+  datasource:
+    username: dbuser
+    password: '{cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ'
+----
+
+Encrypted values in `application.properties` file must not be wrapped in quotes. Otherwise, the value is not decrypted. The following example shows values that would work:
+
+.application.properties
+----
+spring.datasource.username: dbuser
+spring.datasource.password: {cipher}FKSAJDFGYOS8F7GLHAKERGFHLSAJ
+----
+
+You can safely push this plain text to a shared git repository, and the secret password remains protected.
+
+The server also exposes `/encrypt` and `/decrypt` endpoints (on the assumption that these are secured and only accessed by authorized agents).
+If you edit a remote config file, you can use the Config Server to encrypt values by POSTing to the `/encrypt` endpoint, as shown in the following example:
+
+----
+$ curl localhost:8888/encrypt -s -d mysecret
+682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+----
+
+TIP: If you are testing with curl, then use `--data-urlencode` (instead of `-d`) and prefix the value to encrypt with `=` (curl requires this) or set an explicit `Content-Type: text/plain` to make sure curl encodes the data correctly when there are special characters ('+' is particularly tricky).
+
+TIP: Be sure not to include any of the curl command statistics in the encrypted value, this is why the examples use the `-s` option to silence them. Outputting the value to a file can help avoid this problem.
+
+The inverse operation is also available through `/decrypt` (provided the server is
+configured with a symmetric key or a full key pair), as shown in the following example:
+
+----
+$ curl localhost:8888/decrypt -s -d 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+mysecret
+----
+
+Take the encrypted value and add the `\{cipher}` prefix before you put it in the YAML or properties file and before you commit and push it to a remote (potentially insecure) store.
+
+The `/encrypt` and `/decrypt` endpoints also both accept paths in the form of `/*/\{application}/\{profiles}`, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.
+
+NOTE: To control the cryptography in this granular way, you must also provide a `@Bean` of type `TextEncryptorLocator` that creates a different encryptor per name and profiles.
+The one that is provided by default does not do so (all encryptions use the same key).
+
+The `spring` command line client (with Spring Cloud CLI extensions
+installed) can also be used to encrypt and decrypt, as shown in the following example:
+
+----
+$ spring encrypt mysecret --key foo
+682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+$ spring decrypt --key foo 682bc583f4641835fa2db009355293665d2647dade3375c0ee201de2a49f7bda
+mysecret
+----
+
+To use a key in a file (such as an RSA public key for encryption), prepend
+the key value with "@" and provide the file path, as shown in the following example:
+
+----
+$ spring encrypt mysecret --key @${HOME}/.ssh/id_rsa.pub
+AQAjPgt3eFZQXwt8tsHAVv/QHiY5sI2dRcR+...
+----
+
+NOTE: The `--key` argument is mandatory (despite having a `--` prefix).
+

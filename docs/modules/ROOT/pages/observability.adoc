@@ -1,0 +1,6 @@
+[[observability]]
+== Observability metadata
+
+include::partial$_metrics.adoc[]
+
+include::partial$_spans.adoc[]

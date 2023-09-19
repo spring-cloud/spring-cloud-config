@@ -1,0 +1,40 @@
+[[aws-s3-backend]]
+= AWS S3 Backend
+
+Spring Cloud Config Server supports AWS S3 as a backend for configuration properties.
+You can enable this feature by adding a dependency to the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/examples-s3.html[AWS Java SDK For Amazon S3].
+
+[source,xml,indent=0]
+.pom.xml
+----
+	<dependencies>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+		</dependency>
+	</dependencies>
+----
+
+The following configuration uses the AWS S3 client to access configuration files. We can use `spring.cloud.config.server.awss3.*` properties to select the bucket where your configuration is stored.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: awss3
+  cloud:
+    config:
+      server:
+        awss3:
+          region: us-east-1
+          bucket: bucket1
+----
+
+It is also possible to specify an AWS URL to link:https://aws.amazon.com/blogs/developer/using-new-regions-and-endpoints/[override the standard endpoint] of your S3 service with `spring.cloud.config.server.awss3.endpoint`. This allows support for beta regions of S3, and other S3 compatible storage APIs.
+
+Credentials are found using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html[Default Credential Provider Chain]. Versioned and encrypted buckets are supported without further configuration.
+
+Configuration files are stored in your bucket as `\{application}-\{profile}.properties`, `\{application}-\{profile}.yml` or `\{application}-\{profile}.json`. An optional label can be provided to specify a directory path to the file.
+
+NOTE: When no profile is specified `default` will be used.
+

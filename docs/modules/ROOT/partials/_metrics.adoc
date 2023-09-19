@@ -1,0 +1,41 @@
+[[observability-metrics]]
+=== Observability - Metrics
+
+Below you can find a list of all metrics declared by this project.
+
+[[observability-metrics-environment-repository]]
+==== Environment Repository
+
+____
+Observation created around an EnvironmentRepository.
+____
+
+
+**Metric name** `spring.cloud.config.environment.find` (defined by convention class `org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryObservationConvention`). **Type** `timer`.
+
+**Metric name** `spring.cloud.config.environment.find.active` (defined by convention class `org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryObservationConvention`). **Type** `long task timer`.
+
+
+IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
+
+
+IMPORTANT: Micrometer internally uses `nanoseconds` for the baseunit. However, each backend determines the actual baseunit. (i.e. Prometheus uses seconds)
+
+
+Fully qualified name of the enclosing class `org.springframework.cloud.config.server.environment.DocumentedConfigObservation`.
+
+IMPORTANT: All tags must be prefixed with `spring.cloud.config.environment` prefix!
+
+.Low cardinality Keys
+[cols="a,a"]
+|===
+|Name | Description
+|`spring.cloud.config.environment.application` _(required)_|Application name for which properties are being queried for.
+|`spring.cloud.config.environment.class` _(required)_|Implementation of the EnvironmentRepository.
+|`spring.cloud.config.environment.label` _(required)_|Label for which properties are being queried for.
+|`spring.cloud.config.environment.profile` _(required)_|Application name for which properties are being queried for.
+|===
+
+
+
+

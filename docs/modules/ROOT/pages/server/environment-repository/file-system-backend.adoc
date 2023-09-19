@@ -1,0 +1,25 @@
+[[file-system-backend]]
+= File System Backend
+:page-section-summary-toc: 1
+
+There is also a "`native`" profile in the Config Server that does not use Git but loads the config files from the local classpath or file system (any static URL you want to point to with `spring.cloud.config.server.native.searchLocations`).
+To use the native profile, launch the Config Server with `spring.profiles.active=native`.
+
+NOTE: Remember to use the `file:` prefix for file resources (the default without a prefix is usually the classpath).
+As with any Spring Boot configuration, you can embed `${}`-style environment placeholders, but remember that absolute paths in Windows require an extra `/` (for example, `file:///${user.home}/config-repo`).
+
+WARNING: The default value of the `searchLocations` is identical to a local Spring Boot application (that is, `[classpath:/, classpath:/config,
+file:./, file:./config]`).
+This does not expose the `application.properties` from the server to all clients, because any property sources present in the server are removed before being sent to the client.
+
+TIP: A filesystem backend is great for getting started quickly and for testing.
+To use it in production, you need to be sure that the file system is reliable and shared across all instances of the Config Server.
+
+The search locations can contain placeholders for `\{application}`, `\{profile}`, and `\{label}`.
+In this way, you can segregate the directories in the path and choose a strategy that makes sense for you (such as subdirectory per application or subdirectory per profile).
+
+If you do not use placeholders in the search locations, this repository also appends the `\{label}` parameter of the HTTP resource to a suffix on the search path, so properties files are loaded from each search location *and* a subdirectory with the same name as the label (the labelled properties take precedence in the Spring Environment).
+Thus, the default behaviour with no placeholders is the same as adding a search location ending with `/\{label}/`.
+For example, `file:/tmp/config` is the same as `file:/tmp/config,file:/tmp/config/\{label}`.
+This behavior can be disabled by setting `spring.cloud.config.server.native.addLabelLocations=false`.
+

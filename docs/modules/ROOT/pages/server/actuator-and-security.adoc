@@ -1,0 +1,6 @@
+[[actuator-and-security]]
+= Actuator and Security
+:page-section-summary-toc: 1
+
+IMPORTANT: Some platforms configure health checks or something similar and point to `/actuator/health` or other actuator endpoints. If actuator is not a dependency of config server, requests to `/actuator/**` would match the config server API `/\{application}/\{label}` possibly leaking secure information. Remember to add the `spring-boot-starter-actuator` dependency in this case and configure the users such that the user that makes calls to `/actuator/**` does not have access to the config server API at `/\{application}/\{label}`.
+

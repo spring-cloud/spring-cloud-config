@@ -1,0 +1,11 @@
+[[version-control-backend-filesystem-use]]
+= Version Control Backend Filesystem Use
+:page-section-summary-toc: 1
+
+WARNING: With VCS-based backends (git, svn), files are checked out or cloned to the local filesystem.
+By default, they are put in the system temporary directory with a prefix of `config-repo-`.
+On linux, for example, it could be `/tmp/config-repo-<randomid>`.
+Some operating systems https://serverfault.com/questions/377348/when-does-tmp-get-cleared/377349#377349[routinely clean out] temporary directories.
+This can lead to unexpected behavior, such as missing properties.
+To avoid this problem, change the directory that Config Server uses by setting `spring.cloud.config.server.git.basedir` or `spring.cloud.config.server.svn.basedir` to a directory that does not reside in the system temp structure.
+

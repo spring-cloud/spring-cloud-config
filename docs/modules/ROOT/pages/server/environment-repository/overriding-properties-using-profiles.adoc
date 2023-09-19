@@ -1,0 +1,25 @@
+[[overriding-properties-using-profiles]]
+= Overriding Properties Using Profiles
+:page-section-summary-toc: 1
+
+The final way to override properties coming from the config server is to specify them in profile specific configuration file within the client
+application.
+
+For example, if you have the following configuration from the config server
+
+[source,properties]
+----
+hello="Hello From Config Server!"
+----
+
+You can override the value of `hello` in the client application by setting `hello` in a profile specific configuration file and
+then enabling that profile.
+
+.application-overrides.properties
+[source,properties]
+----
+hello="Hello From Application!"
+----
+
+In the above example you would have to enable the `overrides` profile.
+

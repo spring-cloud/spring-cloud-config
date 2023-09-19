@@ -1,0 +1,55 @@
+[[spring-cloud-config-server]]
+= Spring Cloud Config Server
+
+Spring Cloud Config Server provides an HTTP resource-based API for external configuration (name-value pairs or equivalent YAML content).
+The server is embeddable in a Spring Boot application, by using the `@EnableConfigServer` annotation.
+Consequently, the following application is a config server:
+
+.ConfigServer.java
+[source,java]
+----
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigServer {
+  public static void main(String[] args) {
+    SpringApplication.run(ConfigServer.class, args);
+  }
+}
+----
+
+Like all Spring Boot applications, it runs on port 8080 by default, but you can switch it to the more conventional port 8888 in various ways.
+The easiest, which also sets a default configuration repository, is by launching it with `spring.config.name=configserver` (there is a `configserver.yml` in the Config Server jar).
+Another is to use your own `application.properties`, as shown in the following example:
+
+.application.properties
+[source,properties]
+----
+server.port: 8888
+spring.cloud.config.server.git.uri: file://${user.home}/config-repo
+----
+
+where `${user.home}/config-repo` is a git repository containing YAML and properties files.
+
+NOTE: On Windows, you need an extra "/" in the file URL if it is absolute with a drive prefix (for example,`file:///${user.home}/config-repo`).
+
+[TIP]
+====
+The following listing shows a recipe for creating the git repository in the preceding example:
+
+----
+$ cd $HOME
+$ mkdir config-repo
+$ cd config-repo
+$ git init .
+$ echo info.foo: bar > application.properties
+$ git add -A .
+$ git commit -m "Add application.properties"
+----
+====
+
+WARNING: Using the local filesystem for your git repository is intended for testing only.
+You should use a server to host your configuration repositories in production.
+
+WARNING: The initial clone of your configuration repository can be quick and efficient if you keep only text files in it.
+If you store binary files, especially large ones, you may experience delays on the first request for configuration or encounter out of memory errors in the server.
+

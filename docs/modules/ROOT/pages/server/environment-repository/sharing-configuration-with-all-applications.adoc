@@ -1,0 +1,49 @@
+[[sharing-configuration-with-all-applications]]
+= Sharing Configuration With All Applications
+
+Sharing configuration between all applications varies according to which approach you take, as described in the following topics:
+
+* xref:server/environment-repository/sharing-configuration-with-all-applications.adoc#spring-cloud-config-server-file-based-repositories[File Based Repositories]
+* xref:server/environment-repository/sharing-configuration-with-all-applications.adoc#spring-cloud-config-server-vault-server[Vault Server]
+
+[[spring-cloud-config-server-file-based-repositories]]
+== File Based Repositories
+
+With file-based (git, svn, and native) repositories, resources with file names in `application*` (`application.properties`, `application.yml`, `application-*.properties`, and so on) are shared between all client applications.
+You can use resources with these file names to configure global defaults and have them be overridden by application-specific files as necessary.
+
+The xref:server/environment-repository/property-overrides.adoc[property overrides] feature can also be used for setting global defaults, with placeholders applications
+allowed to override them locally.
+
+TIP: With the "`native`" profile (a local file system backend) , you should use an explicit search location that is not part of the server's own configuration.
+Otherwise, the `application*` resources in the default search locations get removed because they are part of the server.
+
+[[spring-cloud-config-server-vault-server]]
+== Vault Server
+
+When using Vault as a backend, you can share configuration with all applications by placing configuration in `secret/application`.
+For example, if you run the following Vault command, all applications using the config server will have the properties `foo` and `baz` available to them:
+
+[source,sh]
+----
+$ vault write secret/application foo=bar baz=bam
+----
+
+[[credhub-server]]
+== CredHub Server
+
+When using CredHub as a backend, you can share configuration with all applications by placing configuration in `/application/` or by placing it in the `default` profile for the application.
+For example, if you run the following CredHub command, all applications using the config server will have the properties `shared.color1` and `shared.color2` available to them:
+
+[source,sh]
+----
+credhub set --name "/application/profile/master/shared" --type=json
+value: {"shared.color1": "blue", "shared.color": "red"}
+----
+
+[source,sh]
+----
+credhub set --name "/my-app/default/master/more-shared" --type=json
+value: {"shared.word1": "hello", "shared.word2": "world"}
+----
+

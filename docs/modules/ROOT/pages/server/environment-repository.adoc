@@ -1,0 +1,41 @@
+[[environment-repository]]
+= Environment Repository
+
+Where should you store the configuration data for the Config Server?
+The strategy that governs this behaviour is the `EnvironmentRepository`, serving `Environment` objects.
+This `Environment` is a shallow copy of the domain from the Spring `Environment` (including `propertySources` as the main feature).
+The `Environment` resources are parametrized by three variables:
+
+
+* `\{application}`, which maps to `spring.application.name` on the client side.
+* `\{profile}`, which maps to `spring.profiles.active` on the client (comma-separated list).
+* `\{label}`, which is a server side feature labelling a "versioned" set of config files.
+
+Repository implementations generally behave like a Spring Boot application, loading configuration files from a `spring.config.name` equal to the `\{application}` parameter, and `spring.profiles.active` equal to the `\{profiles}` parameter.
+Precedence rules for profiles are also the same as in a regular Spring Boot application: Active profiles take precedence over defaults, and, if there are multiple profiles, the last one wins (similar to adding entries to a `Map`).
+
+The following sample client application has this bootstrap configuration:
+
+[source,yaml]
+----
+spring:
+  application:
+    name: foo
+  profiles:
+    active: dev,mysql
+----
+
+(As usual with a Spring Boot application, these properties could also be set by environment variables or command line arguments).
+
+If the repository is file-based, the server creates an
+`Environment` from `application.yml` (shared between all clients) and
+`foo.yml` (with `foo.yml` taking precedence).
+If the YAML files have documents inside them that point to Spring profiles, those are applied with higher precedence (in order of the profiles listed).
+If there are profile-specific YAML (or properties) files, these are also applied with higher precedence than the defaults.
+Higher precedence translates to a `PropertySource` listed earlier in the `Environment`.
+(These same rules apply in a standalone Spring Boot application.)
+
+You can set `spring.cloud.config.server.accept-empty` to `false` so that Server would return a HTTP 404 status, if the application is not found.  By default, this flag is set to `true`.
+
+NOTE:  You cannot place `spring.main.*` properties in a remote `EnvironmentRepository`.  These properties are used as part of the application initialization.
+

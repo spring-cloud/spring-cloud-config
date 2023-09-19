@@ -1,0 +1,72 @@
+[[composite-environment-repositories]]
+= Composite Environment Repositories
+
+In some scenarios, you may wish to pull configuration data from multiple environment repositories.
+To do so, you can enable the `composite` profile in your configuration server's application properties or YAML file.
+If, for example, you want to pull configuration data from a Subversion repository as well as two Git repositories, you can set the following properties for your configuration server:
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: composite
+  cloud:
+    config:
+      server:
+        composite:
+        -
+          type: svn
+          uri: file:///path/to/svn/repo
+        -
+          type: git
+          uri: file:///path/to/rex/git/repo
+        -
+          type: git
+          uri: file:///path/to/walter/git/repo
+----
+
+Using this configuration, precedence is determined by the order in which repositories are listed under the `composite` key.
+In the above example, the Subversion repository is listed first, so a value found in the Subversion repository will override values found for the same property in one of the Git repositories.
+A value found in the `rex` Git repository will be used before a value found for the same property in the `walter` Git repository.
+
+If you want to pull configuration data only from repositories that are each of distinct types, you can enable the corresponding profiles, rather than the `composite` profile, in your configuration server's application properties or YAML file.
+If, for example, you want to pull configuration data from a single Git repository and a single HashiCorp Vault server, you can set the following properties for your configuration server:
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: git, vault
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///path/to/git/repo
+          order: 2
+        vault:
+          host: 127.0.0.1
+          port: 8200
+          order: 1
+----
+
+Using this configuration, precedence can be determined by an `order` property.
+You can use the `order` property to specify the priority order for all your repositories.
+The lower the numerical value of the `order` property, the higher priority it has.
+The priority order of a repository helps resolve any potential conflicts between repositories that contain values for the same properties.
+
+NOTE: If your composite environment includes a Vault server as in the previous example, you must include a Vault token in every request made to the configuration server. See xref:server/environment-repository/vault-backend.adoc[Vault Backend].
+
+NOTE: Any type of failure when retrieving values from an environment repository results in a failure for the entire composite environment.
+If you would like the composite to continue even when a repository fails you can set `spring.cloud.config.server.failOnCompositeError` to `false`.
+
+NOTE: When using a composite environment, it is important that all repositories contain the same labels.
+If you have an environment similar to those in the preceding examples and you request configuration data with the `master` label but the Subversion repository does not contain a branch called `master`, the entire request fails.
+
+[[custom-composite-environment-repositories]]
+== Custom Composite Environment Repositories
+
+In addition to using one of the environment repositories from Spring Cloud, you can also provide your own `EnvironmentRepository` bean to be included as part of a composite environment.
+To do so, your bean must implement the `EnvironmentRepository` interface.
+If you want to control the priority of your custom `EnvironmentRepository` within the composite environment, you should also implement the `Ordered` interface and override the `getOrdered` method.
+If you do not implement the `Ordered` interface, your `EnvironmentRepository` is given the lowest priority.
+

@@ -1,0 +1,26 @@
+[[using-multiple-keys-and-key-rotation]]
+= Using Multiple Keys and Key Rotation
+:page-section-summary-toc: 1
+
+In addition to the `\{cipher}` prefix in encrypted property values, the Config Server looks for zero or more `{name:value}` prefixes before the start of the (Base64 encoded) cipher text.
+The keys are passed to a `TextEncryptorLocator`, which can do whatever logic it needs to locate a `TextEncryptor` for the cipher.
+If you have configured a keystore (`encrypt.keystore.location`), the default locator looks for keys with aliases supplied by the `key` prefix, with a cipher text like resembling the following:
+
+[source,yaml]
+----
+foo:
+  bar: `\{cipher}{key:testkey}...`
+----
+
+The locator looks for a key named "testkey".
+A secret can also be supplied by using a `{secret:...}` value in the prefix.
+However, if it is not supplied, the default is to use the keystore password (which is what you get when you build a keystore and do not specify a secret).
+If you do supply a secret, you should also encrypt the secret using a custom `SecretLocator`.
+
+When the keys are being used only to encrypt a few bytes of configuration data (that is, they are not being used elsewhere), key rotation is hardly ever necessary on cryptographic grounds.
+However, you might occasionally  need to change the keys (for example, in the event of a security breach).
+In that case, all the clients would need to change their source config files (for example, in git) and use a new `{key:...}` prefix in all the ciphers.
+Note that the clients need to first check that the key alias is available in the Config Server keystore.
+
+TIP: If you want to let the Config Server handle all encryption as well as decryption, the `{name:value}` prefixes can also be added as plain text posted to the `/encrypt` endpoint.
+

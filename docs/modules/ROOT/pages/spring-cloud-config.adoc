@@ -1,0 +1,12 @@
+[[spring-cloud-config]]
+= Spring Cloud Config
+:page-section-summary-toc: 1
+:github: https://github.com/spring-cloud/spring-cloud-config
+:githubmaster: {github}/tree/master
+:docslink: {githubmaster}/docs/src/main/asciidoc
+:nofooter:
+:special-string: _
+
+*{spring-cloud-version}*
+
+

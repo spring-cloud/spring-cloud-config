@@ -1,0 +1,80 @@
+[[serving-binary-files]]
+= Serving Binary Files
+
+In order to serve binary files from the config server you will need to send an `Accept` header of `application/octet-stream`.
+
+[[spring-cloud-config-serving-plain-text-git-svn-native-backends]]
+== Git, SVN, and Native Backends
+
+Consider the following example for a GIT or SVN repository or a native backend:
+
+[source]
+----
+application.yml
+nginx.conf
+----
+
+The `nginx.conf` might resemble the following listing:
+
+[source]
+----
+server {
+    listen              80;
+    server_name         ${nginx.server.name};
+}
+----
+
+`application.yml` might resemble the following listing:
+
+[source,yaml]
+----
+nginx:
+  server:
+    name: example.com
+---
+spring:
+  profiles: development
+nginx:
+  server:
+    name: develop.com
+----
+
+The `/sample/default/master/nginx.conf` resource might be as follows:
+
+[source]
+----
+server {
+    listen              80;
+    server_name         example.com;
+}
+----
+
+`/sample/development/master/nginx.conf` might be as follows:
+
+[source]
+----
+server {
+    listen              80;
+    server_name         develop.com;
+}
+----
+
+[[spring-cloud-config-serving-plain-text-aws-s3]]
+== AWS S3
+
+To enable serving plain text for AWS s3, the Config Server application needs to include a dependency on `io.awspring.cloud:spring-cloud-aws-context`.
+For details on how to set up that dependency, see the
+https://docs.awspring.io/spring-cloud-aws/docs/2.4.3/reference/html/index.html#spring-cloud-aws-maven-dependency-management[Spring Cloud AWS Reference Guide].
+In addition, when using Spring Cloud AWS with Spring Boot it is useful to include the https://docs.awspring.io/spring-cloud-aws/docs/2.4.3/reference/html/index.html#spring-boot-auto-configuration[auto-configuration dependency].
+Then you need to configure Spring Cloud AWS, as described in the
+https://docs.awspring.io/spring-cloud-aws/docs/2.4.3/reference/html/index.html#configuring-credentials[Spring Cloud AWS Reference Guide].
+
+[[decrypting-plain-text]]
+== Decrypting Plain Text
+
+By default, encrypted values in plain text files are not decrypted. In order to enable decryption for plain text files, set `spring.cloud.config.server.encrypt.enabled=true` and `spring.cloud.config.server.encrypt.plainTextEncrypt=true` in `bootstrap.[yml|properties]`
+
+NOTE: Decrypting plain text files is only supported for YAML, JSON, and properties file extensions.
+
+If this feature is enabled, and an unsupported file extention is requested, any encrypted values in the file will not be decrypted.
+

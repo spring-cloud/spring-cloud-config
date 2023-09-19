@@ -1,0 +1,160 @@
+[[vault-backend]]
+= Vault Backend
+
+Spring Cloud Config Server also supports https://www.vaultproject.io[Vault] as a backend.
+
+****
+Vault is a tool for securely accessing secrets.
+A secret is anything that to which you want to tightly control access, such as API keys, passwords, certificates, and other sensitive information. Vault provides a unified interface to any secret while providing tight access control and recording a detailed audit log.
+****
+
+For more information on Vault, see the https://learn.hashicorp.com/vault/?track=getting-started#getting-started[Vault quick start guide].
+
+To enable the config server to use a Vault backend, you can run your config server with the `vault` profile.
+For example, in your config server's `application.properties`, you can add `spring.profiles.active=vault`.
+
+****
+By default, Spring Cloud Config Server uses Token based Authentication to fetch config from Vault.
+Vault also supports additional authentication methods like AppRole, LDAP, JWT, CloudFoundry, Kubernetes Auth.
+In order to use any authentication method other than TOKEN or the X-Config-Token header, we need to have Spring Vault Core on the classpath so that Config Server can delegate authentication to that library. Please add the below dependencies to your Config Server App.
+
+`Maven (pom.xml)`
+----
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.vault</groupId>
+		<artifactId>spring-vault-core</artifactId>
+	</dependency>
+</dependencies>
+----
+
+`Gradle (build.gradle)`
+----
+dependencies {
+    implementation "org.springframework.vault:spring-vault-core"
+}
+----
+****
+
+By default, the config server assumes that your Vault server runs at `http://127.0.0.1:8200`.
+It also assumes that the name of backend is `secret` and the key is `application`.
+All of these defaults can be configured in your config server's `application.properties`.
+The following table describes configurable Vault properties:
+
+|===
+|Name |Default Value
+
+|host
+|127.0.0.1
+
+|port
+|8200
+
+|scheme
+|http
+
+|backend
+|secret
+
+|defaultKey
+|application
+
+|profileSeparator
+|,
+
+|kvVersion
+|1
+
+|skipSslValidation
+|false
+
+|timeout
+|5
+
+|namespace
+|null
+
+|===
+
+IMPORTANT: All of the properties in the preceding table must be prefixed with `spring.cloud.config.server.vault` or placed in the correct Vault section of a composite configuration.
+
+All configurable properties can be found in `org.springframework.cloud.config.server.environment.VaultEnvironmentProperties`.
+
+IMPORTANT: Vault 0.10.0 introduced a versioned key-value backend (k/v backend version 2) that exposes a different API than earlier versions, it now requires a `data/` between the mount path and the actual context path and wraps secrets in a `data` object. Setting `spring.cloud.config.server.vault.kv-version=2` will take this into account.
+
+Optionally, there is support for the Vault Enterprise `X-Vault-Namespace` header. To have it sent to Vault set the `namespace` property.
+
+With your config server running, you can make HTTP requests to the server to retrieve
+values from the Vault backend.
+To do so, you need a token for your Vault server.
+
+First, place some data in you Vault, as shown in the following example:
+
+[source,sh]
+----
+$ vault kv put secret/application foo=bar baz=bam
+$ vault kv put secret/myapp foo=myappsbar
+----
+
+Second, make an HTTP request to your config server to retrieve the values, as shown in the following example:
+
+`$ curl -X "GET" "http://localhost:8888/myapp/default" -H "X-Config-Token: yourtoken"`
+
+You should see a response similar to the following:
+
+[source,json]
+----
+{
+   "name":"myapp",
+   "profiles":[
+      "default"
+   ],
+   "label":null,
+   "version":null,
+   "state":null,
+   "propertySources":[
+      {
+         "name":"vault:myapp",
+         "source":{
+            "foo":"myappsbar"
+         }
+      },
+      {
+         "name":"vault:application",
+         "source":{
+            "baz":"bam",
+            "foo":"bar"
+         }
+      }
+   ]
+}
+----
+
+The default way for a client to provide the necessary authentication to let Config Server talk to Vault is to set the X-Config-Token header.
+However, you can instead omit the header and configure the authentication in the server, by setting the same configuration properties as Spring Cloud Vault.
+The property to set is `spring.cloud.config.server.vault.authentication`.
+It should be set to one of the supported authentication methods.
+You may also need to set other properties specific to the authentication method you use, by using the same property names as documented for `spring.cloud.vault` but instead using the `spring.cloud.config.server.vault` prefix.
+See the https://cloud.spring.io/spring-cloud-vault/reference/html/#vault.config.authentication[Spring Cloud Vault Reference Guide] for more detail.
+
+IMPORTANT: If you omit the X-Config-Token header and use a server property to set the authentication, the Config Server application needs an additional dependency on Spring Vault to enable the additional authentication options.
+See the https://docs.spring.io/spring-vault/docs/current/reference/html/#dependencies[Spring Vault Reference Guide] for how to add that dependency.
+
+[[multiple-properties-sources]]
+== Multiple Properties Sources
+
+When using Vault, you can provide your applications with multiple properties sources.
+For example, assume you have written data to the following paths in Vault:
+
+[source,sh]
+----
+secret/myApp,dev
+secret/myApp
+secret/application,dev
+secret/application
+----
+
+Properties written to `secret/application` are available to <<_vault_server,all applications using the Config Server>>.
+An application with the name, `myApp`, would have any properties written to `secret/myApp` and `secret/application` available to it.
+When `myApp` has the `dev` profile enabled, properties written to all of the above paths would be available to it, with properties in the first path in the list taking priority over the others.
+
