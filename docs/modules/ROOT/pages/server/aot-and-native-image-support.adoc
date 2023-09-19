@@ -1,4 +1,4 @@
-[[-aot-and-native-image-support]]
+[[aot-and-native-image-support]]
 =  AOT and Native Image Support
 :page-section-summary-toc: 1
 

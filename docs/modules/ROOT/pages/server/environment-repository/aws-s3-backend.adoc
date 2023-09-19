@@ -34,7 +34,7 @@ It is also possible to specify an AWS URL to link:https://aws.amazon.com/blogs/d
 
 Credentials are found using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html[Default Credential Provider Chain]. Versioned and encrypted buckets are supported without further configuration.
 
-Configuration files are stored in your bucket as `{application}-{profile}.properties`, `{application}-{profile}.yml` or `{application}-{profile}.json`. An optional label can be provided to specify a directory path to the file.
+Configuration files are stored in your bucket as `\{application}-\{profile}.properties`, `\{application}-\{profile}.yml` or `\{application}-\{profile}.json`. An optional label can be provided to specify a directory path to the file.
 
 NOTE: When no profile is specified `default` will be used.
 

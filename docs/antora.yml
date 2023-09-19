@@ -1,6 +1,6 @@
 name: cloud-config
 version: true
-title: spring-cloud-config
+title: Spring Cloud Config
 nav:
   - modules/ROOT/nav.adoc
 ext:

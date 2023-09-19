@@ -7,10 +7,10 @@ If you set it with a `file:` prefix, it should work from a local repository so t
 To scale the Config Server up and make it highly available, you need to have all instances of the server pointing to the same repository, so only a shared file system would work.
 Even in that case, it is better to use the `ssh:` protocol for a shared filesystem repository, so that the server can clone it and use a local working copy as a cache.
 
-This repository implementation maps the `{label}` parameter of the HTTP resource to a git label (commit id, branch name, or tag).
-If the git branch or tag name contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `({special-string})` (to avoid ambiguity with other URL paths).
-For example, if the label is `foo/bar`, replacing the slash would result in the following label: `foo({special-string})bar`.
-The inclusion of the special string `({special-string})` can also be applied to the `{application}` parameter.
+This repository implementation maps the `\{label}` parameter of the HTTP resource to a git label (commit id, branch name, or tag).
+If the git branch or tag name contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `(\{special-string})` (to avoid ambiguity with other URL paths).
+For example, if the label is `foo/bar`, replacing the slash would result in the following label: `foo(\{special-string})bar`.
+The inclusion of the special string `(\{special-string})` can also be applied to the `\{application}` parameter.
 If you use a command-line client such as curl, be careful with the brackets in the URL -- you should escape them from the shell with single quotes ('').
 
 [[skipping-ssl-certificate-validation]]
@@ -48,7 +48,7 @@ spring:
 [[placeholders-in-git-uri]]
 == Placeholders in Git URI
 
-Spring Cloud Config Server supports a git repository URL with placeholders for the `{application}` and `{profile}` (and `{label}` if you need it, but remember that the label is applied as a git label anyway).
+Spring Cloud Config Server supports a git repository URL with placeholders for the `\{application}` and `\{profile}` (and `\{label}` if you need it, but remember that the label is applied as a git label anyway).
 So you can support a "`one repository per application`" policy by using a structure similar to the following:
 
 [source,yaml]
@@ -58,13 +58,13 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/myorg/{application}
+          uri: https://github.com/myorg/\{application}
 ----
 
 You can also support a "`one repository per profile`" policy by using a similar pattern but with
-`{profile}`.
+`\{profile}`.
 
-Additionally, using the special string "({special-string})" within your `{application}` parameters can enable support for multiple
+Additionally, using the special string "(\{special-string})" within your `\{application}` parameters can enable support for multiple
 organizations, as shown in the following example:
 
 [source,yaml]
@@ -74,17 +74,17 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/{application}
+          uri: https://github.com/\{application}
 ----
 
-where `{application}` is provided at request time in the following format: `organization({special-string})application`.
+where `\{application}` is provided at request time in the following format: `organization(\{special-string})application`.
 
 [[pattern-matching-and-multiple-repositories]]
 == Pattern Matching and Multiple Repositories
 
 Spring Cloud Config also includes support for more complex requirements with pattern
 matching on the application and profile name.
-The pattern format is a comma-separated list of `{application}/{profile}` names with wildcards (note that a pattern beginning with a wildcard may need to be quoted), as shown in the following example:
+The pattern format is a comma-separated list of `\{application}/\{profile}` names with wildcards (note that a pattern beginning with a wildcard may need to be quoted), as shown in the following example:
 
 [source,yaml]
 ----
@@ -104,7 +104,7 @@ spring:
               uri: file:/home/configsvc/config-repo
 ----
 
-If `{application}/{profile}` does not match any of the patterns, it uses the default URI defined under `spring.cloud.config.server.git.uri`.
+If `\{application}/\{profile}` does not match any of the patterns, it uses the default URI defined under `spring.cloud.config.server.git.uri`.
 In the above example, for the "`simple`" repository, the pattern is `simple/\*` (it only matches one application named `simple` in all profiles). The "`local`" repository matches all application names beginning with `local` in all profiles (the `/*` suffix is added automatically to any pattern that does not have a profile matcher).
 
 NOTE: The "`one-liner`" short cut used in the "`simple`" example can be used only if the only property to be set is the URI.
@@ -256,7 +256,7 @@ If the `software.amazon.awssdk:auth` jar is not on your classpath, the AWS Code 
 
 Spring Cloud Config Server also supports authenticating against https://cloud.google.com/source-repositories/[Google Cloud Source] repositories.
 
-If your Git URI uses the `http` or `https` protocol and the domain name is `source.developers.google.com`, the Google Cloud Source credentials provider will be used. A Google Cloud Source repository URI has the format `https://source.developers.google.com/p/${GCP_PROJECT}/r/${REPO}`. To obtain the URI for your repository, click on "Clone" in the Google Cloud Source UI, and select "Manually generated credentials". Do not generate any credentials, simply copy the displayed URI.
+If your Git URI uses the `http` or `https` protocol and the domain name is `source.developers.google.com`, the Google Cloud Source credentials provider will be used. A Google Cloud Source repository URI has the format `https://source.developers.google.com/p/$\{GCP_PROJECT}/r/$\{REPO}`. To obtain the URI for your repository, click on "Clone" in the Google Cloud Source UI, and select "Manually generated credentials". Do not generate any credentials, simply copy the displayed URI.
 
 The Google Cloud Source credentials provider will use Google Cloud Platform application default credentials. See https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login[Google Cloud SDK documentation] on how to create application default credentials for a system. This approach will work for user accounts in dev environments and for service accounts in production environments.
 
@@ -344,7 +344,7 @@ The following table describes the SSH configuration properties.
 [[placeholders-in-git-search-paths]]
 == Placeholders in Git Search Paths
 
-Spring Cloud Config Server also supports a search path with placeholders for the `{application}` and `{profile}` (and `{label}` if
+Spring Cloud Config Server also supports a search path with placeholders for the `\{application}` and `\{profile}` (and `\{label}` if
 you need it), as shown in the following example:
 
 [source,yaml]
@@ -355,7 +355,7 @@ spring:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
-          search-paths: '{application}'
+          search-paths: '\{application}'
 ----
 
 The preceding listing causes a search of the repository for files in the same name as the directory (as well as the top level).

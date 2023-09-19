@@ -4,7 +4,7 @@
 IMPORTANT: To use the encryption and decryption features you need the full-strength JCE installed in your JVM (it is not included by default).
 You can download the "`Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files`" from Oracle and follow the installation instructions (essentially, you need to replace the two policy files in the JRE lib/security directory with the ones that you downloaded).
 
-If the remote property sources contain encrypted content (values starting with `{cipher}`), they are decrypted before sending to clients over HTTP.
+If the remote property sources contain encrypted content (values starting with `\{cipher}`), they are decrypted before sending to clients over HTTP.
 The main advantage of this setup is that the property values need not be in plain text when they are "`at rest`" (for example, in a git repository).
 If a value cannot be decrypted, it is removed from the property source and an additional property is added with the same key but prefixed with `invalid` and a value that means "`not applicable`" (usually `<n/a>`).
 This is largely to prevent cipher text being used as a password and accidentally leaking.
@@ -50,9 +50,9 @@ $ curl localhost:8888/decrypt -s -d 682bc583f4641835fa2db009355293665d2647dade33
 mysecret
 ----
 
-Take the encrypted value and add the `{cipher}` prefix before you put it in the YAML or properties file and before you commit and push it to a remote (potentially insecure) store.
+Take the encrypted value and add the `\{cipher}` prefix before you put it in the YAML or properties file and before you commit and push it to a remote (potentially insecure) store.
 
-The `/encrypt` and `/decrypt` endpoints also both accept paths in the form of `/*/{application}/{profiles}`, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.
+The `/encrypt` and `/decrypt` endpoints also both accept paths in the form of `/*/\{application}/\{profiles}`, which can be used to control cryptography on a per-application (name) and per-profile basis when clients call into the main environment resource.
 
 NOTE: To control the cryptography in this granular way, you must also provide a `@Bean` of type `TextEncryptorLocator` that creates a different encryptor per name and profiles.
 The one that is provided by default does not do so (all encryptions use the same key).

@@ -13,8 +13,8 @@ However, by default, it looks for changes in files that match the application na
 The strategy to use when you want to override the behavior is `PropertyPathNotificationExtractor`, which accepts the request headers and body as parameters and returns a list of file paths that changed.
 
 The default configuration works out of the box with Github, Gitlab, Gitea, Gitee, Gogs or Bitbucket.
-In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to `/monitor` with form-encoded body parameters in the pattern of `path={application}`.
-Doing so broadcasts to applications matching the `{application}` pattern (which can contain wildcards).
+In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to `/monitor` with form-encoded body parameters in the pattern of `path=\{application}`.
+Doing so broadcasts to applications matching the `\{application}` pattern (which can contain wildcards).
 
 NOTE: The `RefreshRemoteApplicationEvent` is transmitted only if the `spring-cloud-bus` is activated in both the Config Server and in the client application.
 

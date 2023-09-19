@@ -7,11 +7,11 @@ This `Environment` is a shallow copy of the domain from the Spring `Environment`
 The `Environment` resources are parametrized by three variables:
 
 
-* `{application}`, which maps to `spring.application.name` on the client side.
-* `{profile}`, which maps to `spring.profiles.active` on the client (comma-separated list).
-* `{label}`, which is a server side feature labelling a "versioned" set of config files.
+* `\{application}`, which maps to `spring.application.name` on the client side.
+* `\{profile}`, which maps to `spring.profiles.active` on the client (comma-separated list).
+* `\{label}`, which is a server side feature labelling a "versioned" set of config files.
 
-Repository implementations generally behave like a Spring Boot application, loading configuration files from a `spring.config.name` equal to the `{application}` parameter, and `spring.profiles.active` equal to the `{profiles}` parameter.
+Repository implementations generally behave like a Spring Boot application, loading configuration files from a `spring.config.name` equal to the `\{application}` parameter, and `spring.profiles.active` equal to the `\{profiles}` parameter.
 Precedence rules for profiles are also the same as in a regular Spring Boot application: Active profiles take precedence over defaults, and, if there are multiple profiles, the last one wins (similar to adding entries to a `Map`).
 
 The following sample client application has this bootstrap configuration:
