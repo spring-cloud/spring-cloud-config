@@ -237,7 +237,11 @@ public class EnvironmentRepositoryConfiguration {
 	@ConditionalOnClass(SsmClient.class)
 	static class AwsParameterStoreFactoryConfig {
 
-		@Bean
+		//set the bean name explicitly since we assume the bean name will start with the profile
+		//name in the case of a composite configuration.  The profile name is awsparamstore
+		//but the method name starts with awsParameterStore and the logic in CompositeUtils.getFactoryName
+		//will not find a match
+		@Bean(name = "awsparamstoreenvironmentrepositoryfactory")
 		public AwsParameterStoreEnvironmentRepositoryFactory awsParameterStoreEnvironmentRepositoryFactory(
 				ConfigServerProperties server) {
 			return new AwsParameterStoreEnvironmentRepositoryFactory(server);
