@@ -31,6 +31,7 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.MethodMetadata;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Dylan Roberts
@@ -62,7 +63,8 @@ public final class CompositeUtils {
 	public static String getFactoryName(String type, ConfigurableListableBeanFactory beanFactory) {
 		String[] factoryNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(beanFactory,
 				EnvironmentRepositoryFactory.class, true, false);
-		return Arrays.stream(factoryNames).filter(n -> n.startsWith(type)).findFirst().orElse(null);
+		return Arrays.stream(factoryNames).filter(n -> StringUtils.startsWithIgnoreCase(n, type)).findFirst()
+				.orElse(null);
 	}
 
 	/**

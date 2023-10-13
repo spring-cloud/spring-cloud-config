@@ -23,6 +23,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
@@ -52,6 +53,19 @@ public class EnvironmentRepositoryConfigurationTests {
 					EnvironmentConfigTokenProvider tokenProvider = context
 							.getBean(EnvironmentConfigTokenProvider.class);
 					assertThat(tokenProvider.getToken()).isEqualTo("testTokenValue");
+				});
+	}
+
+	@Test
+	public void awsParamStoreFactoryBeanExistsWithComposite() {
+		new ApplicationContextRunner()
+				.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
+				.withPropertyValues("spring.profiles.active=composite",
+						"spring.cloud.config.server.composite[0].type=awsparamstore",
+						"spring.cloud.config.server.composite[1].type=git",
+						"spring.cloud.config.server.composite[1].uri=https://test.com/Some-Test-Repo.git")
+				.run((context) -> {
+					assertThat(context.getBean(AwsParameterStoreEnvironmentRepositoryFactory.class)).isNotNull();
 				});
 	}
 
