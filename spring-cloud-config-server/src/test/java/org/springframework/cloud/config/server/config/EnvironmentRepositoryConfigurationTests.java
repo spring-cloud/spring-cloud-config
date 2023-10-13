@@ -62,6 +62,7 @@ public class EnvironmentRepositoryConfigurationTests {
 				.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
 				.withPropertyValues("spring.profiles.active=composite",
 						"spring.cloud.config.server.composite[0].type=awsparamstore",
+						"spring.cloud.config.server.composite[0].region=us-east-1",
 						"spring.cloud.config.server.composite[1].type=git",
 						"spring.cloud.config.server.composite[1].uri=https://test.com/Some-Test-Repo.git")
 				.run((context) -> {
