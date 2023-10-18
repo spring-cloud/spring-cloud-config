@@ -137,7 +137,7 @@ public class EncryptionController {
 		catch (IllegalArgumentException | IllegalStateException e) {
 			if (logger.isErrorEnabled()) {
 				logger.error("Cannot decrypt key:" + name + ", value:" + data +
-					", Please verify if symmetric key is set correctly", e);
+					", Please verify if encrypt.key is set correctly", e);
 			}
 			throw new InvalidCipherException();
 		}
