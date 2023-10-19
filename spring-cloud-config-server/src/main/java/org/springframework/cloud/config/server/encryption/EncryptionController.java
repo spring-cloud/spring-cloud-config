@@ -136,8 +136,8 @@ public class EncryptionController {
 		}
 		catch (IllegalArgumentException | IllegalStateException e) {
 			if (logger.isErrorEnabled()) {
-				logger.error("Cannot decrypt key:" + name + ", value:" + data +
-					", Please verify if encrypt.key is set correctly", e);
+				logger.error("Cannot decrypt key:" + name + ", value:" + data
+						+ ", Please verify if encrypt.key is set correctly", e);
 			}
 			throw new InvalidCipherException();
 		}
