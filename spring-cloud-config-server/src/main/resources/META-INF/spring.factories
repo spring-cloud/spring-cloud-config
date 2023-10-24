@@ -1,8 +1,8 @@
 # Bootstrap components
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
 org.springframework.cloud.config.server.bootstrap.ConfigServerBootstrapConfiguration,\
-org.springframework.cloud.config.server.config.DefaultTextEncryptionAutoConfiguration,\
 org.springframework.cloud.config.server.config.RsaEncryptionAutoConfiguration,\
+org.springframework.cloud.config.server.config.DefaultTextEncryptionAutoConfiguration,\
 org.springframework.cloud.config.server.config.EncryptionAutoConfiguration
 
 # Environment PostProcessor
