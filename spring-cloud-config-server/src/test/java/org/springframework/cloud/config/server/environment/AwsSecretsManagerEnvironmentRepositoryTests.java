@@ -42,6 +42,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretResponse;
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.RestoreSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.UpdateSecretVersionStageRequest;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -90,6 +91,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
 
 	private final List<String> toBeRemoved = new ArrayList<>();
+
+	private final List<String> markedForDeletion = new ArrayList<>();
 
 	private static Map<String, String> getFooProperties() {
 		return new HashMap<String, String>() {
@@ -237,6 +240,10 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@AfterEach
 	public void cleanUp() {
+		markedForDeletion
+				.forEach(value -> smClient.restoreSecret(RestoreSecretRequest.builder().secretId(value).build()));
+		markedForDeletion.clear();
+
 		toBeRemoved.forEach(value -> smClient
 				.deleteSecret(DeleteSecretRequest.builder().secretId(value).forceDeleteWithoutRecovery(true).build()));
 		toBeRemoved.clear();
@@ -2503,6 +2510,36 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfileForFooMarkedForDeletion() {
+		String application = "foo";
+		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+
+		String fooPropertiesName = "aws:secrets:/secret/foo/";
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooProperties());
+
+		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultProperties());
+
+		String applicationPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
+
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(applicationDefaultProperties, fooProperties, applicationProperties));
+
+		putSecrets(environment);
+		deleteSecrets(environment);
+
+		Environment emptyEnvironment = new Environment(application, profiles, null, null, null);
+
+		Environment resultEnv = repository.findOne(application, profile, null);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(emptyEnvironment);
+	}
+
+	@Test
 	public void factoryCustomizableWithRegion() {
 		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(
 				new ConfigServerProperties());
@@ -2536,6 +2573,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 						.moveToVersionId(response.versionId()).versionStage(label).build());
 			}
 			toBeRemoved.add(path);
+		}
+	}
+
+	private void deleteSecrets(Environment environment) {
+		for (PropertySource ps : environment.getPropertySources()) {
+			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
+			smClient.deleteSecret(DeleteSecretRequest.builder().secretId(path).recoveryWindowInDays(30L).build());
+			markedForDeletion.add(path);
 		}
 	}
 
