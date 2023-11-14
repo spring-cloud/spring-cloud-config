@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -155,7 +156,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 				}
 			}
 		}
-		catch (ResourceNotFoundException | IOException e) {
+		catch (InvalidRequestException | ResourceNotFoundException | IOException e) {
 			log.debug(String.format(
 					"Skip adding propertySource. Unable to load secrets from AWS Secrets Manager for secretId=%s",
 					path), e);
