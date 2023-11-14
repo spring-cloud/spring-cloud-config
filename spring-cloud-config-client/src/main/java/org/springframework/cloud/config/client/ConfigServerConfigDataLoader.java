@@ -265,8 +265,23 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		String name = properties.getName();
 		String profile = resource.getProfiles();
 		String token = properties.getToken();
-		int noOfUrls = properties.getUri().length;
-		if (noOfUrls > 1) {
+		String[] uris;
+		boolean discoveryEnabled = properties.getDiscovery().isEnabled();
+		ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()
+				.get(ConfigClientProperties.class);
+		// In the case where discovery is enabled we need to extract the config server
+		// uris, username, and password
+		// from the properties from the context. These are set in
+		// ConfigServerInstanceMonitor.refresh which will only
+		// be called the first time we fetch configuration.
+		if (discoveryEnabled) {
+			uris = bootstrapConfigClientProperties.getUri();
+		}
+		else {
+			uris = properties.getUri();
+		}
+		int noOfUrls = uris.length;
+		if (uris.length > 1) {
 			logger.info("Multiple Config Server Urls found listed.");
 		}
 
@@ -284,10 +299,19 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 				.get(ConfigClientRequestTemplateFactory.class);
 
 		for (int i = 0; i < noOfUrls; i++) {
-			ConfigClientProperties.Credentials credentials = properties.getCredentials(i);
-			String uri = credentials.getUri();
-			String username = credentials.getUsername();
-			String password = credentials.getPassword();
+			String username;
+			String password;
+			String uri = uris[i];
+			if (discoveryEnabled) {
+				password = bootstrapConfigClientProperties.getPassword();
+				username = bootstrapConfigClientProperties.getUsername();
+			}
+			else {
+				ConfigClientProperties.Credentials credentials = properties.getCredentials(i);
+				uri = credentials.getUri();
+				username = credentials.getUsername();
+				password = credentials.getPassword();
+			}
 
 			logger.info("Fetching config from server at : " + uri);
 
