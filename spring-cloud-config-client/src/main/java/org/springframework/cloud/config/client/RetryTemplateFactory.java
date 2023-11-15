@@ -39,9 +39,9 @@ public final class RetryTemplateFactory {
 	}
 
 	public static RetryTemplate create(RetryProperties properties, Log log) {
-		RetryTemplate retryTemplate = RetryTemplate.builder().maxAttempts(properties.getMaxAttempts())
-				.exponentialBackoff(properties.getInitialInterval(), properties.getMultiplier(),
-						properties.getMaxInterval())
+		RetryTemplate retryTemplate = RetryTemplate
+				.builder().maxAttempts(properties.getMaxAttempts()).exponentialBackoff(properties.getInitialInterval(),
+						properties.getMultiplier(), properties.getMaxInterval(), properties.isUseRandomPolicy())
 				.build();
 		try {
 			field.set(retryTemplate, log);

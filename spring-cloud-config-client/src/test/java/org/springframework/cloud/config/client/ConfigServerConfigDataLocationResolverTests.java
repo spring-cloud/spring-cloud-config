@@ -138,6 +138,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource.getRetryProperties().getMaxInterval()).isEqualTo(defaultRetry.getMaxInterval());
 		assertThat(resource.getRetryProperties().getInitialInterval()).isEqualTo(defaultRetry.getInitialInterval());
 		assertThat(resource.getRetryProperties().getMultiplier()).isEqualTo(defaultRetry.getMultiplier());
+		assertThat(resource.getRetryProperties().isUseRandomPolicy()).isEqualTo(defaultRetry.isUseRandomPolicy());
 	}
 
 	@Test
@@ -158,6 +159,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource.getRetryProperties().getMaxInterval()).isEqualTo(1500);
 		assertThat(resource.getRetryProperties().getInitialInterval()).isEqualTo(1100);
 		assertThat(resource.getRetryProperties().getMultiplier()).isEqualTo(1.2);
+		assertThat(resource.getRetryProperties().isUseRandomPolicy()).isEqualTo(false);
 	}
 
 	@Test

@@ -50,6 +50,11 @@ public class RetryProperties {
 	 */
 	int maxAttempts = 6;
 
+	/**
+	 * Use a random exponential backoff policy.
+	 */
+	boolean useRandomPolicy = false;
+
 	public long getInitialInterval() {
 		return this.initialInterval;
 	}
@@ -80,6 +85,14 @@ public class RetryProperties {
 
 	public void setMaxAttempts(int maxAttempts) {
 		this.maxAttempts = maxAttempts;
+	}
+
+	public boolean isUseRandomPolicy() {
+		return this.useRandomPolicy;
+	}
+
+	public void setUseRandomPolicy(boolean useRandomPolicy) {
+		this.useRandomPolicy = useRandomPolicy;
 	}
 
 }
