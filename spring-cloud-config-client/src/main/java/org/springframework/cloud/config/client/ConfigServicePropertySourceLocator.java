@@ -50,7 +50,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -80,8 +79,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 	/**
-	 * Combine properties from the config client properties and the active profiles from
-	 * the environment.
+	 * Combine the active and default profiles from the environment.
 	 * @param properties config client properties,
 	 * @param environment application environment.
 	 * @return A list of combined profiles.
@@ -89,10 +87,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	private List<String> combineProfiles(ConfigClientProperties properties,
 			org.springframework.core.env.Environment environment) {
 		List<String> combinedProfiles = new ArrayList<>();
-		if (!ObjectUtils.isEmpty(properties.getProfile())) {
-			combinedProfiles = Stream.of(properties.getProfile().split(",")).map(String::trim).filter(s -> !s.isEmpty())
-					.collect(Collectors.toList());
-		}
 		if (environment.getActiveProfiles().length > 0) {
 			List<String> finalCombinedProfiles = combinedProfiles;
 			List<String> filteredActiveProfiles = Stream.of(environment.getActiveProfiles())
@@ -109,7 +103,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
-		properties.setProfile(String.join(",", combineProfiles(properties, environment)));
+		if (!StringUtils.hasText(properties.getProfile())) {
+			properties.setProfile(String.join(",", combineProfiles(properties, environment)));
+		}
 
 		if (StringUtils.startsWithIgnoreCase(properties.getName(), "application-")) {
 			InvalidApplicationNameException exception = new InvalidApplicationNameException(properties.getName());
