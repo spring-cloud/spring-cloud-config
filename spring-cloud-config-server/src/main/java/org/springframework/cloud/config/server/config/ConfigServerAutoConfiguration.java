@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.config;
 
 import java.util.Set;
 
+import net.i2p.crypto.eddsa.EdDSASecurityProvider;
 import org.apache.sshd.client.ClientBuilder;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.kex.AbstractDHClientKeyExchange;
@@ -160,6 +161,7 @@ class ConfigServerHints implements RuntimeHintsRegistrar {
 						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
 								MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
 								MemberCategory.DECLARED_CLASSES));
+
 	}
 
 }
