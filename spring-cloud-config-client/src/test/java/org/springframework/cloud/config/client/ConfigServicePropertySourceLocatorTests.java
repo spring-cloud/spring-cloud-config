@@ -119,6 +119,17 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@Test
+	public void overrideProfile() {
+		Environment body = new Environment("app", "override-profile");
+		body.add(new PropertySource("p1", new HashMap<>()));
+		mockRequestResponseWithProfile(new ResponseEntity<>(body, HttpStatus.OK), "override-profile");
+		this.locator.setRestTemplate(this.restTemplate);
+		TestPropertyValues.of("spring.cloud.config.profile:override-profile", "spring.profiles.active: foo")
+				.applyTo(this.environment);
+		assertThat(this.locator.locateCollection(this.environment).size()).isEqualTo(2);
+	}
+
+	@Test
 	public void sunnyDayWithLabelThatContainsASlash() {
 		Environment body = new Environment("app", "master");
 		mockRequestResponseWithLabel(new ResponseEntity<>(body, HttpStatus.OK), "release(_)v1.0.0");
@@ -569,6 +580,12 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
 				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString(),
 				ArgumentMatchers.eq(label))).thenReturn(response);
+	}
+
+	private void mockRequestResponseWithProfile(ResponseEntity<?> response, String profiles) {
+		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
+				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), ArgumentMatchers.eq(profiles)))
+				.thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
