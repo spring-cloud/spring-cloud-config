@@ -1906,6 +1906,7 @@ First, you need to set `spring.cloud.config.fail-fast=true`.
 Then you need to add `spring-retry` and `spring-boot-starter-aop` to your classpath.
 The default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs.
 You can configure these properties (and others) by setting the `spring.cloud.config.retry.*` configuration properties.
+To use a random exponential backoff policy set `spring.cloud.config.retry.useRandomPolicy` to `true`.
 
 TIP: To take full control of the retry behavior and are using legacy bootstrap, add a `@Bean` of type `RetryOperationsInterceptor` with an ID of `configServerRetryInterceptor`.
 Spring Retry has a `RetryInterceptorBuilder` that supports creating one.
