@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.config;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -227,8 +228,9 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public AwsSecretsManagerEnvironmentRepositoryFactory awsSecretsManagerEnvironmentRepositoryFactory(
-				ConfigServerProperties configServerProperties) {
-			return new AwsSecretsManagerEnvironmentRepositoryFactory(configServerProperties);
+				ConfigServerProperties configServerProperties,
+				Collection<AwsSecretsManagerEnvironmentRepository.Customizer> customizers) {
+			return new AwsSecretsManagerEnvironmentRepositoryFactory(configServerProperties, customizers);
 		}
 
 	}

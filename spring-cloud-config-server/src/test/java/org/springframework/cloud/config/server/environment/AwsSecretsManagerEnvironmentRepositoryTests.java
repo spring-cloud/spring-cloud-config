@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +52,8 @@ import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SECRETSMANAGER;
@@ -80,13 +83,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	private final AwsSecretsManagerEnvironmentProperties environmentProperties = new AwsSecretsManagerEnvironmentProperties();
 
-	private final AwsSecretsManagerEnvironmentRepository repository = new AwsSecretsManagerEnvironmentRepository(
-			smClient, configServerProperties, environmentProperties);
+	private final AwsSecretsManagerEnvironmentRepository repository = AwsSecretsManagerEnvironmentRepository
+			.builder(DefaultAwsSecretsManagerEnvironmentRepository::new)
+			.smClient(smClient)
+			.configServerProperties(configServerProperties)
+			.environmentProperties(environmentProperties)
+			.build();
 
 	private final AwsSecretsManagerEnvironmentProperties labeledEnvironmentProperties = new AwsSecretsManagerEnvironmentProperties();
 
-	private final AwsSecretsManagerEnvironmentRepository labeledRepository = new AwsSecretsManagerEnvironmentRepository(
-			smClient, configServerProperties, labeledEnvironmentProperties);
+	private final AwsSecretsManagerEnvironmentRepository labeledRepository = AwsSecretsManagerEnvironmentRepository
+			.builder(DefaultAwsSecretsManagerEnvironmentRepository::new)
+			.smClient(smClient)
+			.configServerProperties(configServerProperties)
+			.environmentProperties(labeledEnvironmentProperties)
+			.build();
 
 	private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
 
@@ -1881,6 +1892,41 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testFindOneWithNullApplicationAndNullProfileAndNullLabelWhenLabelIsCustomized() {
+		String application = null;
+		String profile = null;
+		String defaultApplication = configServerProperties.getDefaultApplicationName();
+		String defaultProfile = configServerProperties.getDefaultProfile();
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
+		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
+		String customLabel = "v1";
+		AwsSecretsManagerEnvironmentRepository nullLabeledRepository = AwsSecretsManagerEnvironmentRepository
+			.builder(DefaultAwsSecretsManagerEnvironmentRepository::new)
+			.smClient(smClient)
+			.configServerProperties(configServerProperties)
+			.environmentProperties(labeledEnvironmentProperties)
+			.secretValueRequestCustomizer(builder -> builder.versionStage(customLabel))
+			.build();
+
+		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+			getApplicationDefaultProperties());
+
+		String applicationPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+			getApplicationProperties());
+
+		Environment expectedEnv = new Environment(defaultApplication, profiles, defaultLabel, null, null);
+		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, applicationProperties));
+
+		putSecrets(expectedEnv, customLabel);
+
+		Environment resultEnv = nullLabeledRepository.findOne(application, profile, defaultLabel);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
 	public void testFindOneWithNullApplicationAndNonExistingProfile() {
 		String application = null;
 		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
@@ -2542,7 +2588,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void factoryCustomizableWithRegion() {
 		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(
-				new ConfigServerProperties());
+				new ConfigServerProperties(),
+				emptyList());
 		AwsSecretsManagerEnvironmentProperties properties = new AwsSecretsManagerEnvironmentProperties();
 		properties.setRegion("us-east-1");
 		AwsSecretsManagerEnvironmentRepository repository = factory.build(properties);
@@ -2552,7 +2599,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void factoryCustomizableWithRegionAndEndpoint() {
 		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(
-				new ConfigServerProperties());
+				new ConfigServerProperties(),
+				emptyList());
 		AwsSecretsManagerEnvironmentProperties properties = new AwsSecretsManagerEnvironmentProperties();
 		properties.setRegion("us-east-1");
 		properties.setEndpoint("https://myawsendpoint/");
@@ -2560,9 +2608,28 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		assertThat(repository).isNotNull();
 	}
 
+	@Test
+	public void factoryCustomizableWithRepository() {
+		AwsSecretsManagerEnvironmentRepository customRepository = (application, profile, label) -> null;
+		Function<AwsSecretsManagerEnvironmentRepository.Builder, AwsSecretsManagerEnvironmentRepository> repositoryInitializer =
+			builder -> customRepository;
+		AwsSecretsManagerEnvironmentRepository.Customizer customizer = builder -> builder.initializer(repositoryInitializer);
+		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(
+			new ConfigServerProperties(),
+			singletonList(customizer));
+		AwsSecretsManagerEnvironmentProperties properties = new AwsSecretsManagerEnvironmentProperties();
+		properties.setRegion("us-east-1");
+		AwsSecretsManagerEnvironmentRepository repository = factory.build(properties);
+		assertThat(repository).isSameAs(customRepository);
+	}
+
 	private void putSecrets(Environment environment) {
 		String label = environment.getLabel() != null ? environment.getLabel()
 				: environmentProperties.getDefaultLabel();
+		putSecrets(environment, label);
+	}
+
+	private void putSecrets(Environment environment, String label) {
 		for (PropertySource ps : environment.getPropertySources()) {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 			String secrets = getSecrets(ps);

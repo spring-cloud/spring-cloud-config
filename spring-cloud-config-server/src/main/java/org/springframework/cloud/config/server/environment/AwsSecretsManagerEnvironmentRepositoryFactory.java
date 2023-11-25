@@ -21,6 +21,8 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilde
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 
+import java.util.Collection;
+
 import static org.springframework.cloud.config.server.environment.AwsClientBuilderConfigurer.configureClientBuilder;
 
 /**
@@ -30,9 +32,14 @@ public class AwsSecretsManagerEnvironmentRepositoryFactory implements
 		EnvironmentRepositoryFactory<AwsSecretsManagerEnvironmentRepository, AwsSecretsManagerEnvironmentProperties> {
 
 	private final ConfigServerProperties configServerProperties;
+	private final Collection<AwsSecretsManagerEnvironmentRepository.Customizer> customizers;
 
-	public AwsSecretsManagerEnvironmentRepositoryFactory(ConfigServerProperties configServerProperties) {
+	public AwsSecretsManagerEnvironmentRepositoryFactory(
+			ConfigServerProperties configServerProperties,
+			Collection<AwsSecretsManagerEnvironmentRepository.Customizer> customizers) {
+
 		this.configServerProperties = configServerProperties;
+		this.customizers = customizers;
 	}
 
 	@Override
@@ -42,7 +49,23 @@ public class AwsSecretsManagerEnvironmentRepositoryFactory implements
 		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 
 		SecretsManagerClient client = clientBuilder.build();
-		return new AwsSecretsManagerEnvironmentRepository(client, configServerProperties, environmentProperties);
+
+		return awsSecretsManagerEnvironmentRepository(client, environmentProperties);
+	}
+
+	private AwsSecretsManagerEnvironmentRepository awsSecretsManagerEnvironmentRepository(
+			SecretsManagerClient client,
+			AwsSecretsManagerEnvironmentProperties environmentProperties) {
+
+		AwsSecretsManagerEnvironmentRepository.Builder builder = AwsSecretsManagerEnvironmentRepository
+				.builder(DefaultAwsSecretsManagerEnvironmentRepository::new)
+				.smClient(client)
+				.configServerProperties(configServerProperties)
+				.environmentProperties(environmentProperties);
+
+		customizers.forEach(customizer -> customizer.customize(builder));
+
+		return builder.build();
 	}
 
 }
