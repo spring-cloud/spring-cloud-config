@@ -85,7 +85,8 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 		if (ignoreLabel) {
 			label = null;
-		} else if (StringUtils.isEmpty(label)) {
+		}
+		else if (StringUtils.isEmpty(label)) {
 			label = defaultLabel;
 		}
 
