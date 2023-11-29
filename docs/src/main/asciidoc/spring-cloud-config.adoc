@@ -915,7 +915,7 @@ Note that if the default label is not set and a request does not define a label,
 
 Note that if the staging label contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `({special-string})` (to avoid ambiguity with other URL paths) the same way <<_git_backend,Git backend's section>> describes it.
 
-Use `spring.cloud.config.server.aws-secretsmanager.ignore-label` property to ignore the `{label}` parameter of the HTTP resource as well as `spring.cloud.config.server.aws-secretsmanager.default-label` property. Repository will use secrets as if labelled version support is disabled.
+Use `spring.cloud.config.server.aws-secretsmanager.ignore-label` property to ignore the `{label}` parameter of the HTTP resource as well as `spring.cloud.config.server.aws-secretsmanager.default-label` property. The repository will use secrets as if labelled version support is disabled.
 
 [source,yaml]
 ----
@@ -1173,7 +1173,7 @@ AWS Secrets Manager API credentials are determined using link:https://docs.aws.a
 [NOTE]
 ====
 - When no application is specified `application` is the default, and when no profile is specified `default` is used.
-- Both `label` and `defaultLabel` properties are ignored, when `ignoreLabel` one is set to `true`.
+- Both `label` and `defaultLabel` properties are ignored, when `ignoreLabel` is set to `true`.
 ====
 
 ==== CredHub Backend
