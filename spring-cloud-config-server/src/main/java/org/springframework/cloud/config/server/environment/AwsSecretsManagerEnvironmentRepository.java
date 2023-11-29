@@ -73,6 +73,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		final String defaultApplication = configServerProperties.getDefaultApplicationName();
 		final String defaultProfile = configServerProperties.getDefaultProfile();
 		final String defaultLabel = environmentProperties.getDefaultLabel();
+		final boolean ignoreLabel = environmentProperties.isIgnoreLabel();
 
 		if (ObjectUtils.isEmpty(application)) {
 			application = defaultApplication;
@@ -82,7 +83,10 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 			profileList = defaultProfile;
 		}
 
-		if (StringUtils.isEmpty(label)) {
+		if (ignoreLabel) {
+			label = null;
+		}
+		else if (StringUtils.isEmpty(label)) {
 			label = defaultLabel;
 		}
 
