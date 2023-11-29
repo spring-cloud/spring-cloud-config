@@ -88,6 +88,13 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	private final AwsSecretsManagerEnvironmentRepository labeledRepository = new AwsSecretsManagerEnvironmentRepository(
 			smClient, configServerProperties, labeledEnvironmentProperties);
 
+	private final AwsSecretsManagerEnvironmentProperties ignoreLabelEnvironmentProperties = new AwsSecretsManagerEnvironmentProperties() {{
+		setIgnoreLabel(true);
+	}};
+
+	private final AwsSecretsManagerEnvironmentRepository ignoreLabelRepository = new AwsSecretsManagerEnvironmentRepository(
+			smClient, configServerProperties, ignoreLabelEnvironmentProperties);
+
 	private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
 
 	private final List<String> toBeRemoved = new ArrayList<>();
@@ -1823,6 +1830,47 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		putSecrets(expectedEnv);
 
 		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
+	public void testFindOneWithExistingApplicationAndExistingProfileAndExistingLabelWhenIgnoreLabelIsSet() {
+		String application = "foo";
+		String profile = "prod";
+		String label = "release";
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+
+		String fooProdPropertiesName = "aws:secrets:/secret/foo-prod/";
+		PropertySource fooProdProperties = new PropertySource(fooProdPropertiesName, getFooProdReleaseProperties());
+
+		String fooPropertiesName = "aws:secrets:/secret/foo/";
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooReleaseProperties());
+
+		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
+			getFooDefaultReleaseProperties());
+
+		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+			getApplicationProdReleaseProperties());
+
+		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+			getApplicationDefaultReleaseProperties());
+
+		String applicationPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+			getApplicationReleaseProperties());
+
+		Environment expectedEnv = new Environment(application, profiles, null, null, null);
+		expectedEnv.addAll(Arrays.asList(
+			fooProdProperties, applicationProdProperties, fooDefaultProperties,
+			applicationDefaultProperties, fooProperties, applicationProperties));
+
+		putSecrets(expectedEnv);
+
+		Environment resultEnv = ignoreLabelRepository.findOne(application, profile, label);
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
