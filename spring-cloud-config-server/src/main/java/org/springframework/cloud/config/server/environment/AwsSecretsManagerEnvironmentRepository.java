@@ -83,12 +83,10 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 			profileList = defaultProfile;
 		}
 
-		if (StringUtils.isEmpty(label)) {
-			label = defaultLabel;
-		}
-
 		if (ignoreLabel) {
 			label = null;
+		} else if (StringUtils.isEmpty(label)) {
+			label = defaultLabel;
 		}
 
 		String[] profiles = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(profileList));
