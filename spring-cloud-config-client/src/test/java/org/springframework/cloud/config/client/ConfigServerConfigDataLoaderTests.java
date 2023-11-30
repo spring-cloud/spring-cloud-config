@@ -412,6 +412,28 @@ public class ConfigServerConfigDataLoaderTests {
 
 	}
 
+	@Test
+	public void useDiscoveryUriIfEnabled() throws Exception {
+		String[] uris = new String[] { "http://uritest:8888" };
+		properties.setUri(uris);
+		ConfigClientProperties.Discovery discovery = new ConfigClientProperties.Discovery();
+		discovery.setEnabled(true);
+		discovery.setServiceId("configservice");
+		properties.setDiscovery(discovery);
+		this.loader = new ConfigServerConfigDataLoader(destination -> logger);
+		ClientHttpRequestFactory requestFactory = mock(ClientHttpRequestFactory.class);
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
+		when(bootstrapContext.get(RestTemplate.class)).thenReturn(restTemplate);
+		ConfigClientProperties bootstrapConfigClientProperties = new ConfigClientProperties();
+		bootstrapConfigClientProperties.setDiscovery(discovery);
+		bootstrapConfigClientProperties.setUri(new String[] { "http://configservice:8888" });
+		when(bootstrapContext.get(ConfigClientProperties.class)).thenReturn(bootstrapConfigClientProperties);
+
+		mockRequestResponse(requestFactory, "http://configservice:8888", HttpStatus.OK);
+
+		assertThat(this.loader.load(context, resource)).isNotNull();
+	}
+
 	@Disabled
 	@Test
 	// TODO Enable once we have

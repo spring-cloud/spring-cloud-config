@@ -22,6 +22,7 @@
 |spring.cloud.config.retry.max-attempts | `+++6+++` | Maximum number of attempts.
 |spring.cloud.config.retry.max-interval | `+++2000+++` | Maximum interval for backoff.
 |spring.cloud.config.retry.multiplier | `+++1.1+++` | Multiplier for next interval.
+|spring.cloud.config.retry.use-random-policy | `+++false+++` | Use a random exponential backoff policy.
 |spring.cloud.config.send-state | `+++true+++` | Flag to indicate whether to send state. Default true.
 |spring.cloud.config.tls |  | TLS properties.
 |spring.cloud.config.token |  | Security Token passed thru to underlying environment repository.
