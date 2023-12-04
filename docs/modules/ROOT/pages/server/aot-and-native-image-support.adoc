@@ -2,5 +2,28 @@
 =  AOT and Native Image Support
 :page-section-summary-toc: 1
 
-Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. However, for the time being, GraalVM native images are not supported. Implementing native image support is blocked by https://github.com/oracle/graal/issues/5134[graal#5134] and will likely require the completion of the work on https://github.com/graalvm/taming-build-time-initialization[https://github.com/graalvm/taming-build-time-initialization] to be fixed.
+Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. As of `4.1.0` it also supports GraalVM native images.
+
+====
+
+IMPORTANT::
+Since handling `FileSystemProvider` has not yet been properly addressed in Graal (https://github.com/oracle/graal/issues/5134[graal#5134], will likely require the completion of the work on https://github.com/graalvm/taming-build-time-initialization[https://github.com/graalvm/taming-build-time-initialization] to be fixed), workaround config has to be added. If you want to run Config Server as a native image, you'll need to add the following options to your GraalVM build plugin setup (please refer to https://www.graalvm.org/[GraalVM] Maven or Gradle plugin documentation for more details):
+
+[source,indent=0]
+----
+-H:-AddAllFileSystemProviders
+--strict-image-heap
+--initialize-at-build-time=org.bouncycastle
+--initialize-at-build-time=net.i2p.crypto.eddsa.EdDSASecurityProvider
+--initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$Default
+--initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$NonceAndIV
+----
+
+
+====
+
+TIP::
+If you are connecting with your config data backend over SSH, keep in mind that GraalVM requires https://www.graalvm.org/latest/reference-manual/native-image/dynamic-features/JCASecurityServices/#provider-registration[security provider registration using `java.security`]
+
+WARNING: Refresh scope is not supported with native images. If you are going to run your config client application as a native image, make sure to set `spring.cloud.refresh.enabled` property to `false`.
 
