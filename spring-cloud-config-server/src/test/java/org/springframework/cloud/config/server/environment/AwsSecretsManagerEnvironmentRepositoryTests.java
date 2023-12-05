@@ -88,9 +88,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	private final AwsSecretsManagerEnvironmentRepository labeledRepository = new AwsSecretsManagerEnvironmentRepository(
 			smClient, configServerProperties, labeledEnvironmentProperties);
 
-	private final AwsSecretsManagerEnvironmentProperties ignoreLabelEnvironmentProperties = new AwsSecretsManagerEnvironmentProperties() {{
-		setIgnoreLabel(true);
-	}};
+	private final AwsSecretsManagerEnvironmentProperties ignoreLabelEnvironmentProperties = new AwsSecretsManagerEnvironmentProperties() {
+		{
+			setIgnoreLabel(true);
+		}
+	};
 
 	private final AwsSecretsManagerEnvironmentRepository ignoreLabelRepository = new AwsSecretsManagerEnvironmentRepository(
 			smClient, configServerProperties, ignoreLabelEnvironmentProperties);
@@ -1849,24 +1851,23 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
 		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
-			getFooDefaultReleaseProperties());
+				getFooDefaultReleaseProperties());
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
 		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
-			getApplicationProdReleaseProperties());
+				getApplicationProdReleaseProperties());
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
 		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
-			getApplicationDefaultReleaseProperties());
+				getApplicationDefaultReleaseProperties());
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
 		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
-			getApplicationReleaseProperties());
+				getApplicationReleaseProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, null, null, null);
-		expectedEnv.addAll(Arrays.asList(
-			fooProdProperties, applicationProdProperties, fooDefaultProperties,
-			applicationDefaultProperties, fooProperties, applicationProperties));
+		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooDefaultProperties,
+				applicationDefaultProperties, fooProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
