@@ -7,7 +7,7 @@ Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. A
 ====
 
 IMPORTANT::
-Since handling `FileSystemProvider` has not yet been properly addressed in Graal (https://github.com/oracle/graal/issues/5134[graal#5134], will likely require the completion of the work on https://github.com/graalvm/taming-build-time-initialization[https://github.com/graalvm/taming-build-time-initialization] to be fixed), workaround config has to be added. If you want to run Config Server as a native image, you'll need to add the following options to your GraalVM build plugin setup (please refer to https://www.graalvm.org/[GraalVM] Maven or Gradle plugin documentation for more details):
+Due to [a bug](https://github.com/oracle/graal/issues/5134) in Graal's `FileSystemProvider` a configuration workaround needs to be added to allow the Config Server to run as a native image.  You will need to add the following options to your GraalVM build plugin setup (please refer to https://www.graalvm.org/[GraalVM] Maven or Gradle plugin documentation for more details):
 
 [source,indent=0]
 ----
