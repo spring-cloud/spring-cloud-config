@@ -2,7 +2,7 @@
 =  AOT and Native Image Support
 :page-section-summary-toc: 1
 
-Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. As of `4.1.0` it also supports GraalVM native images.
+Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. As of `4.1.0` it also supports GraalVM native images, however it requires the user to add some workarounds for known GraalVM issues, as described below.
 
 ====
 
@@ -19,6 +19,7 @@ Since handling `FileSystemProvider` has not yet been properly addressed in Graal
 --initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$NonceAndIV
 ----
 
+NOTE:: Adding the additional build time initializations can affect performance, but it still may offer gains as compared to a regular JVM run. Make sure to measure and compare for your application.
 
 ====
 
