@@ -49,6 +49,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -264,9 +265,23 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
 		String profile = resource.getProfiles();
-		String token = properties.getToken();
-		int noOfUrls = properties.getUri().length;
-		if (noOfUrls > 1) {
+		String[] uris;
+		boolean discoveryEnabled = properties.getDiscovery().isEnabled();
+		ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()
+				.get(ConfigClientProperties.class);
+		// In the case where discovery is enabled we need to extract the config server
+		// uris, username, and password
+		// from the properties from the context. These are set in
+		// ConfigServerInstanceMonitor.refresh which will only
+		// be called the first time we fetch configuration.
+		if (discoveryEnabled) {
+			uris = bootstrapConfigClientProperties.getUri();
+		}
+		else {
+			uris = properties.getUri();
+		}
+		int noOfUrls = uris.length;
+		if (uris.length > 1) {
 			logger.info("Multiple Config Server Urls found listed.");
 		}
 
@@ -284,10 +299,19 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 				.get(ConfigClientRequestTemplateFactory.class);
 
 		for (int i = 0; i < noOfUrls; i++) {
-			ConfigClientProperties.Credentials credentials = properties.getCredentials(i);
-			String uri = credentials.getUri();
-			String username = credentials.getUsername();
-			String password = credentials.getPassword();
+			String username;
+			String password;
+			String uri = uris[i];
+			if (discoveryEnabled) {
+				password = bootstrapConfigClientProperties.getPassword();
+				username = bootstrapConfigClientProperties.getUsername();
+			}
+			else {
+				ConfigClientProperties.Credentials credentials = properties.getCredentials(i);
+				uri = credentials.getUri();
+				username = credentials.getUsername();
+				password = credentials.getPassword();
+			}
 
 			logger.info("Fetching config from server at : " + uri);
 
@@ -295,11 +319,20 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 				HttpHeaders headers = new HttpHeaders();
 				headers.setAccept(acceptHeader);
 				requestTemplateFactory.addAuthorizationToken(headers, username, password);
-				if (StringUtils.hasText(token)) {
-					headers.add(TOKEN_HEADER, token);
-				}
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
+				}
+				if (StringUtils.hasText(properties.getTokenUri()) && !properties.getHeaders().isEmpty()) {
+					List<ClientHttpRequestInterceptor> interceptors = List
+							.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(
+									properties.getHeaders()));
+					restTemplate.setInterceptors(interceptors);
+				}
+				else {
+					requestTemplateFactory.addAuthorizationToken(headers, username, password);
+					if (StringUtils.hasText(properties.getToken())) {
+						headers.add(TOKEN_HEADER, properties.getToken());
+					}
 				}
 
 				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);

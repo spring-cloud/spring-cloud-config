@@ -19,11 +19,14 @@ package org.springframework.cloud.config.client;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -412,6 +415,28 @@ public class ConfigServerConfigDataLoaderTests {
 
 	}
 
+	@Test
+	public void useDiscoveryUriIfEnabled() throws Exception {
+		String[] uris = new String[] { "http://uritest:8888" };
+		properties.setUri(uris);
+		ConfigClientProperties.Discovery discovery = new ConfigClientProperties.Discovery();
+		discovery.setEnabled(true);
+		discovery.setServiceId("configservice");
+		properties.setDiscovery(discovery);
+		this.loader = new ConfigServerConfigDataLoader(destination -> logger);
+		ClientHttpRequestFactory requestFactory = mock(ClientHttpRequestFactory.class);
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
+		when(bootstrapContext.get(RestTemplate.class)).thenReturn(restTemplate);
+		ConfigClientProperties bootstrapConfigClientProperties = new ConfigClientProperties();
+		bootstrapConfigClientProperties.setDiscovery(discovery);
+		bootstrapConfigClientProperties.setUri(new String[] { "http://configservice:8888" });
+		when(bootstrapContext.get(ConfigClientProperties.class)).thenReturn(bootstrapConfigClientProperties);
+
+		mockRequestResponse(requestFactory, "http://configservice:8888", HttpStatus.OK);
+
+		assertThat(this.loader.load(context, resource)).isNotNull();
+	}
+
 	@Disabled
 	@Test
 	// TODO Enable once we have
@@ -667,6 +692,74 @@ public class ConfigServerConfigDataLoaderTests {
 
 		when(request.getHeaders()).thenReturn(new HttpHeaders());
 		when(request.execute()).thenThrow(IOException.class);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	void whenRemoteEnvironment_givenOauth_thenAddInterceptor() {
+		Environment body = new Environment("test", "local");
+		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
+		properties.setLabel(null);
+		properties.setTokenUri("http://localhost:9999/realms/test-realm/protocol/openid-connect/token");
+		Map<String, String> tokenHeader = new HashMap<>();
+		tokenHeader.put(AUTHORIZATION, "Bearer " + UUID.randomUUID().toString());
+		properties.setHeaders(tokenHeader);
+		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), null);
+
+		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
+				httpEntityArgumentCaptor.capture(), any(Class.class), anyString(), anyString());
+
+		Mockito.verify(this.restTemplate, Mockito.times(1)).setInterceptors(any());
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	void whenRemoteEnvironment_givenOauthNoToken_thenNoInterceptor() {
+		Environment body = new Environment("test", "local");
+		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
+		properties.setLabel(null);
+		properties.setTokenUri("http://localhost:9999/realms/test-realm/protocol/openid-connect/token");
+		properties.setSendState(false);
+		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), "stale");
+
+		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
+				httpEntityArgumentCaptor.capture(), any(Class.class), anyString(), anyString());
+
+		Mockito.verify(this.restTemplate, Mockito.times(0)).setInterceptors(any());
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	void whenRemoteEnvironment_givenBasicAuth_thenNoInterceptor() {
+		Environment body = new Environment("test", "local");
+		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
+		properties.setLabel(null);
+		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), "stale");
+
+		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
+				httpEntityArgumentCaptor.capture(), any(Class.class), anyString(), anyString());
+
+		Mockito.verify(this.restTemplate, Mockito.times(0)).setInterceptors(any());
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	void whenRemoteEnvironment_givenBasicAuthToken_thenNoInterceptor() {
+		Environment body = new Environment("test", "local");
+		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
+		properties.setLabel(null);
+		properties.setToken("Basic "
+				+ Arrays.toString(Base64.getEncoder().encode("YaddaYaddaYadda".getBytes(StandardCharsets.UTF_8))));
+		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), "stale");
+
+		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
+				httpEntityArgumentCaptor.capture(), any(Class.class), anyString(), anyString());
+
+		Mockito.verify(this.restTemplate, Mockito.times(0)).setInterceptors(any());
+
 	}
 
 }
