@@ -265,6 +265,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		String path = "/{name}/{profile}";
 		String name = properties.getName();
 		String profile = resource.getProfiles();
+
 		String[] uris;
 		boolean discoveryEnabled = properties.getDiscovery().isEnabled();
 		ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()

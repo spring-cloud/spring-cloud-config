@@ -9,7 +9,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-config</artifactId>
-		<version>4.1.0-SNAPSHOT</version>
+		<version>4.1.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
@@ -98,13 +98,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcpkix-jdk15on</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcpkix-jdk15on</artifactId>
-			<version>1.67</version>
+			<artifactId>bcpkix-jdk18on</artifactId>
+			<version>1.74</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

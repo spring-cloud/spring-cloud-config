@@ -55,6 +55,11 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 	private String defaultLabel;
 
 	/**
+	 * Do not set staging label when fetching the secret values.
+	 */
+	private boolean ignoreLabel;
+
+	/**
 	 * The order of the environment repository.
 	 */
 	private int order = Ordered.LOWEST_PRECEDENCE;
@@ -103,6 +108,14 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 
 	public void setDefaultLabel(String defaultLabel) {
 		this.defaultLabel = defaultLabel;
+	}
+
+	public boolean isIgnoreLabel() {
+		return this.ignoreLabel;
+	}
+
+	public void setIgnoreLabel(boolean ignoreLabel) {
+		this.ignoreLabel = ignoreLabel;
 	}
 
 	public int getOrder() {
