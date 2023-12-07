@@ -18,13 +18,20 @@ package org.springframework.cloud.config.client;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ulisesbocchio.jasyptspringboot.encryptor.SimplePBEByteEncryptor;
+import com.ulisesbocchio.jasyptspringboot.encryptor.SimplePBEStringEncryptor;
 import org.apache.commons.logging.Log;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -33,22 +40,29 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
+import org.jasypt.salt.RandomSaltGenerator;
 
 import org.springframework.cloud.configuration.SSLContextFactory;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.util.Base64Utils;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 
 public class ConfigClientRequestTemplateFactory {
+
+	private SimplePBEStringEncryptor encryptor;
 
 	private final Log log;
 
@@ -57,6 +71,7 @@ public class ConfigClientRequestTemplateFactory {
 	public ConfigClientRequestTemplateFactory(Log log, ConfigClientProperties properties) {
 		this.log = log;
 		this.properties = properties;
+		this.encryptor = new SimplePBEStringEncryptor(buildEncryptor());
 	}
 
 	public Log getLog() {
@@ -65,6 +80,17 @@ public class ConfigClientRequestTemplateFactory {
 
 	public ConfigClientProperties getProperties() {
 		return this.properties;
+	}
+
+	public SimplePBEByteEncryptor buildEncryptor() {
+		SimplePBEByteEncryptor byteEncryptor = new SimplePBEByteEncryptor();
+		byteEncryptor.setPassword(System.getProperty("encryptor-password"));
+		byteEncryptor.setSaltGenerator(new RandomSaltGenerator());
+		byteEncryptor.setIterations(properties.getEncryptorIterations());
+		if (StringUtils.hasText(properties.getEncryptorAlgorithm())) {
+			byteEncryptor.setAlgorithm(properties.getEncryptorAlgorithm());
+		}
+		return byteEncryptor;
 	}
 
 	public RestTemplate create() {
@@ -79,11 +105,54 @@ public class ConfigClientRequestTemplateFactory {
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(properties.getHeaders());
 		headers.remove(AUTHORIZATION); // To avoid redundant addition of header
-		if (!headers.isEmpty()) {
-			template.setInterceptors(Arrays.asList(new GenericRequestHeaderInterceptor(headers)));
+		if (StringUtils.hasText(properties.getTokenUri())) {
+			Optional<AccessTokenResponse> responseOpt = getOAuthToken(template, properties.getTokenUri());
+			if (responseOpt.isPresent()) {
+				AccessTokenResponse accessTokenResponse = responseOpt.get();
+				headers.put(AUTHORIZATION, accessTokenResponse.getBearerHeader());
+				properties.setHeaders(headers);
+			}
 		}
 
 		return template;
+	}
+
+	private Optional<AccessTokenResponse> getOAuthToken(RestTemplate template, String tokenUri) {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+		map.put("grant_type", List.of(properties.getGrantType()));
+		if (StringUtils.hasText(properties.getClientId())) {
+			map.put("client_id", List.of(properties.getClientId()));
+			map.put("client_secret", List.of(decryptProperty(properties.getClientSecret())));
+		}
+		if (StringUtils.hasText(properties.getOauthUsername())) {
+			map.put("username", List.of(properties.getOauthUsername()));
+			map.put("password", List.of(decryptProperty(properties.getOauthPassword())));
+		}
+		HttpEntity<MultiValueMap<String, String>> requestBodyFormUrlEncoded = new HttpEntity<>(map, httpHeaders);
+
+		String tokenJson = template.postForObject(tokenUri, requestBodyFormUrlEncoded, String.class);
+		return parseTokenResponse(tokenJson);
+	}
+
+	private String decryptProperty(String prop) {
+		if (prop.startsWith("ENC(")) {
+			prop = prop.substring(4, prop.lastIndexOf(")"));
+			return encryptor.decrypt(prop);
+		}
+		return prop;
+	}
+
+	private Optional<AccessTokenResponse> parseTokenResponse(String tokenJson) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+					false);
+			return Optional.of(objectMapper.readValue(tokenJson, AccessTokenResponse.class));
+		}
+		catch (JsonProcessingException e) {
+			return Optional.empty();
+		}
 	}
 
 	protected ClientHttpRequestFactory createHttpRequestFactory(ConfigClientProperties client) {
@@ -137,7 +206,7 @@ public class ConfigClientRequestTemplateFactory {
 		}
 
 		if (password != null) {
-			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
+			byte[] token = Base64.getEncoder().encode((username + ":" + password).getBytes());
 			httpHeaders.add("Authorization", "Basic " + new String(token));
 		}
 		else if (authorization != null) {

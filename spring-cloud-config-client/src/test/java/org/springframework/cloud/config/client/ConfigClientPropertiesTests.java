@@ -25,6 +25,7 @@ import org.springframework.cloud.config.client.ConfigClientProperties.MultipleUr
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.mock.env.MockEnvironment;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -181,6 +182,39 @@ public class ConfigClientPropertiesTests {
 		assertThat(properties.getMultipleUriStrategy()).isNotNull();
 		assertThat(properties.getMultipleUriStrategy().name())
 				.isEqualTo(MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY.name());
+	}
+
+	@Test
+	void testOauthProperties() {
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+
+		properties.setUri(new String[] { "https://localhost:8888/" });
+		properties.setTokenUri("http://localhost:9080/realms/test-realm/protocol/openid-connect/token");
+		properties.setClientId("clientId");
+		properties.setClientSecret("clientSecret");
+		properties.setOauthUsername("oauthUsername");
+		properties.setOauthPassword("oauthPassword");
+		properties.setGrantType("password");
+		properties.setEncryptorIterations(10000);
+		assertThat(properties.getTokenUri())
+				.isEqualTo("http://localhost:9080/realms/test-realm/protocol/openid-connect/token");
+		assertThat(properties.getClientId()).isEqualTo("clientId");
+		assertThat(properties.getClientSecret()).isEqualTo("clientSecret");
+		assertThat(properties.getOauthUsername()).isEqualTo("oauthUsername");
+		assertThat(properties.getOauthPassword()).isEqualTo("oauthPassword");
+		assertThat(properties.getGrantType()).isEqualTo("password");
+		assertThat(properties.toString()).contains(ConfigClientProperties.class.getSimpleName());
+		assertThat(properties.getEncryptorIterations()).isEqualTo(10000);
+	}
+
+	@Test
+	void whenExtractCredentials_givenInvalidUrl_thenThrowException() {
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		properties.setUri(new String[] { "https//localhost:abcd/" });
+		Assertions.assertThatThrownBy(() -> {
+			ReflectionTestUtils.invokeMethod(properties, "extractCredentials", 0);
+		}).isInstanceOf(IllegalStateException.class).hasMessageContaining("Invalid URL: " + properties.getUri()[0]);
+
 	}
 
 }
