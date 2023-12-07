@@ -78,6 +78,25 @@ class ConfigClientRequestTemplateFactoryTest {
 	}
 
 	@Test
+	void whenGetOAuthToken_givenNoGrant_thenThrowExeption() {
+		// given
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
+		properties.setOauthUsername("oauthUsername");
+		properties.setOauthPassword("oauthPassword");
+		properties.setGrantType(null);
+		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
+		try {
+			// when
+			templateFactory.create();
+		}
+		catch (IllegalStateException e) {
+			// then
+			assertThat(e.getMessage()).startsWith("Grant type is required for OAuth2 requests.");
+		}
+	}
+
+	@Test
 	void whenParseTokenResponse_givenValidJson_thenParseToken() {
 		// given
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());

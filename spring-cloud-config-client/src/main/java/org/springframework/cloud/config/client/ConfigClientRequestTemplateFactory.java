@@ -121,7 +121,12 @@ public class ConfigClientRequestTemplateFactory {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.put("grant_type", List.of(properties.getGrantType()));
+		if (StringUtils.hasText(properties.getGrantType())) {
+			map.put("grant_type", List.of(properties.getGrantType()));
+		}
+		else {
+			throw new IllegalStateException("Grant type is required for OAuth2 requests.");
+		}
 		if (StringUtils.hasText(properties.getClientId())) {
 			map.put("client_id", List.of(properties.getClientId()));
 			map.put("client_secret", List.of(decryptProperty(properties.getClientSecret())));
