@@ -62,7 +62,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.AUT
 
 public class ConfigClientRequestTemplateFactory {
 
-	private SimplePBEStringEncryptor encryptor;
+	private final SimplePBEStringEncryptor encryptor;
 
 	private final Log log;
 

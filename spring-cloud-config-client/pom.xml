@@ -23,7 +23,6 @@
 
 	<properties>
 		<jasypt-spring-boot.version>3.0.5</jasypt-spring-boot.version>
-		<okhttp.version>4.11.0</okhttp.version>
 	</properties>
 
 	<dependencies>
@@ -108,13 +107,11 @@
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
-			<version>${okhttp.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>mockwebserver</artifactId>
-			<version>${okhttp.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
