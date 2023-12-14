@@ -17,18 +17,15 @@
 package org.springframework.cloud.config.client;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.ulisesbocchio.jasyptspringboot.encryptor.SimplePBEByteEncryptor;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jasypt.salt.RandomSaltGenerator;
+import org.jasypt.encryption.StringEncryptor;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -38,7 +35,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,28 +74,10 @@ class ConfigClientRequestTemplateFactoryTest {
 	}
 
 	@Test
-	void whenGetOAuthToken_givenNoGrant_thenThrowExeption() {
-		// given
-		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
-		properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
-		properties.setOauthUsername("oauthUsername");
-		properties.setOauthPassword("oauthPassword");
-		properties.setGrantType(null);
-		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
-		try {
-			// when
-			templateFactory.create();
-		}
-		catch (IllegalStateException e) {
-			// then
-			assertThat(e.getMessage()).startsWith("Grant type is required for OAuth2 requests.");
-		}
-	}
-
-	@Test
 	void whenParseTokenResponse_givenValidJson_thenParseToken() {
 		// given
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		EncryptorConfig encryptorConfig = new EncryptorConfig();
 		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
 
 		// when
@@ -124,10 +102,13 @@ class ConfigClientRequestTemplateFactoryTest {
 	void whenCreate_givenTokenUri_thenGetOAuthToken() {
 		// given
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
-		properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
-		properties.setClientId("clientId");
-		properties.setClientSecret("clientSecret");
-		properties.setGrantType("client_credentials");
+		ConfigClientOauth2Properties oauth2Properties = new ConfigClientOauth2Properties();
+		oauth2Properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
+		oauth2Properties.setClientId("clientId");
+		oauth2Properties.setClientSecret("clientSecret");
+		oauth2Properties.setGrantType("client_credentials");
+		properties.setConfigClientOauth2Properties(oauth2Properties);
+
 		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
 		Optional<AccessTokenResponse> tokenOpt = ReflectionTestUtils.invokeMethod(templateFactory, "parseTokenResponse",
 				TOKEN_RESPONSE);
@@ -158,13 +139,38 @@ class ConfigClientRequestTemplateFactoryTest {
 	}
 
 	@Test
+	void whenCreate_givenNoGrantType_thenIllegalState() {
+		// given
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		ConfigClientOauth2Properties oauth2Properties = new ConfigClientOauth2Properties();
+		oauth2Properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
+		oauth2Properties.setClientId("clientId");
+		oauth2Properties.setClientSecret("clientSecret");
+		properties.setConfigClientOauth2Properties(oauth2Properties);
+
+		// when
+		try {
+			ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG,
+					properties);
+			RestTemplate restTemplate = templateFactory.create();
+		}
+		catch (IllegalStateException e) {
+			// then
+			assertThat(e.getMessage()).startsWith("OAuth2 Grant Type property required.");
+		}
+	}
+
+	@Test
 	void whenCreate_givenBadTokenResponse_thenNoHeaderSet() {
 		// given
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
-		properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
-		properties.setOauthUsername("oauthUsername");
-		properties.setOauthPassword("oauthPassword");
-		properties.setGrantType("password");
+		ConfigClientOauth2Properties oauth2Properties = new ConfigClientOauth2Properties();
+		oauth2Properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
+		oauth2Properties.setOauthUsername("oauthUsername");
+		oauth2Properties.setOauthPassword("oauthPassword");
+		oauth2Properties.setGrantType("password");
+		properties.setConfigClientOauth2Properties(oauth2Properties);
+
 		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
 		mockWebServer.enqueue(new MockResponse().setBody("TOKEN_RESPONSE").setHeader(HttpHeaders.CONTENT_TYPE,
 				MediaType.APPLICATION_JSON_VALUE));
@@ -180,32 +186,27 @@ class ConfigClientRequestTemplateFactoryTest {
 	void whenDecryptProperty_givenEncryptedProp_thenDecryptProp() {
 		// given
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
-		properties.setEncryptorAlgorithm("PBEWITHHMACSHA512ANDAES_256");
-		System.setProperty("encryptor-password", "YaddaYaddaYadda");
-		SimplePBEByteEncryptor encryptor = buildEncryptor(properties);
+		EncryptorConfig encryptorConfig = new EncryptorConfig();
+		encryptorConfig.setEncryptorAlgorithm("PBEWITHHMACSHA512ANDAES_256");
+		properties.setEncryptorConfig(encryptorConfig);
+		properties.setConfigClientOauth2Properties(new ConfigClientOauth2Properties());
+		properties.getConfigClientOauth2Properties().setGrantType("client_credentials");
+		properties.getConfigClientOauth2Properties()
+				.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
+		properties.getConfigClientOauth2Properties().setOauthUsername("oauthUsername");
+		properties.getConfigClientOauth2Properties().setOauthPassword("oauthPassword");
+		System.setProperty(EncryptorConfig.ENCRYPTOR_SYSTEM_PROPERTY, "YaddaYaddaYadda");
+		StringEncryptor encryptor = encryptorConfig.getEncryptor();
 		String secret = UUID.randomUUID().toString();
-		String encryptedProp = new String(
-				Base64.getEncoder().encode(encryptor.encrypt(secret.getBytes(StandardCharsets.UTF_8))));
-		properties.setClientSecret("ENC(" + encryptedProp + ")");
+		String encryptedProp = encryptor.encrypt(secret);
+		properties.getConfigClientOauth2Properties().setClientSecret("ENC(" + encryptedProp + ")");
 		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
 		// when
-		templateFactory.create();
 		String actualSecret = ReflectionTestUtils.invokeMethod(templateFactory, "decryptProperty",
-				properties.getClientSecret());
+				properties.getConfigClientOauth2Properties().getClientSecret());
 
 		// then
 		assertThat(secret).isEqualTo(actualSecret);
-	}
-
-	private SimplePBEByteEncryptor buildEncryptor(ConfigClientProperties properties) {
-		SimplePBEByteEncryptor byteEncryptor = new SimplePBEByteEncryptor();
-		byteEncryptor.setPassword(System.getProperty("encryptor-password"));
-		byteEncryptor.setSaltGenerator(new RandomSaltGenerator());
-		byteEncryptor.setIterations(1000);
-		if (StringUtils.hasText(properties.getEncryptorAlgorithm())) {
-			byteEncryptor.setAlgorithm(properties.getEncryptorAlgorithm());
-		}
-		return byteEncryptor;
 	}
 
 }

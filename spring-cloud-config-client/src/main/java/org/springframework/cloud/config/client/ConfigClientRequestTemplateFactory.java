@@ -30,8 +30,6 @@ import javax.net.ssl.SSLContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ulisesbocchio.jasyptspringboot.encryptor.SimplePBEByteEncryptor;
-import com.ulisesbocchio.jasyptspringboot.encryptor.SimplePBEStringEncryptor;
 import org.apache.commons.logging.Log;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -40,7 +38,6 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
-import org.jasypt.salt.RandomSaltGenerator;
 
 import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.http.HttpEntity;
@@ -62,8 +59,6 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.AUT
 
 public class ConfigClientRequestTemplateFactory {
 
-	private final SimplePBEStringEncryptor encryptor;
-
 	private final Log log;
 
 	private final ConfigClientProperties properties;
@@ -71,7 +66,6 @@ public class ConfigClientRequestTemplateFactory {
 	public ConfigClientRequestTemplateFactory(Log log, ConfigClientProperties properties) {
 		this.log = log;
 		this.properties = properties;
-		this.encryptor = new SimplePBEStringEncryptor(buildEncryptor());
 	}
 
 	public Log getLog() {
@@ -80,17 +74,6 @@ public class ConfigClientRequestTemplateFactory {
 
 	public ConfigClientProperties getProperties() {
 		return this.properties;
-	}
-
-	public SimplePBEByteEncryptor buildEncryptor() {
-		SimplePBEByteEncryptor byteEncryptor = new SimplePBEByteEncryptor();
-		byteEncryptor.setPassword(System.getProperty("encryptor-password"));
-		byteEncryptor.setSaltGenerator(new RandomSaltGenerator());
-		byteEncryptor.setIterations(properties.getEncryptorIterations());
-		if (StringUtils.hasText(properties.getEncryptorAlgorithm())) {
-			byteEncryptor.setAlgorithm(properties.getEncryptorAlgorithm());
-		}
-		return byteEncryptor;
 	}
 
 	public RestTemplate create() {
@@ -105,8 +88,10 @@ public class ConfigClientRequestTemplateFactory {
 		RestTemplate template = new RestTemplate(requestFactory);
 		Map<String, String> headers = new HashMap<>(properties.getHeaders());
 		headers.remove(AUTHORIZATION); // To avoid redundant addition of header
-		if (StringUtils.hasText(properties.getTokenUri())) {
-			Optional<AccessTokenResponse> responseOpt = getOAuthToken(template, properties.getTokenUri());
+
+		if (properties.getConfigClientOauth2Properties() != null) {
+			Optional<AccessTokenResponse> responseOpt = getOAuthToken(template,
+					properties.getConfigClientOauth2Properties().getTokenUri());
 			if (responseOpt.isPresent()) {
 				AccessTokenResponse accessTokenResponse = responseOpt.get();
 				headers.put(AUTHORIZATION, accessTokenResponse.getBearerHeader());
@@ -118,22 +103,21 @@ public class ConfigClientRequestTemplateFactory {
 	}
 
 	private Optional<AccessTokenResponse> getOAuthToken(RestTemplate template, String tokenUri) {
+		ConfigClientOauth2Properties oauth2Properties = properties.getConfigClientOauth2Properties();
+		if (oauth2Properties.getGrantType() == null) {
+			throw new IllegalStateException("OAuth2 Grant Type property required.");
+		}
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		if (StringUtils.hasText(properties.getGrantType())) {
-			map.put("grant_type", List.of(properties.getGrantType()));
+		map.put("grant_type", List.of(oauth2Properties.getGrantType()));
+		if (StringUtils.hasText(oauth2Properties.getClientId())) {
+			map.put("client_id", List.of(oauth2Properties.getClientId()));
+			map.put("client_secret", List.of(decryptProperty(oauth2Properties.getClientSecret())));
 		}
-		else {
-			throw new IllegalStateException("Grant type is required for OAuth2 requests.");
-		}
-		if (StringUtils.hasText(properties.getClientId())) {
-			map.put("client_id", List.of(properties.getClientId()));
-			map.put("client_secret", List.of(decryptProperty(properties.getClientSecret())));
-		}
-		if (StringUtils.hasText(properties.getOauthUsername())) {
-			map.put("username", List.of(properties.getOauthUsername()));
-			map.put("password", List.of(decryptProperty(properties.getOauthPassword())));
+		if (StringUtils.hasText(oauth2Properties.getOauthUsername())) {
+			map.put("username", List.of(oauth2Properties.getOauthUsername()));
+			map.put("password", List.of(decryptProperty(oauth2Properties.getOauthPassword())));
 		}
 		HttpEntity<MultiValueMap<String, String>> requestBodyFormUrlEncoded = new HttpEntity<>(map, httpHeaders);
 
@@ -144,7 +128,7 @@ public class ConfigClientRequestTemplateFactory {
 	private String decryptProperty(String prop) {
 		if (prop.startsWith("ENC(")) {
 			prop = prop.substring(4, prop.lastIndexOf(")"));
-			return encryptor.decrypt(prop);
+			return properties.getEncryptorConfig().getEncryptor().decrypt(prop);
 		}
 		return prop;
 	}
@@ -235,7 +219,9 @@ public class ConfigClientRequestTemplateFactory {
 		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
 				throws IOException {
 			for (Map.Entry<String, String> header : this.headers.entrySet()) {
-				request.getHeaders().add(header.getKey(), header.getValue());
+				if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+					request.getHeaders().add(header.getKey(), header.getValue());
+				}
 			}
 			return execution.execute(request, body);
 		}

@@ -18,6 +18,10 @@ package org.springframework.cloud.config.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * @author Bruce Randall
+ *
+ */
 public class AccessTokenResponse {
 
 	@JsonProperty("access_token")

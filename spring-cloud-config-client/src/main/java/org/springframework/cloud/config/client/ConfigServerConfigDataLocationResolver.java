@@ -102,13 +102,20 @@ public class ConfigServerConfigDataLocationResolver
 					.orElse("application");
 			configClientProperties.setName(applicationName);
 		}
+		ConfigClientOauth2Properties oauth2Properties = binder
+				.bind(ConfigClientOauth2Properties.PREFIX, Bindable.of(ConfigClientOauth2Properties.class), bindHandler)
+				.orElse(null);
+		configClientProperties.setConfigClientOauth2Properties(oauth2Properties);
+
+		EncryptorConfig encryptorConfig = binder
+				.bind(EncryptorConfig.PREFIX, Bindable.of(EncryptorConfig.class), bindHandler).orElse(null);
+		configClientProperties.setEncryptorConfig(encryptorConfig);
 
 		PropertyHolder holder = new PropertyHolder();
 		holder.properties = configClientProperties;
 		// bind retry, override later
 		holder.retryProperties = binder.bind(RetryProperties.PREFIX, RetryProperties.class)
 				.orElseGet(RetryProperties::new);
-
 		if (StringUtils.hasText(uris)) {
 			String[] uri = StringUtils.commaDelimitedListToStringArray(uris);
 			String paramStr = null;

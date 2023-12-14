@@ -118,45 +118,14 @@ public class ConfigClientProperties {
 	private String password;
 
 	/**
-	 * The OAuth2 token URI of the IDP issuing JWT tokens. When present enables OAuth2
-	 * client calls.
+	 * OAUTH2 Properties.
 	 */
-	private String tokenUri;
+	private ConfigClientOauth2Properties configClientOauth2Properties;
 
 	/**
-	 * The OAuth2 grant type (client_credentials, password).
+	 * Encryption properties.
 	 */
-	private String grantType;
-
-	/**
-	 * The OAuth2 client id should it be needed in JWT token request.
-	 */
-	private String clientId;
-
-	/**
-	 * The OAuth2 client secret should it be needed in JWT token request.
-	 */
-	private String clientSecret;
-
-	/**
-	 * The OAuth2 username to use when contacting the IDP.
-	 */
-	private String oauthUsername;
-
-	/**
-	 * The OAuth2 user password to use when contacting the IDP.
-	 */
-	private String oauthPassword;
-
-	/**
-	 * The Jasypt encryption algorithm.
-	 */
-	private String encryptorAlgorithm;
-
-	/**
-	 * Encryption iterations.
-	 */
-	private Integer encryptorIterations = 1000;
+	private EncryptorConfig encryptorConfig;
 
 	/**
 	 * The URI of the remote server (default http://localhost:8888).
@@ -289,68 +258,20 @@ public class ConfigClientProperties {
 		this.password = password;
 	}
 
-	public String getTokenUri() {
-		return tokenUri;
+	public ConfigClientOauth2Properties getConfigClientOauth2Properties() {
+		return configClientOauth2Properties;
 	}
 
-	public void setTokenUri(String tokenUri) {
-		this.tokenUri = tokenUri;
+	public void setConfigClientOauth2Properties(ConfigClientOauth2Properties configClientOauth2Properties) {
+		this.configClientOauth2Properties = configClientOauth2Properties;
 	}
 
-	public String getGrantType() {
-		return grantType;
+	public EncryptorConfig getEncryptorConfig() {
+		return encryptorConfig;
 	}
 
-	public void setGrantType(String grantType) {
-		this.grantType = grantType;
-	}
-
-	public String getClientId() {
-		return clientId;
-	}
-
-	public void setClientId(String clientId) {
-		this.clientId = clientId;
-	}
-
-	public String getClientSecret() {
-		return clientSecret;
-	}
-
-	public void setClientSecret(String clientSecret) {
-		this.clientSecret = clientSecret;
-	}
-
-	public String getOauthUsername() {
-		return oauthUsername;
-	}
-
-	public void setOauthUsername(String oauthUsername) {
-		this.oauthUsername = oauthUsername;
-	}
-
-	public String getOauthPassword() {
-		return oauthPassword;
-	}
-
-	public void setOauthPassword(String oauthPassword) {
-		this.oauthPassword = oauthPassword;
-	}
-
-	public String getEncryptorAlgorithm() {
-		return encryptorAlgorithm;
-	}
-
-	public void setEncryptorAlgorithm(String encryptorAlgorithm) {
-		this.encryptorAlgorithm = encryptorAlgorithm;
-	}
-
-	public Integer getEncryptorIterations() {
-		return encryptorIterations;
-	}
-
-	public void setEncryptorIterations(Integer encryptorIterations) {
-		this.encryptorIterations = encryptorIterations;
+	public void setEncryptorConfig(EncryptorConfig encryptorConfig) {
+		this.encryptorConfig = encryptorConfig;
 	}
 
 	public Credentials getCredentials(int index) {
@@ -496,7 +417,7 @@ public class ConfigClientProperties {
 		return credentials;
 	}
 
-	public ConfigClientProperties override(org.springframework.core.env.Environment environment) {
+	public ConfigClientProperties override(Environment environment) {
 		ConfigClientProperties override = new ConfigClientProperties();
 		BeanUtils.copyProperties(this, override);
 		override.setName(environment.resolvePlaceholders(NAME_PLACEHOLDER));
