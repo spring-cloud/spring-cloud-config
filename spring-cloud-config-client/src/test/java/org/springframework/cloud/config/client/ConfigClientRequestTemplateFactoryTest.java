@@ -186,27 +186,32 @@ class ConfigClientRequestTemplateFactoryTest {
 	void whenDecryptProperty_givenEncryptedProp_thenDecryptProp() {
 		// given
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		System.setProperty(EncryptorConfig.ENCRYPTOR_SYSTEM_PROPERTY, "YaddaYaddaYadda");
 		EncryptorConfig encryptorConfig = new EncryptorConfig();
 		encryptorConfig.setEncryptorAlgorithm("PBEWITHHMACSHA512ANDAES_256");
 		properties.setEncryptorConfig(encryptorConfig);
+
 		properties.setConfigClientOauth2Properties(new ConfigClientOauth2Properties());
 		properties.getConfigClientOauth2Properties().setGrantType("client_credentials");
 		properties.getConfigClientOauth2Properties()
 				.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
 		properties.getConfigClientOauth2Properties().setOauthUsername("oauthUsername");
 		properties.getConfigClientOauth2Properties().setOauthPassword("oauthPassword");
-		System.setProperty(EncryptorConfig.ENCRYPTOR_SYSTEM_PROPERTY, "YaddaYaddaYadda");
+
 		StringEncryptor encryptor = encryptorConfig.getEncryptor();
 		String secret = UUID.randomUUID().toString();
 		String encryptedProp = encryptor.encrypt(secret);
 		properties.getConfigClientOauth2Properties().setClientSecret("ENC(" + encryptedProp + ")");
-		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
+		properties.getConfigClientOauth2Properties().setOauthPassword("PLAIN OLD TEXT");
 		// when
-		String actualSecret = ReflectionTestUtils.invokeMethod(templateFactory, "decryptProperty",
-				properties.getConfigClientOauth2Properties().getClientSecret());
+
+		String actualSecret = encryptorConfig
+				.decryptProperty(properties.getConfigClientOauth2Properties().getClientSecret());
 
 		// then
 		assertThat(secret).isEqualTo(actualSecret);
+		actualSecret = encryptorConfig.decryptProperty(properties.getConfigClientOauth2Properties().getOauthPassword());
+		assertThat("PLAIN OLD TEXT").isEqualTo(actualSecret);
 	}
 
 }

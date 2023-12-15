@@ -61,11 +61,14 @@ public class ConfigClientRequestTemplateFactory {
 
 	private final Log log;
 
+	private EncryptorConfig encryptorConfig;
+
 	private final ConfigClientProperties properties;
 
 	public ConfigClientRequestTemplateFactory(Log log, ConfigClientProperties properties) {
 		this.log = log;
 		this.properties = properties;
+		this.encryptorConfig = properties.getEncryptorConfig();
 	}
 
 	public Log getLog() {
@@ -125,12 +128,13 @@ public class ConfigClientRequestTemplateFactory {
 		return parseTokenResponse(tokenJson);
 	}
 
-	private String decryptProperty(String prop) {
-		if (prop.startsWith("ENC(")) {
-			prop = prop.substring(4, prop.lastIndexOf(")"));
-			return properties.getEncryptorConfig().getEncryptor().decrypt(prop);
+	private String decryptProperty(String property) {
+		if (encryptorConfig != null) {
+			return encryptorConfig.decryptProperty(property);
 		}
-		return prop;
+		else {
+			return property;
+		}
 	}
 
 	private Optional<AccessTokenResponse> parseTokenResponse(String tokenJson) {

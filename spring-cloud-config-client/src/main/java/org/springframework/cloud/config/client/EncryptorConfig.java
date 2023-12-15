@@ -81,6 +81,14 @@ public class EncryptorConfig {
 		return encryptor;
 	}
 
+	public String decryptProperty(String prop) {
+		if (prop.startsWith("ENC(")) {
+			prop = prop.substring(4, prop.lastIndexOf(")"));
+			return getEncryptor().decrypt(prop);
+		}
+		return prop;
+	}
+
 	@Override
 	public String toString() {
 		return "EncryptorConfig{" + "encryptorAlgorithm='" + encryptorAlgorithm + '\'' + ", encryptorIterations="
