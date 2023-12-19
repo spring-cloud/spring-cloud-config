@@ -211,7 +211,7 @@ class ConfigClientRequestTemplateFactoryTest {
 		// then
 		assertThat(secret).isEqualTo(actualSecret);
 		actualSecret = encryptorConfig.decryptProperty(properties.getConfigClientOAuth2Properties().getOauthPassword());
-		assertThat("PLAIN OLD TEXT").isEqualTo(actualSecret);
+		assertThat(actualSecret).isEqualTo("PLAIN OLD TEXT");
 	}
 
 }
