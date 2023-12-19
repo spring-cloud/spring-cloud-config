@@ -102,12 +102,12 @@ class ConfigClientRequestTemplateFactoryTest {
 	void whenCreate_givenTokenUri_thenGetOAuthToken() {
 		// given
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
-		ConfigClientOauth2Properties oauth2Properties = new ConfigClientOauth2Properties();
+		ConfigClientOAuth2Properties oauth2Properties = new ConfigClientOAuth2Properties();
 		oauth2Properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
 		oauth2Properties.setClientId("clientId");
 		oauth2Properties.setClientSecret("clientSecret");
 		oauth2Properties.setGrantType("client_credentials");
-		properties.setConfigClientOauth2Properties(oauth2Properties);
+		properties.setConfigClientOAuth2Properties(oauth2Properties);
 
 		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
 		Optional<AccessTokenResponse> tokenOpt = ReflectionTestUtils.invokeMethod(templateFactory, "parseTokenResponse",
@@ -142,11 +142,11 @@ class ConfigClientRequestTemplateFactoryTest {
 	void whenCreate_givenNoGrantType_thenIllegalState() {
 		// given
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
-		ConfigClientOauth2Properties oauth2Properties = new ConfigClientOauth2Properties();
+		ConfigClientOAuth2Properties oauth2Properties = new ConfigClientOAuth2Properties();
 		oauth2Properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
 		oauth2Properties.setClientId("clientId");
 		oauth2Properties.setClientSecret("clientSecret");
-		properties.setConfigClientOauth2Properties(oauth2Properties);
+		properties.setConfigClientOAuth2Properties(oauth2Properties);
 
 		// when
 		try {
@@ -164,12 +164,12 @@ class ConfigClientRequestTemplateFactoryTest {
 	void whenCreate_givenBadTokenResponse_thenNoHeaderSet() {
 		// given
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
-		ConfigClientOauth2Properties oauth2Properties = new ConfigClientOauth2Properties();
+		ConfigClientOAuth2Properties oauth2Properties = new ConfigClientOAuth2Properties();
 		oauth2Properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
 		oauth2Properties.setOauthUsername("oauthUsername");
 		oauth2Properties.setOauthPassword("oauthPassword");
 		oauth2Properties.setGrantType("password");
-		properties.setConfigClientOauth2Properties(oauth2Properties);
+		properties.setConfigClientOAuth2Properties(oauth2Properties);
 
 		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
 		mockWebServer.enqueue(new MockResponse().setBody("TOKEN_RESPONSE").setHeader(HttpHeaders.CONTENT_TYPE,
@@ -191,26 +191,26 @@ class ConfigClientRequestTemplateFactoryTest {
 		encryptorConfig.setEncryptorAlgorithm("PBEWITHHMACSHA512ANDAES_256");
 		properties.setEncryptorConfig(encryptorConfig);
 
-		properties.setConfigClientOauth2Properties(new ConfigClientOauth2Properties());
-		properties.getConfigClientOauth2Properties().setGrantType("client_credentials");
-		properties.getConfigClientOauth2Properties()
+		properties.setConfigClientOAuth2Properties(new ConfigClientOAuth2Properties());
+		properties.getConfigClientOAuth2Properties().setGrantType("client_credentials");
+		properties.getConfigClientOAuth2Properties()
 				.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
-		properties.getConfigClientOauth2Properties().setOauthUsername("oauthUsername");
-		properties.getConfigClientOauth2Properties().setOauthPassword("oauthPassword");
+		properties.getConfigClientOAuth2Properties().setOauthUsername("oauthUsername");
+		properties.getConfigClientOAuth2Properties().setOauthPassword("oauthPassword");
 
 		StringEncryptor encryptor = encryptorConfig.getEncryptor();
 		String secret = UUID.randomUUID().toString();
 		String encryptedProp = encryptor.encrypt(secret);
-		properties.getConfigClientOauth2Properties().setClientSecret("ENC(" + encryptedProp + ")");
-		properties.getConfigClientOauth2Properties().setOauthPassword("PLAIN OLD TEXT");
+		properties.getConfigClientOAuth2Properties().setClientSecret("ENC(" + encryptedProp + ")");
+		properties.getConfigClientOAuth2Properties().setOauthPassword("PLAIN OLD TEXT");
 		// when
 
 		String actualSecret = encryptorConfig
-				.decryptProperty(properties.getConfigClientOauth2Properties().getClientSecret());
+				.decryptProperty(properties.getConfigClientOAuth2Properties().getClientSecret());
 
 		// then
 		assertThat(secret).isEqualTo(actualSecret);
-		actualSecret = encryptorConfig.decryptProperty(properties.getConfigClientOauth2Properties().getOauthPassword());
+		actualSecret = encryptorConfig.decryptProperty(properties.getConfigClientOAuth2Properties().getOauthPassword());
 		assertThat("PLAIN OLD TEXT").isEqualTo(actualSecret);
 	}
 

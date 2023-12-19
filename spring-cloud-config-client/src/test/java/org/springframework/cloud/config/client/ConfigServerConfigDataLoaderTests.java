@@ -700,8 +700,8 @@ public class ConfigServerConfigDataLoaderTests {
 		Environment body = new Environment("test", "local");
 		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
 		properties.setLabel(null);
-		properties.setConfigClientOauth2Properties(new ConfigClientOauth2Properties());
-		properties.getConfigClientOauth2Properties()
+		properties.setConfigClientOAuth2Properties(new ConfigClientOAuth2Properties());
+		properties.getConfigClientOAuth2Properties()
 				.setTokenUri("http://localhost:9999/realms/test-realm/protocol/openid-connect/token");
 		Map<String, String> tokenHeader = new HashMap<>();
 		tokenHeader.put(AUTHORIZATION, "Bearer " + UUID.randomUUID().toString());
@@ -720,9 +720,9 @@ public class ConfigServerConfigDataLoaderTests {
 	void whenRemoteEnvironment_givenOauthNoToken_thenNoInterceptor() {
 		Environment body = new Environment("test", "local");
 		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
-		properties.setConfigClientOauth2Properties(new ConfigClientOauth2Properties());
+		properties.setConfigClientOAuth2Properties(new ConfigClientOAuth2Properties());
 		properties.setLabel(null);
-		properties.getConfigClientOauth2Properties()
+		properties.getConfigClientOAuth2Properties()
 				.setTokenUri("http://localhost:9999/realms/test-realm/protocol/openid-connect/token");
 		properties.setSendState(false);
 		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), "stale");

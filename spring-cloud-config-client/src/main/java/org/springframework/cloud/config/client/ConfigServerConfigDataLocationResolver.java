@@ -102,10 +102,10 @@ public class ConfigServerConfigDataLocationResolver
 					.orElse("application");
 			configClientProperties.setName(applicationName);
 		}
-		ConfigClientOauth2Properties oauth2Properties = binder
-				.bind(ConfigClientOauth2Properties.PREFIX, Bindable.of(ConfigClientOauth2Properties.class), bindHandler)
+		ConfigClientOAuth2Properties oauth2Properties = binder
+				.bind(ConfigClientOAuth2Properties.PREFIX, Bindable.of(ConfigClientOAuth2Properties.class), bindHandler)
 				.orElse(null);
-		configClientProperties.setConfigClientOauth2Properties(oauth2Properties);
+		configClientProperties.setConfigClientOAuth2Properties(oauth2Properties);
 
 		EncryptorConfig encryptorConfig = binder
 				.bind(EncryptorConfig.PREFIX, Bindable.of(EncryptorConfig.class), bindHandler).orElse(null);

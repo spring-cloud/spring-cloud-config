@@ -189,14 +189,14 @@ public class ConfigClientPropertiesTests {
 		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
 		properties.setUri(new String[] { "https://localhost:8888/" });
 
-		ConfigClientOauth2Properties oauth2Properties = new ConfigClientOauth2Properties();
+		ConfigClientOAuth2Properties oauth2Properties = new ConfigClientOAuth2Properties();
 		oauth2Properties.setTokenUri("http://localhost:9080/realms/test-realm/protocol/openid-connect/token");
 		oauth2Properties.setClientId("clientId");
 		oauth2Properties.setClientSecret("clientSecret");
 		oauth2Properties.setOauthUsername("oauthUsername");
 		oauth2Properties.setOauthPassword("oauthPassword");
 		oauth2Properties.setGrantType("password");
-		properties.setConfigClientOauth2Properties(oauth2Properties);
+		properties.setConfigClientOAuth2Properties(oauth2Properties);
 		EncryptorConfig encryptorConfig = new EncryptorConfig();
 		encryptorConfig.setEncryptorAlgorithm("PBEWITHHMACSHA512ANDAES_256");
 		encryptorConfig.setEncryptorIterations(10000);
@@ -211,7 +211,7 @@ public class ConfigClientPropertiesTests {
 		assertThat(oauth2Properties.getGrantType()).isEqualTo("password");
 		assertThat(encryptorConfig.getEncryptorAlgorithm()).isEqualTo("PBEWITHHMACSHA512ANDAES_256");
 		assertThat(encryptorConfig.getEncryptorIterations()).isEqualTo(10000);
-		assertThat(oauth2Properties.toString()).contains(ConfigClientOauth2Properties.class.getSimpleName());
+		assertThat(oauth2Properties.toString()).contains(ConfigClientOAuth2Properties.class.getSimpleName());
 		assertThat(encryptorConfig.toString()).contains(EncryptorConfig.class.getSimpleName());
 
 		encryptorConfig.setEncryptorAlgorithm(null);

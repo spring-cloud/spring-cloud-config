@@ -92,9 +92,9 @@ public class ConfigClientRequestTemplateFactory {
 		Map<String, String> headers = new HashMap<>(properties.getHeaders());
 		headers.remove(AUTHORIZATION); // To avoid redundant addition of header
 
-		if (properties.getConfigClientOauth2Properties() != null) {
+		if (properties.getConfigClientOAuth2Properties() != null) {
 			Optional<AccessTokenResponse> responseOpt = getOAuthToken(template,
-					properties.getConfigClientOauth2Properties().getTokenUri());
+					properties.getConfigClientOAuth2Properties().getTokenUri());
 			if (responseOpt.isPresent()) {
 				AccessTokenResponse accessTokenResponse = responseOpt.get();
 				headers.put(AUTHORIZATION, accessTokenResponse.getBearerHeader());
@@ -106,7 +106,7 @@ public class ConfigClientRequestTemplateFactory {
 	}
 
 	private Optional<AccessTokenResponse> getOAuthToken(RestTemplate template, String tokenUri) {
-		ConfigClientOauth2Properties oauth2Properties = properties.getConfigClientOauth2Properties();
+		ConfigClientOAuth2Properties oauth2Properties = properties.getConfigClientOAuth2Properties();
 		if (oauth2Properties.getGrantType() == null) {
 			throw new IllegalStateException("OAuth2 Grant Type property required.");
 		}

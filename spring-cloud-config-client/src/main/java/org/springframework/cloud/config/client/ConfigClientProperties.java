@@ -120,7 +120,7 @@ public class ConfigClientProperties {
 	/**
 	 * OAUTH2 Properties.
 	 */
-	private ConfigClientOauth2Properties configClientOauth2Properties;
+	private ConfigClientOAuth2Properties configClientOAuth2Properties;
 
 	/**
 	 * Encryption properties.
@@ -258,12 +258,12 @@ public class ConfigClientProperties {
 		this.password = password;
 	}
 
-	public ConfigClientOauth2Properties getConfigClientOauth2Properties() {
-		return configClientOauth2Properties;
+	public ConfigClientOAuth2Properties getConfigClientOAuth2Properties() {
+		return configClientOAuth2Properties;
 	}
 
-	public void setConfigClientOauth2Properties(ConfigClientOauth2Properties configClientOauth2Properties) {
-		this.configClientOauth2Properties = configClientOauth2Properties;
+	public void setConfigClientOAuth2Properties(ConfigClientOAuth2Properties configClientOAuth2Properties) {
+		this.configClientOAuth2Properties = configClientOAuth2Properties;
 	}
 
 	public EncryptorConfig getEncryptorConfig() {

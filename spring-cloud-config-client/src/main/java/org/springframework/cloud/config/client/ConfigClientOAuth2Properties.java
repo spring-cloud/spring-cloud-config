@@ -22,8 +22,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Bruce Randall
  *
  */
-@ConfigurationProperties(ConfigClientOauth2Properties.PREFIX)
-public class ConfigClientOauth2Properties {
+@ConfigurationProperties(ConfigClientOAuth2Properties.PREFIX)
+public class ConfigClientOAuth2Properties {
 
 	/**
 	 * Prefix for Spring Cloud Config properties.
@@ -111,7 +111,7 @@ public class ConfigClientOauth2Properties {
 
 	@Override
 	public String toString() {
-		return "ConfigClientOauth2Properties{" + "tokenUri='" + tokenUri + '\'' + ", grantType='" + grantType + '\''
+		return "ConfigClientOAuth2Properties{" + "tokenUri='" + tokenUri + '\'' + ", grantType='" + grantType + '\''
 				+ ", clientId='" + clientId + '\'' + ", oauthUsername='" + oauthUsername + '\'' + '}';
 	}
 
