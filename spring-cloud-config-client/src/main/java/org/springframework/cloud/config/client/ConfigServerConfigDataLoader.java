@@ -49,6 +49,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -318,12 +319,25 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 			try {
 				HttpHeaders headers = new HttpHeaders();
 				headers.setAccept(acceptHeader);
-				requestTemplateFactory.addAuthorizationToken(headers, username, password);
-				if (StringUtils.hasText(token)) {
-					headers.add(TOKEN_HEADER, token);
-				}
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
+				}
+				if (properties.getConfigClientOAuth2Properties() != null) {
+					if (!properties.getHeaders().isEmpty()) {
+						List<ClientHttpRequestInterceptor> interceptors = List
+								.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(
+										properties.getHeaders()));
+						restTemplate.setInterceptors(interceptors);
+					}
+					else {
+						requestTemplateFactory.refreshJwt(restTemplate);
+					}
+				}
+				else {
+					requestTemplateFactory.addAuthorizationToken(headers, username, password);
+					if (StringUtils.hasText(properties.getToken())) {
+						headers.add(TOKEN_HEADER, properties.getToken());
+					}
 				}
 
 				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);

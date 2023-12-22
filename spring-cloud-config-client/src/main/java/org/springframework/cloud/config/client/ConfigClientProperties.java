@@ -118,6 +118,16 @@ public class ConfigClientProperties {
 	private String password;
 
 	/**
+	 * OAUTH2 Properties.
+	 */
+	private ConfigClientOAuth2Properties configClientOAuth2Properties;
+
+	/**
+	 * Encryption properties.
+	 */
+	private EncryptorConfig encryptorConfig;
+
+	/**
 	 * The URI of the remote server (default http://localhost:8888).
 	 */
 	private String[] uri = { "http://localhost:8888" };
@@ -246,6 +256,22 @@ public class ConfigClientProperties {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public ConfigClientOAuth2Properties getConfigClientOAuth2Properties() {
+		return configClientOAuth2Properties;
+	}
+
+	public void setConfigClientOAuth2Properties(ConfigClientOAuth2Properties configClientOAuth2Properties) {
+		this.configClientOAuth2Properties = configClientOAuth2Properties;
+	}
+
+	public EncryptorConfig getEncryptorConfig() {
+		return encryptorConfig;
+	}
+
+	public void setEncryptorConfig(EncryptorConfig encryptorConfig) {
+		this.encryptorConfig = encryptorConfig;
 	}
 
 	public Credentials getCredentials(int index) {

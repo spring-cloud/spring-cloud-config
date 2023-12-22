@@ -191,6 +191,80 @@ spring:
 
 ----
 
+If the config server requires OAuth2 JWT security, clients can provide the following combinations of properties.
+
+For client credentials grant type:
+----
+spring:
+  cloud:
+    config:
+      oauth2:
+        token-uri: http://localhost:9080/realms/${realm}/protocol/openid-connect/token
+        client-id: oauth2-client
+        client-secret: oauth2-client-secret
+        grant-type: client_credentials
+----
+
+For password credentials grant type you can include username and password
+----
+spring:
+  cloud:
+    config:
+      oauth2:
+        token-uri: http://localhost:9080/realms/${realm}/protocol/openid-connect/token
+        client-id: oauth2-client
+        client-secret: oauth2-client-secret
+        grant-type: client_credentials
+        username: actuator-user
+        password: actuator-secret
+----
+
+Additionally, client-secret and password can be encrypted with http://www.jasypt.org/index.html[Jasypt].
+----
+spring:
+  cloud:
+    config:
+      encryptor:
+        encryptor-algorithm: PBEWITHHMACSHA512ANDAES_256
+        encryptor-iterations: 1000
+----
+The Jasypt encryption password will need to be passed as a system property. Examples:
+----
+-Djasypt.encryptor.password=my-favorite-password
+----
+It can also be done in the Spring Application.
+----
+import org.springframework.cloud.config.client.EncryptorConfig;
+
+@EnableEncryptableProperties //enable Jayspt encryption
+@SpringBootApplication
+public class MyBootApplication {
+
+    public static void main(String[] args) {
+        System.setProperty(EncryptorConfig.ENCRYPTOR_SYSTEM_PROPERTY, "my-favorite-password");
+        //OR
+        System.setProperty("jasypt.encryptor.password", "my-favorite-password");
+        SpringApplication.run(MyBootApplication.class, args);
+    }
+}
+----
+Example of OAuth2 properties with encryption.
+----
+spring:
+  cloud:
+    config:
+      oauth2:
+        token-uri: http://localhost:9080/realms/${realm}/protocol/openid-connect/token
+        client-id: oauth2-client
+        client-secret: ENC(WzBZMDgGCSqGSIb3DQEFDDArBBSNIl7Wk7QOYfVUgZwVvAt9kXw8QgICEAACASAwDAYIKoZIhvcNAgsFADAdBglghk=)
+        grant-type: client_credentials
+        username: actuator-user
+        password: ENC(7QOYfVUgZwVvAt9kXw8QgICEAACASAwDAYIKoZIhvcNAgsFADAdBglghkWzBZMDgGCSqGSIb3DQEFDDArBBSNIl7Wk==)
+      encryptor:
+        encryptor-algorithm: PBEWITHHMACSHA512ANDAES_256
+        encryptor-iterations: 1000
+----
+
 If config server requires client side TLS certificate, you can configure client side TLS certificate and trust store via properties, as shown in following example:
 
 [source,yaml]
