@@ -347,5 +347,5 @@ ifndef::releaseTrain[]
 [[appendix]]
 == Appendices
 
-include:../:_observability.adoc[]
+include::observability.adoc[]
 endif::[]
