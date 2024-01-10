@@ -1383,8 +1383,8 @@ You can change the priority of all overrides in the client to be more like defau
 
 ==== Using Bootstrap To Override Properties
 
-If you enable <<config-first-bootstrap, config first bootstrap>>, you can allow client applications to override configuration from the config server by placing two properties within
-the applications configuration coming from the config server.
+If you enable <<config-first-bootstrap, config first bootstrap>>, you can let client settings override configuration from the config server by placing two properties within 
+the application's configuration that reside in the external environment repository (for example, Git, Vault, SVN, and others) used by the config server.
 
 [source,properties]
 ----
