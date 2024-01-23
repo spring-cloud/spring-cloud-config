@@ -19,6 +19,7 @@ package org.springframework.cloud.config.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 
@@ -204,6 +205,9 @@ public class ConfigServerConfigDataLocationResolver
 			return factory.create();
 		});
 
+		bootstrapContext.registerIfAbsent(PropertyResolver.class,
+				context -> new PropertyResolver(resolverContext.getBinder(), getBindHandler(resolverContext)));
+
 		ConfigServerConfigDataResource resource = new ConfigServerConfigDataResource(properties, location.isOptional(),
 				profiles);
 		resource.setProfileSpecific(!ObjectUtils.isEmpty(profiles));
@@ -270,6 +274,31 @@ public class ConfigServerConfigDataLocationResolver
 		ConfigClientProperties properties;
 
 		RetryProperties retryProperties;
+
+	}
+
+	public static class PropertyResolver {
+
+		private final Binder binder;
+
+		private final BindHandler bindHandler;
+
+		public PropertyResolver(Binder binder, BindHandler bindHandler) {
+			this.binder = binder;
+			this.bindHandler = bindHandler;
+		}
+
+		public <T> T get(String key, Class<T> type, T defaultValue) {
+			return binder.bind(key, Bindable.of(type)).orElse(defaultValue);
+		}
+
+		public <T> T resolveConfigurationProperties(String prefix, Class<T> type, Supplier<T> defaultValue) {
+			return binder.bind(prefix, Bindable.of(type), bindHandler).orElseGet(defaultValue);
+		}
+
+		public <T> T resolveOrCreateConfigurationProperties(String prefix, Class<T> type) {
+			return binder.bindOrCreate(prefix, Bindable.of(type), bindHandler);
+		}
 
 	}
 
