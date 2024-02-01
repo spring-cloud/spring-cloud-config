@@ -30,6 +30,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.backoff.ExponentialRandomBackOffPolicy;
 import org.springframework.retry.interceptor.RetryInterceptorBuilder;
 import org.springframework.retry.interceptor.RetryOperationsInterceptor;
 
@@ -70,8 +72,12 @@ public class ConfigServiceBootstrapConfiguration {
 		@Bean
 		@ConditionalOnMissingBean(name = "configServerRetryInterceptor")
 		public RetryOperationsInterceptor configServerRetryInterceptor(RetryProperties properties) {
-			return RetryInterceptorBuilder.stateless().backOffOptions(properties.getInitialInterval(),
-					properties.getMultiplier(), properties.getMaxInterval()).maxAttempts(properties.getMaxAttempts())
+			ExponentialBackOffPolicy policy = properties.isUseRandomPolicy() ? new ExponentialRandomBackOffPolicy()
+					: new ExponentialBackOffPolicy();
+			policy.setInitialInterval(properties.getInitialInterval());
+			policy.setMultiplier(properties.getMultiplier());
+			policy.setMaxInterval(properties.getMaxInterval());
+			return RetryInterceptorBuilder.stateless().backOffPolicy(policy).maxAttempts(properties.getMaxAttempts())
 					.build();
 		}
 
