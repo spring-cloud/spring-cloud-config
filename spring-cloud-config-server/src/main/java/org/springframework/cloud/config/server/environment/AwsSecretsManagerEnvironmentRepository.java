@@ -17,8 +17,11 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -98,7 +101,9 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 			environment.add(new PropertySource("overrides", overrides));
 		}
 
-		for (String profile : profiles) {
+		List<String> reversedProfiles = new ArrayList<>(Arrays.asList(profiles));
+		Collections.reverse(reversedProfiles);
+		for (String profile : reversedProfiles) {
 			addPropertySource(environment, application, profile, label);
 			if (!defaultApplication.equals(application)) {
 				addPropertySource(environment, defaultApplication, profile, label);
