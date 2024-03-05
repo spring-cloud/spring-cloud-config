@@ -1,0 +1,66 @@
+[
+	{
+		"application": "foo",
+		"profile": "bar",
+		"label": "master",
+		"properties": {
+			"a_b_c": "foo-bar"
+		}
+	},
+	{
+		"application": "foo",
+		"profile": "default",
+		"label": "master",
+		"properties": {
+			"a_b_c": "foo-default"
+		}
+	},
+	{
+		"application": "foo",
+		"profile": null,
+		"label": "master",
+		"properties": {
+			"a_b_c": "foo-null"
+		}
+	},
+	{
+		"application": "application",
+		"profile": "bar",
+		"label": "master",
+		"properties": {
+			"a_b_c": "application-bar"
+		}
+	},
+	{
+		"application": "application",
+		"profile": "default",
+		"label": "master",
+		"properties": {
+			"a_b_c": "application-default"
+		}
+	},
+	{
+		"application": "application",
+		"profile": null,
+		"label": "master",
+		"properties": {
+			"a_b_c": "application-null"
+		}
+	},
+	{
+		"application": "foo",
+		"profile": "bar",
+		"label": "main",
+		"properties": {
+			"a_b_c": "foo-bar"
+		}
+	},
+	{
+		"application": "application",
+		"profile": "bar",
+		"label": "main",
+		"properties": {
+			"a_b_c": "application-bar"
+		}
+	}
+]
