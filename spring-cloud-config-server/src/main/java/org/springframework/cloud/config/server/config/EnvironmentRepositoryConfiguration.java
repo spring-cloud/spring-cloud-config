@@ -68,6 +68,9 @@ import org.springframework.cloud.config.server.environment.HttpRequestConfigToke
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.MongoDbEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.MongoDbEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.MongoEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepositoryFactory;
@@ -98,6 +101,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.credhub.core.CredHubOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.vault.core.VaultTemplate;
@@ -117,13 +121,14 @@ import org.springframework.vault.core.VaultTemplate;
 		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
 		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
 		AwsSecretsManagerEnvironmentProperties.class, AwsParameterStoreEnvironmentProperties.class,
-		GoogleSecretManagerEnvironmentProperties.class })
+		GoogleSecretManagerEnvironmentProperties.class, MongoEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultConfiguration.class,
 		VaultRepositoryConfiguration.class, SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
 		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
 		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
 		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
 		AwsParameterStoreRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class,
+		MongoRepositoryConfiguration.class,
 		// DefaultRepositoryConfiguration must be last
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
@@ -376,6 +381,18 @@ public class EnvironmentRepositoryConfiguration {
 
 	}
 
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(MongoTemplate.class)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.mongodb.enabled", matchIfMissing = true)
+	static class MongoDbFactoryConfig {
+
+		@Bean
+		@ConditionalOnBean(MongoTemplate.class)
+		public MongoDbEnvironmentRepositoryFactory mongoDbEnvironmentRepositoryFactory(MongoTemplate mongoTemplate) {
+			return new MongoDbEnvironmentRepositoryFactory(mongoTemplate);
+		}
+	}
+
 }
 
 @Configuration(proxyBeanMethods = false)
@@ -576,4 +593,18 @@ class GoogleSecretManagerRepositoryConfiguration {
 		return factory.build(environmentProperties);
 	}
 
+}
+
+@Configuration(proxyBeanMethods = false)
+@Profile("mongodb")
+@ConditionalOnClass(MongoTemplate.class)
+@ConditionalOnProperty(value = "spring.cloud.config.server.mongodb.enabled", matchIfMissing = true)
+class MongoRepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnBean(MongoTemplate.class)
+	public MongoDbEnvironmentRepository mongoDbEnvironmentRepository(MongoDbEnvironmentRepositoryFactory factory,
+																	 MongoEnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
 }
