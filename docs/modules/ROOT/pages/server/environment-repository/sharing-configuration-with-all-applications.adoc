@@ -5,6 +5,8 @@ Sharing configuration between all applications varies according to which approac
 
 * xref:server/environment-repository/sharing-configuration-with-all-applications.adoc#spring-cloud-config-server-file-based-repositories[File Based Repositories]
 * xref:server/environment-repository/sharing-configuration-with-all-applications.adoc#spring-cloud-config-server-vault-server[Vault Server]
+* xref:server/environment-repository/sharing-configuration-with-all-applications.adoc#credhub-server[CredHub Server]
+* xref:server/environment-repository/sharing-configuration-with-all-applications.adoc#spring-cloud-config-server-jdbc[JDBC Repository]
 
 [[spring-cloud-config-server-file-based-repositories]]
 == File Based Repositories
@@ -47,3 +49,17 @@ credhub set --name "/my-app/default/master/more-shared" --type=json
 value: {"shared.word1": "hello", "shared.word2": "world"}
 ----
 
+[[spring-cloud-config-server-jdbc]]
+== JDBC Environment Repository
+
+To share configurations using the JDBC backend, insert records into your database with `'application'` as the value in the application column for entries intended to be shared across all clients. Application-specific properties can then override these shared configurations, providing flexibility and control over your application environments.
+
+[source,sql]
+----
+INSERT INTO PROPERTIES (APPLICATION, PROFILE, LABEL, KEY, VALUE)
+VALUES ('application', 'default', 'master', 'a.b.c', 'shared-value');
+INSERT INTO PROPERTIES (APPLICATION, PROFILE, LABEL, KEY, VALUE)
+VALUES ('myapp', 'prod', 'master', 'd.e.f', 'specific-value');
+----
+
+Refer to the `JdbcEnvironmentRepository` implementation and associated tests for detailed examples on setup and configuration management using the JDBC repository.
