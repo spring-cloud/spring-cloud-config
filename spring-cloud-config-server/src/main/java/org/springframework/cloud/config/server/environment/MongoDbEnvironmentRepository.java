@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.mongodb.MongoException;
@@ -54,8 +53,8 @@ public class MongoDbEnvironmentRepository implements EnvironmentRepository, Orde
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-		label = Optional.ofNullable(label).filter(StringUtils::hasText).orElse(this.properties.getDefaultLabel());
-		profile = Optional.ofNullable(profile).filter(StringUtils::hasText).orElse("default");
+		label = StringUtils.hasText(label) ? label : this.properties.getDefaultLabel();
+		profile = StringUtils.hasText(profile) ? profile : "default";
 
 		// Prepare the environment with applications and profiles
 		String[] profilesArray = StringUtils.commaDelimitedListToStringArray(profile);

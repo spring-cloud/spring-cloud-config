@@ -29,21 +29,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import wiremock.com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -61,20 +60,15 @@ import static org.mockito.ArgumentMatchers.anyString;
 public class MongoDbEnvironmentRepositoryTests {
 
 	@Container
-	public static GenericContainer<?> mongoContainer = new GenericContainer<>("mongo:6.0.5").withExposedPorts(27017);
-
-	@DynamicPropertySource
-	static void mongoProperties(DynamicPropertyRegistry registry) {
-		String databaseName = "testdb";
-		registry.add("spring.data.mongodb.uri", () -> String.format("mongodb://%s:%d/%s", mongoContainer.getHost(),
-				mongoContainer.getFirstMappedPort(), databaseName));
-	}
+	@ServiceConnection
+	static MongoDBContainer mongoContainer = new MongoDBContainer("mongo:5.0");
 
 	@Autowired
 	private MongoTemplate mongoTemplate;
 
 	@BeforeEach
 	void setup() throws IOException {
+		mongoContainer.start();
 		mongoTemplate.dropCollection("properties");
 		InputStream inputStream = new ClassPathResource("/data-mongo.json").getInputStream();
 		String json = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
