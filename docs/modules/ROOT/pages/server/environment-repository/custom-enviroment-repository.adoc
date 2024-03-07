@@ -29,6 +29,7 @@ public class CustomConfigurationRepository implements EnvironmentRepository, Ord
 }
 
 @Configuration
+@Profile("custom")
 public class AppConfig {
     @Bean
     public CustomConfigurationRepository customConfigurationRepository() {
