@@ -1,0 +1,74 @@
+[[custom-environment-repositories]]
+= Custom Environment Repositories
+
+Spring Cloud Config supports enhancing its configuration management by allowing you to create and integrate custom EnvironmentRepository implementations. This enables the addition of unique configuration sources to your application. Implementing the Ordered interface and specifying the getOrder method also lets you set the priority of your custom repository within a composite configuration setup. Without this, custom repositories are considered with the lowest priority by default.
+
+Below is an example of how to create and configure a custom `EnvironmentRepository`:
+
+[source,java]
+----
+public class CustomConfigurationRepository implements EnvironmentRepository, Ordered {
+
+    @Override
+    public Environment findOne(String application, String profile, String label) {
+        // Simulate fetching configuration from a custom source
+        final Map<String, String> properties = Map.of(
+            "key1", "value1",
+            "key2", "value2",
+            "key3", "value3"
+        );
+        Environment environment = new Environment(application, profile);
+        environment.add(new PropertySource("customPropertySource", properties));
+        return environment;
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
+    }
+}
+
+@Configuration
+@Profile("custom")
+public class AppConfig {
+    @Bean
+    public CustomConfigurationRepository customConfigurationRepository() {
+        return new CustomConfigurationRepository();
+    }
+}
+----
+
+With this setup, if you activate the `custom` profile within your Spring application's configuration, your custom environment repository will be integrated into the configuration server. For instance, specifying the `custom` profile in your `application.properties` or `application.yml` as follows:
+
+[source,yaml]
+----
+spring:
+  application:
+    name: configserver
+  profiles:
+    active: custom
+----
+
+Now, accessing the configuration server at:
+----
+http://localhost:8080/any-client/dev/latest
+----
+will return default values from the custom repository, as shown below:
+[source,json]
+----
+{
+  "name": "any-client",
+  "profiles": ["dev"],
+  "label": "latest",
+  "propertySources": [
+    {
+      "name": "customPropertySource",
+      "source": {
+        "key1": "value1",
+        "key2": "value2",
+        "key3": "value3"
+      }
+    }
+  ]
+}
+----
