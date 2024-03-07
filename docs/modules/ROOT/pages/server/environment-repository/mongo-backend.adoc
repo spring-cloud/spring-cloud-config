@@ -1,0 +1,56 @@
+[[mongo-backend]]
+= MongoDB Backend
+:page-section-summary-toc: 1
+
+Spring Cloud Config Server supports MongoDB as a backend for configuration properties.
+You can enable this feature by adding `spring-boot-starter-data-mongodb` to the classpath and using the `mongodb` profile.
+
+[source,xml,indent=0]
+.pom.xml
+----
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
+	</dependencies>
+----
+
+Configure your application's `application.properties` or `application.yml` to point to your MongoDB instance:
+
+[source,yaml]
+----
+spring:
+  data:
+    mongodb:
+      database: your-database-name
+      port: '27017'
+      host: localhost
+----
+
+The configuration properties should be stored in documents within the `properties` collection. Each document represents a set of properties for a given application, profile, and label.
+
+Example MongoDB document:
+
+[source,json]
+----
+{
+  "application": "myapp",
+  "profile": "development",
+  "label": "master",
+  "properties": {
+    "property1": "value1",
+    "property2": "value2"
+  }
+}
+----
+
+You can disable autoconfiguration for `MongoDbEnvironmentRepository` by setting the `spring.cloud.config.server.mongodb.enabled` property to `false`.
+
+The default values for MongoDB backend configuration are as follows:
+
+- **Collection Name:** `"properties"` (Name of the MongoDB collection to query for configuration properties.)
+
+- **Default Label:** `"master"` (Default label to use if none is specified.)
+
+NOTE: You can change these defaults by setting `spring.cloud.config.server.mongodb.collection` and `spring.cloud.config.server.mongodb.defaultLabel` in your application's configuration.
