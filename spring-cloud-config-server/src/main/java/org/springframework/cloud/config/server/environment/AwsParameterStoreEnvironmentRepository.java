@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -90,7 +91,9 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 		String profileSeparator = environmentProperties.getProfileSeparator();
 		String defaultProfile = configServerProperties.getDefaultProfile();
 
-		List<String> orderedProfiles = Stream.concat(Arrays.stream(profiles).filter(p -> !p.equals(defaultProfile)),
+		List<String> reversedProfiles = new ArrayList<>(Arrays.asList(profiles));
+		Collections.reverse(reversedProfiles);
+		List<String> orderedProfiles = Stream.concat(reversedProfiles.stream().filter(p -> !p.equals(defaultProfile)),
 				Arrays.stream(new String[] { defaultProfile })).collect(Collectors.toList());
 
 		if (application.equals(defaultApplication)) {

@@ -809,8 +809,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
+		expectedEnv.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
 		putSecrets(expectedEnv);
@@ -849,8 +849,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooProperties, applicationProperties));
+		expectedEnv.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1786,8 +1786,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastReleaseProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
+		expectedEnv.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
 		putSecrets(expectedEnv);
@@ -1826,8 +1826,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastReleaseProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooProperties, applicationProperties));
+		expectedEnv.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -2461,8 +2461,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastProperties());
 
 		Environment environment = new Environment(application, profiles, null, null, null);
-		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
+		environment.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
 		putSecrets(environment);
@@ -2500,8 +2500,33 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastProperties());
 
 		Environment environment = new Environment(application, profiles, null, null, null);
-		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooProperties, applicationProperties));
+		environment.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooProperties, applicationProperties));
+
+		putSecrets(environment);
+
+		Environment resultEnv = repository.findOne(application, profile, null);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
+	}
+
+	@Test
+	public void testFindOneWithExistingApplicationAndOrderedMultipleExistingProfileAndNoDefaults() {
+		String application = "foo";
+		String profile = "profile1,profile2,profile3";
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+
+		String fooProfile1PropertiesName = "aws:secrets:/secret/foo-profile1/";
+		PropertySource fooProfile1Properties = new PropertySource(fooProfile1PropertiesName, getFooDefaultProperties());
+
+		String fooProfile2PropertiesName = "aws:secrets:/secret/foo-profile2/";
+		PropertySource fooProfile2Properties = new PropertySource(fooProfile2PropertiesName, getFooEastProperties());
+
+		String fooProfile3PropertiesName = "aws:secrets:/secret/foo-profile3/";
+		PropertySource fooProfile3Properties = new PropertySource(fooProfile3PropertiesName, getFooProdProperties());
+
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooProfile3Properties, fooProfile2Properties, fooProfile1Properties));
 
 		putSecrets(environment);
 
