@@ -443,7 +443,7 @@ You can control how often the config server will fetch updated configuration dat
 from your Git backend by using `spring.cloud.config.server.git.refreshRate`.  The
 value of this property is specified in seconds.  By default the value is 0, meaning
 the config server will fetch updated configuration from the Git repo every time it
-is requested.
+is requested. If the value is a negative number the refresh will not occur.
 
 [[default-label]]
 == Default Label

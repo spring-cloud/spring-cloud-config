@@ -524,6 +524,32 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void shouldNotRefreshWhenNegativeValue() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(-1);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
+			ObservationRegistry.NOOP);
+
+		boolean shouldPull = repo.shouldPull(git);
+
+		assertThat(shouldPull).as("shouldPull was true").isFalse();
+	}
+
+	@Test
 	public void shouldUpdateLastRefresh() throws Exception {
 		Git git = mock(Git.class);
 		StatusCommand statusCommand = mock(StatusCommand.class);
