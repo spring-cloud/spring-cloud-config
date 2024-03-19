@@ -470,7 +470,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	protected boolean shouldPull(Git git) throws GitAPIException {
 		boolean shouldPull;
 
-		if (this.refreshRate < 0 || (this.refreshRate > 0 && System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000))) {
+		if (this.refreshRate < 0 || (this.refreshRate > 0
+				&& System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000))) {
 			return false;
 		}
 

@@ -542,7 +542,7 @@ public class JGitEnvironmentRepositoryTests {
 		properties.setRefreshRate(-1);
 
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
-			ObservationRegistry.NOOP);
+				ObservationRegistry.NOOP);
 
 		boolean shouldPull = repo.shouldPull(git);
 
