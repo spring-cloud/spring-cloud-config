@@ -18,13 +18,20 @@ package org.springframework.cloud.config.client;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -35,15 +42,19 @@ import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
 
 import org.springframework.cloud.configuration.SSLContextFactory;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.util.Base64Utils;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
@@ -52,11 +63,14 @@ public class ConfigClientRequestTemplateFactory {
 
 	private final Log log;
 
+	private EncryptorConfig encryptorConfig;
+
 	private final ConfigClientProperties properties;
 
 	public ConfigClientRequestTemplateFactory(Log log, ConfigClientProperties properties) {
 		this.log = log;
 		this.properties = properties;
+		this.encryptorConfig = properties.getEncryptorConfig();
 	}
 
 	public Log getLog() {
@@ -77,13 +91,90 @@ public class ConfigClientRequestTemplateFactory {
 
 		ClientHttpRequestFactory requestFactory = createHttpRequestFactory(properties);
 		RestTemplate template = new RestTemplate(requestFactory);
-		Map<String, String> headers = new HashMap<>(properties.getHeaders());
-		headers.remove(AUTHORIZATION); // To avoid redundant addition of header
-		if (!headers.isEmpty()) {
-			template.setInterceptors(Arrays.asList(new GenericRequestHeaderInterceptor(headers)));
-		}
+
+		handleOAuthToken(template);
 
 		return template;
+	}
+
+	private void handleOAuthToken(RestTemplate template) {
+		if (properties.getConfigClientOAuth2Properties() != null) {
+			Map<String, String> headers = properties.getHeaders();
+			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
+			Optional<AccessTokenResponse> responseOpt = getOAuthToken(template,
+					properties.getConfigClientOAuth2Properties().getTokenUri());
+			if (responseOpt.isPresent()) {
+				AccessTokenResponse accessTokenResponse = responseOpt.get();
+				headers.put(AUTHORIZATION, accessTokenResponse.getBearerHeader());
+				properties.setHeaders(headers);
+			}
+		}
+	}
+
+	Optional<AccessTokenResponse> getOAuthToken(RestTemplate template, String tokenUri) {
+		ConfigClientOAuth2Properties oauth2Properties = properties.getConfigClientOAuth2Properties();
+		if (oauth2Properties.getGrantType() == null) {
+			throw new IllegalStateException("OAuth2 Grant Type property required.");
+		}
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+		map.put("grant_type", List.of(oauth2Properties.getGrantType()));
+		if (StringUtils.hasText(oauth2Properties.getClientId())) {
+			map.put("client_id", List.of(oauth2Properties.getClientId()));
+			map.put("client_secret", List.of(decryptProperty(oauth2Properties.getClientSecret())));
+		}
+		if (StringUtils.hasText(oauth2Properties.getOauthUsername())) {
+			map.put("username", List.of(oauth2Properties.getOauthUsername()));
+			map.put("password", List.of(decryptProperty(oauth2Properties.getOauthPassword())));
+		}
+		HttpEntity<MultiValueMap<String, String>> requestBodyFormUrlEncoded = new HttpEntity<>(map, httpHeaders);
+
+		String tokenJson = template.postForObject(tokenUri, requestBodyFormUrlEncoded, String.class);
+		return parseTokenResponse(tokenJson);
+	}
+
+	private String decryptProperty(String property) {
+		if (encryptorConfig != null) {
+			return encryptorConfig.decryptProperty(property);
+		}
+		else {
+			return property;
+		}
+	}
+
+	private Optional<AccessTokenResponse> parseTokenResponse(String tokenJson) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+					false);
+			return Optional.of(objectMapper.readValue(tokenJson, AccessTokenResponse.class));
+		}
+		catch (JsonProcessingException e) {
+			return Optional.empty();
+		}
+	}
+
+	protected void refreshJwt(RestTemplate restTemplate) {
+		if (properties.getHeaders().containsKey(AUTHORIZATION)
+				&& jwtExpired(properties.getHeaders().get(AUTHORIZATION))) {
+
+			handleOAuthToken(restTemplate);
+			List<ClientHttpRequestInterceptor> interceptors = List.of(
+					new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(properties.getHeaders()));
+			restTemplate.setInterceptors(interceptors);
+		}
+	}
+
+	boolean jwtExpired(String header) {
+		ConfigClientOAuth2Properties oAuth2Properties = properties.getConfigClientOAuth2Properties();
+		if (oAuth2Properties != null && header.startsWith("Bearer ")) {
+			String[] tokenParts = header.split(" ");
+			DecodedJWT decodedJWT = JWT.decode(tokenParts[1]);
+			return decodedJWT.getExpiresAtAsInstant().isBefore(Instant.now());
+		}
+		else {
+			return false;
+		}
 	}
 
 	protected ClientHttpRequestFactory createHttpRequestFactory(ConfigClientProperties client) {
@@ -137,7 +228,7 @@ public class ConfigClientRequestTemplateFactory {
 		}
 
 		if (password != null) {
-			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
+			byte[] token = Base64.getEncoder().encode((username + ":" + password).getBytes());
 			httpHeaders.add("Authorization", "Basic " + new String(token));
 		}
 		else if (authorization != null) {

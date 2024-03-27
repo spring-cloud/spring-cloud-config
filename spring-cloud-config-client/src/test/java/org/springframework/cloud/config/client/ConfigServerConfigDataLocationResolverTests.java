@@ -183,6 +183,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 		verify(bootstrapContext, times(0)).get(eq(ConfigClientProperties.class));
 		ConfigServerConfigDataResource resource = resources.get(0);
 		assertThat(resource.getProperties().getUri()).isEqualTo(new String[] { "http://locationuri" });
+		assertThat(resource.getLog()).isNotNull();
 	}
 
 	@Test
