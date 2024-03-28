@@ -30,6 +30,7 @@ jobs:
         if: github.event.inputs.build-refname
         run: |
           git fetch --depth 1 https://github.com/$GITHUB_REPOSITORY ${{ github.event.inputs.build-refname }}
+          git rev-parse --abbrev-ref HEAD
           git checkout tags/${{ github.event.inputs.build-refname }}
           export BUILD_REFNAME=${{ github.event.inputs.build-refname }}
           echo "BUILD_REFNAME=$BUILD_REFNAME" >> $GITHUB_ENV
