@@ -52,6 +52,8 @@ public class FileBasedSshSessionFactory extends SshdSessionFactory {
 				hostEntry.setValue(SshConstants.STRICT_HOST_KEY_CHECKING,
 						sshProperties.isStrictHostKeyChecking() ? SshConstants.YES : SshConstants.NO);
 
+				hostEntry.setValue(SshConstants.CONNECT_TIMEOUT, String.valueOf(sshProperties.getTimeout()));
+
 				return hostEntry;
 			}
 		};
