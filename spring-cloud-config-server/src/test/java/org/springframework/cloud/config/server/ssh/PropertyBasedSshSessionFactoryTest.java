@@ -313,6 +313,17 @@ public class PropertyBasedSshSessionFactoryTest {
 	}
 
 	@Test
+	public void connectTimeoutIsUsed() {
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		setupSessionFactory(sshKey);
+
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
+
+		assertThat(sshConfig.getValue("ConnectTimeout")).isEqualTo("5");
+	}
+
+	@Test
 	public void sshConfigFileIsNotUsed() {
 		setupSessionFactory(new JGitEnvironmentProperties());
 
