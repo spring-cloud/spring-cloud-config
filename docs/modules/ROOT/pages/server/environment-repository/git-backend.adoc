@@ -29,10 +29,10 @@ spring:
           skipSslValidation: true
 ----
 
-[[setting-http-connection-timeout]]
-== Setting HTTP Connection Timeout
+[[setting-connection-timeout]]
+== Setting Connection Timeout
 
-You can configure the time, in seconds, that the configuration server will wait to acquire an HTTP connection. Use the `git.timeout` property (default is `5`).
+You can configure the time, in seconds, that the configuration server will wait to acquire an HTTP or SSH connection. Use the `git.timeout` property (default is `5`).
 
 [source,yaml]
 ----
