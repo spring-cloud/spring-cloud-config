@@ -21,14 +21,23 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
+import org.springframework.beans.factory.support.InstanceSupplier;
+import org.springframework.boot.BootstrapRegistry;
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.context.config.ConfigDataLocation;
 import org.springframework.boot.context.config.ConfigDataLocationResolverContext;
 import org.springframework.boot.context.config.Profiles;
+import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.logging.DeferredLog;
+import org.springframework.cloud.bootstrap.TextEncryptorBindHandler;
+import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
+import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
+import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.mock.env.MockEnvironment;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.eq;
@@ -203,6 +212,65 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource1.getProperties().getUri()).isEqualTo(new String[] { "http://urlNo1" });
 		ConfigServerConfigDataResource resource2 = resources2.get(0);
 		assertThat(resource2.getProperties().getUri()).isEqualTo(new String[] { "http://urlNo2" });
+	}
+
+	@Test
+	void setFailsafeDelegateKeysNotConfigured() {
+		ConfigurableBootstrapContext bootstrapContext = mock(ConfigurableBootstrapContext.class);
+		when(bootstrapContext.isRegistered(eq(ConfigClientProperties.class))).thenReturn(true);
+		KeyProperties keyProperties = new KeyProperties();
+		ConfigClientProperties configClientProperties = new ConfigClientProperties();
+		configClientProperties.setUri(new String[] { "http://myuri" });
+		when(bootstrapContext.isRegistered(TextEncryptor.class)).thenReturn(true);
+		when(bootstrapContext.get(TextEncryptor.class)).thenReturn(new TextEncryptorUtils.FailsafeTextEncryptor());
+		when(bootstrapContext.get(eq(ConfigClientProperties.class))).thenReturn(configClientProperties);
+		when(context.getBootstrapContext()).thenReturn(bootstrapContext);
+		this.resolver.resolve(context, ConfigDataLocation.of("configserver:http://urlNo1"));
+		TextEncryptor textEncryptor = bootstrapContext.get(TextEncryptor.class);
+		assertThat(textEncryptor).isInstanceOf(TextEncryptorUtils.FailsafeTextEncryptor.class);
+		assertThat(((TextEncryptorUtils.FailsafeTextEncryptor) textEncryptor).getDelegate()).isNull();
+	}
+
+	@Test
+	void setFailsafeDelegateKeysConfigured() {
+		ConfigurableBootstrapContext bootstrapContext = mock(ConfigurableBootstrapContext.class);
+		when(bootstrapContext.isRegistered(eq(ConfigClientProperties.class))).thenReturn(true);
+		environment.setProperty("encrypt.key", "mykey");
+
+		// The value is "password" encrypted with the key "mykey"
+		environment.setProperty("spring.cloud.config.password",
+				"{cipher}6defc102cd76752fcf4c78231ed82ead85133a09741d9a1442595b4800e2b3d1");
+		ConfigClientProperties configClientProperties = new ConfigClientProperties();
+		configClientProperties.setUri(new String[] { "http://myuri" });
+		when(bootstrapContext.isRegistered(TextEncryptor.class)).thenReturn(true);
+		when(bootstrapContext.get(TextEncryptor.class)).thenReturn(new TextEncryptorUtils.FailsafeTextEncryptor());
+		when(bootstrapContext.get(eq(ConfigClientProperties.class))).thenReturn(configClientProperties);
+		when(context.getBootstrapContext()).thenReturn(bootstrapContext);
+		KeyProperties keyProperties = new KeyProperties();
+		keyProperties.setKey("mykey");
+
+		// Use this TextEncryptor in the BindHandler we return so it will decrypt the
+		// password when we bind ConfigClientProperties
+		TextEncryptor bindHandlerTextEncryptor = new EncryptorFactory(keyProperties.getSalt())
+				.create(keyProperties.getKey());
+		when(context.getBootstrapContext().getOrElse(eq(BindHandler.class), eq(null)))
+				.thenReturn(new TextEncryptorBindHandler(bindHandlerTextEncryptor, keyProperties));
+
+		// Call resolve so we can test that the delegate is added to the
+		// FailsafeTextEncryptor
+		this.resolver.resolve(context, ConfigDataLocation.of("configserver:http://urlNo1"));
+		TextEncryptor textEncryptor = bootstrapContext.get(TextEncryptor.class);
+
+		// Capture the ConfigClientProperties we create and register in
+		// ConfigServerConfigDataLocationResolver.resolveProfileSpecific
+		// it should have the decrypted passord in it
+		ArgumentCaptor<BootstrapRegistry.InstanceSupplier<ConfigClientProperties>> captor = ArgumentCaptor
+				.forClass(BootstrapRegistry.InstanceSupplier.class);
+		verify(bootstrapContext).register(eq(ConfigClientProperties.class), captor.capture());
+		assertThat(captor.getValue().get(bootstrapContext).getPassword()).isEqualTo("password");
+		assertThat(textEncryptor).isInstanceOf(TextEncryptorUtils.FailsafeTextEncryptor.class);
+		assertThat(((TextEncryptorUtils.FailsafeTextEncryptor) textEncryptor).getDelegate())
+				.isInstanceOf(TextEncryptor.class);
 	}
 
 	private ConfigServerConfigDataResource testUri(String propertyUri, String locationUri) {

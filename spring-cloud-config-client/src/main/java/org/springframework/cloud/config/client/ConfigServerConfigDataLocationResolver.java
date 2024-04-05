@@ -37,10 +37,16 @@ import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.logging.DeferredLogFactory;
+import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
+import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
+import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
 import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -54,6 +60,8 @@ public class ConfigServerConfigDataLocationResolver
 	 * Prefix for Config Server imports.
 	 */
 	public static final String PREFIX = "configserver:";
+	static final boolean RSA_IS_PRESENT = ClassUtils
+			.isPresent("org.springframework.security.rsa.crypto.RsaSecretEncryptor", null);
 
 	private final Log log;
 
@@ -64,6 +72,41 @@ public class ConfigServerConfigDataLocationResolver
 	@Override
 	public int getOrder() {
 		return -1;
+	}
+
+	/*
+	 * Depending on whether encrypt.key is set as an environment or system property we may
+	 * have created a TextEncryptor implementation or just created a
+	 * FailsafeTextEncryptor. This is because when TextEncryptorConfigBootstrapper runs we
+	 * have not yet loaded any configuration files (application.yaml | properties etc).
+	 * However, at this point when the ConfigServerConfigDataLocationResolver is resolving
+	 * configuration we would have resolved the configuration files on the classpath at
+	 * least so we can potentially create a properly configured TextEncryptor. So if the
+	 * FailsafeTextEncryptor is in the context and we can create a TextEncryptor then we
+	 * set the delegate in the FailsafeTextEncryptor so that we can decrypt any encrypted
+	 * properties at this point.
+	 */
+	protected void setTextEncryptorDelegate(ConfigDataLocationResolverContext context) {
+		if (context.getBootstrapContext().isRegistered(TextEncryptor.class)) {
+			Binder binder = context.getBinder();
+			KeyProperties keyProperties = binder.bindOrCreate(KeyProperties.PREFIX, Bindable.of(KeyProperties.class));
+			boolean textEncryptorRegistered = context.getBootstrapContext().isRegistered(TextEncryptor.class);
+			if (TextEncryptorUtils.keysConfigured(keyProperties) && textEncryptorRegistered) {
+				TextEncryptor textEncryptor = context.getBootstrapContext().get(TextEncryptor.class);
+				if (textEncryptor instanceof TextEncryptorUtils.FailsafeTextEncryptor failsafeTextEncryptor) {
+					TextEncryptor delegate;
+					if (RSA_IS_PRESENT) {
+						RsaProperties rsaProperties = binder.bindOrCreate(RsaProperties.PREFIX,
+								Bindable.of(RsaProperties.class));
+						delegate = TextEncryptorUtils.createTextEncryptor(keyProperties, rsaProperties);
+					}
+					else {
+						delegate = new EncryptorFactory(keyProperties.getSalt()).create(keyProperties.getKey());
+					}
+					failsafeTextEncryptor.setDelegate(delegate);
+				}
+			}
+		}
 	}
 
 	protected PropertyHolder loadProperties(ConfigDataLocationResolverContext context, String uris) {
@@ -182,6 +225,7 @@ public class ConfigServerConfigDataLocationResolver
 	public List<ConfigServerConfigDataResource> resolveProfileSpecific(
 			ConfigDataLocationResolverContext resolverContext, ConfigDataLocation location, Profiles profiles)
 			throws ConfigDataLocationNotFoundException {
+		setTextEncryptorDelegate(resolverContext);
 		String uris = location.getNonPrefixedValue(getPrefix());
 		PropertyHolder propertyHolder = loadProperties(resolverContext, uris);
 		ConfigClientProperties properties = propertyHolder.properties;
@@ -269,14 +313,6 @@ public class ConfigServerConfigDataLocationResolver
 		return locations;
 	}
 
-	private class PropertyHolder {
-
-		ConfigClientProperties properties;
-
-		RetryProperties retryProperties;
-
-	}
-
 	public static class PropertyResolver {
 
 		private final Binder binder;
@@ -299,6 +335,14 @@ public class ConfigServerConfigDataLocationResolver
 		public <T> T resolveOrCreateConfigurationProperties(String prefix, Class<T> type) {
 			return binder.bindOrCreate(prefix, Bindable.of(type), bindHandler);
 		}
+
+	}
+
+	private class PropertyHolder {
+
+		ConfigClientProperties properties;
+
+		RetryProperties retryProperties;
 
 	}
 
