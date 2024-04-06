@@ -61,10 +61,11 @@ public class GenericResourceRepository implements ResourceRepository, ResourceLo
 	}
 
 	@Override
-	public synchronized Resource findOne(String application, String profile, String label, String path) {
+	public synchronized Resource findOne(String application, String profile, String label, String path,
+			boolean forceRefresh) {
 
 		if (StringUtils.hasText(path)) {
-			String[] locations = this.service.getLocations(application, profile, label).getLocations();
+			String[] locations = this.service.getLocations(application, profile, label, forceRefresh).getLocations();
 			if (!ObjectUtils.isEmpty(properties) && properties.isReverseLocationOrder()) {
 				Collections.reverse(Arrays.asList(locations));
 			}

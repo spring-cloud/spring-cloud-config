@@ -24,6 +24,6 @@ import org.springframework.core.io.Resource;
  */
 public interface ResourceRepository {
 
-	Resource findOne(String name, String profile, String label, String path);
+	Resource findOne(String name, String profile, String label, String path, boolean forceRefresh);
 
 }

@@ -124,16 +124,16 @@ public class RefreshableConfigServerIntegrationTests {
 		public EnvironmentRepository environmentRepository() {
 			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
 			Environment environment = new Environment("", "");
-			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(Boolean.class)))
-					.willReturn(environment);
+			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(Boolean.class),
+					isA(Boolean.class))).willReturn(environment);
 			return repository;
 		}
 
 		@Bean
 		public ResourceRepository resourceRepository() {
 			ResourceRepository repository = Mockito.mock(ResourceRepository.class);
-			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(String.class)))
-					.willReturn(new ByteArrayResource("".getBytes()));
+			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(String.class),
+					isA(boolean.class))).willReturn(new ByteArrayResource("".getBytes()));
 			return repository;
 		}
 

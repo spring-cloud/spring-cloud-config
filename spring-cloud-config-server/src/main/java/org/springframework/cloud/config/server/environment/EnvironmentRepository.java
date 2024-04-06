@@ -30,4 +30,9 @@ public interface EnvironmentRepository {
 		return findOne(application, profile, label);
 	}
 
+	default Environment findOne(String application, String profile, String label, boolean includeOrigin,
+			boolean forceRefresh) {
+		return findOne(application, profile, label, includeOrigin);
+	}
+
 }

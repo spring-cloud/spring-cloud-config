@@ -137,6 +137,12 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 	@Override
 	public Environment findOne(String config, String profile, String label, boolean includeOrigin) {
+		return findOne(config, profile, label, includeOrigin, false);
+	}
+
+	@Override
+	public Environment findOne(String config, String profile, String label, boolean includeOrigin,
+			boolean forceRefresh) {
 
 		try {
 			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
@@ -155,7 +161,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			environment.getPropertySources().remove("config-data-setup");
 			return clean(ObservationEnvironmentRepositoryWrapper
 					.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment))
-					.findOne(config, profile, label, includeOrigin), propertySourceToConfigData);
+					.findOne(config, profile, label, includeOrigin, forceRefresh), propertySourceToConfigData);
 		}
 		catch (Exception e) {
 			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",

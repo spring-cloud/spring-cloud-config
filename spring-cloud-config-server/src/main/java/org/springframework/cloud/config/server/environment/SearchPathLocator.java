@@ -30,6 +30,10 @@ public interface SearchPathLocator {
 
 	Locations getLocations(String application, String profile, String label);
 
+	default Locations getLocations(String application, String profile, String label, boolean forceRefresh) {
+		return getLocations(application, profile, label);
+	}
+
 	/**
 	 * Locations POJO.
 	 */

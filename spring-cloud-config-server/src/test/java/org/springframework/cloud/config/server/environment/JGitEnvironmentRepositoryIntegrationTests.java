@@ -557,6 +557,65 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	}
 
 	@Test
+	public void testForceRefresh() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData
+				.prepareClonedGitRepository(TestConfiguration.class);
+
+		// get our starting versions
+		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
+
+		// update the remote repo
+		FileOutputStream out = new FileOutputStream(
+				new File(testData.getServerGit().getGitWorkingDirectory(), "bar.properties"));
+		StreamUtils.copy("foo: barNewCommit", Charset.defaultCharset(), out);
+		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
+		testData.getServerGit().getGit().commit().setMessage("Updated for pull").call();
+		String updatedRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
+
+		// never fetch remote repo without force refresh
+		testData.getRepository().setRefreshRate(-1);
+		testData.getRepository().setAllowForceRefresh(true);
+
+		// should return old content
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master", false);
+		assertThat(startingRemoteVersion).isEqualTo(environment.getVersion());
+		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertThat("bar").isEqualTo(fooProperty);
+
+		// should return new content
+		environment = testData.getRepository().findOne("bar", "staging", "master", false, true);
+		assertThat(updatedRemoteVersion).isEqualTo(environment.getVersion());
+		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertThat("barNewCommit").isEqualTo(fooProperty);
+	}
+
+	@Test
+	public void testAllowForceRefreshFalse() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData
+				.prepareClonedGitRepository(TestConfiguration.class);
+
+		// get our starting versions
+		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
+
+		// update the remote repo
+		FileOutputStream out = new FileOutputStream(
+				new File(testData.getServerGit().getGitWorkingDirectory(), "bar.properties"));
+		StreamUtils.copy("foo: barNewCommit", Charset.defaultCharset(), out);
+		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
+		testData.getServerGit().getGit().commit().setMessage("Updated for pull").call();
+
+		// never fetch remote repo even with force refresh
+		testData.getRepository().setRefreshRate(-1);
+		testData.getRepository().setAllowForceRefresh(false);
+
+		// should return old content
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master", false, true);
+		assertThat(startingRemoteVersion).isEqualTo(environment.getVersion());
+		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertThat("bar").isEqualTo(fooProperty);
+	}
+
+	@Test
 	public void testUnknownLabelWithRemote() throws Exception {
 		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			JGitConfigServerTestData testData = JGitConfigServerTestData

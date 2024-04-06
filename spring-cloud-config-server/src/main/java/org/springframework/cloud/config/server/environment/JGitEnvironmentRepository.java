@@ -97,6 +97,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private int timeout;
 
 	/**
+	 * Allow forceRefresh query parameter to force refresh the git repository regardless
+	 * of refreshRate if true.
+	 */
+	public boolean allowForceRefresh = false;
+
+	/**
 	 * Time (in seconds) between refresh of the git repository.
 	 */
 	private int refreshRate = 0;
@@ -158,6 +164,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.timeout = properties.getTimeout();
 		this.deleteUntrackedBranches = properties.isDeleteUntrackedBranches();
 		this.refreshRate = properties.getRefreshRate();
+		this.allowForceRefresh = properties.getAllowForceRefresh();
 		this.skipSslValidation = properties.isSkipSslValidation();
 		this.gitFactory = new JGitFactory(properties.isCloneSubmodules());
 		this.tryMasterBranch = properties.isTryMasterBranch();
@@ -194,6 +201,14 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	public void setRefreshRate(int refreshRate) {
 		this.refreshRate = refreshRate;
+	}
+
+	public boolean getAllowForceRefresh() {
+		return this.allowForceRefresh;
+	}
+
+	public void setAllowForceRefresh(boolean allowForceRefresh) {
+		this.allowForceRefresh = allowForceRefresh;
 	}
 
 	public TransportConfigCallback getTransportConfigCallback() {
@@ -254,19 +269,24 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	@Override
 	public synchronized Locations getLocations(String application, String profile, String label) {
+		return getLocations(application, profile, label, false);
+	}
+
+	@Override
+	public synchronized Locations getLocations(String application, String profile, String label, boolean forceRefresh) {
 		if (label == null) {
 			label = this.defaultLabel;
 		}
 		String version;
 		try {
-			version = refresh(label);
+			version = refresh(label, forceRefresh);
 		}
 		catch (Exception e) {
 			if (this.defaultLabel.equals(label) && JGitEnvironmentProperties.MAIN_LABEL.equals(this.defaultLabel)
 					&& tryMasterBranch) {
 				logger.info("Could not refresh default label " + label, e);
 				logger.info("Will try to refresh master label instead.");
-				version = refresh(JGitEnvironmentProperties.MASTER_LABEL);
+				version = refresh(JGitEnvironmentProperties.MASTER_LABEL, forceRefresh);
 			}
 			else {
 				throw e;
@@ -289,11 +309,11 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 * @param label label to refresh
 	 * @return head id
 	 */
-	public String refresh(String label) {
+	public String refresh(String label, boolean forceRefresh) {
 		Git git = null;
 		try {
 			git = createGitClient();
-			if (shouldPull(git)) {
+			if (shouldPull(git, forceRefresh)) {
 				FetchResult fetchStatus = fetch(git, label);
 				if (this.deleteUntrackedBranches && fetchStatus != null) {
 					deleteUntrackedLocalBranches(fetchStatus.getTrackingRefUpdates(), git);
@@ -467,11 +487,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		return checkout.call();
 	}
 
-	protected boolean shouldPull(Git git) throws GitAPIException {
+	protected boolean shouldPull(Git git, boolean forceRefresh) throws GitAPIException {
 		boolean shouldPull;
-
-		if (this.refreshRate < 0 || (this.refreshRate > 0
-				&& System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000))) {
+		if (!(this.allowForceRefresh && forceRefresh) && (this.refreshRate < 0 || (this.refreshRate > 0
+				&& System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000)))) {
 			return false;
 		}
 

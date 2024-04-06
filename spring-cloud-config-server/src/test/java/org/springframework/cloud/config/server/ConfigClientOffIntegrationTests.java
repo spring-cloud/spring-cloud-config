@@ -95,7 +95,7 @@ public class ConfigClientOffIntegrationTests {
 		@Bean
 		public ResourceRepository resourceRepository() {
 			ResourceRepository repository = Mockito.mock(ResourceRepository.class);
-			given(repository.findOne(anyString(), anyString(), anyString(), anyString()))
+			given(repository.findOne(anyString(), anyString(), anyString(), anyString(), anyBoolean()))
 					.willReturn(new ByteArrayResource("".getBytes()));
 			return repository;
 		}

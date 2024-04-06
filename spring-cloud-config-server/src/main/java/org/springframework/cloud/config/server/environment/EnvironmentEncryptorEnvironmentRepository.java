@@ -61,7 +61,13 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 
 	@Override
 	public Environment findOne(String name, String profiles, String label, boolean includeOrigin) {
-		Environment environment = this.delegate.findOne(name, profiles, label, includeOrigin);
+		return findOne(name, profiles, label, includeOrigin, false);
+	}
+
+	@Override
+	public Environment findOne(String name, String profiles, String label, boolean includeOrigin,
+			boolean forceRefresh) {
+		Environment environment = this.delegate.findOne(name, profiles, label, includeOrigin, forceRefresh);
 		if (this.environmentEncryptors != null) {
 			for (EnvironmentEncryptor environmentEncryptor : environmentEncryptors) {
 				environment = environmentEncryptor.decrypt(environment);

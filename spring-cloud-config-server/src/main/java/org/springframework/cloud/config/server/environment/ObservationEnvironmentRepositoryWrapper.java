@@ -68,11 +68,17 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 
 	@Override
 	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		return findOne(application, profile, label, includeOrigin, false);
+	}
+
+	@Override
+	public Environment findOne(String application, String profile, String label, boolean includeOrigin,
+			boolean forceRefresh) {
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
 				this.delegate.getClass(), application, profile, label);
 		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY
 				.observation(null, CONVENTION, () -> context, this.registry)
-				.observe(() -> this.delegate.findOne(application, profile, label, includeOrigin));
+				.observe(() -> this.delegate.findOne(application, profile, label, includeOrigin, forceRefresh));
 	}
 
 	/**

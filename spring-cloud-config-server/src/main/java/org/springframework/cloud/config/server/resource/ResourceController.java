@@ -98,17 +98,17 @@ public class ResourceController {
 
 	@GetMapping("/{name}/{profile}/{label}/**")
 	public String retrieve(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
-			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws IOException {
+			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders,
+			@RequestParam(defaultValue = "false") boolean forceRefresh) throws IOException {
 		String path = getFilePath(request, name, profile, label);
-		return retrieve(request, name, profile, label, path, resolvePlaceholders);
+		return retrieve(request, name, profile, label, path, resolvePlaceholders, forceRefresh);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel")
 	public String retrieveDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
-			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
-			throws IOException {
-		return retrieve(request, name, profile, null, path, resolvePlaceholders);
+			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders,
+			@RequestParam(defaultValue = "false") boolean forceRefresh) throws IOException {
+		return retrieve(request, name, profile, null, path, resolvePlaceholders, forceRefresh);
 	}
 
 	private String getFilePath(ServletWebRequest request, String name, String profile, String label) {
@@ -130,10 +130,10 @@ public class ResourceController {
 	 * the files on disk.
 	 */
 	synchronized String retrieve(ServletWebRequest request, String name, String profile, String label, String path,
-			boolean resolvePlaceholders) throws IOException {
+			boolean resolvePlaceholders, boolean forceRefresh) throws IOException {
 		name = Environment.normalize(name);
 		label = Environment.normalize(label);
-		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+		Resource resource = this.resourceRepository.findOne(name, profile, label, path, forceRefresh);
 		if (checkNotModified(request, resource)) {
 			// Content was not modified. Just return.
 			return null;
@@ -145,7 +145,7 @@ public class ResourceController {
 			if (ext != null) {
 				ext = ext.toLowerCase();
 			}
-			Environment environment = this.environmentRepository.findOne(name, profile, label, false);
+			Environment environment = this.environmentRepository.findOne(name, profile, label, false, forceRefresh);
 			if (resolvePlaceholders) {
 				text = resolvePlaceholders(prepareEnvironment(environment), text);
 			}
@@ -165,37 +165,37 @@ public class ResourceController {
 	/*
 	 * Used only for unit tests.
 	 */
-	String retrieve(String name, String profile, String label, String path, boolean resolvePlaceholders)
-			throws IOException {
-		return retrieve(null, name, profile, label, path, resolvePlaceholders);
+	String retrieve(String name, String profile, String label, String path, boolean resolvePlaceholders,
+			boolean forceRefresh) throws IOException {
+		return retrieve(null, name, profile, label, path, resolvePlaceholders, forceRefresh);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binary(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
-			ServletWebRequest request) throws IOException {
+			@RequestParam(defaultValue = "false") boolean forceRefresh, ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
-		return binary(request, name, profile, label, path);
+		return binary(request, name, profile, label, path, forceRefresh);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel",
 			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binaryDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
-			ServletWebRequest request) throws IOException {
-		return binary(request, name, profile, null, path);
+			@RequestParam(defaultValue = "false") boolean forceRefresh, ServletWebRequest request) throws IOException {
+		return binary(request, name, profile, null, path, forceRefresh);
 	}
 
 	/*
 	 * Used only for unit tests.
 	 */
-	byte[] binary(String name, String profile, String label, String path) throws IOException {
-		return binary(null, name, profile, label, path);
+	byte[] binary(String name, String profile, String label, String path, boolean forceRefresh) throws IOException {
+		return binary(null, name, profile, label, path, forceRefresh);
 	}
 
 	private synchronized byte[] binary(ServletWebRequest request, String name, String profile, String label,
-			String path) throws IOException {
+			String path, boolean forceRefresh) throws IOException {
 		name = Environment.normalize(name);
 		label = Environment.normalize(label);
-		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+		Resource resource = this.resourceRepository.findOne(name, profile, label, path, forceRefresh);
 		if (checkNotModified(request, resource)) {
 			// Content was not modified. Just return.
 			return null;

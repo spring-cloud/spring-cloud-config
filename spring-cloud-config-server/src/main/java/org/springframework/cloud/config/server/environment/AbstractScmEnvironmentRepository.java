@@ -57,11 +57,17 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	@Override
 	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		return findOne(application, profile, label, includeOrigin, false);
+	}
+
+	@Override
+	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin,
+			boolean forceRefresh) {
 		NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(getEnvironment(),
 				new NativeEnvironmentProperties(), this.observationRegistry);
-		Locations locations = getLocations(application, profile, label);
+		Locations locations = getLocations(application, profile, label, forceRefresh);
 		delegate.setSearchLocations(locations.getLocations());
-		Environment result = delegate.findOne(application, profile, "", includeOrigin);
+		Environment result = delegate.findOne(application, profile, "", includeOrigin, forceRefresh);
 		result.setVersion(locations.getVersion());
 		result.setLabel(label);
 		return this.cleaner.clean(result, getWorkingDirectory().toURI().toString(), getUri());
