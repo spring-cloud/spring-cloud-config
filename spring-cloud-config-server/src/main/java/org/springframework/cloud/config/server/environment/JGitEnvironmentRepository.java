@@ -78,6 +78,7 @@ import static org.eclipse.jgit.transport.ReceiveCommand.Type.DELETE;
  * @author Ryan Lynch
  * @author Gareth Clay
  * @author ChaoDong Xi
+ * @author Chin Huang
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -167,7 +168,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.deleteUntrackedBranches = properties.isDeleteUntrackedBranches();
 		this.refreshRate = properties.getRefreshRate();
 		this.skipSslValidation = properties.isSkipSslValidation();
-		this.gitFactory = new JGitFactory(properties.isCloneSubmodules());
+		this.gitFactory = new JGitFactory(properties.isCloneSubmodules(), properties.getDepth());
 		this.tryMasterBranch = properties.isTryMasterBranch();
 		this.observationRegistry = observationRegistry;
 	}
@@ -778,12 +779,19 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 		private final boolean cloneSubmodules;
 
+		private final int depth;
+
 		public JGitFactory() {
-			this(false);
+			this(false, 0);
 		}
 
 		public JGitFactory(boolean cloneSubmodules) {
+			this(cloneSubmodules, 0);
+		}
+
+		public JGitFactory(boolean cloneSubmodules, int depth) {
 			this.cloneSubmodules = cloneSubmodules;
+			this.depth = depth;
 		}
 
 		public Git getGitByOpen(File file) throws IOException {
@@ -793,6 +801,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 		public CloneCommand getCloneCommandByCloneRepository() {
 			CloneCommand command = Git.cloneRepository().setCloneSubmodules(cloneSubmodules);
+			if (depth > 0) {
+				command.setDepth(depth);
+			}
 			return command;
 		}
 
