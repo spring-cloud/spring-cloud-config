@@ -34,6 +34,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.RefreshableConfigServerIntegrationTests.TestConfiguration;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.resource.ResourceRepository;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -125,7 +126,7 @@ public class RefreshableConfigServerIntegrationTests {
 			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
 			Environment environment = new Environment("", "");
 			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(Boolean.class),
-					isA(Boolean.class))).willReturn(environment);
+					isA(RequestContext.class))).willReturn(environment);
 			return repository;
 		}
 
@@ -133,7 +134,7 @@ public class RefreshableConfigServerIntegrationTests {
 		public ResourceRepository resourceRepository() {
 			ResourceRepository repository = Mockito.mock(ResourceRepository.class);
 			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(String.class),
-					isA(boolean.class))).willReturn(new ByteArrayResource("".getBytes()));
+					isA(RequestContext.class))).willReturn(new ByteArrayResource("".getBytes()));
 			return repository;
 		}
 

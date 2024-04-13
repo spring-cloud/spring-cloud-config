@@ -54,6 +54,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -583,7 +584,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThat("bar").isEqualTo(fooProperty);
 
 		// should return new content
-		environment = testData.getRepository().findOne("bar", "staging", "master", false, true);
+		environment = testData.getRepository().findOne("bar", "staging", "master", false,
+				new RequestContext.Builder().forceRefresh(true).build());
 		assertThat(updatedRemoteVersion).isEqualTo(environment.getVersion());
 		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertThat("barNewCommit").isEqualTo(fooProperty);
@@ -609,7 +611,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		testData.getRepository().setAllowForceRefresh(false);
 
 		// should return old content
-		Environment environment = testData.getRepository().findOne("bar", "staging", "master", false, true);
+		Environment environment = testData.getRepository().findOne("bar", "staging", "master", false,
+				new RequestContext.Builder().forceRefresh(true).build());
 		assertThat(startingRemoteVersion).isEqualTo(environment.getVersion());
 		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertThat("bar").isEqualTo(fooProperty);

@@ -22,6 +22,8 @@ import java.util.List;
 
 import io.micrometer.observation.ObservationRegistry;
 
+import org.springframework.cloud.config.server.support.RequestContext;
+
 /**
  * A {@link CompositeEnvironmentRepository} which implements {@link SearchPathLocator}.
  *
@@ -44,20 +46,20 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 
 	@Override
 	public Locations getLocations(String application, String profile, String label) {
-		return getLocations(application, profile, label, false);
+		return getLocations(application, profile, label, new RequestContext.Builder().forceRefresh(false).build());
 	}
 
 	@Override
-	public Locations getLocations(String application, String profile, String label, boolean forceRefresh) {
+	public Locations getLocations(String application, String profile, String label, RequestContext ctx) {
 		List<String> locations = new ArrayList<>();
 		for (EnvironmentRepository repo : this.environmentRepositories) {
 			try {
 				if (repo instanceof SearchPathLocator searchPathLocator) {
-					addForSearchPathLocators(application, profile, label, locations, searchPathLocator, forceRefresh);
+					addForSearchPathLocators(application, profile, label, locations, searchPathLocator, ctx);
 				}
 				else if (repo instanceof ObservationEnvironmentRepositoryWrapper wrapper
 						&& wrapper.getDelegate() instanceof SearchPathLocator searchPathLocator) {
-					addForSearchPathLocators(application, profile, label, locations, searchPathLocator, forceRefresh);
+					addForSearchPathLocators(application, profile, label, locations, searchPathLocator, ctx);
 				}
 			}
 			catch (RepositoryException ex) {
@@ -73,9 +75,9 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 	}
 
 	private void addForSearchPathLocators(String application, String profile, String label, List<String> locations,
-			SearchPathLocator searchPathLocator, boolean forceRefresh) {
-		locations.addAll(Arrays
-				.asList(searchPathLocator.getLocations(application, profile, label, forceRefresh).getLocations()));
+			SearchPathLocator searchPathLocator, RequestContext ctx) {
+		locations
+				.addAll(Arrays.asList(searchPathLocator.getLocations(application, profile, label, ctx).getLocations()));
 	}
 
 }

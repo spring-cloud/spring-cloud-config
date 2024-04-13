@@ -37,6 +37,7 @@ import org.springframework.boot.context.config.ConfigDataResource;
 import org.springframework.boot.context.config.StandardConfigDataResource;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -137,12 +138,11 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 	@Override
 	public Environment findOne(String config, String profile, String label, boolean includeOrigin) {
-		return findOne(config, profile, label, includeOrigin, false);
+		return findOne(config, profile, label, includeOrigin, new RequestContext.Builder().forceRefresh(false).build());
 	}
 
 	@Override
-	public Environment findOne(String config, String profile, String label, boolean includeOrigin,
-			boolean forceRefresh) {
+	public Environment findOne(String config, String profile, String label, boolean includeOrigin, RequestContext ctx) {
 
 		try {
 			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
@@ -161,7 +161,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			environment.getPropertySources().remove("config-data-setup");
 			return clean(ObservationEnvironmentRepositoryWrapper
 					.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment))
-					.findOne(config, profile, label, includeOrigin, forceRefresh), propertySourceToConfigData);
+					.findOne(config, profile, label, includeOrigin, ctx), propertySourceToConfigData);
 		}
 		catch (Exception e) {
 			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",

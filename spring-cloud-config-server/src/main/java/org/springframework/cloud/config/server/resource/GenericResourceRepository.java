@@ -27,6 +27,7 @@ import java.util.Set;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.environment.SearchPathLocator;
 import org.springframework.cloud.config.server.support.PathUtils;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -62,10 +63,10 @@ public class GenericResourceRepository implements ResourceRepository, ResourceLo
 
 	@Override
 	public synchronized Resource findOne(String application, String profile, String label, String path,
-			boolean forceRefresh) {
+			RequestContext ctx) {
 
 		if (StringUtils.hasText(path)) {
-			String[] locations = this.service.getLocations(application, profile, label, forceRefresh).getLocations();
+			String[] locations = this.service.getLocations(application, profile, label, ctx).getLocations();
 			if (!ObjectUtils.isEmpty(properties) && properties.isReverseLocationOrder()) {
 				Collections.reverse(Arrays.asList(locations));
 			}

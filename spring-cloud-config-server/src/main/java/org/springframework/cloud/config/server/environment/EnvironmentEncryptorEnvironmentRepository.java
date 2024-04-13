@@ -27,6 +27,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.environment.PropertyValueDescriptor;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
+import org.springframework.cloud.config.server.support.RequestContext;
 
 /**
  * A delegating {@link EnvironmentRepository} that can decrypt the properties if an
@@ -61,13 +62,12 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 
 	@Override
 	public Environment findOne(String name, String profiles, String label, boolean includeOrigin) {
-		return findOne(name, profiles, label, includeOrigin, false);
+		return findOne(name, profiles, label, includeOrigin, new RequestContext.Builder().forceRefresh(false).build());
 	}
 
 	@Override
-	public Environment findOne(String name, String profiles, String label, boolean includeOrigin,
-			boolean forceRefresh) {
-		Environment environment = this.delegate.findOne(name, profiles, label, includeOrigin, forceRefresh);
+	public Environment findOne(String name, String profiles, String label, boolean includeOrigin, RequestContext ctx) {
+		Environment environment = this.delegate.findOne(name, profiles, label, includeOrigin, ctx);
 		if (this.environmentEncryptors != null) {
 			for (EnvironmentEncryptor environmentEncryptor : environmentEncryptors) {
 				environment = environmentEncryptor.decrypt(environment);

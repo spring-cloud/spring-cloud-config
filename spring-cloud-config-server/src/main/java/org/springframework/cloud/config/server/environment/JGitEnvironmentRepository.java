@@ -57,6 +57,7 @@ import org.eclipse.jgit.util.FileUtils;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
@@ -269,24 +270,24 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	@Override
 	public synchronized Locations getLocations(String application, String profile, String label) {
-		return getLocations(application, profile, label, false);
+		return getLocations(application, profile, label, new RequestContext.Builder().forceRefresh(false).build());
 	}
 
 	@Override
-	public synchronized Locations getLocations(String application, String profile, String label, boolean forceRefresh) {
+	public synchronized Locations getLocations(String application, String profile, String label, RequestContext ctx) {
 		if (label == null) {
 			label = this.defaultLabel;
 		}
 		String version;
 		try {
-			version = refresh(label, forceRefresh);
+			version = refresh(label, ctx.getForceRefresh());
 		}
 		catch (Exception e) {
 			if (this.defaultLabel.equals(label) && JGitEnvironmentProperties.MAIN_LABEL.equals(this.defaultLabel)
 					&& tryMasterBranch) {
 				logger.info("Could not refresh default label " + label, e);
 				logger.info("Will try to refresh master label instead.");
-				version = refresh(JGitEnvironmentProperties.MASTER_LABEL, forceRefresh);
+				version = refresh(JGitEnvironmentProperties.MASTER_LABEL, ctx.getForceRefresh());
 			}
 			else {
 				throw e;

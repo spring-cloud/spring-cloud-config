@@ -37,6 +37,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.support.PathUtils;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -108,34 +109,38 @@ public class EnvironmentController {
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public Environment defaultLabel(@PathVariable String name, @PathVariable String profiles,
 			@RequestParam(defaultValue = "false") boolean forceRefresh) {
-		return getEnvironment(name, profiles, null, false, forceRefresh);
+		RequestContext ctx = new RequestContext.Builder().forceRefresh(forceRefresh).build();
+		return getEnvironment(name, profiles, null, false, ctx);
 	}
 
 	@GetMapping(path = "/{name}/{profiles:(?!.*\\b\\.(?:ya?ml|properties|json)\\b).*}",
 			produces = EnvironmentMediaType.V2_JSON)
 	public Environment defaultLabelIncludeOrigin(@PathVariable String name, @PathVariable String profiles,
 			@RequestParam(defaultValue = "false") boolean forceRefresh) {
-		return getEnvironment(name, profiles, null, true, forceRefresh);
+		RequestContext ctx = new RequestContext.Builder().forceRefresh(forceRefresh).build();
+		return getEnvironment(name, profiles, null, true, ctx);
 	}
 
 	@GetMapping(path = "/{name}/{profiles}/{label:.*}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Environment labelled(@PathVariable String name, @PathVariable String profiles, @PathVariable String label,
 			@RequestParam(defaultValue = "false") boolean forceRefresh) {
-		return getEnvironment(name, profiles, label, false, forceRefresh);
+		RequestContext ctx = new RequestContext.Builder().forceRefresh(forceRefresh).build();
+		return getEnvironment(name, profiles, label, false, ctx);
 	}
 
 	@GetMapping(path = "/{name}/{profiles}/{label:.*}", produces = EnvironmentMediaType.V2_JSON)
 	public Environment labelledIncludeOrigin(@PathVariable String name, @PathVariable String profiles,
 			@PathVariable String label, @RequestParam(defaultValue = "false") boolean forceRefresh) {
-		return getEnvironment(name, profiles, label, true, forceRefresh);
+		RequestContext ctx = new RequestContext.Builder().forceRefresh(forceRefresh).build();
+		return getEnvironment(name, profiles, label, true, ctx);
 	}
 
 	public Environment getEnvironment(String name, String profiles, String label, boolean includeOrigin,
-			boolean forceRefresh) {
+			RequestContext ctx) {
 		try {
 			name = normalize(name);
 			label = normalize(label);
-			Environment environment = this.repository.findOne(name, profiles, label, includeOrigin, forceRefresh);
+			Environment environment = this.repository.findOne(name, profiles, label, includeOrigin, ctx);
 			if (!this.acceptEmpty && (environment == null || environment.getPropertySources().isEmpty())) {
 				throw new EnvironmentNotFoundException("Profile Not found");
 			}
