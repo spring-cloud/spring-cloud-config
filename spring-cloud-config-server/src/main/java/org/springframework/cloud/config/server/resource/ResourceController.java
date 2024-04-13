@@ -102,16 +102,18 @@ public class ResourceController {
 			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders,
 			@RequestParam(defaultValue = "false") boolean forceRefresh) throws IOException {
 		String path = getFilePath(request, name, profile, label);
-		RequestContext ctx = new RequestContext.Builder().forceRefresh(forceRefresh).build();
-		return retrieve(request, name, profile, label, path, resolvePlaceholders, ctx);
+		RequestContext ctx = new RequestContext.Builder().resolvePlaceholders(resolvePlaceholders)
+				.forceRefresh(forceRefresh).build();
+		return retrieve(request, name, profile, label, path, ctx);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel")
 	public String retrieveDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
 			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders,
 			@RequestParam(defaultValue = "false") boolean forceRefresh) throws IOException {
-		RequestContext ctx = new RequestContext.Builder().forceRefresh(forceRefresh).build();
-		return retrieve(request, name, profile, null, path, resolvePlaceholders, ctx);
+		RequestContext ctx = new RequestContext.Builder().resolvePlaceholders(resolvePlaceholders)
+				.forceRefresh(forceRefresh).build();
+		return retrieve(request, name, profile, null, path, ctx);
 	}
 
 	private String getFilePath(ServletWebRequest request, String name, String profile, String label) {
@@ -133,7 +135,7 @@ public class ResourceController {
 	 * the files on disk.
 	 */
 	synchronized String retrieve(ServletWebRequest request, String name, String profile, String label, String path,
-			boolean resolvePlaceholders, RequestContext ctx) throws IOException {
+			RequestContext ctx) throws IOException {
 		name = Environment.normalize(name);
 		label = Environment.normalize(label);
 		Resource resource = this.resourceRepository.findOne(name, profile, label, path, ctx);
@@ -149,7 +151,7 @@ public class ResourceController {
 				ext = ext.toLowerCase();
 			}
 			Environment environment = this.environmentRepository.findOne(name, profile, label, false, ctx);
-			if (resolvePlaceholders) {
+			if (ctx.getResolvePlaceholders()) {
 				text = resolvePlaceholders(prepareEnvironment(environment), text);
 			}
 			if (ext != null && encryptEnabled && plainTextEncryptEnabled) {
@@ -168,9 +170,8 @@ public class ResourceController {
 	/*
 	 * Used only for unit tests.
 	 */
-	String retrieve(String name, String profile, String label, String path, boolean resolvePlaceholders,
-			RequestContext ctx) throws IOException {
-		return retrieve(null, name, profile, label, path, resolvePlaceholders, ctx);
+	String retrieve(String name, String profile, String label, String path, RequestContext ctx) throws IOException {
+		return retrieve(null, name, profile, label, path, ctx);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

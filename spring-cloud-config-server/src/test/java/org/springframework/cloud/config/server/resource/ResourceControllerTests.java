@@ -84,8 +84,8 @@ public class ResourceControllerTests {
 	@Disabled // FIXME: configdata
 	public void templateReplacement() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(replaceNewLines(resource)).matches("\\{\\s*\"foo\": \"dev_bar\"\\s*\\}")
 				.as("Wrong content: " + resource);
 	}
@@ -93,8 +93,8 @@ public class ResourceControllerTests {
 	@Test
 	public void templateReplacementNotForResolvePlaceholdersFalse() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", false,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json",
+				new RequestContext.Builder().resolvePlaceholders(false).forceRefresh(false).build());
 		assertThat(replaceNewLines(resource)).matches("\\{\\s*\"foo\": \"\\$\\{foo\\}\"\\s*\\}")
 				.as("Wrong content: " + resource);
 	}
@@ -111,48 +111,48 @@ public class ResourceControllerTests {
 	@Test
 	public void escapedPlaceholder() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.retrieve("foo", "bar", "dev", "placeholder.txt", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev", "placeholder.txt",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: ${foo}");
 	}
 
 	@Test
 	public void applicationAndLabelPlaceholdersWithoutSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}/{label}");
-		String resource = this.controller.retrieve("dev", "bar", "spam", "foo.txt", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("dev", "bar", "spam", "foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
 	@Test
 	public void applicationPlaceholderWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
-		String resource = this.controller.retrieve("dev(_)spam", "bar", "", "foo.txt", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("dev(_)spam", "bar", "", "foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
 	@Test
 	public void applicationPlaceholderWithSlashNullLabel() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{application}");
-		String resource = this.controller.retrieve("dev(_)spam", "bar", null, "foo.txt", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("dev(_)spam", "bar", null, "foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
 	@Test
 	public void labelPlaceholderWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
-		String resource = this.controller.retrieve("dev", "bar", "dev(_)spam", "foo.txt", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("dev", "bar", "dev(_)spam", "foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
 	@Test
 	public void profilePlaceholderNullLabel() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{profile}");
-		String resource = this.controller.retrieve("bar", "dev", null, "spam/foo.txt", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("bar", "dev", null, "spam/foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
@@ -160,8 +160,8 @@ public class ResourceControllerTests {
 	public void nullNameAndLabel() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		try {
-			this.controller.retrieve(null, "foo", "bar", "spam/foo.txt", true,
-					new RequestContext.Builder().forceRefresh(false).build());
+			this.controller.retrieve(null, "foo", "bar", "spam/foo.txt",
+					new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		}
 		catch (Exception e) {
 			assertThat(e).isNotNull();
@@ -171,24 +171,24 @@ public class ResourceControllerTests {
 	@Test
 	public void labelWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.retrieve("foo", "bar", "dev(_)spam", "foo.txt", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev(_)spam", "foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
 	@Test
 	public void resourceWithoutFileExtension() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.retrieve("foo", "bar", "dev", "foo", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev", "foo",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar");
 	}
 
 	@Test
 	public void resourceWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt", true,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(true).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
@@ -216,16 +216,16 @@ public class ResourceControllerTests {
 	@Test
 	public void labelWithSlashForResolvePlaceholdersFalse() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.retrieve("foo", "bar", "dev(_)spam", "foo.txt", false,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev(_)spam", "foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(false).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
 	@Test
 	public void resourceWithSlashForResolvePlaceholdersFalse() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test");
-		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt", false,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(false).forceRefresh(false).build());
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");
 	}
 
@@ -344,8 +344,8 @@ public class ResourceControllerTests {
 		this.controller.setPlainTextEncryptEnabled(true);
 
 		// when
-		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", false,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json",
+				new RequestContext.Builder().resolvePlaceholders(false).forceRefresh(false).build());
 
 		// then
 		assertThat(resource).isEqualTo(decryptedStr);
@@ -364,8 +364,8 @@ public class ResourceControllerTests {
 		this.controller.setPlainTextEncryptEnabled(true);
 
 		// when
-		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt", false,
-				new RequestContext.Builder().forceRefresh(false).build());
+		String resource = this.controller.retrieve("foo", "bar", "dev", "spam/foo.txt",
+				new RequestContext.Builder().resolvePlaceholders(false).forceRefresh(false).build());
 
 		// then
 		assertThat(resource).isEqualToIgnoringNewLines("foo: dev_bar/spam");

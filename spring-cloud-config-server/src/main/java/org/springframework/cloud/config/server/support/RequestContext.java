@@ -23,14 +23,21 @@ import java.util.Objects;
  */
 public final class RequestContext {
 
+	private final boolean resolvePlaceholders;
+
 	private final boolean forceRefresh;
 
 	private RequestContext(Builder builder) {
+		this.resolvePlaceholders = builder.resolvePlaceholders;
 		this.forceRefresh = builder.forceRefresh;
 	}
 
 	public boolean getForceRefresh() {
 		return forceRefresh;
+	}
+
+	public boolean getResolvePlaceholders() {
+		return resolvePlaceholders;
 	}
 
 	@Override
@@ -42,17 +49,24 @@ public final class RequestContext {
 			return false;
 		}
 		RequestContext ctx = (RequestContext) o;
-		return getForceRefresh() == ctx.getForceRefresh();
+		return getResolvePlaceholders() == ctx.getResolvePlaceholders() && getForceRefresh() == ctx.getForceRefresh();
 	}
 
 	@Override
 	public int hashCode() {
-		return 31 * Objects.hash(getForceRefresh());
+		return 31 * Objects.hash(getResolvePlaceholders(), getForceRefresh());
 	}
 
 	public static class Builder {
 
+		private boolean resolvePlaceholders;
+
 		private boolean forceRefresh;
+
+		public Builder resolvePlaceholders(boolean resolvePlaceholders) {
+			this.resolvePlaceholders = resolvePlaceholders;
+			return this;
+		}
 
 		public Builder forceRefresh(boolean forceRefresh) {
 			this.forceRefresh = forceRefresh;
