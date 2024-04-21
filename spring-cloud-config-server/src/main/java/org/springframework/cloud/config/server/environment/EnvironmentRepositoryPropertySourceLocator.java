@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
@@ -50,7 +51,8 @@ public class EnvironmentRepositoryPropertySourceLocator implements PropertySourc
 	@Override
 	public org.springframework.core.env.PropertySource<?> locate(Environment environment) {
 		CompositePropertySource composite = new CompositePropertySource("configService");
-		for (PropertySource source : this.repository.findOne(this.name, this.profiles, this.label, false)
+		for (PropertySource source : this.repository
+				.findOne(new RequestContext.Builder().name(name).profiles(profiles).label(label).build())
 				.getPropertySources()) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) source.getSource();

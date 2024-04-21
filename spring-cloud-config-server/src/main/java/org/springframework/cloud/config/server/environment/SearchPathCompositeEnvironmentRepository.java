@@ -22,6 +22,8 @@ import java.util.List;
 
 import io.micrometer.observation.ObservationRegistry;
 
+import org.springframework.cloud.config.server.support.RequestContext;
+
 /**
  * A {@link CompositeEnvironmentRepository} which implements {@link SearchPathLocator}.
  *
@@ -43,16 +45,16 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 	}
 
 	@Override
-	public Locations getLocations(String application, String profile, String label) {
+	public Locations getLocations(RequestContext ctx) {
 		List<String> locations = new ArrayList<>();
 		for (EnvironmentRepository repo : this.environmentRepositories) {
 			try {
 				if (repo instanceof SearchPathLocator searchPathLocator) {
-					addForSearchPathLocators(application, profile, label, locations, searchPathLocator);
+					addForSearchPathLocators(ctx, locations, searchPathLocator);
 				}
 				else if (repo instanceof ObservationEnvironmentRepositoryWrapper wrapper
 						&& wrapper.getDelegate() instanceof SearchPathLocator searchPathLocator) {
-					addForSearchPathLocators(application, profile, label, locations, searchPathLocator);
+					addForSearchPathLocators(ctx, locations, searchPathLocator);
 				}
 			}
 			catch (RepositoryException ex) {
@@ -64,12 +66,13 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 				}
 			}
 		}
-		return new Locations(application, profile, label, null, locations.toArray(new String[locations.size()]));
+		return new Locations(ctx.getName(), ctx.getProfiles(), ctx.getLabel(), null,
+				locations.toArray(new String[locations.size()]));
 	}
 
-	private void addForSearchPathLocators(String application, String profile, String label, List<String> locations,
+	private void addForSearchPathLocators(RequestContext ctx, List<String> locations,
 			SearchPathLocator searchPathLocator) {
-		locations.addAll(Arrays.asList(searchPathLocator.getLocations(application, profile, label).getLocations()));
+		locations.addAll(Arrays.asList(searchPathLocator.getLocations(ctx).getLocations()));
 	}
 
 }

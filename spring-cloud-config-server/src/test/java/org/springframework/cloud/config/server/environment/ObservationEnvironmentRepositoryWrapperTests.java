@@ -23,6 +23,7 @@ import io.micrometer.observation.tck.TestObservationRegistry;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.RequestContext;
 
 import static io.micrometer.observation.tck.TestObservationRegistryAssert.assertThat;
 
@@ -72,7 +73,7 @@ class ObservationEnvironmentRepositoryWrapperTests {
 	static class MyEnvRepo implements EnvironmentRepository {
 
 		@Override
-		public Environment findOne(String application, String profile, String label) {
+		public Environment findOne(RequestContext ctx) {
 			return new Environment("foo", "bar");
 		}
 

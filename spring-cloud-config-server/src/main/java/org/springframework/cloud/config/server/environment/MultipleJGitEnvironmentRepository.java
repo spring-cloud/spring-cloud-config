@@ -28,6 +28,7 @@ import io.micrometer.observation.ObservationRegistry;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
@@ -119,14 +120,15 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	}
 
 	@Override
-	public Locations getLocations(String application, String profile, String label) {
+	public Locations getLocations(RequestContext ctx) {
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
-			if (repository.matches(application, profile, label)) {
-				for (JGitEnvironmentRepository candidate : getRepositories(repository, application, profile, label)) {
+			if (repository.matches(ctx.getName(), ctx.getProfiles(), ctx.getLabel())) {
+				for (JGitEnvironmentRepository candidate : getRepositories(repository, ctx.getName(), ctx.getProfiles(),
+						ctx.getLabel())) {
 					try {
-						Environment source = candidate.findOne(application, profile, label, false);
+						Environment source = candidate.findOne(ctx);
 						if (source != null) {
-							return candidate.getLocations(application, profile, label);
+							return candidate.getLocations(ctx);
 						}
 					}
 					catch (Exception e) {
@@ -139,23 +141,26 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 				}
 			}
 		}
-		JGitEnvironmentRepository candidate = getRepository(this, application, profile, label);
+		JGitEnvironmentRepository candidate = getRepository(this, ctx.getName(), ctx.getProfiles(), ctx.getLabel());
 		if (candidate == this) {
-			return super.getLocations(application, profile, label);
+			return super.getLocations(ctx);
 		}
-		return candidate.getLocations(application, profile, label);
+		return candidate.getLocations(ctx);
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+	public Environment findOne(RequestContext ctx) {
+		String label = ctx.getLabel();
+
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
-			if (repository.matches(application, profile, label)) {
-				for (JGitEnvironmentRepository candidate : getRepositories(repository, application, profile, label)) {
+			if (repository.matches(ctx.getName(), ctx.getProfiles(), label)) {
+				for (JGitEnvironmentRepository candidate : getRepositories(repository, ctx.getName(), ctx.getProfiles(),
+						label)) {
 					try {
 						if (label == null) {
 							label = candidate.getDefaultLabel();
 						}
-						Environment source = candidate.findOne(application, profile, label, includeOrigin);
+						Environment source = candidate.findOne(ctx.toBuilder().label(label).build());
 						if (source != null) {
 							return source;
 						}
@@ -170,31 +175,30 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 				}
 			}
 		}
-		JGitEnvironmentRepository candidate = getRepository(this, application, profile, label);
+		JGitEnvironmentRepository candidate = getRepository(this, ctx.getName(), ctx.getProfiles(), label);
 		if (label == null) {
 			label = candidate.getDefaultLabel();
 		}
 		try {
-			return findOneFromCandidate(candidate, application, profile, label, includeOrigin);
+			return findOneFromCandidate(candidate, ctx.toBuilder().label(label).build());
 		}
 		catch (Exception e) {
 			if (MultipleJGitEnvironmentProperties.MAIN_LABEL.equals(label) && isTryMasterBranch()) {
 				logger.info("Cannot find Environment with default label " + getDefaultLabel(), e);
 				logger.info("Will try to find Environment master label instead.");
-				candidate = getRepository(this, application, profile, MultipleJGitEnvironmentProperties.MASTER_LABEL);
-				return findOneFromCandidate(candidate, application, profile,
-						MultipleJGitEnvironmentProperties.MASTER_LABEL, includeOrigin);
+				candidate = getRepository(this, ctx.getName(), ctx.getProfiles(),
+						MultipleJGitEnvironmentProperties.MASTER_LABEL);
+				return findOneFromCandidate(candidate, ctx);
 			}
 			throw e;
 		}
 	}
 
-	private Environment findOneFromCandidate(JGitEnvironmentRepository candidate, String application, String profile,
-			String label, boolean includeOrigin) {
+	private Environment findOneFromCandidate(JGitEnvironmentRepository candidate, RequestContext ctx) {
 		if (candidate == this) {
-			return super.findOne(application, profile, label, includeOrigin);
+			return super.findOne(ctx);
 		}
-		return candidate.findOne(application, profile, label, includeOrigin);
+		return candidate.findOne(ctx);
 	}
 
 	private List<JGitEnvironmentRepository> getRepositories(JGitEnvironmentRepository repository, String application,
@@ -295,14 +299,14 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		public Environment findOne(RequestContext ctx) {
 
 			if (this.pattern == null || this.pattern.length == 0) {
 				return null;
 			}
 
-			if (PatternMatchUtils.simpleMatch(this.pattern, application + "/" + profile)) {
-				return super.findOne(application, profile, label, includeOrigin);
+			if (PatternMatchUtils.simpleMatch(this.pattern, ctx.getName() + "/" + ctx.getProfiles())) {
+				return super.findOne(ctx);
 			}
 
 			return null;

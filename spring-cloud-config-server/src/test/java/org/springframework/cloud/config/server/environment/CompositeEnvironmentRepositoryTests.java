@@ -27,6 +27,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.CompositeConfiguration;
 import org.springframework.cloud.config.server.config.ConfigServerHealthIndicator;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -222,17 +223,12 @@ public class CompositeEnvironmentRepositoryTests {
 		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label) {
-			return findOne(application, profile, label, false);
-		}
-
-		@Override
-		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		public Environment findOne(RequestContext ctx) {
 			return env;
 		}
 
 		@Override
-		public Locations getLocations(String application, String profile, String label) {
+		public Locations getLocations(RequestContext ctx) {
 			return this.locations;
 		}
 
@@ -250,12 +246,7 @@ public class CompositeEnvironmentRepositoryTests {
 		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-			throw new IllegalArgumentException("Failing for some reason");
-		}
-
-		@Override
-		public Environment findOne(String application, String profile, String label) {
+		public Environment findOne(RequestContext ctx) {
 			throw new IllegalArgumentException("Failing for some reason");
 		}
 
@@ -268,7 +259,7 @@ public class CompositeEnvironmentRepositoryTests {
 		}
 
 		@Override
-		public Locations getLocations(String application, String profile, String label) {
+		public Locations getLocations(RequestContext ctx) {
 			throw new RepositoryException("Failing for some reason");
 		}
 

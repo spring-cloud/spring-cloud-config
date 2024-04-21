@@ -22,17 +22,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerHealthIndicator.Repository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -58,23 +57,20 @@ public class ConfigServerHealthIndicatorTests {
 
 	@Test
 	public void defaultStatusWorks() {
-		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-				.thenReturn(this.environment);
+		when(this.repository.findOne(any(RequestContext.class))).thenReturn(this.environment);
 		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);
 	}
 
 	@Test
 	public void exceptionStatusIsDownByDefault() {
-		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-				.thenThrow(new RuntimeException());
+		when(this.repository.findOne(any(RequestContext.class))).thenThrow(new RuntimeException());
 		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(Status.DOWN);
 	}
 
 	@Test
 	public void exceptionDownStatusMayBeCustomized() {
 		ReflectionTestUtils.setField(this.indicator, "downHealthStatus", "CUSTOM");
-		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-				.thenThrow(new RuntimeException());
+		when(this.repository.findOne(any(RequestContext.class))).thenThrow(new RuntimeException());
 		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(new Status(("CUSTOM")));
 	}
 
@@ -85,7 +81,9 @@ public class ConfigServerHealthIndicatorTests {
 		repo.setProfiles("myprofile");
 		repo.setLabel("mylabel");
 		this.indicator.setRepositories(Collections.singletonMap("myname", repo));
-		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		when(this.repository
+				.findOne(new RequestContext.Builder().name("myname").profiles("myprofile").label("mylabel").build()))
+						.thenReturn(this.environment);
 		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);
 	}
 

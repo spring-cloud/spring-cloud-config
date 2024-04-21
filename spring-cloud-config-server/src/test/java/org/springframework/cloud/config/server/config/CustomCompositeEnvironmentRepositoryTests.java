@@ -35,6 +35,7 @@ import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -196,12 +197,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		}
 
 		@Override
-		public Environment findOne(String application, String profile, String label) {
-			return findOne(application, profile, label, false);
-		}
-
-		@Override
-		public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		public Environment findOne(RequestContext ctx) {
 			Environment e = new Environment("test", new String[0], "label", "version", "state");
 			PropertySource p = new PropertySource(this.properties.getPropertySourceName(), new HashMap<>());
 			e.add(p);

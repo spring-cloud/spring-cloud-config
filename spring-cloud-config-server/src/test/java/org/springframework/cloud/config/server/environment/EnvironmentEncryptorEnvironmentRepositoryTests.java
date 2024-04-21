@@ -29,6 +29,7 @@ import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -55,24 +56,26 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 
 	@Test
 	public void allowOverrideFalse() throws Exception {
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("bar").label("master").build();
 		this.controller.setOverrides(Collections.singletonMap("foo", "bar"));
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master", false).getPropertySources().get(0).getSource()
-				.toString()).isEqualTo("{foo=bar}");
+		when(this.repository.findOne(ctx)).thenReturn(this.environment);
+		assertThat(this.controller.findOne(ctx).getPropertySources().get(0).getSource().toString())
+				.isEqualTo("{foo=bar}");
 	}
 
 	@Test
 	public void overrideWithEscapedPlaceholders() throws Exception {
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("bar").label("master").build();
 		this.controller.setOverrides(Collections.singletonMap("foo", "$\\{bar}"));
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("bar", "foo");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master", false).getPropertySources().get(0).getSource()
-				.toString()).isEqualTo("{foo=${bar}}");
+		when(this.repository.findOne(ctx)).thenReturn(this.environment);
+		assertThat(this.controller.findOne(ctx).getPropertySources().get(0).getSource().toString())
+				.isEqualTo("{foo=${bar}}");
 	}
 
 }

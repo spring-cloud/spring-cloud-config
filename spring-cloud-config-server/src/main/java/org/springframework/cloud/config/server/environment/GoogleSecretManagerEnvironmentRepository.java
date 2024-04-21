@@ -31,6 +31,7 @@ import org.springframework.cloud.config.server.environment.secretmanager.GoogleS
 import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerAccessStrategy;
 import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerAccessStrategyFactory;
 import org.springframework.cloud.config.server.environment.secretmanager.HttpHeaderGoogleConfigProvider;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.Ordered;
 import org.springframework.web.client.RestTemplate;
 
@@ -63,7 +64,10 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
+	public Environment findOne(RequestContext ctx) {
+		String label = ctx.getLabel();
+		String profile = ctx.getProfiles();
+
 		if (StringUtils.isEmpty(label)) {
 			label = "master";
 		}
@@ -75,14 +79,14 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 		}
 		String[] profiles = org.springframework.util.StringUtils
 				.trimArrayElements(org.springframework.util.StringUtils.commaDelimitedListToStringArray(profile));
-		Environment result = new Environment(application, profile, label, null, null);
+		Environment result = new Environment(ctx.getName(), profile, label, null, null);
 		if (tokenMandatory) {
 			if (accessStrategy.checkRemotePermissions()) {
-				addPropertySource(application, profiles, result);
+				addPropertySource(ctx.getName(), profiles, result);
 			}
 		}
 		else {
-			addPropertySource(application, profiles, result);
+			addPropertySource(ctx.getName(), profiles, result);
 		}
 		return result;
 	}

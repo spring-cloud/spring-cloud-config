@@ -34,6 +34,7 @@ import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.util.ObjectUtils;
@@ -76,12 +77,12 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	@Override
-	public Environment findOne(String specifiedApplication, String specifiedProfiles, String specifiedLabel) {
-		final String application = ObjectUtils.isEmpty(specifiedApplication)
-				? serverProperties.getDefaultApplicationName() : specifiedApplication;
-		final String profiles = ObjectUtils.isEmpty(specifiedProfiles) ? serverProperties.getDefaultProfile()
-				: specifiedProfiles;
-		final String label = ObjectUtils.isEmpty(specifiedLabel) ? serverProperties.getDefaultLabel() : specifiedLabel;
+	public Environment findOne(RequestContext ctx) {
+		final String application = ObjectUtils.isEmpty(ctx.getName()) ? serverProperties.getDefaultApplicationName()
+				: ctx.getName();
+		final String profiles = ObjectUtils.isEmpty(ctx.getProfiles()) ? serverProperties.getDefaultProfile()
+				: ctx.getProfiles();
+		final String label = ObjectUtils.isEmpty(ctx.getLabel()) ? serverProperties.getDefaultLabel() : ctx.getLabel();
 
 		String[] profileArray = parseProfiles(profiles);
 		List<String> apps = Arrays.asList(StringUtils.commaDelimitedListToStringArray(application.replace(" ", "")));
@@ -204,7 +205,9 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	@Override
-	public Locations getLocations(String application, String profiles, String label) {
+	public Locations getLocations(RequestContext ctx) {
+		String label = ctx.getLabel();
+
 		StringBuilder baseLocation = new StringBuilder(AWS_S3_RESOURCE_SCHEME + bucketName + PATH_SEPARATOR);
 		if (!StringUtils.hasText(label) && StringUtils.hasText(serverProperties.getDefaultLabel())) {
 			label = serverProperties.getDefaultLabel();
@@ -214,7 +217,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			baseLocation.append(label);
 		}
 
-		return new Locations(application, profiles, label, null, new String[] { baseLocation.toString() });
+		return new Locations(ctx.getName(), ctx.getProfiles(), label, null, new String[] { baseLocation.toString() });
 	}
 
 }

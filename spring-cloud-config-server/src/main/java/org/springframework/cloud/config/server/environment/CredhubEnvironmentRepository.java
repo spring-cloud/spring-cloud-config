@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.Ordered;
 import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.credhub.support.CredentialDetails;
@@ -52,30 +53,26 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 	}
 
 	@Override
-	public Environment findOne(String application, String profilesList, String label) {
-		if (ObjectUtils.isEmpty(profilesList)) {
-			profilesList = DEFAULT_PROFILE;
-		}
-		if (ObjectUtils.isEmpty(label)) {
-			label = DEFAULT_LABEL;
-		}
+	public Environment findOne(RequestContext ctx) {
+		String profilesList = ObjectUtils.isEmpty(ctx.getProfiles()) ? DEFAULT_PROFILE : ctx.getProfiles();
+		String label = ObjectUtils.isEmpty(ctx.getLabel()) ? DEFAULT_LABEL : ctx.getLabel();
 
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profilesList);
 
-		Environment environment = new Environment(application, profiles, label, null, null);
+		Environment environment = new Environment(ctx.getName(), profiles, label, null, null);
 		for (String profile : profiles) {
-			environment.add(new PropertySource("credhub-" + application + "-" + profile + "-" + label,
-					findProperties(application, profile, label)));
-			if (!DEFAULT_APPLICATION.equals(application)) {
+			environment.add(new PropertySource("credhub-" + ctx.getName() + "-" + profile + "-" + label,
+					findProperties(ctx.getName(), profile, label)));
+			if (!DEFAULT_APPLICATION.equals(ctx.getName())) {
 				addDefaultPropertySource(environment, DEFAULT_APPLICATION, profile, label);
 			}
 		}
 
 		if (!Arrays.asList(profiles).contains(DEFAULT_PROFILE)) {
-			addDefaultPropertySource(environment, application, DEFAULT_PROFILE, label);
+			addDefaultPropertySource(environment, ctx.getName(), DEFAULT_PROFILE, label);
 		}
 
-		if (!Arrays.asList(profiles).contains(DEFAULT_PROFILE) && !DEFAULT_APPLICATION.equals(application)) {
+		if (!Arrays.asList(profiles).contains(DEFAULT_PROFILE) && !DEFAULT_APPLICATION.equals(ctx.getName())) {
 			addDefaultPropertySource(environment, DEFAULT_APPLICATION, DEFAULT_PROFILE, label);
 		}
 

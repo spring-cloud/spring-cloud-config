@@ -33,6 +33,7 @@ import org.tmatesoft.svn.core.wc2.SvnTarget;
 import org.tmatesoft.svn.core.wc2.SvnUpdate;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -70,10 +71,8 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	@Override
-	public synchronized Locations getLocations(String application, String profile, String label) {
-		if (label == null) {
-			label = this.defaultLabel;
-		}
+	public synchronized Locations getLocations(RequestContext ctx) {
+		String label = ctx.getLabel() == null ? this.defaultLabel : ctx.getLabel();
 		SvnOperationFactory svnOperationFactory = new SvnOperationFactory();
 		if (hasText(getUsername())) {
 			svnOperationFactory.setAuthenticationManager(
@@ -87,7 +86,8 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 			else {
 				version = checkout(svnOperationFactory);
 			}
-			return new Locations(application, profile, label, version, getPaths(application, profile, label));
+			return new Locations(ctx.getName(), ctx.getProfiles(), label, version,
+					getPaths(ctx.getName(), ctx.getProfiles(), label));
 		}
 		catch (SVNException e) {
 			throw new IllegalStateException("Cannot checkout repository", e);

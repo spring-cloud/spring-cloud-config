@@ -19,6 +19,8 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Arrays;
 import java.util.Objects;
 
+import org.springframework.cloud.config.server.support.RequestContext;
+
 /**
  * Strategy for locating a search path for resource (e.g. in the file system or
  * classpath).
@@ -28,7 +30,11 @@ import java.util.Objects;
  */
 public interface SearchPathLocator {
 
-	Locations getLocations(String application, String profile, String label);
+	default Locations getLocations(String application, String profile, String label) {
+		return getLocations(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
+	}
+
+	Locations getLocations(RequestContext ctx);
 
 	/**
 	 * Locations POJO.

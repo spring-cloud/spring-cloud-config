@@ -35,6 +35,7 @@ import org.springframework.cloud.config.server.environment.EnvironmentController
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NoSuchLabelException;
 import org.springframework.cloud.config.server.resource.ResourceControllerIntegrationTests.ControllerConfiguration;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
@@ -84,94 +85,98 @@ public class ResourceControllerIntegrationTests {
 
 	@Test
 	public void environmentNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", "master", false)).thenReturn(new Environment("foo", "default"));
-		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("default").label("master")
+				.path("foo.txt").resolvePlaceholders(true).build();
+		when(this.repository.findOne(ctx)).thenReturn(new Environment("foo", "default"));
+		when(this.resources.findOne(ctx)).thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo", "default", "master", false);
-		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
+		verify(this.repository).findOne(ctx);
+		verify(this.resources).findOne(ctx);
 	}
 
 	@Test
 	public void resource() throws Exception {
-		when(this.repository.findOne("foo", "default", "master", false))
-				.thenReturn(new Environment("foo", "default", "master"));
-		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("default").label("master")
+				.path("foo.txt").resolvePlaceholders(true).build();
+		when(this.repository.findOne(ctx)).thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne(ctx)).thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo", "default", "master", false);
-		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
+		verify(this.repository).findOne(ctx);
+		verify(this.resources).findOne(ctx);
 	}
 
 	@Test
 	public void resourceHttp() throws Exception {
-		when(this.repository.findOne("foo", "default", "master", false))
-				.thenReturn(new Environment("foo", "default", "master"));
-		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("default").label("master")
+				.path("foo.txt").resolvePlaceholders(true).build();
+		when(this.repository.findOne(ctx)).thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne(ctx)).thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 
 		ResponseEntity<String> response = new TestRestTemplate()
 				.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-		verify(this.repository).findOne("foo", "default", "master", false);
-		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
+		verify(this.repository).findOne(ctx);
+		verify(this.resources).findOne(ctx);
 	}
 
 	@Test
 	public void resourceHttpDoesNotExist() throws Exception {
-		when(this.resources.findOne("foo", "default", "master", "doesNotExist.txt"))
-				.thenThrow(new NoSuchResourceException("Does not exist"));
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("default").label("master")
+				.path("doesNotExist.txt").resolvePlaceholders(true).build();
+		when(this.resources.findOne(ctx)).thenThrow(new NoSuchResourceException("Does not exist"));
 
 		ResponseEntity<String> response = new TestRestTemplate()
 				.getForEntity("http://localhost:" + port + "/foo/default/master/doesNotExist.txt", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-		verify(this.resources).findOne("foo", "default", "master", "doesNotExist.txt");
+		verify(this.resources).findOne(ctx);
 	}
 
 	@Test
 	public void resourceNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", null, false))
-				.thenReturn(new Environment("foo", "default", "master"));
-		when(this.resources.findOne("foo", "default", null, "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("default").label(null).path("foo.txt")
+				.resolvePlaceholders(true).build();
+		when(this.repository.findOne(ctx)).thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne(ctx)).thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt").param("useDefaultLabel", ""))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo", "default", null, false);
-		verify(this.resources).findOne("foo", "default", null, "foo.txt");
+		verify(this.repository).findOne(ctx);
+		verify(this.resources).findOne(ctx);
 	}
 
 	@Test
 	public void resourceNoLabelHttp() throws Exception {
-		when(this.repository.findOne("foo", "default", null, false))
-				.thenReturn(new Environment("foo", "default", "master"));
-		when(this.resources.findOne("foo", "default", null, "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("default").label(null).path("foo.txt")
+				.resolvePlaceholders(true).build();
+		when(this.repository.findOne(ctx)).thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne(ctx)).thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 
 		ResponseEntity<String> response = new TestRestTemplate()
 				.getForEntity("http://localhost:" + port + "/foo/default/foo.txt?useDefaultLabel", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-		verify(this.repository).findOne("foo", "default", null, false);
-		verify(this.resources).findOne("foo", "default", null, "foo.txt");
+		verify(this.repository).findOne(ctx);
+		verify(this.resources).findOne(ctx);
 	}
 
 	@Test
 	public void binaryResourceNoLabel() throws Exception {
-		when(this.repository.findOne("foo", "default", null)).thenReturn(new Environment("foo", "default", "master"));
-		when(this.resources.findOne("foo", "default", null, "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("default").label(null).path("foo.txt")
+				.build();
+		when(this.repository.findOne(ctx)).thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne(ctx)).thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt").param("useDefaultLabel", "")
 				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
 				.andExpect(MockMvcResultMatchers.status().isOk());
-		verify(this.repository).findOne("foo", "default", null);
-		verify(this.resources).findOne("foo", "default", null, "foo.txt");
+		verify(this.repository).findOne(ctx);
+		verify(this.resources).findOne(ctx);
 	}
 
 	@Test
 	public void resourceWithMissingLabel() throws Exception {
-		when(this.resources.findOne("foo", "default", "missing", "foo.txt"))
-				.thenThrow(new NoSuchLabelException("Planned"));
+		RequestContext ctx = new RequestContext.Builder().name("foo").profiles("default").label("missing")
+				.path("foo.txt").resolvePlaceholders(true).build();
+		when(this.resources.findOne(ctx)).thenThrow(new NoSuchLabelException("Planned"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/missing/foo.txt"))
 				.andExpect(MockMvcResultMatchers.status().isNotFound());
 	}

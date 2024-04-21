@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.Ordered;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -97,8 +98,12 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
+	public Environment findOne(RequestContext ctx) {
+		String application = ctx.getName();
+		String profile = ctx.getProfiles();
+		String label = ctx.getLabel();
 		String config = application;
+
 		if (StringUtils.isEmpty(label)) {
 			label = this.defaultLabel;
 		}
