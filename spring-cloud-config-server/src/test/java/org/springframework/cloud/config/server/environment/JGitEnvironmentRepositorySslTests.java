@@ -37,6 +37,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -79,7 +80,8 @@ public class JGitEnvironmentRepositorySslTests {
 			JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
 
 			try {
-				repository.findOne("bar", "staging", "master");
+				repository
+						.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 			}
 			catch (Throwable e) {
 				while (e.getCause() != null) {
@@ -100,7 +102,7 @@ public class JGitEnvironmentRepositorySslTests {
 				.web(WebApplicationType.NONE).run();
 
 		JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
-		repository.findOne("bar", "staging", "master");
+		repository.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 	}
 
 	@Configuration(proxyBeanMethods = false)

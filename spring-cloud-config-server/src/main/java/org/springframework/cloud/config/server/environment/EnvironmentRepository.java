@@ -25,15 +25,6 @@ import org.springframework.cloud.config.server.support.RequestContext;
  */
 public interface EnvironmentRepository {
 
-	default Environment findOne(String application, String profile, String label) {
-		return findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
-	}
-
-	default Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-		return findOne(new RequestContext.Builder().name(application).profiles(profile).label(label)
-				.includeOrigin(includeOrigin).build());
-	}
-
 	Environment findOne(RequestContext ctx);
 
 }

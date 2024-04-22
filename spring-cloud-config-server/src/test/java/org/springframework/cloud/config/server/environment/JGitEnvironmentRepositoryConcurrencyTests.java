@@ -56,6 +56,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -108,14 +109,16 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 			tasks.add(threads.submit(new Runnable() {
 				@Override
 				public void run() {
-					repository.findOne("bar", "staging", "master");
+					repository.findOne(
+							new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 				}
 			}, true));
 		}
 		for (Future<Boolean> future : tasks) {
 			future.get();
 		}
-		Environment environment = repository.findOne("bar", "staging", "master");
+		Environment environment = repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getName()).isEqualTo("bar");
 		assertThat(environment.getProfiles()).isEqualTo(new String[] { "staging" });
@@ -146,7 +149,8 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 			public void run() {
 				JGitEnvironmentRepositoryConcurrencyTests.this.logger.info("client start.");
 				try {
-					Environment environment = testData.getRepository().findOne("bar", "staging", "master");
+					Environment environment = testData.getRepository().findOne(
+							new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 				}
 				catch (Exception e) {
 					errorCount.incrementAndGet();

@@ -81,7 +81,8 @@ public class CompositeEnvironmentRepositoryTests {
 		repos.add(new TestOrderedEnvironmentRepository(1, e2, loc3));
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
 				ObservationRegistry.NOOP, true);
-		Environment compositeEnv = compositeRepo.findOne("foo", "bar", "world", false);
+		Environment compositeEnv = compositeRepo
+				.findOne(new RequestContext.Builder().name("foo").profiles("bar").label("world").build());
 		List<PropertySource> propertySources = compositeEnv.getPropertySources();
 		assertThat(propertySources).hasSize(5);
 		assertThat(propertySources.get(0).getName()).isEqualTo("p2");
@@ -90,7 +91,8 @@ public class CompositeEnvironmentRepositoryTests {
 		assertThat(propertySources.get(3).getName()).isEqualTo("p1");
 		assertThat(propertySources.get(4).getName()).isEqualTo("p5");
 
-		SearchPathLocator.Locations locations = compositeRepo.getLocations("app", "dev", "label");
+		SearchPathLocator.Locations locations = compositeRepo
+				.getLocations(new RequestContext.Builder().name("app").profiles("dev").label("label").build());
 		String[] locationStrings = locations.getLocations();
 		assertThat(locationStrings.length).isEqualTo(5);
 		assertThat(locationStrings[0]).isEqualTo(sLoc3);
@@ -129,10 +131,12 @@ public class CompositeEnvironmentRepositoryTests {
 				ObservationRegistry.NOOP, true);
 		SearchPathCompositeEnvironmentRepository multiCompositeRepo = new SearchPathCompositeEnvironmentRepository(
 				repos2, ObservationRegistry.NOOP, true);
-		Environment env = compositeRepo.findOne("app", "dev", "label", false);
+		Environment env = compositeRepo
+				.findOne(new RequestContext.Builder().name("app").profiles("dev").label("label").build());
 		assertThat(env.getVersion()).isEqualTo("1");
 		assertThat(env.getState()).isEqualTo("state");
-		Environment multiEnv = multiCompositeRepo.findOne("app", "dev", "label", false);
+		Environment multiEnv = multiCompositeRepo
+				.findOne(new RequestContext.Builder().name("app").profiles("dev").label("label").build());
 		assertThat(multiEnv.getVersion()).isEqualTo(null);
 		assertThat(multiEnv.getState()).isEqualTo(null);
 	}
@@ -172,7 +176,8 @@ public class CompositeEnvironmentRepositoryTests {
 
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
 				ObservationRegistry.NOOP, false);
-		Environment env = compositeRepo.findOne("app", "dev", "label", false);
+		Environment env = compositeRepo
+				.findOne(new RequestContext.Builder().name("app").profiles("dev").label("label").build());
 		List<PropertySource> propertySources = env.getPropertySources();
 		assertThat(propertySources).hasSize(1);
 		assertThat(propertySources.get(0).getName()).isEqualTo("p1");
@@ -189,7 +194,8 @@ public class CompositeEnvironmentRepositoryTests {
 
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
 				ObservationRegistry.NOOP, false);
-		SearchPathLocator.Locations locations = compositeRepo.getLocations("app", "dev", "label");
+		SearchPathLocator.Locations locations = compositeRepo
+				.getLocations(new RequestContext.Builder().name("app").profiles("dev").label("label").build());
 		assertThat(locations.getLocations()).isEmpty();
 	}
 
@@ -204,8 +210,8 @@ public class CompositeEnvironmentRepositoryTests {
 
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
 				ObservationRegistry.NOOP, true);
-		assertThatExceptionOfType(RepositoryException.class)
-				.isThrownBy(() -> compositeRepo.getLocations("app", "dev", "label"));
+		assertThatExceptionOfType(RepositoryException.class).isThrownBy(() -> compositeRepo
+				.getLocations(new RequestContext.Builder().name("app").profiles("dev").label("label").build()));
 	}
 
 	private static class TestOrderedEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {

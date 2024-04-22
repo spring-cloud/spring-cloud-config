@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.credhub.core.credential.CredHubCredentialOperations;
 import org.springframework.credhub.support.CredentialDetails;
@@ -60,7 +61,8 @@ public class CredhubEnvironmentRepositoryTests {
 	public void shouldDisplayEmptyPropertiesWhenNoPathFound() {
 		when(this.credhubCredentialOperations.findByPath("/my-application/production/mylabel")).thenReturn(emptyList());
 
-		Environment environment = this.credhubEnvironmentRepository.findOne("my-application", "production", "mylabel");
+		Environment environment = this.credhubEnvironmentRepository.findOne(
+				new RequestContext.Builder().name("my-application").profiles("production").label("mylabel").build());
 
 		assertThat(environment.getName()).isEqualTo("my-application");
 		assertThat(environment.getProfiles()).containsExactly("production");
@@ -76,7 +78,8 @@ public class CredhubEnvironmentRepositoryTests {
 	public void shouldRetrieveDefaultsWhenNoLabelNorProfileProvided() {
 		stubCredentials("/my-application/default/master", "toggles", "key1", "value1");
 
-		Environment environment = this.credhubEnvironmentRepository.findOne("my-application", null, null);
+		Environment environment = this.credhubEnvironmentRepository
+				.findOne(new RequestContext.Builder().name("my-application").build());
 
 		assertThat(environment.getName()).isEqualTo("my-application");
 		assertThat(environment.getProfiles()).containsExactly("default");
@@ -92,7 +95,8 @@ public class CredhubEnvironmentRepositoryTests {
 	public void shouldRetrieveGivenProfileAndLabel() {
 		stubCredentials("/my-application/production/mylabel", "toggles", "key1", "value1");
 
-		Environment environment = this.credhubEnvironmentRepository.findOne("my-application", "production", "mylabel");
+		Environment environment = this.credhubEnvironmentRepository.findOne(
+				new RequestContext.Builder().name("my-application").profiles("production").label("mylabel").build());
 
 		assertThat(environment.getName()).isEqualTo("my-application");
 		assertThat(environment.getProfiles()).containsExactly("production");
@@ -109,8 +113,8 @@ public class CredhubEnvironmentRepositoryTests {
 		stubCredentials("/my-application/production/mylabel", "toggles", "key1", "value1");
 		stubCredentials("/my-application/cloud/mylabel", "abs", "key2", "value2");
 
-		Environment environment = this.credhubEnvironmentRepository.findOne("my-application", "production,cloud",
-				"mylabel");
+		Environment environment = this.credhubEnvironmentRepository.findOne(new RequestContext.Builder()
+				.name("my-application").profiles("production,cloud").label("mylabel").build());
 
 		assertThat(environment.getName()).isEqualTo("my-application");
 		assertThat(environment.getProfiles()).containsExactly("production", "cloud");
@@ -144,7 +148,8 @@ public class CredhubEnvironmentRepositoryTests {
 		when(this.credhubCredentialOperations.getByName(absCredentialName, JsonCredential.class))
 				.thenReturn(new CredentialDetails<>("id2", absCredentialName, CredentialType.JSON, otherCredentials));
 
-		Environment environment = this.credhubEnvironmentRepository.findOne("my-application", "production", "mylabel");
+		Environment environment = this.credhubEnvironmentRepository.findOne(
+				new RequestContext.Builder().name("my-application").profiles("production").label("mylabel").build());
 
 		assertThat(environment.getName()).isEqualTo("my-application");
 		assertThat(environment.getProfiles()).containsExactly("production");
@@ -164,7 +169,8 @@ public class CredhubEnvironmentRepositoryTests {
 		stubCredentials("/my-application/production/mylabel", "toggles", "key1", "value1");
 		stubCredentials("/application/production/mylabel", "abs", "key2", "value2");
 
-		Environment environment = this.credhubEnvironmentRepository.findOne("my-application", "production", "mylabel");
+		Environment environment = this.credhubEnvironmentRepository.findOne(
+				new RequestContext.Builder().name("my-application").profiles("production").label("mylabel").build());
 
 		assertThat(environment.getName()).isEqualTo("my-application");
 		assertThat(environment.getProfiles()).containsExactly("production");
@@ -186,7 +192,8 @@ public class CredhubEnvironmentRepositoryTests {
 		stubCredentials("/my-application/default/mylabel", "abs", "key3", "value3");
 		stubCredentials("/application/default/mylabel", "abs", "key4", "value4");
 
-		Environment environment = this.credhubEnvironmentRepository.findOne("my-application", "production", "mylabel");
+		Environment environment = this.credhubEnvironmentRepository.findOne(
+				new RequestContext.Builder().name("my-application").profiles("production").label("mylabel").build());
 
 		assertThat(environment.getName()).isEqualTo("my-application");
 		assertThat(environment.getProfiles()).contains("production");

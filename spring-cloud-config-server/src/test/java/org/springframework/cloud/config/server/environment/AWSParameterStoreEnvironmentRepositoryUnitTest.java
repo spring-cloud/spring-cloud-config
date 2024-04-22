@@ -40,6 +40,7 @@ import software.amazon.awssdk.services.ssm.model.ParameterType;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.util.StringUtils;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
@@ -101,7 +102,8 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 		setupAwsSsmClientMocks(expected, false, true);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);

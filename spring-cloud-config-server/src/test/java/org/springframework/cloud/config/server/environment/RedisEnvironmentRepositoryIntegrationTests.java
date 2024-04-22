@@ -25,6 +25,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.annotation.DirtiesContext;
@@ -59,8 +60,8 @@ public class RedisEnvironmentRepositoryIntegrationTests {
 		bound.put("name", "foo");
 		bound.put("tag", "myapp");
 
-		Environment env = new RedisEnvironmentRepository(redis, new RedisEnvironmentProperties()).findOne("foo", "bar",
-				"");
+		Environment env = new RedisEnvironmentRepository(redis, new RedisEnvironmentProperties())
+				.findOne(new RequestContext.Builder().name("foo").profiles("bar").label("").build());
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getPropertySources()).isNotEmpty();
 		assertThat(env.getPropertySources().get(0).getSource().get("tag")).isEqualTo("myapp");

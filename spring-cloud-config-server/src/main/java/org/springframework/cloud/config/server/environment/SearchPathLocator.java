@@ -30,10 +30,6 @@ import org.springframework.cloud.config.server.support.RequestContext;
  */
 public interface SearchPathLocator {
 
-	default Locations getLocations(String application, String profile, String label) {
-		return getLocations(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
-	}
-
 	Locations getLocations(RequestContext ctx);
 
 	/**

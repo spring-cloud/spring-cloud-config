@@ -31,6 +31,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.RequestContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -58,7 +59,8 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 					withTokenProvider(request));
 			VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
 					.build(withEnvironmentProperties(false));
-			vaultEnvironmentRepository.findOne("application", "profile", "label");
+			vaultEnvironmentRepository.findOne(
+					new RequestContext.Builder().name("application").profiles("profile").label("label").build());
 		}).hasCauseInstanceOf(SSLHandshakeException.class);
 	}
 
@@ -71,7 +73,8 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 		VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
 				.build(withEnvironmentProperties(true));
 
-		Environment actual = vaultEnvironmentRepository.findOne("application", "profile", "label");
+		Environment actual = vaultEnvironmentRepository
+				.findOne(new RequestContext.Builder().name("application").profiles("profile").label("label").build());
 
 		assertThat(actual).isNotNull();
 	}
