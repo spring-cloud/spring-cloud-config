@@ -169,16 +169,11 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 				if (matcher.find()) {
 					String indexString = matcher.group(3);
 					int index = Integer.parseInt(indexString);
-					// method.addStatement(
-					// "$T[] factoryTypes =
-					// $T.getEnvironmentRepositoryFactoryTypeParams(beanFactory, $S)",
-					// Type.class, CompositeUtils.class, factoryName);
-					// method.addStatement("""
-					// Class<? extends EnvironmentRepositoryProperties> propertiesClass
-					// = (Class<? extends EnvironmentRepositoryProperties>)
-					// factoryTypes[1]""");
+					String environmentConfigurationPropertyName = String
+							.format("spring.cloud.config.server.composite[%d]", index);
 					method.addStatement("$T properties$L = binder.bindOrCreate($S, $T.class)",
-							EnvironmentRepositoryProperties.class, index, beanName, propertiesClass);
+							EnvironmentRepositoryProperties.class, index, environmentConfigurationPropertyName,
+							propertiesClass);
 					method.addStatement("properties$L.setOrder($L)", index, index + 1);
 					method.addStatement(
 							"$T propertiesDefinition$L = "
