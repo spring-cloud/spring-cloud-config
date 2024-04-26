@@ -19,7 +19,6 @@ package org.springframework.cloud.config.server.aot;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -98,14 +97,9 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 				BeanFactoryInitializationCode beanFactoryInitializationCode) {
 			GeneratedMethod environmentRepositoryPropertiesGeneratedMethod = beanFactoryInitializationCode.getMethods()
 					.add("registerCompositeEnvironmentRepositoryPropertiesBeanDefinitions",
-							method -> generateRegisterPropertyBeanDefinitionsMethod(method,
-									propertyBeanDefinitions.keySet()));
-			GeneratedMethod environmentRepositoriesGeneratedMethod = beanFactoryInitializationCode.getMethods().add(
-					"registerCompositeEnvironmentRepositoryBeanDefinitions",
-					method -> generateRegisterRepoBeanDefinitionsMethod(method, repoBeanDefinitions));
+							this::generateRegisterPropertyBeanDefinitionsMethod);
 			beanFactoryInitializationCode
 					.addInitializer(environmentRepositoryPropertiesGeneratedMethod.toMethodReference());
-			beanFactoryInitializationCode.addInitializer(environmentRepositoriesGeneratedMethod.toMethodReference());
 			generateRuntimeHints(generationContext.getRuntimeHints());
 		}
 
@@ -127,7 +121,7 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 
 		}
 
-		private void generateRegisterPropertyBeanDefinitionsMethod(MethodSpec.Builder method, Set<String> beanNames) {
+		private void generateRegisterPropertyBeanDefinitionsMethod(MethodSpec.Builder method) {
 			method.addJavadoc(
 					"Register the EnvironmentRepositoryProperties bean definitions for composite config data sources.");
 			method.addModifiers(Modifier.PUBLIC);
@@ -135,7 +129,7 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 			method.addParameter(Environment.class, "environment");
 			method.addStatement("$T binder = Binder.get(environment)", Binder.class);
 			Pattern findIndexPattern = Pattern.compile("(^.*)(-env-repo-properties)([0-9]+)$");
-			beanNames.forEach(beanName -> {
+			propertyBeanDefinitions.keySet().forEach(beanName -> {
 				Matcher matcher = findIndexPattern.matcher(beanName);
 				if (matcher.find()) {
 					String indexString = matcher.group(3);
@@ -151,27 +145,18 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 							EnvironmentRepositoryProperties.class, index);
 					method.addStatement("beanFactory.registerBeanDefinition($S, propertiesDefinition$L)", beanName,
 							index);
+					String repoBeanName = beanName.replace("repo-properties", "repo");
+					BeanDefinition registeredRepoBeanDefinition = repoBeanDefinitions.get(repoBeanName);
+					method.addStatement(
+							"""
+									$T repoBeanDefinition$L = $T.genericBeanDefinition($T.class).setFactoryMethodOnBean("build", $S)
+										.addConstructorArgValue(properties$L).getBeanDefinition()""",
+							AbstractBeanDefinition.class, index, BeanDefinitionBuilder.class,
+							EnvironmentRepository.class, registeredRepoBeanDefinition.getFactoryBeanName(), index);
+					method.addStatement("beanFactory.registerBeanDefinition($S, repoBeanDefinition$L)", repoBeanName,
+							index);
 				}
 			});
-		}
-
-		private void generateRegisterRepoBeanDefinitionsMethod(MethodSpec.Builder method,
-				Map<String, BeanDefinition> beanDefinitions) {
-			method.addJavadoc("Register the EnvironmentRepository bean definitions for composite config data sources.");
-			method.addModifiers(Modifier.PUBLIC);
-			method.addParameter(DefaultListableBeanFactory.class, "beanFactory");
-			beanDefinitions.keySet().forEach(beanName -> {
-				BeanDefinition registeredBeanDefinition = beanDefinitions.get(beanName);
-				method.addStatement(
-						"""
-								beanFactory.registerBeanDefinition(beanName, $T.genericBeanDefinition($T.class).setFactoryMethodOnBean("build", $L)
-									.addConstructorArgValue($L).getBeanDefinition())""",
-						BeanDefinitionBuilder.class, EnvironmentRepository.class,
-						registeredBeanDefinition.getFactoryBeanName(),
-						registeredBeanDefinition.getConstructorArgumentValues()
-								.getArgumentValue(0, EnvironmentRepositoryProperties.class).getValue());
-			});
-
 		}
 
 		// from Spring Framework BeanRegistrationsAotContribution
