@@ -54,11 +54,11 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 	Map<String, HttpClientBuilder> httpClientBuildersByUri = new LinkedHashMap<>();
 
 	@Override
-	public void addConfiguration(MultipleJGitEnvironmentProperties environmentProperties)
-			throws GeneralSecurityException {
-		addHttpClient(environmentProperties);
+	public void addConfiguration(MultipleJGitEnvironmentProperties environmentProperties,
+			List<HttpClient4BuilderCustomizer> customizers) throws GeneralSecurityException {
+		addHttpClient(environmentProperties, customizers);
 		for (JGitEnvironmentProperties repo : environmentProperties.getRepos().values()) {
-			addHttpClient(repo);
+			addHttpClient(repo, customizers);
 		}
 	}
 
@@ -81,9 +81,10 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 		}
 	}
 
-	private void addHttpClient(JGitEnvironmentProperties properties) throws GeneralSecurityException {
+	private void addHttpClient(JGitEnvironmentProperties properties, List<HttpClient4BuilderCustomizer> customizers)
+			throws GeneralSecurityException {
 		if (properties.getUri() != null && properties.getUri().startsWith("http")) {
-			this.httpClientBuildersByUri.put(properties.getUri(), HttpClient4Support.builder(properties));
+			this.httpClientBuildersByUri.put(properties.getUri(), HttpClient4Support.builder(properties, customizers));
 		}
 	}
 
