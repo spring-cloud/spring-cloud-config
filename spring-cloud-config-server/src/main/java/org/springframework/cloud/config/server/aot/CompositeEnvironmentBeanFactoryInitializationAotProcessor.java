@@ -16,22 +16,17 @@
 
 package org.springframework.cloud.config.server.aot;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.lang.model.element.Modifier;
 
 import org.springframework.aot.generate.GeneratedMethod;
 import org.springframework.aot.generate.GenerationContext;
-import org.springframework.aot.hint.MemberCategory;
-import org.springframework.aot.hint.ReflectionHints;
-import org.springframework.aot.hint.RuntimeHints;
-import org.springframework.aot.hint.TypeReference;
 import org.springframework.beans.factory.aot.BeanFactoryInitializationAotContribution;
 import org.springframework.beans.factory.aot.BeanFactoryInitializationAotProcessor;
 import org.springframework.beans.factory.aot.BeanFactoryInitializationCode;
@@ -43,11 +38,11 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RegisteredBean;
 import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.cloud.config.server.composite.CompositeUtils;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.javapoet.MethodSpec;
-import org.springframework.util.ClassUtils;
 
 /**
  * @author Olga Maciaszek-Sharma
@@ -88,10 +83,20 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 						&& registeredBean.getBeanName().contains("-env-repo");
 	}
 
-	private record CompositeEnvironmentBeanFactoryInitializationAotContribution(
-			Map<String, BeanDefinition> propertyBeanDefinitions,
-			Map<String, BeanDefinition> repoBeanDefinitions) implements BeanFactoryInitializationAotContribution {
+	private static final class CompositeEnvironmentBeanFactoryInitializationAotContribution
+			implements BeanFactoryInitializationAotContribution {
 
+		private final Map<String, BeanDefinition> propertyBeanDefinitions;
+
+		private final Map<String, BeanDefinition> repoBeanDefinitions;
+
+		private CompositeEnvironmentBeanFactoryInitializationAotContribution(
+				Map<String, BeanDefinition> propertyBeanDefinitions, Map<String, BeanDefinition> repoBeanDefinitions) {
+			this.propertyBeanDefinitions = propertyBeanDefinitions;
+			this.repoBeanDefinitions = repoBeanDefinitions;
+		}
+
+		@SuppressWarnings("NullableProblems")
 		@Override
 		public void applyTo(GenerationContext generationContext,
 				BeanFactoryInitializationCode beanFactoryInitializationCode) {
@@ -100,25 +105,6 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 							this::generateRegisterPropertyBeanDefinitionsMethod);
 			beanFactoryInitializationCode
 					.addInitializer(environmentRepositoryPropertiesGeneratedMethod.toMethodReference());
-			generateRuntimeHints(generationContext.getRuntimeHints());
-		}
-
-		private void generateRuntimeHints(RuntimeHints runtimeHints) {
-			ReflectionHints hints = runtimeHints.reflection();
-			Stream.concat(propertyBeanDefinitions.values().stream(), repoBeanDefinitions.values().stream())
-					.map(BeanDefinition::getBeanClassName).filter(Objects::nonNull).map(beanClassName -> {
-						try {
-							return Class.forName(beanClassName);
-						}
-						catch (ClassNotFoundException e) {
-							throw new RuntimeException("Class " + beanClassName + " could not be found", e);
-						}
-					}).forEach(beanClassName -> {
-						hints.registerType(TypeReference.of(beanClassName), MemberCategory.INTROSPECT_PUBLIC_METHODS,
-								MemberCategory.INTROSPECT_DECLARED_METHODS);
-						introspectPublicMethodsOnAllInterfaces(hints, beanClassName);
-					});
-
 		}
 
 		private void generateRegisterPropertyBeanDefinitionsMethod(MethodSpec.Builder method) {
@@ -131,47 +117,39 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 			Pattern findIndexPattern = Pattern.compile("(^.*)(-env-repo-properties)([0-9]+)$");
 			propertyBeanDefinitions.keySet().forEach(beanName -> {
 				Matcher matcher = findIndexPattern.matcher(beanName);
+				String repoBeanName = beanName.replace("repo-properties", "repo");
+				String factoryName = repoBeanDefinitions.get(repoBeanName).getFactoryBeanName();
 				if (matcher.find()) {
 					String indexString = matcher.group(3);
 					int index = Integer.parseInt(indexString);
-					method.addStatement("$T properties$L = binder.bindOrCreate($S, $T.class)",
-							EnvironmentRepositoryProperties.class, index, beanName,
-							EnvironmentRepositoryProperties.class);
+					method.addStatement(
+							"$T[] factoryTypes$L = $T.getEnvironmentRepositoryFactoryTypeParams(beanFactory, $S)",
+							Type.class, index, CompositeUtils.class, factoryName);
+					method.addStatement("""
+							Class<? extends EnvironmentRepositoryProperties> propertiesClass$L
+									= (Class<? extends EnvironmentRepositoryProperties>) factoryTypes$L[1]""", index,
+							index);
+					method.addStatement("$T properties$L = binder.bindOrCreate($S, propertiesClass$L)",
+							EnvironmentRepositoryProperties.class, index, beanName, index);
 					method.addStatement("properties$L.setOrder($L)", index, index + 1);
 					method.addStatement(
-							"$T propertiesDefinition$L = "
-									+ "$T.genericBeanDefinition($T.class, () -> properties$L).getBeanDefinition()",
+							"$T propertiesDefinition$L = $T.genericBeanDefinition($T.class, () -> properties$L).getBeanDefinition()",
 							AbstractBeanDefinition.class, index, BeanDefinitionBuilder.class,
 							EnvironmentRepositoryProperties.class, index);
 					method.addStatement("beanFactory.registerBeanDefinition($S, propertiesDefinition$L)", beanName,
 							index);
-					String repoBeanName = beanName.replace("repo-properties", "repo");
-					BeanDefinition registeredRepoBeanDefinition = repoBeanDefinitions.get(repoBeanName);
 					method.addStatement(
 							"""
 									$T repoBeanDefinition$L = $T.genericBeanDefinition($T.class).setFactoryMethodOnBean("build", $S)
 										.addConstructorArgValue(properties$L).getBeanDefinition()""",
 							AbstractBeanDefinition.class, index, BeanDefinitionBuilder.class,
-							EnvironmentRepository.class, registeredRepoBeanDefinition.getFactoryBeanName(), index);
+							EnvironmentRepository.class, factoryName, index);
 					method.addStatement("beanFactory.registerBeanDefinition($S, repoBeanDefinition$L)", repoBeanName,
 							index);
 				}
 			});
 		}
 
-		// from Spring Framework BeanRegistrationsAotContribution
-		private void introspectPublicMethodsOnAllInterfaces(ReflectionHints hints, Class<?> type) {
-			Class<?> currentClass = type;
-			while (currentClass != null && currentClass != Object.class) {
-				for (Class<?> interfaceType : currentClass.getInterfaces()) {
-					if (!ClassUtils.isJavaLanguageInterface(interfaceType)) {
-						hints.registerType(interfaceType, MemberCategory.INTROSPECT_PUBLIC_METHODS);
-						introspectPublicMethodsOnAllInterfaces(hints, interfaceType);
-					}
-				}
-				currentClass = currentClass.getSuperclass();
-			}
-		}
 	}
 
 }
