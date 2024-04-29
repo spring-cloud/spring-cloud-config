@@ -18,6 +18,8 @@ package org.springframework.cloud.config.server.support;
 
 import java.net.ProxySelector;
 import java.security.GeneralSecurityException;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -34,6 +36,7 @@ import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContextBuilder;
 
+import org.springframework.cloud.config.server.environment.HttpClient4BuilderCustomizer;
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.util.CollectionUtils;
 
@@ -48,6 +51,11 @@ public final class HttpClient4Support {
 
 	public static HttpClientBuilder builder(HttpEnvironmentRepositoryProperties environmentProperties)
 			throws GeneralSecurityException {
+		return builder(environmentProperties, Collections.EMPTY_LIST);
+	}
+
+	public static HttpClientBuilder builder(HttpEnvironmentRepositoryProperties environmentProperties,
+			List<HttpClient4BuilderCustomizer> customizers) throws GeneralSecurityException {
 		SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 		HttpClientBuilder httpClientBuilder = HttpClients.custom();
 
@@ -78,8 +86,10 @@ public final class HttpClient4Support {
 		httpClientBuilder.disableRedirectHandling();
 
 		int timeout = environmentProperties.getTimeout() * 1000;
-		return httpClientBuilder.setSSLContext(sslContextBuilder.build()).setDefaultRequestConfig(
+		httpClientBuilder.setSSLContext(sslContextBuilder.build()).setDefaultRequestConfig(
 				RequestConfig.custom().setSocketTimeout(timeout).setConnectTimeout(timeout).build());
+		customizers.forEach(customizer -> customizer.customize(httpClientBuilder));
+		return httpClientBuilder;
 	}
 
 	static class SchemeBasedRoutePlanner4 extends DefaultRoutePlanner {

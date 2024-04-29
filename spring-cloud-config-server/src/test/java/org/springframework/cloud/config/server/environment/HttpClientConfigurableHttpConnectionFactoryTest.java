@@ -31,6 +31,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class HttpClientConfigurableHttpConnectionFactoryTest {
 
@@ -67,6 +71,23 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 				.findFirst().get();
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+	}
+
+	@Test
+	public void customizeHttpClient() throws Exception {
+		String url = "http://localhost/test.git";
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(url);
+		HttpClient4BuilderCustomizer customizer = mock(HttpClient4BuilderCustomizer.class);
+		this.connectionFactory.addConfiguration(properties, List.of(customizer));
+
+		HttpConnection actualConnection = this.connectionFactory.create(new URL(url));
+
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
+				.findFirst().get();
+		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
+		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+		verify(customizer, times(1)).customize(any(HttpClientBuilder.class));
 	}
 
 	@Test
