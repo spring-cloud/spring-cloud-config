@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import io.micrometer.observation.ObservationRegistry;
@@ -42,6 +44,8 @@ public class MultipleJGitEnvironmentRepositoryFactory
 
 	private final GitCredentialsProviderFactory gitCredentialsProviderFactory;
 
+	private final List<HttpClient4BuilderCustomizer> customizers;
+
 	@Deprecated
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			TransportConfigCallbackFactory transportConfigCallbackFactory) {
@@ -61,11 +65,21 @@ public class MultipleJGitEnvironmentRepositoryFactory
 			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
 			TransportConfigCallbackFactory transportConfigCallbackFactory,
 			GitCredentialsProviderFactory gitCredentialsProviderFactory) {
+		this(environment, server, connectionFactory, transportConfigCallbackFactory, gitCredentialsProviderFactory,
+				Collections.EMPTY_LIST);
+	}
+
+	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
+			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
+			TransportConfigCallbackFactory transportConfigCallbackFactory,
+			GitCredentialsProviderFactory gitCredentialsProviderFactory,
+			List<HttpClient4BuilderCustomizer> customizers) {
 		this.environment = environment;
 		this.server = server;
 		this.connectionFactory = connectionFactory;
 		this.transportConfigCallbackFactory = transportConfigCallbackFactory;
 		this.gitCredentialsProviderFactory = gitCredentialsProviderFactory;
+		this.customizers = customizers;
 	}
 
 	@Override
@@ -73,7 +87,7 @@ public class MultipleJGitEnvironmentRepositoryFactory
 			throws Exception {
 		if (this.connectionFactory.isPresent()) {
 			HttpTransport.setConnectionFactory(this.connectionFactory.get());
-			this.connectionFactory.get().addConfiguration(environmentProperties);
+			this.connectionFactory.get().addConfiguration(environmentProperties, this.customizers);
 		}
 
 		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,

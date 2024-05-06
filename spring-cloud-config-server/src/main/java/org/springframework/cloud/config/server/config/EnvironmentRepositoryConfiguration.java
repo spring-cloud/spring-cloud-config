@@ -62,6 +62,7 @@ import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.HttpClient4BuilderCustomizer;
 import org.springframework.cloud.config.server.environment.HttpClientConfigurableHttpConnectionFactory;
 import org.springframework.cloud.config.server.environment.HttpClientVaultRestTemplateFactory;
 import org.springframework.cloud.config.server.environment.HttpRequestConfigTokenProvider;
@@ -184,11 +185,12 @@ public class EnvironmentRepositoryConfiguration {
 				Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
 				Optional<TransportConfigCallback> customTransportConfigCallback,
 				Optional<GoogleCloudSourceSupport> googleCloudSourceSupport,
-				GitCredentialsProviderFactory gitCredentialsProviderFactory) {
+				GitCredentialsProviderFactory gitCredentialsProviderFactory,
+				List<HttpClient4BuilderCustomizer> customizers) {
 			final TransportConfigCallbackFactory transportConfigCallbackFactory = new TransportConfigCallbackFactory(
 					customTransportConfigCallback.orElse(null), googleCloudSourceSupport.orElse(null));
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, jgitHttpConnectionFactory,
-					transportConfigCallbackFactory, gitCredentialsProviderFactory);
+					transportConfigCallbackFactory, gitCredentialsProviderFactory, customizers);
 		}
 
 		@Bean
