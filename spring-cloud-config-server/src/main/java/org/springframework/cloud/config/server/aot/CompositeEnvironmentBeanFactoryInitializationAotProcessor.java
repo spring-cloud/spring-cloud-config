@@ -20,12 +20,10 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.lang.model.element.Modifier;
 
@@ -49,6 +47,7 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.config.server.composite.CompositeEnvironmentBeanFactoryPostProcessor;
 import org.springframework.cloud.config.server.composite.CompositeUtils;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.EnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.javapoet.MethodSpec;
@@ -70,8 +69,8 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 				"-env-repo-properties", EnvironmentRepositoryProperties.class);
 		Map<String, BeanDefinition> repoBeanDefinitions = getCompositeEnvironmentBeanDefinitions(beanFactory,
 				"-env-repo", EnvironmentRepository.class);
-		return new org.springframework.cloud.config.server.aot.CompositeEnvironmentBeanFactoryInitializationAotProcessor.CompositeEnvironmentBeanFactoryInitializationAotContribution(
-				propertyBeanDefinitions, repoBeanDefinitions, beanFactory);
+		return new CompositeEnvironmentBeanFactoryInitializationAotContribution(propertyBeanDefinitions,
+				repoBeanDefinitions, beanFactory);
 	}
 
 	private static Map<String, BeanDefinition> getCompositeEnvironmentBeanDefinitions(
@@ -106,7 +105,7 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 
 		private final ConfigurableListableBeanFactory beanFactory;
 
-		private final Set<Class<? extends EnvironmentRepositoryProperties>> propertiesClasses = new HashSet<>();
+		private final Set<Class<?>> hintClasses = new HashSet<>();
 
 		private CompositeEnvironmentBeanFactoryInitializationAotContribution(
 				Map<String, BeanDefinition> propertyBeanDefinitions, Map<String, BeanDefinition> repoBeanDefinitions,
@@ -121,7 +120,7 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 				BeanFactoryInitializationCode beanFactoryInitializationCode) {
 			GeneratedMethod environmentRepositoryPropertiesGeneratedMethod = beanFactoryInitializationCode.getMethods()
 					.add("registerCompositeEnvironmentRepositoryPropertiesBeanDefinitions",
-							this::generateRegisterPropertyBeanDefinitionsMethod);
+							this::generateRegisterBeanDefinitionsMethod);
 			beanFactoryInitializationCode
 					.addInitializer(environmentRepositoryPropertiesGeneratedMethod.toMethodReference());
 			generateRuntimeHints(generationContext.getRuntimeHints());
@@ -129,28 +128,15 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 
 		private void generateRuntimeHints(RuntimeHints runtimeHints) {
 			ReflectionHints hints = runtimeHints.reflection();
-			Stream.concat(propertyBeanDefinitions.values().stream(), repoBeanDefinitions.values().stream())
-					.map(BeanDefinition::getBeanClassName).filter(Objects::nonNull).map(beanClassName -> {
-						try {
-							return Class.forName(beanClassName);
-						}
-						catch (ClassNotFoundException e) {
-							throw new RuntimeException("Class " + beanClassName + " could not be found", e);
-						}
-					}).forEach(beanClassName -> {
-						hints.registerType(TypeReference.of(beanClassName), MemberCategory.INTROSPECT_PUBLIC_METHODS,
-								MemberCategory.INTROSPECT_DECLARED_METHODS);
-						introspectPublicMethodsOnAllInterfaces(hints, beanClassName);
-					});
-			for (Class<? extends EnvironmentRepositoryProperties> propertiesClass : propertiesClasses) {
-				hints.registerType(TypeReference.of(propertiesClass), MemberCategory.INTROSPECT_PUBLIC_METHODS,
+			for (Class<?> clazz : hintClasses) {
+				hints.registerType(TypeReference.of(clazz), MemberCategory.INVOKE_PUBLIC_METHODS,
 						MemberCategory.INTROSPECT_DECLARED_METHODS);
-				introspectPublicMethodsOnAllInterfaces(hints, propertiesClass);
+				introspectPublicMethodsOnAllInterfaces(hints, clazz);
 			}
 		}
 
 		@SuppressWarnings("unchecked")
-		private void generateRegisterPropertyBeanDefinitionsMethod(MethodSpec.Builder method) {
+		private void generateRegisterBeanDefinitionsMethod(MethodSpec.Builder method) {
 			method.addJavadoc(
 					"Register the EnvironmentRepositoryProperties bean definitions for composite config data sources.");
 			method.addModifiers(Modifier.PUBLIC);
@@ -160,13 +146,16 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 			Pattern findIndexPattern = Pattern.compile("(^.*)(-env-repo-properties)([0-9]+)$");
 			propertyBeanDefinitions.keySet().forEach(beanName -> {
 				Matcher matcher = findIndexPattern.matcher(beanName);
-				String repoBeanName = beanName.replace("repo-properties", "repo");
-				String factoryName = repoBeanDefinitions.get(repoBeanName).getFactoryBeanName();
-				Type propertyType = CompositeUtils.getEnvironmentRepositoryFactoryTypeParams(beanFactory,
-						factoryName)[1];
-				Class<? extends EnvironmentRepositoryProperties> propertiesClass = (Class<? extends EnvironmentRepositoryProperties>) propertyType;
-				propertiesClasses.add(propertiesClass);
 				if (matcher.find()) {
+					String repoBeanName = beanName.replace("repo-properties", "repo");
+					String factoryName = repoBeanDefinitions.get(repoBeanName).getFactoryBeanName();
+					Class<? extends EnvironmentRepositoryFactory<? extends EnvironmentRepository, ? extends EnvironmentRepositoryProperties>> factoryClass = (Class<? extends EnvironmentRepositoryFactory<? extends EnvironmentRepository, ? extends EnvironmentRepositoryProperties>>) CompositeUtils
+							.getFactoryClass(beanFactory, factoryName);
+					Type[] environmentRepositoryFactoryTypeParams = CompositeUtils
+							.getEnvironmentRepositoryFactoryTypeParams(factoryClass);
+					Class<? extends EnvironmentRepositoryProperties> repoClass = (Class<? extends EnvironmentRepositoryProperties>) environmentRepositoryFactoryTypeParams[0];
+					Class<? extends EnvironmentRepositoryProperties> propertiesClass = (Class<? extends EnvironmentRepositoryProperties>) environmentRepositoryFactoryTypeParams[1];
+					hintClasses.addAll(Set.of(repoClass, propertiesClass, factoryClass));
 					String indexString = matcher.group(3);
 					int index = Integer.parseInt(indexString);
 					String environmentConfigurationPropertyName = String

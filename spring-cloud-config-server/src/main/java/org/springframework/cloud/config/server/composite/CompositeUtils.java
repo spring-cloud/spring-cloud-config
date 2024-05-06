@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,12 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.config.server.environment.EnvironmentRepositoryFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.MethodMetadata;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Dylan Roberts
+ * @author Olga Maciaszek-Sharma
  */
 public final class CompositeUtils {
 
@@ -68,7 +70,7 @@ public final class CompositeUtils {
 	}
 
 	/**
-	 * Given a Factory Name return the generic type parameters of the factory (The actual
+	 * Given a Factory Name, return the generic type parameters of the factory (The actual
 	 * repository class, and its properties class).
 	 * @param beanFactory Spring Bean Factory
 	 * @param factoryName name of the factory
@@ -76,14 +78,17 @@ public final class CompositeUtils {
 	 */
 	public static Type[] getEnvironmentRepositoryFactoryTypeParams(ConfigurableListableBeanFactory beanFactory,
 			String factoryName) {
-		MethodMetadata methodMetadata = (MethodMetadata) beanFactory.getBeanDefinition(factoryName).getSource();
-		Class<?> factoryClass = null;
-		try {
-			factoryClass = Class.forName(methodMetadata.getReturnTypeName());
-		}
-		catch (ClassNotFoundException e) {
-			throw new IllegalStateException(e);
-		}
+		Class<?> factoryClass = getFactoryClass(beanFactory, factoryName);
+		return getEnvironmentRepositoryFactoryTypeParams(factoryClass);
+	}
+
+	/**
+	 * Given a Factory {@link Class}, return the generic type parameters of the factory
+	 * (The actual repository class, and its properties class).
+	 * @param factoryClass Factory {@link Class}
+	 * @return generic type params of the factory
+	 */
+	public static Type[] getEnvironmentRepositoryFactoryTypeParams(Class<?> factoryClass) {
 		Optional<AnnotatedType> annotatedFactoryType = Arrays.stream(factoryClass.getAnnotatedInterfaces())
 				.filter(i -> {
 					ParameterizedType parameterizedType = (ParameterizedType) i.getType();
@@ -92,6 +97,25 @@ public final class CompositeUtils {
 		ParameterizedType factoryParameterizedType = (ParameterizedType) annotatedFactoryType
 				.orElse(factoryClass.getAnnotatedSuperclass()).getType();
 		return factoryParameterizedType.getActualTypeArguments();
+	}
+
+	/**
+	 * Given a Factory Name, return the Factory {@link Class}.
+	 * @param beanFactory Spring Bean Factory
+	 * @param factoryName name of the factory
+	 * @return factory {@link Class}
+	 */
+	public static Class<?> getFactoryClass(ConfigurableListableBeanFactory beanFactory, String factoryName) {
+		MethodMetadata methodMetadata = (MethodMetadata) beanFactory.getBeanDefinition(factoryName).getSource();
+		Assert.notNull(methodMetadata, "Factory MethodMetadata cannot be null.");
+		Class<?> factoryClass;
+		try {
+			factoryClass = Class.forName(methodMetadata.getReturnTypeName());
+		}
+		catch (ClassNotFoundException e) {
+			throw new IllegalStateException(e);
+		}
+		return factoryClass;
 	}
 
 	static class CompositeConfig {
