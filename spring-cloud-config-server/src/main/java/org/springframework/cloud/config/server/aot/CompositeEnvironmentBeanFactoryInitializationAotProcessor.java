@@ -55,8 +55,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 /**
- * A {@link BeanFactoryInitializationAotProcessor} implementation that generates code
- * for registering composite environment repository beans.
+ * A {@link BeanFactoryInitializationAotProcessor} implementation that generates code for
+ * registering composite environment repository beans.
  *
  * @author Olga Maciaszek-Sharma
  * @since 4.1.2

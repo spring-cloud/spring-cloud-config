@@ -50,53 +50,48 @@ class CompositeEnvironmentBeanFactoryInitializationAotProcessorTests {
 
 	@Test
 	void shouldCreateCompositeEnvironmentBeansRegistrationContribution() {
-		Set<Class<?>> hintClasses = Set.of(MultipleJGitEnvironmentRepository.class,
-			SvnKitEnvironmentRepository.class, SvnKitEnvironmentProperties.class,
-			MultipleJGitEnvironmentRepositoryFactory.class, SvnEnvironmentRepositoryFactory.class,
-			MultipleJGitEnvironmentProperties.class);
+		Set<Class<?>> hintClasses = Set.of(MultipleJGitEnvironmentRepository.class, SvnKitEnvironmentRepository.class,
+				SvnKitEnvironmentProperties.class, MultipleJGitEnvironmentRepositoryFactory.class,
+				SvnEnvironmentRepositoryFactory.class, MultipleJGitEnvironmentProperties.class);
 		new WebApplicationContextRunner(AnnotationConfigServletWebApplicationContext::new)
-			.withUserConfiguration(TestConfigServerApplication.class)
-			.withPropertyValues("spring.cloud.refresh.enabled=false",
-				"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
-				"spring.cloud.config.server.composite[0].type:git",
-				"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
-				"spring.cloud.config.server.composite[1].type:svn", "spring.profiles.active:test,composite")
-			.prepare(context -> {
-				TestGenerationContext generationContext = new TestGenerationContext(TestTarget.class);
-				ClassName className = new ApplicationContextAotGenerator().processAheadOfTime(
-					(GenericApplicationContext) context.getSourceApplicationContext(), generationContext);
-				generationContext.writeGeneratedContent();
-				Optional<String> source = getGeneratedSource(generationContext, className.simpleName());
-				assertThat(source).isNotEmpty();
-				assertThat(source.get()).contains("beanFactory.registerBeanDefinition(\"git-env-repo-properties0\", propertiesDefinition0);",
-					"beanFactory.registerBeanDefinition(\"git-env-repo0\", repoBeanDefinition0);",
-					"beanFactory.registerBeanDefinition(\"svn-env-repo-properties1\", propertiesDefinition1);",
-					"beanFactory.registerBeanDefinition(\"svn-env-repo1\", repoBeanDefinition1);");
-				ReflectionHints hints = generationContext.getRuntimeHints().reflection();
-				hintClasses.forEach(clazz -> assertThat(hints.getTypeHint(clazz)).isNotNull());
-			});
+				.withUserConfiguration(TestConfigServerApplication.class)
+				.withPropertyValues("spring.cloud.refresh.enabled=false",
+						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+						"spring.cloud.config.server.composite[0].type:git",
+						"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
+						"spring.cloud.config.server.composite[1].type:svn", "spring.profiles.active:test,composite")
+				.prepare(context -> {
+					TestGenerationContext generationContext = new TestGenerationContext(TestTarget.class);
+					ClassName className = new ApplicationContextAotGenerator().processAheadOfTime(
+							(GenericApplicationContext) context.getSourceApplicationContext(), generationContext);
+					generationContext.writeGeneratedContent();
+					Optional<String> source = getGeneratedSource(generationContext, className.simpleName());
+					assertThat(source).isNotEmpty();
+					assertThat(source.get()).contains(
+							"beanFactory.registerBeanDefinition(\"git-env-repo-properties0\", propertiesDefinition0);",
+							"beanFactory.registerBeanDefinition(\"git-env-repo0\", repoBeanDefinition0);",
+							"beanFactory.registerBeanDefinition(\"svn-env-repo-properties1\", propertiesDefinition1);",
+							"beanFactory.registerBeanDefinition(\"svn-env-repo1\", repoBeanDefinition1);");
+					ReflectionHints hints = generationContext.getRuntimeHints().reflection();
+					hintClasses.forEach(clazz -> assertThat(hints.getTypeHint(clazz)).isNotNull());
+				});
 	}
 
-	private static Optional<String> getGeneratedSource(TestGenerationContext generationContext, String simpleClassName) {
-		return generationContext.
-			getGeneratedFiles()
-			.getGeneratedFiles(GeneratedFiles.Kind.SOURCE)
-			.values()
-			.stream()
-			.map(inputStreamSource -> {
-				try {
-					return new String(inputStreamSource.getInputStream()
-						.readAllBytes(), Charset.defaultCharset());
-				}
-				catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			})
-			.filter(source ->
-				source.contains(simpleClassName))
-			.findAny();
+	private static Optional<String> getGeneratedSource(TestGenerationContext generationContext,
+			String simpleClassName) {
+		return generationContext.getGeneratedFiles().getGeneratedFiles(GeneratedFiles.Kind.SOURCE).values().stream()
+				.map(inputStreamSource -> {
+					try {
+						return new String(inputStreamSource.getInputStream().readAllBytes(), Charset.defaultCharset());
+					}
+					catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}).filter(source -> source.contains(simpleClassName)).findAny();
 	}
 
-	static class TestTarget { }
+	static class TestTarget {
+
+	}
 
 }
