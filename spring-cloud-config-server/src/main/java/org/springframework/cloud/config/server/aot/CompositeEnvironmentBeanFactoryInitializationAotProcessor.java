@@ -55,7 +55,11 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 /**
+ * A {@link BeanFactoryInitializationAotProcessor} implementation that generates code
+ * for registering composite environment repository beans.
+ *
  * @author Olga Maciaszek-Sharma
+ * @since 4.1.2
  */
 public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 		implements BeanFactoryInitializationAotProcessor, BeanRegistrationExcludeFilter {
@@ -138,7 +142,7 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 		@SuppressWarnings("unchecked")
 		private void generateRegisterBeanDefinitionsMethod(MethodSpec.Builder method) {
 			method.addJavadoc(
-					"Register the EnvironmentRepositoryProperties bean definitions for composite config data sources.");
+					"Register composite environment repository bean definitions for composite config data sources.");
 			method.addModifiers(Modifier.PUBLIC);
 			method.addParameter(DefaultListableBeanFactory.class, "beanFactory");
 			method.addParameter(Environment.class, "environment");
