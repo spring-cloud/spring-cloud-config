@@ -165,7 +165,7 @@ Spring Cloud Config Server supports decrypting properties from Vault by utilizin
 
 === Configuration Steps
 
-All configuration settings for integrating with Vault should be placed in your `application.yml`. Below are the specific configurations required to activate the Vault profile, connect to your Vault server, and format properties using the `\{vault}` prefix.
+All configuration settings for integrating with Vault should be placed in your `application.yml` or `application.properties`. Below are the specific configurations required to activate the Vault profile, connect to your Vault server, and format properties using the `\{vault}` prefix.
 
 ==== Enable Vault Profile
 
