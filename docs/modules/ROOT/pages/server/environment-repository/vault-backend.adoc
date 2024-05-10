@@ -158,3 +158,63 @@ Properties written to `secret/application` are available to <<_vault_server,all 
 An application with the name, `myApp`, would have any properties written to `secret/myApp` and `secret/application` available to it.
 When `myApp` has the `dev` profile enabled, properties written to all of the above paths would be available to it, with properties in the first path in the list taking priority over the others.
 
+[[decrypting-vault-secrets]]
+== Decrypting Vault Secrets in Property Sources
+
+Spring Cloud Config Server supports decrypting properties from Vault by utilizing a special placeholder prefix `\{vault}`. This feature allows for dynamic resolution of sensitive configuration properties directly from Vault at runtime.
+
+=== Configuration Steps
+
+All configuration settings for integrating with Vault should be placed in your `application.yml` or `application.properties`. Below are the specific configurations required to activate the Vault profile, connect to your Vault server, and format properties using the `\{vault}` prefix.
+
+==== Enable Vault Profile
+
+Activate the Vault profile for your Spring Cloud Config Server:
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: vault
+----
+
+==== Vault Configuration
+
+Set up the connection to your Vault server with the necessary authentication details:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        vault:
+          host: vault.example.com
+          port: 8200
+          scheme: https
+          backend: secret
+          defaultKey: application
+          kvVersion: 2
+          authentication: TOKEN
+          token: ${VAULT_TOKEN}
+          skipSslValidation: true
+----
+
+These settings specify the Vault server address, authentication method, and the token required to access Vault.
+
+==== Property Formatting
+
+Define properties with the `\{vault}` prefix to specify the Vault path and key for retrieving secrets:
+
+[source,yaml]
+----
+some:
+  sensitive:
+    value: '{vault}:path/to/secret#key'
+----
+
+This format directly maps to the location in Vault where the secret is stored (`path/to/secret`) and the specific secret key (`key`) to be retrieved.
+
+=== Error Handling
+
+If the Config Server encounters any issues during the decryption process, such as incorrect paths, access issues, or missing keys, the affected property will be prefixed with `invalid.` and its value will be set to `<n/a>`. This approach is similar to the handling of properties prefixed with `\{cipher}`, but it is specifically tailored for integration with Vault, providing clear feedback when decryption fails.
