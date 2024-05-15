@@ -2,7 +2,7 @@
 =  AOT and Native Image Support
 :page-section-summary-toc: 1
 
-Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. As of `4.1.0` it also supports GraalVM native images, however it requires the user to add some workarounds for known GraalVM issues, as described below.
+Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. As of `4.1.0` it also supports GraalVM native images, as long as GraalVM 21 or higher is used, however it requires the user to add some workarounds for known GraalVM issues, as described below.
 
 ====
 

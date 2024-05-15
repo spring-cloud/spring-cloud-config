@@ -187,6 +187,7 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 			});
 		}
 
+		// TODO: switch to reflectionHints.registerForInterfaces(...) after upgrading to Framework 6.2.0
 		// from Spring Framework BeanRegistrationsAotContribution
 		private void introspectPublicMethodsOnAllInterfaces(ReflectionHints hints, Class<?> type) {
 			Class<?> currentClass = type;
