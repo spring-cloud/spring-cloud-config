@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.encryption;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +34,6 @@ import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.rsa.crypto.RsaKeyHolder;
 import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
-import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -194,7 +194,7 @@ public class EncryptionController {
 						}
 						catch (IllegalArgumentException e) {
 							try {
-								Base64Utils.decode(candidate.getBytes());
+								Base64.getDecoder().decode(candidate.getBytes());
 								return candidate;
 							}
 							catch (IllegalArgumentException ex) {
