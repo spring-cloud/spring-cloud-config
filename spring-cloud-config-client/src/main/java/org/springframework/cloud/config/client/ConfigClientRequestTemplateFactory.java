@@ -19,6 +19,7 @@ package org.springframework.cloud.config.client;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +44,6 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.util.Base64Utils;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
@@ -137,7 +137,7 @@ public class ConfigClientRequestTemplateFactory {
 		}
 
 		if (password != null) {
-			byte[] token = Base64Utils.encode((username + ":" + password).getBytes());
+			byte[] token = Base64.getEncoder().encode((username + ":" + password).getBytes());
 			httpHeaders.add("Authorization", "Basic " + new String(token));
 		}
 		else if (authorization != null) {
