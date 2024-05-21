@@ -21,6 +21,8 @@ Configure your application's `application.properties` or `application.yml` to po
 [source,yaml]
 ----
 spring:
+  profiles:
+    active: mongodb
   data:
     mongodb:
       database: your-database-name
