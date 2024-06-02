@@ -118,7 +118,7 @@ public class GitCredentialsProviderFactory {
 
 	/**
 	 * Check to see if the AWS Authentication API is available.
-	 * @return true if the com.amazonaws.auth.DefaultAWSCredentialsProviderChain is
+	 * @return true if the software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain is
 	 * present, false otherwise.
 	 */
 	private boolean awsAvailable() {
