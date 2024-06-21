@@ -25,5 +25,5 @@ IntelliJ_Spring_Boot_Java_Conventions.xml
 node
 node_modules
 build
-package.json
+/package.json
 package-lock.json
