@@ -55,6 +55,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.springframework.cloud.config.client.ConfigClientProperties.DEFAULT_PROFILE;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 
@@ -66,6 +67,8 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 	public static final String CONFIG_CLIENT_PROPERTYSOURCE_NAME = "configClient";
 
 	private static final EnumSet<Option> ALL_OPTIONS = EnumSet.allOf(Option.class);
+
+	private static final String OVERRIDES_NAME = "configserver:overrides";
 
 	protected final Log logger;
 
@@ -168,7 +171,13 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 								// - is the default profile-separator for property sources
 								// TODO This is error prone logic see
 								// https://github.com/spring-cloud/spring-cloud-config/issues/2291
-								if (propertySourceName.matches(".*[-,]" + profile + ".*")) {
+								// When we see the overrides property source name we
+								// should always prioritize those
+								// properties over everything else, even profile specific
+								// property sources so also
+								// label this property source profile specific.
+								if (OVERRIDES_NAME.equals(propertySourceName) || (!DEFAULT_PROFILE.equals(profile)
+										&& propertySourceName.matches(".*[-,]" + profile + "\\b.*"))) {
 									// // TODO: switch to Options.with() when implemented
 									options.add(Option.PROFILE_SPECIFIC);
 								}
