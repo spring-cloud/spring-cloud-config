@@ -506,6 +506,70 @@ public class ConfigServerConfigDataLoaderTests {
 
 	}
 
+	@Test
+	void testProfileSpecificPropertySources() {
+		PropertySource p1 = new PropertySource("overrides", Collections.singletonMap("foo", "bar"));
+		PropertySource p2 = new PropertySource("classpath:/test-default/config-client/application.yaml",
+				Collections.singletonMap("foo", "baroverride"));
+		PropertySource p3 = new PropertySource(
+				"git@github.com:demo/support-configuration-repo.git/Config resource 'file [/var/folders/k3/zv8hzdm17vv69j485fv3cf9r0000gp/T/config-repo-14772121892716396795/commons/application.properties' via location 'commons/' (document #0)",
+				Collections.singletonMap("hello", "world"));
+		PropertySource p4 = new PropertySource("aws:secrets:/secret/application-name_profile",
+				Collections.singletonMap("hello", "world"));
+		Map<String, Object> activatesOnProfileCamelCase = new HashMap<>();
+		activatesOnProfileCamelCase.put("spring.config.activate.onProfile", "foo");
+		PropertySource p5 = new PropertySource(
+				"git@github.com:demo/support-configuration-repo.git/Config resource 'file [/var/folders/k3/zv8hzdm17vv69j485fv3cf9r0000gp/T/config-repo-14772121892716396795/commons/application.properties' via location 'commons/' (document #1)",
+				activatesOnProfileCamelCase);
+		Map<String, Object> activatesOnProfile = new HashMap<>();
+		activatesOnProfile.put("spring.config.activate.on-profile", "foo");
+		PropertySource p6 = new PropertySource(
+				"ssh://git@stash.int.openbet.com:7999/dbs/environments.git/Config resource 'file [/tmp/config-repo-16512912790018624282/platform/pinnacle-def.yaml' via location 'platform/' (document#0)",
+				activatesOnProfile);
+		ConfigData configData = setupConfigServerConfigDataLoader(Arrays.asList(p6, p5, p4, p3, p2, p1),
+				"application-slash", "def");
+		assertThat(configData.getPropertySources()).hasSize(7);
+		assertThat(configData.getOptions(configData.getPropertySources().get(0))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(1))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
+		assertThat(configData.getOptions(configData.getPropertySources().get(2))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(3))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(4))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(5))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(6))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
+	}
+
+	@Test
+	void testProfileSpecificPropertySourcesWithDefaultProfile() {
+		PropertySource p1 = new PropertySource("overrides", Collections.singletonMap("foo", "bar"));
+		PropertySource p2 = new PropertySource("classpath:/test-default/config-client/application.yaml",
+				Collections.singletonMap("foo", "baroverride"));
+		PropertySource p3 = new PropertySource(
+				"git@github.com:demo/support-configuration-repo.git/Config resource 'file [/var/folders/k3/zv8hzdm17vv69j485fv3cf9r0000gp/T/config-repo-14772121892716396795/commons/application.properties' via location 'commons/' (document #0)",
+				Collections.singletonMap("hello", "world"));
+		PropertySource p4 = new PropertySource("aws:secrets:/secret/application-name_profile",
+				Collections.singletonMap("hello", "world"));
+		ConfigData configData = setupConfigServerConfigDataLoader(Arrays.asList(p4, p3, p2, p1), "application-slash",
+				"default");
+		assertThat(configData.getPropertySources()).hasSize(5);
+		assertThat(configData.getOptions(configData.getPropertySources().get(0))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(1))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
+		assertThat(configData.getOptions(configData.getPropertySources().get(2))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(3))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(4))
+				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+	}
+
 	private ConfigData setupConfigServerConfigDataLoader(List<PropertySource> propertySources, String applicationName,
 			String... profileList) {
 		RestTemplate rest = mock(RestTemplate.class);
