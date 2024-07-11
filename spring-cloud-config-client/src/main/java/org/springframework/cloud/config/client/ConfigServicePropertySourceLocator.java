@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -260,6 +261,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		ResponseEntity<Environment> response = null;
 		List<MediaType> acceptHeader = Collections.singletonList(MediaType.parseMediaType(properties.getMediaType()));
+		List<Charset> acceptCharsetHeader = Collections.singletonList(properties.getCharset());
 
 		for (int i = 0; i < noOfUrls; i++) {
 			Credentials credentials = properties.getCredentials(i);
@@ -272,6 +274,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			try {
 				HttpHeaders headers = new HttpHeaders();
 				headers.setAccept(acceptHeader);
+				headers.setAcceptCharset(acceptCharsetHeader);
 				requestTemplateFactory.addAuthorizationToken(headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);

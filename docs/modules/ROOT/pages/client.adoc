@@ -155,6 +155,19 @@ If you want to configure timeout thresholds:
 * Read timeouts can be configured by using the property `spring.cloud.config.request-read-timeout`.
 * Connection timeouts can be configured by using the property `spring.cloud.config.request-connect-timeout`.
 
+[[configuring-charsets]]
+== Configuring Charset
+
+If you want to configure a specific charset the resources should be delivered by the server, you need to apply it via charset.
+----
+spring:
+  cloud:
+    config:
+      charset: UTF-8
+----
+
+The charset configuration property is defined as `java.nio.charset.Charset`
+
 [[security]]
 == Security
 
