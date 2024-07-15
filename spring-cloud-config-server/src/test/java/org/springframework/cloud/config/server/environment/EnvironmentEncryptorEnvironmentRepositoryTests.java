@@ -29,6 +29,7 @@ import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -59,9 +60,11 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master", false).getPropertySources().get(0).getSource()
-				.toString()).isEqualTo("{foo=bar}");
+		when(this.repository.findOne("foo", "bar", "master", false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		assertThat(this.controller
+				.findOne("foo", "bar", "master", false, new RequestContext.Builder().forceRefresh(false).build())
+				.getPropertySources().get(0).getSource().toString()).isEqualTo("{foo=bar}");
 	}
 
 	@Test
@@ -70,9 +73,11 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("bar", "foo");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master", false).getPropertySources().get(0).getSource()
-				.toString()).isEqualTo("{foo=${bar}}");
+		when(this.repository.findOne("foo", "bar", "master", false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		assertThat(this.controller
+				.findOne("foo", "bar", "master", false, new RequestContext.Builder().forceRefresh(false).build())
+				.getPropertySources().get(0).getSource().toString()).isEqualTo("{foo=${bar}}");
 	}
 
 }

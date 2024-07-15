@@ -36,6 +36,7 @@ import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepos
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -80,25 +81,28 @@ public class GenericResourceRepositoryTests {
 
 	@Test
 	public void locateResource() {
-		assertThat(this.repository.findOne("blah", "default", "master", "foo.properties")).isNotNull();
+		assertThat(this.repository.findOne("blah", "default", "master", "foo.properties",
+				new RequestContext.Builder().forceRefresh(false).build())).isNotNull();
 	}
 
 	@Test
 	public void locateProfiledResource() {
-		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt")).isNotNull();
+		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt",
+				new RequestContext.Builder().forceRefresh(false).build())).isNotNull();
 	}
 
 	@Test
 	public void locateProfiledResourceWithPlaceholder() {
 		this.nativeRepository.setSearchLocations("classpath:/test/{profile}");
-		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt")).isNotNull();
+		assertThat(this.repository.findOne("blah", "local", "master", "foo.txt",
+				new RequestContext.Builder().forceRefresh(false).build())).isNotNull();
 	}
 
 	@Test
 	public void locateMissingResource() {
 		Assertions
-				.assertThatThrownBy(
-						() -> assertThat(this.repository.findOne("blah", "default", "master", "foo.txt")).isNotNull())
+				.assertThatThrownBy(() -> assertThat(this.repository.findOne("blah", "default", "master", "foo.txt",
+						new RequestContext.Builder().forceRefresh(false).build())).isNotNull())
 				.isInstanceOf(NoSuchResourceException.class);
 	}
 
@@ -106,7 +110,8 @@ public class GenericResourceRepositoryTests {
 	public void invalidPath(CapturedOutput capturedOutput) {
 		Assertions.assertThatThrownBy(() -> {
 			this.nativeRepository.setSearchLocations("file:./src/test/resources/test/{profile}");
-			this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql");
+			this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql",
+					new RequestContext.Builder().forceRefresh(false).build());
 		}).isInstanceOf(NoSuchResourceException.class);
 		Assertions.assertThat(capturedOutput.getAll())
 				.contains("Path contains \"../\" after call to StringUtils#cleanPath");
@@ -134,7 +139,8 @@ public class GenericResourceRepositoryTests {
 			file = file.replaceFirst("\\/", "%2f");
 			file += "/src/test/resources/ssh/key";
 			this.nativeRepository.setSearchLocations("file:./");
-			this.repository.findOne("blah", "local", "master", file);
+			this.repository.findOne("blah", "local", "master", file,
+					new RequestContext.Builder().forceRefresh(false).build());
 		}).isInstanceOf(NoSuchResourceException.class);
 		Assertions.assertThat(capturedOutput.getAll()).contains("is neither under the current location");
 	}
@@ -142,7 +148,8 @@ public class GenericResourceRepositoryTests {
 	private void testInvalidPath(String label, CapturedOutput capturedOutput) {
 		Assertions.assertThatThrownBy(() -> {
 			this.nativeRepository.setSearchLocations("file:./src/test/resources/test/local");
-			this.repository.findOne("blah", "local", label, "foo.properties");
+			this.repository.findOne("blah", "local", label, "foo.properties",
+					new RequestContext.Builder().forceRefresh(false).build());
 		}).isInstanceOf(NoSuchResourceException.class);
 		Assertions.assertThat(capturedOutput.getAll()).contains("Location contains \"..\"");
 	}
@@ -185,7 +192,8 @@ public class GenericResourceRepositoryTests {
 			}
 		});
 
-		Resource resource = genericResourceRepository.findOne("app", "default", "main", "data.json");
+		Resource resource = genericResourceRepository.findOne("app", "default", "main", "data.json",
+				new RequestContext.Builder().forceRefresh(false).build());
 		assertThat(resource.getURL()).isEqualTo(new URL("https://us-east-1/test/main%2Fdata.json"));
 	}
 

@@ -91,6 +91,12 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 	private int refreshRate = 0;
 
 	/**
+	 * Allow forceRefresh query parameter to force refresh the git repository regardless
+	 * of refreshRate if true.
+	 */
+	private boolean allowForceRefresh = false;
+
+	/**
 	 * Valid SSH private key. Must be set if ignoreLocalSshSettings is true and Git URI is
 	 * SSH format.
 	 */
@@ -187,6 +193,14 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 
 	public void setRefreshRate(int refreshRate) {
 		this.refreshRate = refreshRate;
+	}
+
+	public boolean getAllowForceRefresh() {
+		return this.allowForceRefresh;
+	}
+
+	public void setAllowForceRefresh(boolean allowForceRefresh) {
+		this.allowForceRefresh = allowForceRefresh;
 	}
 
 	public String getPrivateKey() {

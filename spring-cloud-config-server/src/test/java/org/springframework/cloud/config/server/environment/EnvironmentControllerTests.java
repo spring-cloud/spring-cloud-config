@@ -34,6 +34,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -83,8 +84,9 @@ class EnvironmentControllerTests {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("a:\n  b:\n    c: d\n");
 	}
 
@@ -94,8 +96,9 @@ class EnvironmentControllerTests {
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
 		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "e")));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("a:\n  b:\n    c: e\n");
 	}
 
@@ -110,15 +113,16 @@ class EnvironmentControllerTests {
 		map.put("A", "Z");
 		map.put("S", 3);
 		this.environment.addFirst(new PropertySource("two", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("A: Z\nS: 3\nY: 0\n");
 	}
 
 	@Test
 	public void placeholdersResolvedInYaml() throws Exception {
 		whenPlaceholders();
-		String yaml = this.controller.yaml("foo", "bar", true).getBody();
+		String yaml = this.controller.yaml("foo", "bar", true, false).getBody();
 		Map<String, Object> map = new Yaml().load(yaml);
 		assertThat(map).containsOnlyKeys("a", "foo");
 		assertThat(map).containsEntry("foo", "bar");
@@ -131,7 +135,7 @@ class EnvironmentControllerTests {
 	@Test
 	public void placeholdersNotResolvedInYaml() throws Exception {
 		whenPlaceholders();
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		Map<String, Object> map = new Yaml().load(yaml);
 		assertThat(map).containsOnlyKeys("a", "foo");
 		assertThat(map).containsEntry("foo", "bar");
@@ -144,21 +148,21 @@ class EnvironmentControllerTests {
 	@Test
 	public void placeholdersNotResolvedInYamlFromSystemProperties() throws Exception {
 		whenPlaceholdersSystemProps();
-		String yaml = this.controller.yaml("foo", "bar", true).getBody();
+		String yaml = this.controller.yaml("foo", "bar", true, false).getBody();
 		assertThat(yaml).isEqualTo("a:\n  b:\n    c: ${foo}\n");
 	}
 
 	@Test
 	public void placeholdersNotResolvedInYamlFromSystemPropertiesWhenNotFlagged() throws Exception {
 		whenPlaceholdersSystemProps();
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("a:\n  b:\n    c: ${foo}\n");
 	}
 
 	@Test
 	public void placeholdersNotResolvedInYamlFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		// If there is a default value we prevent the placeholder being resolved
 		assertThat(yaml).isEqualTo("a:\n  b:\n    c: ${foo:spam}\n");
 	}
@@ -166,7 +170,7 @@ class EnvironmentControllerTests {
 	@Test
 	public void placeholdersResolvedInYamlFromSystemPropertiesWhenFlagged() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
-		String yaml = this.controller.yaml("foo", "bar", true).getBody();
+		String yaml = this.controller.yaml("foo", "bar", true, false).getBody();
 		// If there is a default value we do not prevent the placeholder being resolved
 		assertThat(yaml).isEqualTo("a:\n  b:\n    c: spam\n");
 	}
@@ -177,8 +181,9 @@ class EnvironmentControllerTests {
 		map.put("a.b[0]", "c");
 		map.put("a.b[1]", "d");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("a:\n  b:\n  - c\n  - d\n");
 	}
 
@@ -190,8 +195,9 @@ class EnvironmentControllerTests {
 		map.put("a.b[world]", "d");
 		map.put("a.b[world]d", "f");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("a:\n  test: e\n  b[hello]: c\n  b[world]: d\n  b[world]d: f\n");
 	}
 
@@ -210,8 +216,9 @@ class EnvironmentControllerTests {
 		twoMap.put("a.b[1]", "h");
 		this.environment.addFirst(new PropertySource("two", twoMap));
 
-		when(this.repository.findOne("foo", "bar", "two", false)).thenReturn(this.environment);
-		Environment environment = this.controller.labelled("foo", "bar", "two");
+		when(this.repository.findOne("foo", "bar", "two", false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		Environment environment = this.controller.labelled("foo", "bar", "two", false);
 		assertThat(environment).isNotNull();
 		assertThat(environment.getName()).isEqualTo("foo");
 		assertThat(environment.getProfiles()).isEqualTo(new String[] { "master" });
@@ -226,9 +233,10 @@ class EnvironmentControllerTests {
 
 	@Test
 	public void testNameWithSlash() {
-		when(this.repository.findOne("foo/spam", "bar", "two", false)).thenReturn(this.environment);
+		when(this.repository.findOne("foo/spam", "bar", "two", false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
 
-		Environment returnedEnvironment = this.controller.labelled("foo(_)spam", "bar", "two");
+		Environment returnedEnvironment = this.controller.labelled("foo(_)spam", "bar", "two", false);
 
 		assertThat(returnedEnvironment.getLabel()).isEqualTo(this.environment.getLabel());
 		assertThat(returnedEnvironment.getName()).isEqualTo(this.environment.getName());
@@ -238,14 +246,15 @@ class EnvironmentControllerTests {
 	@Test
 	public void testEnvironmentNotFound() {
 		this.controller.setAcceptEmpty(false);
-		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", null))
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", null, false))
 				.isInstanceOf(EnvironmentNotFoundException.class);
 	}
 
 	@Test
 	public void testwithValidEnvironment() {
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		Environment environment = this.controller.labelled("foo", "bar", null);
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		Environment environment = this.controller.labelled("foo", "bar", null, false);
 		assertThat(environment).isNotNull();
 
 	}
@@ -253,9 +262,10 @@ class EnvironmentControllerTests {
 	@Test
 	public void testLabelWithSlash() {
 
-		when(this.repository.findOne("foo", "bar", "two/spam", false)).thenReturn(this.environment);
+		when(this.repository.findOne("foo", "bar", "two/spam", false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
 
-		Environment returnedEnvironment = this.controller.labelled("foo", "bar", "two(_)spam");
+		Environment returnedEnvironment = this.controller.labelled("foo", "bar", "two(_)spam", false);
 
 		assertThat(returnedEnvironment.getLabel()).isEqualTo(this.environment.getLabel());
 		assertThat(returnedEnvironment.getName()).isEqualTo(this.environment.getName());
@@ -276,8 +286,9 @@ class EnvironmentControllerTests {
 		twoMap.put("a.b[1]", "h");
 		this.environment.addFirst(new PropertySource("two", twoMap));
 
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 
 		// Result will not contain original, extra values from oneMap
 		assertThat(yaml).isEqualTo("a:\n  b:\n  - f\n  - h\n");
@@ -288,8 +299,9 @@ class EnvironmentControllerTests {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("document", "blah");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("blah\n");
 	}
 
@@ -299,8 +311,9 @@ class EnvironmentControllerTests {
 		map.put("document[0]", "c");
 		map.put("document[1]", "d");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("- c\n- d\n");
 	}
 
@@ -310,8 +323,9 @@ class EnvironmentControllerTests {
 		map.put("document[0].a", "c");
 		map.put("document[1].a", "d");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("- a: c\n- a: d\n");
 	}
 
@@ -321,9 +335,10 @@ class EnvironmentControllerTests {
 		map.put("org.springframework", "WARN");
 		map.put("org.springframework.cloud", "ERROR");
 		this.environment.add(new PropertySource("abo", map));
-		when(this.repository.findOne("ay", "äzöq", null, false)).thenReturn(this.environment);
+		when(this.repository.findOne("ay", "äzöq", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
 		System.out.println("this.controller = " + this.controller);
-		String yaml = this.controller.yaml("ay", "äzöq", false).getBody();
+		String yaml = this.controller.yaml("ay", "äzöq", false, false).getBody();
 		assertThat(yaml).isEqualTo("org:\n  springframework: WARN\n  springframework.cloud: ERROR\n");
 	}
 
@@ -334,8 +349,9 @@ class EnvironmentControllerTests {
 		map.put("a.b[0].d", "e");
 		map.put("a.b[1].c", "d");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat("a:\n  b:\n  - d: e\n    c: d\n  - c: d\n".equals(yaml)
 				|| "a:\n  b:\n  - c: d\n    d: e\n  - c: d\n".equals(yaml)).as("Wrong output: " + yaml).isTrue();
 	}
@@ -351,8 +367,9 @@ class EnvironmentControllerTests {
 		map.put("a.b[3][0]", "r");
 		map.put("a.b[3][1]", "s");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 
 		Map<String, Object> level1 = new Yaml().load(yaml);
 		assertThat(level1).containsOnlyKeys("a");
@@ -391,8 +408,9 @@ class EnvironmentControllerTests {
 		map.put("a.b[1].c", "y");
 		map.put("a.b[1].e[0].d", "z");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String json = this.controller.jsonProperties("foo", "bar", false, false).getBody();
 		assertThat(json).as("Wrong output: " + json)
 				.isEqualTo("{\"a\":{\"b\":[{\"c\":\"x\",\"d\":[\"xx\",\"yy\"]},{\"c\":\"y\",\"e\":[{\"d\":\"z\"}]}]}}");
 	}
@@ -403,8 +421,9 @@ class EnvironmentControllerTests {
 		map.put("b[0].c", "d");
 		map.put("b[1].c", "d");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("b:\n- c: d\n- c: d\n");
 	}
 
@@ -414,15 +433,16 @@ class EnvironmentControllerTests {
 		map.put("x.a.b[0].c", "d");
 		map.put("x.a.b[1].c", "d");
 		this.environment.add(new PropertySource("one", map));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
-		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false, false).getBody();
 		assertThat(yaml).isEqualTo("x:\n  a:\n    b:\n    - c: d\n    - c: d\n");
 	}
 
 	@Test
 	public void placeholdersResolvedInProperties() throws Exception {
 		whenPlaceholders();
-		String text = this.controller.properties("foo", "bar", true).getBody();
+		String text = this.controller.properties("foo", "bar", true, false).getBody();
 		Properties properties = new Properties();
 		properties.load(new StringReader(text));
 		assertThat(properties).containsOnly(entry("a.b.c", "bar"), entry("foo", "bar"));
@@ -431,7 +451,7 @@ class EnvironmentControllerTests {
 	@Test
 	public void placeholdersNotResolvedInProperties() throws Exception {
 		whenPlaceholders();
-		String text = this.controller.properties("foo", "bar", false).getBody();
+		String text = this.controller.properties("foo", "bar", false, false).getBody();
 		Properties properties = new Properties();
 		properties.load(new StringReader(text));
 		assertThat(properties).containsOnly(entry("a.b.c", "${foo}"), entry("foo", "bar"));
@@ -440,56 +460,56 @@ class EnvironmentControllerTests {
 	@Test
 	public void placeholdersNotResolvedInPropertiesFromSystemProperties() throws Exception {
 		whenPlaceholdersSystemProps();
-		String text = this.controller.properties("foo", "bar", true).getBody();
+		String text = this.controller.properties("foo", "bar", true, false).getBody();
 		assertThat(text).isEqualTo("a.b.c: ${foo}");
 	}
 
 	@Test
 	public void placeholdersNotResolvedInPropertiesFromSystemPropertiesWhenNotFlagged() throws Exception {
 		whenPlaceholdersSystemProps();
-		String text = this.controller.properties("foo", "bar", false).getBody();
+		String text = this.controller.properties("foo", "bar", false, false).getBody();
 		assertThat(text).isEqualTo("a.b.c: ${foo}");
 	}
 
 	@Test
 	public void placeholdersNotResolvedInPropertiesFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
-		String text = this.controller.properties("foo", "bar", false).getBody();
+		String text = this.controller.properties("foo", "bar", false, false).getBody();
 		assertThat(text).isEqualTo("a.b.c: ${foo:spam}");
 	}
 
 	@Test
 	public void placeholdersResolvedInJson() throws Exception {
 		whenPlaceholders();
-		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
+		String json = this.controller.jsonProperties("foo", "bar", true, false).getBody();
 		JSONAssert.assertEquals("{\"a\":{\"b\":{\"c\":\"bar\"}},\"foo\":\"bar\"}", json, JSONCompareMode.STRICT);
 	}
 
 	@Test
 	public void placeholdersNotResolvedInJson() throws Exception {
 		whenPlaceholders();
-		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		String json = this.controller.jsonProperties("foo", "bar", false, false).getBody();
 		JSONAssert.assertEquals("{\"a\":{\"b\":{\"c\":\"${foo}\"}},\"foo\":\"bar\"}", json, JSONCompareMode.STRICT);
 	}
 
 	@Test
 	public void placeholdersNotResolvedInJsonFromSystemProperties() throws Exception {
 		whenPlaceholdersSystemProps();
-		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
+		String json = this.controller.jsonProperties("foo", "bar", true, false).getBody();
 		assertThat(json).isEqualTo("{\"a\":{\"b\":{\"c\":\"${foo}\"}}}");
 	}
 
 	@Test
 	public void placeholdersNotResolvedInJsonFromSystemPropertiesWhenNotFlagged() throws Exception {
 		whenPlaceholdersSystemProps();
-		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		String json = this.controller.jsonProperties("foo", "bar", false, false).getBody();
 		assertThat(json).isEqualTo("{\"a\":{\"b\":{\"c\":\"${foo}\"}}}");
 	}
 
 	@Test
 	public void placeholdersNotResolvedInJsonFromSystemPropertiesWhenNotFlaggedWithDefault() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
-		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		String json = this.controller.jsonProperties("foo", "bar", false, false).getBody();
 		// If there is a default value we prevent the placeholder being resolved
 		assertThat(json).isEqualTo("{\"a\":{\"b\":{\"c\":\"${foo:spam}\"}}}");
 	}
@@ -497,7 +517,7 @@ class EnvironmentControllerTests {
 	@Test
 	public void placeholdersResolvedInJsonFromSystemPropertiesWhenFlagged() throws Exception {
 		whenPlaceholdersSystemPropsWithDefault();
-		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
+		String json = this.controller.jsonProperties("foo", "bar", true, false).getBody();
 		// If there is a default value we do not prevent the placeholder being resolved
 		assertThat(json).isEqualTo("{\"a\":{\"b\":{\"c\":\"spam\"}}}");
 	}
@@ -507,48 +527,51 @@ class EnvironmentControllerTests {
 		map.put("foo", "bar");
 		this.environment.add(new PropertySource("one", map));
 		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "${foo}")));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
 	}
 
 	private void whenPlaceholdersSystemProps() {
 		System.setProperty("foo", "bar");
 		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "${foo}")));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
 	}
 
 	private void whenPlaceholdersSystemPropsWithDefault() {
 		System.setProperty("foo", "bar");
 		this.environment.addFirst(new PropertySource("two", Collections.singletonMap("a.b.c", "${foo:spam}")));
-		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		when(this.repository.findOne("foo", "bar", null, false,
+				new RequestContext.Builder().forceRefresh(false).build())).thenReturn(this.environment);
 	}
 
 	@Test
 	public void labelWithPreviousDirectory() {
-		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "..(_).."))
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "..(_)..", false))
 				.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
 	@Test
 	public void labelWithPreviousDirectoryEncodedParenthesis() {
-		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "..%28_%29.."))
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "..%28_%29..", false))
 				.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
 	@Test
 	public void labelWithPreviousDirectoryAllEncoded() {
-		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "%2E%2E%28%5F%29%2E%2E"))
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "%2E%2E%28%5F%29%2E%2E", false))
 				.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
 	@Test
 	public void nameWithPound() {
-		assertThatThrownBy(() -> this.controller.labelled("foo#", "bar", "mylabel"))
+		assertThatThrownBy(() -> this.controller.labelled("foo#", "bar", "mylabel", false))
 				.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
 	@Test
 	public void nameWithPoundEncoded() {
-		assertThatThrownBy(() -> this.controller.labelled("foo%23", "bar", "mylabel"))
+		assertThatThrownBy(() -> this.controller.labelled("foo%23", "bar", "mylabel", false))
 				.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
@@ -558,31 +581,35 @@ class EnvironmentControllerTests {
 
 		@Test
 		public void mappingForEnvironment() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo/bar")).andExpect(MockMvcResultMatchers.status().isOk());
 		}
 
 		@Test
 		public void mappingForLabelledEnvironment() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo/bar/other"))
 					.andExpect(MockMvcResultMatchers.status().isOk());
 		}
 
 		@Test
 		public void environmentMissing() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo1", "notfound", null, false))
-					.thenThrow(new EnvironmentNotFoundException("Missing Environment"));
+			when(EnvironmentControllerTests.this.repository.findOne("foo1", "notfound", null, false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenThrow(new EnvironmentNotFoundException("Missing Environment"));
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo1/notfound"))
 					.andExpect(MockMvcResultMatchers.status().isNotFound());
 		}
 
 		@Test
 		public void mappingForYaml() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo-bar.yml"))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN))
 					.andExpect(MockMvcResultMatchers.content().string("{}\n"));
@@ -590,8 +617,9 @@ class EnvironmentControllerTests {
 
 		@Test
 		public void mappingForJson() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json"))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 					.andExpect(MockMvcResultMatchers.content().string("{}"));
@@ -599,56 +627,63 @@ class EnvironmentControllerTests {
 
 		@Test
 		public void mappingForLabelledYaml() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.yml"))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
 		}
 
 		@Test
 		public void mappingForLabelledProperties() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.properties"))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
 		}
 
 		@Test
 		public void mappingForProperties() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo-bar.properties"))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
 		}
 
 		@Test
 		public void mappingForLabelledYamlWithHyphen() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo-bar-foo2-bar2", "spam", "other", false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo-bar-foo2-bar2", "spam", "other", false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-foo2-bar2-spam.yml"))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.TEXT_PLAIN));
 		}
 
 		@Test
 		public void mappingforLabelledJsonProperties() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", "other", false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar.json"))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
 		}
 
 		@Test
 		public void mappingforJsonProperties() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo", "bar", null, false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/foo-bar.json"))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
 		}
 
 		@Test
 		public void mappingForLabelledJsonPropertiesWithHyphen() throws Exception {
-			when(EnvironmentControllerTests.this.repository.findOne("foo-bar-foo2-bar2", "spam", "other", false))
-					.thenReturn(EnvironmentControllerTests.this.environment);
+			when(EnvironmentControllerTests.this.repository.findOne("foo-bar-foo2-bar2", "spam", "other", false,
+					new RequestContext.Builder().forceRefresh(false).build()))
+							.thenReturn(EnvironmentControllerTests.this.environment);
 			this.mvc.perform(MockMvcRequestBuilders.get("/other/foo-bar-foo2-bar2-spam.json"))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
 
@@ -657,7 +692,7 @@ class EnvironmentControllerTests {
 		@Test
 		public void handleEnvironmentException() throws Exception {
 			when(EnvironmentControllerTests.this.repository.findOne(eq("exception"), eq("bad_syntax.ext"), any(),
-					eq(false)))
+					eq(false), eq(new RequestContext.Builder().forceRefresh(false).build())))
 							.thenThrow(new FailedToConstructEnvironmentException("Cannot construct",
 									new RuntimeException("underlier")));
 			MvcResult result = this.mvc.perform(MockMvcRequestBuilders.get("/exception/bad_syntax.ext"))

@@ -319,7 +319,7 @@ public class JGitEnvironmentRepositoryTests {
 				new JGitEnvironmentProperties(), ObservationRegistry.NOOP);
 		repo.setForcePull(true);
 
-		boolean shouldPull = repo.shouldPull(git);
+		boolean shouldPull = repo.shouldPull(git, false);
 
 		assertThat(shouldPull).as("shouldPull was false").isTrue();
 	}
@@ -342,7 +342,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
 				new JGitEnvironmentProperties(), ObservationRegistry.NOOP);
 
-		boolean shouldPull = repo.shouldPull(git);
+		boolean shouldPull = repo.shouldPull(git, false);
 
 		assertThat(shouldPull).as("shouldPull was true").isFalse();
 	}
@@ -371,7 +371,7 @@ public class JGitEnvironmentRepositoryTests {
 		repo.setUri("");
 		repo.setForcePull(true);
 
-		boolean shouldPull = repo.shouldPull(git);
+		boolean shouldPull = repo.shouldPull(git, false);
 
 		assertThat(shouldPull).as("shouldPull was false").isTrue();
 	}
@@ -396,7 +396,7 @@ public class JGitEnvironmentRepositoryTests {
 		repo.setForcePull(false);
 
 		try {
-			final boolean shouldPull = repo.shouldPull(git);
+			final boolean shouldPull = repo.shouldPull(git, false);
 			assertThat(shouldPull).as("shouldPull did not fail").isFalse();
 		}
 		catch (JGitInternalException e) {
@@ -429,7 +429,7 @@ public class JGitEnvironmentRepositoryTests {
 				new JGitEnvironmentProperties(), ObservationRegistry.NOOP);
 
 		try {
-			repo.shouldPull(git);
+			repo.shouldPull(git, false);
 			Assertions.fail("shouldPull did not fail");
 		}
 		catch (JGitInternalException e) {
@@ -458,7 +458,7 @@ public class JGitEnvironmentRepositoryTests {
 				new JGitEnvironmentProperties(), ObservationRegistry.NOOP);
 
 		try {
-			repo.shouldPull(git);
+			repo.shouldPull(git, false);
 			Assertions.fail("shouldPull did not fail");
 		}
 		catch (JGitInternalException e) {
@@ -484,7 +484,7 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment,
 				new JGitEnvironmentProperties(), ObservationRegistry.NOOP);
 
-		boolean shouldPull = repo.shouldPull(git);
+		boolean shouldPull = repo.shouldPull(git, false);
 
 		assertThat(shouldPull).as("shouldPull was false").isTrue();
 	}
@@ -512,13 +512,13 @@ public class JGitEnvironmentRepositoryTests {
 
 		repo.setLastRefresh(System.currentTimeMillis() - 5000);
 
-		boolean shouldPull = repo.shouldPull(git);
+		boolean shouldPull = repo.shouldPull(git, false);
 
 		assertThat(shouldPull).as("shouldPull was false").isTrue();
 
 		repo.setRefreshRate(30);
 
-		shouldPull = repo.shouldPull(git);
+		shouldPull = repo.shouldPull(git, false);
 
 		assertThat(shouldPull).as("shouldPull was true").isFalse();
 	}
@@ -544,7 +544,135 @@ public class JGitEnvironmentRepositoryTests {
 		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
 				ObservationRegistry.NOOP);
 
-		boolean shouldPull = repo.shouldPull(git);
+		boolean shouldPull = repo.shouldPull(git, false);
+
+		assertThat(shouldPull).as("shouldPull was true").isFalse();
+	}
+
+	@Test
+	public void shouldRefreshWhenForceRefresh() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(30);
+		properties.setAllowForceRefresh(true);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
+				ObservationRegistry.NOOP);
+
+		repo.setLastRefresh(System.currentTimeMillis() - 5000);
+
+		boolean shouldPull = repo.shouldPull(git, false);
+
+		assertThat(shouldPull).as("shouldPull was True").isFalse();
+
+		shouldPull = repo.shouldPull(git, true);
+
+		assertThat(shouldPull).as("shouldPull was false").isTrue();
+	}
+
+	@Test
+	public void shouldRefreshWhenForceRefreshAndNegativeRefreshRate() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(-1);
+		properties.setAllowForceRefresh(true);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
+				ObservationRegistry.NOOP);
+
+		boolean shouldPull = repo.shouldPull(git, false);
+
+		assertThat(shouldPull).as("shouldPull was true").isFalse();
+
+		shouldPull = repo.shouldPull(git, true);
+
+		assertThat(shouldPull).as("shouldPull was false").isTrue();
+	}
+
+	@Test
+	public void shouldNotRefreshWhenAllowForceRefreshFalse() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(30);
+		properties.setAllowForceRefresh(false);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
+				ObservationRegistry.NOOP);
+
+		repo.setLastRefresh(System.currentTimeMillis() - 5000);
+
+		boolean shouldPull = repo.shouldPull(git, false);
+
+		assertThat(shouldPull).as("shouldPull was True").isFalse();
+
+		shouldPull = repo.shouldPull(git, true);
+
+		assertThat(shouldPull).as("shouldPull was True").isFalse();
+	}
+
+	@Test
+	public void shouldNotRefreshWhenAllowForceRefreshFalseAndNegativeRefreshRate() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(-1);
+		properties.setAllowForceRefresh(false);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
+				ObservationRegistry.NOOP);
+
+		boolean shouldPull = repo.shouldPull(git, false);
+
+		assertThat(shouldPull).as("shouldPull was true").isFalse();
+
+		shouldPull = repo.shouldPull(git, true);
 
 		assertThat(shouldPull).as("shouldPull was true").isFalse();
 	}
@@ -797,7 +925,7 @@ public class JGitEnvironmentRepositoryTests {
 		repo.setLastRefresh(System.currentTimeMillis() - 100);
 		repo.setRefreshRate(2);
 
-		repo.refresh("master");
+		repo.refresh("master", false);
 
 		// Verify no fetch but merge only.
 		verify(git, times(0)).fetch();
