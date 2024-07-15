@@ -29,6 +29,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,13 +60,15 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void emptySearchLocations() {
 		this.repository.setSearchLocations((String[]) null);
-		Environment environment = this.repository.findOne("foo", "development", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("development").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
 	@Test
 	public void vanilla() {
-		Environment environment = this.repository.findOne("foo", "development", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("development").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 	}
@@ -73,7 +76,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void ignoresExistingProfile() {
 		System.setProperty("spring.profiles.active", "cloud");
-		Environment environment = this.repository.findOne("foo", "main", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("main").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 	}
@@ -81,7 +85,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void prefixed() {
 		this.repository.setSearchLocations("classpath:/test");
-		Environment environment = this.repository.findOne("foo", "development", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("development").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
@@ -92,7 +97,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void prefixedYaml() {
 		this.repository.setSearchLocations("classpath:/test");
-		Environment environment = this.repository.findOne("bar", "development", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("development").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
@@ -103,7 +109,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void prefixedMultiDocProperties() {
 		this.repository.setSearchLocations("classpath:/test");
-		Environment environment = this.repository.findOne("baz", "development", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("baz").profiles("development").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
@@ -114,7 +121,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void prefixedWithFile() {
 		this.repository.setSearchLocations("file:./src/test/resources/test");
-		Environment environment = this.repository.findOne("foo", "development", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("development").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 	}
@@ -153,7 +161,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Disabled // FIXME: configdata
 	public void labelled() {
 		this.repository.setSearchLocations("classpath:/test");
-		Environment environment = this.repository.findOne("foo", "development", "dev", false);
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("development").label("dev").build());
 		assertThat(environment.getPropertySources()).hasSize(3);
 		// position 1 because it has higher precedence than anything except the
 		// foo-development.properties
@@ -164,7 +173,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersLabel() {
 		this.repository.setSearchLocations("classpath:/test/{label}/");
-		Environment environment = this.repository.findOne("foo", "development", "dev");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("development").label("dev").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("dev_bar");
 	}
@@ -172,7 +182,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersProfile() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/");
-		Environment environment = this.repository.findOne("foo", "dev", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("dev").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("dev_bar");
 	}
@@ -180,7 +191,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersProfiles() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/");
-		Environment environment = this.repository.findOne("foo", "dev,mysql", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("dev,mysql").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("mysql");
 	}
@@ -188,7 +200,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersApplicationAndProfile() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/{application}/");
-		Environment environment = this.repository.findOne("app", "dev", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("app").profiles("dev").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("app");
 	}
@@ -197,7 +210,8 @@ public class NativeEnvironmentRepositoryTests {
 	public void placeholdersApplicationWithPrefixAndProfile() {
 		this.repository.setSearchLocations("classpath:/test/{profile}/{application}/");
 		// gh-2259 application name starts with "application"
-		Environment environment = this.repository.findOne("applicationxyz", "dev", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("applicationxyz").profiles("dev").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("default-app");
 	}
@@ -205,7 +219,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void locationPlaceholdersApplication() {
 		this.repository.setSearchLocations("classpath:/test/{application}");
-		Locations locations = this.repository.getLocations("foo", "dev", "master");
+		Locations locations = this.repository
+				.getLocations(new RequestContext.Builder().name("foo").profiles("dev").label("master").build());
 		assertThat(locations.getLocations().length).isEqualTo(1);
 		assertThat(locations.getLocations()[0]).isEqualTo("classpath:/test/foo/");
 	}
@@ -213,7 +228,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void locationPlaceholdersMultipleApplication() {
 		this.repository.setSearchLocations("classpath:/test/{application}");
-		Locations locations = this.repository.getLocations("foo,bar", "dev", "master");
+		Locations locations = this.repository
+				.getLocations(new RequestContext.Builder().name("foo,bar").profiles("dev").label("master").build());
 		assertThat(locations.getLocations().length).isEqualTo(2);
 		assertThat(locations.getLocations()[0]).isEqualTo("classpath:/test/foo/");
 		assertThat(locations.getLocations()[1]).isEqualTo("classpath:/test/bar/");
@@ -222,7 +238,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void locationProfilesApplication() {
 		this.repository.setSearchLocations("classpath:/test/{profile}");
-		Locations locations = this.repository.getLocations("foo", "dev,one,two", "master");
+		Locations locations = this.repository
+				.getLocations(new RequestContext.Builder().name("foo").profiles("dev,one,two").label("master").build());
 		assertThat(locations.getLocations().length).isEqualTo(3);
 		assertThat(locations.getLocations()[0]).isEqualTo("classpath:/test/dev/");
 	}
@@ -230,7 +247,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void placeholdersNoTrailingSlash() {
 		this.repository.setSearchLocations("classpath:/test/{label}");
-		Environment environment = this.repository.findOne("foo", "development", "dev");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("development").label("dev").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("dev_bar");
 	}
@@ -238,7 +256,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void locationAddLabelLocations() {
 		this.repository.setSearchLocations("classpath:/test/dev/");
-		Environment environment = this.repository.findOne("foo", "development", "ignore");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("development").label("ignore").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isNotEqualTo("dev_bar");
 	}
@@ -246,7 +265,8 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void tryToStartReactive() {
 		this.repository.setSearchLocations("classpath:/test/reactive/");
-		Environment environment = this.repository.findOne("foo", "master", "default");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("master").label("default").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("reactive");
 	}
@@ -255,7 +275,8 @@ public class NativeEnvironmentRepositoryTests {
 	public void locationDontAddLabelLocations() {
 		this.repository.setSearchLocations("classpath:/test/dev/");
 		this.repository.setAddLabelLocations(false);
-		Environment environment = this.repository.findOne("foo", "development", "ignore");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("development").label("ignore").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("dev_bar");
 	}
@@ -263,14 +284,16 @@ public class NativeEnvironmentRepositoryTests {
 	@Test
 	public void locationNoDuplicates() {
 		this.repository.setSearchLocations("classpath:/test/{profile}", "classpath:/test/dev");
-		Locations locations = this.repository.getLocations("foo", "dev", null);
+		Locations locations = this.repository
+				.getLocations(new RequestContext.Builder().name("foo").profiles("dev").build());
 		assertThat(locations.getLocations().length).isEqualTo(1);
 	}
 
 	@Test
 	public void testDefaultLabel() {
 		this.repository.setDefaultLabel("test");
-		Environment environment = this.repository.findOne("foo", "default", null);
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("foo").profiles("default").build());
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("test_bar");
 	}
 
@@ -304,7 +327,8 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	private void testImport() {
-		Environment environment = this.repository.findOne("import", "default", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("import").profiles("default").label("master").build());
 		// TODO should be 4, bar.yml contains 2 yaml documents
 		assertThat(environment.getPropertySources()).hasSize(3);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("imported");
@@ -316,7 +340,9 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("classpath:/test/bad-syntax");
 		NativeEnvironmentRepository repo = this.repository;
 		assertThatExceptionOfType(FailedToConstructEnvironmentException.class)
-				.isThrownBy(() -> repo.findOne("foo", "master", "default")).withMessage(
+				.isThrownBy(() -> repo
+						.findOne(new RequestContext.Builder().name("foo").profiles("master").label("default").build()))
+				.withMessage(
 						"Could not construct context for config=foo profile=master label=default includeOrigin=false; nested exception is while constructing a mapping\n"
 								+ " in 'reader', line 1, column 1:\n" + "    key: value\n" + "    ^\n"
 								+ "found duplicate key key\n" + " in 'reader', line 2, column 1:\n" + "    key: value\n"

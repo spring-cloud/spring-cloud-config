@@ -35,6 +35,7 @@ import software.amazon.awssdk.services.ssm.model.Parameter;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
@@ -62,18 +63,15 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
-		if (!StringUtils.hasLength(application)) {
-			application = configServerProperties.getDefaultApplicationName();
-		}
-
-		if (!StringUtils.hasLength(profile)) {
-			profile = configServerProperties.getDefaultProfile();
-		}
+	public Environment findOne(RequestContext ctx) {
+		String application = StringUtils.hasLength(ctx.getName()) ? ctx.getName()
+				: configServerProperties.getDefaultApplicationName();
+		String profile = StringUtils.hasLength(ctx.getProfiles()) ? ctx.getProfiles()
+				: configServerProperties.getDefaultProfile();
 
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
-		Environment result = new Environment(application, profiles, label, null, null);
+		Environment result = new Environment(application, profiles, ctx.getLabel(), null, null);
 
 		Set<String> paths = buildParameterPaths(application, profiles);
 		List<PropertySource> propertySources = getPropertySources(paths);

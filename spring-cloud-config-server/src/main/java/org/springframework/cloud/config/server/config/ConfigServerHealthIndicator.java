@@ -35,6 +35,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -74,8 +75,8 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 			String profiles = repository.getProfiles();
 
 			try {
-				Environment environment = this.environmentRepository.findOne(application, profiles,
-						repository.getLabel(), false);
+				Environment environment = this.environmentRepository.findOne(new RequestContext.Builder()
+						.name(application).profiles(profiles).label(repository.getLabel()).build());
 
 				HashMap<String, Object> detail = new HashMap<>();
 				detail.put("name", environment.getName());

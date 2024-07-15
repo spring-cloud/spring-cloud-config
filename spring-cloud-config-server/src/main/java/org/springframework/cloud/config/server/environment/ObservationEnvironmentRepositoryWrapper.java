@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import io.micrometer.observation.ObservationRegistry;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.RequestContext;
 
 /**
  * Wraps a {@link EnvironmentRepository} execution with observation.
@@ -58,21 +59,11 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
+	public Environment findOne(RequestContext ctx) {
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
-				this.delegate.getClass(), application, profile, label);
+				this.delegate.getClass(), ctx.getName(), ctx.getProfiles(), ctx.getLabel());
 		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY
-				.observation(null, CONVENTION, () -> context, this.registry)
-				.observe(() -> this.delegate.findOne(application, profile, label));
-	}
-
-	@Override
-	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
-				this.delegate.getClass(), application, profile, label);
-		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY
-				.observation(null, CONVENTION, () -> context, this.registry)
-				.observe(() -> this.delegate.findOne(application, profile, label, includeOrigin));
+				.observation(null, CONVENTION, () -> context, this.registry).observe(() -> this.delegate.findOne(ctx));
 	}
 
 	/**

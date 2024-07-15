@@ -37,6 +37,7 @@ import org.springframework.boot.context.config.ConfigDataResource;
 import org.springframework.boot.context.config.StandardConfigDataResource;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -131,19 +132,14 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 	}
 
 	@Override
-	public Environment findOne(String config, String profile, String label) {
-		return findOne(config, profile, label, false);
-	}
-
-	@Override
-	public Environment findOne(String config, String profile, String label, boolean includeOrigin) {
+	public Environment findOne(RequestContext ctx) {
 
 		try {
-			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
+			ConfigurableEnvironment environment = getEnvironment(ctx);
 			DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
 			Map<org.springframework.core.env.PropertySource<?>, PropertySourceConfigData> propertySourceToConfigData = new HashMap<>();
 			ConfigDataEnvironmentPostProcessor.applyTo(environment, resourceLoader, null,
-					StringUtils.commaDelimitedListToSet(profile), new ConfigDataEnvironmentUpdateListener() {
+					StringUtils.commaDelimitedListToSet(ctx.getProfiles()), new ConfigDataEnvironmentUpdateListener() {
 						@Override
 						public void onPropertySourceAdded(org.springframework.core.env.PropertySource<?> propertySource,
 								ConfigDataLocation location, ConfigDataResource resource) {
@@ -154,12 +150,12 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 			environment.getPropertySources().remove("config-data-setup");
 			return clean(ObservationEnvironmentRepositoryWrapper
-					.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment))
-					.findOne(config, profile, label, includeOrigin), propertySourceToConfigData);
+					.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment)).findOne(ctx),
+					propertySourceToConfigData);
 		}
 		catch (Exception e) {
 			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
-					config, profile, label, includeOrigin);
+					ctx.getName(), ctx.getProfiles(), ctx.getLabel(), ctx.getIncludeOrigin());
 			String completeMessage = NestedExceptionUtils.buildMessage(msg,
 					NestedExceptionUtils.getMostSpecificCause(e));
 			throw new FailedToConstructEnvironmentException(completeMessage, e);
@@ -167,7 +163,11 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 	}
 
 	@Override
-	public Locations getLocations(String application, String profile, String label) {
+	public Locations getLocations(RequestContext ctx) {
+		String application = ctx.getName();
+		String profile = ctx.getProfiles();
+		String label = ctx.getLabel();
+
 		String[] locations = this.searchLocations;
 		if (this.searchLocations == null || this.searchLocations.length == 0) {
 			locations = DEFAULT_LOCATIONS;
@@ -220,18 +220,17 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		return new Locations(application, profile, label, this.version, output.toArray(new String[0]));
 	}
 
-	private ConfigurableEnvironment getEnvironment(String application, String profile, String label) {
+	private ConfigurableEnvironment getEnvironment(RequestContext ctx) {
 		ConfigurableEnvironment environment = new StandardEnvironment();
 		Map<String, Object> map = new HashMap<>();
-		map.put("spring.profiles.active", profile);
-		String config = application;
+		map.put("spring.profiles.active", ctx.getProfiles());
+		String config = ctx.getName();
 		if (!config.equals("application")) {
 			config = "application," + config;
 		}
 		map.put("spring.config.name", config);
 		// map.put("encrypt.failOnError=" + this.failOnError);
-		map.put("spring.config.location",
-				StringUtils.arrayToDelimitedString(getLocations(application, profile, label).getLocations(), ";"));
+		map.put("spring.config.location", StringUtils.arrayToDelimitedString(getLocations(ctx).getLocations(), ";"));
 		// globally ignore config files that are not found
 		map.put("spring.config.on-not-found", "IGNORE");
 		environment.getPropertySources().addFirst(new MapPropertySource("config-data-setup", map));
@@ -319,7 +318,9 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		}
 		String profile = result.getProfiles() == null ? null
 				: StringUtils.arrayToCommaDelimitedString(result.getProfiles());
-		for (String pattern : getLocations(result.getName(), profile, result.getLabel()).getLocations()) {
+		for (String pattern : getLocations(
+				new RequestContext.Builder().name(result.getName()).profiles(profile).label(result.getLabel()).build())
+						.getLocations()) {
 			if (!pattern.contains(":")) {
 				pattern = "file:" + pattern;
 			}

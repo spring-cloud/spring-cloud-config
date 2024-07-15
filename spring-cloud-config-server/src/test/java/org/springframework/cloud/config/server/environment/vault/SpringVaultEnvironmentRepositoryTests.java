@@ -26,6 +26,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.util.StringUtils;
 import org.springframework.vault.core.VaultKeyValueOperations;
 import org.springframework.vault.support.VaultResponse;
@@ -75,7 +76,7 @@ public class SpringVaultEnvironmentRepositoryTests {
 		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
 				new EnvironmentWatch.Default(), properties, keyValueTemplate);
 
-		Environment e = repo.findOne("myapp", null, null);
+		Environment e = repo.findOne(new RequestContext.Builder().name("myapp").build());
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
 		assertThat(e.getPropertySources()).as(
 				"Properties for specified application and default application with key 'application' should be returned")
@@ -101,7 +102,7 @@ public class SpringVaultEnvironmentRepositoryTests {
 		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
 				new EnvironmentWatch.Default(), properties, keyValueTemplate);
 
-		Environment e = repo.findOne("myapp", null, null);
+		Environment e = repo.findOne(new RequestContext.Builder().name("myapp").build());
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
 		assertThat(e.getPropertySources()).as(
 				"Properties for specified application and default application with key 'application' should be returned")
@@ -125,7 +126,7 @@ public class SpringVaultEnvironmentRepositoryTests {
 				new EnvironmentWatch.Default(), new VaultEnvironmentProperties(), keyValueTemplate);
 		repo.setDefaultKey("mydefaultkey");
 
-		Environment e = repo.findOne("myapp", null, null);
+		Environment e = repo.findOne(new RequestContext.Builder().name("myapp").build());
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
 		assertThat(e.getPropertySources()).as(
 				"Properties for specified application and default application with key 'mydefaultkey' should be returned")
@@ -150,7 +151,7 @@ public class SpringVaultEnvironmentRepositoryTests {
 				new EnvironmentWatch.Default(), new VaultEnvironmentProperties(), keyValueTemplate);
 		repo.setDefaultKey("mydefaultkey");
 
-		Environment e = repo.findOne("myapp,yourapp", null, null);
+		Environment e = repo.findOne(new RequestContext.Builder().name("myapp,yourapp").build());
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp,yourapp");
 		assertThat(e.getPropertySources()).as(
 				"Properties for specified applications and default application with key 'mydefaultkey' should be returned")
@@ -179,7 +180,7 @@ public class SpringVaultEnvironmentRepositoryTests {
 				new EnvironmentWatch.Default(), new VaultEnvironmentProperties(), keyValueTemplate);
 		repo.setDefaultKey("myapp");
 
-		Environment e = repo.findOne("myapp", null, null);
+		Environment e = repo.findOne(new RequestContext.Builder().name("myapp").build());
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
 		assertThat(e.getPropertySources()).as("Only properties for specified application should be returned")
 				.hasSize(1);
@@ -200,7 +201,7 @@ public class SpringVaultEnvironmentRepositoryTests {
 		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
 				new EnvironmentWatch.Default(), vaultEnvironmentProperties, keyValueTemplate);
 
-		Environment e = repo.findOne("myapp", null, null);
+		Environment e = repo.findOne(new RequestContext.Builder().name("myapp").build());
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
 		assertThat(e.getPropertySources()).as(
 				"Properties for specified application and default application with key 'application' should be returned")

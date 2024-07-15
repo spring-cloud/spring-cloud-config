@@ -23,6 +23,7 @@ import io.micrometer.observation.tck.TestObservationRegistry;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.RequestContext;
 
 import static io.micrometer.observation.tck.TestObservationRegistryAssert.assertThat;
 
@@ -34,7 +35,7 @@ class ObservationEnvironmentRepositoryWrapperTests {
 		EnvironmentRepository delegate = new MyEnvRepo();
 		EnvironmentRepository wrapper = ObservationEnvironmentRepositoryWrapper.wrap(registry, delegate);
 
-		wrapper.findOne("foo", "bar", "baz");
+		wrapper.findOne(new RequestContext.Builder().name("foo").profiles("bar").label("baz").build());
 
 		assertThat(registry).hasSingleObservationThat().hasNameEqualTo("spring.cloud.config.environment.find")
 				.hasBeenStarted().hasBeenStopped().hasLowCardinalityKeyValue("spring.cloud.config.environment.class",
@@ -48,7 +49,7 @@ class ObservationEnvironmentRepositoryWrapperTests {
 		EnvironmentRepository composite = new CompositeEnvironmentRepository(Arrays.asList(delegate), registry, true);
 		EnvironmentRepository wrapper = ObservationEnvironmentRepositoryWrapper.wrap(registry, composite);
 
-		wrapper.findOne("foo", "bar", "baz");
+		wrapper.findOne(new RequestContext.Builder().name("foo").profiles("bar").label("baz").build());
 
 		assertThat(registry).hasHandledContextsThatSatisfy(contexts -> {
 			contexts.stream().filter(context -> context.getName().equals("spring.cloud.config.environment.find")
@@ -72,7 +73,7 @@ class ObservationEnvironmentRepositoryWrapperTests {
 	static class MyEnvRepo implements EnvironmentRepository {
 
 		@Override
-		public Environment findOne(String application, String profile, String label) {
+		public Environment findOne(RequestContext ctx) {
 			return new Environment("foo", "bar");
 		}
 

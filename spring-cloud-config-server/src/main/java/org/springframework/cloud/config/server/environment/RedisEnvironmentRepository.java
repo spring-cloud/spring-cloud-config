@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
@@ -47,10 +48,10 @@ public class RedisEnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
-		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
-		Environment environment = new Environment(application, profiles, label, null, null);
-		final List<String> keys = addKeys(application, Arrays.asList(profiles));
+	public Environment findOne(RequestContext ctx) {
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(ctx.getProfiles());
+		Environment environment = new Environment(ctx.getName(), profiles, ctx.getLabel(), null, null);
+		final List<String> keys = addKeys(ctx.getName(), Arrays.asList(profiles));
 		keys.forEach(it -> {
 			Map<?, ?> m = redis.opsForHash().entries(it);
 			environment.add(new PropertySource("redis:" + it, m));

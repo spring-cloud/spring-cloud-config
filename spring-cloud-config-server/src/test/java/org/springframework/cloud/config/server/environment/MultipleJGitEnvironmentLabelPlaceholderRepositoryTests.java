@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -57,7 +58,8 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 
 	@Test
 	public void defaultRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo(this.defaultUri + "application.yml");
 		assertVersion(environment);
@@ -65,7 +67,8 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 
 	@Test
 	public void missingRepo() {
-		Environment environment = this.repository.findOne("missing-config-repo", "staging", "master");
+		Environment environment = this.repository.findOne(
+				new RequestContext.Builder().name("missing-config-repo").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources().size()).as("Wrong property sources: " + environment).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo(this.defaultUri + "application.yml");
 		assertVersion(environment);
@@ -73,7 +76,8 @@ public class MultipleJGitEnvironmentLabelPlaceholderRepositoryTests {
 
 	@Test
 	public void defaultLabelRepo() {
-		Environment environment = this.repository.findOne("bar", "staging", null);
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo(this.defaultUri + "application.yml");
 		assertVersion(environment);

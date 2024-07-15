@@ -28,6 +28,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.config.CustomEnvironmentRepositoryTests.TestApplication;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -67,14 +68,8 @@ public class CustomEnvironmentRepositoryTests {
 		@Bean
 		public EnvironmentRepository environmentRepository() {
 			return new EnvironmentRepository() {
-
 				@Override
-				public Environment findOne(String application, String profile, String label) {
-					return findOne(application, profile, label, false);
-				}
-
-				@Override
-				public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+				public Environment findOne(RequestContext ctx) {
 					return new Environment("test", new String[0], "label", "version", "state");
 				}
 			};

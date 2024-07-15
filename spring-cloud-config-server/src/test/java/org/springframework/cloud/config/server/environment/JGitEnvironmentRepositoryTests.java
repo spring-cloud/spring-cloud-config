@@ -77,6 +77,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitSkipSslValidationCredentialsProvider;
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -130,7 +131,8 @@ public class JGitEnvironmentRepositoryTests {
 
 	@Test
 	public void vanilla() {
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -142,7 +144,8 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub" });
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
@@ -154,7 +157,8 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "{application}" });
-		Environment environment = this.repository.findOne("sub", "staging", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("sub").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
@@ -173,7 +177,8 @@ public class JGitEnvironmentRepositoryTests {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
 		this.repository.setSearchPaths(new String[] { "sub*" });
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
@@ -183,7 +188,8 @@ public class JGitEnvironmentRepositoryTests {
 	@Test
 	public void branch() {
 		this.repository.setBasedir(this.basedir);
-		Environment environment = this.repository.findOne("bar", "staging", "raw");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("raw").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -193,7 +199,8 @@ public class JGitEnvironmentRepositoryTests {
 	@Test
 	public void tag() {
 		this.repository.setBasedir(this.basedir);
-		Environment environment = this.repository.findOne("bar", "staging", "foo");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("foo").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -203,7 +210,8 @@ public class JGitEnvironmentRepositoryTests {
 	@Test
 	public void basedir() {
 		this.repository.setBasedir(this.basedir);
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -215,7 +223,8 @@ public class JGitEnvironmentRepositoryTests {
 		assertThat(this.basedir.mkdirs()).isTrue();
 		assertThat(new File(this.basedir, ".nothing").createNewFile()).isTrue();
 		this.repository.setBasedir(this.basedir);
-		Environment environment = this.repository.findOne("bar", "staging", "master");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
 				.isEqualTo(this.repository.getUri() + "/bar.properties");
@@ -240,11 +249,13 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setUri(uri);
 
 		// exists branch "feature/foo"
-		Environment environment = this.repository.findOne("bar", "staging", "feature/foo");
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("feature/foo").build());
 		assertVersion(environment);
 
 		// try tag "foo"
-		environment = this.repository.findOne("bar", "staging", "foo");
+		environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("foo").build());
 		assertThat(environment.getPropertySources().get(0).getSource().get("key")).isEqualTo("value from tag");
 	}
 
@@ -628,7 +639,8 @@ public class JGitEnvironmentRepositoryTests {
 		// here is our exception we are testing
 		when(mergeCommand.call()).thenThrow(new NotMergedException());
 
-		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", null);
+		SearchPathLocator.Locations locations = this.repository
+				.getLocations(new RequestContext.Builder().name("bar").profiles("staging").build());
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
 		verify(git, times(0)).branchDelete();
@@ -743,7 +755,8 @@ public class JGitEnvironmentRepositoryTests {
 																		// exception we
 																		// are testing
 
-		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
+		SearchPathLocator.Locations locations = this.repository
+				.getLocations(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
 		verify(git, times(0)).branchDelete();
@@ -855,7 +868,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(git.reset()).thenReturn(resetCommand);
 		when(resetCommand.call()).thenReturn(ref);
 
-		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
+		SearchPathLocator.Locations locations = this.repository
+				.getLocations(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
 		verify(git, times(0)).branchDelete();
@@ -877,7 +891,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setBasedir(this.basedir);
 
 		try {
-			envRepository.findOne("bar", "staging", "master");
+			envRepository.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		}
 		catch (Exception ex) {
 			// expected - ignore
@@ -1189,7 +1203,8 @@ public class JGitEnvironmentRepositoryTests {
 		when(mergeResult.getMergeStatus()).thenReturn(mergeStatus);
 		when(mergeStatus.isSuccessful()).thenReturn(true);
 
-		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
+		SearchPathLocator.Locations locations = this.repository
+				.getLocations(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
 		verify(deleteBranchCommand).setBranchNames(eq("feature/deletedBranchFromOrigin"));

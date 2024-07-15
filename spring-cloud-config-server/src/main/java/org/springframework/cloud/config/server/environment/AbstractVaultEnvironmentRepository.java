@@ -31,6 +31,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.util.StringUtils;
@@ -77,13 +78,13 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
-		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+	public Environment findOne(RequestContext ctx) {
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(ctx.getProfiles());
 		List<String> scrubbedProfiles = scrubProfiles(profiles);
 
-		List<String> keys = findKeys(application, scrubbedProfiles);
+		List<String> keys = findKeys(ctx.getName(), scrubbedProfiles);
 
-		Environment environment = new Environment(application, profiles, label, null, getWatchState());
+		Environment environment = new Environment(ctx.getName(), profiles, ctx.getLabel(), null, getWatchState());
 
 		for (String key : keys) {
 			// read raw 'data' key from vault

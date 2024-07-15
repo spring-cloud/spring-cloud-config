@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.mock.env.MockEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,7 +39,8 @@ public class PassthruEnvironmentRepositoryTests {
 		mockEnvironment.getPropertySources().addFirst(new OriginTrackedMapPropertySource("myorigintrackedsource",
 				Collections.singletonMap("keyNoOrigin", "valueNoOrigin")));
 		PassthruEnvironmentRepository repository = new PassthruEnvironmentRepository(mockEnvironment);
-		Environment environment = repository.findOne("testapp", "default", "master", true);
+		Environment environment = repository.findOne(new RequestContext.Builder().name("testapp").profiles("default")
+				.label("master").includeOrigin(true).build());
 		assertThat(environment).isNotNull();
 		List<PropertySource> propertySources = environment.getPropertySources();
 		assertThat(propertySources).hasSize(2);

@@ -37,6 +37,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -82,7 +83,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("bar", "staging", "master");
+		Environment environment = repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
@@ -97,7 +99,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri).properties(repoMapping).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("test1-svc", "staging", "master");
+		Environment environment = repository
+				.findOne(new RequestContext.Builder().name("test1-svc").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
@@ -113,7 +116,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri).properties(repoMapping).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("test1-svc", "staging", "master");
+		Environment environment = repository
+				.findOne(new RequestContext.Builder().name("test1-svc").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(30)
 				.isEqualTo(((MultipleJGitEnvironmentRepository) repository).getRepos().get("test1").getRefreshRate());
@@ -130,7 +134,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri).properties(repoMapping).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("test1-svc", "staging", "master");
+		Environment environment = repository
+				.findOne(new RequestContext.Builder().name("test1-svc").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
@@ -145,7 +150,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri).properties(repoMapping).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("test1-svc", "staging,cloud", "master");
+		Environment environment = repository.findOne(
+				new RequestContext.Builder().name("test1-svc").profiles("staging,cloud").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
@@ -162,9 +168,11 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri).properties(repoMapping).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("test1-svc", "cloud,staging", "master");
+		Environment environment = repository.findOne(
+				new RequestContext.Builder().name("test1-svc").profiles("cloud,staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
-		environment = repository.findOne("test1-svc", "staging,cloud", "master");
+		environment = repository.findOne(
+				new RequestContext.Builder().name("test1-svc").profiles("staging,cloud").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
@@ -178,7 +186,8 @@ public class MultipleJGitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.properties("spring.cloud.config.server.git.uri:" + defaultRepoUri).properties(repoMapping).run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("test1-svc", "staging", "master");
+		Environment environment = repository
+				.findOne(new RequestContext.Builder().name("test1-svc").profiles("staging").label("master").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 

@@ -57,6 +57,7 @@ import org.eclipse.jgit.util.FileUtils;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.Assert;
@@ -253,7 +254,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	@Override
-	public synchronized Locations getLocations(String application, String profile, String label) {
+	public synchronized Locations getLocations(RequestContext ctx) {
+		String label = ctx.getLabel();
+
 		if (label == null) {
 			label = this.defaultLabel;
 		}
@@ -272,8 +275,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				throw e;
 			}
 		}
-		return new Locations(application, profile, label, version,
-				getSearchLocations(getWorkingDirectory(), application, profile, label));
+		return new Locations(ctx.getName(), ctx.getProfiles(), label, version,
+				getSearchLocations(getWorkingDirectory(), ctx.getName(), ctx.getProfiles(), label));
 	}
 
 	@Override

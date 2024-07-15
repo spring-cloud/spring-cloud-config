@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.EnableConfigServer;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.StandardEnvironment;
@@ -94,14 +95,16 @@ public class SVNKitEnvironmentRepositoryTests {
 
 	@Test
 	public void branch() {
-		Environment environment = this.repository.findOne("bar", "staging", "branches/demobranch");
+		Environment environment = this.repository.findOne(
+				new RequestContext.Builder().name("bar").profiles("staging").label("branches/demobranch").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
 	}
 
 	@Test
 	public void branch_no_folder() {
-		Environment environment = this.repository.findOne("bar", "staging", "demobranch", false);
+		Environment environment = this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("demobranch").build());
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
 	}
@@ -118,7 +121,8 @@ public class SVNKitEnvironmentRepositoryTests {
 	@Test
 	public void invalidLabel() {
 		Assertions.assertThatThrownBy(() -> {
-			Environment environment = this.repository.findOne("bar", "staging", "unknownlabel");
+			Environment environment = this.repository.findOne(
+					new RequestContext.Builder().name("bar").profiles("staging").label("unknownlabel").build());
 			assertThat(environment.getPropertySources()).isEmpty();
 		}).isInstanceOf(NoSuchLabelException.class);
 	}
@@ -132,7 +136,8 @@ public class SVNKitEnvironmentRepositoryTests {
 	}
 
 	private Environment findOne() {
-		return this.repository.findOne("bar", "staging", "trunk");
+		return this.repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("trunk").build());
 	}
 
 	@EnableAutoConfiguration

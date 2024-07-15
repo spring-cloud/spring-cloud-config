@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.OrderComparator;
 
 /**
@@ -71,16 +72,11 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
-		return findOne(application, profile, label, false);
-	}
-
-	@Override
-	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-		Environment env = new Environment(application, new String[] { profile }, label, null, null);
+	public Environment findOne(RequestContext ctx) {
+		Environment env = new Environment(ctx.getName(), new String[] { ctx.getProfiles() }, ctx.getLabel(), null,
+				null);
 		if (this.environmentRepositories.size() == 1) {
-			Environment envRepo = this.environmentRepositories.get(0).findOne(application, profile, label,
-					includeOrigin);
+			Environment envRepo = this.environmentRepositories.get(0).findOne(ctx);
 			env.addAll(envRepo.getPropertySources());
 			env.setVersion(envRepo.getVersion());
 			env.setState(envRepo.getState());
@@ -88,7 +84,7 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 		else {
 			for (EnvironmentRepository repo : environmentRepositories) {
 				try {
-					env.addAll(repo.findOne(application, profile, label, includeOrigin).getPropertySources());
+					env.addAll(repo.findOne(ctx).getPropertySources());
 				}
 				catch (Exception e) {
 					if (failOnError) {

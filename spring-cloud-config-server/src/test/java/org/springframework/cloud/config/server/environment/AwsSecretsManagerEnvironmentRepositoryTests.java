@@ -48,6 +48,7 @@ import software.amazon.awssdk.services.secretsmanager.model.UpdateSecretVersionS
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -279,7 +280,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -305,7 +307,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -336,7 +339,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -362,7 +366,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -387,7 +392,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -412,7 +418,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -442,7 +449,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -468,7 +476,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -493,7 +502,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -518,7 +528,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -548,7 +559,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -581,7 +593,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -613,7 +626,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -645,7 +659,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -669,7 +684,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -697,7 +713,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -736,7 +753,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -768,7 +786,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -815,7 +834,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -854,7 +874,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -872,7 +893,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -889,7 +911,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -906,7 +929,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -923,7 +947,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -940,7 +965,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -956,7 +982,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -972,7 +999,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -988,7 +1016,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1005,7 +1034,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1021,7 +1051,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1037,7 +1068,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1053,7 +1085,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1070,7 +1103,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1086,7 +1120,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1102,7 +1137,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1118,7 +1154,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1134,7 +1171,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1150,7 +1188,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1166,7 +1205,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1182,7 +1222,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1198,7 +1239,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1225,7 +1267,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1251,7 +1294,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1277,7 +1321,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1308,7 +1353,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1334,7 +1380,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1359,7 +1406,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1384,7 +1432,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1414,7 +1463,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1440,7 +1490,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1465,7 +1516,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1490,7 +1542,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1520,7 +1573,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1554,7 +1608,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1587,7 +1642,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1620,7 +1676,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1644,7 +1701,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1672,7 +1730,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1712,7 +1771,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1744,7 +1804,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1792,7 +1853,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1831,7 +1893,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1871,7 +1934,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = ignoreLabelRepository.findOne(application, profile, label);
+		Environment resultEnv = ignoreLabelRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(label).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1897,7 +1961,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -1924,7 +1989,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(expectedEnv);
 
-		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
+		Environment resultEnv = labeledRepository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).label(defaultLabel).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
@@ -1949,7 +2015,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -1974,7 +2041,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2004,7 +2072,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2029,7 +2098,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2053,7 +2123,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2077,7 +2148,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2106,7 +2178,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2131,7 +2204,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2155,7 +2229,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2179,7 +2254,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2208,7 +2284,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2240,7 +2317,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2271,7 +2349,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2302,7 +2381,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2325,7 +2405,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2352,7 +2433,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2390,7 +2472,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2421,7 +2504,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2467,7 +2551,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2505,7 +2590,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2530,7 +2616,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2564,7 +2651,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2578,7 +2666,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		Environment environment = new Environment(application, profiles, null, null, null);
 		putSecrets(environment);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
 	}
@@ -2608,7 +2697,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment emptyEnvironment = new Environment(application, profiles, null, null, null);
 
-		Environment resultEnv = repository.findOne(application, profile, null);
+		Environment resultEnv = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(emptyEnvironment);
 	}

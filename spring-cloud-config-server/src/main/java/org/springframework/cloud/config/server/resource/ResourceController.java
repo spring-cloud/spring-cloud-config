@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
@@ -100,15 +101,20 @@ public class ResourceController {
 	public String retrieve(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
 			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
+		RequestContext ctx = new RequestContext.Builder().name(Environment.normalize(name)).profiles(profile)
+				.label(Environment.normalize(label)).path(getFilePath(request, name, profile, label))
+				.resolvePlaceholders(resolvePlaceholders).build();
 		String path = getFilePath(request, name, profile, label);
-		return retrieve(request, name, profile, label, path, resolvePlaceholders);
+		return retrieve(request, ctx);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel")
 	public String retrieveDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
 			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
 			throws IOException {
-		return retrieve(request, name, profile, null, path, resolvePlaceholders);
+		RequestContext ctx = new RequestContext.Builder().name(Environment.normalize(name)).profiles(profile).path(path)
+				.resolvePlaceholders(resolvePlaceholders).build();
+		return retrieve(request, ctx);
 	}
 
 	private String getFilePath(ServletWebRequest request, String name, String profile, String label) {
@@ -129,11 +135,8 @@ public class ResourceController {
 	 * be threadsafe (JGit for example). Calling this method could result in an update to
 	 * the files on disk.
 	 */
-	synchronized String retrieve(ServletWebRequest request, String name, String profile, String label, String path,
-			boolean resolvePlaceholders) throws IOException {
-		name = Environment.normalize(name);
-		label = Environment.normalize(label);
-		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+	synchronized String retrieve(ServletWebRequest request, RequestContext ctx) throws IOException {
+		Resource resource = this.resourceRepository.findOne(ctx);
 		if (checkNotModified(request, resource)) {
 			// Content was not modified. Just return.
 			return null;
@@ -145,8 +148,8 @@ public class ResourceController {
 			if (ext != null) {
 				ext = ext.toLowerCase();
 			}
-			Environment environment = this.environmentRepository.findOne(name, profile, label, false);
-			if (resolvePlaceholders) {
+			Environment environment = this.environmentRepository.findOne(ctx);
+			if (ctx.getResolvePlaceholders()) {
 				text = resolvePlaceholders(prepareEnvironment(environment), text);
 			}
 			if (ext != null && encryptEnabled && plainTextEncryptEnabled) {
@@ -167,41 +170,45 @@ public class ResourceController {
 	 */
 	String retrieve(String name, String profile, String label, String path, boolean resolvePlaceholders)
 			throws IOException {
-		return retrieve(null, name, profile, label, path, resolvePlaceholders);
+		RequestContext ctx = new RequestContext.Builder().name(Environment.normalize(name)).profiles(profile)
+				.label(Environment.normalize(label)).path(path).resolvePlaceholders(resolvePlaceholders).build();
+		return retrieve(null, ctx);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binary(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
 			ServletWebRequest request) throws IOException {
-		String path = getFilePath(request, name, profile, label);
-		return binary(request, name, profile, label, path);
+		RequestContext ctx = new RequestContext.Builder().name(Environment.normalize(name)).profiles(profile)
+				.label(Environment.normalize(label)).path(getFilePath(request, name, profile, label)).build();
+		return binary(request, ctx);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel",
 			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binaryDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
 			ServletWebRequest request) throws IOException {
-		return binary(request, name, profile, null, path);
+		RequestContext ctx = new RequestContext.Builder().name(Environment.normalize(name)).profiles(profile).path(path)
+				.build();
+		return binary(request, ctx);
 	}
 
 	/*
 	 * Used only for unit tests.
 	 */
 	byte[] binary(String name, String profile, String label, String path) throws IOException {
-		return binary(null, name, profile, label, path);
+		RequestContext ctx = new RequestContext.Builder().name(Environment.normalize(name)).profiles(profile)
+				.label(Environment.normalize(label)).path(path).build();
+		return binary(null, ctx);
 	}
 
-	private synchronized byte[] binary(ServletWebRequest request, String name, String profile, String label,
-			String path) throws IOException {
-		name = Environment.normalize(name);
-		label = Environment.normalize(label);
-		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+	private synchronized byte[] binary(ServletWebRequest request, RequestContext ctx) throws IOException {
+		Resource resource = this.resourceRepository.findOne(ctx);
 		if (checkNotModified(request, resource)) {
 			// Content was not modified. Just return.
 			return null;
 		}
 		// TODO: is this line needed for side effects?
-		prepareEnvironment(this.environmentRepository.findOne(name, profile, label));
+		prepareEnvironment(this.environmentRepository.findOne(ctx));
 		try (InputStream is = resource.getInputStream()) {
 			return StreamUtils.copyToByteArray(is);
 		}

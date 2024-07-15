@@ -28,6 +28,7 @@ import org.springframework.boot.origin.TextResourceOrigin;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.environment.PropertyValueDescriptor;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
@@ -63,18 +64,13 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 	}
 
 	@Override
-	public Environment findOne(String application, String profile, String label) {
-		return findOne(application, profile, label, false);
-	}
-
-	@Override
-	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-		Environment result = new Environment(application, StringUtils.commaDelimitedListToStringArray(profile), label,
-				null, null);
+	public Environment findOne(RequestContext ctx) {
+		Environment result = new Environment(ctx.getName(),
+				StringUtils.commaDelimitedListToStringArray(ctx.getProfiles()), ctx.getLabel(), null, null);
 		for (org.springframework.core.env.PropertySource<?> source : this.environment.getPropertySources()) {
 			String name = source.getName();
 			if (!this.standardSources.contains(name) && source instanceof MapPropertySource) {
-				result.add(new PropertySource(name, getMap(source, includeOrigin), source));
+				result.add(new PropertySource(name, getMap(source, ctx.getIncludeOrigin()), source));
 			}
 		}
 		return result;

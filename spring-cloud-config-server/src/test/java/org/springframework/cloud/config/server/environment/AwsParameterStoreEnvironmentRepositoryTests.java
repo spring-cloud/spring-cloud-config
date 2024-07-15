@@ -45,6 +45,7 @@ import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
@@ -108,7 +109,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -134,7 +136,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -157,7 +160,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -183,7 +187,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -209,7 +214,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -234,7 +240,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -256,7 +263,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -281,7 +289,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -307,7 +316,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -332,7 +342,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -354,7 +365,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -379,7 +391,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -415,7 +428,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -450,7 +464,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -476,7 +491,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -511,7 +527,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -553,7 +570,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -582,7 +600,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -620,7 +639,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -645,7 +665,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		putParameters(expected, true);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);
@@ -661,7 +682,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 		Environment expected = new Environment(application, profiles, null, null, null);
 
 		// Act
-		Environment result = repository.findOne(application, profile, null);
+		Environment result = repository
+				.findOne(new RequestContext.Builder().name(application).profiles(profile).build());
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expected);

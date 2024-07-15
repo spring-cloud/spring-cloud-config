@@ -40,6 +40,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.config.EnvironmentRepositoryConfiguration;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -80,7 +81,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("bar", "staging", "trunk");
+		Environment environment = repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("trunk").build());
 		assertThat(environment.getPropertySources()).hasSize(2);
 	}
 
@@ -90,10 +92,12 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("bar", "staging", "trunk");
+		Environment environment = repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("trunk").build());
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("bar");
 		updateRepoForUpdate(uri);
-		environment = repository.findOne("bar", "staging", "trunk");
+		environment = repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("trunk").build());
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("foo");
 	}
 
@@ -131,7 +135,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 					.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
 			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-			Environment environment = repository.findOne("bar", "staging", "unknownlabel");
+			Environment environment = repository.findOne(
+					new RequestContext.Builder().name("bar").profiles("staging").label("unknownlabel").build());
 			assertThat(environment.getPropertySources()).isEmpty();
 		}).isInstanceOf(NoSuchLabelException.class);
 	}
@@ -142,7 +147,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
 				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
-		Environment environment = repository.findOne("bar", "staging", "demobranch");
+		Environment environment = repository
+				.findOne(new RequestContext.Builder().name("bar").profiles("staging").label("demobranch").build());
 		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
 		assertThat(environment.getPropertySources()).hasSize(1);
 	}

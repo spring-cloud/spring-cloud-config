@@ -44,6 +44,7 @@ import software.amazon.awssdk.services.s3.model.VersioningConfiguration;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.support.RequestContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
@@ -125,7 +126,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void failToFindNonexistentObject() {
-		Environment env = envRepo.findOne("foo", "bar", null);
+		Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").profiles("bar").build());
 		assertThat(env.getPropertySources()).isEmpty();
 	}
 
@@ -143,7 +144,7 @@ public class AwsS3EnvironmentRepositoryTests {
 		// Pulling content from a .properties file forces a boolean into a String
 		expectedProperties.put("cloudfoundry.enabled", "true");
 
-		final Environment env = envRepo.findOne("foo", "bar", null);
+		final Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").profiles("bar").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
@@ -152,7 +153,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	public void findJsonObject() throws UnsupportedEncodingException {
 		String versionId = putFiles("foo-bar.json", jsonContent);
 
-		final Environment env = envRepo.findOne("foo", "bar", null);
+		final Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").profiles("bar").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
@@ -161,7 +162,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	public void findYamlObject() throws UnsupportedEncodingException {
 		String versionId = putFiles("foo-bar.yaml", yamlContent);
 
-		final Environment env = envRepo.findOne("foo", "bar", null);
+		final Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").profiles("bar").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
@@ -170,7 +171,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	public void findYmlObject() throws UnsupportedEncodingException {
 		String versionId = putFiles("foo-bar.yml", yamlContent);
 
-		final Environment env = envRepo.findOne("foo", "bar", null);
+		final Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").profiles("bar").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
@@ -179,7 +180,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	public void findWithDefaultProfile() throws UnsupportedEncodingException {
 		String versionId = putFiles("foo.yml", yamlContent);
 
-		final Environment env = envRepo.findOne("foo", null, null);
+		final Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default");
 	}
@@ -188,7 +189,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	public void findWithDefaultProfileUsingSuffix() throws UnsupportedEncodingException {
 		String versionId = putFiles("foo-default.yml", yamlContent);
 
-		final Environment env = envRepo.findOne("foo", null, null);
+		final Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default");
 	}
@@ -198,7 +199,8 @@ public class AwsS3EnvironmentRepositoryTests {
 		putFiles("foo-profile1.yml", yamlContent);
 		String versionId = putFiles("foo-profile2.yml", jsonContent);
 
-		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
+		final Environment env = envRepo
+				.findOne(new RequestContext.Builder().name("foo").profiles("profile1,profile2").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1", "profile2");
 	}
@@ -207,7 +209,8 @@ public class AwsS3EnvironmentRepositoryTests {
 	public void findWithMultipleProfilesOneFound() throws UnsupportedEncodingException {
 		String versionId = putFiles("foo-profile2.yml", jsonContent);
 
-		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
+		final Environment env = envRepo
+				.findOne(new RequestContext.Builder().name("foo").profiles("profile1,profile2").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 1, "profile1", "profile2");
 	}
@@ -217,7 +220,7 @@ public class AwsS3EnvironmentRepositoryTests {
 		putFiles("foo-profile1.yml", jsonContent);
 		String versionId = putFiles("foo.yml", yamlContent);
 
-		final Environment env = envRepo.findOne("foo", "profile1", null);
+		final Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").profiles("profile1").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1");
 	}
@@ -227,7 +230,7 @@ public class AwsS3EnvironmentRepositoryTests {
 		server.setDefaultProfile(null);
 		String versionId = putFiles("foo.yml", yamlContent);
 
-		final Environment env = envRepo.findOne("foo", null, null);
+		final Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 1);
 
@@ -237,7 +240,8 @@ public class AwsS3EnvironmentRepositoryTests {
 	public void findWithLabel() throws UnsupportedEncodingException {
 		String versionId = putFiles("label1/foo-bar.yml", yamlContent);
 
-		final Environment env = envRepo.findOne("foo", "bar", "label1");
+		final Environment env = envRepo
+				.findOne(new RequestContext.Builder().name("foo").profiles("bar").label("label1").build());
 
 		assertExpectedEnvironment(env, "foo", "label1", versionId, 1, "bar");
 	}
@@ -246,7 +250,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	public void findWithVersion() throws UnsupportedEncodingException {
 		String versionId = putFiles("foo-bar.yml", yamlContent);
 
-		final Environment env = envRepo.findOne("foo", "bar", null);
+		final Environment env = envRepo.findOne(new RequestContext.Builder().name("foo").profiles("bar").build());
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
 	}
@@ -256,7 +260,8 @@ public class AwsS3EnvironmentRepositoryTests {
 		putFiles("foo-profile1.yml", jsonContent);
 		String versionId = putFiles("bar-profile1.yml", jsonContent);
 
-		final Environment env = envRepo.findOne("foo,bar", "profile1", null);
+		final Environment env = envRepo
+				.findOne(new RequestContext.Builder().name("foo,bar").profiles("profile1").build());
 
 		assertExpectedEnvironment(env, "foo,bar", null, versionId, 2, "profile1");
 
@@ -280,25 +285,33 @@ public class AwsS3EnvironmentRepositoryTests {
 		properties.setBucket("test");
 		AwsS3EnvironmentRepository repository = factory.build(properties);
 
-		assertThat(repository.getLocations("app", "default", "main")).isEqualTo(
-				new SearchPathLocator.Locations("app", "default", "main", null, new String[] { "s3://test/main" }));
+		assertThat(repository
+				.getLocations(new RequestContext.Builder().name("app").profiles("default").label("main").build()))
+						.isEqualTo(new SearchPathLocator.Locations("app", "default", "main", null,
+								new String[] { "s3://test/main" }));
 
-		assertThat(repository.getLocations("app", "default", null)).isEqualTo(
-				new SearchPathLocator.Locations("app", "default", null, null, new String[] { "s3://test/" }));
+		assertThat(repository.getLocations(new RequestContext.Builder().name("app").profiles("default").build()))
+				.isEqualTo(
+						new SearchPathLocator.Locations("app", "default", null, null, new String[] { "s3://test/" }));
 
-		assertThat(repository.getLocations("app", "default", ""))
-				.isEqualTo(new SearchPathLocator.Locations("app", "default", "", null, new String[] { "s3://test/" }));
+		assertThat(
+				repository.getLocations(new RequestContext.Builder().name("app").profiles("default").label("").build()))
+						.isEqualTo(new SearchPathLocator.Locations("app", "default", "", null,
+								new String[] { "s3://test/" }));
 
 		ConfigServerProperties configServerProperties = new ConfigServerProperties();
 		configServerProperties.setDefaultLabel("defaultlabel");
 		factory = new AwsS3EnvironmentRepositoryFactory(configServerProperties);
 		repository = factory.build(properties);
 
-		assertThat(repository.getLocations("app", "default", null)).isEqualTo(new SearchPathLocator.Locations("app",
-				"default", "defaultlabel", null, new String[] { "s3://test/defaultlabel" }));
+		assertThat(repository.getLocations(new RequestContext.Builder().name("app").profiles("default").build()))
+				.isEqualTo(new SearchPathLocator.Locations("app", "default", "defaultlabel", null,
+						new String[] { "s3://test/defaultlabel" }));
 
-		assertThat(repository.getLocations("app", "default", "")).isEqualTo(new SearchPathLocator.Locations("app",
-				"default", "defaultlabel", null, new String[] { "s3://test/defaultlabel" }));
+		assertThat(
+				repository.getLocations(new RequestContext.Builder().name("app").profiles("default").label("").build()))
+						.isEqualTo(new SearchPathLocator.Locations("app", "default", "defaultlabel", null,
+								new String[] { "s3://test/defaultlabel" }));
 	}
 
 	private String putFiles(String fileName, String propertyContent) {

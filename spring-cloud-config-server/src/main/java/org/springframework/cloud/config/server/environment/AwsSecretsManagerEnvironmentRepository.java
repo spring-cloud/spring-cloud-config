@@ -37,6 +37,7 @@ import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundExce
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.support.RequestContext;
 import org.springframework.core.Ordered;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -72,26 +73,15 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 	}
 
 	@Override
-	public Environment findOne(String application, String profileList, String label) {
+	public Environment findOne(RequestContext ctx) {
 		final String defaultApplication = configServerProperties.getDefaultApplicationName();
 		final String defaultProfile = configServerProperties.getDefaultProfile();
 		final String defaultLabel = environmentProperties.getDefaultLabel();
 		final boolean ignoreLabel = environmentProperties.isIgnoreLabel();
 
-		if (ObjectUtils.isEmpty(application)) {
-			application = defaultApplication;
-		}
-
-		if (ObjectUtils.isEmpty(profileList)) {
-			profileList = defaultProfile;
-		}
-
-		if (ignoreLabel) {
-			label = null;
-		}
-		else if (StringUtils.isEmpty(label)) {
-			label = defaultLabel;
-		}
+		String application = ObjectUtils.isEmpty(ctx.getName()) ? defaultApplication : ctx.getName();
+		String profileList = ObjectUtils.isEmpty(ctx.getProfiles()) ? defaultProfile : ctx.getProfiles();
+		String label = ignoreLabel ? null : (StringUtils.isEmpty(ctx.getLabel()) ? defaultLabel : ctx.getLabel());
 
 		String[] profiles = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(profileList));
 		Environment environment = new Environment(application, profiles, label, null, null);
