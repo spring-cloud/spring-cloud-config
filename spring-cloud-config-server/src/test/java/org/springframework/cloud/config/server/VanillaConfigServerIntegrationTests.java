@@ -73,7 +73,7 @@ public class VanillaConfigServerIntegrationTests {
 	@Test
 	public void resourseEndpointsWork() {
 		String text = new TestRestTemplate()
-				.getForObject("http://localhost:" + this.port + "/foo/development/master/bar.properties", String.class);
+			.getForObject("http://localhost:" + this.port + "/foo/development/master/bar.properties", String.class);
 
 		String expected = "foo: bar";
 		assertThat(text).as("invalid content").isEqualTo(expected);

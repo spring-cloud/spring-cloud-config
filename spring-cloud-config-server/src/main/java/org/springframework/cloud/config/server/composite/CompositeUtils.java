@@ -51,8 +51,13 @@ public final class CompositeUtils {
 	 * @return list of matching types
 	 */
 	public static List<String> getCompositeTypeList(Environment environment) {
-		return Binder.get(environment).bind("spring.cloud.config.server", CompositeConfig.class).get().getComposite()
-				.stream().map(map -> (String) map.get("type")).collect(Collectors.toList());
+		return Binder.get(environment)
+			.bind("spring.cloud.config.server", CompositeConfig.class)
+			.get()
+			.getComposite()
+			.stream()
+			.map(map -> (String) map.get("type"))
+			.collect(Collectors.toList());
 	}
 
 	/**
@@ -65,8 +70,10 @@ public final class CompositeUtils {
 	public static String getFactoryName(String type, ConfigurableListableBeanFactory beanFactory) {
 		String[] factoryNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(beanFactory,
 				EnvironmentRepositoryFactory.class, true, false);
-		return Arrays.stream(factoryNames).filter(n -> StringUtils.startsWithIgnoreCase(n, type)).findFirst()
-				.orElse(null);
+		return Arrays.stream(factoryNames)
+			.filter(n -> StringUtils.startsWithIgnoreCase(n, type))
+			.findFirst()
+			.orElse(null);
 	}
 
 	/**
@@ -90,12 +97,14 @@ public final class CompositeUtils {
 	 */
 	public static Type[] getEnvironmentRepositoryFactoryTypeParams(Class<?> factoryClass) {
 		Optional<AnnotatedType> annotatedFactoryType = Arrays.stream(factoryClass.getAnnotatedInterfaces())
-				.filter(i -> {
-					ParameterizedType parameterizedType = (ParameterizedType) i.getType();
-					return parameterizedType.getRawType().equals(EnvironmentRepositoryFactory.class);
-				}).findFirst();
+			.filter(i -> {
+				ParameterizedType parameterizedType = (ParameterizedType) i.getType();
+				return parameterizedType.getRawType().equals(EnvironmentRepositoryFactory.class);
+			})
+			.findFirst();
 		ParameterizedType factoryParameterizedType = (ParameterizedType) annotatedFactoryType
-				.orElse(factoryClass.getAnnotatedSuperclass()).getType();
+			.orElse(factoryClass.getAnnotatedSuperclass())
+			.getType();
 		return factoryParameterizedType.getActualTypeArguments();
 	}
 

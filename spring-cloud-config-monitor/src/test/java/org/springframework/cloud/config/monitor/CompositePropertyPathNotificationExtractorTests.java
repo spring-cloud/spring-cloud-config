@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CompositePropertyPathNotificationExtractorTests {
 
 	private CompositePropertyPathNotificationExtractor extractor = new CompositePropertyPathNotificationExtractor(Arrays
-			.asList(new GitlabPropertyPathNotificationExtractor(), new GithubPropertyPathNotificationExtractor()));
+		.asList(new GitlabPropertyPathNotificationExtractor(), new GithubPropertyPathNotificationExtractor()));
 
 	private HttpHeaders headers = new HttpHeaders();
 

@@ -42,7 +42,9 @@ public class EncryptionAutoConfigurationTests {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
-				PropertyPlaceholderAutoConfiguration.class).properties("server.port=0").run();
+				PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=0")
+			.run();
 		TextEncryptor textEncryptor = context.getBean(TextEncryptor.class);
 		String[] textEncryptorLocatorNames = context.getBeanNamesForType(TextEncryptorLocator.class);
 		assertThat(textEncryptor).isInstanceOf(TextEncryptorUtils.FailsafeTextEncryptor.class);
@@ -56,9 +58,9 @@ public class EncryptionAutoConfigurationTests {
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
-						.properties("server.port=0", "encrypt.key-store.location=classpath:server.jks",
-								"encrypt.key-store.password=letmein", "encrypt.key-store.alias=myKey")
-						.run();
+			.properties("server.port=0", "encrypt.key-store.location=classpath:server.jks",
+					"encrypt.key-store.password=letmein", "encrypt.key-store.alias=myKey")
+			.run();
 		TextEncryptor textEncryptor = context.getBean(TextEncryptor.class);
 		TextEncryptorLocator textEncryptorLocator = context.getBean(TextEncryptorLocator.class);
 		assertThat(textEncryptor).isInstanceOf(RsaSecretEncryptor.class);
@@ -71,11 +73,13 @@ public class EncryptionAutoConfigurationTests {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
-				PropertyPlaceholderAutoConfiguration.class).properties("server.port=0", "encrypt.key=mykey").run();
+				PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=0", "encrypt.key=mykey")
+			.run();
 		TextEncryptor textEncryptor = context.getBean(TextEncryptor.class);
 		String[] textEncryptorLocatorNames = context.getBeanNamesForType(TextEncryptorLocator.class);
 		assertThat(textEncryptor.getClass().getName())
-				.isEqualTo("org.springframework.security.crypto.encrypt.HexEncodingTextEncryptor");
+			.isEqualTo("org.springframework.security.crypto.encrypt.HexEncodingTextEncryptor");
 		assertThat(textEncryptorLocatorNames).isEmpty();
 		context.close();
 	}
@@ -86,7 +90,8 @@ public class EncryptionAutoConfigurationTests {
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
-						.properties("server.port=0", "spring.cloud.bootstrap.enabled=true").run();
+			.properties("server.port=0", "spring.cloud.bootstrap.enabled=true")
+			.run();
 		TextEncryptor textEncryptor = context.getBean(TextEncryptor.class);
 		String[] textEncryptorLocatorNames = context.getBeanNamesForType(TextEncryptorLocator.class);
 		assertThat(textEncryptor.getClass().isInstance(Encryptors.noOpText().getClass()));
@@ -100,10 +105,11 @@ public class EncryptionAutoConfigurationTests {
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
-						.properties("server.port=0", "spring.cloud.bootstrap.enabled=true", "encrypt.key=mykey").run();
+			.properties("server.port=0", "spring.cloud.bootstrap.enabled=true", "encrypt.key=mykey")
+			.run();
 		TextEncryptor textEncryptor = context.getBean(TextEncryptor.class);
 		assertThat(textEncryptor.getClass().getName())
-				.isEqualTo("org.springframework.security.crypto.encrypt.HexEncodingTextEncryptor");
+			.isEqualTo("org.springframework.security.crypto.encrypt.HexEncodingTextEncryptor");
 		context.close();
 	}
 
@@ -113,10 +119,10 @@ public class EncryptionAutoConfigurationTests {
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
-						.properties("server.port=0", "spring.cloud.bootstrap.enabled=true",
-								"encrypt.key-store.location=classpath:server.jks", "encrypt.key-store.password=letmein",
-								"encrypt.key-store.alias=myKey")
-						.run();
+			.properties("server.port=0", "spring.cloud.bootstrap.enabled=true",
+					"encrypt.key-store.location=classpath:server.jks", "encrypt.key-store.password=letmein",
+					"encrypt.key-store.alias=myKey")
+			.run();
 		TextEncryptor textEncryptor = context.getBean(TextEncryptor.class);
 		TextEncryptorLocator textEncryptorLocator = context.getBean(TextEncryptorLocator.class);
 		assertThat(textEncryptor).isInstanceOf(LocatorTextEncryptor.class);

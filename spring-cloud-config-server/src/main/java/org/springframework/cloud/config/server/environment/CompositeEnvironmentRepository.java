@@ -54,8 +54,8 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
 		this.environmentRepositories = observationRegistry.isNoop() ? environmentRepositories
 				: environmentRepositories.stream()
-						.map(e -> ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, e))
-						.collect(Collectors.toList());
+					.map(e -> ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, e))
+					.collect(Collectors.toList());
 		this.failOnError = failOnError;
 	}
 
@@ -79,8 +79,8 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
 		Environment env = new Environment(application, new String[] { profile }, label, null, null);
 		if (this.environmentRepositories.size() == 1) {
-			Environment envRepo = this.environmentRepositories.get(0).findOne(application, profile, label,
-					includeOrigin);
+			Environment envRepo = this.environmentRepositories.get(0)
+				.findOne(application, profile, label, includeOrigin);
 			env.addAll(envRepo.getPropertySources());
 			env.setVersion(envRepo.getVersion());
 			env.setState(envRepo.getState());

@@ -78,7 +78,7 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 			if (item instanceof CredentialItem.YesNoType && item.getPromptText() != null
 					&& (item.getPromptText().equals(JGitText.get().sslTrustNow)
 							|| item.getPromptText()
-									.startsWith(stripFormattingPlaceholders(JGitText.get().sslTrustForRepo))
+								.startsWith(stripFormattingPlaceholders(JGitText.get().sslTrustForRepo))
 							|| item.getPromptText().equals(JGitText.get().sslTrustAlways))) {
 				continue;
 			}

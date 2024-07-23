@@ -29,6 +29,7 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Beans annotated with {@link HostKeyAndAlgoBothExist} and {@link Validated} will have
  * the constraints applied.
+ *
  * @author Ollie Hughes
  */
 @Constraint(validatedBy = HostKeyAndAlgoBothExistValidator.class)

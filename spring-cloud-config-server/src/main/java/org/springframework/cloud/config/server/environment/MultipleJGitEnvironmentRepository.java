@@ -62,8 +62,9 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			MultipleJGitEnvironmentProperties properties, ObservationRegistry observationRegistry) {
 		super(environment, properties, observationRegistry);
 		this.observationRegistry = observationRegistry;
-		properties.getRepos().forEach((name, props) -> this.repos.put(name,
-				new PatternMatchingJGitEnvironmentRepository(environment, props, this.observationRegistry)));
+		properties.getRepos()
+			.forEach((name, props) -> this.repos.put(name,
+					new PatternMatchingJGitEnvironmentRepository(environment, props, this.observationRegistry)));
 	}
 
 	@Override

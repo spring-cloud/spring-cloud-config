@@ -76,8 +76,12 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 	@Override
 	public VaultEndpoint vaultEndpoint() {
 
-		URI baseUrl = UriComponentsBuilder.newInstance().scheme(vaultProperties.getScheme())
-				.host(vaultProperties.getHost()).port(vaultProperties.getPort()).build().toUri();
+		URI baseUrl = UriComponentsBuilder.newInstance()
+			.scheme(vaultProperties.getScheme())
+			.host(vaultProperties.getHost())
+			.port(vaultProperties.getPort())
+			.build()
+			.toUri();
 
 		return VaultEndpoint.from(baseUrl);
 	}
@@ -125,7 +129,8 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 	@Override
 	public RestOperations restOperations() {
 		return restTemplateBuilder(vaultEndpointProvider(),
-				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory()).build();
+				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory())
+			.build();
 	}
 
 	private SslConfiguration.KeyStoreConfiguration getKeyStoreConfiguration(Resource resourceProperty,

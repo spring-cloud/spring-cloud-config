@@ -55,18 +55,20 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 		try {
 			BindHandlerBootstrapper bindHandlerBootstrapper = new BindHandlerBootstrapper();
 			context = new SpringApplicationBuilder(TestConfig.class)
-					.addBootstrapRegistryInitializer(bindHandlerBootstrapper)
-					.addBootstrapRegistryInitializer(ConfigServerBootstrapper.create()
-							.withLoaderInterceptor(new Interceptor()).withRestTemplateFactory(this::restTemplate))
-					.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
-						BootstrapContext bootstrapContext = event.getBootstrapContext();
-						ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
+				.addBootstrapRegistryInitializer(bindHandlerBootstrapper)
+				.addBootstrapRegistryInitializer(ConfigServerBootstrapper.create()
+					.withLoaderInterceptor(new Interceptor())
+					.withRestTemplateFactory(this::restTemplate))
+				.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
+					BootstrapContext bootstrapContext = event.getBootstrapContext();
+					ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
 
-						RestTemplate restTemplate = bootstrapContext.get(RestTemplate.class);
-						beanFactory.registerSingleton("holder", new RestTemplateHolder(restTemplate));
-						beanFactory.registerSingleton("interceptor", bootstrapContext.get(LoaderInterceptor.class));
-					})).run("--spring.config.import=optional:configserver:", "--custom.prop=customval",
-							"--spring.cloud.config.label=mylabel");
+					RestTemplate restTemplate = bootstrapContext.get(RestTemplate.class);
+					beanFactory.registerSingleton("holder", new RestTemplateHolder(restTemplate));
+					beanFactory.registerSingleton("interceptor", bootstrapContext.get(LoaderInterceptor.class));
+				}))
+				.run("--spring.config.import=optional:configserver:", "--custom.prop=customval",
+						"--spring.cloud.config.label=mylabel");
 
 			RestTemplateHolder holder = context.getBean(RestTemplateHolder.class);
 			assertThat(holder).isNotNull();
@@ -118,8 +120,10 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 
 				PropertySource<?> propertySource = configData.getPropertySources().iterator().next();
 				Options options = configData.getOptions(propertySource);
-				assertThat(options).as("ConfigData.options was null for location %s property source %s",
-						context.getResource(), propertySource.getName()).isNotNull();
+				assertThat(options)
+					.as("ConfigData.options was null for location %s property source %s", context.getResource(),
+							propertySource.getName())
+					.isNotNull();
 				assertThat(options.contains(Option.IGNORE_IMPORTS)).isTrue();
 				assertThat(options.contains(Option.PROFILE_SPECIFIC)).isFalse();
 			}

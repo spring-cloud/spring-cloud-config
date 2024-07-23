@@ -53,7 +53,7 @@ public class VaultEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(secret);
+			.isEqualTo(secret);
 	}
 
 	@Test
@@ -73,7 +73,7 @@ public class VaultEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isNull();
+			.isNull();
 	}
 
 	@Test
@@ -88,11 +88,11 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(value);
+			.isEqualTo(value);
 	}
 
 	@Test
@@ -107,14 +107,14 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
-				.isEqualTo("<n/a>");
+			.isEqualTo("<n/a>");
 	}
 
 	@Test
@@ -129,14 +129,14 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
-				.isEqualTo("<n/a>");
+			.isEqualTo("<n/a>");
 	}
 
 	@Test
@@ -151,14 +151,14 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
-				.isEqualTo("<n/a>");
+			.isEqualTo("<n/a>");
 	}
 
 	@Test
@@ -173,14 +173,14 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
-				.isEqualTo("<n/a>");
+			.isEqualTo("<n/a>");
 	}
 
 	private VaultResponse withVaultResponse(String key, Object value) {

@@ -74,7 +74,8 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 		if (StringUtils.isNotEmpty(serviceAccountFile)) {
 			GoogleCredentials creds = GoogleCredentials.fromStream(new FileInputStream(new File(serviceAccountFile)));
 			this.client = SecretManagerServiceClient.create(SecretManagerServiceSettings.newBuilder()
-					.setCredentialsProvider(FixedCredentialsProvider.create(creds)).build());
+				.setCredentialsProvider(FixedCredentialsProvider.create(creds))
+				.build());
 		}
 		else {
 			this.client = SecretManagerServiceClient.create();
@@ -100,7 +101,7 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 
 		// Get all secrets.
 		SecretManagerServiceClient.ListSecretsPagedResponse pagedListSecretResponse = client
-				.listSecrets(listSecretRequest);
+			.listSecrets(listSecretRequest);
 
 		List<Secret> result = new ArrayList<Secret>();
 		pagedListSecretResponse.iterateAll().forEach(result::add);
@@ -114,11 +115,12 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 
 		// Create the request.
 		ListSecretVersionsRequest listVersionRequest = ListSecretVersionsRequest.newBuilder()
-				.setParent(parent.toString()).build();
+			.setParent(parent.toString())
+			.build();
 
 		// Get all versions.
 		SecretManagerServiceClient.ListSecretVersionsPagedResponse pagedListVersionResponse = client
-				.listSecretVersions(listVersionRequest);
+			.listSecretVersions(listVersionRequest);
 		List<SecretVersion> result = new ArrayList<SecretVersion>();
 		pagedListVersionResponse.iterateAll().forEach(result::add);
 		return result;
@@ -138,8 +140,9 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 		if (winner != null) {
 			SecretVersionName name = SecretVersionName.parse(winner.getName());
 			// Access the secret version.
-			AccessSecretVersionRequest request = AccessSecretVersionRequest.newBuilder().setName(name.toString())
-					.build();
+			AccessSecretVersionRequest request = AccessSecretVersionRequest.newBuilder()
+				.setName(name.toString())
+				.build();
 			AccessSecretVersionResponse response = client.accessSecretVersion(request);
 			result = response.getPayload().getData().toStringUtf8();
 		}
@@ -160,14 +163,16 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 			GoogleCredentials credential = new GoogleCredentials(accessToken);
 			HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credential);
 			service = new CloudResourceManager.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-					JacksonFactory.getDefaultInstance(), requestInitializer).setApplicationName(APPLICATION_NAME)
-							.build();
+					JacksonFactory.getDefaultInstance(), requestInitializer)
+				.setApplicationName(APPLICATION_NAME)
+				.build();
 			List<String> permissionsList = Arrays.asList(ACCESS_SECRET_PERMISSION);
 
 			TestIamPermissionsRequest requestBody = new TestIamPermissionsRequest().setPermissions(permissionsList);
 
 			TestIamPermissionsResponse testIamPermissionsResponse = service.projects()
-					.testIamPermissions(getProjectId(), requestBody).execute();
+				.testIamPermissions(getProjectId(), requestBody)
+				.execute();
 
 			if (testIamPermissionsResponse.getPermissions() != null && testIamPermissionsResponse.size() >= 1) {
 				return Boolean.TRUE;
@@ -198,8 +203,10 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 		catch (Exception e) {
 			// not in GCP
 			HttpEntity<String> entity = new HttpEntity<String>("parameters", getMetadataHttpHeaders());
-			result = rest.exchange(GoogleSecretManagerEnvironmentProperties.GOOGLE_METADATA_PROJECT_URL, HttpMethod.GET,
-					entity, String.class).getBody();
+			result = rest
+				.exchange(GoogleSecretManagerEnvironmentProperties.GOOGLE_METADATA_PROJECT_URL, HttpMethod.GET, entity,
+						String.class)
+				.getBody();
 		}
 		return result;
 	}

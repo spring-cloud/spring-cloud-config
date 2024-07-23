@@ -42,7 +42,8 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
 
 		SpringVaultEnvironmentRepository environmentRepository = new SpringVaultEnvironmentRepositoryFactory(
-				mockHttpRequest(), new EnvironmentWatch.Default(), mockClientConfiguration()).build(properties);
+				mockHttpRequest(), new EnvironmentWatch.Default(), mockClientConfiguration())
+			.build(properties);
 
 		VaultKeyValueOperations keyValueTemplate = environmentRepository.getKeyValueTemplate();
 		assertThat(keyValueTemplate.getApiVersion()).isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_1);
@@ -54,7 +55,8 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 		properties.setKvVersion(2);
 
 		SpringVaultEnvironmentRepository environmentRepository = new SpringVaultEnvironmentRepositoryFactory(
-				mockHttpRequest(), new EnvironmentWatch.Default(), mockClientConfiguration()).build(properties);
+				mockHttpRequest(), new EnvironmentWatch.Default(), mockClientConfiguration())
+			.build(properties);
 
 		VaultKeyValueOperations keyValueTemplate = environmentRepository.getKeyValueTemplate();
 		assertThat(keyValueTemplate.getApiVersion()).isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);

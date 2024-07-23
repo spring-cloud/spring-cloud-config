@@ -66,7 +66,7 @@ public class TransportConfigurationIntegrationTests {
 			@Test
 			public void propertyBasedTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
+					.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 			}
 
@@ -95,7 +95,7 @@ public class TransportConfigurationIntegrationTests {
 			@Test
 			public void propertyBasedTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
+					.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 			}
 
@@ -132,7 +132,7 @@ public class TransportConfigurationIntegrationTests {
 
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
-						.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
+					.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
 			}
 
 		}
@@ -154,7 +154,7 @@ public class TransportConfigurationIntegrationTests {
 
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
-						.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
+					.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
 			}
 
 		}
@@ -181,11 +181,11 @@ public class TransportConfigurationIntegrationTests {
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
 				MultipleJGitEnvironmentProperties sshUriProperties = configCallback.getSshUriProperties();
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
-						.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
+					.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
 
 				assertThat(sshUriProperties.getRepos().get("repo1")).isNotNull();
 				assertThat(sshUriProperties.getRepos().get("repo1").getPrivateKey())
-						.isEqualTo(TestProperties.TEST_PRIVATE_KEY_2);
+					.isEqualTo(TestProperties.TEST_PRIVATE_KEY_2);
 			}
 
 		}
@@ -208,11 +208,11 @@ public class TransportConfigurationIntegrationTests {
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
 				MultipleJGitEnvironmentProperties sshUriProperties = configCallback.getSshUriProperties();
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
-						.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
+					.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
 
 				assertThat(sshUriProperties.getRepos().get("repo1")).isNotNull();
 				assertThat(sshUriProperties.getRepos().get("repo1").getPrivateKey())
-						.isEqualTo(TestProperties.TEST_PRIVATE_KEY_2);
+					.isEqualTo(TestProperties.TEST_PRIVATE_KEY_2);
 			}
 
 		}
@@ -234,7 +234,7 @@ public class TransportConfigurationIntegrationTests {
 			@Test
 			public void fileBasedTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
+					.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isInstanceOf(FileBasedSshTransportConfigCallback.class);
 			}
 
@@ -261,15 +261,15 @@ public class TransportConfigurationIntegrationTests {
 				// configuration, so we'll reflect
 				// the createSshConfigStore method to allow us to check that the config
 				// property is set as expected.
-				Method createSshConfigStore = factory.getClass().getDeclaredMethod("createSshConfigStore", File.class,
-						File.class, String.class);
+				Method createSshConfigStore = factory.getClass()
+					.getDeclaredMethod("createSshConfigStore", File.class, File.class, String.class);
 				createSshConfigStore.setAccessible(true);
 				SshConfigStore configStore = (SshConfigStore) createSshConfigStore.invoke(factory, new File("."),
 						new File("."), "local-username");
 				createSshConfigStore.setAccessible(false);
 				assertThat("yes"
-						.equals(configStore.lookup("gitserver.com", 22, "username").getValue("StrictHostKeyChecking")))
-								.isTrue();
+					.equals(configStore.lookup("gitserver.com", 22, "username").getValue("StrictHostKeyChecking")))
+					.isTrue();
 			}
 
 		}
@@ -288,7 +288,7 @@ public class TransportConfigurationIntegrationTests {
 			@Test
 			public void fileBasedTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
+					.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isInstanceOf(FileBasedSshTransportConfigCallback.class);
 			}
 
@@ -315,15 +315,15 @@ public class TransportConfigurationIntegrationTests {
 				// configuration, so we'll reflect
 				// the createSshConfigStore method to allow us to check that the config
 				// property is set as expected.
-				Method createSshConfigStore = factory.getClass().getDeclaredMethod("createSshConfigStore", File.class,
-						File.class, String.class);
+				Method createSshConfigStore = factory.getClass()
+					.getDeclaredMethod("createSshConfigStore", File.class, File.class, String.class);
 				createSshConfigStore.setAccessible(true);
 				SshConfigStore configStore = (SshConfigStore) createSshConfigStore.invoke(factory, new File("."),
 						new File("."), "local-username");
 				createSshConfigStore.setAccessible(false);
 				assertThat("yes"
-						.equals(configStore.lookup("gitserver.com", 22, "username").getValue("StrictHostKeyChecking")))
-								.isTrue();
+					.equals(configStore.lookup("gitserver.com", 22, "username").getValue("StrictHostKeyChecking")))
+					.isTrue();
 			}
 
 		}
@@ -344,7 +344,7 @@ public class TransportConfigurationIntegrationTests {
 			@Test
 			public void sshTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
+					.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isNotNull();
 			}
 
@@ -374,7 +374,7 @@ public class TransportConfigurationIntegrationTests {
 			@Test
 			public void sshTransportCallbackIsConfigured() {
 				TransportConfigCallback transportConfigCallback = this.jGitEnvironmentRepository
-						.getTransportConfigCallback();
+					.getTransportConfigCallback();
 				assertThat(transportConfigCallback).isNotNull();
 			}
 

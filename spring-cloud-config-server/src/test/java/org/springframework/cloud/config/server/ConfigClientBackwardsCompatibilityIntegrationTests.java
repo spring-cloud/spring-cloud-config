@@ -70,7 +70,7 @@ public class ConfigClientBackwardsCompatibilityIntegrationTests {
 	@Test
 	public void testBackwardsCompatibleFormatWithLabel() {
 		Map environment = new TestRestTemplate()
-				.getForObject("http://localhost:" + this.port + "/foo/development/master", Map.class);
+			.getForObject("http://localhost:" + this.port + "/foo/development/master", Map.class);
 		Object value = getPropertySourceValue(environment);
 		assertThat(value).isInstanceOf(String.class).isEqualTo("true");
 	}

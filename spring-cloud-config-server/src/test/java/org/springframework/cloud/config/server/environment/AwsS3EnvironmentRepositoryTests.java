@@ -58,16 +58,19 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Container
 	private static final LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(S3);
+			DockerImageName.parse("localstack/localstack:1.3.1"))
+		.withServices(S3);
 
 	private final ConfigServerProperties server = new ConfigServerProperties();
 
 	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
-			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
+		.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
 
-	private final S3Client s3Client = S3Client.builder().region(Region.of(localstack.getRegion()))
-			.credentialsProvider(staticCredentialsProvider).endpointOverride(localstack.getEndpointOverride(S3))
-			.build();
+	private final S3Client s3Client = S3Client.builder()
+		.region(Region.of(localstack.getRegion()))
+		.credentialsProvider(staticCredentialsProvider)
+		.endpointOverride(localstack.getEndpointOverride(S3))
+		.build();
 
 	private final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
 
@@ -104,16 +107,17 @@ public class AwsS3EnvironmentRepositoryTests {
 	@BeforeAll
 	public static void createBucket() {
 		StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
-				.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
-		S3Client s3Client = S3Client.builder().region(Region.of(localstack.getRegion()))
-				.credentialsProvider(staticCredentialsProvider).endpointOverride(localstack.getEndpointOverride(S3))
-				.build();
+			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
+		S3Client s3Client = S3Client.builder()
+			.region(Region.of(localstack.getRegion()))
+			.credentialsProvider(staticCredentialsProvider)
+			.endpointOverride(localstack.getEndpointOverride(S3))
+			.build();
 		s3Client.createBucket(CreateBucketRequest.builder().bucket("bucket1").build());
-		s3Client.putBucketVersioning(
-				PutBucketVersioningRequest.builder().bucket("bucket1")
-						.versioningConfiguration(
-								VersioningConfiguration.builder().status(BucketVersioningStatus.ENABLED).build())
-						.build());
+		s3Client.putBucketVersioning(PutBucketVersioningRequest.builder()
+			.bucket("bucket1")
+			.versioningConfiguration(VersioningConfiguration.builder().status(BucketVersioningStatus.ENABLED).build())
+			.build());
 	}
 
 	@AfterEach
@@ -283,11 +287,11 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(repository.getLocations("app", "default", "main")).isEqualTo(
 				new SearchPathLocator.Locations("app", "default", "main", null, new String[] { "s3://test/main" }));
 
-		assertThat(repository.getLocations("app", "default", null)).isEqualTo(
-				new SearchPathLocator.Locations("app", "default", null, null, new String[] { "s3://test/" }));
+		assertThat(repository.getLocations("app", "default", null))
+			.isEqualTo(new SearchPathLocator.Locations("app", "default", null, null, new String[] { "s3://test/" }));
 
 		assertThat(repository.getLocations("app", "default", ""))
-				.isEqualTo(new SearchPathLocator.Locations("app", "default", "", null, new String[] { "s3://test/" }));
+			.isEqualTo(new SearchPathLocator.Locations("app", "default", "", null, new String[] { "s3://test/" }));
 
 		ConfigServerProperties configServerProperties = new ConfigServerProperties();
 		configServerProperties.setDefaultLabel("defaultlabel");
@@ -303,8 +307,10 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	private String putFiles(String fileName, String propertyContent) {
 		toBeRemoved.add(fileName);
-		return s3Client.putObject(PutObjectRequest.builder().bucket("bucket1").key(fileName).build(),
-				RequestBody.fromString((propertyContent))).versionId();
+		return s3Client
+			.putObject(PutObjectRequest.builder().bucket("bucket1").key(fileName).build(),
+					RequestBody.fromString((propertyContent)))
+			.versionId();
 	}
 
 	private void assertExpectedEnvironment(Environment env, String applicationName, String label, String versionId,

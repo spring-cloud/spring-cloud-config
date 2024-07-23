@@ -91,7 +91,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		if (environment.getActiveProfiles().length > 0) {
 			List<String> finalCombinedProfiles = combinedProfiles;
 			List<String> filteredActiveProfiles = Stream.of(environment.getActiveProfiles())
-					.filter(s -> !finalCombinedProfiles.contains(s)).collect(Collectors.toList());
+				.filter(s -> !finalCombinedProfiles.contains(s))
+				.collect(Collectors.toList());
 			combinedProfiles.addAll(filteredActiveProfiles);
 		}
 		else if (environment.getDefaultProfiles().length > 0 && combinedProfiles.isEmpty()) {

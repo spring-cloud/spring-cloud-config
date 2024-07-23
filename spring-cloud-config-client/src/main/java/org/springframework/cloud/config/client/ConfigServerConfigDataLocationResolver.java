@@ -61,7 +61,7 @@ public class ConfigServerConfigDataLocationResolver
 	 */
 	public static final String PREFIX = "configserver:";
 	static final boolean RSA_IS_PRESENT = ClassUtils
-			.isPresent("org.springframework.security.rsa.crypto.RsaSecretEncryptor", null);
+		.isPresent("org.springframework.security.rsa.crypto.RsaSecretEncryptor", null);
 
 	private final Log log;
 
@@ -116,10 +116,11 @@ public class ConfigServerConfigDataLocationResolver
 		ConfigClientProperties configClientProperties;
 		if (context.getBootstrapContext().isRegistered(ConfigClientProperties.class)) {
 			configClientProperties = binder
-					.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
-					.orElseGet(ConfigClientProperties::new);
+				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
+				.orElseGet(ConfigClientProperties::new);
 			boolean discoveryEnabled = context.getBinder()
-					.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(context)).orElse(false);
+				.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(context))
+				.orElse(false);
 			// In the case where discovery is enabled we need to extract the config server
 			// uris, username, and password
 			// from the properties from the context. These are set in
@@ -127,7 +128,7 @@ public class ConfigServerConfigDataLocationResolver
 			// be called the first time we fetch configuration.
 			if (discoveryEnabled) {
 				ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()
-						.get(ConfigClientProperties.class);
+					.get(ConfigClientProperties.class);
 
 				configClientProperties.setUri(bootstrapConfigClientProperties.getUri());
 				configClientProperties.setPassword(bootstrapConfigClientProperties.getPassword());
@@ -136,14 +137,14 @@ public class ConfigServerConfigDataLocationResolver
 		}
 		else {
 			configClientProperties = binder
-					.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
-					.orElseGet(ConfigClientProperties::new);
+				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
+				.orElseGet(ConfigClientProperties::new);
 		}
 		if (!StringUtils.hasText(configClientProperties.getName())
 				|| "application".equals(configClientProperties.getName())) {
 			// default to spring.application.name if name isn't set
 			String applicationName = binder.bind("spring.application.name", Bindable.of(String.class), bindHandler)
-					.orElse("application");
+				.orElse("application");
 			configClientProperties.setName(applicationName);
 		}
 
@@ -151,7 +152,7 @@ public class ConfigServerConfigDataLocationResolver
 		holder.properties = configClientProperties;
 		// bind retry, override later
 		holder.retryProperties = binder.bind(RetryProperties.PREFIX, RetryProperties.class)
-				.orElseGet(RetryProperties::new);
+			.orElseGet(RetryProperties::new);
 
 		if (StringUtils.hasText(uris)) {
 			String[] uri = StringUtils.commaDelimitedListToStringArray(uris);
@@ -168,19 +169,24 @@ public class ConfigServerConfigDataLocationResolver
 			}
 			if (StringUtils.hasText(paramStr)) {
 				Properties properties = StringUtils
-						.splitArrayElementsIntoProperties(StringUtils.delimitedListToStringArray(paramStr, "&"), "=");
+					.splitArrayElementsIntoProperties(StringUtils.delimitedListToStringArray(paramStr, "&"), "=");
 				if (properties != null) {
 					PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
-					map.from(() -> properties.getProperty("fail-fast")).as(Boolean::valueOf)
-							.to(configClientProperties::setFailFast);
-					map.from(() -> properties.getProperty("max-attempts")).as(Integer::valueOf)
-							.to(holder.retryProperties::setMaxAttempts);
-					map.from(() -> properties.getProperty("max-interval")).as(Long::valueOf)
-							.to(holder.retryProperties::setMaxInterval);
-					map.from(() -> properties.getProperty("multiplier")).as(Double::valueOf)
-							.to(holder.retryProperties::setMultiplier);
-					map.from(() -> properties.getProperty("initial-interval")).as(Long::valueOf)
-							.to(holder.retryProperties::setInitialInterval);
+					map.from(() -> properties.getProperty("fail-fast"))
+						.as(Boolean::valueOf)
+						.to(configClientProperties::setFailFast);
+					map.from(() -> properties.getProperty("max-attempts"))
+						.as(Integer::valueOf)
+						.to(holder.retryProperties::setMaxAttempts);
+					map.from(() -> properties.getProperty("max-interval"))
+						.as(Long::valueOf)
+						.to(holder.retryProperties::setMaxInterval);
+					map.from(() -> properties.getProperty("multiplier"))
+						.as(Double::valueOf)
+						.to(holder.retryProperties::setMultiplier);
+					map.from(() -> properties.getProperty("initial-interval"))
+						.as(Long::valueOf)
+						.to(holder.retryProperties::setInitialInterval);
 				}
 			}
 			configClientProperties.setUri(uri);
@@ -233,8 +239,10 @@ public class ConfigServerConfigDataLocationResolver
 		ConfigurableBootstrapContext bootstrapContext = resolverContext.getBootstrapContext();
 		bootstrapContext.register(ConfigClientProperties.class,
 				InstanceSupplier.of(properties).withScope(BootstrapRegistry.Scope.PROTOTYPE));
-		bootstrapContext.addCloseListener(event -> event.getApplicationContext().getBeanFactory().registerSingleton(
-				"configDataConfigClientProperties", event.getBootstrapContext().get(ConfigClientProperties.class)));
+		bootstrapContext.addCloseListener(event -> event.getApplicationContext()
+			.getBeanFactory()
+			.registerSingleton("configDataConfigClientProperties",
+					event.getBootstrapContext().get(ConfigClientProperties.class)));
 
 		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class,
 				context -> new ConfigClientRequestTemplateFactory(log, context.get(ConfigClientProperties.class)));
@@ -259,18 +267,20 @@ public class ConfigServerConfigDataLocationResolver
 		resource.setRetryProperties(propertyHolder.retryProperties);
 
 		boolean discoveryEnabled = resolverContext.getBinder()
-				.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(resolverContext))
-				.orElse(false);
+			.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(resolverContext))
+			.orElse(false);
 
-		boolean retryEnabled = resolverContext.getBinder().bind(ConfigClientProperties.PREFIX + ".fail-fast",
-				Bindable.of(Boolean.class), getBindHandler(resolverContext)).orElse(false);
+		boolean retryEnabled = resolverContext.getBinder()
+			.bind(ConfigClientProperties.PREFIX + ".fail-fast", Bindable.of(Boolean.class),
+					getBindHandler(resolverContext))
+			.orElse(false);
 
 		if (discoveryEnabled) {
 			log.debug(LogMessage.format("discovery enabled"));
 			// register ConfigServerInstanceMonitor
 			bootstrapContext.registerIfAbsent(ConfigServerInstanceMonitor.class, context -> {
 				ConfigServerInstanceProvider.Function function = context
-						.get(ConfigServerInstanceProvider.Function.class);
+					.get(ConfigServerInstanceProvider.Function.class);
 
 				ConfigServerInstanceProvider instanceProvider;
 				if (ConfigClientRetryBootstrapper.RETRY_IS_PRESENT && retryEnabled) {
@@ -301,9 +311,10 @@ public class ConfigServerConfigDataLocationResolver
 			// config client uri
 			bootstrapContext.addCloseListener(event -> {
 				ConfigServerInstanceMonitor configServerInstanceMonitor = event.getBootstrapContext()
-						.get(ConfigServerInstanceMonitor.class);
-				event.getApplicationContext().getBeanFactory().registerSingleton("configServerInstanceMonitor",
-						configServerInstanceMonitor);
+					.get(ConfigServerInstanceMonitor.class);
+				event.getApplicationContext()
+					.getBeanFactory()
+					.registerSingleton("configServerInstanceMonitor", configServerInstanceMonitor);
 			});
 		}
 

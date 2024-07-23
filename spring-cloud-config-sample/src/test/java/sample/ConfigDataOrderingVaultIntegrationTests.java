@@ -54,8 +54,9 @@ public class ConfigDataOrderingVaultIntegrationTests {
 
 	@Container
 	public static VaultContainer vaultContainer = new VaultContainer<>(DockerImageName.parse("vault:1.13.3"))
-			.withVaultToken("my-root-token").withClasspathResourceMapping("vaultordering/vault_test_policy.txt",
-					"/tmp/vault_test_policy.txt", BindMode.READ_ONLY);
+		.withVaultToken("my-root-token")
+		.withClasspathResourceMapping("vaultordering/vault_test_policy.txt", "/tmp/vault_test_policy.txt",
+				BindMode.READ_ONLY);
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException, JSONException {

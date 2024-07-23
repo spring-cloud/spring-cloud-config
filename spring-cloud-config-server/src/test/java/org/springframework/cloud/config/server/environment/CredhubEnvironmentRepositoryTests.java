@@ -68,7 +68,7 @@ public class CredhubEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application-production-mylabel");
+			.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEmpty();
 	}
 
@@ -84,7 +84,7 @@ public class CredhubEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application-default-master");
+			.isEqualTo("credhub-my-application-default-master");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));
 	}
 
@@ -100,7 +100,7 @@ public class CredhubEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application-production-mylabel");
+			.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));
 	}
 
@@ -118,11 +118,11 @@ public class CredhubEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application-production-mylabel");
+			.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));
 		assertThat(environment.getPropertySources().get(1).getName())
 
-				.isEqualTo("credhub-my-application-cloud-mylabel");
+			.isEqualTo("credhub-my-application-cloud-mylabel");
 		assertThat(environment.getPropertySources().get(1).getSource()).isEqualTo(singletonMap("key2", "value2"));
 	}
 
@@ -132,17 +132,17 @@ public class CredhubEnvironmentRepositoryTests {
 
 		SimpleCredentialName togglesCredentialName = new SimpleCredentialName(expectedPath + "/toggles");
 		SimpleCredentialName absCredentialName = new SimpleCredentialName(expectedPath + "/abs");
-		when(this.credhubCredentialOperations.findByPath(expectedPath)).thenReturn(
-				asList(new CredentialSummary(togglesCredentialName), new CredentialSummary(absCredentialName)));
+		when(this.credhubCredentialOperations.findByPath(expectedPath))
+			.thenReturn(asList(new CredentialSummary(togglesCredentialName), new CredentialSummary(absCredentialName)));
 		JsonCredential credentials = new JsonCredential();
 		credentials.put("key1", "value1");
 		when(this.credhubCredentialOperations.getByName(togglesCredentialName, JsonCredential.class))
-				.thenReturn(new CredentialDetails<>("id1", togglesCredentialName, CredentialType.JSON, credentials));
+			.thenReturn(new CredentialDetails<>("id1", togglesCredentialName, CredentialType.JSON, credentials));
 
 		JsonCredential otherCredentials = new JsonCredential();
 		otherCredentials.put("key2", "value2");
 		when(this.credhubCredentialOperations.getByName(absCredentialName, JsonCredential.class))
-				.thenReturn(new CredentialDetails<>("id2", absCredentialName, CredentialType.JSON, otherCredentials));
+			.thenReturn(new CredentialDetails<>("id2", absCredentialName, CredentialType.JSON, otherCredentials));
 
 		Environment environment = this.credhubEnvironmentRepository.findOne("my-application", "production", "mylabel");
 
@@ -152,7 +152,7 @@ public class CredhubEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application-production-mylabel");
+			.isEqualTo("credhub-my-application-production-mylabel");
 		HashMap<Object, Object> expectedValues = new HashMap<>();
 		expectedValues.put("key1", "value1");
 		expectedValues.put("key2", "value2");
@@ -172,10 +172,10 @@ public class CredhubEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application-production-mylabel");
+			.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));
 		assertThat(environment.getPropertySources().get(1).getName())
-				.isEqualTo("credhub-application-production-mylabel");
+			.isEqualTo("credhub-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(1).getSource()).isEqualTo(singletonMap("key2", "value2"));
 	}
 
@@ -194,13 +194,13 @@ public class CredhubEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources()).hasSize(4);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("credhub-my-application-production-mylabel");
+			.isEqualTo("credhub-my-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(singletonMap("key1", "value1"));
 		assertThat(environment.getPropertySources().get(1).getName())
-				.isEqualTo("credhub-application-production-mylabel");
+			.isEqualTo("credhub-application-production-mylabel");
 		assertThat(environment.getPropertySources().get(1).getSource()).isEqualTo(singletonMap("key2", "value2"));
 		assertThat(environment.getPropertySources().get(2).getName())
-				.isEqualTo("credhub-my-application-default-mylabel");
+			.isEqualTo("credhub-my-application-default-mylabel");
 		assertThat(environment.getPropertySources().get(2).getSource()).isEqualTo(singletonMap("key3", "value3"));
 		assertThat(environment.getPropertySources().get(3).getName()).isEqualTo("credhub-application-default-mylabel");
 		assertThat(environment.getPropertySources().get(3).getSource()).isEqualTo(singletonMap("key4", "value4"));
@@ -209,12 +209,12 @@ public class CredhubEnvironmentRepositoryTests {
 	private void stubCredentials(String expectedPath, String name, String key, String value) {
 		SimpleCredentialName credentialsName = new SimpleCredentialName(expectedPath + "/" + name);
 		when(this.credhubCredentialOperations.findByPath(expectedPath))
-				.thenReturn(singletonList(new CredentialSummary(credentialsName)));
+			.thenReturn(singletonList(new CredentialSummary(credentialsName)));
 		JsonCredential credentials = new JsonCredential();
 		credentials.put(key, value);
 		when(this.credhubCredentialOperations.getByName(new SimpleCredentialName(expectedPath + "/" + name),
 				JsonCredential.class))
-						.thenReturn(new CredentialDetails<>("id1", credentialsName, CredentialType.JSON, credentials));
+			.thenReturn(new CredentialDetails<>("id1", credentialsName, CredentialType.JSON, credentials));
 	}
 
 }

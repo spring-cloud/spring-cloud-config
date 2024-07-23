@@ -31,8 +31,9 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTest
 		org.assertj.core.api.Assertions.assertThatThrownBy(() -> {
 			givenDiscoveryClientReturnsNoInfo();
 			setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true");
-		}).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
 	}
 
 	@Test

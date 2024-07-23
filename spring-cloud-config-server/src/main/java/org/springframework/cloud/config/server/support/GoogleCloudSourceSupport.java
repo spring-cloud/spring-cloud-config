@@ -119,8 +119,11 @@ public final class GoogleCloudSourceSupport {
 		@Override
 		public Map<String, String> getAuthorizationHeaders() {
 			try {
-				return GoogleCredentials.getApplicationDefault().getRequestMetadata().entrySet().stream()
-						.collect(toMap(Entry::getKey, this::joinValues));
+				return GoogleCredentials.getApplicationDefault()
+					.getRequestMetadata()
+					.entrySet()
+					.stream()
+					.collect(toMap(Entry::getKey, this::joinValues));
 			}
 			catch (IOException ex) {
 				throw new IllegalStateException(ex);

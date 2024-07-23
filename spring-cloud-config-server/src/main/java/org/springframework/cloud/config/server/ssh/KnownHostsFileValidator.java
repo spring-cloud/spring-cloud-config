@@ -51,7 +51,8 @@ public class KnownHostsFileValidator
 			context.disableDefaultConstraintViolation();
 			context.buildConstraintViolationWithTemplate(format(
 					"File '%s' specified in property 'spring.cloud.config.server.git.knownHostsFile' could not be located",
-					knownHostsFile)).addConstraintViolation();
+					knownHostsFile))
+				.addConstraintViolation();
 			return false;
 		}
 		return true;

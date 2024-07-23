@@ -44,7 +44,7 @@ public class VaultKvAccessStrategyFactoryTest {
 	@Test
 	public void testGetUnsupportedStrategy() {
 		Assertions.assertThatThrownBy(() -> VaultKvAccessStrategyFactory.forVersion(null, "foo", 0, ""))
-				.isInstanceOf(IllegalArgumentException.class);
+			.isInstanceOf(IllegalArgumentException.class);
 	}
 
 }

@@ -103,19 +103,19 @@ class ConfigClientHints implements RuntimeHintsRegistrar {
 			return;
 		}
 		hints.reflection()
-				.registerType(TypeReference.of(ConfigClientAutoConfiguration.class),
-						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS))
-				.registerType(TypeReference.of(ConfigDataLocation.class),
-						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS))
-				.registerType(TypeReference.of("org.springframework.boot.context.config.ConfigDataProperties"),
-						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-								MemberCategory.DECLARED_FIELDS, MemberCategory.INTROSPECT_DECLARED_METHODS))
-				.registerType(TypeReference.of(org.springframework.cloud.config.environment.Environment.class),
-						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-								MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS))
-				.registerType(TypeReference.of(PropertySource.class),
-						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-								MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS));
+			.registerType(TypeReference.of(ConfigClientAutoConfiguration.class),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS))
+			.registerType(TypeReference.of(ConfigDataLocation.class),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS))
+			.registerType(TypeReference.of("org.springframework.boot.context.config.ConfigDataProperties"),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+							MemberCategory.DECLARED_FIELDS, MemberCategory.INTROSPECT_DECLARED_METHODS))
+			.registerType(TypeReference.of(org.springframework.cloud.config.environment.Environment.class),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+							MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS))
+			.registerType(TypeReference.of(PropertySource.class),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+							MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS));
 	}
 
 }

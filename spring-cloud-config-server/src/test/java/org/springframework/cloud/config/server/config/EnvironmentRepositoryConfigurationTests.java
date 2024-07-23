@@ -39,62 +39,60 @@ public class EnvironmentRepositoryConfigurationTests {
 	@Test
 	public void configTokenProviderCanBeOverridden() {
 		new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
-				.withPropertyValues("spring.profiles.active=composite",
-						"spring.cloud.config.server.vault.authentication=TOKEN",
-						"spring.cloud.config.server.vault.token=testTokenValue",
-						"spring.cloud.config.server.composite[0].type=vault",
-						"spring.cloud.config.server.composite[1].type=git",
-						"spring.cloud.config.server.composite[1].uri=https://test.com/Some-Test-Repo.git")
-				.run((context) -> {
-					assertThat(context.getBean(ConfigTokenProvider.class)).isNotNull();
-					assertThat(context.getBean(ConfigTokenProvider.class))
-							.isInstanceOf(EnvironmentConfigTokenProvider.class);
-					EnvironmentConfigTokenProvider tokenProvider = context
-							.getBean(EnvironmentConfigTokenProvider.class);
-					assertThat(tokenProvider.getToken()).isEqualTo("testTokenValue");
-				});
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
+			.withPropertyValues("spring.profiles.active=composite",
+					"spring.cloud.config.server.vault.authentication=TOKEN",
+					"spring.cloud.config.server.vault.token=testTokenValue",
+					"spring.cloud.config.server.composite[0].type=vault",
+					"spring.cloud.config.server.composite[1].type=git",
+					"spring.cloud.config.server.composite[1].uri=https://test.com/Some-Test-Repo.git")
+			.run((context) -> {
+				assertThat(context.getBean(ConfigTokenProvider.class)).isNotNull();
+				assertThat(context.getBean(ConfigTokenProvider.class))
+					.isInstanceOf(EnvironmentConfigTokenProvider.class);
+				EnvironmentConfigTokenProvider tokenProvider = context.getBean(EnvironmentConfigTokenProvider.class);
+				assertThat(tokenProvider.getToken()).isEqualTo("testTokenValue");
+			});
 	}
 
 	@Test
 	public void awsParamStoreFactoryBeanExistsWithComposite() {
 		new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
-				.withPropertyValues("spring.profiles.active=composite",
-						"spring.cloud.config.server.composite[0].type=awsparamstore",
-						"spring.cloud.config.server.composite[0].region=us-east-1",
-						"spring.cloud.config.server.composite[1].type=git",
-						"spring.cloud.config.server.composite[1].uri=https://test.com/Some-Test-Repo.git")
-				.run((context) -> {
-					assertThat(context.getBean(AwsParameterStoreEnvironmentRepositoryFactory.class)).isNotNull();
-				});
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
+			.withPropertyValues("spring.profiles.active=composite",
+					"spring.cloud.config.server.composite[0].type=awsparamstore",
+					"spring.cloud.config.server.composite[0].region=us-east-1",
+					"spring.cloud.config.server.composite[1].type=git",
+					"spring.cloud.config.server.composite[1].uri=https://test.com/Some-Test-Repo.git")
+			.run((context) -> {
+				assertThat(context.getBean(AwsParameterStoreEnvironmentRepositoryFactory.class)).isNotNull();
+			});
 	}
 
 	@Test
 	public void customGitCredentialsProvider() {
 		new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(GitTestBeans.class, TestBeans.class,
-						EnvironmentRepositoryConfiguration.class))
-				.withPropertyValues("spring.profiles.active=git",
-						"spring.cloud.config.server.git.uri=http://github.com/user/test")
-				.run((context) -> {
-					assertThat(context.getBean(GitCredentialsProviderFactory.class))
-							.isInstanceOf(GitTestBeans.CustomGitCredentialsProviderFactory.class);
-				});
+			.withConfiguration(AutoConfigurations.of(GitTestBeans.class, TestBeans.class,
+					EnvironmentRepositoryConfiguration.class))
+			.withPropertyValues("spring.profiles.active=git",
+					"spring.cloud.config.server.git.uri=http://github.com/user/test")
+			.run((context) -> {
+				assertThat(context.getBean(GitCredentialsProviderFactory.class))
+					.isInstanceOf(GitTestBeans.CustomGitCredentialsProviderFactory.class);
+			});
 	}
 
 	@Test
 	public void configServerActuatorConfigurationWithCustomHealthStatus() {
 		new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(
-						EnvironmentRepositoryConfigurationTests.EnableConfigurationPropertiesBeans.class,
-						EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class))
-				.withPropertyValues("spring.cloud.config.server.health.down-health-status=CUSTOMIZED")
-				.run((context) -> {
-					ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
-					assertThat(ReflectionTestUtils.getField(healthIndicator, "downHealthStatus"))
-							.isEqualTo("CUSTOMIZED");
-				});
+			.withConfiguration(AutoConfigurations.of(
+					EnvironmentRepositoryConfigurationTests.EnableConfigurationPropertiesBeans.class,
+					EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class))
+			.withPropertyValues("spring.cloud.config.server.health.down-health-status=CUSTOMIZED")
+			.run((context) -> {
+				ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
+				assertThat(ReflectionTestUtils.getField(healthIndicator, "downHealthStatus")).isEqualTo("CUSTOMIZED");
+			});
 	}
 
 	@TestConfiguration

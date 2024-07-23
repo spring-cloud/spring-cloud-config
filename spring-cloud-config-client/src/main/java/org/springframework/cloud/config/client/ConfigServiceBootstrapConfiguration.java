@@ -77,8 +77,10 @@ public class ConfigServiceBootstrapConfiguration {
 			policy.setInitialInterval(properties.getInitialInterval());
 			policy.setMultiplier(properties.getMultiplier());
 			policy.setMaxInterval(properties.getMaxInterval());
-			return RetryInterceptorBuilder.stateless().backOffPolicy(policy).maxAttempts(properties.getMaxAttempts())
-					.build();
+			return RetryInterceptorBuilder.stateless()
+				.backOffPolicy(policy)
+				.maxAttempts(properties.getMaxAttempts())
+				.build();
 		}
 
 	}

@@ -64,7 +64,8 @@ public class AwsS3IntegrationTests {
 
 	@Container
 	static LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(LocalStackContainer.Service.S3);
+			DockerImageName.parse("localstack/localstack:1.3.1"))
+		.withServices(LocalStackContainer.Service.S3);
 
 	private static ConfigurableApplicationContext server;
 
@@ -118,9 +119,9 @@ public class AwsS3IntegrationTests {
 		Environment env = rest.getForObject(configServerUrl + "/application/default", Environment.class);
 		assertThat(env.getPropertySources().get(0).getSource().get("foo")).isEqualTo("1");
 		assertThat(rest.getForObject(configServerUrl + "/application/default/main/data.txt", String.class))
-				.isEqualTo("this is a test in main");
+			.isEqualTo("this is a test in main");
 		assertThat(rest.getForObject(configServerUrl + "/application/default/data.txt?useDefaultLabel", String.class))
-				.isEqualTo("this is a test");
+			.isEqualTo("this is a test");
 	}
 
 	@Test
@@ -139,8 +140,10 @@ public class AwsS3IntegrationTests {
 
 		@Bean
 		S3Client s3Client() {
-			return S3Client.builder().region(Region.of(localstack.getRegion()))
-					.endpointOverride(localstack.getEndpointOverride(LocalStackContainer.Service.S3)).build();
+			return S3Client.builder()
+				.region(Region.of(localstack.getRegion()))
+				.endpointOverride(localstack.getEndpointOverride(LocalStackContainer.Service.S3))
+				.build();
 		}
 
 		@Bean

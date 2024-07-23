@@ -148,7 +148,8 @@ public class SVNKitEnvironmentRepositoryTests {
 				FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 			}
 			new SpringApplicationBuilder(TestApplication.class).profiles("subversion")
-					.properties("server.port=8888", "spring.cloud.config.server.svn.uri:" + uri).run(args);
+				.properties("server.port=8888", "spring.cloud.config.server.svn.uri:" + uri)
+				.run(args);
 		}
 
 	}

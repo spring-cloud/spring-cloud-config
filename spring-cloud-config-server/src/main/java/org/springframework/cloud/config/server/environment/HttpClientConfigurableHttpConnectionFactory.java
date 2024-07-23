@@ -117,8 +117,10 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 			 * which have no placeholders. That is the one we want to use in the case
 			 * there are multiple matches.
 			 */
-			List<String> keys = builderMap.keySet().stream().filter(key -> !PLACEHOLDER_PATTERN.matcher(key).find())
-					.collect(Collectors.toList());
+			List<String> keys = builderMap.keySet()
+				.stream()
+				.filter(key -> !PLACEHOLDER_PATTERN.matcher(key).find())
+				.collect(Collectors.toList());
 
 			if (keys.size() == 1) {
 				return builderMap.get(keys.get(0));

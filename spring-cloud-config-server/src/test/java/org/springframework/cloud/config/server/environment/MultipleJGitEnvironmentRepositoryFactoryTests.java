@@ -55,11 +55,12 @@ public class MultipleJGitEnvironmentRepositoryFactoryTests {
 				new MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties());
 		multipleJGitEnvironmentProperties.setRepos(patternMatchingJGitEnvironmentPropertiesMap);
 		MultipleJGitEnvironmentRepository multipleJGitEnvironmentRepository = multipleJGitEnvironmentRepositoryFactory
-				.build(multipleJGitEnvironmentProperties);
+			.build(multipleJGitEnvironmentProperties);
 		assertThat(multipleJGitEnvironmentRepository.getGitCredentialsProviderFactory())
-				.isSameAs(gitCredentialsProviderFactory);
+			.isSameAs(gitCredentialsProviderFactory);
 		MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository pattenMatchingGitRepo = multipleJGitEnvironmentRepository
-				.getRepos().get("pattenMatchingGitRepo1");
+			.getRepos()
+			.get("pattenMatchingGitRepo1");
 		assertThat(pattenMatchingGitRepo.getGitCredentialsProviderFactory()).isSameAs(gitCredentialsProviderFactory);
 
 	}

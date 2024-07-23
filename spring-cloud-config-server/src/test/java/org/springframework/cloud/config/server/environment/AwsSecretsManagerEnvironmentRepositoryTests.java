@@ -65,16 +65,19 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Container
 	private static final LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(SECRETSMANAGER);
+			DockerImageName.parse("localstack/localstack:1.3.1"))
+		.withServices(SECRETSMANAGER);
 
 	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
 	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
-			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
+		.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
 
 	private final SecretsManagerClient smClient = SecretsManagerClient.builder()
-			.region(Region.of(localstack.getRegion())).credentialsProvider(staticCredentialsProvider)
-			.endpointOverride(localstack.getEndpointOverride(SECRETSMANAGER)).build();
+		.region(Region.of(localstack.getRegion()))
+		.credentialsProvider(staticCredentialsProvider)
+		.endpointOverride(localstack.getEndpointOverride(SECRETSMANAGER))
+		.build();
 
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
 
@@ -250,11 +253,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@AfterEach
 	public void cleanUp() {
 		markedForDeletion
-				.forEach(value -> smClient.restoreSecret(RestoreSecretRequest.builder().secretId(value).build()));
+			.forEach(value -> smClient.restoreSecret(RestoreSecretRequest.builder().secretId(value).build()));
 		markedForDeletion.clear();
 
 		toBeRemoved.forEach(value -> smClient
-				.deleteSecret(DeleteSecretRequest.builder().secretId(value).forceDeleteWithoutRecovery(true).build()));
+			.deleteSecret(DeleteSecretRequest.builder().secretId(value).forceDeleteWithoutRecovery(true).build()));
 		toBeRemoved.clear();
 	}
 
@@ -332,7 +335,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(defaultApplication, profiles, defaultLabel, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -438,7 +441,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -544,7 +547,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -763,8 +766,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
-		expectedEnv.addAll(
-				Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
+		expectedEnv
+			.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1304,7 +1307,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(defaultApplication, profiles, label, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1410,7 +1413,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1516,7 +1519,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1739,8 +1742,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationReleaseProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
-		expectedEnv.addAll(
-				Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
+		expectedEnv
+			.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -2000,7 +2003,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
 		environment
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
@@ -2102,7 +2105,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment environment = new Environment(application, profiles, null, null, null);
 		environment
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
@@ -2204,7 +2207,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment environment = new Environment(application, profiles, null, null, null);
 		environment
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
@@ -2416,8 +2419,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationProperties());
 
 		Environment environment = new Environment(application, profiles, null, null, null);
-		environment.addAll(
-				Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
+		environment
+			.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(environment);
 
@@ -2641,10 +2644,13 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 			String secrets = getSecrets(ps);
 			CreateSecretResponse response = smClient
-					.createSecret(CreateSecretRequest.builder().name(path).secretString(secrets).build());
+				.createSecret(CreateSecretRequest.builder().name(path).secretString(secrets).build());
 			if (!ObjectUtils.isEmpty(label)) {
-				smClient.updateSecretVersionStage(UpdateSecretVersionStageRequest.builder().secretId(path)
-						.moveToVersionId(response.versionId()).versionStage(label).build());
+				smClient.updateSecretVersionStage(UpdateSecretVersionStageRequest.builder()
+					.secretId(path)
+					.moveToVersionId(response.versionId())
+					.versionStage(label)
+					.build());
 			}
 			toBeRemoved.add(path);
 		}

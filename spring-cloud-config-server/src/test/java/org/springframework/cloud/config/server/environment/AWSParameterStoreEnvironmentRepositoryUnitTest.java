@@ -112,10 +112,12 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 		for (PropertySource ps : environment.getPropertySources()) {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 
-			GetParametersByPathRequest request = GetParametersByPathRequest.builder().path(path)
-					.recursive(environmentProperties.isRecursive())
-					.withDecryption(environmentProperties.isDecryptValues())
-					.maxResults(environmentProperties.getMaxResults()).build();
+			GetParametersByPathRequest request = GetParametersByPathRequest.builder()
+				.path(path)
+				.recursive(environmentProperties.isRecursive())
+				.withDecryption(environmentProperties.isDecryptValues())
+				.maxResults(environmentProperties.getMaxResults())
+				.build();
 
 			Set<Parameter> parameters = getParameters(ps, path, withSlashesForPropertyName);
 
@@ -132,8 +134,10 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 					if (i == 0) {
 						nextToken = generateNextToken();
 
-						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
-								.nextToken(nextToken).build();
+						GetParametersByPathResponse responseClone = response.toBuilder()
+							.parameters(chunk)
+							.nextToken(nextToken)
+							.build();
 
 						when(ssmClient.getParametersByPath(eq(request))).thenReturn(responseClone);
 					}
@@ -148,8 +152,10 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 
 						GetParametersByPathRequest requestClone = request.toBuilder().nextToken(nextToken).build();
 
-						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
-								.nextToken(newNextToken).build();
+						GetParametersByPathResponse responseClone = response.toBuilder()
+							.parameters(chunk)
+							.nextToken(newNextToken)
+							.build();
 
 						when(ssmClient.getParametersByPath(eq(requestClone))).thenReturn(responseClone);
 
@@ -165,10 +171,13 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 
 	private Set<Parameter> getParameters(PropertySource propertySource, String path,
 			boolean withSlashesForPropertyName) {
-		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter
-				.builder().name(path + (withSlashesForPropertyName
-						? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR) : p.getKey()))
-				.type(ParameterType.STRING).value((String) p.getValue()).version(1L).build();
+		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter.builder()
+			.name(path + (withSlashesForPropertyName ? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR)
+					: p.getKey()))
+			.type(ParameterType.STRING)
+			.value((String) p.getValue())
+			.version(1L)
+			.build();
 
 		return propertySource.getSource().entrySet().stream().map(mapper).collect(Collectors.toSet());
 	}
@@ -177,7 +186,7 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 		AtomicInteger counter = new AtomicInteger();
 
 		Collector<Parameter, ?, Map<Integer, Set<Parameter>>> collector = Collectors
-				.groupingBy(p -> counter.getAndIncrement() / environmentProperties.getMaxResults(), Collectors.toSet());
+			.groupingBy(p -> counter.getAndIncrement() / environmentProperties.getMaxResults(), Collectors.toSet());
 
 		return new ArrayList<>(parameters.stream().collect(collector).values());
 	}

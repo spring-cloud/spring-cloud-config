@@ -63,7 +63,7 @@ public class CipherEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(secret);
+			.isEqualTo(secret);
 	}
 
 	@ParameterizedTest
@@ -83,7 +83,7 @@ public class CipherEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(secret);
+			.isEqualTo(secret);
 	}
 
 	@ParameterizedTest
@@ -97,7 +97,7 @@ public class CipherEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(null);
+			.isEqualTo(null);
 	}
 
 	@ParameterizedTest
@@ -116,7 +116,7 @@ public class CipherEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(secret);
+			.isEqualTo(secret);
 	}
 
 }

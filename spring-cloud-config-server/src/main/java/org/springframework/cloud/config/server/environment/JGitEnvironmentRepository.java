@@ -446,10 +446,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private List<String> deleteBranches(Git git, Collection<String> branchesToDelete) throws GitAPIException {
 		DeleteBranchCommand deleteBranchCommand = git.branchDelete()
-				.setBranchNames(branchesToDelete.toArray(new String[0]))
-				// local branch can contain data which is not merged to HEAD - force
-				// delete it anyway, since local copy should be R/O
-				.setForce(true);
+			.setBranchNames(branchesToDelete.toArray(new String[0]))
+			// local branch can contain data which is not merged to HEAD - force
+			// delete it anyway, since local copy should be R/O
+			.setForce(true);
 		List<String> resultList = deleteBranchCommand.call();
 		this.logger.info(format("Deleted %s branches from %s branches to delete.", resultList, branchesToDelete));
 		return resultList;
@@ -651,8 +651,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private Git cloneToBasedir() throws GitAPIException {
-		CloneCommand clone = this.gitFactory.getCloneCommandByCloneRepository().setURI(getUri())
-				.setDirectory(getBasedir());
+		CloneCommand clone = this.gitFactory.getCloneCommandByCloneRepository()
+			.setURI(getUri())
+			.setDirectory(getBasedir());
 		configureCommand(clone);
 		try {
 			return clone.call();
@@ -709,8 +710,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
-		checkout.setCreateBranch(true).setName(label).setUpstreamMode(SetupUpstreamMode.TRACK)
-				.setStartPoint("origin/" + label);
+		checkout.setCreateBranch(true)
+			.setName(label)
+			.setUpstreamMode(SetupUpstreamMode.TRACK)
+			.setStartPoint("origin/" + label);
 	}
 
 	private boolean isBranch(Git git, String label) throws GitAPIException {

@@ -46,7 +46,8 @@ public class AppRoleClientAuthenticationProvider extends SpringVaultClientAuthen
 		VaultEnvironmentProperties.AppRoleProperties appRole = vaultProperties.getAppRole();
 
 		AppRoleAuthenticationOptions.AppRoleAuthenticationOptionsBuilder builder = AppRoleAuthenticationOptions
-				.builder().path(appRole.getAppRolePath());
+			.builder()
+			.path(appRole.getAppRolePath());
 
 		if (StringUtils.hasText(appRole.getRole())) {
 			builder.appRole(appRole.getRole());

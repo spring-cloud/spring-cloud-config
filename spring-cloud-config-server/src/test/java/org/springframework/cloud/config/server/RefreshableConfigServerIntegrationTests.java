@@ -125,7 +125,7 @@ public class RefreshableConfigServerIntegrationTests {
 			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
 			Environment environment = new Environment("", "");
 			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(Boolean.class)))
-					.willReturn(environment);
+				.willReturn(environment);
 			return repository;
 		}
 
@@ -133,7 +133,7 @@ public class RefreshableConfigServerIntegrationTests {
 		public ResourceRepository resourceRepository() {
 			ResourceRepository repository = Mockito.mock(ResourceRepository.class);
 			given(repository.findOne(isA(String.class), isA(String.class), nullable(String.class), isA(String.class)))
-					.willReturn(new ByteArrayResource("".getBytes()));
+				.willReturn(new ByteArrayResource("".getBytes()));
 			return repository;
 		}
 

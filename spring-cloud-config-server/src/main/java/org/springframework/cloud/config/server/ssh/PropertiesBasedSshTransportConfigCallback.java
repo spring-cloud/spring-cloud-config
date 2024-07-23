@@ -40,7 +40,7 @@ public class PropertiesBasedSshTransportConfigCallback implements TransportConfi
 	public PropertiesBasedSshTransportConfigCallback(MultipleJGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
 		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new SshUriPropertyProcessor(this.sshUriProperties)
-				.getSshKeysByHostname();
+			.getSshKeysByHostname();
 		if (sshKeysByHostname.isEmpty()) {
 			this.sshdSessionFactory = null;
 		}

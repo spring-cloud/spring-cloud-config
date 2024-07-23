@@ -47,8 +47,9 @@ public class NativeEnvironmentRepositoryTests {
 	@BeforeEach
 	public void init() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class)
-				.properties("logging.level.org.springframework.boot.context.config=TRACE").web(WebApplicationType.NONE)
-				.run();
+			.properties("logging.level.org.springframework.boot.context.config=TRACE")
+			.web(WebApplicationType.NONE)
+			.run();
 		this.repository = new NativeEnvironmentRepository(context.getEnvironment(), new NativeEnvironmentProperties(),
 				ObservationRegistry.NOOP);
 		this.repository.setVersion("myversion");
@@ -86,7 +87,7 @@ public class NativeEnvironmentRepositoryTests {
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isNotEqualTo(environment.getPropertySources().get(1).getName());
+			.isNotEqualTo(environment.getPropertySources().get(1).getName());
 	}
 
 	@Test
@@ -97,7 +98,7 @@ public class NativeEnvironmentRepositoryTests {
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isNotEqualTo(environment.getPropertySources().get(1).getName());
+			.isNotEqualTo(environment.getPropertySources().get(1).getName());
 	}
 
 	@Test
@@ -108,7 +109,7 @@ public class NativeEnvironmentRepositoryTests {
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isNotEqualTo(environment.getPropertySources().get(1).getName());
+			.isNotEqualTo(environment.getPropertySources().get(1).getName());
 	}
 
 	@Test
@@ -316,11 +317,12 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("classpath:/test/bad-syntax");
 		NativeEnvironmentRepository repo = this.repository;
 		assertThatExceptionOfType(FailedToConstructEnvironmentException.class)
-				.isThrownBy(() -> repo.findOne("foo", "master", "default")).withMessage(
-						"Could not construct context for config=foo profile=master label=default includeOrigin=false; nested exception is while constructing a mapping\n"
-								+ " in 'reader', line 1, column 1:\n" + "    key: value\n" + "    ^\n"
-								+ "found duplicate key key\n" + " in 'reader', line 2, column 1:\n" + "    key: value\n"
-								+ "    ^\n");
+			.isThrownBy(() -> repo.findOne("foo", "master", "default"))
+			.withMessage(
+					"Could not construct context for config=foo profile=master label=default includeOrigin=false; nested exception is while constructing a mapping\n"
+							+ " in 'reader', line 1, column 1:\n" + "    key: value\n" + "    ^\n"
+							+ "found duplicate key key\n" + " in 'reader', line 2, column 1:\n" + "    key: value\n"
+							+ "    ^\n");
 	}
 
 	@Test

@@ -33,15 +33,15 @@ public class CompositeClasspathTests {
 		@Test
 		public void contextLoads() {
 			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
-							"spring.config.name:compositeconfigserver",
-							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
-							"spring.cloud.config.server.composite[0].type:git",
-							"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
-							"spring.cloud.config.server.composite[1].type:svn")
-					.run(context -> {
-						CompositeUtils.getCompositeTypeList(context.getEnvironment());
-					});
+				.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
+						"spring.config.name:compositeconfigserver",
+						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+						"spring.cloud.config.server.composite[0].type:git",
+						"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
+						"spring.cloud.config.server.composite[1].type:svn")
+				.run(context -> {
+					CompositeUtils.getCompositeTypeList(context.getEnvironment());
+				});
 		}
 
 	}
@@ -52,14 +52,14 @@ public class CompositeClasspathTests {
 		@Test
 		public void contextLoads() {
 			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
-							"spring.config.name:compositeconfigserver",
-							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
-							"spring.cloud.config.server.composite[0].type:git")
-					.run(context -> {
-						CompositeUtils.getCompositeTypeList(context.getEnvironment());
-						assertThat(context).doesNotHaveBean("configServerHealthIndicator");
-					});
+				.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
+						"spring.config.name:compositeconfigserver",
+						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+						"spring.cloud.config.server.composite[0].type:git")
+				.run(context -> {
+					CompositeUtils.getCompositeTypeList(context.getEnvironment());
+					assertThat(context).doesNotHaveBean("configServerHealthIndicator");
+				});
 		}
 
 	}
@@ -70,15 +70,15 @@ public class CompositeClasspathTests {
 		@Test
 		public void contextLoads() {
 			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
-							"spring.config.name:compositeconfigserver",
-							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
-							"spring.cloud.config.server.composite[0].type:git",
-							"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
-							"spring.cloud.config.server.composite[1].type:svn")
-					.run(context -> {
-						CompositeUtils.getCompositeTypeList(context.getEnvironment());
-					});
+				.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
+						"spring.config.name:compositeconfigserver",
+						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+						"spring.cloud.config.server.composite[0].type:git",
+						"spring.cloud.config.server.composite[1].uri:file:///./target/repos/svn-config-repo",
+						"spring.cloud.config.server.composite[1].type:svn")
+				.run(context -> {
+					CompositeUtils.getCompositeTypeList(context.getEnvironment());
+				});
 		}
 
 	}
@@ -89,15 +89,15 @@ public class CompositeClasspathTests {
 		@Test
 		public void contextLoads() {
 			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
-							"spring.config.name:compositeconfigserver",
-							"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
-							"spring.cloud.config.server.composite[0].type:git",
-							"spring.cloud.config.server.composite[1].uri:file:./target/repos/config-repo",
-							"spring.cloud.config.server.composite[1].type:native")
-					.run(context -> {
-						CompositeUtils.getCompositeTypeList(context.getEnvironment());
-					});
+				.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
+						"spring.config.name:compositeconfigserver",
+						"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
+						"spring.cloud.config.server.composite[0].type:git",
+						"spring.cloud.config.server.composite[1].uri:file:./target/repos/config-repo",
+						"spring.cloud.config.server.composite[1].type:native")
+				.run(context -> {
+					CompositeUtils.getCompositeTypeList(context.getEnvironment());
+				});
 		}
 
 	}
@@ -108,15 +108,15 @@ public class CompositeClasspathTests {
 		@Test
 		public void contextLoads() {
 			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
-							"spring.config.name:compositeconfigserver",
-							"spring.cloud.config.server.composite[0].uri:file:///./target/repos/svn-config-repo",
-							"spring.cloud.config.server.composite[0].type:svn",
-							"spring.cloud.config.server.composite[1].uri:file:./target/repos/config-repo",
-							"spring.cloud.config.server.composite[1].type:native")
-					.run(context -> {
-						CompositeUtils.getCompositeTypeList(context.getEnvironment());
-					});
+				.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
+						"spring.config.name:compositeconfigserver",
+						"spring.cloud.config.server.composite[0].uri:file:///./target/repos/svn-config-repo",
+						"spring.cloud.config.server.composite[0].type:svn",
+						"spring.cloud.config.server.composite[1].uri:file:./target/repos/config-repo",
+						"spring.cloud.config.server.composite[1].type:native")
+				.run(context -> {
+					CompositeUtils.getCompositeTypeList(context.getEnvironment());
+				});
 		}
 
 	}
@@ -127,13 +127,13 @@ public class CompositeClasspathTests {
 		@Test
 		public void contextLoads() {
 			new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-					.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
-							"spring.config.name:configserver",
-							"spring.cloud.config.server.composite[0].uri:https://source.developers.google.com",
-							"spring.cloud.config.server.composite[0].type:git")
-					.run(context -> {
-						CompositeUtils.getCompositeTypeList(context.getEnvironment());
-					});
+				.withPropertyValues("spring.profiles.active:test,composite", "spring.jmx.enabled=false",
+						"spring.config.name:configserver",
+						"spring.cloud.config.server.composite[0].uri:https://source.developers.google.com",
+						"spring.cloud.config.server.composite[0].type:git")
+				.run(context -> {
+					CompositeUtils.getCompositeTypeList(context.getEnvironment());
+				});
 		}
 
 	}

@@ -63,39 +63,45 @@ class ConfigServerRuntimeHints implements RuntimeHintsRegistrar {
 				classLoader)) {
 			return;
 		}
-		hints.reflection().registerTypes(Set.of(TypeReference.of(HostKeyAndAlgoBothExistValidator.class),
-				TypeReference.of(KnownHostsFileValidator.class), TypeReference.of(HostKeyAlgoSupportedValidator.class),
-				TypeReference.of(PrivateKeyValidator.class), TypeReference.of(SshPropertyValidator.class),
-				TypeReference.of(PropertyValueDescriptor.class)),
-				hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
-		hints.reflection().registerTypes(
-				Set.of(TypeReference.of(PropertyValueDescriptor.class), TypeReference.of(Mac.class),
-						TypeReference.of(KeyAgreement.class), TypeReference.of(KeyPairGenerator.class),
-						TypeReference.of(KeyFactory.class), TypeReference.of(Signature.class),
-						TypeReference.of(MessageDigest.class)),
-				hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS));
+		hints.reflection()
+			.registerTypes(Set.of(TypeReference.of(HostKeyAndAlgoBothExistValidator.class),
+					TypeReference.of(KnownHostsFileValidator.class),
+					TypeReference.of(HostKeyAlgoSupportedValidator.class), TypeReference.of(PrivateKeyValidator.class),
+					TypeReference.of(SshPropertyValidator.class), TypeReference.of(PropertyValueDescriptor.class)),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
+		hints.reflection()
+			.registerTypes(
+					Set.of(TypeReference.of(PropertyValueDescriptor.class), TypeReference.of(Mac.class),
+							TypeReference.of(KeyAgreement.class), TypeReference.of(KeyPairGenerator.class),
+							TypeReference.of(KeyFactory.class), TypeReference.of(Signature.class),
+							TypeReference.of(MessageDigest.class)),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS));
 
 		// TODO: move over to GraalVM reachability metadata
 		if (ClassUtils.isPresent("org.apache.sshd.common.SshConstants", classLoader)) {
-			hints.reflection().registerTypes(Set.of(TypeReference.of(BouncyCastleSecurityProviderRegistrar.class),
-					TypeReference.of(EdDSASecurityProviderRegistrar.class), TypeReference.of(Nio2ServiceFactory.class),
-					TypeReference.of(Nio2ServiceFactoryFactory.class)),
-					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
-			hints.reflection().registerTypes(Set.of(TypeReference.of(PortForwardingEventListener.class)),
-					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-							MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS));
-			hints.proxies().registerJdkProxy(TypeReference.of(ChannelListener.class),
-					TypeReference.of(PortForwardingEventListener.class), TypeReference.of(SessionListener.class));
+			hints.reflection()
+				.registerTypes(Set.of(TypeReference.of(BouncyCastleSecurityProviderRegistrar.class),
+						TypeReference.of(EdDSASecurityProviderRegistrar.class),
+						TypeReference.of(Nio2ServiceFactory.class), TypeReference.of(Nio2ServiceFactoryFactory.class)),
+						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
+			hints.reflection()
+				.registerTypes(Set.of(TypeReference.of(PortForwardingEventListener.class)),
+						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+								MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS));
+			hints.proxies()
+				.registerJdkProxy(TypeReference.of(ChannelListener.class),
+						TypeReference.of(PortForwardingEventListener.class), TypeReference.of(SessionListener.class));
 		}
 
 		// TODO: move over to GraalVM reachability metadata
 		if (ClassUtils.isPresent("org.eclipse.jgit.api.Git", classLoader)) {
 			hints.reflection()
-					.registerTypes(Set.of(TypeReference.of(MergeCommand.FastForwardMode.Merge.class),
-							TypeReference.of(MergeCommand.ConflictStyle.class),
-							TypeReference.of(MergeCommand.FastForwardMode.class), TypeReference.of(FetchCommand.class)),
-							hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS));
-			hints.reflection().registerTypes(Set.of(TypeReference.of(SshdText.class)), hint -> hint
+				.registerTypes(Set.of(TypeReference.of(MergeCommand.FastForwardMode.Merge.class),
+						TypeReference.of(MergeCommand.ConflictStyle.class),
+						TypeReference.of(MergeCommand.FastForwardMode.class), TypeReference.of(FetchCommand.class)),
+						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS));
+			hints.reflection()
+				.registerTypes(Set.of(TypeReference.of(SshdText.class)), hint -> hint
 					.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.DECLARED_FIELDS));
 		}
 	}

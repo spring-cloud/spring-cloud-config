@@ -36,7 +36,7 @@ class ConfigServerConfigDataMissingEnvironmentPostProcessorTests {
 		SpringApplication app = mock(SpringApplication.class);
 		ConfigServerConfigDataMissingEnvironmentPostProcessor processor = new ConfigServerConfigDataMissingEnvironmentPostProcessor();
 		assertThatThrownBy(() -> processor.postProcessEnvironment(environment, app))
-				.isInstanceOf(ConfigServerConfigDataMissingEnvironmentPostProcessor.ImportException.class);
+			.isInstanceOf(ConfigServerConfigDataMissingEnvironmentPostProcessor.ImportException.class);
 	}
 
 	@Test

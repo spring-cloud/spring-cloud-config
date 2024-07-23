@@ -93,8 +93,10 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 
 		List<String> reversedProfiles = new ArrayList<>(Arrays.asList(profiles));
 		Collections.reverse(reversedProfiles);
-		List<String> orderedProfiles = Stream.concat(reversedProfiles.stream().filter(p -> !p.equals(defaultProfile)),
-				Arrays.stream(new String[] { defaultProfile })).collect(Collectors.toList());
+		List<String> orderedProfiles = Stream
+			.concat(reversedProfiles.stream().filter(p -> !p.equals(defaultProfile)),
+					Arrays.stream(new String[] { defaultProfile }))
+			.collect(Collectors.toList());
 
 		if (application.equals(defaultApplication)) {
 			for (String profile : orderedProfiles) {
@@ -143,9 +145,12 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 	private Map<String, String> getPropertiesByParameterPath(String path) {
 		Map<String, String> result = new HashMap<>();
 
-		GetParametersByPathRequest request = GetParametersByPathRequest.builder().path(path)
-				.recursive(environmentProperties.isRecursive()).withDecryption(environmentProperties.isDecryptValues())
-				.maxResults(environmentProperties.getMaxResults()).build();
+		GetParametersByPathRequest request = GetParametersByPathRequest.builder()
+			.path(path)
+			.recursive(environmentProperties.isRecursive())
+			.withDecryption(environmentProperties.isDecryptValues())
+			.maxResults(environmentProperties.getMaxResults())
+			.build();
 
 		GetParametersByPathResponse response = awsSsmClient.getParametersByPath(request);
 
@@ -154,7 +159,7 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 
 			while (StringUtils.hasLength(response.nextToken())) {
 				response = awsSsmClient
-						.getParametersByPath(request.toBuilder().nextToken(response.nextToken()).build());
+					.getParametersByPath(request.toBuilder().nextToken(response.nextToken()).build());
 
 				addParametersToProperties(path, response.parameters(), result);
 			}

@@ -53,7 +53,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void basicProperties() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -72,7 +73,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void testDefaultProfile() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -91,7 +93,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void testProfileNotExist() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "not_exist", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "not_exist", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "not_exist" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -106,7 +109,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void testApplicationNotExist() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("not_exist", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("not_exist", "bar", "");
 		assertThat(env.getName()).isEqualTo("not_exist");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -121,7 +125,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void testApplicationProfileBothNotExist() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("not_exist", "not_exist", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("not_exist", "not_exist", "");
 		assertThat(env.getName()).isEqualTo("not_exist");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "not_exist" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -137,7 +142,8 @@ public class JdbcEnvironmentRepositoryTests {
 		properties.setSqlWithoutProfile(
 				"SELECT MY_KEY, MY_VALUE from MY_PROPERTIES where APPLICATION=? and PROFILE is null and LABEL=?");
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -157,7 +163,8 @@ public class JdbcEnvironmentRepositoryTests {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		properties.setSql("SELECT MY_KEY, MY_VALUE from MY_PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=?");
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default", "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -183,7 +190,8 @@ public class JdbcEnvironmentRepositoryTests {
 		properties.setSqlWithoutProfile(
 				"SELECT SHOULD_FAIL from TABLE_NOTEXIST where APPLICATION=? and PROFILE is null and LABEL=?");
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -209,7 +217,8 @@ public class JdbcEnvironmentRepositoryTests {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		properties.setDefaultLabel("main");
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("main");

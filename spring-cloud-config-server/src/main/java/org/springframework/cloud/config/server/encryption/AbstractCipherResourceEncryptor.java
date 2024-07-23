@@ -75,8 +75,8 @@ abstract class AbstractCipherResourceEncryptor implements ResourceEncryptor {
 
 	protected String decryptValue(String value, String name, String[] profiles) {
 		return encryptor
-				.locate(this.helper.getEncryptorKeys(name, StringUtils.arrayToCommaDelimitedString(profiles), value))
-				.decrypt(this.helper.stripPrefix(value));
+			.locate(this.helper.getEncryptorKeys(name, StringUtils.arrayToCommaDelimitedString(profiles), value))
+			.decrypt(this.helper.stripPrefix(value));
 	}
 
 }

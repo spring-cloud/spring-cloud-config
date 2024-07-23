@@ -94,12 +94,15 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 	private Map<Object, Object> findProperties(String application, String profile, String label) {
 		String path = "/" + application + "/" + profile + "/" + label;
 
-		return this.credHubOperations.credentials().findByPath(path).stream()
-				.map(credentialSummary -> credentialSummary.getName().getName())
-				.map(name -> this.credHubOperations.credentials().getByName(new SimpleCredentialName(name),
-						JsonCredential.class))
-				.map(CredentialDetails::getValue).flatMap(jsonCredential -> jsonCredential.entrySet().stream())
-				.collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
+		return this.credHubOperations.credentials()
+			.findByPath(path)
+			.stream()
+			.map(credentialSummary -> credentialSummary.getName().getName())
+			.map(name -> this.credHubOperations.credentials()
+				.getByName(new SimpleCredentialName(name), JsonCredential.class))
+			.map(CredentialDetails::getValue)
+			.flatMap(jsonCredential -> jsonCredential.entrySet().stream())
+			.collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
 	}
 
 	@Override

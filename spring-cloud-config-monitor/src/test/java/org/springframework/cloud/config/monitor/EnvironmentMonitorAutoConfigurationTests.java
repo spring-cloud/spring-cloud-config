@@ -42,10 +42,13 @@ public class EnvironmentMonitorAutoConfigurationTests {
 	public void testExtractorsCount() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
 				EnvironmentMonitorAutoConfiguration.class, ServletWebServerFactoryAutoConfiguration.class,
-				ServerProperties.class, PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1").run();
+				ServerProperties.class, PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=-1")
+			.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
 		assertThat(((Collection<?>) ReflectionTestUtils.getField(ReflectionTestUtils.getField(endpoint, "extractor"),
-				"extractors"))).hasSize(7);
+				"extractors")))
+			.hasSize(7);
 		context.close();
 	}
 
@@ -54,10 +57,13 @@ public class EnvironmentMonitorAutoConfigurationTests {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
 				CustomPropertyPathNotificationExtractorConfig.class, EnvironmentMonitorAutoConfiguration.class,
 				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
-				PropertyPlaceholderAutoConfiguration.class).properties("server.port=-1").run();
+				PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=-1")
+			.run();
 		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
 		assertThat(((Collection<?>) ReflectionTestUtils.getField(ReflectionTestUtils.getField(endpoint, "extractor"),
-				"extractors"))).hasSize(8);
+				"extractors")))
+			.hasSize(8);
 		context.close();
 	}
 

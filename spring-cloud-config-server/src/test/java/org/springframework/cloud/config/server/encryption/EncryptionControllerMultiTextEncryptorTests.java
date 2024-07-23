@@ -50,7 +50,7 @@ public class EncryptionControllerMultiTextEncryptorTests {
 
 		// then
 		assertThat(this.controller.decrypt(this.application, this.profiles, encrypted, TEXT_PLAIN))
-				.isEqualTo(this.data);
+			.isEqualTo(this.data);
 	}
 
 	@Test

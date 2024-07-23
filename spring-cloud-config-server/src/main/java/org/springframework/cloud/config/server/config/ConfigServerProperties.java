@@ -203,12 +203,19 @@ public class ConfigServerProperties {
 
 	@Override
 	public String toString() {
-		return new ToStringCreator(this).append("enabled", enabled).append("bootstrap", bootstrap)
-				.append("prefix", prefix).append("defaultLabel", defaultLabel).append("overrides", overrides)
-				.append("stripDocumentFromYaml", stripDocumentFromYaml).append("acceptEmpty", acceptEmpty)
-				.append("defaultApplicationName", defaultApplicationName).append("defaultProfile", defaultProfile)
-				.append("failOnCompositeError", failOnCompositeError).append("encrypt", encrypt)
-				.append("reverseLocationOrder", reverseLocationOrder).toString();
+		return new ToStringCreator(this).append("enabled", enabled)
+			.append("bootstrap", bootstrap)
+			.append("prefix", prefix)
+			.append("defaultLabel", defaultLabel)
+			.append("overrides", overrides)
+			.append("stripDocumentFromYaml", stripDocumentFromYaml)
+			.append("acceptEmpty", acceptEmpty)
+			.append("defaultApplicationName", defaultApplicationName)
+			.append("defaultProfile", defaultProfile)
+			.append("failOnCompositeError", failOnCompositeError)
+			.append("encrypt", encrypt)
+			.append("reverseLocationOrder", reverseLocationOrder)
+			.toString();
 
 	}
 
@@ -246,8 +253,9 @@ public class ConfigServerProperties {
 
 		@Override
 		public String toString() {
-			return new ToStringCreator(this).append("enabled", enabled).append("plainTextEncrypt", plainTextEncrypt)
-					.toString();
+			return new ToStringCreator(this).append("enabled", enabled)
+				.append("plainTextEncrypt", plainTextEncrypt)
+				.toString();
 
 		}
 

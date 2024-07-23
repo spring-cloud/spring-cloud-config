@@ -84,7 +84,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -93,7 +93,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 		Environment environment = this.repository.findOne("missing-config-repo", "staging", "master");
 		assertThat(environment.getPropertySources().size()).as("Wrong property sources: " + environment).isEqualTo(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/application.yml");
+			.isEqualTo(this.repository.getUri() + "/application.yml");
 		assertVersion(environment);
 	}
 
@@ -102,7 +102,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 		Environment environment = this.repository.findOne("test1-config-repo", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(getUri("*").replace("{application}", "test1-config-repo") + "/application.yml");
+			.isEqualTo(getUri("*").replace("{application}", "test1-config-repo") + "/application.yml");
 		assertVersion(environment);
 	}
 
@@ -111,7 +111,7 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 		Environment environment = this.repository.findOne("test2-config-repo", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(getUri("*").replace("{application}", "test2-config-repo") + "/application.properties");
+			.isEqualTo(getUri("*").replace("{application}", "test2-config-repo") + "/application.properties");
 		assertVersion(environment);
 	}
 

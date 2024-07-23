@@ -60,8 +60,11 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
 		when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master", false).getPropertySources().get(0).getSource()
-				.toString()).isEqualTo("{foo=bar}");
+		assertThat(this.controller.findOne("foo", "bar", "master", false)
+			.getPropertySources()
+			.get(0)
+			.getSource()
+			.toString()).isEqualTo("{foo=bar}");
 	}
 
 	@Test
@@ -71,8 +74,11 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		map.put("bar", "foo");
 		this.environment.add(new PropertySource("one", map));
 		when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master", false).getPropertySources().get(0).getSource()
-				.toString()).isEqualTo("{foo=${bar}}");
+		assertThat(this.controller.findOne("foo", "bar", "master", false)
+			.getPropertySources()
+			.get(0)
+			.getSource()
+			.toString()).isEqualTo("{foo=${bar}}");
 	}
 
 }

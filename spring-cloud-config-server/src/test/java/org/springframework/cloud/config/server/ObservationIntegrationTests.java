@@ -91,46 +91,48 @@ class ObservationIntegrationTests {
 
 		List<FinishedSpan> finishedSpans = finishedSpans();
 
-		SpansAssert.then(finishedSpans).hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
+		SpansAssert.then(finishedSpans)
+			.hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
 				.hasTag("spring.cloud.config.environment.application", "foo")
 				.hasTag("spring.cloud.config.environment.profile", "development")
 				.hasTag("spring.cloud.config.environment.class",
 						"org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository"))
-				.hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
-						.hasTag("spring.cloud.config.environment.application", "foo")
-						.hasTag("spring.cloud.config.environment.profile", "development")
-						.hasTag("spring.cloud.config.environment.class",
-								"org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository"))
-				.hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
-						.hasTag("spring.cloud.config.environment.application", "foo")
+			.hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
+				.hasTag("spring.cloud.config.environment.application", "foo")
+				.hasTag("spring.cloud.config.environment.profile", "development")
+				.hasTag("spring.cloud.config.environment.class",
+						"org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository"))
+			.hasASpanWithNameIgnoreCase("env find",
+					spanAssert -> spanAssert.hasTag("spring.cloud.config.environment.application", "foo")
 						.hasTag("spring.cloud.config.environment.profile", "development")
 						.hasTag("spring.cloud.config.environment.class",
 								"org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository"))
-				.hasASpanWithNameIgnoreCase("env find", spanAssert -> spanAssert
-						.hasTag("spring.cloud.config.environment.application", "foo")
+			.hasASpanWithNameIgnoreCase("env find",
+					spanAssert -> spanAssert.hasTag("spring.cloud.config.environment.application", "foo")
 						.hasTag("spring.cloud.config.environment.profile", "development")
 						.hasTag("spring.cloud.config.environment.class",
 								"org.springframework.cloud.config.server.environment.PassthruEnvironmentRepository"));
 
 		MeterRegistryAssert.then(this.meterRegistry)
-				.hasTimerWithNameAndTags("spring.cloud.config.environment.find", KeyValues.of(
-						"spring.cloud.config.environment.application", "foo", "spring.cloud.config.environment.profile",
-						"development", "spring.cloud.config.environment.class",
-						"org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository"))
-				.hasTimerWithNameAndTags("spring.cloud.config.environment.find", KeyValues.of(
-						"spring.cloud.config.environment.application", "foo", "spring.cloud.config.environment.profile",
-						"development", "spring.cloud.config.environment.class",
-						"org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository"))
-				.hasTimerWithNameAndTags("spring.cloud.config.environment.find",
-						KeyValues.of("spring.cloud.config.environment.application", "foo",
-								"spring.cloud.config.environment.profile", "development",
-								"spring.cloud.config.environment.class",
-								"org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository"))
-				.hasTimerWithNameAndTags("spring.cloud.config.environment.find",
-						KeyValues.of("spring.cloud.config.environment.application", "foo",
-								"spring.cloud.config.environment.profile", "development",
-								"spring.cloud.config.environment.class",
-								"org.springframework.cloud.config.server.environment.PassthruEnvironmentRepository"));
+			.hasTimerWithNameAndTags("spring.cloud.config.environment.find", KeyValues.of(
+					"spring.cloud.config.environment.application", "foo", "spring.cloud.config.environment.profile",
+					"development", "spring.cloud.config.environment.class",
+					"org.springframework.cloud.config.server.environment.SearchPathCompositeEnvironmentRepository"))
+			.hasTimerWithNameAndTags("spring.cloud.config.environment.find",
+					KeyValues.of("spring.cloud.config.environment.application", "foo",
+							"spring.cloud.config.environment.profile", "development",
+							"spring.cloud.config.environment.class",
+							"org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository"))
+			.hasTimerWithNameAndTags("spring.cloud.config.environment.find",
+					KeyValues.of("spring.cloud.config.environment.application", "foo",
+							"spring.cloud.config.environment.profile", "development",
+							"spring.cloud.config.environment.class",
+							"org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository"))
+			.hasTimerWithNameAndTags("spring.cloud.config.environment.find",
+					KeyValues.of("spring.cloud.config.environment.application", "foo",
+							"spring.cloud.config.environment.profile", "development",
+							"spring.cloud.config.environment.class",
+							"org.springframework.cloud.config.server.environment.PassthruEnvironmentRepository"));
 	}
 
 	private List<FinishedSpan> finishedSpans() {

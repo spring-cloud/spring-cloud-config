@@ -63,7 +63,7 @@ public class AwsIamClientAuthenticationProvider extends SpringVaultClientAuthent
 		}
 
 		builder.path(awsIam.getAwsPath()) //
-				.credentialsProvider(credentialsProvider);
+			.credentialsProvider(credentialsProvider);
 
 		AwsIamAuthenticationOptions options = builder.credentialsProvider(credentialsProvider).build();
 

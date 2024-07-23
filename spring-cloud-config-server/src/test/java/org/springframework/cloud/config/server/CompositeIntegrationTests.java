@@ -73,7 +73,8 @@ public class CompositeIntegrationTests {
 			assertThat(3).isEqualTo(environment.getPropertySources().size());
 			assertThat("overrides").isEqualTo(environment.getPropertySources().get(0).getName());
 			assertThat(environment.getPropertySources().get(1).getName().contains("config-repo")
-					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo")).isTrue();
+					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo"))
+				.isTrue();
 			assertThat(environment.getPropertySources().get(2).getName()).contains("svn-config-repo");
 			ConfigServerTestUtils.assertConfigEnabled(environment);
 		}
@@ -161,7 +162,8 @@ public class CompositeIntegrationTests {
 			assertThat(environment.getPropertySources()).hasSize(3);
 			assertThat("overrides").isEqualTo(environment.getPropertySources().get(0).getName());
 			assertThat(environment.getPropertySources().get(1).getName().contains("config-repo")
-					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo")).isTrue();
+					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo"))
+				.isTrue();
 			assertThat(environment.getPropertySources().get(2).getName()).contains("svn-config-repo");
 			ConfigServerTestUtils.assertConfigEnabled(environment);
 		}

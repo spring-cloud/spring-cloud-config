@@ -32,13 +32,15 @@ public class ConfigServerBootstrapConfigurationTests {
 	public void withHealthIndicator() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				PropertySourceBootstrapConfiguration.class, ConfigServiceBootstrapConfiguration.class)
-						.child(ConfigClientAutoConfiguration.class).properties("spring.cloud.bootstrap.enabled=true")
-						.web(WebApplicationType.NONE).run();
+			.child(ConfigClientAutoConfiguration.class)
+			.properties("spring.cloud.bootstrap.enabled=true")
+			.web(WebApplicationType.NONE)
+			.run();
 		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context, ConfigClientProperties.class).length)
-				.isEqualTo(1);
+			.isEqualTo(1);
 		assertThat(
 				BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context, ConfigServerHealthIndicator.class).length)
-						.isEqualTo(1);
+			.isEqualTo(1);
 		context.close();
 	}
 

@@ -59,14 +59,14 @@ public class ConfigServerHealthIndicatorTests {
 	@Test
 	public void defaultStatusWorks() {
 		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-				.thenReturn(this.environment);
+			.thenReturn(this.environment);
 		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);
 	}
 
 	@Test
 	public void exceptionStatusIsDownByDefault() {
 		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-				.thenThrow(new RuntimeException());
+			.thenThrow(new RuntimeException());
 		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(Status.DOWN);
 	}
 
@@ -74,7 +74,7 @@ public class ConfigServerHealthIndicatorTests {
 	public void exceptionDownStatusMayBeCustomized() {
 		ReflectionTestUtils.setField(this.indicator, "downHealthStatus", "CUSTOM");
 		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-				.thenThrow(new RuntimeException());
+			.thenThrow(new RuntimeException());
 		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(new Status(("CUSTOM")));
 	}
 

@@ -114,18 +114,19 @@ public class ConfigClientRequestTemplateFactory {
 		SSLContextFactory factory = new SSLContextFactory(client.getTls());
 		SSLContext sslContext = factory.createSSLContext();
 		SSLConnectionSocketFactoryBuilder sslConnectionSocketFactoryBuilder = SSLConnectionSocketFactoryBuilder
-				.create();
+			.create();
 		sslConnectionSocketFactoryBuilder.setSslContext(sslContext);
 		SocketConfig.Builder socketBuilder = createSocketBuilderForTls(client);
 		PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-				.setDefaultSocketConfig(socketBuilder.build())
-				.setSSLSocketFactory(sslConnectionSocketFactoryBuilder.build()).build();
+			.setDefaultSocketConfig(socketBuilder.build())
+			.setSSLSocketFactory(sslConnectionSocketFactoryBuilder.build())
+			.build();
 		return connectionManager;
 	}
 
 	protected SocketConfig.Builder createSocketBuilderForTls(ConfigClientProperties client) {
 		SocketConfig.Builder socketBuilder = SocketConfig.custom()
-				.setSoTimeout(Timeout.of(client.getRequestReadTimeout(), TimeUnit.MILLISECONDS));
+			.setSoTimeout(Timeout.of(client.getRequestReadTimeout(), TimeUnit.MILLISECONDS));
 		return socketBuilder;
 	}
 

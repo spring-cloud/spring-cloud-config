@@ -79,16 +79,19 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 
 	private static Map<String, BeanDefinition> getCompositeEnvironmentBeanDefinitions(
 			ConfigurableListableBeanFactory beanFactory, String infix, Class<?> beanClass) {
-		return Arrays.stream(beanFactory.getBeanDefinitionNames()).filter(beanName -> beanName.contains(infix))
-				.map(beanName -> Map.entry(beanName, beanFactory.getBeanDefinition(beanName))).filter(entry -> {
-					try {
-						return beanClass.isAssignableFrom(Class.forName(entry.getValue().getBeanClassName()));
-					}
-					catch (ClassNotFoundException e) {
-						throw new RuntimeException(
-								"Class " + entry.getValue().getBeanClassName() + " could not be found", e);
-					}
-				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		return Arrays.stream(beanFactory.getBeanDefinitionNames())
+			.filter(beanName -> beanName.contains(infix))
+			.map(beanName -> Map.entry(beanName, beanFactory.getBeanDefinition(beanName)))
+			.filter(entry -> {
+				try {
+					return beanClass.isAssignableFrom(Class.forName(entry.getValue().getBeanClassName()));
+				}
+				catch (ClassNotFoundException e) {
+					throw new RuntimeException("Class " + entry.getValue().getBeanClassName() + " could not be found",
+							e);
+				}
+			})
+			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 	@Override
@@ -123,10 +126,10 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 		public void applyTo(GenerationContext generationContext,
 				BeanFactoryInitializationCode beanFactoryInitializationCode) {
 			GeneratedMethod environmentRepositoryPropertiesGeneratedMethod = beanFactoryInitializationCode.getMethods()
-					.add("registerCompositeEnvironmentRepositoryPropertiesBeanDefinitions",
-							this::generateRegisterBeanDefinitionsMethod);
+				.add("registerCompositeEnvironmentRepositoryPropertiesBeanDefinitions",
+						this::generateRegisterBeanDefinitionsMethod);
 			beanFactoryInitializationCode
-					.addInitializer(environmentRepositoryPropertiesGeneratedMethod.toMethodReference());
+				.addInitializer(environmentRepositoryPropertiesGeneratedMethod.toMethodReference());
 			generateRuntimeHints(generationContext.getRuntimeHints());
 		}
 
@@ -154,16 +157,16 @@ public class CompositeEnvironmentBeanFactoryInitializationAotProcessor
 					String repoBeanName = beanName.replace("repo-properties", "repo");
 					String factoryName = repoBeanDefinitions.get(repoBeanName).getFactoryBeanName();
 					Class<? extends EnvironmentRepositoryFactory<? extends EnvironmentRepository, ? extends EnvironmentRepositoryProperties>> factoryClass = (Class<? extends EnvironmentRepositoryFactory<? extends EnvironmentRepository, ? extends EnvironmentRepositoryProperties>>) CompositeUtils
-							.getFactoryClass(beanFactory, factoryName);
+						.getFactoryClass(beanFactory, factoryName);
 					Type[] environmentRepositoryFactoryTypeParams = CompositeUtils
-							.getEnvironmentRepositoryFactoryTypeParams(factoryClass);
+						.getEnvironmentRepositoryFactoryTypeParams(factoryClass);
 					Class<? extends EnvironmentRepositoryProperties> repoClass = (Class<? extends EnvironmentRepositoryProperties>) environmentRepositoryFactoryTypeParams[0];
 					Class<? extends EnvironmentRepositoryProperties> propertiesClass = (Class<? extends EnvironmentRepositoryProperties>) environmentRepositoryFactoryTypeParams[1];
 					hintClasses.addAll(Set.of(repoClass, propertiesClass, factoryClass));
 					String indexString = matcher.group(3);
 					int index = Integer.parseInt(indexString);
 					String environmentConfigurationPropertyName = String
-							.format("spring.cloud.config.server.composite[%d]", index);
+						.format("spring.cloud.config.server.composite[%d]", index);
 					method.addStatement("$T properties$L = binder.bindOrCreate($S, $T.class)",
 							EnvironmentRepositoryProperties.class, index, environmentConfigurationPropertyName,
 							propertiesClass);

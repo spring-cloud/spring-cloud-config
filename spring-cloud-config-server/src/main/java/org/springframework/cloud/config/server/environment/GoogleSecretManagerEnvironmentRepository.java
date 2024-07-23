@@ -74,7 +74,7 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 			profile = "default," + profile;
 		}
 		String[] profiles = org.springframework.util.StringUtils
-				.trimArrayElements(org.springframework.util.StringUtils.commaDelimitedListToStringArray(profile));
+			.trimArrayElements(org.springframework.util.StringUtils.commaDelimitedListToStringArray(profile));
 		Environment result = new Environment(application, profile, label, null, null);
 		if (tokenMandatory) {
 			if (accessStrategy.checkRemotePermissions()) {

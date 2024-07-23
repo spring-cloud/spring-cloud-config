@@ -90,7 +90,7 @@ public class SshPropertyValidatorTest {
 		validSettings.setHostKeyAlgorithm("ssh-rsa");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
-				.validate(validSettings);
+			.validate(validSettings);
 		assertThat(constraintViolations).hasSize(0);
 	}
 
@@ -102,7 +102,7 @@ public class SshPropertyValidatorTest {
 		invalidKey.setPrivateKey("-----BEGIN OPENSSH PRIVATE KEY-----\nFOOBAR");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
-				.validate(invalidKey);
+			.validate(invalidKey);
 		assertThat(constraintViolations).hasSize(1);
 	}
 
@@ -114,7 +114,7 @@ public class SshPropertyValidatorTest {
 		invalidKey.setPrivateKey("invalid_key");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
-				.validate(invalidKey);
+			.validate(invalidKey);
 		assertThat(constraintViolations).hasSize(1);
 	}
 
@@ -125,7 +125,7 @@ public class SshPropertyValidatorTest {
 		missingKey.setIgnoreLocalSshSettings(true);
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
-				.validate(missingKey);
+			.validate(missingKey);
 		assertThat(constraintViolations).hasSize(1);
 	}
 
@@ -138,7 +138,7 @@ public class SshPropertyValidatorTest {
 		missingAlgo.setHostKey("some_host");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
-				.validate(missingAlgo);
+			.validate(missingAlgo);
 		assertThat(constraintViolations).hasSize(1);
 	}
 
@@ -151,7 +151,7 @@ public class SshPropertyValidatorTest {
 		missingHostKey.setHostKeyAlgorithm("ssh-rsa");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
-				.validate(missingHostKey);
+			.validate(missingHostKey);
 		assertThat(constraintViolations).hasSize(1);
 	}
 
@@ -165,7 +165,7 @@ public class SshPropertyValidatorTest {
 		unsupportedAlgo.setHostKeyAlgorithm("unsupported");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
-				.validate(unsupportedAlgo);
+			.validate(unsupportedAlgo);
 		assertThat(constraintViolations).hasSize(1);
 	}
 

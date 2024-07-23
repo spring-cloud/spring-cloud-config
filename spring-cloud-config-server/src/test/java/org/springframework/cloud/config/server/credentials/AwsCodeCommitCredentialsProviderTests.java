@@ -70,8 +70,7 @@ public class AwsCodeCommitCredentialsProviderTests {
 	@Test
 	public void testSupportsUsernamePassword() {
 		assertThat(this.provider
-				.supports(new CredentialItem[] { new CredentialItem.Username(), new CredentialItem.Password() }))
-						.isTrue();
+			.supports(new CredentialItem[] { new CredentialItem.Username(), new CredentialItem.Password() })).isTrue();
 	}
 
 	@Test

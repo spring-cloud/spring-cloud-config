@@ -66,16 +66,17 @@ public class DiscoveryClientConfigDataConfigurationTests {
 	@Test
 	public void offByDefault() {
 		context = new SpringApplicationBuilder(TestConfig.class)
-				.properties("spring.config.import=optional:configserver:")
-				.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
-					try {
-						event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);
-						fail("ConfigServerInstanceMonitor was created when it shouldn't");
-					}
-					catch (IllegalStateException e) {
-						// expected
-					}
-				})).run();
+			.properties("spring.config.import=optional:configserver:")
+			.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
+				try {
+					event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);
+					fail("ConfigServerInstanceMonitor was created when it shouldn't");
+				}
+				catch (IllegalStateException e) {
+					// expected
+				}
+			}))
+			.run();
 	}
 
 	@Test
@@ -169,7 +170,8 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
 		context = setup("spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.fail-fast=true").run();
+				"spring.cloud.config.fail-fast=true")
+			.run();
 
 		verifyDiscoveryClientCalledThreeTimes();
 
@@ -183,7 +185,7 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
 		context = setup("spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10")
-				.run();
+			.run();
 
 		verifyDiscoveryClientCalledOnce();
 		expectConfigClientPropertiesHasDefaultConfiguration();
@@ -194,9 +196,9 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsNoInfo();
 
 		assertThatThrownBy(() -> context = setup("spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true").run())
-						.isInstanceOf(IllegalStateException.class)
-						.hasMessageContaining("No instances found of configserver");
+				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true")
+			.run()).isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("No instances found of configserver");
 	}
 
 	@Test
@@ -204,7 +206,8 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsNoInfo();
 
 		context = setup("spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.fail-fast=false").run();
+				"spring.cloud.config.fail-fast=false")
+			.run();
 
 		expectConfigClientPropertiesHasDefaultConfiguration();
 	}
@@ -215,13 +218,13 @@ public class DiscoveryClientConfigDataConfigurationTests {
 
 	SpringApplicationBuilder setup(boolean addInstanceProvider, String... env) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(TestConfig.class)
-				.properties(addDefaultEnv(env));
+			.properties(addDefaultEnv(env));
 		if (addInstanceProvider) {
 			builder.addBootstrapRegistryInitializer(instanceProviderBootstrapper());
 			// ignore actual calls to config server since we're just testing discovery
 			// client.
 			builder.addBootstrapRegistryInitializer(registry -> registry
-					.register(ConfigServerBootstrapper.LoaderInterceptor.class, ctx -> loadContext -> null));
+				.register(ConfigServerBootstrapper.LoaderInterceptor.class, ctx -> loadContext -> null));
 		}
 		return builder.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
 			ConfigServerInstanceMonitor monitor = event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);
@@ -262,7 +265,8 @@ public class DiscoveryClientConfigDataConfigurationTests {
 
 	void givenDiscoveryClientReturnsInfoOnThirdTry() {
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Collections.emptyList())
-				.willReturn(Collections.emptyList()).willReturn(Collections.singletonList(this.info));
+			.willReturn(Collections.emptyList())
+			.willReturn(Collections.singletonList(this.info));
 	}
 
 	void verifyDiscoveryClientCalledOnce() {

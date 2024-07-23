@@ -66,9 +66,9 @@ public final class HttpClient4Support {
 
 		if (!CollectionUtils.isEmpty(environmentProperties.getProxy())) {
 			ProxyHostProperties httpsProxy = environmentProperties.getProxy()
-					.get(ProxyHostProperties.ProxyForScheme.HTTPS);
+				.get(ProxyHostProperties.ProxyForScheme.HTTPS);
 			ProxyHostProperties httpProxy = environmentProperties.getProxy()
-					.get(ProxyHostProperties.ProxyForScheme.HTTP);
+				.get(ProxyHostProperties.ProxyForScheme.HTTP);
 
 			httpClientBuilder.setRoutePlanner(new SchemeBasedRoutePlanner4(httpsProxy, httpProxy));
 			httpClientBuilder.setDefaultCredentialsProvider(new ProxyHostCredentialsProvider4(httpProxy, httpsProxy));
@@ -86,8 +86,9 @@ public final class HttpClient4Support {
 		httpClientBuilder.disableRedirectHandling();
 
 		int timeout = environmentProperties.getTimeout() * 1000;
-		httpClientBuilder.setSSLContext(sslContextBuilder.build()).setDefaultRequestConfig(
-				RequestConfig.custom().setSocketTimeout(timeout).setConnectTimeout(timeout).build());
+		httpClientBuilder.setSSLContext(sslContextBuilder.build())
+			.setDefaultRequestConfig(
+					RequestConfig.custom().setSocketTimeout(timeout).setConnectTimeout(timeout).build());
 		customizers.forEach(customizer -> customizer.customize(httpClientBuilder));
 		return httpClientBuilder;
 	}

@@ -252,9 +252,9 @@ public class ConfigServerConfigDataLocationResolverTests {
 		// Use this TextEncryptor in the BindHandler we return so it will decrypt the
 		// password when we bind ConfigClientProperties
 		TextEncryptor bindHandlerTextEncryptor = new EncryptorFactory(keyProperties.getSalt())
-				.create(keyProperties.getKey());
+			.create(keyProperties.getKey());
 		when(context.getBootstrapContext().getOrElse(eq(BindHandler.class), eq(null)))
-				.thenReturn(new TextEncryptorBindHandler(bindHandlerTextEncryptor, keyProperties));
+			.thenReturn(new TextEncryptorBindHandler(bindHandlerTextEncryptor, keyProperties));
 
 		// Call resolve so we can test that the delegate is added to the
 		// FailsafeTextEncryptor
@@ -265,12 +265,12 @@ public class ConfigServerConfigDataLocationResolverTests {
 		// ConfigServerConfigDataLocationResolver.resolveProfileSpecific
 		// it should have the decrypted passord in it
 		ArgumentCaptor<BootstrapRegistry.InstanceSupplier<ConfigClientProperties>> captor = ArgumentCaptor
-				.forClass(BootstrapRegistry.InstanceSupplier.class);
+			.forClass(BootstrapRegistry.InstanceSupplier.class);
 		verify(bootstrapContext).register(eq(ConfigClientProperties.class), captor.capture());
 		assertThat(captor.getValue().get(bootstrapContext).getPassword()).isEqualTo("password");
 		assertThat(textEncryptor).isInstanceOf(TextEncryptorUtils.FailsafeTextEncryptor.class);
 		assertThat(((TextEncryptorUtils.FailsafeTextEncryptor) textEncryptor).getDelegate())
-				.isInstanceOf(TextEncryptor.class);
+			.isInstanceOf(TextEncryptor.class);
 	}
 
 	private ConfigServerConfigDataResource testUri(String propertyUri, String locationUri) {

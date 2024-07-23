@@ -77,16 +77,16 @@ public class SpringVaultEnvironmentRepositoryTests {
 
 		Environment e = repo.findOne("myapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources()).as(
-				"Properties for specified application and default application with key 'application' should be returned")
-				.hasSize(2);
+		assertThat(e.getPropertySources())
+			.as("Properties for specified application and default application with key 'application' should be returned")
+			.hasSize(2);
 
 		assertThat(e.getPropertySources().get(0).getSource())
-				.as("Properties for specified application should be returned in priority position")
-				.containsOnly((Map.Entry) entry("foo", "bar"));
+			.as("Properties for specified application should be returned in priority position")
+			.containsOnly((Map.Entry) entry("foo", "bar"));
 		assertThat(e.getPropertySources().get(1).getSource())
-				.as("Properties for default application with key 'application' should be returned in second position")
-				.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
+			.as("Properties for default application with key 'application' should be returned in second position")
+			.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
 	}
 
 	@Test
@@ -103,16 +103,16 @@ public class SpringVaultEnvironmentRepositoryTests {
 
 		Environment e = repo.findOne("myapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources()).as(
-				"Properties for specified application and default application with key 'application' should be returned")
-				.hasSize(2);
+		assertThat(e.getPropertySources())
+			.as("Properties for specified application and default application with key 'application' should be returned")
+			.hasSize(2);
 
 		assertThat(e.getPropertySources().get(0).getSource())
-				.as("Properties for specified application should be returned in priority position")
-				.containsOnly((Map.Entry) entry("foo", "bar"));
+			.as("Properties for specified application should be returned in priority position")
+			.containsOnly((Map.Entry) entry("foo", "bar"));
 		assertThat(e.getPropertySources().get(1).getSource())
-				.as("Properties for default application with key 'application' should be returned in second position")
-				.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
+			.as("Properties for default application with key 'application' should be returned in second position")
+			.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
 	}
 
 	@Test
@@ -127,16 +127,16 @@ public class SpringVaultEnvironmentRepositoryTests {
 
 		Environment e = repo.findOne("myapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources()).as(
-				"Properties for specified application and default application with key 'mydefaultkey' should be returned")
-				.hasSize(2);
+		assertThat(e.getPropertySources())
+			.as("Properties for specified application and default application with key 'mydefaultkey' should be returned")
+			.hasSize(2);
 
 		assertThat(e.getPropertySources().get(0).getSource())
-				.as("Properties for specified application should be returned in priority position")
-				.containsOnly((Map.Entry) entry("foo", "bar"));
+			.as("Properties for specified application should be returned in priority position")
+			.containsOnly((Map.Entry) entry("foo", "bar"));
 		assertThat(e.getPropertySources().get(1).getSource())
-				.as("Properties for default application with key 'mydefaultkey' should be returned in second position")
-				.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
+			.as("Properties for default application with key 'mydefaultkey' should be returned in second position")
+			.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
 	}
 
 	@Test
@@ -152,21 +152,21 @@ public class SpringVaultEnvironmentRepositoryTests {
 
 		Environment e = repo.findOne("myapp,yourapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp,yourapp");
-		assertThat(e.getPropertySources()).as(
-				"Properties for specified applications and default application with key 'mydefaultkey' should be returned")
-				.hasSize(3);
+		assertThat(e.getPropertySources())
+			.as("Properties for specified applications and default application with key 'mydefaultkey' should be returned")
+			.hasSize(3);
 
 		assertThat(e.getPropertySources().get(0).getSource())
-				.as("Properties for first specified application should be returned in priority position")
-				.containsOnly((Map.Entry) entry("yourapp-foo", "yourapp-bar"));
+			.as("Properties for first specified application should be returned in priority position")
+			.containsOnly((Map.Entry) entry("yourapp-foo", "yourapp-bar"));
 
 		assertThat(e.getPropertySources().get(1).getSource())
-				.as("Properties for second specified application should be returned in priority position")
-				.containsOnly((Map.Entry) entry("myapp-foo", "myapp-bar"));
+			.as("Properties for second specified application should be returned in priority position")
+			.containsOnly((Map.Entry) entry("myapp-foo", "myapp-bar"));
 
 		assertThat(e.getPropertySources().get(2).getSource())
-				.as("Properties for default application with key 'mydefaultkey' should be returned in second position")
-				.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
+			.as("Properties for default application with key 'mydefaultkey' should be returned in second position")
+			.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
 	}
 
 	@Test
@@ -182,11 +182,11 @@ public class SpringVaultEnvironmentRepositoryTests {
 		Environment e = repo.findOne("myapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
 		assertThat(e.getPropertySources()).as("Only properties for specified application should be returned")
-				.hasSize(1);
+			.hasSize(1);
 
 		assertThat(e.getPropertySources().get(0).getSource())
-				.as("Properties should be returned for specified application")
-				.containsOnly((Map.Entry) entry("foo", "bar"));
+			.as("Properties should be returned for specified application")
+			.containsOnly((Map.Entry) entry("foo", "bar"));
 	}
 
 	@Test
@@ -202,13 +202,13 @@ public class SpringVaultEnvironmentRepositoryTests {
 
 		Environment e = repo.findOne("myapp", null, null);
 		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources()).as(
-				"Properties for specified application and default application with key 'application' should be returned")
-				.hasSize(2);
+		assertThat(e.getPropertySources())
+			.as("Properties for specified application and default application with key 'application' should be returned")
+			.hasSize(2);
 
 		assertThat(e.getPropertySources().get(0).getSource())
-				.as("Properties for specified application should be returned in priority position")
-				.containsOnly((Map.Entry) entry("foo", "bar"));
+			.as("Properties for specified application should be returned in priority position")
+			.containsOnly((Map.Entry) entry("foo", "bar"));
 	}
 
 	private VaultResponse withVaultResponse(String key, Object value) {

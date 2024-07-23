@@ -126,7 +126,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					// result.getPropertySources() can be null if using xml
 					if (result.getPropertySources() != null) {
 						for (org.springframework.cloud.config.environment.PropertySource source : result
-								.getPropertySources()) {
+							.getPropertySources()) {
 							@SuppressWarnings("unchecked")
 							Map<String, Object> map = translateOrigins(source.getName(),
 									(Map<String, Object>) source.getSource());
@@ -222,7 +222,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		}
 		if (logger.isDebugEnabled()) {
 			List<org.springframework.cloud.config.environment.PropertySource> propertySourceList = result
-					.getPropertySources();
+				.getPropertySources();
 			if (propertySourceList != null) {
 				int propertyCount = 0;
 				for (org.springframework.cloud.config.environment.PropertySource propertySource : propertySourceList) {
@@ -277,7 +277,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		String[] uris;
 		boolean discoveryEnabled = properties.getDiscovery().isEnabled();
 		ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()
-				.get(ConfigClientProperties.class);
+			.get(ConfigClientProperties.class);
 		// In the case where discovery is enabled we need to extract the config server
 		// uris, username, and password
 		// from the properties from the context. These are set in
@@ -305,7 +305,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		List<MediaType> acceptHeader = Collections.singletonList(MediaType.parseMediaType(properties.getMediaType()));
 
 		ConfigClientRequestTemplateFactory requestTemplateFactory = context.getBootstrapContext()
-				.get(ConfigClientRequestTemplateFactory.class);
+			.get(ConfigClientRequestTemplateFactory.class);
 
 		for (int i = 0; i < noOfUrls; i++) {
 			String username;

@@ -46,12 +46,12 @@ public class CredhubIntegrationTest {
 		String expectedPath = "/myapp/master/default";
 		SimpleCredentialName togglesCredentialName = new SimpleCredentialName(expectedPath + "/toggles");
 		when(credhubCredentialOperations.findByPath(expectedPath))
-				.thenReturn(singletonList(new CredentialSummary(togglesCredentialName)));
+			.thenReturn(singletonList(new CredentialSummary(togglesCredentialName)));
 		JsonCredential credentials = new JsonCredential();
 		credentials.put("key", "value");
 		when(credhubCredentialOperations.getByName(new SimpleCredentialName(expectedPath + "/toggles"),
-				JsonCredential.class)).thenReturn(
-						new CredentialDetails<>("id1", togglesCredentialName, CredentialType.JSON, credentials));
+				JsonCredential.class))
+			.thenReturn(new CredentialDetails<>("id1", togglesCredentialName, CredentialType.JSON, credentials));
 
 		when(this.credHubOperations.credentials()).thenReturn(credhubCredentialOperations);
 	}

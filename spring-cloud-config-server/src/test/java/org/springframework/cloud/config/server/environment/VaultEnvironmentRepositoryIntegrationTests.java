@@ -57,7 +57,7 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 					request, new EnvironmentWatch.Default(), Optional.of(new HttpClientVaultRestTemplateFactory()),
 					withTokenProvider(request));
 			VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
-					.build(withEnvironmentProperties(false));
+				.build(withEnvironmentProperties(false));
 			vaultEnvironmentRepository.findOne("application", "profile", "label");
 		}).hasCauseInstanceOf(SSLHandshakeException.class);
 	}
@@ -69,7 +69,7 @@ public class VaultEnvironmentRepositoryIntegrationTests {
 				request, new EnvironmentWatch.Default(), Optional.of(new HttpClientVaultRestTemplateFactory()),
 				withTokenProvider(request));
 		VaultEnvironmentRepository vaultEnvironmentRepository = vaultEnvironmentRepositoryFactory
-				.build(withEnvironmentProperties(true));
+			.build(withEnvironmentProperties(true));
 
 		Environment actual = vaultEnvironmentRepository.findOne("application", "profile", "label");
 

@@ -164,7 +164,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
 				try {
 					return AuthorizedKeyEntry.parseAuthorizedKeyEntry(hostKeyAlgorithm + " " + hostKey)
-							.resolvePublicKey(null, null);
+						.resolvePublicKey(null, null);
 				}
 				catch (IOException | GeneralSecurityException e) {
 					throw new RuntimeException(e);
@@ -236,7 +236,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 			JGitEnvironmentProperties sshProperties = findEnvironmentProperties(sshKeysByHostname, remoteAddress);
 
 			ProxyHostProperties proxyHostProperties = sshProperties.getProxy()
-					.get(ProxyHostProperties.ProxyForScheme.HTTP);
+				.get(ProxyHostProperties.ProxyForScheme.HTTP);
 
 			if (proxyHostProperties == null || !proxyHostProperties.connectionInformationProvided()) {
 				return null;

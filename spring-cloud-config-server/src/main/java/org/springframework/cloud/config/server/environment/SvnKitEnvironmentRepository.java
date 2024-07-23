@@ -153,8 +153,9 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 			}
 		}
 
-		final SVNStatus status = SVNClientManager.newInstance().getStatusClient().doStatus(getWorkingDirectory(),
-				false);
+		final SVNStatus status = SVNClientManager.newInstance()
+			.getStatusClient()
+			.doStatus(getWorkingDirectory(), false);
 		return status != null ? status.getRevision().toString() : null;
 	}
 

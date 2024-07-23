@@ -33,7 +33,8 @@ public class ConfigServerApplicationTests {
 	@Test
 	public void contextLoads() {
 		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(ConfigServerApplication.class)
-				.properties("spring.config.name=configserver").run("--server.port=0")) {
+			.properties("spring.config.name=configserver")
+			.run("--server.port=0")) {
 			// empty
 		}
 	}

@@ -50,7 +50,9 @@ public class GcpIamClientAuthenticationProvider extends SpringVaultClientAuthent
 		Assert.hasText(gcp.getRole(), missingPropertyForAuthMethod("gcp-iam.role", AuthenticationMethod.GCP_IAM));
 
 		GcpIamAuthenticationOptions.GcpIamAuthenticationOptionsBuilder builder = GcpIamAuthenticationOptions.builder()
-				.path(gcp.getGcpPath()).role(gcp.getRole()).jwtValidity(gcp.getJwtValidity());
+			.path(gcp.getGcpPath())
+			.role(gcp.getRole())
+			.jwtValidity(gcp.getJwtValidity());
 
 		if (StringUtils.hasText(gcp.getProjectId())) {
 			builder.projectId(gcp.getProjectId());

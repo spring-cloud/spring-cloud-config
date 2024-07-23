@@ -130,7 +130,7 @@ public class ConfigServerConfigDataLoaderTests {
 
 		when(context.getBootstrapContext()).thenReturn(bootstrapContext);
 		when(bootstrapContext.get(ConfigClientRequestTemplateFactory.class))
-				.thenReturn(mock(ConfigClientRequestTemplateFactory.class));
+			.thenReturn(mock(ConfigClientRequestTemplateFactory.class));
 		when(bootstrapContext.get(RestTemplate.class)).thenReturn(restTemplate);
 		when(resource.getProperties()).thenReturn(properties);
 
@@ -147,8 +147,9 @@ public class ConfigServerConfigDataLoaderTests {
 
 		assertThat(this.loader.load(context, resource)).isNotNull();
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
-				httpEntityArgumentCaptor.capture(), any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), httpEntityArgumentCaptor.capture(), any(Class.class),
+					anyString(), anyString());
 
 		HttpEntity<Void> httpEntity = httpEntityArgumentCaptor.getValue();
 		assertThat(httpEntity.getHeaders().getAccept()).containsExactly(MediaType.parseMediaType(V2_JSON));
@@ -163,9 +164,9 @@ public class ConfigServerConfigDataLoaderTests {
 
 		assertThat(loader.load(context, resource)).isNotNull();
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
-				httpEntityArgumentCaptor.capture(), ArgumentMatchers.<Class<Environment>>any(), anyString(),
-				anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), httpEntityArgumentCaptor.capture(),
+					ArgumentMatchers.<Class<Environment>>any(), anyString(), anyString());
 
 		HttpEntity<Void> httpEntity = httpEntityArgumentCaptor.getValue();
 		assertThat(httpEntity.getHeaders().getAccept()).containsExactly(MediaType.parseMediaType("application/json"));
@@ -240,7 +241,7 @@ public class ConfigServerConfigDataLoaderTests {
 		IllegalStateException exception = Assertions.assertThrows(IllegalStateException.class,
 				() -> this.loader.load(context, resource));
 		assertThat(exception.getMessage())
-				.contains("Could not locate PropertySource and the fail fast property is set, failing");
+			.contains("Could not locate PropertySource and the fail fast property is set, failing");
 	}
 
 	@Test
@@ -404,11 +405,11 @@ public class ConfigServerConfigDataLoaderTests {
 		ConfigData configData = setupConfigServerConfigDataLoader(Arrays.asList(p1, p2), "application-slash", null);
 		assertThat(configData.getPropertySources()).hasSize(3);
 		assertThat(configData.getOptions(configData.getPropertySources().get(0))
-				.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
+			.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
 		assertThat(configData.getOptions(configData.getPropertySources().get(1))
-				.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
+			.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
 		assertThat(configData.getOptions(configData.getPropertySources().get(2))
-				.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
+			.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
 
 	}
 
@@ -457,9 +458,9 @@ public class ConfigServerConfigDataLoaderTests {
 		ConfigData configData = setupConfigServerConfigDataLoader(propertySources, "application-slash", "dev");
 		assertThat(configData.getPropertySources()).hasSize(2);
 		assertThat(configData.getOptions(configData.getPropertySources().get(0))
-				.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
+			.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
 		assertThat(configData.getOptions(configData.getPropertySources().get(1))
-				.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
+			.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
 
 	}
 
@@ -530,19 +531,19 @@ public class ConfigServerConfigDataLoaderTests {
 				"application-slash", "def");
 		assertThat(configData.getPropertySources()).hasSize(7);
 		assertThat(configData.getOptions(configData.getPropertySources().get(0))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(1))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
 		assertThat(configData.getOptions(configData.getPropertySources().get(2))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(3))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(4))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(5))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(6))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
 	}
 
 	@Test
@@ -559,15 +560,15 @@ public class ConfigServerConfigDataLoaderTests {
 				"default");
 		assertThat(configData.getPropertySources()).hasSize(5);
 		assertThat(configData.getOptions(configData.getPropertySources().get(0))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(1))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
 		assertThat(configData.getOptions(configData.getPropertySources().get(2))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(3))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(4))
-				.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
 	}
 
 	private ConfigData setupConfigServerConfigDataLoader(List<PropertySource> propertySources, String applicationName,
@@ -580,11 +581,12 @@ public class ConfigServerConfigDataLoaderTests {
 		when(responseEntity.getStatusCode()).thenReturn(HttpStatus.OK);
 		when(responseEntity.getBody()).thenReturn(environment);
 		when(rest.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(Environment.class),
-				eq(applicationName), ArgumentMatchers.<String>any())).thenReturn(responseEntity);
+				eq(applicationName), ArgumentMatchers.<String>any()))
+			.thenReturn(responseEntity);
 
 		ConfigurableBootstrapContext bootstrapContext = mock(ConfigurableBootstrapContext.class);
 		when(bootstrapContext.get(eq(ConfigClientRequestTemplateFactory.class)))
-				.thenReturn(mock(ConfigClientRequestTemplateFactory.class));
+			.thenReturn(mock(ConfigClientRequestTemplateFactory.class));
 		when(bootstrapContext.get(eq(RestTemplate.class))).thenReturn(rest);
 
 		ConfigServerConfigDataLoader loader = new ConfigServerConfigDataLoader(destination -> mock(Log.class));
@@ -595,7 +597,7 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setName(applicationName);
 		Profiles profiles = mock(Profiles.class);
 		when(profiles.getAccepted())
-				.thenReturn(profileList == null ? Collections.singletonList("default") : Arrays.asList(profileList));
+			.thenReturn(profileList == null ? Collections.singletonList("default") : Arrays.asList(profileList));
 		ConfigServerConfigDataResource resource = new ConfigServerConfigDataResource(properties, false, profiles);
 		resource.setProfileSpecific(!ObjectUtils.isEmpty(profileList));
 
@@ -708,7 +710,8 @@ public class ConfigServerConfigDataLoaderTests {
 		}
 		else {
 			when(requestFactory.createRequest(eq(new URI(format(URI_TEMPLATE, baseURI, NAME, PROFILES, LABEL))),
-					any(HttpMethod.class))).thenReturn(request);
+					any(HttpMethod.class)))
+				.thenReturn(request);
 		}
 
 		when(request.getHeaders()).thenReturn(new HttpHeaders());
@@ -725,19 +728,22 @@ public class ConfigServerConfigDataLoaderTests {
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		when(this.restTemplate.exchange(any(String.class), any(HttpMethod.class), any(HttpEntity.class),
-				any(Class.class), anyString(), anyString(), eq(label))).thenReturn(response);
+				any(Class.class), anyString(), anyString(), eq(label)))
+			.thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithoutLabel(ResponseEntity<?> response) {
 		when(this.restTemplate.exchange(any(String.class), any(HttpMethod.class), any(HttpEntity.class),
-				any(Class.class), anyString(), anyString())).thenReturn(response);
+				any(Class.class), anyString(), anyString()))
+			.thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestTimedOut() {
 		when(this.restTemplate.exchange(any(String.class), any(HttpMethod.class), any(HttpEntity.class),
-				any(Class.class), anyString(), anyString(), anyString())).thenThrow(ResourceAccessException.class);
+				any(Class.class), anyString(), anyString(), anyString()))
+			.thenThrow(ResourceAccessException.class);
 	}
 
 	private void mockRequestTimedOut(ClientHttpRequestFactory requestFactory, String baseURI) throws Exception {
@@ -748,7 +754,8 @@ public class ConfigServerConfigDataLoaderTests {
 		}
 		else {
 			when(requestFactory.createRequest(eq(new URI(format(URI_TEMPLATE, baseURI, NAME, PROFILES, LABEL))),
-					any(HttpMethod.class))).thenReturn(request);
+					any(HttpMethod.class)))
+				.thenReturn(request);
 		}
 
 		when(request.getHeaders()).thenReturn(new HttpHeaders());

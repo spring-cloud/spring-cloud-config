@@ -62,8 +62,8 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
 				this.delegate.getClass(), application, profile, label);
 		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY
-				.observation(null, CONVENTION, () -> context, this.registry)
-				.observe(() -> this.delegate.findOne(application, profile, label));
+			.observation(null, CONVENTION, () -> context, this.registry)
+			.observe(() -> this.delegate.findOne(application, profile, label));
 	}
 
 	@Override
@@ -71,8 +71,8 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
 				this.delegate.getClass(), application, profile, label);
 		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY
-				.observation(null, CONVENTION, () -> context, this.registry)
-				.observe(() -> this.delegate.findOne(application, profile, label, includeOrigin));
+			.observation(null, CONVENTION, () -> context, this.registry)
+			.observe(() -> this.delegate.findOne(application, profile, label, includeOrigin));
 	}
 
 	/**

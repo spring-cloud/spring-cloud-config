@@ -55,7 +55,7 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 	@Test
 	public void exponentialBackoffPolicy() {
 		TestPropertyValues.of("spring.cloud.config.enabled=true", "spring.cloud.config.fail-fast=true")
-				.applyTo(this.context);
+			.applyTo(this.context);
 		this.context.register(ConfigServiceBootstrapConfiguration.class);
 		this.context.refresh();
 
@@ -75,8 +75,10 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 
 	@Test
 	public void exponentialRandomBackoffPolicy() {
-		TestPropertyValues.of("spring.cloud.config.enabled=true", "spring.cloud.config.fail-fast=true",
-				"spring.cloud.config.retry.useRandomPolicy=true").applyTo(this.context);
+		TestPropertyValues
+			.of("spring.cloud.config.enabled=true", "spring.cloud.config.fail-fast=true",
+					"spring.cloud.config.retry.useRandomPolicy=true")
+			.applyTo(this.context);
 		this.context.register(ConfigServiceBootstrapConfiguration.class);
 		this.context.refresh();
 

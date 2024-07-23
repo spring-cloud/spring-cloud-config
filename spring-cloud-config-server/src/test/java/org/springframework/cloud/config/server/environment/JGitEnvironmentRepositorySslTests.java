@@ -74,7 +74,9 @@ public class JGitEnvironmentRepositorySslTests {
 	public void selfSignedCertIsRejected() {
 		assertThatExceptionOfType(CertificateException.class).isThrownBy(() -> {
 			ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfiguration.class)
-					.properties(configServerProperties()).web(WebApplicationType.NONE).run();
+				.properties(configServerProperties())
+				.web(WebApplicationType.NONE)
+				.run();
 
 			JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
 
@@ -96,8 +98,9 @@ public class JGitEnvironmentRepositorySslTests {
 	@Test
 	public void selfSignedCertWithSkipSslValidationIsAccepted() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfiguration.class)
-				.properties(configServerProperties("spring.cloud.config.server.git.skipSslValidation=true"))
-				.web(WebApplicationType.NONE).run();
+			.properties(configServerProperties("spring.cloud.config.server.git.skipSslValidation=true"))
+			.web(WebApplicationType.NONE)
+			.run();
 
 		JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
 		repository.findOne("bar", "staging", "master");

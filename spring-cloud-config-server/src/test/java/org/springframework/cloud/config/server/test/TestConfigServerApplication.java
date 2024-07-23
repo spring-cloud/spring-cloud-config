@@ -26,7 +26,7 @@ public class TestConfigServerApplication {
 
 	public static void main(String[] args) {
 		new SpringApplicationBuilder(TestConfigServerApplication.class).properties("spring.config.name=configserver")
-				.run(args);
+			.run(args);
 	}
 
 }

@@ -204,7 +204,7 @@ public class CompositeEnvironmentRepositoryTests {
 		SearchPathCompositeEnvironmentRepository compositeRepo = new SearchPathCompositeEnvironmentRepository(repos,
 				ObservationRegistry.NOOP, true);
 		assertThatExceptionOfType(RepositoryException.class)
-				.isThrownBy(() -> compositeRepo.getLocations("app", "dev", "label"));
+			.isThrownBy(() -> compositeRepo.getLocations("app", "dev", "label"));
 	}
 
 	private static class TestOrderedEnvironmentRepository implements EnvironmentRepository, SearchPathLocator, Ordered {

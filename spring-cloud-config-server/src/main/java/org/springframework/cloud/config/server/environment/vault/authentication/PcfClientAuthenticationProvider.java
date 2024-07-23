@@ -44,7 +44,8 @@ public class PcfClientAuthenticationProvider extends SpringVaultClientAuthentica
 		Assert.hasText(pcfProperties.getRole(), missingPropertyForAuthMethod("pcf.role", AuthenticationMethod.PCF));
 
 		PcfAuthenticationOptions.PcfAuthenticationOptionsBuilder builder = PcfAuthenticationOptions.builder()
-				.role(pcfProperties.getRole()).path(pcfProperties.getPcfPath());
+			.role(pcfProperties.getRole())
+			.path(pcfProperties.getPcfPath());
 
 		if (pcfProperties.getInstanceCertificate() != null) {
 			builder.instanceCertificate(new ResourceCredentialSupplier(pcfProperties.getInstanceCertificate()));

@@ -64,7 +64,7 @@ public class SshPropertyValidator {
 		List<JGitEnvironmentProperties> allRepoProperties = new ArrayList<>();
 		allRepoProperties.add(sshUriProperties);
 		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = sshUriProperties
-				.getRepos();
+			.getRepos();
 		if (repos != null) {
 			allRepoProperties.addAll(repos.values());
 		}

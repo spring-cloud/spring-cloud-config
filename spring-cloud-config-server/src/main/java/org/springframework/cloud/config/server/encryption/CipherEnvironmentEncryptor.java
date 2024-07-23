@@ -69,9 +69,9 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 					try {
 						value = value.substring("{cipher}".length());
 						value = encryptor
-								.locate(this.helper.getEncryptorKeys(name,
-										StringUtils.arrayToCommaDelimitedString(environment.getProfiles()), value))
-								.decrypt(this.helper.stripPrefix(value));
+							.locate(this.helper.getEncryptorKeys(name,
+									StringUtils.arrayToCommaDelimitedString(environment.getProfiles()), value))
+							.decrypt(this.helper.stripPrefix(value));
 					}
 					catch (Exception e) {
 						value = "<n/a>";

@@ -80,7 +80,7 @@ public class NativeConfigServerIntegrationTests {
 	@Test
 	public void badYaml() {
 		ResponseEntity<String> response = new TestRestTemplate()
-				.getForEntity("http://localhost:" + this.port + "/bad/default", String.class);
+			.getForEntity("http://localhost:" + this.port + "/bad/default", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 

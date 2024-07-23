@@ -41,7 +41,9 @@ public class GcpGceClientAuthenticationProvider extends SpringVaultClientAuthent
 		Assert.hasText(gcp.getRole(), missingPropertyForAuthMethod("gcp-iam.role", AuthenticationMethod.GCP_GCE));
 
 		GcpComputeAuthenticationOptions.GcpComputeAuthenticationOptionsBuilder builder = GcpComputeAuthenticationOptions
-				.builder().path(gcp.getGcpPath()).role(gcp.getRole());
+			.builder()
+			.path(gcp.getGcpPath())
+			.role(gcp.getRole());
 
 		if (StringUtils.hasText(gcp.getServiceAccount())) {
 			builder.serviceAccount(gcp.getServiceAccount());

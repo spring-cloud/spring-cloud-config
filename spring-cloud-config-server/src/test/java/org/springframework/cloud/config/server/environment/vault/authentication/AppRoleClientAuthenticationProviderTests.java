@@ -37,7 +37,7 @@ class AppRoleClientAuthenticationProviderTests {
 		properties.getAppRole().setSecretId("bar");
 
 		AppRoleAuthenticationOptions options = AppRoleClientAuthenticationProvider
-				.getAppRoleAuthenticationOptions(properties);
+			.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
 		assertThat(options.getSecretId()).isInstanceOf(SecretId.provided("bar").getClass());
@@ -50,7 +50,7 @@ class AppRoleClientAuthenticationProviderTests {
 		properties.getAppRole().setRoleId("foo");
 
 		AppRoleAuthenticationOptions options = AppRoleClientAuthenticationProvider
-				.getAppRoleAuthenticationOptions(properties);
+			.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
 		assertThat(options.getSecretId()).isInstanceOf(SecretId.absent().getClass());
@@ -65,7 +65,7 @@ class AppRoleClientAuthenticationProviderTests {
 		properties.getAppRole().setRole("my-role");
 
 		AppRoleAuthenticationOptions options = AppRoleClientAuthenticationProvider
-				.getAppRoleAuthenticationOptions(properties);
+			.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getAppRole()).isEqualTo("my-role");
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
@@ -80,7 +80,7 @@ class AppRoleClientAuthenticationProviderTests {
 		properties.getAppRole().setRole("my-role");
 
 		AppRoleAuthenticationOptions options = AppRoleClientAuthenticationProvider
-				.getAppRoleAuthenticationOptions(properties);
+			.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getAppRole()).isEqualTo("my-role");
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.pull(VaultToken.of("token")).getClass());
@@ -94,7 +94,7 @@ class AppRoleClientAuthenticationProviderTests {
 		properties.setToken("token");
 
 		AppRoleAuthenticationOptions options = AppRoleClientAuthenticationProvider
-				.getAppRoleAuthenticationOptions(properties);
+			.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.wrapped(VaultToken.of("token")).getClass());
 		assertThat(options.getSecretId()).isInstanceOf(SecretId.wrapped(VaultToken.of("token")).getClass());
@@ -108,7 +108,7 @@ class AppRoleClientAuthenticationProviderTests {
 		properties.getAppRole().setSecretId("bar");
 
 		AppRoleAuthenticationOptions options = AppRoleClientAuthenticationProvider
-				.getAppRoleAuthenticationOptions(properties);
+			.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.wrapped(VaultToken.of("token")).getClass());
 		assertThat(options.getSecretId()).isInstanceOf(SecretId.provided("bar").getClass());
@@ -122,7 +122,7 @@ class AppRoleClientAuthenticationProviderTests {
 		properties.getAppRole().setRoleId("foo");
 
 		AppRoleAuthenticationOptions options = AppRoleClientAuthenticationProvider
-				.getAppRoleAuthenticationOptions(properties);
+			.getAppRoleAuthenticationOptions(properties);
 
 		assertThat(options.getRoleId()).isInstanceOf(RoleId.provided("foo").getClass());
 		assertThat(options.getSecretId()).isInstanceOf(SecretId.wrapped(VaultToken.of("token")).getClass());
@@ -134,7 +134,7 @@ class AppRoleClientAuthenticationProviderTests {
 		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
 
 		assertThatThrownBy(() -> AppRoleClientAuthenticationProvider.getAppRoleAuthenticationOptions(properties))
-				.isInstanceOf(IllegalArgumentException.class);
+			.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
@@ -144,7 +144,7 @@ class AppRoleClientAuthenticationProviderTests {
 		properties.getAppRole().setRole("my-role");
 
 		assertThatThrownBy(() -> AppRoleClientAuthenticationProvider.getAppRoleAuthenticationOptions(properties))
-				.isInstanceOf(IllegalArgumentException.class);
+			.isInstanceOf(IllegalArgumentException.class);
 	}
 
 }

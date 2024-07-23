@@ -133,7 +133,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -145,7 +145,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
+			.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
@@ -157,7 +157,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("sub", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
+			.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
@@ -176,7 +176,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
+			.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
@@ -186,7 +186,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "raw");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -196,7 +196,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "foo");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -206,7 +206,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -218,7 +218,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -1289,7 +1289,7 @@ public class JGitEnvironmentRepositoryTests {
 		// Mock calls on list and checkout commands
 		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
 		when(mockCheckoutCommand.call()).thenThrow(new RefNotFoundException("Ref main cannot be resolved"))
-				.thenReturn(mockMasterRef);
+			.thenReturn(mockMasterRef);
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		properties.setTryMasterBranch(true);
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment, properties,
@@ -1340,7 +1340,7 @@ public class JGitEnvironmentRepositoryTests {
 		// Mock calls on list and checkout commands
 		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
 		when(mockCheckoutCommand.call()).thenThrow(new RefNotFoundException("Ref main cannot be resolved"))
-				.thenReturn(mockMasterRef);
+			.thenReturn(mockMasterRef);
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		properties.setTryMasterBranch(false);
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment, properties,

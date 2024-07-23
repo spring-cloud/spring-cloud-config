@@ -91,7 +91,7 @@ public class HttpClient4SupportTest {
 		try {
 			httpClient = HttpClient4Support.builder(properties).build();
 			response = httpClient
-					.execute(new HttpGet("https://localhost:" + wireMockServer.httpsPort() + "/test/proxy"));
+				.execute(new HttpGet("https://localhost:" + wireMockServer.httpsPort() + "/test/proxy"));
 		}
 		finally {
 			if (response != null) {

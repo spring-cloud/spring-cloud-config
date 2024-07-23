@@ -154,8 +154,8 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 			environment.getPropertySources().remove("config-data-setup");
 			return clean(ObservationEnvironmentRepositoryWrapper
-					.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment))
-					.findOne(config, profile, label, includeOrigin), propertySourceToConfigData);
+				.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment))
+				.findOne(config, profile, label, includeOrigin), propertySourceToConfigData);
 		}
 		catch (Exception e) {
 			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
@@ -338,8 +338,9 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				break;
 			}
 			if (locations != null) {
-				matches = Arrays.stream(locations).map(this::cleanFileLocation)
-						.anyMatch(location -> location.startsWith(finalPattern));
+				matches = Arrays.stream(locations)
+					.map(this::cleanFileLocation)
+					.anyMatch(location -> location.startsWith(finalPattern));
 				if (matches) {
 					break;
 				}

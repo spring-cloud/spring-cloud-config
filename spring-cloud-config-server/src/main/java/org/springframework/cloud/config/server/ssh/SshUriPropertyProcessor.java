@@ -64,10 +64,10 @@ public class SshUriPropertyProcessor {
 			sshUriPropertyMap.put(getHostname(parentUri), uriProperties);
 		}
 		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = uriProperties
-				.getRepos();
+			.getRepos();
 		if (repos != null) {
 			for (MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties repoProperties : repos
-					.values()) {
+				.values()) {
 				String repoUri = repoProperties.getUri();
 				if (isSshUri(repoUri) && getHostname(repoUri) != null) {
 					sshUriPropertyMap.put(getHostname(repoUri), repoProperties);

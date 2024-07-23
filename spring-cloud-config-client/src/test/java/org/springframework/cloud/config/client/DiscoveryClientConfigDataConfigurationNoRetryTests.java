@@ -75,10 +75,11 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 		givenDiscoveryClientReturnsNoInfo();
 		ConfigServerInstanceProvider.Function function = mock(ConfigServerInstanceProvider.Function.class);
 		when(function.apply(anyString(), any(Binder.class), any(BindHandler.class), any(Log.class)))
-				.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
+			.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
 		assertThatThrownBy(() -> context = setup(true, function, "spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.fail-fast=true").run()).isInstanceOf(IllegalStateException.class)
-						.hasMessageContaining("No instances found of configserver");
+				"spring.cloud.config.fail-fast=true")
+			.run()).isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("No instances found of configserver");
 		verify(function).apply(eq(DEFAULT_CONFIG_SERVER), any(Binder.class), any(BindHandler.class), any(Log.class));
 		verify(function, never()).apply(eq(DEFAULT_CONFIG_SERVER));
 	}
@@ -88,9 +89,10 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 		givenDiscoveryClientReturnsNoInfo();
 		ConfigServerInstanceProvider.Function function = mock(ConfigServerInstanceProvider.Function.class);
 		when(function.apply(anyString(), any(Binder.class), any(BindHandler.class), any(Log.class)))
-				.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
+			.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
 		context = setup(true, function, "spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.fail-fast=false").run();
+				"spring.cloud.config.fail-fast=false")
+			.run();
 
 		// expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasDefaultConfiguration();
@@ -104,9 +106,10 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 		givenDiscoveryClientReturnsInfo();
 		ConfigServerInstanceProvider.Function function = mock(ConfigServerInstanceProvider.Function.class);
 		when(function.apply(eq(DEFAULT_CONFIG_SERVER), any(Binder.class), any(BindHandler.class), any(Log.class)))
-				.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
+			.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
 		context = setup(true, function, "spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.fail-fast=true").run();
+				"spring.cloud.config.fail-fast=true")
+			.run();
 
 		// expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		// expectConfigClientPropertiesHasConfigurationFromEureka();
@@ -118,13 +121,13 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 	SpringApplicationBuilder setup(boolean addInstanceProvider, ConfigServerInstanceProvider.Function function,
 			String... env) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(TestConfig.class)
-				.properties(addDefaultEnv(env));
+			.properties(addDefaultEnv(env));
 		if (addInstanceProvider) {
 			builder.addBootstrapRegistryInitializer(instanceProviderBootstrapper(function));
 			// ignore actual calls to config server since we're just testing discovery
 			// client.
 			builder.addBootstrapRegistryInitializer(registry -> registry
-					.register(ConfigServerBootstrapper.LoaderInterceptor.class, ctx -> loadContext -> null));
+				.register(ConfigServerBootstrapper.LoaderInterceptor.class, ctx -> loadContext -> null));
 		}
 		return builder.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
 			ConfigServerInstanceMonitor monitor = event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);

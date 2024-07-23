@@ -180,7 +180,7 @@ public class ConfigClientPropertiesTests {
 		properties.setMultipleUriStrategy(MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY);
 		assertThat(properties.getMultipleUriStrategy()).isNotNull();
 		assertThat(properties.getMultipleUriStrategy().name())
-				.isEqualTo(MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY.name());
+			.isEqualTo(MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY.name());
 	}
 
 }

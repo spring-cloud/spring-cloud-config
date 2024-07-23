@@ -78,11 +78,12 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 		long accessTime = System.currentTimeMillis();
 		if (isCacheStale(accessTime)) {
 			this.lastAccess = accessTime;
-			this.cached = this.environment.getPropertySources().stream()
-					.filter(p -> p.getName().startsWith(CONFIG_CLIENT_PROPERTYSOURCE_NAME)
-							|| p.getName().startsWith(BOOTSTRAP_PROPERTY_SOURCE_NAME + "-")
-							|| p.getName().startsWith(PREFIX))
-					.collect(Collectors.toList());
+			this.cached = this.environment.getPropertySources()
+				.stream()
+				.filter(p -> p.getName().startsWith(CONFIG_CLIENT_PROPERTYSOURCE_NAME)
+						|| p.getName().startsWith(BOOTSTRAP_PROPERTY_SOURCE_NAME + "-")
+						|| p.getName().startsWith(PREFIX))
+				.collect(Collectors.toList());
 		}
 		return this.cached;
 	}

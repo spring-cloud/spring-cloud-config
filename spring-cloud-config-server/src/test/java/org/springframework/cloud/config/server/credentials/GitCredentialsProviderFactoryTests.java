@@ -98,7 +98,8 @@ public class GitCredentialsProviderFactoryTests {
 		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER, PASSWORD, null);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof UsernamePasswordCredentialsProvider)
-				.as("deprecated createFor() should not enable ssl validation skipping").isTrue();
+			.as("deprecated createFor() should not enable ssl validation skipping")
+			.isTrue();
 	}
 
 	@Test

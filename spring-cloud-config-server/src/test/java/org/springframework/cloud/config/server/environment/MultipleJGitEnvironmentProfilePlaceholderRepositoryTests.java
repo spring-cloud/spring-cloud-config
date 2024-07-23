@@ -88,7 +88,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -107,7 +107,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 		Environment environment = this.repository.findOne("application", "test2-config-repo", "master");
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(getUri("*").replace("{profile}", "test2-config-repo") + "/application.properties");
+			.isEqualTo(getUri("*").replace("{profile}", "test2-config-repo") + "/application.properties");
 		assertVersion(environment);
 	}
 
@@ -117,8 +117,8 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 				"master");
 		assertThat(locations.getLocations().length).isEqualTo(1);
 		assertThat(new File(locations.getLocations()[0].replace("file:", "")).getCanonicalPath())
-				.isEqualTo(new File(getUri("*").replace("{profile}", "test2-config-repo").replace("file:", ""))
-						.getCanonicalPath());
+			.isEqualTo(new File(getUri("*").replace("{profile}", "test2-config-repo").replace("file:", ""))
+				.getCanonicalPath());
 	}
 
 	@Test
@@ -126,7 +126,7 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 		Locations locations = this.repository.getLocations("application", "not-there,another-not-there", "master");
 		assertThat(locations.getLocations().length).isEqualTo(1);
 		assertThat(new File(locations.getLocations()[0].replace("file:", "")).getCanonicalPath())
-				.isEqualTo(new File(this.repository.getUri().replace("file:", "")).getCanonicalPath());
+			.isEqualTo(new File(this.repository.getUri().replace("file:", "")).getCanonicalPath());
 	}
 
 	@Test
@@ -135,16 +135,16 @@ public class MultipleJGitEnvironmentProfilePlaceholderRepositoryTests {
 				"test1-config-repo,test2-config-repo,missing-config-repo", "master");
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(getUri("*").replace("{profile}", "test2-config-repo") + "/application.properties");
+			.isEqualTo(getUri("*").replace("{profile}", "test2-config-repo") + "/application.properties");
 		assertVersion(environment);
 		assertThat(new String[] { "test1-config-repo", "test2-config-repo", "missing-config-repo" })
-				.isEqualTo(environment.getProfiles());
+			.isEqualTo(environment.getProfiles());
 	}
 
 	@SuppressWarnings("unchecked")
 	private JGitEnvironmentRepository getRepository(String uri) {
 		Map<String, JGitEnvironmentRepository> repos = (Map<String, JGitEnvironmentRepository>) ReflectionTestUtils
-				.getField(this.repository, "placeholders");
+			.getField(this.repository, "placeholders");
 		return repos.get(uri);
 	}
 

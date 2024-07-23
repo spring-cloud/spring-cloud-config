@@ -42,13 +42,14 @@ public class AzureMsiClientAuthenticationProvider extends SpringVaultClientAuthe
 		Assert.hasText(azureMsi.getRole(),
 				missingPropertyForAuthMethod("azure-msi.role", AuthenticationMethod.AZURE_MSI));
 
-		AzureMsiAuthenticationOptions options = AzureMsiAuthenticationOptions.builder().role(azureMsi.getRole())
-				.path(azureMsi.getAzurePath())
-				.instanceMetadataUri(getUri(azureMsi.getMetadataService(),
-						AzureMsiAuthenticationOptions.DEFAULT_INSTANCE_METADATA_SERVICE_URI))
-				.identityTokenServiceUri(getUri(azureMsi.getIdentityTokenService(),
-						AzureMsiAuthenticationOptions.DEFAULT_IDENTITY_TOKEN_SERVICE_URI))
-				.build();
+		AzureMsiAuthenticationOptions options = AzureMsiAuthenticationOptions.builder()
+			.role(azureMsi.getRole())
+			.path(azureMsi.getAzurePath())
+			.instanceMetadataUri(getUri(azureMsi.getMetadataService(),
+					AzureMsiAuthenticationOptions.DEFAULT_INSTANCE_METADATA_SERVICE_URI))
+			.identityTokenServiceUri(getUri(azureMsi.getIdentityTokenService(),
+					AzureMsiAuthenticationOptions.DEFAULT_IDENTITY_TOKEN_SERVICE_URI))
+			.build();
 
 		return new AzureMsiAuthentication(options, vaultRestOperations, externalRestOperations);
 	}

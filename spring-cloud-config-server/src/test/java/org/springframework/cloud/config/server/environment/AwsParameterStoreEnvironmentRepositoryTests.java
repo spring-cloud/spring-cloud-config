@@ -63,14 +63,17 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 
 	@Container
 	private static final LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(SSM);
+			DockerImageName.parse("localstack/localstack:1.3.1"))
+		.withServices(SSM);
 
 	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
-			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
+		.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
 
-	private final SsmClient ssmClient = SsmClient.builder().region(Region.of(localstack.getRegion()))
-			.credentialsProvider(staticCredentialsProvider).endpointOverride(localstack.getEndpointOverride(SSM))
-			.build();
+	private final SsmClient ssmClient = SsmClient.builder()
+		.region(Region.of(localstack.getRegion()))
+		.credentialsProvider(staticCredentialsProvider)
+		.endpointOverride(localstack.getEndpointOverride(SSM))
+		.build();
 
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
 
@@ -505,8 +508,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 
 		Environment expected = new Environment(application, profiles, null, null, null);
 
-		expected.addAll(
-				Arrays.asList(appSpecificProdParamsPs, sharedProdParamsPs, appSpecificParamsPs, sharedParamsPs));
+		expected
+			.addAll(Arrays.asList(appSpecificProdParamsPs, sharedProdParamsPs, appSpecificParamsPs, sharedParamsPs));
 
 		putParameters(expected);
 
@@ -706,10 +709,13 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 
 	private Set<Parameter> getParameters(PropertySource propertySource, String path,
 			boolean withSlashesForPropertyName) {
-		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter
-				.builder().name(path + (withSlashesForPropertyName
-						? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR) : p.getKey()))
-				.type(ParameterType.STRING).value((String) p.getValue()).version(1L).build();
+		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter.builder()
+			.name(path + (withSlashesForPropertyName ? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR)
+					: p.getKey()))
+			.type(ParameterType.STRING)
+			.value((String) p.getValue())
+			.version(1L)
+			.build();
 
 		return propertySource.getSource().entrySet().stream().map(mapper).collect(Collectors.toSet());
 	}

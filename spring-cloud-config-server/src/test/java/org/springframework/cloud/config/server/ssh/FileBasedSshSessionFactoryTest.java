@@ -94,8 +94,8 @@ public class FileBasedSshSessionFactoryTest {
 	}
 
 	private SshConfigStore.HostConfig getSshHostConfig(String hostName) {
-		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName").lookup(hostName, 22,
-				"userName");
+		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName")
+			.lookup(hostName, 22, "userName");
 	}
 
 	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {

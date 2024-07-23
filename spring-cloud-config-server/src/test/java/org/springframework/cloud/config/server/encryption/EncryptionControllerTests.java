@@ -46,13 +46,13 @@ public class EncryptionControllerTests {
 	@Test
 	public void cannotDecryptWithoutKey() {
 		assertThatExceptionOfType(EncryptionTooWeakException.class)
-				.isThrownBy(() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
+			.isThrownBy(() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
 	}
 
 	@Test
 	public void cannotDecryptWithNoopEncryptor() {
 		assertThatExceptionOfType(EncryptionTooWeakException.class)
-				.isThrownBy(() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
+			.isThrownBy(() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
 	}
 
 	@Test

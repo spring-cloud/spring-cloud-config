@@ -75,7 +75,7 @@ public class ConfigDataOrderingIntegrationTests {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void contextLoads() {
 		ResponseEntity<Map> response = new TestRestTemplate()
-				.getForEntity("http://localhost:" + this.port + BASE_PATH + "/env/my.prop", Map.class);
+			.getForEntity("http://localhost:" + this.port + BASE_PATH + "/env/my.prop", Map.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		Map res = response.getBody();
 		assertThat(res).containsKey("propertySources");

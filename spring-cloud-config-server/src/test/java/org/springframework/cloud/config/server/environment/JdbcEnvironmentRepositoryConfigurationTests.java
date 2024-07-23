@@ -42,24 +42,24 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 	@Test
 	public void jdbcEnvironmentRepositoryBeansConfiguredWhenDefault() throws IOException {
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
-				.run(context -> {
-					assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
-					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
-					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.PropertiesResultSetExtractor.class);
-				});
+			.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
+			.run(context -> {
+				assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
+				assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
+				assertThat(context).hasSingleBean(JdbcEnvironmentRepository.PropertiesResultSetExtractor.class);
+			});
 	}
 
 	@Test
 	public void jdbcEnvironmentRepositoryBeansConfiguredWitCustomResultSetExtractor() {
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-				.withBean(CustomResultSetExtractor.class, CustomResultSetExtractor::new)
-				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
-				.run(context -> {
-					assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
-					assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
-					assertThat(context).hasSingleBean(CustomResultSetExtractor.class);
-				});
+			.withBean(CustomResultSetExtractor.class, CustomResultSetExtractor::new)
+			.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
+			.run(context -> {
+				assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
+				assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
+				assertThat(context).hasSingleBean(CustomResultSetExtractor.class);
+			});
 	}
 
 	@Test
@@ -86,10 +86,10 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 			ContextConsumer<? super AssertableWebApplicationContext> consumer) throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-				.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none",
-						"spring.cloud.config.server.git.uri:" + uri,
-						"spring.cloud.config.server.jdbc.enabled:" + jdbcEnabled)
-				.run(consumer);
+			.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none",
+					"spring.cloud.config.server.git.uri:" + uri,
+					"spring.cloud.config.server.jdbc.enabled:" + jdbcEnabled)
+			.run(consumer);
 	}
 
 	private static class CustomResultSetExtractor extends JdbcEnvironmentRepository.PropertiesResultSetExtractor {

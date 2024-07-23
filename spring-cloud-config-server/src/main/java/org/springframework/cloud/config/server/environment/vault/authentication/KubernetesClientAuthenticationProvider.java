@@ -44,8 +44,10 @@ public class KubernetesClientAuthenticationProvider extends SpringVaultClientAut
 				missingPropertyForAuthMethod("kubernetes.service-account-token-file", AuthenticationMethod.KUBERNETES));
 
 		KubernetesAuthenticationOptions options = KubernetesAuthenticationOptions.builder()
-				.path(kubernetes.getKubernetesPath()).role(kubernetes.getRole())
-				.jwtSupplier(new KubernetesServiceAccountTokenFile(kubernetes.getServiceAccountTokenFile())).build();
+			.path(kubernetes.getKubernetesPath())
+			.role(kubernetes.getRole())
+			.jwtSupplier(new KubernetesServiceAccountTokenFile(kubernetes.getServiceAccountTokenFile()))
+			.build();
 
 		return new KubernetesAuthentication(options, vaultRestOperations);
 	}

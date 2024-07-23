@@ -69,7 +69,7 @@ public class ResourceControllerTests {
 	@BeforeEach
 	public void init() {
 		this.context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
-				.run();
+			.run();
 		this.environmentRepository = new NativeEnvironmentRepository(this.context.getEnvironment(),
 				new NativeEnvironmentProperties(), ObservationRegistry.NOOP);
 		this.repository = new GenericResourceRepository(this.environmentRepository);
@@ -85,7 +85,7 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", true);
 		assertThat(replaceNewLines(resource)).matches("\\{\\s*\"foo\": \"dev_bar\"\\s*\\}")
-				.as("Wrong content: " + resource);
+			.as("Wrong content: " + resource);
 	}
 
 	@Test
@@ -93,7 +93,7 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = this.controller.retrieve("foo", "bar", "dev", "template.json", false);
 		assertThat(replaceNewLines(resource)).matches("\\{\\s*\"foo\": \"\\$\\{foo\\}\"\\s*\\}")
-				.as("Wrong content: " + resource);
+			.as("Wrong content: " + resource);
 	}
 
 	@Test
@@ -101,7 +101,7 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test");
 		String resource = new String(this.controller.binary("foo", "bar", "dev", "template.json"));
 		assertThat(replaceNewLines(resource)).matches("\\{\\s*\"foo\": \"\\$\\{foo\\}\"\\s*\\}")
-				.as("Wrong content: " + resource);
+			.as("Wrong content: " + resource);
 	}
 
 	@Test

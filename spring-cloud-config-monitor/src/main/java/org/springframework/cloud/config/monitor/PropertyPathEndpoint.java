@@ -85,7 +85,7 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 				for (String service : services) {
 					log.info("Refresh for: " + service);
 					this.applicationEventPublisher
-							.publishEvent(new RefreshRemoteApplicationEvent(this, this.busId, service));
+						.publishEvent(new RefreshRemoteApplicationEvent(this, this.busId, service));
 				}
 				return services;
 			}

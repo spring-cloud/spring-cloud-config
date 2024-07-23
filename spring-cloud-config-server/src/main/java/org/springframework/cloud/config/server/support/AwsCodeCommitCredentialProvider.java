@@ -119,9 +119,14 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		String codeCommitPassword;
 		try {
 			StringBuilder stringToSign = new StringBuilder();
-			stringToSign.append("AWS4-HMAC-SHA256\n").append(dateStamp).append("\n").append(shortDateStamp).append("/")
-					.append(region).append("/codecommit/aws4_request\n")
-					.append(bytesToHexString(canonicalRequestDigest(uri)));
+			stringToSign.append("AWS4-HMAC-SHA256\n")
+				.append(dateStamp)
+				.append("\n")
+				.append(shortDateStamp)
+				.append("/")
+				.append(region)
+				.append("/codecommit/aws4_request\n")
+				.append(bytesToHexString(canonicalRequestDigest(uri)));
 
 			byte[] signedRequest = sign(awsSecretKey, shortDateStamp, region, stringToSign.toString());
 			codeCommitPassword = dateStamp + "Z" + bytesToHexString(signedRequest);
@@ -158,18 +163,22 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 	private static byte[] canonicalRequestDigest(URIish uri) throws NoSuchAlgorithmException {
 		StringBuilder canonicalRequest = new StringBuilder();
 		canonicalRequest.append("GIT\n") // codecommit uses GIT as the request method
-				.append(uri.getPath()).append("\n") // URI request path
-				.append("\n") // Query string, always empty for codecommit
-				// Next is canonical headers, codecommit only requires the host header
-				.append("host:").append(uri.getHost()).append("\n").append("\n") // canonical
-																					// headers
-																					// are
-																					// always
-																					// terminated
-																					// by
-																					// newline
-				.append("host\n"); // The list of canonical headers, only one for
-									// codecommit
+			.append(uri.getPath())
+			.append("\n") // URI request path
+			.append("\n") // Query string, always empty for codecommit
+			// Next is canonical headers, codecommit only requires the host header
+			.append("host:")
+			.append(uri.getHost())
+			.append("\n")
+			.append("\n") // canonical
+							// headers
+							// are
+							// always
+							// terminated
+							// by
+							// newline
+			.append("host\n"); // The list of canonical headers, only one for
+								// codecommit
 
 		MessageDigest digest = MessageDigest.getInstance(SHA_256);
 

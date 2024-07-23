@@ -307,8 +307,8 @@ public class EnvironmentController {
 				}
 				else {
 					String prefixKey = entry.getKey().substring(0, entry.getKey().indexOf("["));
-					currentArrayMap.computeIfAbsent(prefixKey, k -> new LinkedHashMap<>()).put(entry.getKey(),
-							entry.getValue());
+					currentArrayMap.computeIfAbsent(prefixKey, k -> new LinkedHashMap<>())
+						.put(entry.getKey(), entry.getValue());
 				}
 			}
 			// Override array properties by prefix key

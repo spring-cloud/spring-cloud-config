@@ -41,9 +41,9 @@ public class CubbyholeClientAuthenticationProvider extends SpringVaultClientAuth
 		Assert.hasText(token, missingPropertyForAuthMethod("token", AuthenticationMethod.CUBBYHOLE));
 
 		CubbyholeAuthenticationOptions options = CubbyholeAuthenticationOptions.builder() //
-				.wrapped() //
-				.initialToken(VaultToken.of(token)) //
-				.build();
+			.wrapped() //
+			.initialToken(VaultToken.of(token)) //
+			.build();
 
 		return new CubbyholeAuthentication(options, vaultRestOperations);
 	}

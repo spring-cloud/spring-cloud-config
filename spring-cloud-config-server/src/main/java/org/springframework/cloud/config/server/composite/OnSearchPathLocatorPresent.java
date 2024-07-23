@@ -54,11 +54,11 @@ public class OnSearchPathLocatorPresent extends SpringBootCondition {
 		boolean foundSearchPathLocator = repositoryTypes.stream().anyMatch(SearchPathLocator.class::isAssignableFrom);
 		if (required && !foundSearchPathLocator) {
 			return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnSearchPathLocator.class)
-					.notAvailable(SearchPathLocator.class.getTypeName()));
+				.notAvailable(SearchPathLocator.class.getTypeName()));
 		}
 		if (!required && foundSearchPathLocator) {
 			return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnMissingSearchPathLocator.class)
-					.available(SearchPathLocator.class.getTypeName()));
+				.available(SearchPathLocator.class.getTypeName()));
 		}
 		return ConditionOutcome.match();
 	}

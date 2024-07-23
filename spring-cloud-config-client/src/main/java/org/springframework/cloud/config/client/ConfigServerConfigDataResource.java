@@ -173,8 +173,10 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 
 	@Override
 	public String toString() {
-		return new ToStringCreator(this).append("uris", properties.getUri()).append("optional", optional)
-				.append("profiles", getProfiles()).toString();
+		return new ToStringCreator(this).append("uris", properties.getUri())
+			.append("optional", optional)
+			.append("profiles", getProfiles())
+			.toString();
 
 	}
 

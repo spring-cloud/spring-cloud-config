@@ -82,8 +82,9 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(),
-				any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(), any(Class.class), anyString(),
+					anyString());
 
 		HttpEntity httpEntity = argumentCaptor.getValue();
 		assertThat(httpEntity.getHeaders().getAccept()).containsExactly(MediaType.parseMediaType(V2_JSON));
@@ -102,8 +103,9 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		assertThat(locator.locateCollection(this.environment)).isNotNull();
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(),
-				any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(), any(Class.class), anyString(),
+					anyString());
 
 		HttpEntity httpEntity = argumentCaptor.getValue();
 		assertThat(httpEntity.getHeaders().getAccept()).containsExactly(MediaType.parseMediaType("application/json"));
@@ -125,7 +127,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithProfile(new ResponseEntity<>(body, HttpStatus.OK), "override-profile");
 		this.locator.setRestTemplate(this.restTemplate);
 		TestPropertyValues.of("spring.cloud.config.profile:override-profile", "spring.profiles.active: foo")
-				.applyTo(this.environment);
+			.applyTo(this.environment);
 		assertThat(this.locator.locateCollection(this.environment).size()).isEqualTo(2);
 	}
 
@@ -155,8 +157,10 @@ public class ConfigServicePropertySourceLocatorTests {
 			this.locator.setRestTemplate(this.restTemplate);
 			TestPropertyValues.of("spring.cloud.config.label:release/v1.0.1").applyTo(this.environment);
 			this.locator.locateCollection(this.environment);
-		}).isInstanceOf(IllegalStateException.class).hasMessageContaining(
-				"Could not locate PropertySource and the fail fast property is set, failing: None of labels [release/v1.0.1] found");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining(
+					"Could not locate PropertySource and the fail fast property is set, failing: None of labels [release/v1.0.1] found");
 	}
 
 	@Test
@@ -177,8 +181,10 @@ public class ConfigServicePropertySourceLocatorTests {
 			this.locator = new ConfigServicePropertySourceLocator(defaults);
 			this.locator.setRestTemplate(restTemplate);
 			this.locator.locateCollection(this.environment);
-		}).isInstanceOf(IllegalStateException.class).hasCauseInstanceOf(HttpServerErrorException.class)
-				.hasMessageContaining("fail fast property is set");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasCauseInstanceOf(HttpServerErrorException.class)
+			.hasMessageContaining("fail fast property is set");
 	}
 
 	@Test
@@ -192,8 +198,9 @@ public class ConfigServicePropertySourceLocatorTests {
 			this.locator = new ConfigServicePropertySourceLocator(defaults);
 			this.locator.setRestTemplate(restTemplate);
 			this.locator.locateCollection(this.environment);
-		}).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("fail fast property is set, failing: None of labels [] found");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("fail fast property is set, failing: None of labels [] found");
 	}
 
 	@Test
@@ -214,7 +221,7 @@ public class ConfigServicePropertySourceLocatorTests {
 			ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
 			ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
 			Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
-					.thenReturn(request);
+				.thenReturn(request);
 			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 			defaults.setFailFast(true);
 			defaults.setUsername("username");
@@ -222,8 +229,9 @@ public class ConfigServicePropertySourceLocatorTests {
 			defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 			this.locator = new ConfigServicePropertySourceLocator(defaults);
 			this.locator.locateCollection(this.environment);
-		}).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("Could not locate PropertySource and the fail fast property is set, failing");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("Could not locate PropertySource and the fail fast property is set, failing");
 	}
 
 	@Test
@@ -268,8 +276,9 @@ public class ConfigServicePropertySourceLocatorTests {
 			String username = "user";
 			String password = "pass";
 			factory(defaults).addAuthorizationToken(headers, username, password);
-		}).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("You must set either 'password' or 'authorization'");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("You must set either 'password' or 'authorization'");
 	}
 
 	@Test
@@ -396,7 +405,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Iterator<ClientHttpRequestInterceptor> iterator = restTemplate.getInterceptors().iterator();
 		while (iterator.hasNext()) {
 			GenericRequestHeaderInterceptor genericRequestHeaderInterceptor = (GenericRequestHeaderInterceptor) iterator
-					.next();
+				.next();
 			assertThat(genericRequestHeaderInterceptor.getHeaders()).doesNotContainKeys(AUTHORIZATION);
 		}
 	}
@@ -557,11 +566,13 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		if (baseURI == null) {
 			Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
-					.thenReturn(request);
+				.thenReturn(request);
 		}
 		else {
-			Mockito.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
-					Mockito.any(HttpMethod.class))).thenReturn(request);
+			Mockito
+				.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
+						Mockito.any(HttpMethod.class)))
+				.thenReturn(request);
 		}
 
 		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
@@ -579,27 +590,30 @@ public class ConfigServicePropertySourceLocatorTests {
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
 				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString(),
-				ArgumentMatchers.eq(label))).thenReturn(response);
+				ArgumentMatchers.eq(label)))
+			.thenReturn(response);
 	}
 
 	private void mockRequestResponseWithProfile(ResponseEntity<?> response, String profiles) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
 				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), ArgumentMatchers.eq(profiles)))
-				.thenReturn(response);
+			.thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithoutLabel(ResponseEntity<?> response) {
-		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
-				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString()))
-				.thenReturn(response);
+		Mockito
+			.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
+					Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString()))
+			.thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestTimedOut() {
-		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
-				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString()))
-				.thenThrow(ResourceAccessException.class);
+		Mockito
+			.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
+					Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString()))
+			.thenThrow(ResourceAccessException.class);
 	}
 
 	private void mockRequestTimedOut(ClientHttpRequestFactory requestFactory, String baseURI) throws Exception {
@@ -607,11 +621,13 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		if (baseURI == null) {
 			Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
-					.thenReturn(request);
+				.thenReturn(request);
 		}
 		else {
-			Mockito.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
-					Mockito.any(HttpMethod.class))).thenReturn(request);
+			Mockito
+				.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
+						Mockito.any(HttpMethod.class)))
+				.thenReturn(request);
 		}
 
 		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());

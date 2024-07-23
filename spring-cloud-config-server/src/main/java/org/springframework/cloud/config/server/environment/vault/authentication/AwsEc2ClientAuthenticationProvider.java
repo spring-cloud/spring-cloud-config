@@ -43,11 +43,12 @@ public class AwsEc2ClientAuthenticationProvider extends SpringVaultClientAuthent
 				? AwsEc2AuthenticationOptions.Nonce.provided(awsEc2.getNonce().toCharArray())
 				: AwsEc2AuthenticationOptions.Nonce.generated();
 
-		AwsEc2AuthenticationOptions authenticationOptions = AwsEc2AuthenticationOptions.builder().role(awsEc2.getRole()) //
-				.path(awsEc2.getAwsEc2Path()) //
-				.nonce(nonce) //
-				.identityDocumentUri(URI.create(awsEc2.getIdentityDocument())) //
-				.build();
+		AwsEc2AuthenticationOptions authenticationOptions = AwsEc2AuthenticationOptions.builder()
+			.role(awsEc2.getRole()) //
+			.path(awsEc2.getAwsEc2Path()) //
+			.nonce(nonce) //
+			.identityDocumentUri(URI.create(awsEc2.getIdentityDocument())) //
+			.build();
 
 		return new AwsEc2Authentication(authenticationOptions, vaultRestOperations, externalRestOperations);
 	}

@@ -60,13 +60,16 @@ public class CompositeEnvironmentBeanFactoryPostProcessor implements BeanFactory
 			propertiesClass = (Class<? extends EnvironmentRepositoryProperties>) factoryTypes[1];
 			EnvironmentRepositoryProperties properties = bindProperties(i, propertiesClass, this.environment);
 			AbstractBeanDefinition propertiesDefinition = BeanDefinitionBuilder
-					.genericBeanDefinition(EnvironmentRepositoryProperties.class, () -> properties).getBeanDefinition();
+				.genericBeanDefinition(EnvironmentRepositoryProperties.class, () -> properties)
+				.getBeanDefinition();
 			String propertiesBeanName = String.format("%s-env-repo-properties%d", type, i);
 			registry.registerBeanDefinition(propertiesBeanName, propertiesDefinition);
 
 			AbstractBeanDefinition beanDefinition = BeanDefinitionBuilder
-					.genericBeanDefinition(EnvironmentRepository.class).setFactoryMethodOnBean("build", factoryName)
-					.addConstructorArgValue(properties).getBeanDefinition();
+				.genericBeanDefinition(EnvironmentRepository.class)
+				.setFactoryMethodOnBean("build", factoryName)
+				.addConstructorArgValue(properties)
+				.getBeanDefinition();
 			String beanName = String.format("%s-env-repo%d", type, i);
 			registry.registerBeanDefinition(beanName, beanDefinition);
 		}
