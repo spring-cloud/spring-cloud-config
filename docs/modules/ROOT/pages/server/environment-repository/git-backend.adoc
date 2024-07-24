@@ -189,6 +189,20 @@ All other repositories are not cloned until configuration from the repository is
 NOTE: Setting a repository to be cloned when the Config Server starts up can help to identify a misconfigured configuration source (such as an invalid repository URI) quickly, while the Config Server is starting up.
 With `cloneOnStart` not enabled for a configuration source, the Config Server may start successfully with a misconfigured or invalid configuration source and not detect an error until an application requests configuration from that configuration source.
 
+By default, the server clones the entire commit history from remote repositories.
+Downloading a huge commit history might be slow, so the server can be configured to truncate the commit history in the clone to one commit, as shown in the following top-level example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          clone-shallow: true
+----
+
 [[authentication]]
 == Authentication
 

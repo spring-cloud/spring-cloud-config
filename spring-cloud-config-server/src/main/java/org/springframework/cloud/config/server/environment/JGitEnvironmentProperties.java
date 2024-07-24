@@ -28,6 +28,7 @@ import org.springframework.cloud.config.server.support.HttpEnvironmentRepository
 /**
  * @author Dylan Roberts
  * @author Gareth Clay
+ * @author Chin Huang
  */
 public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 		implements HttpEnvironmentRepositoryProperties {
@@ -55,6 +56,13 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 	 * Generally leads to slower startup but faster first query.
 	 */
 	private boolean cloneOnStart = false;
+
+	/**
+	 * Flag to indicate that the commit history in the clone should be truncated to one
+	 * commit. Generally leads to faster queries because the entire commit history is not
+	 * downloaded from the remote.
+	 */
+	private boolean cloneShallow = false;
 
 	/**
 	 * Flag to indicate that the submodules in the repository should be cloned.
@@ -146,6 +154,14 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 
 	public void setCloneOnStart(boolean cloneOnStart) {
 		this.cloneOnStart = cloneOnStart;
+	}
+
+	public boolean isCloneShallow() {
+		return this.cloneShallow;
+	}
+
+	public void setCloneShallow(boolean cloneShallow) {
+		this.cloneShallow = cloneShallow;
 	}
 
 	public boolean isCloneSubmodules() {
