@@ -32,6 +32,7 @@ import org.springframework.web.client.RestTemplate;
  * supports additional features including more authentication options, support for several
  * underlying HTTP client libraries, and better SSL configuration.
  */
+@Deprecated
 public class VaultEnvironmentRepositoryFactory
 		implements EnvironmentRepositoryFactory<VaultEnvironmentRepository, VaultEnvironmentProperties> {
 
