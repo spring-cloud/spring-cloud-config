@@ -721,7 +721,6 @@ public class ConfigServerConfigDataLoaderTests {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		when(response.getHeaders()).thenReturn(headers);
 		when(response.getStatusCode()).thenReturn(status);
-		when(response.getRawStatusCode()).thenReturn(status.value());
 		when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));
 	}
 
