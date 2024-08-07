@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -303,6 +304,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		}
 		ResponseEntity<Environment> response = null;
 		List<MediaType> acceptHeader = Collections.singletonList(MediaType.parseMediaType(properties.getMediaType()));
+		List<Charset> acceptCharsetHeader = Collections.singletonList(properties.getCharset());
 
 		ConfigClientRequestTemplateFactory requestTemplateFactory = context.getBootstrapContext()
 			.get(ConfigClientRequestTemplateFactory.class);
@@ -327,6 +329,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 			try {
 				HttpHeaders headers = new HttpHeaders();
 				headers.setAccept(acceptHeader);
+				headers.setAcceptCharset(acceptCharsetHeader);
 				requestTemplateFactory.addAuthorizationToken(headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
