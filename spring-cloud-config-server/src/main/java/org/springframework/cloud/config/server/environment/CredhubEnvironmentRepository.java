@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -37,8 +38,6 @@ import static java.util.stream.Collectors.toMap;
  */
 public class CredhubEnvironmentRepository implements EnvironmentRepository, Ordered {
 
-	private CredHubOperations credHubOperations;
-
 	private static final String DEFAULT_PROFILE = "default";
 
 	private static final String DEFAULT_LABEL = "master";
@@ -47,42 +46,49 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
+	private final CredHubOperations credHubOperations;
+
 	public CredhubEnvironmentRepository(CredHubOperations credHubOperations) {
 		this.credHubOperations = credHubOperations;
 	}
 
 	@Override
-	public Environment findOne(String application, String profilesList, String label) {
-		if (ObjectUtils.isEmpty(profilesList)) {
-			profilesList = DEFAULT_PROFILE;
+	public Environment findOne(String application, String profile, String label) {
+		if (ObjectUtils.isEmpty(profile)) {
+			profile = DEFAULT_PROFILE;
 		}
 		if (ObjectUtils.isEmpty(label)) {
 			label = DEFAULT_LABEL;
 		}
 
-		String[] profiles = StringUtils.commaDelimitedListToStringArray(profilesList);
+		String[] applications = deDuplicateAndAddDefault(application, DEFAULT_APPLICATION);
+		String[] profiles = deDuplicateAndAddDefault(profile, DEFAULT_PROFILE);
 
 		Environment environment = new Environment(application, profiles, label, null, null);
-		for (String profile : profiles) {
-			environment.add(new PropertySource("credhub-" + application + "-" + profile + "-" + label,
-					findProperties(application, profile, label)));
-			if (!DEFAULT_APPLICATION.equals(application)) {
-				addDefaultPropertySource(environment, DEFAULT_APPLICATION, profile, label);
+		for (String prof : profiles) {
+			for (String app : applications) {
+				addPropertySource(environment, app, prof, label);
 			}
-		}
-
-		if (!Arrays.asList(profiles).contains(DEFAULT_PROFILE)) {
-			addDefaultPropertySource(environment, application, DEFAULT_PROFILE, label);
-		}
-
-		if (!Arrays.asList(profiles).contains(DEFAULT_PROFILE) && !DEFAULT_APPLICATION.equals(application)) {
-			addDefaultPropertySource(environment, DEFAULT_APPLICATION, DEFAULT_PROFILE, label);
 		}
 
 		return environment;
 	}
 
-	private void addDefaultPropertySource(Environment environment, String application, String profile, String label) {
+	/**
+	 * Converts the comma delimited items to a List and then: - Removes duplicates and
+	 * keeps unique items only. - Moves or Adds the given default item to the end of List.
+	 */
+	private String[] deDuplicateAndAddDefault(String commaDelimitedItems, String defaultItem) {
+		var items = Arrays.stream(StringUtils.commaDelimitedListToStringArray(commaDelimitedItems))
+			.distinct()
+			.filter(item -> !defaultItem.equals(item))
+			.collect(Collectors.toList());
+
+		items.add(defaultItem);
+		return items.toArray(new String[0]);
+	}
+
+	private void addPropertySource(Environment environment, String application, String profile, String label) {
 		Map<Object, Object> properties = findProperties(application, profile, label);
 		if (!properties.isEmpty()) {
 			PropertySource propertySource = new PropertySource("credhub-" + application + "-" + profile + "-" + label,
