@@ -90,7 +90,8 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 
 	private void addPropertySource(Environment environment, String application, String profile, String label) {
 		Map<Object, Object> properties = findProperties(application, profile, label);
-		if (!properties.isEmpty()) {
+		// The main PropertySource (the first one) should be always there, even if it is empty.
+		if (!properties.isEmpty() || environment.getPropertySources().isEmpty()) {
 			PropertySource propertySource = new PropertySource("credhub-" + application + "-" + profile + "-" + label,
 					properties);
 			environment.add(propertySource);

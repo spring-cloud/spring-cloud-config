@@ -66,7 +66,9 @@ public class CredhubEnvironmentRepositoryTests {
 		assertThat(environment.getProfiles()).containsExactly("prod", "default");
 		assertThat(environment.getLabel()).isEqualTo("myLabel");
 
-		assertThat(environment.getPropertySources()).isEmpty();
+		assertThat(environment.getPropertySources()).hasSize(1);
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("credhub-myApp-prod-myLabel");
+		assertThat(environment.getPropertySources().get(0).getSource()).isEmpty();
 	}
 
 	@Test
