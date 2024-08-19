@@ -7,6 +7,8 @@
 			<password>${env.CI_DEPLOY_PASSWORD}</password>
 		</server>
 	</servers>
+
+	<!-- for Afsar -->
 	<profiles>
 		<profile>
 			<!--
