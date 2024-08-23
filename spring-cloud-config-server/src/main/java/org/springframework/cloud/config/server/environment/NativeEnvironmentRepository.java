@@ -210,9 +210,15 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		if (this.addLabelLocations) {
 			for (String location : locations) {
 				if (StringUtils.hasText(label)) {
-					String labelled = location + label.trim() + "/";
-					if (isDirectory(labelled)) {
-						output.add(labelled);
+					String[] labels = { label };
+					if (labels[0].contains(",")) {
+						labels = labels[0].split(",");
+					}
+					for (String l : labels) {
+						String labelled = location + l + "/";
+						if (isDirectory(labelled)) {
+							output.add(labelled);
+						}
 					}
 				}
 			}
