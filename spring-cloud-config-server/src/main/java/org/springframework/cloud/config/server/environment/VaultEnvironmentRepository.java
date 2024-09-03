@@ -71,7 +71,7 @@ public class VaultEnvironmentRepository extends AbstractVaultEnvironmentReposito
 	/** Vault Namespace header value. */
 	private String namespace;
 
-	private VaultKvAccessStrategy accessStrategy;
+	private final VaultKvAccessStrategy accessStrategy;
 
 	private final ConfigTokenProvider tokenProvider;
 
@@ -94,10 +94,6 @@ public class VaultEnvironmentRepository extends AbstractVaultEnvironmentReposito
 
 		this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(rest, baseUrl, properties.getKvVersion(),
 				properties.getPathToKey());
-	}
-
-	/* for testing */ void setAccessStrategy(VaultKvAccessStrategy accessStrategy) {
-		this.accessStrategy = accessStrategy;
 	}
 
 	@Override
