@@ -17,8 +17,11 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -61,10 +64,10 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 			label = DEFAULT_LABEL;
 		}
 
-		String[] applications = deDuplicateAndAddDefault(application, DEFAULT_APPLICATION);
-		String[] profiles = deDuplicateAndAddDefault(profile, DEFAULT_PROFILE);
+		List<String> applications = normalize(application, DEFAULT_APPLICATION);
+		List<String> profiles = normalize(profile, DEFAULT_PROFILE);
 
-		Environment environment = new Environment(application, profiles, label, null, null);
+		Environment environment = new Environment(application, split(profile), label, null, null);
 		for (String prof : profiles) {
 			for (String app : applications) {
 				addPropertySource(environment, app, prof, label);
@@ -75,17 +78,16 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 	}
 
 	/**
-	 * Converts the comma delimited items to a List and then: - Removes duplicates and
-	 * keeps unique items only. - Moves or Adds the given default item to the end of List.
+	 * Splits the comma delimited items and returns the reversed distinct items with given
+	 * default item at the end.
 	 */
-	private String[] deDuplicateAndAddDefault(String commaDelimitedItems, String defaultItem) {
-		var items = Arrays.stream(StringUtils.commaDelimitedListToStringArray(commaDelimitedItems))
+	private List<String> normalize(String commaDelimitedItems, String defaultItem) {
+		var items = Stream.concat(Stream.of(defaultItem), Arrays.stream(split(commaDelimitedItems)))
 			.distinct()
-			.filter(item -> !defaultItem.equals(item))
 			.collect(Collectors.toList());
 
-		items.add(defaultItem);
-		return items.toArray(new String[0]);
+		Collections.reverse(items);
+		return items;
 	}
 
 	private void addPropertySource(Environment environment, String application, String profile, String label) {
@@ -111,6 +113,10 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 			.map(CredentialDetails::getValue)
 			.flatMap(jsonCredential -> jsonCredential.entrySet().stream())
 			.collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
+	}
+
+	private String[] split(String str) {
+		return StringUtils.commaDelimitedListToStringArray(str);
 	}
 
 	@Override
