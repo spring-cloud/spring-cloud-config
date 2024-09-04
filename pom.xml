@@ -28,7 +28,7 @@
 	<properties>
 		<bintray.package>config</bintray.package>
 		<spring-cloud-commons.version>3.1.9-SNAPSHOT</spring-cloud-commons.version>
-		<aws-java-sdk.version>1.11.911</aws-java-sdk.version>
+		<aws-java-sdk.version>1.11.1034</aws-java-sdk.version>
 		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
 		<testcontainers.version>1.16.2</testcontainers.version>
 		<wiremock.version>2.31.0</wiremock.version>
