@@ -14,17 +14,6 @@ updates:
     directory: /
     schedule:
       interval: daily
-    target-branch: 3.1.x
-    ignore:
-      # only upgrade patch versions for maintenance branch
-      - dependency-name: "*"
-        update-types:
-          - version-update:semver-major
-          - version-update:semver-minor
-  - package-ecosystem: maven
-    directory: /
-    schedule:
-      interval: daily
     target-branch: 4.1.x
     ignore:
       # only upgrade patch versions for maintenance branch
