@@ -65,8 +65,8 @@ public class SpringVaultEnvironmentRepositoryTests {
 			path = myPathKey + "/";
 		}
 
-		when(keyValueTemplate.get(path + "myapp")).thenReturn(withVaultResponse("foo", "bar"));
-		when(keyValueTemplate.get(path + "application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get(path + "myapp,master")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get(path + "application,master")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setPathToKey(myPathKey);
@@ -77,14 +77,16 @@ public class SpringVaultEnvironmentRepositoryTests {
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources()).hasSize(2);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,master");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,master");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void testBackendWithSlashes() {
-		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
-		when(keyValueTemplate.get("application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("myapp,master")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("application,master")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setBackend("foo/bar/secret");
@@ -94,66 +96,145 @@ public class SpringVaultEnvironmentRepositoryTests {
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources()).hasSize(2);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,master");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,master");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void testFindOneDefaultKeySetAndDifferentToApplication() {
-		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
-		when(keyValueTemplate.get("mydefaultkey")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("myapp,main")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("mydefaultkey,main")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setDefaultKey("mydefaultkey");
 
-		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, null);
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, "main");
 
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources()).hasSize(2);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,main");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:mydefaultkey,main");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
+	public void testFindOneWithEmptyDefaultKey() {
+		when(keyValueTemplate.get("myapp,main")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("application,main")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+
+		var properties = new VaultEnvironmentProperties();
+		properties.setDefaultKey("");
+
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, "main");
+
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources()).hasSize(1);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,main");
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+	}
+
+	@Test
 	public void testFindOneDefaultKeySetAndDifferentToMultipleApplications() {
-		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("myapp-foo", "myapp-bar"));
-		when(keyValueTemplate.get("yourapp")).thenReturn(withVaultResponse("yourapp-foo", "yourapp-bar"));
-		when(keyValueTemplate.get("mydefaultkey")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("myapp,lbl")).thenReturn(withVaultResponse("myapp-foo", "myapp-bar"));
+		when(keyValueTemplate.get("yourapp,lbl")).thenReturn(withVaultResponse("yourapp-foo", "yourapp-bar"));
+		when(keyValueTemplate.get("mydefaultkey,lbl")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setDefaultKey("mydefaultkey");
 
-		var e = springVaultEnvironmentRepository(properties).findOne("myapp,yourapp", null, null);
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp,yourapp", null, "lbl");
 
 		assertThat(e.getName()).isEqualTo("myapp,yourapp");
 
 		assertThat(e.getPropertySources()).hasSize(3);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:yourapp,lbl");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("yourapp-foo", "yourapp-bar"));
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:myapp,lbl");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("myapp-foo", "myapp-bar"));
+		assertThat(e.getPropertySources().get(2).getName()).isEqualTo("vault:mydefaultkey,lbl");
 		assertThat(e.getPropertySources().get(2).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void testFindOneDefaultKeySetAndEqualToApplication() {
-		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
-		when(keyValueTemplate.get("application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("myapp,foo")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("application,foo")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setDefaultKey("myapp");
 
-		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, null);
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, "foo");
 
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources()).hasSize(1);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,foo");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
 	}
 
 	@Test
+	public void testFindOneWithProfile() {
+		when(keyValueTemplate.get("myapp,lbl")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("myapp,pr1,lbl")).thenReturn(withVaultResponse("foo-pr1", "bar-pr1"));
+		when(keyValueTemplate.get("application,lbl")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("application,pr1,lbl")).thenReturn(withVaultResponse("def-pr1-foo", "def-pr1-bar"));
+
+		var properties = new VaultEnvironmentProperties();
+
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", "pr1", "lbl");
+
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources()).hasSize(4);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,pr1,lbl");
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo-pr1", "bar-pr1"));
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,pr1,lbl");
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-pr1-foo", "def-pr1-bar"));
+		assertThat(e.getPropertySources().get(2).getName()).isEqualTo("vault:myapp,lbl");
+		assertThat(e.getPropertySources().get(2).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(3).getName()).isEqualTo("vault:application,lbl");
+		assertThat(e.getPropertySources().get(3).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
+	}
+
+	@Test
+	public void testFindOneWithMultipleProfiles() {
+		when(keyValueTemplate.get("myapp,lbl")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("myapp,pr1,lbl")).thenReturn(withVaultResponse("foo-pr1", "bar-pr1"));
+		when(keyValueTemplate.get("myapp,pr2,lbl")).thenReturn(withVaultResponse("foo-pr2", "bar-pr2"));
+		when(keyValueTemplate.get("application,lbl")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("application,pr1,lbl")).thenReturn(withVaultResponse("def-pr1-foo", "def-pr1-bar"));
+		when(keyValueTemplate.get("application,pr2,lbl")).thenReturn(withVaultResponse("def-pr2-foo", "def-pr2-bar"));
+
+		var properties = new VaultEnvironmentProperties();
+
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", "pr1,pr2", "lbl");
+
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources()).hasSize(6);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,pr2,lbl");
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo-pr2", "bar-pr2"));
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,pr2,lbl");
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-pr2-foo", "def-pr2-bar"));
+		assertThat(e.getPropertySources().get(2).getName()).isEqualTo("vault:myapp,pr1,lbl");
+		assertThat(e.getPropertySources().get(2).getSource()).isEqualTo(Map.of("foo-pr1", "bar-pr1"));
+		assertThat(e.getPropertySources().get(3).getName()).isEqualTo("vault:application,pr1,lbl");
+		assertThat(e.getPropertySources().get(3).getSource()).isEqualTo(Map.of("def-pr1-foo", "def-pr1-bar"));
+		assertThat(e.getPropertySources().get(4).getName()).isEqualTo("vault:myapp,lbl");
+		assertThat(e.getPropertySources().get(4).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(5).getName()).isEqualTo("vault:application,lbl");
+		assertThat(e.getPropertySources().get(5).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
+	}
+
+	@Test
 	public void testVaultVersioning() {
-		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
-		when(keyValueTemplate.get("application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("myapp,master")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("application,master")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setKvVersion(2);
@@ -163,7 +244,10 @@ public class SpringVaultEnvironmentRepositoryTests {
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources()).hasSize(2);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,master");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,master");
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	private SpringVaultEnvironmentRepository springVaultEnvironmentRepository(VaultEnvironmentProperties properties) {
