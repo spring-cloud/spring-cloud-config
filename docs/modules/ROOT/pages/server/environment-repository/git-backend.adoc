@@ -453,3 +453,18 @@ does not exist, the config server will by default also try to checkout a branch 
 you would like to disable to the fallback branch behavior you can set
 `spring.cloud.config.server.git.tryMasterBranch` to `false`.
 
+[[container]]
+== Running The Config Server Using Git In A Container
+
+If you are getting a `java.io.IOException` when running the Config Server in a container that is similar to:
+
+```
+2022-01-03 20:04:02,892 [tributeWriter-2] ERROR org.eclipse.jgit.util.FS$FileStoreAttributes.saveToConfig - Cannot save config file 'FileBasedConfig[/.config/jgit/config]'
+java.io.IOException: Creating directories for /.config/jgit failed
+```
+
+You must either:
+
+1.  Provide a user with a writeable home directory inside the container.
+2.  Set the environment variable `XDG_CONFIG_HOME` inside the container to point to a directory where the Java process has write permissions.
+
