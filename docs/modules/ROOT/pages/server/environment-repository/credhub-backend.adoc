@@ -52,7 +52,10 @@ All client applications with the name `spring.cloud.config.name=demo-app` will h
 }
 ----
 
-NOTE: When no profile is specified `default` will be used and when no label is specified `master` will be used as a default value.
+NOTE: When no label is specified `master` will be used as a default value. You can change that by setting `spring.cloud.config.server.credhub.defaultLabel`.
+
+NOTE: When no profile is specified `default` will be used.
+
 NOTE: Values added to `application` will be shared by all the applications.
 
 [[oauth-2-0]]
