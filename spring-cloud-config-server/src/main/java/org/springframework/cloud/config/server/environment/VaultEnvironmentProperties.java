@@ -101,6 +101,15 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	 */
 	private String token;
 
+	/**
+	 * Flag to indicate that the repository should use 'label' as well as
+	 * 'application-name' and 'profile', for vault secrets. By default, the vault secrets
+	 * are expected to be in 'application-name,profile' path. When this flag enabled, they
+	 * are expected to be in `application-name,profile,label' path. To maintain
+	 * compatibility this flag is not enabled by default.
+	 */
+	private boolean enableLabel = false;
+
 	private AppRoleProperties appRole = new AppRoleProperties();
 
 	private AwsEc2Properties awsEc2 = new AwsEc2Properties();
@@ -227,6 +236,14 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 	public void setToken(String token) {
 		this.token = token;
+	}
+
+	public boolean isEnableLabel() {
+		return enableLabel;
+	}
+
+	public void setEnableLabel(boolean enableLabel) {
+		this.enableLabel = enableLabel;
 	}
 
 	public AppRoleProperties getAppRole() {

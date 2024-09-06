@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,12 +71,15 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 	@NotEmpty
 	protected String profileSeparator;
 
+	protected final boolean enableLabel;
+
 	protected int order;
 
 	public AbstractVaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
 			VaultEnvironmentProperties properties) {
 		this.defaultKey = properties.getDefaultKey();
 		this.profileSeparator = properties.getProfileSeparator();
+		this.enableLabel = properties.isEnableLabel();
 		this.order = properties.getOrder();
 		this.request = request;
 		this.watch = watch;
@@ -97,9 +101,7 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 
 		for (String prof : profiles) {
 			for (String app : applications) {
-				// default profile should not be included in the key.
-				var key = DEFAULT_PROFILE.equals(prof) ? app + this.profileSeparator + label
-						: app + this.profileSeparator + prof + this.profileSeparator + label;
+				var key = vaultKey(app, prof, label);
 				// read raw 'data' key from vault
 				String data = read(key);
 				if (data != null) {
@@ -119,6 +121,20 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 	}
 
 	protected abstract String read(String key);
+
+	private String vaultKey(String application, String profile, String label) {
+		var key = application;
+		// default profile should not be included in the key.
+		if (!DEFAULT_PROFILE.equals(profile)) {
+			key += this.profileSeparator + profile;
+		}
+		// append label to the key, if flag is enabled.
+		if (this.enableLabel) {
+			key += this.profileSeparator + label;
+		}
+
+		return key;
+	}
 
 	private String getWatchState() {
 		HttpServletRequest servletRequest = this.request.getIfAvailable();
@@ -142,7 +158,7 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 	private List<String> normalize(String commaDelimitedItems, String defaultItem) {
 		var items = Stream.concat(Stream.of(defaultItem), Arrays.stream(split(commaDelimitedItems)))
 			.distinct()
-			.filter(item -> !ObjectUtils.isEmpty(item))
+			.filter(Predicate.not(ObjectUtils::isEmpty))
 			.collect(Collectors.toList());
 
 		Collections.reverse(items);

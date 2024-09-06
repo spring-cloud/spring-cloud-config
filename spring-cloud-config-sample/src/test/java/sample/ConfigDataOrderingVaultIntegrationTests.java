@@ -64,9 +64,9 @@ public class ConfigDataOrderingVaultIntegrationTests {
 				"--server.port=" + configServerPort,
 				"--spring.cloud.config.server.vault.port=" + vaultContainer.getFirstMappedPort());
 
-		execInVault("vault", "kv", "put", "secret/client-app,dev,master", "my.prop=value-in-dev");
-		execInVault("vault", "kv", "put", "secret/client-app,prod,master", "my.prop=value-in-prod");
-		execInVault("vault", "kv", "put", "secret/client-app,master", "my.prop=default-value");
+		execInVault("vault", "kv", "put", "secret/client-app,dev", "my.prop=value-in-dev");
+		execInVault("vault", "kv", "put", "secret/client-app,prod", "my.prop=value-in-prod");
+		execInVault("vault", "kv", "put", "secret/client-app", "my.prop=default-value");
 
 	}
 
