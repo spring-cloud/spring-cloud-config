@@ -47,8 +47,8 @@ public class CredhubEnvironmentRepositoryTests {
 
 	@BeforeEach
 	public void setUp() {
-		CredHubOperations credhubOperations = Mockito.mock(CredHubOperations.class);
 		this.credhubCredentialOperations = Mockito.mock(CredHubCredentialOperations.class);
+		CredHubOperations credhubOperations = Mockito.mock(CredHubOperations.class);
 		when(credhubOperations.credentials()).thenReturn(this.credhubCredentialOperations);
 
 		this.credhubEnvironmentRepository = new CredhubEnvironmentRepository(credhubOperations);
@@ -256,6 +256,29 @@ public class CredhubEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources().get(3).getName()).isEqualTo("credhub-application-default-myLabel");
 		assertThat(environment.getPropertySources().get(3).getSource()).isEqualTo(Map.of("k4", "v4"));
+	}
+
+	@Test
+	public void shouldUseCustomDefaultLabelIfProvided() {
+		stubCredentials("/myApp/default/master", credential("c1", "k1", "v1"));
+		stubCredentials("/myApp/default/main", credential("c2", "k2", "v2"));
+
+		var credhubOperations = Mockito.mock(CredHubOperations.class);
+		when(credhubOperations.credentials()).thenReturn(this.credhubCredentialOperations);
+
+		var properties = new CredhubEnvironmentProperties();
+		properties.setDefaultLabel("main");
+
+		var environment = new CredhubEnvironmentRepository(credhubOperations, properties).findOne("myApp", null, null);
+
+		assertThat(environment.getName()).isEqualTo("myApp");
+		assertThat(environment.getProfiles()).containsExactly("default");
+		assertThat(environment.getLabel()).isEqualTo("main");
+
+		assertThat(environment.getPropertySources()).hasSize(1);
+
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("credhub-myApp-default-main");
+		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(Map.of("k2", "v2"));
 	}
 
 	@SafeVarargs

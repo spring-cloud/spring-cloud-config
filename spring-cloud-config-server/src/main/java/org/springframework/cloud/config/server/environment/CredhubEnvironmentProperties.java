@@ -26,7 +26,17 @@ import org.springframework.core.Ordered;
 @ConfigurationProperties("spring.cloud.config.server.credhub")
 public class CredhubEnvironmentProperties implements EnvironmentRepositoryProperties {
 
+	private String defaultLabel = "master";
+
 	private int order = Ordered.LOWEST_PRECEDENCE;
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
+	}
+
+	public String getDefaultLabel() {
+		return defaultLabel;
+	}
 
 	public int getOrder() {
 		return this.order;
