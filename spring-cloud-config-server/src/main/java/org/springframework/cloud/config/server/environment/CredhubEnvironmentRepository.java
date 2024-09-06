@@ -43,16 +43,23 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 
 	private static final String DEFAULT_PROFILE = "default";
 
-	private static final String DEFAULT_LABEL = "master";
-
 	private static final String DEFAULT_APPLICATION = "application";
 
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private final String defaultLabel;
+
+	private int order;
 
 	private final CredHubOperations credHubOperations;
 
 	public CredhubEnvironmentRepository(CredHubOperations credHubOperations) {
+		this(credHubOperations, new CredhubEnvironmentProperties());
+	}
+
+	public CredhubEnvironmentRepository(CredHubOperations credHubOperations, CredhubEnvironmentProperties properties) {
 		this.credHubOperations = credHubOperations;
+
+		this.order = properties.getOrder();
+		this.defaultLabel = properties.getDefaultLabel();
 	}
 
 	@Override
@@ -61,7 +68,7 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 			profile = DEFAULT_PROFILE;
 		}
 		if (ObjectUtils.isEmpty(label)) {
-			label = DEFAULT_LABEL;
+			label = this.defaultLabel;
 		}
 
 		List<String> applications = normalize(application, DEFAULT_APPLICATION);
