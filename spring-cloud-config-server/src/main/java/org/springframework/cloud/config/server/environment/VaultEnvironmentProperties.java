@@ -110,6 +110,8 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	 */
 	private boolean enableLabel = false;
 
+	private String defaultLabel = "master";
+
 	private AppRoleProperties appRole = new AppRoleProperties();
 
 	private AwsEc2Properties awsEc2 = new AwsEc2Properties();
@@ -244,6 +246,14 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 	public void setEnableLabel(boolean enableLabel) {
 		this.enableLabel = enableLabel;
+	}
+
+	public String getDefaultLabel() {
+		return defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 	public AppRoleProperties getAppRole() {

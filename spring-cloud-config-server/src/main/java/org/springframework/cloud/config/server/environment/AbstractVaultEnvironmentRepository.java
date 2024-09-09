@@ -50,8 +50,6 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 
 	private static final String DEFAULT_PROFILE = "default";
 
-	private static final String DEFAULT_LABEL = "master";
-
 	private static final Log log = LogFactory.getLog(AbstractVaultEnvironmentRepository.class);
 
 	// TODO: move to watchState:String on findOne?
@@ -73,6 +71,8 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 
 	protected final boolean enableLabel;
 
+	protected final String defaultLabel;
+
 	protected int order;
 
 	public AbstractVaultEnvironmentRepository(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
@@ -80,6 +80,7 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 		this.defaultKey = properties.getDefaultKey();
 		this.profileSeparator = properties.getProfileSeparator();
 		this.enableLabel = properties.isEnableLabel();
+		this.defaultLabel = properties.getDefaultLabel();
 		this.order = properties.getOrder();
 		this.request = request;
 		this.watch = watch;
@@ -91,7 +92,7 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 			profile = DEFAULT_PROFILE;
 		}
 		if (ObjectUtils.isEmpty(label)) {
-			label = DEFAULT_LABEL;
+			label = defaultLabel;
 		}
 
 		var environment = new Environment(application, split(profile), label, null, getWatchState());
