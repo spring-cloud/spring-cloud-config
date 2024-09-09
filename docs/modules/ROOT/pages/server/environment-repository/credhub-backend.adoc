@@ -106,3 +106,21 @@ spring:
 
 NOTE: The used UAA client-id should have `credhub.read` as scope.
 
+The following table describes the CredHub configuration properties.
+
+|===
+|Property Name |Remarks
+
+|*url*
+|CredHub server URL.
+
+|*path*
+|Base path for all credentials. Optional, defaults to empty.
+
+|*defaultLabel*
+| Default label to use when is not provided by client application. Optional, defaults to `master`.
+
+|*oauth2*
+| OAuth2 configuration to access CredHub. Optional.
+
+|===
