@@ -281,6 +281,28 @@ public class CredhubEnvironmentRepositoryTests {
 		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(Map.of("k2", "v2"));
 	}
 
+	@Test
+	public void shouldUseBasePathIfProvided() {
+		stubCredentials("/base/path/myApp/default/master", credential("c1", "k1", "v1"));
+
+		var credhubOperations = Mockito.mock(CredHubOperations.class);
+		when(credhubOperations.credentials()).thenReturn(this.credhubCredentialOperations);
+
+		var properties = new CredhubEnvironmentProperties();
+		properties.setPath("/base/path");
+
+		var environment = new CredhubEnvironmentRepository(credhubOperations, properties).findOne("myApp", null, null);
+
+		assertThat(environment.getName()).isEqualTo("myApp");
+		assertThat(environment.getProfiles()).containsExactly("default");
+		assertThat(environment.getLabel()).isEqualTo("master");
+
+		assertThat(environment.getPropertySources()).hasSize(1);
+
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("credhub-myApp-default-master");
+		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(Map.of("k1", "v1"));
+	}
+
 	@SafeVarargs
 	private void stubCredentials(String path, CredentialDetails<JsonCredential>... details) {
 		when(this.credhubCredentialOperations.findByPath(path)).thenReturn(

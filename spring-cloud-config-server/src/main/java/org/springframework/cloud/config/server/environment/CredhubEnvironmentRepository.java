@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +46,8 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 
 	private static final String DEFAULT_APPLICATION = "application";
 
+	private final String path;
+
 	private final String defaultLabel;
 
 	private int order;
@@ -58,8 +61,9 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 	public CredhubEnvironmentRepository(CredHubOperations credHubOperations, CredhubEnvironmentProperties properties) {
 		this.credHubOperations = credHubOperations;
 
-		this.order = properties.getOrder();
+		this.path = properties.getPath();
 		this.defaultLabel = properties.getDefaultLabel();
+		this.order = properties.getOrder();
 	}
 
 	@Override
@@ -109,7 +113,7 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 	}
 
 	private Map<Object, Object> findProperties(String application, String profile, String label) {
-		String path = "/" + application + "/" + profile + "/" + label;
+		var path = Path.of("/", this.path, application, profile, label).toString();
 
 		return this.credHubOperations.credentials()
 			.findByPath(path)
