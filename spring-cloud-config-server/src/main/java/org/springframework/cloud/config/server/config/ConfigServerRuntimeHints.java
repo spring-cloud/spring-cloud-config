@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import org.apache.sshd.common.util.security.eddsa.EdDSASecurityProviderRegistrar
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.internal.transport.sshd.SshdText;
+import org.eclipse.jgit.lib.CoreConfig;
 
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
@@ -98,7 +99,9 @@ class ConfigServerRuntimeHints implements RuntimeHintsRegistrar {
 			hints.reflection()
 				.registerTypes(Set.of(TypeReference.of(MergeCommand.FastForwardMode.Merge.class),
 						TypeReference.of(MergeCommand.ConflictStyle.class),
-						TypeReference.of(MergeCommand.FastForwardMode.class), TypeReference.of(FetchCommand.class)),
+						TypeReference.of(MergeCommand.FastForwardMode.class), TypeReference.of(FetchCommand.class),
+						TypeReference.of(CoreConfig.TrustLooseRefStat.class),
+						TypeReference.of(CoreConfig.TrustPackedRefsStat.class)),
 						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS));
 			hints.reflection()
 				.registerTypes(Set.of(TypeReference.of(SshdText.class)), hint -> hint
