@@ -45,7 +45,6 @@ import com.google.cloud.secretmanager.v1.SecretManagerServiceSettings;
 import com.google.cloud.secretmanager.v1.SecretName;
 import com.google.cloud.secretmanager.v1.SecretVersion;
 import com.google.cloud.secretmanager.v1.SecretVersionName;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -53,6 +52,7 @@ import org.springframework.cloud.config.server.environment.GoogleSecretManagerEn
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerAccessStrategy {
@@ -71,7 +71,7 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 
 	public GoogleSecretManagerV1AccessStrategy(RestTemplate rest, GoogleConfigProvider configProvider,
 			String serviceAccountFile) throws IOException {
-		if (StringUtils.isNotEmpty(serviceAccountFile)) {
+		if (StringUtils.hasText(serviceAccountFile)) {
 			GoogleCredentials creds = GoogleCredentials.fromStream(new FileInputStream(new File(serviceAccountFile)));
 			this.client = SecretManagerServiceClient.create(SecretManagerServiceSettings.newBuilder()
 				.setCredentialsProvider(FixedCredentialsProvider.create(creds))

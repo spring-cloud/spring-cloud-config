@@ -21,11 +21,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.RandomUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -48,10 +48,10 @@ import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SSM;
+import static wiremock.org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 /**
  * @author Iulian Antohe
@@ -147,7 +147,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 	public void testFindOneWithNullApplicationAndNonExistentProfile() {
 		// Arrange
 		String application = null;
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 33));
+		String profile = randomAlphabetic(new Random().nextInt(3, 33));
 		String defaultApp = configServerProperties.getDefaultApplicationName();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -247,7 +247,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 	public void testFindOneWithDefaultApplicationAndNonExistentProfile() {
 		// Arrange
 		String application = configServerProperties.getDefaultApplicationName();
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 33));
+		String profile = randomAlphabetic(new Random().nextInt(3, 33));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String name = "aws:ssm:parameter:/config/application/";
@@ -293,7 +293,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithNonExistentApplicationAndNullProfile() {
 		// Arrange
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 33));
+		String application = randomAlphabetic(new Random().nextInt(3, 33));
 		String profile = null;
 		String defaultProfile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
@@ -319,7 +319,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithNonExistentApplicationAndDefaultProfile() {
 		// Arrange
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 33));
+		String application = randomAlphabetic(new Random().nextInt(3, 33));
 		String profile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -344,8 +344,8 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithNonExistentApplicationAndNonExistentProfile() {
 		// Arrange
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 33));
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 33));
+		String application = randomAlphabetic(new Random().nextInt(3, 33));
+		String profile = randomAlphabetic(new Random().nextInt(3, 33));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String name = "aws:ssm:parameter:/config/application/";
@@ -366,7 +366,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithNonExistentApplicationAndExistentProfile() {
 		// Arrange
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 33));
+		String application = randomAlphabetic(new Random().nextInt(3, 33));
 		String profile = "production";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -463,7 +463,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 	public void testFindOneWithExistentApplicationAndNonExistentProfile() {
 		// Arrange
 		String application = "service";
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 33));
+		String profile = randomAlphabetic(new Random().nextInt(3, 33));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String appSpecificParamsPsName = "aws:ssm:parameter:/config/service/";

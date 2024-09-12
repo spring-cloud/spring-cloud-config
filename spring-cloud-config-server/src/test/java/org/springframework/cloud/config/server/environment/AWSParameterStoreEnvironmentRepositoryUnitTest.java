@@ -23,13 +23,13 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.RandomUtils;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersByPathRequest;
@@ -42,12 +42,12 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.util.StringUtils;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
+import static wiremock.org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 /**
  * Unit test is must for testing paginated logic, since doing it with integration test is
@@ -192,7 +192,7 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 	}
 
 	private String generateNextToken() {
-		String random = randomAlphabetic(RandomUtils.nextInt(3, 33));
+		String random = randomAlphabetic(new Random().nextInt(3, 33));
 
 		return Base64.getEncoder().encodeToString(random.getBytes(StandardCharsets.UTF_8));
 	}
