@@ -1,2 +1,2 @@
 org.springframework.aot.hint.RuntimeHintsRegistrar=\
-org.springframework.cloud.config.client.ConfigClientHints
+org.springframework.cloud.config.client.aot.ConfigClientHints
