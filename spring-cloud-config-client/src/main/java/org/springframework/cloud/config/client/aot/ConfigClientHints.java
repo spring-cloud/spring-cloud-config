@@ -38,38 +38,27 @@ class ConfigClientHints implements RuntimeHintsRegistrar {
 	@Override
 	public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
 		if (!ClassUtils.isPresent("org.springframework.cloud.config.client.ConfigServerConfigDataLoader",
-			classLoader)) {
+				classLoader)) {
 			return;
 		}
 		hints.reflection()
 			.registerType(TypeReference.of(ConfigClientAutoConfiguration.class),
-				hint -> hint.withMembers(
-					MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)
-			).registerType(TypeReference.of(ConfigDataLocation.class),
-				hint -> hint.withMembers(
-					MemberCategory.INVOKE_DECLARED_METHODS)
-			).registerType(TypeReference.of("org.springframework.boot.context.config.ConfigDataProperties"),
-				hint -> hint.withMembers(
-					MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-					MemberCategory.DECLARED_FIELDS,
-					MemberCategory.INTROSPECT_DECLARED_METHODS)
-			).registerType(TypeReference.of(Environment.class),
-				hint -> hint.withMembers(
-					MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-					MemberCategory.INTROSPECT_DECLARED_METHODS,
-					MemberCategory.DECLARED_FIELDS)
-			).registerType(TypeReference.of(PropertySource.class),
-				hint -> hint.withMembers(
-					MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-					MemberCategory.INTROSPECT_DECLARED_METHODS,
-					MemberCategory.DECLARED_FIELDS)
-			).registerType(TypeReference.of(RetryTemplateFactory.class),
-				hint -> hint.withMembers(
-					MemberCategory.INTROSPECT_DECLARED_CONSTRUCTORS,
-					MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-					MemberCategory.DECLARED_FIELDS,
-					MemberCategory.INTROSPECT_DECLARED_METHODS,
-					MemberCategory.INVOKE_DECLARED_METHODS)
-			);
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS))
+			.registerType(TypeReference.of(ConfigDataLocation.class),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS))
+			.registerType(TypeReference.of("org.springframework.boot.context.config.ConfigDataProperties"),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+							MemberCategory.DECLARED_FIELDS, MemberCategory.INTROSPECT_DECLARED_METHODS))
+			.registerType(TypeReference.of(Environment.class),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+							MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS))
+			.registerType(TypeReference.of(PropertySource.class),
+					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+							MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS))
+			.registerType(TypeReference.of(RetryTemplateFactory.class),
+					hint -> hint.withMembers(MemberCategory.INTROSPECT_DECLARED_CONSTRUCTORS,
+							MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.DECLARED_FIELDS,
+							MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_METHODS));
 	}
+
 }
