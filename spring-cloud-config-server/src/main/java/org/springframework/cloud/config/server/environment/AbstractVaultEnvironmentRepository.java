@@ -125,13 +125,15 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 
 	private String vaultKey(String application, String profile, String label) {
 		var key = application;
-		// default profile should not be included in the key.
-		if (!DEFAULT_PROFILE.equals(profile)) {
-			key += this.profileSeparator + profile;
-		}
-		// append label to the key, if flag is enabled.
 		if (this.enableLabel) {
+			// always append profile to the key, if flag is enabled.
+			key += this.profileSeparator + profile;
+			// always append label to the key, if flag is enabled.
 			key += this.profileSeparator + label;
+		}
+		else if (!DEFAULT_PROFILE.equals(profile)) {
+			// default profile should not be included in the key, if flag is not enabled.
+			key += this.profileSeparator + profile;
 		}
 
 		return key;

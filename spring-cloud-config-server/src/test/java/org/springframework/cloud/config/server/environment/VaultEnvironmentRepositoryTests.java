@@ -284,8 +284,8 @@ public class VaultEnvironmentRepositoryTests {
 
 	@Test
 	public void findOneWithDefaultLabelWhenLabelEnabled() {
-		stubRestTemplate("secret/myapp,master", toEntityResponse("foo", "bar"));
-		stubRestTemplate("secret/application,master", toEntityResponse("def-foo", "def-bar"));
+		stubRestTemplate("secret/myapp,default,master", toEntityResponse("foo", "bar"));
+		stubRestTemplate("secret/application,default,master", toEntityResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setEnableLabel(true);
@@ -295,16 +295,16 @@ public class VaultEnvironmentRepositoryTests {
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources().size()).isEqualTo(2);
-		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,master");
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,default,master");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
-		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,master");
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,default,master");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void findOneWithCustomDefaultLabelWhenLabelEnabled() {
-		stubRestTemplate("secret/myapp,main", toEntityResponse("foo", "bar"));
-		stubRestTemplate("secret/application,main", toEntityResponse("def-foo", "def-bar"));
+		stubRestTemplate("secret/myapp,default,main", toEntityResponse("foo", "bar"));
+		stubRestTemplate("secret/application,default,main", toEntityResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setEnableLabel(true);
@@ -315,16 +315,16 @@ public class VaultEnvironmentRepositoryTests {
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources().size()).isEqualTo(2);
-		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,main");
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,default,main");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
-		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,main");
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,default,main");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void findOneWithCustomLabelWhenLabelEnabled() {
-		stubRestTemplate("secret/myapp,my-label", toEntityResponse("foo", "bar"));
-		stubRestTemplate("secret/application,my-label", toEntityResponse(Map.of()));
+		stubRestTemplate("secret/myapp,default,my-label", toEntityResponse("foo", "bar"));
+		stubRestTemplate("secret/application,default,my-label", toEntityResponse(Map.of()));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setEnableLabel(true);
@@ -335,8 +335,33 @@ public class VaultEnvironmentRepositoryTests {
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources().size()).isEqualTo(1);
-		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,my-label");
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,default,my-label");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+	}
+
+	@Test
+	public void findOneWithCustomLabelAndProfileWhenLabelEnabled() {
+		stubRestTemplate("secret/myapp,default,my-label", toEntityResponse("foo", "bar"));
+		stubRestTemplate("secret/myapp,pr1,my-label", toEntityResponse("pr1-foo", "pr1-bar"));
+		stubRestTemplate("secret/application,default,my-label", toEntityResponse("def-foo", "def-bar"));
+		stubRestTemplate("secret/application,pr1,my-label", toEntityResponse("def-pr1-foo", "def-pr1-bar"));
+
+		var properties = new VaultEnvironmentProperties();
+		properties.setEnableLabel(true);
+
+		var e = vaultEnvironmentRepository(properties).findOne("myapp", "pr1", "my-label");
+
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources().size()).isEqualTo(4);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,pr1,my-label");
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("pr1-foo", "pr1-bar"));
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,pr1,my-label");
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-pr1-foo", "def-pr1-bar"));
+		assertThat(e.getPropertySources().get(2).getName()).isEqualTo("vault:myapp,default,my-label");
+		assertThat(e.getPropertySources().get(2).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(3).getName()).isEqualTo("vault:application,default,my-label");
+		assertThat(e.getPropertySources().get(3).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	private VaultEnvironmentRepository vaultEnvironmentRepository() {

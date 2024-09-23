@@ -252,8 +252,8 @@ public class SpringVaultEnvironmentRepositoryTests {
 
 	@Test
 	public void findOneWithDefaultLabelWhenLabelEnabled() {
-		when(keyValueTemplate.get("myapp,master")).thenReturn(withVaultResponse("foo", "bar"));
-		when(keyValueTemplate.get("application,master")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("myapp,default,master")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("application,default,master")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setEnableLabel(true);
@@ -263,17 +263,17 @@ public class SpringVaultEnvironmentRepositoryTests {
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources()).hasSize(2);
-		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,master");
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,default,master");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
-		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,master");
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,default,master");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void findOneWithProfileAndDefaultLabelWhenLabelEnabled() {
-		when(keyValueTemplate.get("myapp,master")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("myapp,default,master")).thenReturn(withVaultResponse("foo", "bar"));
 		when(keyValueTemplate.get("myapp,pr1,master")).thenReturn(withVaultResponse("pr1-foo", "pr1-bar"));
-		when(keyValueTemplate.get("application,master")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("application,default,master")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 		when(keyValueTemplate.get("application,pr1,master"))
 			.thenReturn(withVaultResponse("def-pr1-foo", "def-pr1-bar"));
 
@@ -289,16 +289,16 @@ public class SpringVaultEnvironmentRepositoryTests {
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("pr1-foo", "pr1-bar"));
 		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,pr1,master");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-pr1-foo", "def-pr1-bar"));
-		assertThat(e.getPropertySources().get(2).getName()).isEqualTo("vault:myapp,master");
+		assertThat(e.getPropertySources().get(2).getName()).isEqualTo("vault:myapp,default,master");
 		assertThat(e.getPropertySources().get(2).getSource()).isEqualTo(Map.of("foo", "bar"));
-		assertThat(e.getPropertySources().get(3).getName()).isEqualTo("vault:application,master");
+		assertThat(e.getPropertySources().get(3).getName()).isEqualTo("vault:application,default,master");
 		assertThat(e.getPropertySources().get(3).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void findOneWithCustomDefaultLabelWhenLabelEnabled() {
-		when(keyValueTemplate.get("myapp,main")).thenReturn(withVaultResponse("foo", "bar"));
-		when(keyValueTemplate.get("application,main")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("myapp,default,main")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("application,default,main")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setEnableLabel(true);
@@ -309,16 +309,16 @@ public class SpringVaultEnvironmentRepositoryTests {
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources()).hasSize(2);
-		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,main");
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,default,main");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
-		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,main");
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,default,main");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void findOneWithCustomLabelWhenLabelEnabled() {
-		when(keyValueTemplate.get("myapp,my-label")).thenReturn(withVaultResponse("foo", "bar"));
-		when(keyValueTemplate.get("application,my-label")).thenReturn(withVaultResponse("def-foo", "def-bar"));
+		when(keyValueTemplate.get("myapp,default,my-label")).thenReturn(withVaultResponse("foo", "bar"));
+		when(keyValueTemplate.get("application,default,my-label")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setEnableLabel(true);
@@ -329,9 +329,9 @@ public class SpringVaultEnvironmentRepositoryTests {
 		assertThat(e.getName()).isEqualTo("myapp");
 
 		assertThat(e.getPropertySources()).hasSize(2);
-		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,my-label");
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,default,my-label");
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
-		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,my-label");
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,default,my-label");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
