@@ -23,8 +23,8 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.crypto.encrypt.KeyStoreKeyFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
-import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

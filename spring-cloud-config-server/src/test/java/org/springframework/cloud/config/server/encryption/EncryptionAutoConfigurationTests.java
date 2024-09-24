@@ -27,8 +27,8 @@ import org.springframework.cloud.config.server.config.DefaultTextEncryptionAutoC
 import org.springframework.cloud.config.server.config.RsaEncryptionAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.RsaSecretEncryptor;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
-import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

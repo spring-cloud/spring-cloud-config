@@ -26,9 +26,9 @@ import org.springframework.cloud.config.server.encryption.KeyStoreTextEncryptorL
 import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
-import org.springframework.security.rsa.crypto.RsaAlgorithm;
-import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
+import org.springframework.security.crypto.encrypt.KeyStoreKeyFactory;
+import org.springframework.security.crypto.encrypt.RsaAlgorithm;
+import org.springframework.security.crypto.encrypt.RsaSecretEncryptor;
 
 /**
  * Autoconfiguration for RSA encryption.
