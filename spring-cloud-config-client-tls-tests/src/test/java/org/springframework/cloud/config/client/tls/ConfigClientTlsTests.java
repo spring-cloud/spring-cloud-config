@@ -20,8 +20,7 @@ import java.io.File;
 
 import org.apache.commons.logging.LogFactory;
 import org.apache.hc.core5.http.io.SocketConfig;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringBootConfiguration;
@@ -37,21 +36,18 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	protected static TlsConfigServerRunner server;
 
-	@BeforeAll
-	public static void setupAll() throws Exception {
-		startConfigServer();
-	}
-
-	@AfterAll
-	public static void tearDownAll() {
+	@AfterEach
+	public void tearDownAll() {
 		stopConfigServer();
 	}
 
-	private static void startConfigServer() {
+	private static void startConfigServer(boolean withKeyStore) {
 		server = new TlsConfigServerRunner(TestConfigServer.class);
-		server.enableTls();
-		server.setKeyStore(serverCert, KEY_STORE_PASSWORD, "server", KEY_PASSWORD);
-		server.setTrustStore(caCert, KEY_STORE_PASSWORD);
+		if (withKeyStore) {
+			server.enableTls();
+			server.setKeyStore(serverCert, KEY_STORE_PASSWORD, "server", KEY_PASSWORD);
+			server.setTrustStore(caCert, KEY_STORE_PASSWORD);
+		}
 		server.property("logging.level.org.springframework.cloud.config.server", "TRACE");
 
 		server.start();
@@ -63,6 +59,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test
 	public void clientCertCanWork() {
+		startConfigServer(true);
 		try (TlsConfigClientRunner client = createConfigClient()) {
 			enableTlsClient(client);
 			client.property("logging.level.org.springframework.boot.context.config", "TRACE");
@@ -73,8 +70,21 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 	}
 
 	@Test
+	public void clientCanStartWithoutKeyStoreSet() {
+		startConfigServer(false);
+		try (TlsConfigClientRunner client = createConfigClient()) {
+			enableTlsClient(client, false);
+			client.property("logging.level.org.springframework.boot.context.config", "TRACE");
+			client.property("logging.level.org.springframework.cloud.config.client", "DEBUG");
+			client.start();
+			assertThat(client.getProperty("dumb.key")).isEqualTo("dumb-value");
+		}
+	}
+
+	@Test
 	@SuppressWarnings({ "unchecked" })
 	public void tlsSetsRequestReadTimeout() {
+		startConfigServer(true);
 		try (TlsConfigClientRunner client = createConfigClient()) {
 			enableTlsClient(client);
 			client.property("logging.level.org.springframework.boot.context.config", "TRACE");
@@ -91,6 +101,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test
 	public void tlsClientCanBeDisabled() {
+		startConfigServer(true);
 		try (TlsConfigClientRunner client = createConfigClient()) {
 			enableTlsClient(client);
 			client.property("spring.cloud.config.tls.enabled", "false");
@@ -101,6 +112,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test
 	public void noCertCannotWork() {
+		startConfigServer(true);
 		try (TlsConfigClientRunner client = createConfigClient()) {
 			client.disableTls();
 			client.start();
@@ -110,6 +122,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test
 	public void wrongCertCannotWork() {
+		startConfigServer(true);
 		try (TlsConfigClientRunner client = createConfigClient()) {
 			enableTlsClient(client);
 			client.setKeyStore(wrongClientCert);
@@ -120,6 +133,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test
 	public void wrongPasswordCauseFailure() {
+		startConfigServer(true);
 		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> {
 			TlsConfigClientRunner client = createConfigClient(false);
 			enableTlsClient(client);
@@ -130,6 +144,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test
 	public void nonExistKeyStoreCauseFailure() {
+		startConfigServer(true);
 		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> {
 			TlsConfigClientRunner client = createConfigClient(false);
 			enableTlsClient(client);
@@ -140,6 +155,7 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 
 	@Test
 	public void wrongTrustStoreCannotWork() {
+		startConfigServer(true);
 		try (TlsConfigClientRunner client = createConfigClient()) {
 			enableTlsClient(client);
 			client.setTrustStore(wrongCaCert);
@@ -161,8 +177,14 @@ public class ConfigClientTlsTests extends AbstractTlsSetup {
 	}
 
 	private void enableTlsClient(TlsConfigClientRunner runner) {
+		enableTlsClient(runner, true);
+	}
+
+	private void enableTlsClient(TlsConfigClientRunner runner, boolean withKeyStore) {
 		runner.enableTls();
-		runner.setKeyStore(clientCert, KEY_STORE_PASSWORD, KEY_PASSWORD);
+		if (withKeyStore) {
+			runner.setKeyStore(clientCert, KEY_STORE_PASSWORD, KEY_PASSWORD);
+		}
 		runner.setTrustStore(caCert, KEY_STORE_PASSWORD);
 	}
 

@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.config.client;
 
-import org.springframework.aot.hint.MemberCategory;
-import org.springframework.aot.hint.RuntimeHints;
-import org.springframework.aot.hint.RuntimeHintsRegistrar;
-import org.springframework.aot.hint.TypeReference;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -27,15 +23,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.config.ConfigDataLocation;
-import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
-import org.springframework.util.ClassUtils;
 
 /**
  * Expose a ConfigClientProperties just so that there is a way to inspect the properties
@@ -90,32 +83,6 @@ public class ConfigClientAutoConfiguration {
 			return new ConfigClientWatch(contextRefresher);
 		}
 
-	}
-
-}
-
-class ConfigClientHints implements RuntimeHintsRegistrar {
-
-	@Override
-	public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
-		if (!ClassUtils.isPresent("org.springframework.cloud.config.client.ConfigServerConfigDataLoader",
-				classLoader)) {
-			return;
-		}
-		hints.reflection()
-			.registerType(TypeReference.of(ConfigClientAutoConfiguration.class),
-					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS))
-			.registerType(TypeReference.of(ConfigDataLocation.class),
-					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS))
-			.registerType(TypeReference.of("org.springframework.boot.context.config.ConfigDataProperties"),
-					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-							MemberCategory.DECLARED_FIELDS, MemberCategory.INTROSPECT_DECLARED_METHODS))
-			.registerType(TypeReference.of(org.springframework.cloud.config.environment.Environment.class),
-					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-							MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS))
-			.registerType(TypeReference.of(PropertySource.class),
-					hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-							MemberCategory.INTROSPECT_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS));
 	}
 
 }

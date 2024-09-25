@@ -26,7 +26,29 @@ import org.springframework.core.Ordered;
 @ConfigurationProperties("spring.cloud.config.server.credhub")
 public class CredhubEnvironmentProperties implements EnvironmentRepositoryProperties {
 
+	/** The common base path for credentials in CredHub. It is empty by default. */
+	private String path = "";
+
+	/** The default label to be used when is not provided by client applications. */
+	private String defaultLabel = "master";
+
 	private int order = Ordered.LOWEST_PRECEDENCE;
+
+	public String getPath() {
+		return this.path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public String getDefaultLabel() {
+		return defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
+	}
 
 	public int getOrder() {
 		return this.order;

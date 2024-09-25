@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.util.Collections;
-import java.util.HashMap;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,21 +25,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategy.VaultResponse;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -52,421 +47,205 @@ import static org.mockito.Mockito.when;
  * @author Haytham Mohamed
  * @author Scott Frederick
  */
+@SuppressWarnings("deprecation")
 public class VaultEnvironmentRepositoryTests {
 
-	private ObjectMapper objectMapper;
+	private final ObjectMapper objectMapper = new ObjectMapper();
+
+	private final RestTemplate rest = mock(RestTemplate.class);
+
+	@SuppressWarnings("unchecked")
+	ArgumentCaptor<HttpEntity<?>> requestHeaderCaptor = ArgumentCaptor.forClass(HttpEntity.class);
 
 	@BeforeEach
 	public void init() {
-		this.objectMapper = new ObjectMapper();
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testFindOneNoDefaultKey() {
-		RestTemplate rest = mock(RestTemplate.class);
+		stubRestTemplate("secret/myapp", toEntityResponse("foo", "bar"));
+		stubRestTemplate("secret/application", toEntityResponse("def-foo", "def-bar"));
 
-		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
-		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myAppVaultResp = mock(VaultResponse.class);
-		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
-		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("myapp")))
-			.thenReturn(myAppResp);
+		var e = vaultEnvironmentRepository().findOne("myapp", null, null);
 
-		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
-		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse appVaultResp = mock(VaultResponse.class);
-		when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
-		when(appResp.getBody()).thenReturn(appVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("application")))
-			.thenReturn(appResp);
+		assertThat(e.getName()).isEqualTo("myapp");
 
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties(), mockTokenProvider());
+		assertThat(e.getPropertySources().size()).isEqualTo(2);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources().size())
-			.as("Properties for specified application and default application with key 'application' should be returned")
-			.isEqualTo(2);
-		Map<String, String> firstResult = new HashMap<>();
-		firstResult.put("foo", "bar");
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for specified application should be returned in priority position")
-			.isEqualTo(firstResult);
-
-		Map<String, String> secondResult = new HashMap<>();
-		secondResult.put("def-foo", "def-bar");
-		assertThat(e.getPropertySources().get(1).getSource())
-			.as("Properties for default application with key 'application' should be returned in second position")
-			.isEqualTo(secondResult);
+		assertThat(requestHeaderCaptor.getValue().getHeaders()).containsEntry("X-Vault-Token", List.of("token"));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testBackendWithSlashes() {
-		RestTemplate rest = mock(RestTemplate.class);
+		stubRestTemplate("foo/bar/secret/myapp", toEntityResponse("foo", "bar"));
+		stubRestTemplate("foo/bar/secret/application", toEntityResponse("def-foo", "def-bar"));
 
-		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
-		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myAppVaultResp = mock(VaultResponse.class);
-		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
-		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/foo/bar/secret/{key}"), eq(HttpMethod.GET),
-				any(HttpEntity.class), eq(VaultResponse.class), eq("myapp")))
-			.thenReturn(myAppResp);
-
-		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
-		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse appVaultResp = mock(VaultResponse.class);
-		when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
-		when(appResp.getBody()).thenReturn(appVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/foo/bar/secret/{key}"), eq(HttpMethod.GET),
-				any(HttpEntity.class), eq(VaultResponse.class), eq("application")))
-			.thenReturn(appResp);
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		var properties = new VaultEnvironmentProperties();
 		properties.setBackend("foo/bar/secret");
 
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), rest, properties, mockTokenProvider());
+		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources().size())
-			.as("Properties for specified application and default application with key 'application' should be returned")
-			.isEqualTo(2);
-		Map<String, String> firstResult = new HashMap<>();
-		firstResult.put("foo", "bar");
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for specified application should be returned in priority position")
-			.isEqualTo(firstResult);
+		assertThat(e.getName()).isEqualTo("myapp");
 
-		Map<String, String> secondResult = new HashMap<>();
-		secondResult.put("def-foo", "def-bar");
-		assertThat(e.getPropertySources().get(1).getSource())
-			.as("Properties for default application with key 'application' should be returned in second position")
-			.isEqualTo(secondResult);
+		assertThat(e.getPropertySources().size()).isEqualTo(2);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testFindOneDefaultKeySetAndDifferentToApplication() {
-		RestTemplate rest = mock(RestTemplate.class);
+		stubRestTemplate("secret/myapp", toEntityResponse("foo", "bar"));
+		stubRestTemplate("secret/mydefaultkey", toEntityResponse("def-foo", "def-bar"));
 
-		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
-		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myAppVaultResp = mock(VaultResponse.class);
-		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
-		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("myapp")))
-			.thenReturn(myAppResp);
+		var properties = new VaultEnvironmentProperties();
+		properties.setDefaultKey("mydefaultkey");
 
-		ResponseEntity<VaultResponse> myDefaultKeyResp = mock(ResponseEntity.class);
-		when(myDefaultKeyResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myDefaultKeyVaultResp = mock(VaultResponse.class);
-		when(myDefaultKeyVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
-		when(myDefaultKeyResp.getBody()).thenReturn(myDefaultKeyVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("mydefaultkey")))
-			.thenReturn(myDefaultKeyResp);
+		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties(), mockTokenProvider());
-		repo.setDefaultKey("mydefaultkey");
+		assertThat(e.getName()).isEqualTo("myapp");
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources().size())
-			.as("Properties for specified application and default application with key 'mydefaultkey' should be returned")
-			.isEqualTo(2);
-
-		Map<String, String> firstResult = new HashMap<>();
-		firstResult.put("foo", "bar");
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for specified application should be returned in priority position")
-			.isEqualTo(firstResult);
-
-		Map<String, String> secondResult = new HashMap<>();
-		secondResult.put("def-foo", "def-bar");
-		assertThat(e.getPropertySources().get(1).getSource())
-			.as("Properties for default application with key 'mydefaultkey' should be returned in second position")
-			.isEqualTo(secondResult);
+		assertThat(e.getPropertySources().size()).isEqualTo(2);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testFindOneDefaultKeySetAndDifferentToMultipleApplications() {
-		RestTemplate rest = mock(RestTemplate.class);
+		stubRestTemplate("secret/myapp", toEntityResponse("myapp-foo", "myapp-bar"));
+		stubRestTemplate("secret/yourapp", toEntityResponse("yourapp-foo", "yourapp-bar"));
+		stubRestTemplate("secret/mydefaultkey", toEntityResponse("def-foo", "def-bar"));
 
-		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
-		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myAppVaultResp = mock(VaultResponse.class);
-		when(myAppVaultResp.getData()).thenReturn("{\"myapp-foo\":\"myapp-bar\"}");
-		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("myapp")))
-			.thenReturn(myAppResp);
+		var properties = new VaultEnvironmentProperties();
+		properties.setDefaultKey("mydefaultkey");
 
-		ResponseEntity<VaultResponse> yourAppResp = mock(ResponseEntity.class);
-		when(yourAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse yourAppVaultResp = mock(VaultResponse.class);
-		when(yourAppVaultResp.getData()).thenReturn("{\"yourapp-foo\":\"yourapp-bar\"}");
-		when(yourAppResp.getBody()).thenReturn(yourAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("yourapp")))
-			.thenReturn(yourAppResp);
+		var e = vaultEnvironmentRepository(properties).findOne("myapp,yourapp", null, null);
 
-		ResponseEntity<VaultResponse> myDefaultKeyResp = mock(ResponseEntity.class);
-		when(myDefaultKeyResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myDefaultKeyVaultResp = mock(VaultResponse.class);
-		when(myDefaultKeyVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
-		when(myDefaultKeyResp.getBody()).thenReturn(myDefaultKeyVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("mydefaultkey")))
-			.thenReturn(myDefaultKeyResp);
+		assertThat(e.getName()).isEqualTo("myapp,yourapp");
 
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties(), mockTokenProvider());
-		repo.setDefaultKey("mydefaultkey");
-
-		Environment e = repo.findOne("myapp,yourapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp,yourapp");
-		assertThat(e.getPropertySources().size())
-			.as("Properties for specified applications and default application with key 'mydefaultkey' should be returned")
-			.isEqualTo(3);
-
-		Map<String, String> firstResult = new HashMap<>();
-		firstResult.put("yourapp-foo", "yourapp-bar");
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for first specified application should be returned in priority position")
-			.isEqualTo(firstResult);
-
-		Map<String, String> secondResult = new HashMap<>();
-		secondResult.put("myapp-foo", "myapp-bar");
-		assertThat(e.getPropertySources().get(1).getSource())
-			.as("Properties for second specified application should be returned in priority position")
-			.isEqualTo(secondResult);
-
-		Map<String, String> thirdResult = new HashMap<>();
-		thirdResult.put("def-foo", "def-bar");
-		assertThat(e.getPropertySources().get(2).getSource())
-			.as("Properties for default application with key 'mydefaultkey' should be returned in second position")
-			.isEqualTo(thirdResult);
+		assertThat(e.getPropertySources().size()).isEqualTo(3);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("yourapp-foo", "yourapp-bar"));
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("myapp-foo", "myapp-bar"));
+		assertThat(e.getPropertySources().get(2).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testFindOneDefaultKeySetAndEqualToApplication() {
-		RestTemplate rest = mock(RestTemplate.class);
+		stubRestTemplate("secret/myapp", toEntityResponse("foo", "bar"));
+		stubRestTemplate("secret/application", toEntityResponse("def-foo", "def-bar"));
 
-		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
-		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myAppVaultResp = mock(VaultResponse.class);
-		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
-		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("myapp")))
-			.thenReturn(myAppResp);
+		var properties = new VaultEnvironmentProperties();
+		properties.setDefaultKey("myapp");
 
-		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
-		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse appVaultResp = mock(VaultResponse.class);
-		when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
-		when(appResp.getBody()).thenReturn(appVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("application")))
-			.thenReturn(appResp);
+		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), rest, new VaultEnvironmentProperties(), mockTokenProvider());
-		repo.setDefaultKey("myapp");
+		assertThat(e.getName()).isEqualTo("myapp");
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources().size()).as("Only properties for specified application should be returned")
-			.isEqualTo(1);
-
-		Map<String, String> result = new HashMap<>();
-		result.put("foo", "bar");
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties should be returned for specified application")
-			.isEqualTo(result);
+		assertThat(e.getPropertySources().size()).isEqualTo(1);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
 	}
 
 	@Test
 	public void missingConfigToken() {
-		Assertions.assertThatThrownBy(() -> {
-			ConfigTokenProvider tokenProvider = mock(ConfigTokenProvider.class);
-			when(tokenProvider.getToken()).thenReturn(null);
+		ConfigTokenProvider nullTokenProvider = () -> null;
 
-			VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-					new EnvironmentWatch.Default(), mock(RestTemplate.class), new VaultEnvironmentProperties(),
-					tokenProvider);
-			repo.findOne("myapp", null, null);
-		}).isInstanceOf(IllegalArgumentException.class);
+		Assertions.assertThatThrownBy(() -> vaultEnvironmentRepository(nullTokenProvider).findOne("myapp", null, null))
+			.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testVaultVersioning() {
-		RestTemplate rest = mock(RestTemplate.class);
+		stubRestTemplate("secret/data/myapp", toEntityResponse("data", Map.of("foo", "bar")));
+		stubRestTemplate("secret/data/application", toEntityResponse("data", Map.of("def-foo", "def-bar")));
 
-		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
-		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myAppVaultResp = getVaultResponse("{\"data\": {\"data\": {\"foo\": \"bar\"}}}");
-		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/data/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("myapp")))
-			.thenReturn(myAppResp);
+		var properties = new VaultEnvironmentProperties();
+		properties.setKvVersion(2);
 
-		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
-		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse appVaultResp = getVaultResponse("{\"data\": {\"data\": {\"def-foo\":\"def-bar\"}}}");
-		when(appResp.getBody()).thenReturn(appVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/data/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("application")))
-			.thenReturn(appResp);
+		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		final VaultEnvironmentProperties vaultEnvironmentProperties = new VaultEnvironmentProperties();
-		vaultEnvironmentProperties.setKvVersion(2);
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), rest, vaultEnvironmentProperties, mockTokenProvider());
+		assertThat(e.getName()).isEqualTo("myapp");
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources().size())
-			.as("Properties for specified application and default application with key 'application' should be returned")
-			.isEqualTo(2);
-		Map<String, String> firstResult = new HashMap<>();
-		firstResult.put("foo", "bar");
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for specified application should be returned in priority position")
-			.isEqualTo(firstResult);
+		assertThat(e.getPropertySources().size()).isEqualTo(2);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+
+		assertThat(requestHeaderCaptor.getValue().getHeaders()).containsEntry("X-Vault-Token", List.of("token"));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testVaultKV2WithPath2Key() {
-		RestTemplate rest = mock(RestTemplate.class);
+		stubRestTemplate("secret/data/myorg/myapp", toEntityResponse("data", Map.of("foo", "bar")));
+		stubRestTemplate("secret/data/myorg/application", toEntityResponse("data", Map.of("def-foo", "def-bar")));
 
-		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
-		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myAppVaultResp = getVaultResponse("{\"data\": {\"data\": {\"foo\": \"bar\"}}}");
-		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/data/myorg/{key}"), eq(HttpMethod.GET),
-				any(HttpEntity.class), eq(VaultResponse.class), eq("myapp")))
-			.thenReturn(myAppResp);
+		var properties = new VaultEnvironmentProperties();
+		properties.setKvVersion(2);
+		properties.setPathToKey("myorg");
 
-		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
-		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse appVaultResp = getVaultResponse("{\"data\": {\"data\": {\"def-foo\":\"def-bar\"}}}");
-		when(appResp.getBody()).thenReturn(appVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/data/myorg/{key}"), eq(HttpMethod.GET),
-				any(HttpEntity.class), eq(VaultResponse.class), eq("application")))
-			.thenReturn(appResp);
+		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		final VaultEnvironmentProperties vaultEnvironmentProperties = new VaultEnvironmentProperties();
-		vaultEnvironmentProperties.setKvVersion(2);
-		vaultEnvironmentProperties.setPathToKey("myorg");
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), rest, vaultEnvironmentProperties, mockTokenProvider());
+		assertThat(e.getName()).isEqualTo("myapp");
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources().size())
-			.as("Properties for specified application and default application with key 'application' should be returned")
-			.isEqualTo(2);
-		Map<String, String> firstResult = new HashMap<>();
-		firstResult.put("foo", "bar");
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for specified application should be returned in priority position")
-			.isEqualTo(firstResult);
+		assertThat(e.getPropertySources().size()).isEqualTo(2);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
 	}
 
 	@Test
-	@SuppressWarnings({ "Duplicates", "unchecked" })
 	public void testNamespaceHeaderSent() {
-		RestTemplate rest = mock(RestTemplate.class);
+		stubRestTemplate("secret/myapp", toEntityResponse("foo", "bar"));
+		stubRestTemplate("secret/application", toEntityResponse("def-foo", "def-bar"));
 
-		ResponseEntity<VaultResponse> myAppResp = mock(ResponseEntity.class);
-		when(myAppResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse myAppVaultResp = mock(VaultResponse.class);
-		when(myAppVaultResp.getData()).thenReturn("{\"foo\":\"bar\"}");
-		when(myAppResp.getBody()).thenReturn(myAppVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("myapp")))
-			.thenReturn(myAppResp);
-
-		ResponseEntity<VaultResponse> appResp = mock(ResponseEntity.class);
-		when(appResp.getStatusCode()).thenReturn(HttpStatus.OK);
-		VaultResponse appVaultResp = mock(VaultResponse.class);
-		when(appVaultResp.getData()).thenReturn("{\"def-foo\":\"def-bar\"}");
-		when(appResp.getBody()).thenReturn(appVaultResp);
-		when(rest.exchange(eq("http://127.0.0.1:8200/v1/secret/{key}"), eq(HttpMethod.GET), any(HttpEntity.class),
-				eq(VaultResponse.class), eq("application")))
-			.thenReturn(appResp);
-
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		var properties = new VaultEnvironmentProperties();
 		properties.setNamespace("mynamespace");
-		VaultEnvironmentRepository repo = new VaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), rest, properties, mockTokenProvider());
 
-		TestAccessStrategy accessStrategy = new TestAccessStrategy(rest, properties);
-		repo.setAccessStrategy(accessStrategy);
+		vaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		repo.findOne("myapp", null, null);
-
-		assertThat(accessStrategy.headers).containsEntry(VaultEnvironmentRepository.VAULT_NAMESPACE,
-				Collections.singletonList("mynamespace"));
+		assertThat(requestHeaderCaptor.getValue().getHeaders()).containsEntry("X-Vault-Namespace",
+				List.of("mynamespace"));
 	}
 
-	private VaultResponse getVaultResponse(String json) {
-		try {
-			return this.objectMapper.readValue(json, VaultResponse.class);
-		}
-		catch (Exception e) {
-			fail(e.getMessage());
-		}
-		return null;
+	private VaultEnvironmentRepository vaultEnvironmentRepository() {
+		return vaultEnvironmentRepository(new VaultEnvironmentProperties());
+	}
+
+	private VaultEnvironmentRepository vaultEnvironmentRepository(ConfigTokenProvider tokenProvider) {
+		return vaultEnvironmentRepository(new VaultEnvironmentProperties(), tokenProvider);
+	}
+
+	private VaultEnvironmentRepository vaultEnvironmentRepository(VaultEnvironmentProperties properties) {
+		return vaultEnvironmentRepository(properties, () -> "token");
+	}
+
+	private VaultEnvironmentRepository vaultEnvironmentRepository(VaultEnvironmentProperties properties,
+			ConfigTokenProvider tokenProvider) {
+		return new VaultEnvironmentRepository(mockHttpRequest(), new EnvironmentWatch.Default(), rest, properties,
+				tokenProvider);
+	}
+
+	private void stubRestTemplate(String path, ResponseEntity<VaultResponse> response) {
+		var p = Path.of(path);
+		var url = "http://127.0.0.1:8200/v1/%s/{key}".formatted(p.getParent());
+		var key = p.getFileName().toString();
+		when(rest.exchange(eq(url), eq(HttpMethod.GET), requestHeaderCaptor.capture(), eq(VaultResponse.class),
+				eq(key)))
+			.thenReturn(response);
+	}
+
+	private ResponseEntity<VaultResponse> toEntityResponse(String key, Object value) {
+		return toEntityResponse(Map.of(key, value));
+	}
+
+	private ResponseEntity<VaultResponse> toEntityResponse(Map<String, Object> body) {
+		var response = new VaultResponse();
+		response.setData(objectMapper.valueToTree(body));
+
+		return ResponseEntity.ok(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private ObjectProvider<HttpServletRequest> mockHttpRequest() {
-		ObjectProvider<HttpServletRequest> objectProvider = mock(ObjectProvider.class);
+		var objectProvider = mock(ObjectProvider.class);
 		when(objectProvider.getIfAvailable()).thenReturn(null);
 		return objectProvider;
-	}
-
-	private ConfigTokenProvider mockTokenProvider() {
-		ConfigTokenProvider tokenProvider = mock(ConfigTokenProvider.class);
-		when(tokenProvider.getToken()).thenReturn("token");
-		return tokenProvider;
-	}
-
-	private static class TestAccessStrategy implements VaultKvAccessStrategy {
-
-		private final VaultKvAccessStrategy accessStrategy;
-
-		private HttpHeaders headers;
-
-		TestAccessStrategy(RestTemplate restTemplate, VaultEnvironmentProperties properties) {
-			String baseUrl = String.format("%s://%s:%s", properties.getScheme(), properties.getHost(),
-					properties.getPort());
-			this.accessStrategy = VaultKvAccessStrategyFactory.forVersion(restTemplate, baseUrl,
-					properties.getKvVersion(), "");
-		}
-
-		@Override
-		public String getData(HttpHeaders headers, String backend, String key) throws RestClientException {
-			this.headers = headers;
-			return this.accessStrategy.getData(headers, backend, key);
-		}
-
 	}
 
 }
