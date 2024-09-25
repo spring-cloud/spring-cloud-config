@@ -16,14 +16,12 @@
 
 package org.springframework.cloud.config.server.environment.vault;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.util.StringUtils;
@@ -31,7 +29,6 @@ import org.springframework.vault.core.VaultKeyValueOperations;
 import org.springframework.vault.support.VaultResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,8 +40,9 @@ import static org.mockito.Mockito.when;
  * @author Haytham Mohamed
  * @author Scott Frederick
  */
-@SuppressWarnings("rawtypes")
 public class SpringVaultEnvironmentRepositoryTests {
+
+	private final VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 
 	@Test
 	public void testFindOneNoDefaultKey() {
@@ -66,158 +64,116 @@ public class SpringVaultEnvironmentRepositoryTests {
 		if (StringUtils.hasText(myPathKey) && version == 2) {
 			path = myPathKey + "/";
 		}
-		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+
 		when(keyValueTemplate.get(path + "myapp")).thenReturn(withVaultResponse("foo", "bar"));
 		when(keyValueTemplate.get(path + "application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+
+		var properties = new VaultEnvironmentProperties();
 		properties.setPathToKey(myPathKey);
 		properties.setKvVersion(version);
-		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), properties, keyValueTemplate);
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources())
-			.as("Properties for specified application and default application with key 'application' should be returned")
-			.hasSize(2);
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for specified application should be returned in priority position")
-			.containsOnly((Map.Entry) entry("foo", "bar"));
-		assertThat(e.getPropertySources().get(1).getSource())
-			.as("Properties for default application with key 'application' should be returned in second position")
-			.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources()).hasSize(2);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void testBackendWithSlashes() {
-		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
 		when(keyValueTemplate.get("application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
-		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		var properties = new VaultEnvironmentProperties();
 		properties.setBackend("foo/bar/secret");
 
-		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), properties, keyValueTemplate);
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources())
-			.as("Properties for specified application and default application with key 'application' should be returned")
-			.hasSize(2);
+		assertThat(e.getName()).isEqualTo("myapp");
 
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for specified application should be returned in priority position")
-			.containsOnly((Map.Entry) entry("foo", "bar"));
-		assertThat(e.getPropertySources().get(1).getSource())
-			.as("Properties for default application with key 'application' should be returned in second position")
-			.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
+		assertThat(e.getPropertySources()).hasSize(2);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void testFindOneDefaultKeySetAndDifferentToApplication() {
-		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
 		when(keyValueTemplate.get("mydefaultkey")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
-		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), new VaultEnvironmentProperties(), keyValueTemplate);
-		repo.setDefaultKey("mydefaultkey");
+		var properties = new VaultEnvironmentProperties();
+		properties.setDefaultKey("mydefaultkey");
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources())
-			.as("Properties for specified application and default application with key 'mydefaultkey' should be returned")
-			.hasSize(2);
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for specified application should be returned in priority position")
-			.containsOnly((Map.Entry) entry("foo", "bar"));
-		assertThat(e.getPropertySources().get(1).getSource())
-			.as("Properties for default application with key 'mydefaultkey' should be returned in second position")
-			.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources()).hasSize(2);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void testFindOneDefaultKeySetAndDifferentToMultipleApplications() {
-		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("myapp-foo", "myapp-bar"));
 		when(keyValueTemplate.get("yourapp")).thenReturn(withVaultResponse("yourapp-foo", "yourapp-bar"));
 		when(keyValueTemplate.get("mydefaultkey")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
-		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), new VaultEnvironmentProperties(), keyValueTemplate);
-		repo.setDefaultKey("mydefaultkey");
+		var properties = new VaultEnvironmentProperties();
+		properties.setDefaultKey("mydefaultkey");
 
-		Environment e = repo.findOne("myapp,yourapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp,yourapp");
-		assertThat(e.getPropertySources())
-			.as("Properties for specified applications and default application with key 'mydefaultkey' should be returned")
-			.hasSize(3);
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp,yourapp", null, null);
 
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for first specified application should be returned in priority position")
-			.containsOnly((Map.Entry) entry("yourapp-foo", "yourapp-bar"));
+		assertThat(e.getName()).isEqualTo("myapp,yourapp");
 
-		assertThat(e.getPropertySources().get(1).getSource())
-			.as("Properties for second specified application should be returned in priority position")
-			.containsOnly((Map.Entry) entry("myapp-foo", "myapp-bar"));
-
-		assertThat(e.getPropertySources().get(2).getSource())
-			.as("Properties for default application with key 'mydefaultkey' should be returned in second position")
-			.containsOnly((Map.Entry) entry("def-foo", "def-bar"));
+		assertThat(e.getPropertySources()).hasSize(3);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("yourapp-foo", "yourapp-bar"));
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("myapp-foo", "myapp-bar"));
+		assertThat(e.getPropertySources().get(2).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 	}
 
 	@Test
 	public void testFindOneDefaultKeySetAndEqualToApplication() {
-		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
 		when(keyValueTemplate.get("application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
-		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), new VaultEnvironmentProperties(), keyValueTemplate);
-		repo.setDefaultKey("myapp");
+		var properties = new VaultEnvironmentProperties();
+		properties.setDefaultKey("myapp");
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources()).as("Only properties for specified application should be returned")
-			.hasSize(1);
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties should be returned for specified application")
-			.containsOnly((Map.Entry) entry("foo", "bar"));
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources()).hasSize(1);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
 	}
 
 	@Test
 	public void testVaultVersioning() {
-		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
 		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
 		when(keyValueTemplate.get("application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
 
-		final VaultEnvironmentProperties vaultEnvironmentProperties = new VaultEnvironmentProperties();
-		vaultEnvironmentProperties.setKvVersion(2);
-		SpringVaultEnvironmentRepository repo = new SpringVaultEnvironmentRepository(mockHttpRequest(),
-				new EnvironmentWatch.Default(), vaultEnvironmentProperties, keyValueTemplate);
+		var properties = new VaultEnvironmentProperties();
+		properties.setKvVersion(2);
 
-		Environment e = repo.findOne("myapp", null, null);
-		assertThat(e.getName()).as("Name should be the same as the application argument").isEqualTo("myapp");
-		assertThat(e.getPropertySources())
-			.as("Properties for specified application and default application with key 'application' should be returned")
-			.hasSize(2);
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
-		assertThat(e.getPropertySources().get(0).getSource())
-			.as("Properties for specified application should be returned in priority position")
-			.containsOnly((Map.Entry) entry("foo", "bar"));
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources()).hasSize(2);
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+	}
+
+	private SpringVaultEnvironmentRepository springVaultEnvironmentRepository(VaultEnvironmentProperties properties) {
+		return new SpringVaultEnvironmentRepository(mockHttpRequest(), new EnvironmentWatch.Default(), properties,
+				keyValueTemplate);
 	}
 
 	private VaultResponse withVaultResponse(String key, Object value) {
-		Map<String, Object> responseData = new HashMap<>();
-		responseData.put(key, value);
-
 		VaultResponse response = new VaultResponse();
-		response.setData(responseData);
-
+		response.setData(Map.of(key, value));
 		return response;
 	}
 

@@ -52,7 +52,10 @@ All client applications with the name `spring.cloud.config.name=demo-app` will h
 }
 ----
 
-NOTE: When no profile is specified `default` will be used and when no label is specified `master` will be used as a default value.
+NOTE: When no label is specified `master` will be used as a default value. You can change that by setting `spring.cloud.config.server.credhub.defaultLabel`.
+
+NOTE: When no profile is specified `default` will be used.
+
 NOTE: Values added to `application` will be shared by all the applications.
 
 [[oauth-2-0]]
@@ -103,3 +106,21 @@ spring:
 
 NOTE: The used UAA client-id should have `credhub.read` as scope.
 
+The following table describes the CredHub configuration properties.
+
+|===
+|Property Name |Remarks
+
+|*url*
+|CredHub server URL.
+
+|*path*
+|Base path for all credentials. Optional, defaults to empty.
+
+|*defaultLabel*
+| Default label to use when is not provided by client application. Optional, defaults to `master`.
+
+|*oauth2*
+| OAuth2 configuration to access CredHub. Optional.
+
+|===
