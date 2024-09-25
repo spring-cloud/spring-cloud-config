@@ -240,9 +240,9 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default" });
 		assertThat(env.getLabel()).isEqualTo("main,master");
 		assertThat(env.getPropertySources()).isNotEmpty();
-		assertThat(env.getPropertySources().get(0).getSource().get("e.f.g")).isEqualTo("application-default");
-		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("application-default");
-		assertThat(env.getPropertySources().get(2).getSource().get("a.b.c")).isEqualTo("application-null");
+		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c")).isEqualTo("application-default");
+		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("application-null");
+		assertThat(env.getPropertySources().get(2).getSource().get("e.f.g")).isEqualTo("application-default");
 	}
 
 	@ImportAutoConfiguration(SqlInitializationAutoConfiguration.class)

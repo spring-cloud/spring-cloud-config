@@ -119,9 +119,13 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		List<String> envs = new ArrayList<>(new LinkedHashSet<>(Arrays.asList(profiles)));
 		Collections.reverse(applications);
 		Collections.reverse(envs);
-		String[] labels = { label };
-		if (labels[0].contains(",")) {
-			labels = labels[0].split(",");
+		List<String> labels;
+		if (label.contains(",")) {
+			labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+			Collections.reverse(labels);
+		}
+		else {
+			labels = Collections.singletonList(label);
 		}
 		for (String l : labels) {
 			for (String env : envs) {
