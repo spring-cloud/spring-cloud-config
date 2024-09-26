@@ -116,6 +116,15 @@ public class SVNKitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testMultipleLabels() {
+		Environment environment = this.repository.findOne("bar", "staging", "branches/demobranch,trunk");
+		assertThat(environment.getPropertySources()).hasSize(3);
+		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
+		assertThat(environment.getPropertySources().get(1).getName()).contains("application.yml");
+		assertThat(environment.getPropertySources().get(2).getName()).contains("branches/demobranch/bar.properties");
+	}
+
+	@Test
 	public void invalidLabel() {
 		Assertions.assertThatThrownBy(() -> {
 			Environment environment = this.repository.findOne("bar", "staging", "unknownlabel");
