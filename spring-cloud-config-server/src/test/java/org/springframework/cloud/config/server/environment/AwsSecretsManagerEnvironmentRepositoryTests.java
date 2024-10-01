@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1596,6 +1597,41 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testFindOneWithExistingApplicationAndDefaultProfileAndExistingLabelWhenMultipleLabelIsSet() {
+		String application = "foo";
+		String profile = configServerProperties.getDefaultProfile();
+		String label = "release,test";
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+
+		String fooPropertiesName = "aws:secrets:/secret/foo/";
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooReleaseProperties());
+
+		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
+				getFooDefaultReleaseProperties());
+
+		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultReleaseProperties());
+
+		String applicationPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationReleaseProperties());
+
+		Environment expectedEnv = new Environment(application, profiles, label, null, null);
+		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, fooProperties));
+
+		putSecrets("release", Collections.singletonList(fooProperties));
+		putSecrets("dev", Collections.singletonList(fooDefaultProperties));
+		putSecrets("test", Collections.singletonList(applicationDefaultProperties));
+		putSecrets("", Collections.singletonList(applicationProperties));
+
+		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
 		String profile = randomAlphabetic(new Random().nextInt(2, 25));
@@ -2640,7 +2676,11 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	private void putSecrets(Environment environment) {
 		String label = environment.getLabel() != null ? environment.getLabel()
 				: environmentProperties.getDefaultLabel();
-		for (PropertySource ps : environment.getPropertySources()) {
+		putSecrets(label, environment.getPropertySources());
+	}
+
+	private void putSecrets(String label, List<PropertySource> propertySources) {
+		for (PropertySource ps : propertySources) {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 			String secrets = getSecrets(ps);
 			CreateSecretResponse response = smClient
