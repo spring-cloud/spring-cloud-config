@@ -14,3 +14,4 @@ INSERT into MY_PROPERTIES(APPLICATION, PROFILE, LABEL, MY_KEY, MY_VALUE) values 
 
 INSERT into PROPERTIES(APPLICATION, PROFILE, LABEL, "KEY", "VALUE") values ('foo', 'bar', 'main', 'a.b.c', 'foo-bar');
 INSERT into PROPERTIES(APPLICATION, PROFILE, LABEL, "KEY", "VALUE") values ('application', 'bar', 'main', 'a.b.c', 'application-bar');
+INSERT into PROPERTIES(APPLICATION, PROFILE, LABEL, "KEY", "VALUE") values ('application', 'default', 'main', 'e.f.g', 'application-default');
