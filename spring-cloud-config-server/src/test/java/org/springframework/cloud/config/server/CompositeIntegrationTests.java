@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server;
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,6 +42,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
  */
 public class CompositeIntegrationTests {
 
+	@Nested
 	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
@@ -49,7 +51,7 @@ public class CompositeIntegrationTests {
 					"spring.cloud.config.server.git.order:1" },
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "git", "subversion" })
-	public static class StaticTests {
+	class StaticTests {
 
 		@LocalServerPort
 		private int port;
@@ -92,6 +94,7 @@ public class CompositeIntegrationTests {
 
 	}
 
+	@Nested
 	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
@@ -100,7 +103,7 @@ public class CompositeIntegrationTests {
 					"spring.cloud.config.server.git.order:1", "spring.cloud.config.server.reverseLocationOrder:true" },
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "git", "subversion" })
-	public static class ReverseLocationOrderTest {
+	class ReverseLocationOrderTest {
 
 		@LocalServerPort
 		private int port;
@@ -130,6 +133,7 @@ public class CompositeIntegrationTests {
 
 	}
 
+	@Nested
 	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -138,7 +142,7 @@ public class CompositeIntegrationTests {
 					"spring.cloud.config.server.composite[1].type:svn" },
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "composite" })
-	public static class ListTests {
+	class ListTests {
 
 		@LocalServerPort
 		private int port;

@@ -211,6 +211,13 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void multipleLabels() {
+		this.repository.setBasedir(this.basedir);
+		Environment environment = this.repository.findOne("bar", "staging", "master,foo,raw");
+		assertThat(environment.getPropertySources()).hasSize(6);
+	}
+
+	@Test
 	public void basedirExists() throws Exception {
 		assertThat(this.basedir.mkdirs()).isTrue();
 		assertThat(new File(this.basedir, ".nothing").createNewFile()).isTrue();
