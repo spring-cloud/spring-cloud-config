@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -210,9 +211,19 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		if (this.addLabelLocations) {
 			for (String location : locations) {
 				if (StringUtils.hasText(label)) {
-					String labelled = location + label.trim() + "/";
-					if (isDirectory(labelled)) {
-						output.add(labelled);
+					List<String> labels;
+					if (label.contains(",")) {
+						labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+						Collections.reverse(labels);
+					}
+					else {
+						labels = Collections.singletonList(label);
+					}
+					for (String l : labels) {
+						String labelled = location + l + "/";
+						if (isDirectory(labelled)) {
+							output.add(labelled);
+						}
 					}
 				}
 			}
