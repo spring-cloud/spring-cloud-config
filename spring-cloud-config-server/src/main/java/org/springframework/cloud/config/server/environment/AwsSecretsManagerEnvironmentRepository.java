@@ -101,28 +101,36 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 			environment.add(new PropertySource("overrides", overrides));
 		}
 
+		List<String> labels;
+		if (StringUtils.hasText(label) && label.contains(",")) {
+			labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+			Collections.reverse(labels);
+		}
+		else {
+			labels = Collections.singletonList(label);
+		}
+
 		List<String> reversedProfiles = new ArrayList<>(Arrays.asList(profiles));
 		Collections.reverse(reversedProfiles);
-		for (String profile : reversedProfiles) {
-			addPropertySource(environment, application, profile, label);
-			if (!defaultApplication.equals(application)) {
-				addPropertySource(environment, defaultApplication, profile, label);
+		for (String l : labels) {
+			for (String profile : reversedProfiles) {
+				addPropertySource(environment, application, profile, l);
+				if (!defaultApplication.equals(application)) {
+					addPropertySource(environment, defaultApplication, profile, l);
+				}
 			}
-		}
+			if (!Arrays.asList(profiles).contains(defaultProfile)) {
+				addPropertySource(environment, application, defaultProfile, l);
+			}
+			if (!Arrays.asList(profiles).contains(defaultProfile) && !defaultApplication.equals(application)) {
+				addPropertySource(environment, defaultApplication, defaultProfile, l);
+			}
 
-		if (!Arrays.asList(profiles).contains(defaultProfile)) {
-			addPropertySource(environment, application, defaultProfile, label);
+			if (!defaultApplication.equals(application)) {
+				addPropertySource(environment, application, null, l);
+			}
+			addPropertySource(environment, defaultApplication, null, l);
 		}
-
-		if (!Arrays.asList(profiles).contains(defaultProfile) && !defaultApplication.equals(application)) {
-			addPropertySource(environment, defaultApplication, defaultProfile, label);
-		}
-
-		if (!defaultApplication.equals(application)) {
-			addPropertySource(environment, application, null, label);
-		}
-
-		addPropertySource(environment, defaultApplication, null, label);
 
 		return environment;
 	}
