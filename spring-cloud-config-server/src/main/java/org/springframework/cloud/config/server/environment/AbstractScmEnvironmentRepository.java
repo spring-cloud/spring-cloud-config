@@ -16,6 +16,11 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import io.micrometer.observation.ObservationRegistry;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -23,6 +28,7 @@ import org.springframework.cloud.config.server.support.AbstractScmAccessor;
 import org.springframework.cloud.config.server.support.AbstractScmAccessorProperties;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Dave Syer
@@ -57,12 +63,29 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	@Override
 	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-		NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(getEnvironment(),
-				new NativeEnvironmentProperties(), this.observationRegistry);
-		Locations locations = getLocations(application, profile, label);
-		delegate.setSearchLocations(locations.getLocations());
-		Environment result = delegate.findOne(application, profile, "", includeOrigin);
-		result.setVersion(locations.getVersion());
+		Environment result;
+		if (StringUtils.hasText(label) && label.contains(",")) {
+			List<String> labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+			Collections.reverse(labels);
+			List<EnvironmentRepository> environmentRepositories = new ArrayList<>();
+			Environment env = new Environment(application, new String[] { profile }, label, null, null);
+			for (String l : labels) {
+				NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(getEnvironment(),
+						new NativeEnvironmentProperties(), this.observationRegistry);
+				Locations locations = getLocations(application, profile, l);
+				delegate.setSearchLocations(locations.getLocations());
+				env.addAll(delegate.findOne(application, profile, "", includeOrigin).getPropertySources());
+			}
+			result = env;
+		}
+		else {
+			NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(getEnvironment(),
+					new NativeEnvironmentProperties(), this.observationRegistry);
+			Locations locations = getLocations(application, profile, label);
+			delegate.setSearchLocations(locations.getLocations());
+			result = delegate.findOne(application, profile, "", includeOrigin);
+			result.setVersion(locations.getVersion());
+		}
 		result.setLabel(label);
 		return this.cleaner.clean(result, getWorkingDirectory().toURI().toString(), getUri());
 	}

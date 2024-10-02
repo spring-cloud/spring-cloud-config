@@ -77,11 +77,14 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 
 		List<String> applications = normalize(application, DEFAULT_APPLICATION);
 		List<String> profiles = normalize(profile, DEFAULT_PROFILE);
+		List<String> labels = normalize(label, this.defaultLabel);
 
 		Environment environment = new Environment(application, split(profile), label, null, null);
-		for (String prof : profiles) {
-			for (String app : applications) {
-				addPropertySource(environment, app, prof, label);
+		for (String l : labels) {
+			for (String prof : profiles) {
+				for (String app : applications) {
+					addPropertySource(environment, app, prof, l);
+				}
 			}
 		}
 

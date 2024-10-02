@@ -103,6 +103,15 @@ public class AwsS3IntegrationTests {
 		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("data-dev.properties"),
 				RequestBody.fromString("bar=1"));
 		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("main/foo.properties"),
+				RequestBody.fromString("foo=1"));
+		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("dev/foo.properties"),
+				RequestBody.fromString("devfoo=1"));
+		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("test/foo.properties"),
+				RequestBody.fromString("testfoo=1"));
+		LOG.info("object response " + objectResponse);
 	}
 
 	@AfterAll
@@ -122,6 +131,16 @@ public class AwsS3IntegrationTests {
 			.isEqualTo("this is a test in main");
 		assertThat(rest.getForObject(configServerUrl + "/application/default/data.txt?useDefaultLabel", String.class))
 			.isEqualTo("this is a test");
+	}
+
+	@Test
+	public void testMultipleLabels() throws IOException {
+		RestTemplate rest = new RestTemplateBuilder().build();
+		String configServerUrl = "http://localhost:" + configServerPort;
+		Environment env = rest.getForObject(configServerUrl + "/foo/default/main,dev,test", Environment.class);
+		assertThat(env.getPropertySources().get(0).getSource().get("testfoo")).isEqualTo("1");
+		assertThat(env.getPropertySources().get(1).getSource().get("devfoo")).isEqualTo("1");
+		assertThat(env.getPropertySources().get(2).getSource().get("foo")).isEqualTo("1");
 	}
 
 	@Test
