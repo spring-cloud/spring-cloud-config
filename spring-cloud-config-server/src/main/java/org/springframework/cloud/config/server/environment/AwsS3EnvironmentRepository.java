@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -93,15 +94,28 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		final Environment environment = new Environment(application, profileArray);
 		environment.setLabel(label);
 
-		for (String profile : profileArray) {
-			for (String app : apps) {
-				addPropertySource(environment, app, profile, label);
+		List<String> labels;
+		if (StringUtils.hasText(label) && label.contains(",")) {
+			labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+			Collections.reverse(labels);
+		}
+		else {
+			labels = Collections.singletonList(label);
+		}
+
+		for (String l : labels) {
+			for (String profile : profileArray) {
+				for (String app : apps) {
+					addPropertySource(environment, app, profile, l);
+				}
 			}
 		}
 
 		// Add propertysources without profiles as well
-		for (String app : apps) {
-			addPropertySource(environment, app, null, label);
+		for (String l : labels) {
+			for (String app : apps) {
+				addPropertySource(environment, app, null, l);
+			}
 		}
 
 		if (LOG.isDebugEnabled()) {
