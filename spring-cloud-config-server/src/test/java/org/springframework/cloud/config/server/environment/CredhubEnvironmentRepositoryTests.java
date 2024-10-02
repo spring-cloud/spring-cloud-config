@@ -122,6 +122,28 @@ public class CredhubEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void shouldRetrieveGivenLabelsProfiles() {
+		stubCredentials("/myApp/prod/myLabel", credential("c1", "k1", "v1"));
+		stubCredentials("/myApp/cloud/mySecondLabel", credential("c2", "k2", "v2"));
+		stubCredentials("/myApp/prod/myThirdLabel", credential("c3", "k3", "v3"));
+
+		Environment environment = this.credhubEnvironmentRepository.findOne("myApp", "prod,cloud",
+				"myLabel,mySecondLabel");
+
+		assertThat(environment.getName()).isEqualTo("myApp");
+		assertThat(environment.getProfiles()).containsExactly("prod", "cloud");
+		assertThat(environment.getLabel()).isEqualTo("myLabel,mySecondLabel");
+
+		assertThat(environment.getPropertySources()).hasSize(2);
+
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("credhub-myApp-cloud-mySecondLabel");
+		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(Map.of("k2", "v2"));
+
+		assertThat(environment.getPropertySources().get(1).getName()).isEqualTo("credhub-myApp-prod-myLabel");
+		assertThat(environment.getPropertySources().get(1).getSource()).isEqualTo(Map.of("k1", "v1"));
+	}
+
+	@Test
 	public void shouldRetrieveGivenMultipleApplicationNames() {
 		stubCredentials("/app1/default/myLabel", credential("c1", "k1", "v1"));
 		stubCredentials("/app2/default/myLabel", credential("c2", "k2", "v2"));
