@@ -63,8 +63,9 @@ public class MongoDbEnvironmentRepository implements EnvironmentRepository, Orde
 		// Prepend "application," to config if not already present
 		String config = application.startsWith("application") ? application : "application," + application;
 
-		List<String> applications = Arrays.stream(StringUtils.commaDelimitedListToStringArray(config)).distinct()
-				.collect(Collectors.toList());
+		List<String> applications = Arrays.stream(StringUtils.commaDelimitedListToStringArray(config))
+			.distinct()
+			.collect(Collectors.toList());
 		List<String> profiles = Arrays.stream(profilesArray).distinct().collect(Collectors.toList());
 
 		// Reverse for the intended processing order

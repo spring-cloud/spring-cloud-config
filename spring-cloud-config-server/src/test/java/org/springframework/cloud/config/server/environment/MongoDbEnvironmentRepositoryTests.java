@@ -172,11 +172,12 @@ public class MongoDbEnvironmentRepositoryTests {
 	public void testFailOnError() {
 		MongoTemplate failingMongoTemplate = Mockito.spy(mongoTemplate);
 		Mockito.doThrow(new MongoTimeoutException("Timed out after 30000 ms while waiting for a server."))
-				.when(failingMongoTemplate).find(any(Query.class), any(), anyString());
+			.when(failingMongoTemplate)
+			.find(any(Query.class), any(), anyString());
 		MongoDbEnvironmentRepository repository = new MongoDbEnvironmentRepository(failingMongoTemplate,
 				new MongoDbEnvironmentProperties());
 		assertThatThrownBy(() -> repository.findOne("foo", "bar", "")).isInstanceOf(MongoException.class)
-				.hasMessageContaining("Timed out after 30000 ms while waiting for a server.");
+			.hasMessageContaining("Timed out after 30000 ms while waiting for a server.");
 	}
 
 }

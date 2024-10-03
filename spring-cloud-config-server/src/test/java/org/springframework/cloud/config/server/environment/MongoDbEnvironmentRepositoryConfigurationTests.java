@@ -38,11 +38,11 @@ public class MongoDbEnvironmentRepositoryConfigurationTests {
 	@Test
 	public void mongoDbEnvironmentRepositoryBeansConfiguredWhenDefault() {
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-				.withPropertyValues("spring.profiles.active=test,mongodb", "spring.main.web-application-type=none")
-				.run(context -> {
-					assertThat(context).hasSingleBean(MongoDbEnvironmentRepositoryFactory.class);
-					assertThat(context).hasSingleBean(MongoDbEnvironmentRepository.class);
-				});
+			.withPropertyValues("spring.profiles.active=test,mongodb", "spring.main.web-application-type=none")
+			.run(context -> {
+				assertThat(context).hasSingleBean(MongoDbEnvironmentRepositoryFactory.class);
+				assertThat(context).hasSingleBean(MongoDbEnvironmentRepository.class);
+			});
 	}
 
 	@Test
@@ -69,10 +69,10 @@ public class MongoDbEnvironmentRepositoryConfigurationTests {
 			ContextConsumer<? super AssertableWebApplicationContext> consumer) throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-				.withPropertyValues("spring.profiles.active=test,mongodb", "spring.main.web-application-type=none",
-						"spring.cloud.config.server.git.uri:" + uri,
-						"spring.cloud.config.server.mongodb.enabled:" + mongoDbEnabled)
-				.run(consumer);
+			.withPropertyValues("spring.profiles.active=test,mongodb", "spring.main.web-application-type=none",
+					"spring.cloud.config.server.git.uri:" + uri,
+					"spring.cloud.config.server.mongodb.enabled:" + mongoDbEnabled)
+			.run(consumer);
 	}
 
 }
