@@ -20,6 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -132,6 +133,11 @@ public class ConfigClientProperties {
 	 * The Accept header media type to send to config server.
 	 */
 	private String mediaType = EnvironmentMediaType.V2_JSON;
+
+	/**
+	 * The charset to read the resource from the config server.
+	 */
+	private Charset charset = StandardCharsets.UTF_8;
 
 	/**
 	 * Discovery properties.
@@ -258,6 +264,14 @@ public class ConfigClientProperties {
 
 	public void setMediaType(String mediaType) {
 		this.mediaType = mediaType;
+	}
+
+	public Charset getCharset() {
+		return charset;
+	}
+
+	public void setCharset(Charset charset) {
+		this.charset = charset;
 	}
 
 	public Discovery getDiscovery() {

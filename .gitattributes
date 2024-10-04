@@ -1,1 +1,2 @@
 **/src/test/resources/*-repo/** eol=lf
+**/foo_enc.properties text working-tree-encoding=UTF-8 eol=LF
