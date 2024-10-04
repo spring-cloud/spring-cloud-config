@@ -2,6 +2,7 @@
 |Name | Default | Description
 
 |spring.cloud.config.allow-override | `+++true+++` | Flag to indicate that {@link #isOverrideSystemProperties() systemPropertiesOverride} can be used. Set to false to prevent users from changing the default accidentally. Default true.
+|spring.cloud.config.charset | `+++UTF-8+++` | The charset to read the resource from the config server.
 |spring.cloud.config.discovery.enabled | `+++false+++` | Flag to indicate that config server discovery is enabled (config server URL will be looked up via discovery).
 |spring.cloud.config.discovery.service-id | `+++configserver+++` | Service id to locate config server.
 |spring.cloud.config.enabled | `+++true+++` | Flag to say that remote configuration is enabled. Default true;
