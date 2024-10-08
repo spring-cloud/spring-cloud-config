@@ -110,7 +110,7 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	 */
 	private boolean enableLabel = false;
 
-	private String defaultLabel = "master";
+	private String defaultLabel = "main";
 
 	private AppRoleProperties appRole = new AppRoleProperties();
 

@@ -60,7 +60,7 @@ The following table describes configurable Vault properties:
 |application
 
 |defaultLabel
-|master (Only used when `enableLabel` is set to `true`)
+|main (Only used when `enableLabel` is set to `true`)
 
 |enableLabel
 |false
@@ -169,7 +169,7 @@ When `myApp` has the `dev` profile enabled, properties written to all of the abo
 
 By default, Vault backend does not use the label when searching for secrets. You can change this by
 setting the `enableLabel` feature flag to `true` and, optionally, setting the `defaultLabel`.
-When `defaultLabel` is not provided `master` will be used.
+When `defaultLabel` is not provided `main` will be used.
 
 When `enableLabel` feature flag is on, the secrets in Vault should always have all three segments(application name, profile and label) in their paths.
 So the example in previous section, with enabled feature flag, would be like :

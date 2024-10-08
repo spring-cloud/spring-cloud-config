@@ -234,7 +234,7 @@ public class VaultEnvironmentRepositoryTests {
 		var properties = new VaultEnvironmentProperties();
 		properties.setKvVersion(2);
 
-		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, "main");
+		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, "label");
 
 		assertThat(e.getName()).isEqualTo("myapp");
 
@@ -284,31 +284,11 @@ public class VaultEnvironmentRepositoryTests {
 
 	@Test
 	public void findOneWithDefaultLabelWhenLabelEnabled() {
-		stubRestTemplate("secret/myapp,default,master", toEntityResponse("foo", "bar"));
-		stubRestTemplate("secret/application,default,master", toEntityResponse("def-foo", "def-bar"));
-
-		var properties = new VaultEnvironmentProperties();
-		properties.setEnableLabel(true);
-
-		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, null);
-
-		assertThat(e.getName()).isEqualTo("myapp");
-
-		assertThat(e.getPropertySources().size()).isEqualTo(2);
-		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,default,master");
-		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
-		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,default,master");
-		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
-	}
-
-	@Test
-	public void findOneWithCustomDefaultLabelWhenLabelEnabled() {
 		stubRestTemplate("secret/myapp,default,main", toEntityResponse("foo", "bar"));
 		stubRestTemplate("secret/application,default,main", toEntityResponse("def-foo", "def-bar"));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setEnableLabel(true);
-		properties.setDefaultLabel("main");
 
 		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, null);
 
@@ -322,13 +302,33 @@ public class VaultEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void findOneWithCustomDefaultLabelWhenLabelEnabled() {
+		stubRestTemplate("secret/myapp,default,custom", toEntityResponse("foo", "bar"));
+		stubRestTemplate("secret/application,default,custom", toEntityResponse("def-foo", "def-bar"));
+
+		var properties = new VaultEnvironmentProperties();
+		properties.setEnableLabel(true);
+		properties.setDefaultLabel("custom");
+
+		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, null);
+
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources().size()).isEqualTo(2);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:myapp,default,custom");
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application,default,custom");
+		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
+	}
+
+	@Test
 	public void findOneWithCustomLabelWhenLabelEnabled() {
 		stubRestTemplate("secret/myapp,default,my-label", toEntityResponse("foo", "bar"));
 		stubRestTemplate("secret/application,default,my-label", toEntityResponse(Map.of()));
 
 		var properties = new VaultEnvironmentProperties();
 		properties.setEnableLabel(true);
-		properties.setDefaultLabel("main");
+		properties.setDefaultLabel("custom");
 
 		var e = vaultEnvironmentRepository(properties).findOne("myapp", null, "my-label");
 
