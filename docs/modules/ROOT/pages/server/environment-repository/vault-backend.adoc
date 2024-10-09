@@ -59,6 +59,12 @@ The following table describes configurable Vault properties:
 |defaultKey
 |application
 
+|defaultLabel
+|main (Only used when `enableLabel` is set to `true`)
+
+|enableLabel
+|false
+
 |profileSeparator
 |,
 
@@ -157,6 +163,24 @@ secret/application
 Properties written to `secret/application` are available to <<_vault_server,all applications using the Config Server>>.
 An application with the name, `myApp`, would have any properties written to `secret/myApp` and `secret/application` available to it.
 When `myApp` has the `dev` profile enabled, properties written to all of the above paths would be available to it, with properties in the first path in the list taking priority over the others.
+
+[[enabling-serach-by-label]]
+== Enabling Search by Label
+
+By default, Vault backend does not use the label when searching for secrets. You can change this by
+setting the `enableLabel` feature flag to `true` and, optionally, setting the `defaultLabel`.
+When `defaultLabel` is not provided `main` will be used.
+
+When `enableLabel` feature flag is on, the secrets in Vault should always have all three segments(application name, profile and label) in their paths.
+So the example in previous section, with enabled feature flag, would be like :
+
+[source,sh]
+----
+secret/myApp,dev,myLabel
+secret/myApp,default,myLabel       # default profile
+secret/application,dev,myLabel     # default application name
+secret/application,default,myLabel # default application name and default profile.
+----
 
 [[decrypting-vault-secrets]]
 == Decrypting Vault Secrets in Property Sources
