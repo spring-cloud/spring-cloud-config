@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -77,7 +76,7 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 
 		List<String> applications = normalize(application, DEFAULT_APPLICATION);
 		List<String> profiles = normalize(profile, DEFAULT_PROFILE);
-		List<String> labels = normalize(label, this.defaultLabel);
+		List<String> labels = normalize(label);
 
 		Environment environment = new Environment(application, split(profile), label, null, null);
 		for (String l : labels) {
@@ -92,12 +91,20 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 	}
 
 	/**
-	 * Splits the comma delimited items and returns the reversed distinct items with given
+	 * Splits the comma-delimited items and returns the reversed distinct items with given
 	 * default item at the end.
 	 */
 	private List<String> normalize(String commaDelimitedItems, String defaultItem) {
-		var items = Stream.concat(Stream.of(defaultItem), Arrays.stream(split(commaDelimitedItems)))
+		return normalize(defaultItem + "," + commaDelimitedItems);
+	}
+
+	/**
+	 * Splits the comma-delimited items and returns the reversed distinct items.
+	 */
+	private List<String> normalize(String commaDelimitedItems) {
+		var items = Arrays.stream(split(commaDelimitedItems))
 			.distinct()
+			.filter(StringUtils::hasText)
 			.collect(Collectors.toList());
 
 		Collections.reverse(items);
