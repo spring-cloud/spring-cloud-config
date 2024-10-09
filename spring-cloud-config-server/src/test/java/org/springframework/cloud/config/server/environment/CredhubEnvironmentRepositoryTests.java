@@ -125,7 +125,7 @@ public class CredhubEnvironmentRepositoryTests {
 	public void shouldRetrieveGivenLabelsProfiles() {
 		stubCredentials("/myApp/prod/myLabel", credential("c1", "k1", "v1"));
 		stubCredentials("/myApp/cloud/mySecondLabel", credential("c2", "k2", "v2"));
-		stubCredentials("/myApp/prod/myThirdLabel", credential("c3", "k3", "v3"));
+		stubCredentials("/myApp/prod/master", credential("c3", "k3", "v3"));
 
 		Environment environment = this.credhubEnvironmentRepository.findOne("myApp", "prod,cloud",
 				"myLabel,mySecondLabel");
