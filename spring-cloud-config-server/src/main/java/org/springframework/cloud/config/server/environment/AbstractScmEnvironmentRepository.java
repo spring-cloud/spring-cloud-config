@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import io.micrometer.observation.ObservationRegistry;
 
@@ -37,7 +37,7 @@ import org.springframework.util.StringUtils;
 public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccessor
 		implements EnvironmentRepository, SearchPathLocator, Ordered {
 
-	private EnvironmentCleaner cleaner = new EnvironmentCleaner();
+	private final EnvironmentCleaner cleaner = new EnvironmentCleaner();
 
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
@@ -63,31 +63,54 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	@Override
 	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-		Environment result;
-		if (StringUtils.hasText(label) && label.contains(",")) {
-			List<String> labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
-			Collections.reverse(labels);
-			List<EnvironmentRepository> environmentRepositories = new ArrayList<>();
-			Environment env = new Environment(application, new String[] { profile }, label, null, null);
-			for (String l : labels) {
-				NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(getEnvironment(),
-						new NativeEnvironmentProperties(), this.observationRegistry);
-				Locations locations = getLocations(application, profile, l);
-				delegate.setSearchLocations(locations.getLocations());
-				env.addAll(delegate.findOne(application, profile, "", includeOrigin).getPropertySources());
-			}
-			result = env;
+		var environment = new Environment(application, StringUtils.commaDelimitedListToStringArray(profile), label, "",
+				"");
+
+		for (String l : splitAndReorder(label)) {
+			var e = findOneInternal(application, profile, l, includeOrigin);
+			environment.addAll(e.getPropertySources());
+			environment.setVersion(concat(e.getVersion(), environment.getVersion()));
 		}
-		else {
-			NativeEnvironmentRepository delegate = new NativeEnvironmentRepository(getEnvironment(),
-					new NativeEnvironmentProperties(), this.observationRegistry);
-			Locations locations = getLocations(application, profile, label);
-			delegate.setSearchLocations(locations.getLocations());
-			result = delegate.findOne(application, profile, "", includeOrigin);
-			result.setVersion(locations.getVersion());
+
+		return this.cleaner.clean(environment, getWorkingDirectory().toURI().toString(), getUri());
+	}
+
+	private Environment findOneInternal(String application, String profile, String label, boolean includeOrigin) {
+		var delegate = new NativeEnvironmentRepository(getEnvironment(), new NativeEnvironmentProperties(),
+				this.observationRegistry);
+		var locations = getLocations(application, profile, label);
+		delegate.setSearchLocations(locations.getLocations());
+		var environment = delegate.findOne(application, profile, "", includeOrigin);
+		environment.setVersion(locations.getVersion());
+		return environment;
+	}
+
+	private List<String> splitAndReorder(String label) {
+		var labels = Arrays.stream(StringUtils.commaDelimitedListToStringArray(label))
+			.filter(StringUtils::hasText)
+			.collect(Collectors.toList());
+
+		// just return the given label (null, empty or invalid...)
+		if (labels.isEmpty()) {
+			labels.add(label);
+			return labels;
 		}
-		result.setLabel(label);
-		return this.cleaner.clean(result, getWorkingDirectory().toURI().toString(), getUri());
+
+		Collections.reverse(labels);
+		return labels;
+	}
+
+	private String concat(String first, String second) {
+		if (StringUtils.hasText(first) && StringUtils.hasText(second)) {
+			return first + "," + second;
+		}
+		if (StringUtils.hasText(first)) {
+			return first;
+		}
+		if (StringUtils.hasText(second)) {
+			return second;
+		}
+		return "";
 	}
 
 	@Override
