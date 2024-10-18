@@ -22,6 +22,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -160,7 +161,7 @@ public class ResourceController {
 			String text = StreamUtils.copyToString(is, charset);
 			String ext = StringUtils.getFilenameExtension(resource.getFilename());
 			if (ext != null) {
-				ext = ext.toLowerCase();
+				ext = ext.toLowerCase(Locale.ROOT);
 			}
 			Environment environment = this.environmentRepository.findOne(name, profile, label, false);
 			if (resolvePlaceholders) {
