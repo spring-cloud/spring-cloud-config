@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.support;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
@@ -53,7 +54,7 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 	 * @return {@code true} if it can be handled
 	 */
 	public static boolean canHandle(String uri) {
-		return uri != null && uri.toLowerCase().startsWith("https://");
+		return uri != null && uri.toLowerCase(Locale.ROOT).startsWith("https://");
 	}
 
 	private static String stripFormattingPlaceholders(String string) {
