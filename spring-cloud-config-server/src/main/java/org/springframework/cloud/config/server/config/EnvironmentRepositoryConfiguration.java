@@ -323,7 +323,8 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public SpringVaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
-				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch, SpringVaultTemplateBuilder springVaultTemplateBuilder) {
+				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+				SpringVaultTemplateBuilder springVaultTemplateBuilder) {
 			return new SpringVaultEnvironmentRepositoryFactory(request, watch, springVaultTemplateBuilder);
 		}
 

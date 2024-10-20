@@ -49,7 +49,8 @@ public class SpringVaultEnvironmentRepositoryFactory
 		this.clientConfiguration = clientConfiguration;
 	}
 
-	public SpringVaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch, SpringVaultTemplateBuilder vaultTemplateBuilder) {
+	public SpringVaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
+			SpringVaultTemplateBuilder vaultTemplateBuilder) {
 		this.request = request;
 		this.watch = watch;
 		this.vaultTemplateBuilder = vaultTemplateBuilder;
