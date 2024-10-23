@@ -36,15 +36,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(classes = Application.class,
-	// Normally spring.cloud.config.enabled:true is the default but since we have the
-	// config server on the classpath we need to set it explicitly
-	// spring.config.import needs to come from orderingtest.yml to test this issue
-	// hence no spring.config.import here and config name change
-	properties = { "spring.application.name=profilesample", "spring.cloud.config.enabled=true",
-		"spring.config.name=orderingtest", "management.security.enabled=false",
-		"management.endpoints.web.exposure.include=*", "management.endpoint.env.show-values=ALWAYS",
-	"spring.cloud.config.label=label1,label2", "spring.cloud.config.send-all-labels=true"},
-	webEnvironment = RANDOM_PORT)
+		// Normally spring.cloud.config.enabled:true is the default but since we have the
+		// config server on the classpath we need to set it explicitly
+		// spring.config.import needs to come from orderingtest.yml to test this issue
+		// hence no spring.config.import here and config name change
+		properties = { "spring.application.name=profilesample", "spring.cloud.config.enabled=true",
+				"spring.config.name=orderingtest", "management.security.enabled=false",
+				"management.endpoints.web.exposure.include=*", "management.endpoint.env.show-values=ALWAYS",
+				"spring.cloud.config.label=label1,label2", "spring.cloud.config.send-all-labels=true" },
+		webEnvironment = RANDOM_PORT)
 public class ConfigServerAndClientMultiLabelTests {
 
 	private static final String BASE_PATH = new WebEndpointProperties().getBasePath();
@@ -59,7 +59,7 @@ public class ConfigServerAndClientMultiLabelTests {
 	@BeforeAll
 	public static void startConfigServer() {
 		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
-			"--spring.profiles.active=native", "--server.port=" + configPort, "--spring.config.name=server");
+				"--spring.profiles.active=native", "--server.port=" + configPort, "--spring.config.name=server");
 
 		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}
