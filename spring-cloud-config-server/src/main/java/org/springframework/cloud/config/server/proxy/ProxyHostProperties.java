@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.proxy;
 
+import java.util.Locale;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -93,12 +95,12 @@ public class ProxyHostProperties {
 
 		@JsonCreator
 		public static ProxyForScheme forLowerCaseName(String lowerCaseName) {
-			return ProxyForScheme.valueOf(lowerCaseName.toUpperCase());
+			return ProxyForScheme.valueOf(lowerCaseName.toUpperCase(Locale.ROOT));
 		}
 
 		@JsonValue
 		public String lowercaseName() {
-			return this.name().toLowerCase();
+			return this.name().toLowerCase(Locale.ROOT);
 		}
 
 	}

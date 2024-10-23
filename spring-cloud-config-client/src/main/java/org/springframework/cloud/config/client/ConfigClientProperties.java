@@ -371,8 +371,10 @@ public class ConfigClientProperties {
 			if (ObjectUtils.isEmpty(userInfo) || ":".equals(userInfo)) {
 				return result;
 			}
-			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build().toUriString();
-			result.uri = bare;
+			result.uri = UriComponentsBuilder.fromUriString(uri, UriComponentsBuilder.ParserType.WHAT_WG)
+				.userInfo(null)
+				.build()
+				.toUriString();
 
 			// if userInfo does not contain a :, then append a : to it
 			if (!userInfo.contains(":")) {
