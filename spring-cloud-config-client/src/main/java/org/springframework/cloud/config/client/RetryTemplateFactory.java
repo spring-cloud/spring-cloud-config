@@ -16,43 +16,23 @@
 
 package org.springframework.cloud.config.client;
 
-import java.lang.reflect.Field;
-
 import org.apache.commons.logging.Log;
 
 import org.springframework.retry.support.RetryTemplate;
-import org.springframework.util.ReflectionUtils;
 
 public final class RetryTemplateFactory {
-
-	private static final Field field;
-
-	static {
-		field = ReflectionUtils.findField(RetryTemplate.class, "logger");
-		if (field != null) {
-			ReflectionUtils.makeAccessible(field);
-		}
-	}
 
 	private RetryTemplateFactory() {
 
 	}
 
 	public static RetryTemplate create(RetryProperties properties, Log log) {
-		RetryTemplate retryTemplate = RetryTemplate.builder()
+		return RetryTemplate.builder()
 			.maxAttempts(properties.getMaxAttempts())
 			.exponentialBackoff(properties.getInitialInterval(), properties.getMultiplier(),
 					properties.getMaxInterval(), properties.isUseRandomPolicy())
+			.withLogger(log)
 			.build();
-		try {
-			field.set(retryTemplate, log);
-		}
-		catch (IllegalAccessException e) {
-			if (log.isErrorEnabled()) {
-				log.error("error setting retry log", e);
-			}
-		}
-		return retryTemplate;
 	}
 
 }

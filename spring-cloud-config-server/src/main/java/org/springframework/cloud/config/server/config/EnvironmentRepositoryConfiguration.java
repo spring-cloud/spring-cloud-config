@@ -88,12 +88,15 @@ import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepo
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.vault.SpringVaultClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientConfiguration;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.vault.SpringVaultTemplateBuilder;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport;
 import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -319,10 +322,16 @@ public class EnvironmentRepositoryConfiguration {
 	static class SpringVaultFactoryConfig {
 
 		@Bean
+		public SpringVaultTemplateBuilder springVaultTemplateBuilder(ConfigTokenProvider configTokenProvider,
+				List<SpringVaultClientAuthenticationProvider> authProviders, ApplicationContext applicationContext) {
+			return new SpringVaultTemplateBuilder(configTokenProvider, authProviders, applicationContext);
+		}
+
+		@Bean
 		public SpringVaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
 				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-				SpringVaultClientConfiguration vaultClientConfiguration) {
-			return new SpringVaultEnvironmentRepositoryFactory(request, watch, vaultClientConfiguration);
+				SpringVaultTemplateBuilder springVaultTemplateBuilder) {
+			return new SpringVaultEnvironmentRepositoryFactory(request, watch, springVaultTemplateBuilder);
 		}
 
 	}
