@@ -18,6 +18,7 @@
 		<jgit.version>6.6.1.202309021850-r</jgit.version>
 		<spring-vault.version>3.1.1</spring-vault.version>
 		<spring-credhub.version>2.1.1.RELEASE</spring-credhub.version>
+		<spring-retry.version>2.0.10</spring-retry.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -40,6 +41,11 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-config-monitor</artifactId>
 				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.retry</groupId>
+				<artifactId>spring-retry</artifactId>
+				<version>${spring-retry.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.vault</groupId>
