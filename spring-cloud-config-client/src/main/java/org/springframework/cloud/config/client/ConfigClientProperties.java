@@ -179,6 +179,13 @@ public class ConfigClientProperties {
 	 */
 	private Map<String, String> headers = new HashMap<>();
 
+	/**
+	 * If set to true the client will send all labels to the server instead of sending one
+	 * at a time. Support for this would require a config server version of 4.2.0 or
+	 * higher.
+	 */
+	private boolean sendAllLabels = false;
+
 	ConfigClientProperties() {
 	}
 
@@ -338,6 +345,14 @@ public class ConfigClientProperties {
 		this.headers = headers;
 	}
 
+	public boolean isSendAllLabels() {
+		return sendAllLabels;
+	}
+
+	public void setSendAllLabels(boolean sendAllLabels) {
+		this.sendAllLabels = sendAllLabels;
+	}
+
 	private Credentials extractCredentials(int index) {
 		Credentials result = new Credentials();
 		int noOfUrl = this.uri.length;
@@ -425,7 +440,7 @@ public class ConfigClientProperties {
 				+ Arrays.toString(this.uri) + ", mediaType=" + this.mediaType + ", discovery=" + this.discovery
 				+ ", failFast=" + this.failFast + ", token=" + this.token + ", requestConnectTimeout="
 				+ this.requestConnectTimeout + ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
-				+ this.sendState + ", headers=" + this.headers + "]";
+				+ this.sendState + ", headers=" + this.headers + ", sendAllLabels=" + this.sendAllLabels + "]";
 	}
 
 	/**

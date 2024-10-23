@@ -113,12 +113,18 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		Exception error = null;
 		String errorBody = null;
 		try {
-			String[] labels = new String[] { "" };
-			if (StringUtils.hasText(properties.getLabel())) {
+			String[] labels;
+			if (!properties.isSendAllLabels() && StringUtils.hasText(properties.getLabel())) {
 				labels = StringUtils.commaDelimitedListToStringArray(properties.getLabel());
 			}
+			else {
+				// This could contain a comma separated list of labels sent directly to
+				// the config server
+				// For this to work you would need to be using a config server version of
+				// 4.2.0 or later
+				labels = new String[] { StringUtils.hasText(properties.getLabel()) ? properties.getLabel() : "" };
+			}
 			String state = ConfigClientStateHolder.getState();
-			// Try all the labels until one works
 			for (String label : labels) {
 				Environment result = getRemoteEnvironment(context, resource, label.trim(), state);
 				if (result != null) {
