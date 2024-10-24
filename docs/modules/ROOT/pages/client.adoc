@@ -133,6 +133,25 @@ Label can also be provided as a comma-separated list.
 This behavior can be useful when working on a feature branch.
 For instance, you might want to align the config label with your branch but make it optional (in that case, use `spring.cloud.config.label=myfeature,develop`).
 
+[[requesting-multiple-labels]]
+== Requesting Multiple Labels
+
+Prior to Spring Cloud Config 4.2.0, if you set `spring.cloud.config.label` to a comma-separated list of labels, the Config Client would
+try each label by making a request to the Config Server until it found one that worked.  This meant that if the first label was found, subsequent labels would not be tried.
+
+As of Spring Cloud Config 4.2.0 if you set `spring.cloud.config.label` to a comma-separated list of labels **AND** set
+`spring.cloud.config.send-all-labels` the Config Client will make a single request to the Config Server with the comma-separated list of labels
+and if **THE CONFIG SERVER IS USING VERSION 4.2.0 OR LATER** it will return a single response with property sources for all the labels.
+
+NOTE: Setting `spring.cloud-config.send-all-labels` to `true`, setting `spring.cloud.config.label` to a comma-separated list of labels,
+and using a Config Server version prior to 4.2.0 will result in unexpected behavior because the Config Server will try and find a label
+that matches the comma-separated list value and will not try and split apart the labels.
+
+By sending all labels in a single request you can reduce the number of requests made to the Config Server.
+
+`spring.cloud.config.send-all-labels` is set to `false` by default so the old behavior is still the default, and it also maintains
+compatibility with older versions of the Config Server.
+
 [[specifying-multiple-urls-for-the-config-server]]
 == Specifying Multiple URLs for the Config Server
 
