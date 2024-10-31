@@ -167,7 +167,6 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 							String propertySourceName = propertySource.getName();
 							List<Option> options = new ArrayList<>();
 							options.add(Option.IGNORE_IMPORTS);
-							options.add(Option.IGNORE_PROFILES);
 							// TODO: the profile is now available on the backend
 							// in a future minor, add the profile associated with a
 							// PropertySource see
@@ -188,6 +187,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 										&& propertySourceName.matches(".*[-,]" + profile + "\\b.*"))) {
 									// // TODO: switch to Options.with() when implemented
 									options.add(Option.PROFILE_SPECIFIC);
+									options.add(Option.IGNORE_PROFILES);
 								}
 							}
 							return ConfigData.Options.of(options.toArray(new Option[0]));

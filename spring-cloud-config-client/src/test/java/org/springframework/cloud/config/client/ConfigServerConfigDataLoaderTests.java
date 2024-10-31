@@ -406,10 +406,16 @@ public class ConfigServerConfigDataLoaderTests {
 		assertThat(configData.getPropertySources()).hasSize(3);
 		assertThat(configData.getOptions(configData.getPropertySources().get(0))
 			.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
+		assertThat(configData.getOptions(configData.getPropertySources().get(0))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(1))
 			.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
+		assertThat(configData.getOptions(configData.getPropertySources().get(1))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(2))
 			.contains(ConfigData.Option.IGNORE_IMPORTS)).isTrue();
+		assertThat(configData.getOptions(configData.getPropertySources().get(2))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isFalse();
 
 	}
 
@@ -532,18 +538,32 @@ public class ConfigServerConfigDataLoaderTests {
 		assertThat(configData.getPropertySources()).hasSize(7);
 		assertThat(configData.getOptions(configData.getPropertySources().get(0))
 			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(0))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(1))
 			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
+		assertThat(configData.getOptions(configData.getPropertySources().get(1))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isTrue();
 		assertThat(configData.getOptions(configData.getPropertySources().get(2))
 			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(2))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(3))
 			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(3))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(4))
 			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(4))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(5))
 			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(configData.getOptions(configData.getPropertySources().get(5))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isFalse();
 		assertThat(configData.getOptions(configData.getPropertySources().get(6))
 			.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
+		assertThat(configData.getOptions(configData.getPropertySources().get(6))
+			.contains(ConfigData.Option.IGNORE_PROFILES)).isTrue();
 	}
 
 	@Test
