@@ -50,6 +50,10 @@ final class ConfigServerInstanceMonitor implements SmartApplicationListener {
 		this.instanceProvider = instanceProvider;
 	}
 
+	public ConfigClientProperties getConfig() {
+		return config;
+	}
+
 	void setRefreshOnStartup(boolean refreshOnStartup) {
 		this.refreshOnStartup = refreshOnStartup;
 	}
