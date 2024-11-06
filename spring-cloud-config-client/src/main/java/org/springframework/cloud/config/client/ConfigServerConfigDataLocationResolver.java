@@ -113,11 +113,10 @@ public class ConfigServerConfigDataLocationResolver
 		Binder binder = context.getBinder();
 		BindHandler bindHandler = getBindHandler(context);
 
-		ConfigClientProperties configClientProperties;
-		if (context.getBootstrapContext().isRegistered(ConfigClientProperties.class)) {
-			configClientProperties = binder
+		ConfigClientProperties configClientProperties = binder
 				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
 				.orElseGet(ConfigClientProperties::new);
+		if (context.getBootstrapContext().isRegistered(ConfigServerInstanceMonitor.class)) {
 			boolean discoveryEnabled = context.getBinder()
 				.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(context))
 				.orElse(false);
@@ -126,19 +125,15 @@ public class ConfigServerConfigDataLocationResolver
 			// from the properties from the context. These are set in
 			// ConfigServerInstanceMonitor.refresh which will only
 			// be called the first time we fetch configuration.
+			// So here we should get the ConfigClientProperties from ConfigServerInstanceMonitor
 			if (discoveryEnabled) {
-				ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()
-					.get(ConfigClientProperties.class);
-
+				ConfigServerInstanceMonitor configServerInstanceMonitor = context.getBootstrapContext()
+						.get(ConfigServerInstanceMonitor.class);
+				ConfigClientProperties bootstrapConfigClientProperties = configServerInstanceMonitor.getConfig();
 				configClientProperties.setUri(bootstrapConfigClientProperties.getUri());
 				configClientProperties.setPassword(bootstrapConfigClientProperties.getPassword());
 				configClientProperties.setUsername(bootstrapConfigClientProperties.getUsername());
 			}
-		}
-		else {
-			configClientProperties = binder
-				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
-				.orElseGet(ConfigClientProperties::new);
 		}
 		if (!StringUtils.hasText(configClientProperties.getName())
 				|| "application".equals(configClientProperties.getName())) {
