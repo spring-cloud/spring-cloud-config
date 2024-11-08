@@ -35,6 +35,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
+import org.springframework.cloud.endpoint.event.RefreshEvent;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -129,6 +130,30 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		Credentials credentials2 = properties.getCredentials(1);
 		assertThat(credentials1.getUri()).isEqualTo("https://localhost:8888/");
 		assertThat(credentials2.getUri()).isEqualTo("http://localhost1:8888/");
+	}
+
+	@Test
+	public void verifyInstanceMonitorUpdates() {
+		ServiceInstance info1 = new DefaultServiceInstance("app1:8888", "app", "localhost", 8888, true);
+		ServiceInstance info2 = new DefaultServiceInstance("app2:8888", "app", "localhost1", 8888, false);
+		givenDiscoveryClientReturnsInfo(info1, info2);
+
+		setupAndRun();
+
+		verifyDiscoveryClientCalledOnce();
+
+		ConfigServerInstanceMonitor instanceMonitor = this.context.getBean(ConfigServerInstanceMonitor.class);
+		assertThat(instanceMonitor.getUri().length).isEqualTo(2);
+		assertThat(instanceMonitor.getUri()[0]).isEqualTo("https://localhost:8888/");
+		assertThat(instanceMonitor.getUri()[1]).isEqualTo("http://localhost1:8888/");
+
+		givenDiscoveryClientReturnsInfo(info1);
+
+		context.publishEvent(new HeartbeatEvent(this.context, "new"));
+		context.publishEvent(new RefreshEvent(this.context, "new", null));
+		instanceMonitor = this.context.getBean(ConfigServerInstanceMonitor.class);
+		assertThat(instanceMonitor.getUri().length).isEqualTo(1);
+		assertThat(instanceMonitor.getUri()[0]).isEqualTo("https://localhost:8888/");
 	}
 
 	@Test
