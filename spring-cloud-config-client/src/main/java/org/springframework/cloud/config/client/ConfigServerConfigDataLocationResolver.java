@@ -123,16 +123,17 @@ public class ConfigServerConfigDataLocationResolver
 				.orElse(false);
 			// In the case where discovery is enabled we need to extract the config server
 			// uris, username, and password
-			// from the properties from the context. These are set in
+			// from the ConfigServiceMonitor. These are set in
 			// ConfigServerInstanceMonitor.refresh which will only
 			// be called the first time we fetch configuration.
+			// They will continue to be updated as HeartbeatEvents are received.
 			if (discoveryEnabled) {
-				ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()
-					.get(ConfigClientProperties.class);
+				ConfigServerInstanceMonitor instanceMonitor = context.getBootstrapContext()
+					.get(ConfigServerInstanceMonitor.class);
 
-				configClientProperties.setUri(bootstrapConfigClientProperties.getUri());
-				configClientProperties.setPassword(bootstrapConfigClientProperties.getPassword());
-				configClientProperties.setUsername(bootstrapConfigClientProperties.getUsername());
+				configClientProperties.setUri(instanceMonitor.getUri());
+				configClientProperties.setPassword(instanceMonitor.getPassword());
+				configClientProperties.setUsername(instanceMonitor.getUsername());
 			}
 		}
 		else {

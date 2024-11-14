@@ -82,6 +82,18 @@ final class ConfigServerInstanceMonitor implements SmartApplicationListener {
 		}
 	}
 
+	String[] getUri() {
+		return this.config.getUri();
+	}
+
+	String getUsername() {
+		return this.config.getUsername();
+	}
+
+	String getPassword() {
+		return this.config.getPassword();
+	}
+
 	void refresh() {
 		try {
 			String serviceId = this.config.getDiscovery().getServiceId();
