@@ -86,6 +86,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 		String[] profileArray = parseProfiles(profiles);
 		List<String> apps = Arrays.asList(StringUtils.commaDelimitedListToStringArray(application.replace(" ", "")));
+		Collections.reverse(apps);
 		if (!apps.contains(serverProperties.getDefaultApplicationName())) {
 			apps = new ArrayList<>(apps);
 			apps.add(serverProperties.getDefaultApplicationName());
