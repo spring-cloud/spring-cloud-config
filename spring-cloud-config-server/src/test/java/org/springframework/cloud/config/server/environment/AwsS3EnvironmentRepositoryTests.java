@@ -257,10 +257,12 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findWithMultipleApplicationAllFound() throws UnsupportedEncodingException {
-		putFiles("foo-profile1.yml", jsonContent);
-		String versionId = putFiles("bar-profile1.yml", jsonContent);
+		String versionId = putFiles("foo-profile1.yml", jsonContent);
+		putFiles("bar-profile1.yml", jsonContent);
 
 		final Environment env = envRepo.findOne("foo,bar", "profile1", null);
+		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("s3:bar-profile1");
+		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("s3:foo-profile1");
 
 		assertExpectedEnvironment(env, "foo,bar", null, versionId, 2, "profile1");
 
