@@ -27,12 +27,14 @@
 		<micrometer-docs-generator.inclusionPattern>.*</micrometer-docs-generator.inclusionPattern>
 		<micrometer-docs-generator.outputPath>${maven.multiModuleProjectDirectory}/docs/modules/ROOT/partials/</micrometer-docs-generator.outputPath>
 	</properties>
+	<!--
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>spring-cloud-starter-config</artifactId>
 		</dependency>
 	</dependencies>
+	-->
 	<build>
 		<sourceDirectory>src/main/asciidoc</sourceDirectory>
 	</build>
