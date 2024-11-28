@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.environment.SearchPathLocator;
@@ -46,6 +48,8 @@ public class GenericResourceRepository implements ResourceRepository, ResourceLo
 
 	private ConfigServerProperties properties;
 
+	private final Lock resourceLock = new ReentrantLock();
+
 	public GenericResourceRepository(SearchPathLocator service) {
 		this.service = service;
 	}
@@ -61,38 +65,43 @@ public class GenericResourceRepository implements ResourceRepository, ResourceLo
 	}
 
 	@Override
-	public synchronized Resource findOne(String application, String profile, String label, String path) {
-
-		if (StringUtils.hasText(path)) {
-			String[] locations = this.service.getLocations(application, profile, label).getLocations();
-			if (!ObjectUtils.isEmpty(properties) && properties.isReverseLocationOrder()) {
-				Collections.reverse(Arrays.asList(locations));
-			}
-			ArrayList<Resource> locationResources = new ArrayList<>();
-			for (String location : locations) {
-				if (!PathUtils.isInvalidEncodedLocation(location)) {
-					locationResources.add(this.resourceLoader.getResource(location.replaceFirst("optional:", "")));
+	public Resource findOne(String application, String profile, String label, String path) {
+		try {
+			this.resourceLock.lock();
+			if (StringUtils.hasText(path)) {
+				String[] locations = this.service.getLocations(application, profile, label).getLocations();
+				if (!ObjectUtils.isEmpty(properties) && properties.isReverseLocationOrder()) {
+					Collections.reverse(Arrays.asList(locations));
 				}
-			}
+				ArrayList<Resource> locationResources = new ArrayList<>();
+				for (String location : locations) {
+					if (!PathUtils.isInvalidEncodedLocation(location)) {
+						locationResources.add(this.resourceLoader.getResource(location.replaceFirst("optional:", "")));
+					}
+				}
 
-			try {
-				for (Resource location : locationResources) {
-					for (String local : getProfilePaths(profile, path)) {
-						if (!PathUtils.isInvalidPath(local) && !PathUtils.isInvalidEncodedPath(local)) {
-							Resource file = location.createRelative(local);
-							if (file.exists() && file.isReadable()
-									&& PathUtils.checkResource(file, location, locationResources)) {
-								return file;
+				try {
+					for (Resource location : locationResources) {
+						for (String local : getProfilePaths(profile, path)) {
+							if (!PathUtils.isInvalidPath(local) && !PathUtils.isInvalidEncodedPath(local)) {
+								Resource file = location.createRelative(local);
+								if (file.exists() && file.isReadable()
+										&& PathUtils.checkResource(file, location, locationResources)) {
+									return file;
+								}
 							}
 						}
 					}
 				}
+				catch (IOException e) {
+					throw new NoSuchResourceException("Error : " + path + ". (" + e.getMessage() + ")");
+				}
 			}
-			catch (IOException e) {
-				throw new NoSuchResourceException("Error : " + path + ". (" + e.getMessage() + ")");
-			}
+			throw new NoSuchResourceException("Not found: " + path);
 		}
-		throw new NoSuchResourceException("Not found: " + path);
+		finally {
+			this.resourceLock.unlock();
+		}
 	}
 
 	private Collection<String> getProfilePaths(String profiles, String path) {

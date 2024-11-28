@@ -70,16 +70,17 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	@Override
-	public synchronized Locations getLocations(String application, String profile, String label) {
-		if (label == null) {
-			label = this.defaultLabel;
-		}
+	public Locations getLocations(String application, String profile, String label) {
 		SvnOperationFactory svnOperationFactory = new SvnOperationFactory();
-		if (hasText(getUsername())) {
-			svnOperationFactory.setAuthenticationManager(
-					new DefaultSVNAuthenticationManager(null, false, getUsername(), getPassword()));
-		}
 		try {
+			this.globalLock.lock();
+			if (label == null) {
+				label = this.defaultLabel;
+			}
+			if (hasText(getUsername())) {
+				svnOperationFactory.setAuthenticationManager(
+						new DefaultSVNAuthenticationManager(null, false, getUsername(), getPassword()));
+			}
 			String version;
 			if (new File(getWorkingDirectory(), ".svn").exists()) {
 				version = update(svnOperationFactory, label);
@@ -93,6 +94,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 			throw new IllegalStateException("Cannot checkout repository", e);
 		}
 		finally {
+			this.globalLock.unlock();
 			svnOperationFactory.dispose();
 		}
 	}

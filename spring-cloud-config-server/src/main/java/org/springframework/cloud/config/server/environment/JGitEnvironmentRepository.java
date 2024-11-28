@@ -253,34 +253,46 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	@Override
-	public synchronized Locations getLocations(String application, String profile, String label) {
-		if (label == null) {
-			label = this.defaultLabel;
-		}
-		String version;
+	public Locations getLocations(String application, String profile, String label) {
 		try {
-			version = refresh(label);
-		}
-		catch (Exception e) {
-			if (this.defaultLabel.equals(label) && JGitEnvironmentProperties.MAIN_LABEL.equals(this.defaultLabel)
-					&& tryMasterBranch) {
-				logger.info("Could not refresh default label " + label, e);
-				logger.info("Will try to refresh master label instead.");
-				version = refresh(JGitEnvironmentProperties.MASTER_LABEL);
+			this.globalLock.lock();
+			if (label == null) {
+				label = this.defaultLabel;
 			}
-			else {
-				throw e;
+			String version;
+			try {
+				version = refresh(label);
 			}
+			catch (Exception e) {
+				if (this.defaultLabel.equals(label) && JGitEnvironmentProperties.MAIN_LABEL.equals(this.defaultLabel)
+						&& tryMasterBranch) {
+					logger.info("Could not refresh default label " + label, e);
+					logger.info("Will try to refresh master label instead.");
+					version = refresh(JGitEnvironmentProperties.MASTER_LABEL);
+				}
+				else {
+					throw e;
+				}
+			}
+			return new Locations(application, profile, label, version,
+					getSearchLocations(getWorkingDirectory(), application, profile, label));
 		}
-		return new Locations(application, profile, label, version,
-				getSearchLocations(getWorkingDirectory(), application, profile, label));
+		finally {
+			this.globalLock.unlock();
+		}
 	}
 
 	@Override
-	public synchronized void afterPropertiesSet() throws Exception {
-		Assert.state(getUri() != null, MESSAGE);
-		if (this.cloneOnStart) {
-			initClonedRepository();
+	public void afterPropertiesSet() throws Exception {
+		try {
+			this.globalLock.lock();
+			Assert.state(getUri() != null, MESSAGE);
+			if (this.cloneOnStart) {
+				initClonedRepository();
+			}
+		}
+		finally {
+			this.globalLock.unlock();
 		}
 	}
 
@@ -617,20 +629,26 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		}
 	}
 
-	// Synchronize here so that multiple requests don't all try and delete the
+	// Lock here so that multiple requests don't all try and delete the
 	// base dir
 	// together (this is a once only operation, so it only holds things up on
 	// the first
 	// request).
-	private synchronized Git copyRepository() throws IOException, GitAPIException {
-		deleteBaseDirIfExists();
-		getBasedir().mkdirs();
-		Assert.state(getBasedir().exists(), "Could not create basedir: " + getBasedir());
-		if (getUri().startsWith(FILE_URI_PREFIX)) {
-			return copyFromLocalRepository();
+	private Git copyRepository() throws IOException, GitAPIException {
+		try {
+			this.globalLock.lock();
+			deleteBaseDirIfExists();
+			getBasedir().mkdirs();
+			Assert.state(getBasedir().exists(), "Could not create basedir: " + getBasedir());
+			if (getUri().startsWith(FILE_URI_PREFIX)) {
+				return copyFromLocalRepository();
+			}
+			else {
+				return cloneToBasedir();
+			}
 		}
-		else {
-			return cloneToBasedir();
+		finally {
+			this.globalLock.unlock();
 		}
 	}
 

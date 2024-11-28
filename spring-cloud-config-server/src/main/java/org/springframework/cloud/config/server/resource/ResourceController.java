@@ -24,6 +24,8 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -74,6 +76,8 @@ public class ResourceController {
 	private Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
 
 	private UrlPathHelper helper = new UrlPathHelper();
+
+	private final Lock resourceLock = new ReentrantLock();
 
 	private boolean encryptEnabled = false;
 
@@ -134,49 +138,55 @@ public class ResourceController {
 	}
 
 	/**
-	 * This method is synchronized because the underlying EnvironmentRespositorys may not
+	 * This method is locked because the underlying EnvironmentRepositorys may not
 	 * be threadsafe (JGit for example). Calling this method could result in an update to
 	 * the files on disk.
 	 */
-	synchronized String retrieve(ServletWebRequest request, String name, String profile, String label, String path,
+	String retrieve(ServletWebRequest request, String name, String profile, String label, String path,
 			boolean resolvePlaceholders, String acceptedCharset) throws IOException {
-		name = Environment.normalize(name);
-		label = Environment.normalize(label);
-		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
-		if (checkNotModified(request, resource)) {
-			// Content was not modified. Just return.
-			return null;
+		try {
+			this.resourceLock.lock();
+			name = Environment.normalize(name);
+			label = Environment.normalize(label);
+			Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+			if (checkNotModified(request, resource)) {
+				// Content was not modified. Just return.
+				return null;
+			}
+			// ensure InputStream will be closed to prevent file locks on Windows
+			try (InputStream is = resource.getInputStream()) {
+
+				Charset charset = StandardCharsets.UTF_8;
+				try {
+					charset = Charset.forName(acceptedCharset);
+				}
+				catch (UnsupportedCharsetException e) {
+					logger.warn("The accepted charset received from the client is not supported. Using UTF-8 instead.", e);
+				}
+
+				String text = StreamUtils.copyToString(is, charset);
+				String ext = StringUtils.getFilenameExtension(resource.getFilename());
+				if (ext != null) {
+					ext = ext.toLowerCase(Locale.ROOT);
+				}
+				Environment environment = this.environmentRepository.findOne(name, profile, label, false);
+				if (resolvePlaceholders) {
+					text = resolvePlaceholders(prepareEnvironment(environment), text);
+				}
+				if (ext != null && encryptEnabled && plainTextEncryptEnabled) {
+					ResourceEncryptor re = this.resourceEncryptorMap.get(ext);
+					if (re == null) {
+						logger.warn("Cannot decrypt for extension " + ext);
+					}
+					else {
+						text = re.decrypt(text, environment);
+					}
+				}
+				return text;
+			}
 		}
-		// ensure InputStream will be closed to prevent file locks on Windows
-		try (InputStream is = resource.getInputStream()) {
-
-			Charset charset = StandardCharsets.UTF_8;
-			try {
-				charset = Charset.forName(acceptedCharset);
-			}
-			catch (UnsupportedCharsetException e) {
-				logger.warn("The accepted charset received from the client is not supported. Using UTF-8 instead.", e);
-			}
-
-			String text = StreamUtils.copyToString(is, charset);
-			String ext = StringUtils.getFilenameExtension(resource.getFilename());
-			if (ext != null) {
-				ext = ext.toLowerCase(Locale.ROOT);
-			}
-			Environment environment = this.environmentRepository.findOne(name, profile, label, false);
-			if (resolvePlaceholders) {
-				text = resolvePlaceholders(prepareEnvironment(environment), text);
-			}
-			if (ext != null && encryptEnabled && plainTextEncryptEnabled) {
-				ResourceEncryptor re = this.resourceEncryptorMap.get(ext);
-				if (re == null) {
-					logger.warn("Cannot decrypt for extension " + ext);
-				}
-				else {
-					text = re.decrypt(text, environment);
-				}
-			}
-			return text;
+		finally {
+			this.resourceLock.unlock();
 		}
 	}
 
@@ -209,19 +219,25 @@ public class ResourceController {
 		return binary(null, name, profile, label, path);
 	}
 
-	private synchronized byte[] binary(ServletWebRequest request, String name, String profile, String label,
+	private byte[] binary(ServletWebRequest request, String name, String profile, String label,
 			String path) throws IOException {
-		name = Environment.normalize(name);
-		label = Environment.normalize(label);
-		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
-		if (checkNotModified(request, resource)) {
-			// Content was not modified. Just return.
-			return null;
+		try {
+			this.resourceLock.lock();
+			name = Environment.normalize(name);
+			label = Environment.normalize(label);
+			Resource resource = this.resourceRepository.findOne(name, profile, label, path);
+			if (checkNotModified(request, resource)) {
+				// Content was not modified. Just return.
+				return null;
+			}
+			// TODO: is this line needed for side effects?
+			prepareEnvironment(this.environmentRepository.findOne(name, profile, label));
+			try (InputStream is = resource.getInputStream()) {
+				return StreamUtils.copyToByteArray(is);
+			}
 		}
-		// TODO: is this line needed for side effects?
-		prepareEnvironment(this.environmentRepository.findOne(name, profile, label));
-		try (InputStream is = resource.getInputStream()) {
-			return StreamUtils.copyToByteArray(is);
+		finally {
+			this.resourceLock.unlock();
 		}
 	}
 
