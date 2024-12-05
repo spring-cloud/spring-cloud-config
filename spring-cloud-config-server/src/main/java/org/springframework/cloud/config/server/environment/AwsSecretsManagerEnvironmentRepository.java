@@ -112,24 +112,26 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 		List<String> reversedProfiles = new ArrayList<>(Arrays.asList(profiles));
 		Collections.reverse(reversedProfiles);
+		if (!reversedProfiles.contains(defaultProfile)) {
+			reversedProfiles.add(defaultProfile);
+		}
+
+		List<String> applications = Arrays.asList(StringUtils.commaDelimitedListToStringArray(application));
+		Collections.reverse(applications);
+		if (!applications.contains(defaultApplication)) {
+			applications = new ArrayList<>(applications);
+			applications.add(defaultApplication);
+		}
+
 		for (String l : labels) {
 			for (String profile : reversedProfiles) {
-				addPropertySource(environment, application, profile, l);
-				if (!defaultApplication.equals(application)) {
-					addPropertySource(environment, defaultApplication, profile, l);
+				for (String app : applications) {
+					addPropertySource(environment, app, profile, l);
 				}
 			}
-			if (!Arrays.asList(profiles).contains(defaultProfile)) {
-				addPropertySource(environment, application, defaultProfile, l);
+			for (String app : applications) {
+				addPropertySource(environment, app, null, l);
 			}
-			if (!Arrays.asList(profiles).contains(defaultProfile) && !defaultApplication.equals(application)) {
-				addPropertySource(environment, defaultApplication, defaultProfile, l);
-			}
-
-			if (!defaultApplication.equals(application)) {
-				addPropertySource(environment, application, null, l);
-			}
-			addPropertySource(environment, defaultApplication, null, l);
 		}
 
 		return environment;
