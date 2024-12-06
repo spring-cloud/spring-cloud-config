@@ -61,7 +61,7 @@ public class ConfigServerConfigDataLocationResolver
 	 */
 	public static final String PREFIX = "configserver:";
 	static final boolean RSA_IS_PRESENT = ClassUtils
-		.isPresent("org.springframework.security.crypto.encrypt", null);
+		.isPresent("org.springframework.security.crypto.encrypt.RsaSecretEncryptor", null);
 
 	private final Log log;
 
