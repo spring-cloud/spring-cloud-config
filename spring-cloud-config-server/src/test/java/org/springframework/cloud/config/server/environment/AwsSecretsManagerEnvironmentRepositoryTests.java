@@ -825,6 +825,59 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testFindOneWithExistingApplicationAndMultipleExistingProfileAndExistingLabelWhenMultipleLabelIsSet() {
+		String application = "foo";
+		String profile = "prod,east";
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+		String label = "release,latest";
+
+		Map<String, PropertySource> propertySources = Map.of(
+			"aws:secrets:/secret/foo-prod/", new PropertySource("aws:secrets:/secret/foo-prod/", getFooProdProperties()),
+			"aws:secrets:/secret/foo-east/", new PropertySource("aws:secrets:/secret/foo-east/", getFooEastProperties()),
+			"aws:secrets:/secret/foo/", new PropertySource("aws:secrets:/secret/foo/", getFooProperties()),
+			"aws:secrets:/secret/foo-default/", new PropertySource("aws:secrets:/secret/foo-default/", getFooDefaultProperties()),
+			"aws:secrets:/secret/application-prod/", new PropertySource("aws:secrets:/secret/application-prod/", getApplicationProdProperties()),
+			"aws:secrets:/secret/application-default/", new PropertySource("aws:secrets:/secret/application-default/", getApplicationDefaultProperties()),
+			"aws:secrets:/secret/application/", new PropertySource("aws:secrets:/secret/application/", getApplicationProperties()),
+			"aws:secrets:/secret/application-east/", new PropertySource("aws:secrets:/secret/application-east/", getApplicationEastProperties())
+		);
+
+		// Expected environment
+		Environment expectedEnv = new Environment(application, profiles, label, null, null);
+		expectedEnv.addAll(Arrays.asList(
+			// "latest" label
+			propertySources.get("aws:secrets:/secret/foo-prod/"),
+			propertySources.get("aws:secrets:/secret/application-default/"),
+			propertySources.get("aws:secrets:/secret/application/"),
+			// "release" label
+			propertySources.get("aws:secrets:/secret/foo-east/"),
+			propertySources.get("aws:secrets:/secret/application-east/"),
+			propertySources.get("aws:secrets:/secret/application-prod/"),
+			propertySources.get("aws:secrets:/secret/foo-default/"),
+			propertySources.get("aws:secrets:/secret/foo/")
+		));
+
+		// Secrets setup
+		putSecrets("release", Arrays.asList(
+			propertySources.get("aws:secrets:/secret/foo-east/"),
+			propertySources.get("aws:secrets:/secret/application-east/"),
+			propertySources.get("aws:secrets:/secret/application-prod/"),
+			propertySources.get("aws:secrets:/secret/foo-default/"),
+			propertySources.get("aws:secrets:/secret/foo/")
+		));
+
+		putSecrets("latest", Arrays.asList(
+			propertySources.get("aws:secrets:/secret/foo-prod/"),
+			propertySources.get("aws:secrets:/secret/application-default/"),
+			propertySources.get("aws:secrets:/secret/application/")
+		));
+
+		// Test
+		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
 	public void testFindOneWithExistingApplicationAndMultipleExistingProfileAndNoDefaultsAndNullLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
 		String profile = "prod,east";
@@ -2650,6 +2703,102 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		Environment resultEnv = repository.findOne(application, profile, null);
 
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(emptyEnvironment);
+	}
+
+	@Test
+	public void testFindOneWithMultipleExistingApplicationsAndExistingProfileAndNullLabelWhenDefaultLabelIsSet() {
+		String applications = "app1,app2";
+		String profile = "prod";
+		String[] applicationArray = StringUtils.commaDelimitedListToStringArray(applications);
+		List<String> reversedApplications = Arrays.asList(applicationArray);
+		Collections.reverse(reversedApplications);
+		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
+
+		Environment expectedEnv = new Environment(applications,
+			StringUtils.commaDelimitedListToStringArray(profile), defaultLabel, null, null);
+
+		for (String app : reversedApplications) {
+			String appPropertiesName = "aws:secrets:/secret/" + app + "-prod/";
+			PropertySource appProperties = new PropertySource(appPropertiesName, getFooProdProperties());
+			expectedEnv.add(appProperties);
+			putSecrets(defaultLabel, Collections.singletonList(appProperties));
+		}
+
+		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, getApplicationProdProperties());
+		expectedEnv.add(applicationProdProperties);
+		putSecrets(defaultLabel, Collections.singletonList(applicationProdProperties));
+
+		String applicationPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, getApplicationProperties());
+		expectedEnv.add(applicationProperties);
+		putSecrets(defaultLabel, Collections.singletonList(applicationProperties));
+
+		Environment resultEnv = labeledRepository.findOne(applications, profile, defaultLabel);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
+	public void testFindOneWithMultipleExistingApplicationsAndDefaultProfileAndExistingLabelWhenDefaultLabelIsSet() {
+		String applications = "app1,app2,app3";
+		String profile = configServerProperties.getDefaultProfile();
+		String label = "release";
+		String[] applicationArray = StringUtils.commaDelimitedListToStringArray(applications);
+		List<String> reversedApplications = Arrays.asList(applicationArray);
+		Collections.reverse(reversedApplications);
+
+		Environment expectedEnv = new Environment(applications,
+			StringUtils.commaDelimitedListToStringArray(profile), label, null, null);
+
+		for (String app : reversedApplications) {
+			String appPropertiesName = "aws:secrets:/secret/" + app + "/";
+			PropertySource appProperties = new PropertySource(appPropertiesName, getFooReleaseProperties());
+			expectedEnv.add(appProperties);
+			putSecrets(label, Collections.singletonList(appProperties));
+		}
+
+		String defaultAppPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource defaultAppProperties = new PropertySource(defaultAppPropertiesName, getApplicationReleaseProperties());
+		expectedEnv.add(defaultAppProperties);
+		putSecrets(label, Collections.singletonList(defaultAppProperties));
+
+		Environment resultEnv = labeledRepository.findOne(applications, profile, label);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
+	public void testFindOneWithMultipleExistingApplicationsAndNonExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
+		String applications = "app1,app2";
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
+		String[] applicationArray = StringUtils.commaDelimitedListToStringArray(applications);
+		List<String> reversedApplications = Arrays.asList(applicationArray);
+		Collections.reverse(reversedApplications);
+
+		Environment expectedEnv = new Environment(applications,
+			StringUtils.commaDelimitedListToStringArray(profile), label, null, null);
+
+		for (String app : reversedApplications) {
+			String appPropertiesName = "aws:secrets:/secret/" + app + "/";
+			PropertySource appProperties = new PropertySource(appPropertiesName, getFooProperties());
+			expectedEnv.add(appProperties);
+			putSecrets(label, Collections.singletonList(appProperties));
+		}
+
+		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, getApplicationProdProperties());
+		putSecrets(label, Collections.singletonList(applicationProdProperties));
+
+		String defaultAppPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource defaultAppProperties = new PropertySource(defaultAppPropertiesName, getApplicationProperties());
+		expectedEnv.add(defaultAppProperties);
+		putSecrets(label, Collections.singletonList(defaultAppProperties));
+
+		Environment resultEnv = labeledRepository.findOne(applications, profile, label);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
 
 	@Test
