@@ -831,46 +831,47 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		String label = "release,latest";
 
-		Map<String, PropertySource> propertySources = Map.of(
-			"aws:secrets:/secret/foo-prod/", new PropertySource("aws:secrets:/secret/foo-prod/", getFooProdProperties()),
-			"aws:secrets:/secret/foo-east/", new PropertySource("aws:secrets:/secret/foo-east/", getFooEastProperties()),
-			"aws:secrets:/secret/foo/", new PropertySource("aws:secrets:/secret/foo/", getFooProperties()),
-			"aws:secrets:/secret/foo-default/", new PropertySource("aws:secrets:/secret/foo-default/", getFooDefaultProperties()),
-			"aws:secrets:/secret/application-prod/", new PropertySource("aws:secrets:/secret/application-prod/", getApplicationProdProperties()),
-			"aws:secrets:/secret/application-default/", new PropertySource("aws:secrets:/secret/application-default/", getApplicationDefaultProperties()),
-			"aws:secrets:/secret/application/", new PropertySource("aws:secrets:/secret/application/", getApplicationProperties()),
-			"aws:secrets:/secret/application-east/", new PropertySource("aws:secrets:/secret/application-east/", getApplicationEastProperties())
-		);
+		Map<String, PropertySource> propertySources = Map.of("aws:secrets:/secret/foo-prod/",
+				new PropertySource("aws:secrets:/secret/foo-prod/", getFooProdProperties()),
+				"aws:secrets:/secret/foo-east/",
+				new PropertySource("aws:secrets:/secret/foo-east/", getFooEastProperties()), "aws:secrets:/secret/foo/",
+				new PropertySource("aws:secrets:/secret/foo/", getFooProperties()), "aws:secrets:/secret/foo-default/",
+				new PropertySource("aws:secrets:/secret/foo-default/", getFooDefaultProperties()),
+				"aws:secrets:/secret/application-prod/",
+				new PropertySource("aws:secrets:/secret/application-prod/", getApplicationProdProperties()),
+				"aws:secrets:/secret/application-default/",
+				new PropertySource("aws:secrets:/secret/application-default/", getApplicationDefaultProperties()),
+				"aws:secrets:/secret/application/",
+				new PropertySource("aws:secrets:/secret/application/", getApplicationProperties()),
+				"aws:secrets:/secret/application-east/",
+				new PropertySource("aws:secrets:/secret/application-east/", getApplicationEastProperties()));
 
 		// Expected environment
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
 		expectedEnv.addAll(Arrays.asList(
-			// "latest" label
-			propertySources.get("aws:secrets:/secret/foo-prod/"),
-			propertySources.get("aws:secrets:/secret/application-default/"),
-			propertySources.get("aws:secrets:/secret/application/"),
-			// "release" label
-			propertySources.get("aws:secrets:/secret/foo-east/"),
-			propertySources.get("aws:secrets:/secret/application-east/"),
-			propertySources.get("aws:secrets:/secret/application-prod/"),
-			propertySources.get("aws:secrets:/secret/foo-default/"),
-			propertySources.get("aws:secrets:/secret/foo/")
-		));
+				// "latest" label
+				propertySources.get("aws:secrets:/secret/foo-prod/"),
+				propertySources.get("aws:secrets:/secret/application-default/"),
+				propertySources.get("aws:secrets:/secret/application/"),
+				// "release" label
+				propertySources.get("aws:secrets:/secret/foo-east/"),
+				propertySources.get("aws:secrets:/secret/application-east/"),
+				propertySources.get("aws:secrets:/secret/application-prod/"),
+				propertySources.get("aws:secrets:/secret/foo-default/"),
+				propertySources.get("aws:secrets:/secret/foo/")));
 
 		// Secrets setup
-		putSecrets("release", Arrays.asList(
-			propertySources.get("aws:secrets:/secret/foo-east/"),
-			propertySources.get("aws:secrets:/secret/application-east/"),
-			propertySources.get("aws:secrets:/secret/application-prod/"),
-			propertySources.get("aws:secrets:/secret/foo-default/"),
-			propertySources.get("aws:secrets:/secret/foo/")
-		));
+		putSecrets("release",
+				Arrays.asList(propertySources.get("aws:secrets:/secret/foo-east/"),
+						propertySources.get("aws:secrets:/secret/application-east/"),
+						propertySources.get("aws:secrets:/secret/application-prod/"),
+						propertySources.get("aws:secrets:/secret/foo-default/"),
+						propertySources.get("aws:secrets:/secret/foo/")));
 
-		putSecrets("latest", Arrays.asList(
-			propertySources.get("aws:secrets:/secret/foo-prod/"),
-			propertySources.get("aws:secrets:/secret/application-default/"),
-			propertySources.get("aws:secrets:/secret/application/")
-		));
+		putSecrets("latest",
+				Arrays.asList(propertySources.get("aws:secrets:/secret/foo-prod/"),
+						propertySources.get("aws:secrets:/secret/application-default/"),
+						propertySources.get("aws:secrets:/secret/application/")));
 
 		// Test
 		Environment resultEnv = labeledRepository.findOne(application, profile, label);
@@ -2714,8 +2715,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		Collections.reverse(reversedApplications);
 		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
 
-		Environment expectedEnv = new Environment(applications,
-			StringUtils.commaDelimitedListToStringArray(profile), defaultLabel, null, null);
+		Environment expectedEnv = new Environment(applications, StringUtils.commaDelimitedListToStringArray(profile),
+				defaultLabel, null, null);
 
 		for (String app : reversedApplications) {
 			String appPropertiesName = "aws:secrets:/secret/" + app + "-prod/";
@@ -2725,12 +2726,14 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		}
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, getApplicationProdProperties());
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
 		expectedEnv.add(applicationProdProperties);
 		putSecrets(defaultLabel, Collections.singletonList(applicationProdProperties));
 
 		String applicationPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource applicationProperties = new PropertySource(applicationPropertiesName, getApplicationProperties());
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
 		expectedEnv.add(applicationProperties);
 		putSecrets(defaultLabel, Collections.singletonList(applicationProperties));
 
@@ -2748,8 +2751,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		List<String> reversedApplications = Arrays.asList(applicationArray);
 		Collections.reverse(reversedApplications);
 
-		Environment expectedEnv = new Environment(applications,
-			StringUtils.commaDelimitedListToStringArray(profile), label, null, null);
+		Environment expectedEnv = new Environment(applications, StringUtils.commaDelimitedListToStringArray(profile),
+				label, null, null);
 
 		for (String app : reversedApplications) {
 			String appPropertiesName = "aws:secrets:/secret/" + app + "/";
@@ -2759,7 +2762,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		}
 
 		String defaultAppPropertiesName = "aws:secrets:/secret/application/";
-		PropertySource defaultAppProperties = new PropertySource(defaultAppPropertiesName, getApplicationReleaseProperties());
+		PropertySource defaultAppProperties = new PropertySource(defaultAppPropertiesName,
+				getApplicationReleaseProperties());
 		expectedEnv.add(defaultAppProperties);
 		putSecrets(label, Collections.singletonList(defaultAppProperties));
 
@@ -2777,8 +2781,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		List<String> reversedApplications = Arrays.asList(applicationArray);
 		Collections.reverse(reversedApplications);
 
-		Environment expectedEnv = new Environment(applications,
-			StringUtils.commaDelimitedListToStringArray(profile), label, null, null);
+		Environment expectedEnv = new Environment(applications, StringUtils.commaDelimitedListToStringArray(profile),
+				label, null, null);
 
 		for (String app : reversedApplications) {
 			String appPropertiesName = "aws:secrets:/secret/" + app + "/";
@@ -2788,7 +2792,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		}
 
 		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
-		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName, getApplicationProdProperties());
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
 		putSecrets(label, Collections.singletonList(applicationProdProperties));
 
 		String defaultAppPropertiesName = "aws:secrets:/secret/application/";
