@@ -18,7 +18,6 @@ package org.springframework.cloud.config.server.environment;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
-import org.springframework.core.Ordered;
 
 /**
  * @author Dylan Roberts
@@ -38,7 +37,7 @@ public class JdbcEnvironmentProperties implements EnvironmentRepositoryPropertie
 	 */
 	private boolean enabled = true;
 
-	private int order = Ordered.LOWEST_PRECEDENCE - 10;
+	private int order = DEFAULT_ORDER - 10;
 
 	/** SQL used to query database for keys and values. */
 	private String sql = DEFAULT_SQL;

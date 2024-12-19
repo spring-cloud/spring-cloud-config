@@ -40,7 +40,7 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 	 */
 	private String bucket;
 
-	private int order;
+	private int order = DEFAULT_ORDER;
 
 	public String getRegion() {
 		return region;

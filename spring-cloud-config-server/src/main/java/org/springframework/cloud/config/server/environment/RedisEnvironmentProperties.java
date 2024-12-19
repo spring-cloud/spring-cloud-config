@@ -18,7 +18,6 @@ package org.springframework.cloud.config.server.environment;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
-import org.springframework.core.Ordered;
 
 /**
  * @author Piotr Mińkowski
@@ -26,7 +25,7 @@ import org.springframework.core.Ordered;
 @ConfigurationProperties("spring.cloud.config.server.redis")
 public class RedisEnvironmentProperties implements EnvironmentRepositoryProperties {
 
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private int order = DEFAULT_ORDER;
 
 	public int getOrder() {
 		return this.order;
