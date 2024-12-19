@@ -18,7 +18,6 @@ package org.springframework.cloud.config.server.environment;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
-import org.springframework.core.Ordered;
 
 /**
  * @author Dylan Roberts
@@ -49,7 +48,7 @@ public class NativeEnvironmentProperties implements EnvironmentRepositoryPropert
 	 */
 	private String version;
 
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private int order = DEFAULT_ORDER;
 
 	public Boolean getFailOnError() {
 		return this.failOnError;

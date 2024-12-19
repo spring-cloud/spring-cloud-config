@@ -18,8 +18,6 @@ package org.springframework.cloud.config.server.support;
 
 import java.io.File;
 
-import org.springframework.core.Ordered;
-
 /**
  * @author Dylan Roberts
  */
@@ -63,7 +61,7 @@ public class AbstractScmAccessorProperties implements EnvironmentRepositoryPrope
 	private boolean strictHostKeyChecking = true;
 
 	/** The order of the environment repository. */
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private int order = DEFAULT_ORDER;
 
 	/** The default label to be used with the remote repository. */
 	private String defaultLabel;

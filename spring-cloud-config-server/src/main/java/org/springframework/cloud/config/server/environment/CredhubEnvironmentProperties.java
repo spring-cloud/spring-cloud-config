@@ -18,7 +18,6 @@ package org.springframework.cloud.config.server.environment;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
-import org.springframework.core.Ordered;
 
 /**
  * @author Alberto C. Ríos
@@ -32,7 +31,7 @@ public class CredhubEnvironmentProperties implements EnvironmentRepositoryProper
 	/** The default label to be used when is not provided by client applications. */
 	private String defaultLabel = "master";
 
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private int order = DEFAULT_ORDER;
 
 	public String getPath() {
 		return this.path;

@@ -16,10 +16,17 @@
 
 package org.springframework.cloud.config.server.support;
 
+import org.springframework.core.Ordered;
+
 /**
  * @author Dylan Roberts
  */
 public interface EnvironmentRepositoryProperties {
+
+	/**
+	 * Default order value.
+	 */
+	int DEFAULT_ORDER = Ordered.LOWEST_PRECEDENCE;
 
 	void setOrder(int order);
 
