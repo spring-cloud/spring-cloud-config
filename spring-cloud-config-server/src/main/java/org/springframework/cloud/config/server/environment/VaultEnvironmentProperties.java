@@ -26,7 +26,6 @@ import jakarta.validation.constraints.NotEmpty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.cloud.config.server.support.HttpEnvironmentRepositoryProperties;
-import org.springframework.core.Ordered;
 import org.springframework.core.io.Resource;
 import org.springframework.validation.annotation.Validated;
 
@@ -83,7 +82,7 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	 */
 	private Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
 
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private int order = DEFAULT_ORDER;
 
 	/**
 	 * Value to indicate which version of Vault kv backend is used. Defaults to 1.
