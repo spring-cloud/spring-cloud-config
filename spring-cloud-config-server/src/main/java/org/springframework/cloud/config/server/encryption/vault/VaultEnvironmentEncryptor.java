@@ -44,6 +44,8 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 
 	private final VaultKeyValueOperations keyValueTemplate;
 
+	private boolean prefixInvalidProperties = true;
+
 	public VaultEnvironmentEncryptor(VaultKeyValueOperations keyValueTemplate) {
 		this.keyValueTemplate = keyValueTemplate;
 	}
@@ -102,8 +104,10 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 						}
 					}
 					catch (Exception e) {
-						value = "<n/a>";
-						name = "invalid." + name;
+						if (this.prefixInvalidProperties) {
+							value = "<n/a>";
+							name = "invalid." + name;
+						}
 						String message = "Cannot resolve key: " + key + " (" + e.getClass() + ": " + e.getMessage()
 								+ ")";
 						if (logger.isDebugEnabled()) {
@@ -119,6 +123,10 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 			result.add(new PropertySource(source.getName(), map));
 		}
 		return result;
+	}
+
+	public void setPrefixInvalidProperties(boolean prefixInvalidProperties) {
+		this.prefixInvalidProperties = prefixInvalidProperties;
 	}
 
 }

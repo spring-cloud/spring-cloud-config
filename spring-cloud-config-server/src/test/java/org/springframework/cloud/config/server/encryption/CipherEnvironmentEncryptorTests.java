@@ -119,4 +119,55 @@ public class CipherEnvironmentEncryptorTests {
 			.isEqualTo(secret);
 	}
 
+	@ParameterizedTest
+	@MethodSource("params")
+	public void shouldDecryptFailed(String salt, String key) {
+		TextEncryptor textEncryptor = new EncryptorFactory(salt).create(key);
+		CipherEnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(keys -> textEncryptor);
+		encryptor.setPrefixInvalidProperties(true);
+		// given
+		String secret = randomUUID().toString();
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		String encrypted = "{cipher}" + new EncryptorFactory(salt).create("dummykey").encrypt(secret);
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				new PropertyValueDescriptor(encrypted, "encrypted value"))));
+
+		// then
+		assertThat(encryptor.decrypt(environment)
+			.getPropertySources()
+			.get(0)
+			.getSource()
+			.get("invalid." + environment.getName())).isEqualTo("<n/a>");
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+			.isNull();
+	}
+
+	@ParameterizedTest
+	@MethodSource("params")
+	public void decryptFailedWithoutInvalidPrefix(String salt, String key) {
+		TextEncryptor textEncryptor = new EncryptorFactory(salt).create(key);
+		CipherEnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(keys -> textEncryptor);
+		encryptor.setPrefixInvalidProperties(false);
+		// given
+		String secret = randomUUID().toString();
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		String encryptedSecret = new EncryptorFactory(salt).create("dummykey").encrypt(secret);
+		String encrypted = "{cipher}" + encryptedSecret;
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				new PropertyValueDescriptor(encrypted, "encrypted value"))));
+
+		// then
+		assertThat(encryptor.decrypt(environment)
+			.getPropertySources()
+			.get(0)
+			.getSource()
+			.get("invalid." + environment.getName())).isNull();
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+			.isEqualTo(encryptedSecret);
+	}
+
 }
