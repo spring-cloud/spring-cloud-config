@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -44,6 +45,9 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 @AutoConfigureAfter(DefaultTextEncryptionAutoConfiguration.class)
 public class EncryptionAutoConfiguration {
 
+	@Value("${spring.cloud.config.server.encrypt.prefixInvalidProperties:${spring.cloud.config.server.encrypt.prefix-invalid-properties:true}}")
+	private boolean prefixInvalidProperties;
+
 	@Bean
 	@ConditionalOnBean(TextEncryptor.class)
 	@ConditionalOnMissingBean(TextEncryptorLocator.class)
@@ -60,7 +64,9 @@ public class EncryptionAutoConfiguration {
 		if (locator == null) {
 			locator = new SingleTextEncryptorLocator(encryptor);
 		}
-		return new CipherEnvironmentEncryptor(locator);
+		CipherEnvironmentEncryptor environmentEncryptor = new CipherEnvironmentEncryptor(locator);
+		environmentEncryptor.setPrefixInvalidProperties(prefixInvalidProperties);
+		return environmentEncryptor;
 	}
 
 }
