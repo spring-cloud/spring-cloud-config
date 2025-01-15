@@ -44,6 +44,8 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 
 	private final TextEncryptorLocator encryptor;
 
+	private boolean prefixInvalidProperties = true;
+
 	private EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
 
 	@Autowired
@@ -74,8 +76,10 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 							.decrypt(this.helper.stripPrefix(value));
 					}
 					catch (Exception e) {
-						value = "<n/a>";
-						name = "invalid." + name;
+						if (this.prefixInvalidProperties) {
+							value = "<n/a>";
+							name = "invalid." + name;
+						}
 						String message = "Cannot decrypt key: " + key + " (" + e.getClass() + ": " + e.getMessage()
 								+ ")";
 						if (logger.isDebugEnabled()) {
@@ -91,6 +95,10 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 			result.add(new PropertySource(source.getName(), map));
 		}
 		return result;
+	}
+
+	public void setPrefixInvalidProperties(boolean prefixInvalidProperties) {
+		this.prefixInvalidProperties = prefixInvalidProperties;
 	}
 
 }

@@ -118,6 +118,31 @@ public class VaultEnvironmentEncryptorTests {
 	}
 
 	@Test
+	public void shouldNotPrefixInvalidPropertyWithNoKeyValue() {
+		// given
+		String accounts = "accounts/mypay";
+		String value = "{vault}:" + accounts;
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+		encryptor.setPrefixInvalidProperties(false);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+
+		// then
+		Environment processedEnvironment = encryptor.decrypt(environment);
+
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
+			.isNull();
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName()))
+			.isEqualTo(accounts);
+	}
+
+	@Test
 	public void shouldMarkAsInvalidPropertyWithNoEmptyValue() {
 		// given
 		String value = "{vault}:accounts/mypay#";
