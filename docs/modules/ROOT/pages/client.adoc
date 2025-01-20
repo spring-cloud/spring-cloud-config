@@ -25,7 +25,7 @@ After it has gathered all activated profiles it will load any additional configu
 Due to this you may see multiple requests being made to the Spring Cloud Config Server to fetch configuration.  This
 is normal and is a side effect of how Spring Boot loads configuration when using `spring.config.import`.  In previous
 versions of Spring Cloud Config there was only a single request made but this meant you could not activate profiles
-from configuration coming from the Config Server.  The additional request with just the 'default` profile now makes
+from configuration coming from the Config Server.  The additional request with just the `default` profile now makes
 this possible.
 
 NOTE: A `bootstrap` file (properties or yaml) is *not* needed for the Spring Boot Config Data method of import via `spring.config.import`.
