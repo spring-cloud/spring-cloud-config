@@ -63,7 +63,7 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 
 	@Container
 	private static final LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1"))
+			DockerImageName.parse("localstack/localstack:4.0.3"))
 		.withServices(SSM);
 
 	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
@@ -700,8 +700,12 @@ public class AwsParameterStoreEnvironmentRepositoryTests {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 			Set<Parameter> parameters = getParameters(ps, path, withSlashesForPropertyName);
 			parameters.forEach(value -> {
-				ssmClient.putParameter(
-						PutParameterRequest.builder().name(value.name()).dataType("text").value(value.value()).build());
+				ssmClient.putParameter(PutParameterRequest.builder()
+					.name(value.name())
+					.type("String")
+					.dataType("text")
+					.value(value.value())
+					.build());
 				toBeRemoved.add(value.name());
 			});
 		}

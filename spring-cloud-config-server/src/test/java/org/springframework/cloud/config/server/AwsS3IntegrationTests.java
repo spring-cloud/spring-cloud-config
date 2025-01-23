@@ -64,7 +64,7 @@ public class AwsS3IntegrationTests {
 
 	@Container
 	static LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1"))
+			DockerImageName.parse("localstack/localstack:4.0.3"))
 		.withServices(LocalStackContainer.Service.S3);
 
 	private static ConfigurableApplicationContext server;
