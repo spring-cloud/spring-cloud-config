@@ -104,10 +104,8 @@
 			</dependency>
 			<dependency>
 				<groupId>io.awspring.cloud</groupId>
-				<artifactId>spring-cloud-aws-dependencies</artifactId>
+				<artifactId>spring-cloud-aws-s3</artifactId>
 				<version>${spring-cloud-aws.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
