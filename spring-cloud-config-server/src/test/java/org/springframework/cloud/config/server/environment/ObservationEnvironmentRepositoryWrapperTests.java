@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.Arrays;
 
+import io.micrometer.common.KeyValue;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.tck.TestObservationRegistry;
 import org.junit.jupiter.api.Test;
@@ -65,6 +66,50 @@ class ObservationEnvironmentRepositoryWrapperTests {
 				.filter(context -> context.getName().equals("spring.cloud.config.environment.find") && contextExists(
 						context, "spring.cloud.config.environment.class",
 						"org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo"))
+				.findFirst()
+				.orElseThrow(() -> new AssertionError("There's no observation for the wrapped EnvironmentRepository"));
+		});
+	}
+
+	@Test
+	void shouldCreateRootObservationForCompositeWithDefaultValues() {
+		TestObservationRegistry registry = TestObservationRegistry.create();
+		EnvironmentRepository delegate = new MyEnvRepo();
+		EnvironmentRepository composite = new CompositeEnvironmentRepository(Arrays.asList(delegate), registry, true);
+		EnvironmentRepository wrapper = ObservationEnvironmentRepositoryWrapper.wrap(registry, composite);
+
+		wrapper.findOne("foo", "bar", null);
+
+		assertThat(registry).hasHandledContextsThatSatisfy(contexts -> {
+			contexts.stream()
+				.filter(context -> context.getName().equals("spring.cloud.config.environment.find")
+						&& contextExists(context, "spring.cloud.config.environment.class",
+								"org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository")
+						&& context.getLowCardinalityKeyValue("spring.cloud.config.environment.label")
+							.getValue()
+							.equals(KeyValue.NONE_VALUE)
+						&& context.getLowCardinalityKeyValue("spring.cloud.config.environment.application")
+							.getValue()
+							.equals("foo")
+						&& context.getLowCardinalityKeyValue("spring.cloud.config.environment.profile")
+							.getValue()
+							.equals("bar"))
+				.findFirst()
+				.orElseThrow(
+						() -> new AssertionError("There's no observation for the Composite EnvironmentRepository"));
+			contexts.stream()
+				.filter(context -> context.getName().equals("spring.cloud.config.environment.find") && contextExists(
+						context, "spring.cloud.config.environment.class",
+						"org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo")
+						&& context.getLowCardinalityKeyValue("spring.cloud.config.environment.label")
+							.getValue()
+							.equals(KeyValue.NONE_VALUE)
+						&& context.getLowCardinalityKeyValue("spring.cloud.config.environment.application")
+							.getValue()
+							.equals("foo")
+						&& context.getLowCardinalityKeyValue("spring.cloud.config.environment.profile")
+							.getValue()
+							.equals("bar"))
 				.findFirst()
 				.orElseThrow(() -> new AssertionError("There's no observation for the wrapped EnvironmentRepository"));
 		});

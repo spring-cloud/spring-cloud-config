@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import io.micrometer.common.KeyValue;
 import io.micrometer.common.KeyValues;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
@@ -35,21 +36,20 @@ class ObservationEnvironmentRepositoryObservationConvention
 	@Override
 	public KeyValues getLowCardinalityKeyValues(ObservationEnvironmentRepositoryContext context) {
 		KeyValues keyValues = KeyValues.empty();
-		keyValues = appendIfPresent(keyValues, DocumentedConfigObservation.LowCardinalityTags.ENVIRONMENT_CLASS,
+		keyValues = appendWithValueOrUseDefault(keyValues,
+				DocumentedConfigObservation.LowCardinalityTags.ENVIRONMENT_CLASS,
 				context.getEnvironmentRepositoryClass().getName());
-		keyValues = appendIfPresent(keyValues, DocumentedConfigObservation.LowCardinalityTags.LABEL,
+		keyValues = appendWithValueOrUseDefault(keyValues, DocumentedConfigObservation.LowCardinalityTags.LABEL,
 				context.getLabel());
-		keyValues = appendIfPresent(keyValues, DocumentedConfigObservation.LowCardinalityTags.PROFILE,
+		keyValues = appendWithValueOrUseDefault(keyValues, DocumentedConfigObservation.LowCardinalityTags.PROFILE,
 				context.getProfile());
-		return appendIfPresent(keyValues, DocumentedConfigObservation.LowCardinalityTags.APPLICATION,
+		return appendWithValueOrUseDefault(keyValues, DocumentedConfigObservation.LowCardinalityTags.APPLICATION,
 				context.getApplication());
 	}
 
-	private KeyValues appendIfPresent(KeyValues keyValues, KeyName profile, String value) {
-		if (StringUtils.hasText(value)) {
-			keyValues = keyValues.and(profile.withValue(value));
-		}
-		return keyValues;
+	private KeyValues appendWithValueOrUseDefault(KeyValues keyValues, KeyName keyName, String value) {
+		value = StringUtils.hasText(value) ? value : KeyValue.NONE_VALUE;
+		return keyValues.and(keyName.withValue(value));
 	}
 
 	@Override
