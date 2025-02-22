@@ -52,7 +52,7 @@ public class ConfigServerHealthIndicatorTests {
 	@BeforeEach
 	public void init() {
 		initMocks(this);
-		this.indicator = new ConfigServerHealthIndicator(this.repository);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, new ConfigServerProperties());
 		this.indicator.init();
 	}
 
@@ -87,6 +87,15 @@ public class ConfigServerHealthIndicatorTests {
 		this.indicator.setRepositories(Collections.singletonMap("myname", repo));
 		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
 		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);
+	}
+
+	@Test
+	public void acceptEmptyFalse() {
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setAcceptEmpty(false);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
+		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.DOWN);
 	}
 
 }

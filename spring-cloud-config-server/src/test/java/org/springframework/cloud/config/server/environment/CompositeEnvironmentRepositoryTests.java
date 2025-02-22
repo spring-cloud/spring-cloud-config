@@ -27,6 +27,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.CompositeConfiguration;
 import org.springframework.cloud.config.server.config.ConfigServerHealthIndicator;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -140,7 +141,7 @@ public class CompositeEnvironmentRepositoryTests {
 	public void overridingCompositeEnvRepo_contextLoads() {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
 			context.register(OverrideCompositeConfig.class, CompositeConfiguration.class,
-					ConfigServerHealthIndicator.class);
+					ConfigServerHealthIndicator.class, ConfigServerProperties.class);
 			context.refresh();
 		}
 	}

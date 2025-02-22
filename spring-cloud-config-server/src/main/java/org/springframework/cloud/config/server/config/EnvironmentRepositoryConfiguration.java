@@ -156,8 +156,9 @@ public class EnvironmentRepositoryConfiguration {
 	protected static class ConfigServerActuatorConfiguration {
 
 		@Bean
-		public ConfigServerHealthIndicator configServerHealthIndicator(EnvironmentRepository repository) {
-			return new ConfigServerHealthIndicator(repository);
+		public ConfigServerHealthIndicator configServerHealthIndicator(EnvironmentRepository repository,
+				ConfigServerProperties configServerProperties) {
+			return new ConfigServerHealthIndicator(repository, configServerProperties);
 		}
 
 	}

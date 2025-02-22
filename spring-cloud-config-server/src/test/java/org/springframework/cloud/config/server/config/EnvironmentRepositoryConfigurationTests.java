@@ -87,7 +87,8 @@ public class EnvironmentRepositoryConfigurationTests {
 		new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(
 					EnvironmentRepositoryConfigurationTests.EnableConfigurationPropertiesBeans.class,
-					EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class))
+					EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class,
+					ConfigServerProperties.class))
 			.withPropertyValues("spring.cloud.config.server.health.down-health-status=CUSTOMIZED")
 			.run((context) -> {
 				ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
