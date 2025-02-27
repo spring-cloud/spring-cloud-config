@@ -307,7 +307,22 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				}
 			}
 
-			if (response == null || response.getStatusCode() != HttpStatus.OK) {
+			if (response == null) {
+				if (i < noOfUrls - 1 && defaultProperties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info("Failed to fetch configs from server at  : " + uri
+							+ ". The response was null. Will try the next url if available.");
+					continue;
+				}
+
+				return null;
+			}
+			else if (response.getStatusCode() != HttpStatus.OK) {
+				if (i < noOfUrls - 1 && defaultProperties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info("Failed to fetch configs from server at  : " + uri
+							+ ". Will try the next url if available. StatusCode : " + response.getStatusCode());
+					continue;
+				}
+
 				return null;
 			}
 
