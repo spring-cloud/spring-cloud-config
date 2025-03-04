@@ -19,6 +19,8 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import io.micrometer.observation.ObservationRegistry;
@@ -43,6 +45,8 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	private final ObservationRegistry observationRegistry;
 
+	protected final Lock globalLock = new ReentrantLock();
+
 	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
 			ObservationRegistry observationRegistry) {
 		super(environment);
@@ -57,22 +61,26 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 	}
 
 	@Override
-	public synchronized Environment findOne(String application, String profile, String label) {
+	public Environment findOne(String application, String profile, String label) {
 		return findOne(application, profile, label, false);
 	}
 
 	@Override
-	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-		var environment = new Environment(application, StringUtils.commaDelimitedListToStringArray(profile), label, "",
-				"");
-
-		for (String l : splitAndReorder(label)) {
-			var e = findOneInternal(application, profile, l, includeOrigin);
-			environment.addAll(e.getPropertySources());
-			environment.setVersion(concat(e.getVersion(), environment.getVersion()));
+	public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		try {
+			globalLock.lock();
+			var environment = new Environment(application, StringUtils.commaDelimitedListToStringArray(profile), label, "",
+					"");
+			for (String l : splitAndReorder(label)) {
+				var e = findOneInternal(application, profile, l, includeOrigin);
+				environment.addAll(e.getPropertySources());
+				environment.setVersion(concat(e.getVersion(), environment.getVersion()));
+			}
+			return this.cleaner.clean(environment, getWorkingDirectory().toURI().toString(), getUri());
 		}
-
-		return this.cleaner.clean(environment, getWorkingDirectory().toURI().toString(), getUri());
+		finally {
+			globalLock.unlock();
+		}
 	}
 
 	private Environment findOneInternal(String application, String profile, String label, boolean includeOrigin) {
