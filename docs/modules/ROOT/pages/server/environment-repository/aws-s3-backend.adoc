@@ -34,7 +34,34 @@ It is also possible to specify an AWS URL to link:https://aws.amazon.com/blogs/d
 
 Credentials are found using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html[Default Credential Provider Chain]. Versioned and encrypted buckets are supported without further configuration.
 
-Configuration files are stored in your bucket as `\{application}-\{profile}.properties`, `\{application}-\{profile}.yml` or `\{application}-\{profile}.json`. An optional label can be provided to specify a directory path to the file.
+By default, configuration files are stored in your bucket as `\{application}-\{profile}.properties`, `\{application}-\{profile}.yml` or `\{application}-\{profile}.json`. An optional label can be provided to specify a directory path to the file.
 
 NOTE: When no profile is specified `default` will be used.
 
+[[directory-layout]]
+== Directory layout
+
+Spring Cloud Config Server also supports per-app directory layout analogous to https://docs.spring.io/spring-cloud-config/docs/current/reference/html/#_placeholders_in_git_search_paths[`search-paths: '{application}'`] in Git backend, as shown in the following example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        awss3:
+          region: us-east-1
+          bucket: bucket1
+          useDirectoryLayout: true
+----
+
+The preceding listing matches objects stored in your bucket in `/{application}` directory like: `/{application}/application{-profile}.yml`. Then structure of the bucket should look like this:
+
+```
+├── foo
+│   ├── application-test.yml
+│   └── application.yml
+├── bar
+│   ├── application-test.yml
+│   └── application.yml
+```
