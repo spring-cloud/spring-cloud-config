@@ -90,12 +90,40 @@ public class ConfigServerHealthIndicatorTests {
 	}
 
 	@Test
-	public void acceptEmptyFalse() {
+	public void acceptEmptyFalseNoRepos() {
 		ConfigServerProperties configServerProperties = new ConfigServerProperties();
 		configServerProperties.setAcceptEmpty(false);
 		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
 		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
 		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.DOWN);
+	}
+
+	@Test
+	public void acceptEmptyFalseNoPropertySources() {
+		Repository repo = new Repository();
+		repo.setName("myname");
+		repo.setProfiles("myprofile");
+		repo.setLabel("mylabel");
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setAcceptEmpty(false);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
+		this.indicator.setRepositories(Collections.singletonMap("myname", repo));
+		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.DOWN);
+	}
+
+	@Test
+	public void acceptEmptyTrueNoPropertySources() {
+		Repository repo = new Repository();
+		repo.setName("myname");
+		repo.setProfiles("myprofile");
+		repo.setLabel("mylabel");
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setAcceptEmpty(true);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
+		this.indicator.setRepositories(Collections.singletonMap("myname", repo));
+		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);
 	}
 
 }
