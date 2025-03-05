@@ -39,7 +39,7 @@ public class AwsS3EnvironmentRepositoryFactory
 		final S3Client client = clientBuilder.build();
 
 		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(client,
-				environmentProperties.getBucket(), server);
+				environmentProperties.getBucket(), environmentProperties.isUseDirectoryLayout(), server);
 		repository.setOrder(environmentProperties.getOrder());
 		return repository;
 	}

@@ -57,14 +57,22 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private final String bucketName;
 
+	private final boolean useApplicationAsDirectory;
+
 	private final ConfigServerProperties serverProperties;
 
 	protected int order = Ordered.LOWEST_PRECEDENCE;
 
 	public AwsS3EnvironmentRepository(S3Client s3Client, String bucketName, ConfigServerProperties server) {
+		this(s3Client, bucketName, false, server);
+	}
+
+	public AwsS3EnvironmentRepository(S3Client s3Client, String bucketName, boolean useApplicationAsDirectory,
+			ConfigServerProperties server) {
 		this.s3Client = s3Client;
 		this.bucketName = bucketName;
 		this.serverProperties = server;
+		this.useApplicationAsDirectory = useApplicationAsDirectory;
 	}
 
 	@Override
@@ -127,17 +135,14 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private void addPropertySource(Environment environment, String app, String profile, String label) {
-		S3ConfigFile s3ConfigFile = getS3ConfigFile(app, profile, label);
+		String objectKeyPrefix = buildObjectKeyPrefix(app, profile, label);
+		S3ConfigFile s3ConfigFile = getS3ConfigFile(objectKeyPrefix);
 		if (s3ConfigFile != null) {
 			environment.setVersion(s3ConfigFile.getVersion());
 
 			final Properties config = s3ConfigFile.read();
 			config.putAll(serverProperties.getOverrides());
-			StringBuilder propertySourceName = new StringBuilder().append("s3:").append(app);
-			if (profile != null) {
-				propertySourceName.append("-").append(profile);
-			}
-			PropertySource propertySource = new PropertySource(propertySourceName.toString(), config);
+			PropertySource propertySource = new PropertySource("s3:" + objectKeyPrefix, config);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Adding property source to environment " + propertySource);
 			}
@@ -149,17 +154,15 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		return StringUtils.commaDelimitedListToStringArray(profiles);
 	}
 
-	private S3ConfigFile getS3ConfigFile(String application, String profile, String label) {
-		String objectKeyPrefix = buildObjectKeyPrefix(application, profile, label);
-		return getS3ConfigFile(objectKeyPrefix);
-	}
-
 	private String buildObjectKeyPrefix(String application, String profile, String label) {
 		StringBuilder objectKeyPrefix = new StringBuilder();
 		if (!ObjectUtils.isEmpty(label)) {
 			objectKeyPrefix.append(label).append(PATH_SEPARATOR);
 		}
 		objectKeyPrefix.append(application);
+		if (this.useApplicationAsDirectory) {
+			objectKeyPrefix.append(PATH_SEPARATOR).append("application");
+		}
 		if (!ObjectUtils.isEmpty(profile)) {
 			objectKeyPrefix.append("-").append(profile);
 		}
