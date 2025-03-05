@@ -40,6 +40,12 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 	 */
 	private String bucket;
 
+	/**
+	 * Use application name as intermediate directory. Analogous to `searchPaths:
+	 * {application}` from Git backend.
+	 */
+	private boolean useDirectoryLayout;
+
 	private int order = DEFAULT_ORDER;
 
 	public String getRegion() {
@@ -64,6 +70,14 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 
 	public void setBucket(String bucket) {
 		this.bucket = bucket;
+	}
+
+	public boolean isUseDirectoryLayout() {
+		return useDirectoryLayout;
+	}
+
+	public void setUseDirectoryLayout(boolean useDirectoryLayout) {
+		this.useDirectoryLayout = useDirectoryLayout;
 	}
 
 	public int getOrder() {

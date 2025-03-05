@@ -72,7 +72,10 @@ public class AwsS3EnvironmentRepositoryTests {
 		.endpointOverride(localstack.getEndpointOverride(S3))
 		.build();
 
-	private final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", server);
+	private final EnvironmentRepository envRepo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server);
+
+	private final EnvironmentRepository envRepoApplicationDir = new AwsS3EnvironmentRepository(s3Client, "bucket1",
+			true, server);
 
 	private final List<String> toBeRemoved = new ArrayList<>();
 
@@ -263,6 +266,147 @@ public class AwsS3EnvironmentRepositoryTests {
 		final Environment env = envRepo.findOne("foo,bar", "profile1", null);
 		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("s3:bar-profile1");
 		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("s3:foo-profile1");
+
+		assertExpectedEnvironment(env, "foo,bar", null, versionId, 2, "profile1");
+
+	}
+
+	@Test
+	public void failToFindNonexistentObject_ApplicationDirVariant() {
+		Environment env = envRepoApplicationDir.findOne("foo", "bar", null);
+		assertThat(env.getPropertySources()).isEmpty();
+	}
+
+	@Test
+	public void findPropertiesObject_ApplicationDirVariant() {
+		String propertyContent = "cloudfoundry.enabled=true\n" + "cloudfoundry.accounts[0].name=acc1\n"
+				+ "cloudfoundry.accounts[0].user=user1\n" + "cloudfoundry.accounts[0].password=password1\n"
+				+ "cloudfoundry.accounts[0].api=api.sys.acc1.cf-app.com\n"
+				+ "cloudfoundry.accounts[0].environment=test1\n" + "cloudfoundry.accounts[1].name=acc2\n"
+				+ "cloudfoundry.accounts[1].user=user2\n" + "cloudfoundry.accounts[1].password=password2\n"
+				+ "cloudfoundry.accounts[1].api=api.sys.acc2.cf-app.com\n"
+				+ "cloudfoundry.accounts[1].environment=test2\n";
+		String versionId = putFiles("foo/application-bar.properties", propertyContent);
+
+		// Pulling content from a .properties file forces a boolean into a String
+		expectedProperties.put("cloudfoundry.enabled", "true");
+
+		final Environment env = envRepoApplicationDir.findOne("foo", "bar", null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+	}
+
+	@Test
+	public void findJsonObject_ApplicationDirVariant() {
+		String versionId = putFiles("foo/application-bar.json", jsonContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", "bar", null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+	}
+
+	@Test
+	public void findYamlObject_ApplicationDirVariant() {
+		String versionId = putFiles("foo/application-bar.yaml", yamlContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", "bar", null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+	}
+
+	@Test
+	public void findYmlObject_ApplicationDirVariant() {
+		String versionId = putFiles("foo/application-bar.yml", yamlContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", "bar", null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+	}
+
+	@Test
+	public void findWithDefaultProfile_ApplicationDirVariant() {
+		String versionId = putFiles("foo/application.yml", yamlContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", null, null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default");
+	}
+
+	@Test
+	public void findWithDefaultProfileUsingSuffix_ApplicationDirVariant() {
+		String versionId = putFiles("foo/application-default.yml", yamlContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", null, null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "default");
+	}
+
+	@Test
+	public void findWithMultipleProfilesAllFound_ApplicationDirVariant() {
+		putFiles("foo/application-profile1.yml", yamlContent);
+		String versionId = putFiles("foo/application-profile2.yml", jsonContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", "profile1,profile2", null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1", "profile2");
+	}
+
+	@Test
+	public void findWithMultipleProfilesOneFound_ApplicationDirVariant() {
+		String versionId = putFiles("foo/application-profile2.yml", jsonContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", "profile1,profile2", null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "profile1", "profile2");
+	}
+
+	@Test
+	public void findWithOneProfileDefaultOneFound_ApplicationDirVariant() {
+		putFiles("foo/application-profile1.yml", jsonContent);
+		String versionId = putFiles("foo/application.yml", yamlContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", "profile1", null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1");
+	}
+
+	@Test
+	public void findWithNoProfileAndNoServerDefaultOneFound_ApplicationDirVariant() {
+		server.setDefaultProfile(null);
+		String versionId = putFiles("foo/application.yml", yamlContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", null, null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1);
+
+	}
+
+	@Test
+	public void findWithLabel_ApplicationDirVariant() {
+		String versionId = putFiles("label1/foo/application-bar.yml", yamlContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", "bar", "label1");
+
+		assertExpectedEnvironment(env, "foo", "label1", versionId, 1, "bar");
+	}
+
+	@Test
+	public void findWithVersion_ApplicationDirVariant() {
+		String versionId = putFiles("foo/application-bar.yml", yamlContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo", "bar", null);
+
+		assertExpectedEnvironment(env, "foo", null, versionId, 1, "bar");
+	}
+
+	@Test
+	public void findWithMultipleApplicationAllFound_ApplicationDirVariant() throws UnsupportedEncodingException {
+		String versionId = putFiles("foo/application-profile1.yml", jsonContent);
+		putFiles("bar/application-profile1.yml", jsonContent);
+
+		final Environment env = envRepoApplicationDir.findOne("foo,bar", "profile1", null);
+		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("s3:bar/application-profile1");
+		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("s3:foo/application-profile1");
 
 		assertExpectedEnvironment(env, "foo,bar", null, versionId, 2, "profile1");
 
