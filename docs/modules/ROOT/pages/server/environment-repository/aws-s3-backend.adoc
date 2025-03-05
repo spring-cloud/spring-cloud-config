@@ -41,7 +41,9 @@ NOTE: When no profile is specified `default` will be used.
 [[directory-layout]]
 == Directory layout
 
-Spring Cloud Config Server also supports per-app directory layout analogous to xref:git-backend.adoc#placeholders-in-git-search-paths[`search-paths: '{application}'`] in Git backend, as shown in the following example:
+Spring Cloud Config Server also supports per-app directory layout analogous to xref:git-backend.adoc#placeholders-in-git-search-paths[`search-paths: '{application}'`] in Git backend.
+
+In order to enable it set `useDirectoryLayout` property to `true` as shown in the following example:
 
 [source,yaml]
 ----
