@@ -112,9 +112,10 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 				return;
 			}
 		}
-		if (!this.acceptEmpty && details.isEmpty()) {
+		if (!this.acceptEmpty && (details.isEmpty() || details.stream().noneMatch(d -> d.containsKey("sources")))) {
 			// If accept-empty is false and no repositories are found, meaning details is
 			// empty, then set status to DOWN
+			// If there are details but none of them have sources, then set status to DOWN
 			builder.down().withDetail("acceptEmpty", this.acceptEmpty);
 		}
 		builder.withDetail("repositories", details);
