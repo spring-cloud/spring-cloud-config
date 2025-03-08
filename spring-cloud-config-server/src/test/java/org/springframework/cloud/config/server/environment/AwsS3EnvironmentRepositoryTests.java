@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -137,7 +136,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findPropertiesObject() throws UnsupportedEncodingException {
+	public void findPropertiesObject() {
 		String propertyContent = "cloudfoundry.enabled=true\n" + "cloudfoundry.accounts[0].name=acc1\n"
 				+ "cloudfoundry.accounts[0].user=user1\n" + "cloudfoundry.accounts[0].password=password1\n"
 				+ "cloudfoundry.accounts[0].api=api.sys.acc1.cf-app.com\n"
@@ -156,7 +155,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findJsonObject() throws UnsupportedEncodingException {
+	public void findJsonObject() {
 		String versionId = putFiles("foo-bar.json", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
@@ -165,7 +164,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findYamlObject() throws UnsupportedEncodingException {
+	public void findYamlObject() {
 		String versionId = putFiles("foo-bar.yaml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
@@ -174,7 +173,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findYmlObject() throws UnsupportedEncodingException {
+	public void findYmlObject() {
 		String versionId = putFiles("foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
@@ -183,7 +182,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithDefaultProfile() throws UnsupportedEncodingException {
+	public void findWithDefaultProfile() {
 		String versionId = putFiles("foo.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", null, null);
@@ -192,7 +191,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithDefaultProfileUsingSuffix() throws UnsupportedEncodingException {
+	public void findWithDefaultProfileUsingSuffix() {
 		String versionId = putFiles("foo-default.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", null, null);
@@ -201,7 +200,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithMultipleProfilesAllFound() throws UnsupportedEncodingException {
+	public void findWithMultipleProfilesAllFound() {
 		putFiles("foo-profile1.yml", yamlContent);
 		String versionId = putFiles("foo-profile2.yml", jsonContent);
 
@@ -211,7 +210,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithMultipleProfilesOneFound() throws UnsupportedEncodingException {
+	public void findWithMultipleProfilesOneFound() {
 		String versionId = putFiles("foo-profile2.yml", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
@@ -220,7 +219,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithOneProfileDefaultOneFound() throws UnsupportedEncodingException {
+	public void findWithOneProfileDefaultOneFound() {
 		putFiles("foo-profile1.yml", jsonContent);
 		String versionId = putFiles("foo.yml", yamlContent);
 
@@ -230,7 +229,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithNoProfileAndNoServerDefaultOneFound() throws UnsupportedEncodingException {
+	public void findWithNoProfileAndNoServerDefaultOneFound() {
 		server.setDefaultProfile(null);
 		String versionId = putFiles("foo.yml", yamlContent);
 
@@ -241,7 +240,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithLabel() throws UnsupportedEncodingException {
+	public void findWithLabel() {
 		String versionId = putFiles("label1/foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", "label1");
@@ -250,7 +249,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithVersion() throws UnsupportedEncodingException {
+	public void findWithVersion() {
 		String versionId = putFiles("foo-bar.yml", yamlContent);
 
 		final Environment env = envRepo.findOne("foo", "bar", null);
@@ -259,7 +258,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithMultipleApplicationAllFound() throws UnsupportedEncodingException {
+	public void findWithMultipleApplicationAllFound() {
 		String versionId = putFiles("foo-profile1.yml", jsonContent);
 		putFiles("bar-profile1.yml", jsonContent);
 
@@ -400,7 +399,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void findWithMultipleApplicationAllFound_ApplicationDirVariant() throws UnsupportedEncodingException {
+	public void findWithMultipleApplicationAllFound_ApplicationDirVariant() {
 		String versionId = putFiles("foo/application-profile1.yml", jsonContent);
 		putFiles("bar/application-profile1.yml", jsonContent);
 
