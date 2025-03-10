@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.support;
 
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -67,8 +68,6 @@ import static org.springframework.util.StringUtils.hasText;
 public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 
 	private static final String SHA_256 = "SHA-256"; //$NON-NLS-1$
-
-	private static final String UTF8 = "UTF8"; //$NON-NLS-1$
 
 	private static final String HMAC_SHA256 = "HmacSHA256"; //$NON-NLS-1$
 
@@ -142,11 +141,11 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		String algorithm = HMAC_SHA256;
 		Mac mac = Mac.getInstance(algorithm);
 		mac.init(new SecretKeySpec(key, algorithm));
-		return mac.doFinal(data.getBytes(UTF8));
+		return mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
 	}
 
 	private static byte[] sign(String secret, String shortDateStamp, String region, String toSign) throws Exception {
-		byte[] kSecret = ("AWS4" + secret).getBytes(UTF8);
+		byte[] kSecret = ("AWS4" + secret).getBytes(StandardCharsets.UTF_8);
 		byte[] kDate = hmacSha256(shortDateStamp, kSecret);
 		byte[] kRegion = hmacSha256(region, kDate);
 		byte[] kService = hmacSha256("codecommit", kRegion);
