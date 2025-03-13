@@ -41,7 +41,7 @@ NOTE: When no profile is specified `default` will be used.
 [[directory-layout]]
 == Directory layout
 
-Spring Cloud Config Server also supports per-app directory layout analogous to xref:./git-backend.adoc#placeholders-in-git-search-paths[`search-paths: '{application}'`] in Git backend.
+Spring Cloud Config Server also supports per-app directory layout analogous to xref:./git-backend.adoc#placeholders-in-git-search-paths[`search-paths: '\{application}'`] in Git backend.
 
 In order to enable it set `useDirectoryLayout` property to `true` as shown in the following example:
 
@@ -57,7 +57,7 @@ spring:
           useDirectoryLayout: true
 ----
 
-The preceding listing matches objects stored in your bucket in `/{application}` directory like: `/{application}/application{-profile}.yml`. Then structure of the bucket should look like this:
+The preceding listing matches objects stored in your bucket in `/\{application}` directory like: `/\{application}/application\{-profile}.yml`. Then structure of the bucket should look like this:
 
 ```
 ├── foo
