@@ -269,7 +269,8 @@ public abstract class PathUtils {
 		}
 		locationPath = (locationPath.endsWith("/") || locationPath.isEmpty() ? locationPath : locationPath + "/");
 		String encodedLocationPath = locationPath.endsWith("/")
-				? locationPath.substring(0, locationPath.length() - 1) + URLEncoder.encode("/", StandardCharsets.UTF_8) : locationPath;
+				? locationPath.substring(0, locationPath.length() - 1) + URLEncoder.encode("/", StandardCharsets.UTF_8)
+				: locationPath;
 		return ((resourcePath.startsWith(locationPath) || resourcePath.startsWith(encodedLocationPath))
 				&& !isInvalidEncodedPath(resourcePath));
 	}
