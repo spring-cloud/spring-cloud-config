@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -333,6 +334,61 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@Test
+	public void shouldUseNextUriFor_NoExceptionNotOK_And_CONNECTION_TIMEOUT_ONLY_Strategy_FailFastIsFalse()
+			throws Exception {
+		// At the time of this writing, TEMPORARY_REDIRECT will not cause an exception to
+		// be thrown back to
+		// getRemoteEnvironment, but since status is not OK, the method returns null and
+		// locate method will
+		// simply return null since fail-fast=false. (Second URL is never tried, due to
+		// the strategy.
+
+		// Set up with two URIs.
+		ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
+		String badURI = "http://baduri";
+		String goodURI = "http://localhost:8888";
+		String[] uris = new String[] { badURI, goodURI };
+		clientProperties.setUri(uris);
+		clientProperties.setFailFast(false);
+		// Strategy is CONNECTION_TIMEOUT_ONLY, so it should not try the next URI for
+		// TEMPORARY_REDIRECT
+		clientProperties.setMultipleUriStrategy(ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY);
+		this.locator = new ConfigServicePropertySourceLocator(clientProperties);
+		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+		RestTemplate restTemplate1 = new RestTemplate(requestFactory);
+		mockRequestResponse(requestFactory, badURI, HttpStatus.TEMPORARY_REDIRECT);
+		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+		this.locator.setRestTemplate(restTemplate1);
+		assertThat(this.locator.locateCollection(this.environment)).isEqualTo(Collections.emptyList());
+	}
+
+	@Test
+	public void shouldUseNextUriFor_NoExceptionNotOK_And_CONNECTION_TIMEOUT_ONLY_Strategy_WithFailFastIsTrue()
+			throws Exception {
+		// At the time of this writing, TEMPORARY_REDIRECT will not cause an exception to
+		// be thrown back to
+		// getRemoteEnvironment, but since status is not OK, the method returns null and
+		// locate method will
+		// throw an IllegalStateException with no cause, since fail-fast=true. Second URL
+		// is never tried, due to the strategy.
+		assertNextUriIsNotTried(true, ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY,
+				HttpStatus.TEMPORARY_REDIRECT, null // IllegalStateException has no cause,
+													// because getRemoteEnvironment did
+													// not throw an exception
+		);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_NoExceptionNotOK_And_ALWAYS_Strategy() throws Exception {
+		// At the time of this writing, TEMPORARY_REDIRECT will not cause an exception to
+		// be thrown back to
+		// getRemoteEnvironment, but since status is not OK, the method will treat it the
+		// same as an exception and
+		// thus try the next URL.
+		assertNextUriIsTried(ConfigClientProperties.MultipleUriStrategy.ALWAYS, HttpStatus.TEMPORARY_REDIRECT);
+	}
+
+	@Test
 	public void shouldUseNextUriFor_TimeOut_And_ALWAYS_Strategy() throws Exception {
 		assertNextUriIsTriedOnTimeout(ConfigClientProperties.MultipleUriStrategy.ALWAYS);
 	}
@@ -459,6 +515,12 @@ public class ConfigServicePropertySourceLocatorTests {
 
 	private void assertNextUriIsNotTried(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy,
 			HttpStatus firstUriResponse, Class<? extends Exception> expectedCause) {
+		assertNextUriIsNotTried(true, multipleUriStrategy, firstUriResponse, expectedCause);
+	}
+
+	private void assertNextUriIsNotTried(boolean failFast,
+			ConfigClientProperties.MultipleUriStrategy multipleUriStrategy, HttpStatus firstUriResponse,
+			Class<? extends Exception> expectedCause) {
 		AbstractThrowableAssert throwableAssert = Assertions.assertThatThrownBy(() -> {
 			// Set up with two URIs.
 			ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
@@ -466,7 +528,7 @@ public class ConfigServicePropertySourceLocatorTests {
 			String goodURI = "http://localhost:8888";
 			String[] uris = new String[] { badURI, goodURI };
 			clientProperties.setUri(uris);
-			clientProperties.setFailFast(true);
+			clientProperties.setFailFast(failFast);
 			// Strategy is CONNECTION_TIMEOUT_ONLY, so it should not try the next URI for
 			// INTERNAL_SERVER_ERROR
 			clientProperties.setMultipleUriStrategy(multipleUriStrategy);
