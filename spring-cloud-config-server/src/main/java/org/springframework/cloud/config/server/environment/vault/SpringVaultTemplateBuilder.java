@@ -21,6 +21,7 @@ import java.util.List;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.context.ApplicationContext;
+import org.springframework.util.StringUtils;
 import org.springframework.vault.core.VaultTemplate;
 
 /**
@@ -43,10 +44,21 @@ public class SpringVaultTemplateBuilder {
 	}
 
 	public VaultTemplate build(VaultEnvironmentProperties vaultProperties) {
+		ConfigTokenProvider tokenProvider = isStaticToken(vaultProperties) ? vaultProperties::getToken
+				: configTokenProvider;
+
 		SpringVaultClientConfiguration clientConfiguration = new SpringVaultClientConfiguration(vaultProperties,
-				configTokenProvider, authProviders);
+				tokenProvider, authProviders);
 		clientConfiguration.setApplicationContext(applicationContext);
-		return clientConfiguration.vaultTemplate();
+
+		var vaultTemplate = clientConfiguration.vaultTemplate();
+		vaultTemplate.setSessionManager(clientConfiguration.sessionManager());
+
+		return vaultTemplate;
+	}
+
+	private boolean isStaticToken(VaultEnvironmentProperties vaultProperties) {
+		return vaultProperties.getAuthentication() == null && StringUtils.hasText(vaultProperties.getToken());
 	}
 
 }
