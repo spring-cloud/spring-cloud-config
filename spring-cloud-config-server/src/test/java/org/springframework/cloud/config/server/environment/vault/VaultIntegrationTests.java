@@ -55,7 +55,7 @@ public class VaultIntegrationTests {
 	private static final int configServerPort = TestSocketUtils.findAvailableTcpPort();
 
 	@Container
-	public static VaultContainer<?> vaultContainer = new VaultContainer<>("hashicorp/vault:1.13.3")
+	public static VaultContainer<?> vaultContainer = new VaultContainer<>("vault:1.13.3")
 			.withVaultToken(VAULT_TOKEN).withClasspathResourceMapping("vault/vault_test_policy.txt",
 					"/tmp/vault_test_policy.txt", BindMode.READ_ONLY);
 
