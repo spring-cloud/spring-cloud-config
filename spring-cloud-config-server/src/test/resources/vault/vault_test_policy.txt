@@ -1,0 +1,16 @@
+path "secret/metadata/" {
+capabilities = ["list"]
+}
+path "secret/data/application,*" {
+capabilities = ["read", "list"]
+}
+path "secret/data/application*" {
+capabilities = ["read", "list"]
+}
+path "secret/data/myapp*" {
+capabilities = ["read", "list"]
+}
+path "secret/data/myapp,*" {
+capabilities = ["read", "list"]
+}
+
