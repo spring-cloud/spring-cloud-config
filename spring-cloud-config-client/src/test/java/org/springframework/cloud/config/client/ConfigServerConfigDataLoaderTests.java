@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.ThrowableAssertAlternative;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -65,6 +65,7 @@ import org.springframework.web.client.RestTemplate;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -199,10 +200,10 @@ public class ConfigServerConfigDataLoaderTests {
 		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		properties.setFailFast(true);
 		when(bootstrapContext.get(RestTemplate.class)).thenReturn(restTemplate);
-		ConfigClientFailFastException exception = Assertions.assertThrows(ConfigClientFailFastException.class,
-				() -> this.loader.load(context, resource));
-		assertThat(exception.getCause()).isInstanceOf(HttpServerErrorException.class);
-		assertThat(exception.getMessage()).contains("fail fast property is set");
+		assertThatExceptionOfType(ConfigClientFailFastException.class)
+			.isThrownBy(() -> this.loader.load(context, resource))
+			.withMessageContaining("fail fast property is set")
+			.withCauseInstanceOf(HttpServerErrorException.class);
 	}
 
 	@Test
@@ -213,20 +214,20 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setFailFast(true);
 		properties.setLabel("WeSetUpToReturn_NOT_FOUND_ForThisLabel");
 		when(bootstrapContext.get(RestTemplate.class)).thenReturn(restTemplate);
-		ConfigClientFailFastException exception = Assertions.assertThrows(ConfigClientFailFastException.class,
-				() -> this.loader.load(context, resource));
-		assertThat(exception.getMessage()).contains(
-				"fail fast property is set, failing: None of labels [WeSetUpToReturn_NOT_FOUND_ForThisLabel] found");
+		assertThatExceptionOfType(ConfigClientFailFastException.class)
+			.isThrownBy(() -> this.loader.load(context, resource))
+			.withMessageContaining(
+					"fail fast property is set, failing: None of labels [WeSetUpToReturn_NOT_FOUND_ForThisLabel] found");
 	}
 
 	@Test
 	public void failFastWhenRequestTimesOut() {
 		mockRequestTimedOut();
 		properties.setFailFast(true);
-		ConfigClientFailFastException exception = Assertions.assertThrows(ConfigClientFailFastException.class,
-				() -> this.loader.load(context, resource));
-		assertThat(exception.getCause()).isExactlyInstanceOf(ResourceAccessException.class);
-		assertThat(exception.getMessage()).contains("fail fast property is set");
+		assertThatExceptionOfType(ConfigClientFailFastException.class)
+			.isThrownBy(() -> this.loader.load(context, resource))
+			.withMessageContaining("fail fast property is set")
+			.withCauseInstanceOf(ResourceAccessException.class);
 
 	}
 
@@ -239,10 +240,8 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setUsername("username");
 		properties.setPassword("password");
 		properties.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
-		IllegalStateException exception = Assertions.assertThrows(IllegalStateException.class,
-				() -> this.loader.load(context, resource));
-		assertThat(exception.getMessage())
-			.contains("Could not locate PropertySource and the fail fast property is set, failing");
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> this.loader.load(context, resource))
+			.withMessageContaining("Could not locate PropertySource and the fail fast property is set, failing");
 	}
 
 	@Test
@@ -282,26 +281,24 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 		String username = "user";
 		String password = "pass";
-		IllegalStateException exception = Assertions.assertThrows(IllegalStateException.class,
-				() -> factory(properties).addAuthorizationToken(headers, username, password));
-		assertThat(exception.getMessage()).contains("You must set either 'password' or 'authorization'");
+		assertThatExceptionOfType(IllegalStateException.class)
+			.isThrownBy(() -> factory(properties).addAuthorizationToken(headers, username, password))
+			.withMessageContaining("You must set either 'password' or 'authorization'");
 	}
 
 	@Test
 	public void shouldThrowExceptionWhenNegativeReadTimeoutSet() {
 		properties.setRequestReadTimeout(-1);
-		IllegalStateException exception = Assertions.assertThrows(IllegalStateException.class,
-				() -> factory(properties).create());
-		assertThat(exception.getMessage()).contains("Invalid Value for Read Timeout set.");
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> factory(properties).create())
+			.withMessageContaining("Invalid Value for Read Timeout set.");
 
 	}
 
 	@Test
 	public void shouldThrowExceptionWhenNegativeConnectTimeoutSet() {
 		properties.setRequestConnectTimeout(-1);
-		IllegalStateException exception = Assertions.assertThrows(IllegalStateException.class,
-				() -> factory(properties).create());
-		assertThat(exception.getMessage()).contains("Invalid Value for Connect Timeout set.");
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> factory(properties).create())
+			.withMessageContaining("Invalid Value for Connect Timeout set.");
 	}
 
 	@Test
@@ -376,8 +373,8 @@ public class ConfigServerConfigDataLoaderTests {
 		// is never tried, due to the strategy.
 		assertNextUriIsNotTried(true, ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY,
 				HttpStatus.TEMPORARY_REDIRECT, null // IllegalStateException has no cause,
-													// because getRemoteEnvironment did
-													// not throw an exception
+		// because getRemoteEnvironment did
+		// not throw an exception
 		);
 	}
 
@@ -708,12 +705,13 @@ public class ConfigServerConfigDataLoaderTests {
 		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
 		when(bootstrapContext.get(RestTemplate.class)).thenReturn(restTemplate);
 
-		ConfigClientFailFastException exception = Assertions.assertThrows(ConfigClientFailFastException.class,
-				() -> this.loader.load(context, resource));
+		ThrowableAssertAlternative<ConfigClientFailFastException> throwableAssertAlternative = assertThatExceptionOfType(
+				ConfigClientFailFastException.class)
+			.isThrownBy(() -> this.loader.load(context, resource))
+			.withMessageContaining("fail fast property is set");
 		if (expectedCause != null) {
-			assertThat(exception.getCause()).isInstanceOf(expectedCause);
+			throwableAssertAlternative.withCauseInstanceOf(expectedCause);
 		}
-		assertThat(exception.getMessage()).contains("fail fast property is set");
 	}
 
 	@SuppressWarnings("SameParameterValue")
