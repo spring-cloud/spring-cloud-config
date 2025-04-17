@@ -1,0 +1,13 @@
+a: 0
+---
+spring:
+  config:
+    activate:
+      onProfile: test1
+a: 1
+---
+spring:
+  config:
+    activate:
+      on-profile: test2
+a: 2
