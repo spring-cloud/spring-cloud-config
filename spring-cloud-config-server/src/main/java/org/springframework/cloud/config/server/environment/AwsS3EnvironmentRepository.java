@@ -89,6 +89,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 		String[] profileArray = parseProfiles(profiles);
 		List<String> apps = Arrays.asList(StringUtils.commaDelimitedListToStringArray(application.replace(" ", "")));
+		Collections.reverse(apps);
 		if (!apps.contains(serverProperties.getDefaultApplicationName())) {
 			apps = new ArrayList<>(apps);
 			apps.add(serverProperties.getDefaultApplicationName());
@@ -97,7 +98,16 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		final Environment environment = new Environment(application, profileArray);
 		environment.setLabel(label);
 
-		addPropertySources(environment, apps, profileArray, label);
+		List<String> labels;
+		if (StringUtils.hasText(label) && label.contains(",")) {
+			labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+			Collections.reverse(labels);
+		}
+		else {
+			labels = Collections.singletonList(label);
+		}
+
+		addPropertySources(environment, apps, profileArray, labels);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Returning Environment: " + environment);
@@ -106,25 +116,36 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		return environment;
 	}
 
-	private void addPropertySources(Environment environment, List<String> apps, String[] profiles, String label) {
-		// If we have profiles, add property sources with those profiles
-		for (String profile : profiles) {
-			addPropertySourcesForApps(apps, app -> addProfileSpecificPropertySource(environment, app, profile, label));
+	private void addPropertySources(Environment environment, List<String> apps, String[] profiles,
+			List<String> labels) {
+		for (String label : labels) {
+			// If we have profiles, add property sources with those profiles
+			for (String profile : profiles) {
+				addPropertySourcesForApps(apps,
+						app -> addProfileSpecificPropertySource(environment, app, profile, label));
+			}
 		}
 
 		// If we have no profiles just add property sources for all apps
 		if (profiles.length == 0) {
-			addPropertySourcesForApps(apps, app -> addNonProfileSpecificPropertySource(environment, app, null, label));
+			for (String label : labels) {
+				addPropertySourcesForApps(apps,
+						app -> addNonProfileSpecificPropertySource(environment, app, null, label));
+			}
 		}
 		else {
-			// If we have profiles, we still need to add property sources from files that
-			// are not profile specific but we pass
-			// along the profiles as well so we can check if any non-profile specific YAML
-			// files have profile specific documents
-			// within them
-			for (String profile : profiles) {
-				addPropertySourcesForApps(apps,
-						app -> addNonProfileSpecificPropertySource(environment, app, profile, label));
+			for (String label : labels) {
+				// If we have profiles, we still need to add property sources from files
+				// that
+				// are not profile specific but we pass
+				// along the profiles as well so we can check if any non-profile specific
+				// YAML
+				// files have profile specific documents
+				// within them
+				for (String profile : profiles) {
+					addPropertySourcesForApps(apps,
+							app -> addNonProfileSpecificPropertySource(environment, app, profile, label));
+				}
 			}
 		}
 	}
