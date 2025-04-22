@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -127,6 +131,39 @@ public class AwsS3EnvironmentRepositoryTests {
 		toBeRemoved.forEach(
 				value -> s3Client.deleteObject(DeleteObjectRequest.builder().bucket("bucket1").key(value).build()));
 		toBeRemoved.clear();
+	}
+
+	@Test
+	public void multiDocumentYaml() throws IOException {
+		Resource resource = new ClassPathResource("awss3/foo.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("foo.yaml", yamlString);
+		resource = new ClassPathResource("awss3/foo-test1.yaml");
+		yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("foo-test1.yaml", yamlString);
+		resource = new ClassPathResource("awss3/application-test1.yaml");
+		yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application-test1.yaml", yamlString);
+		resource = new ClassPathResource("awss3/application.yaml");
+		yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		final Environment env = envRepo.findOne("foo", "test1", null);
+		assertThat(env.getPropertySources().size()).isEqualTo(5);
+		List<PropertySource> propertySources = env.getPropertySources();
+		// @formatter:off
+		assertThat(propertySources.get(0).getName()).isEqualTo("s3:foo-test1"); // foo-test1.yaml
+		assertThat(propertySources.get(0).getSource().get("app")).isEqualTo("test-test1-yaml");
+		assertThat(propertySources.get(1).getName()).isEqualTo("s3:application-test1"); // application-test1.yaml
+		assertThat(propertySources.get(1).getSource().get("app")).isEqualTo("test1-yaml");
+		assertThat(propertySources.get(2).getName()).isEqualTo("s3:foo-test1"); // profile specific document in foo.yaml
+		assertThat(propertySources.get(2).getSource().get("a")).isEqualTo(1);
+		assertThat(propertySources.get(2).getSource().get("spring.config.activate.onProfile")).isEqualTo("test1");
+		assertThat(propertySources.get(3).getName()).isEqualTo("s3:foo"); // non-profile specific document in foo.yaml
+		assertThat(propertySources.get(3).getSource().get("a")).isEqualTo(0);
+		assertThat(propertySources.get(4).getName()).isEqualTo("s3:application"); // application.yaml
+		assertThat(propertySources.get(4).getSource().get("app")).isEqualTo("yaml");
+		// @formatter:on
 	}
 
 	@Test
