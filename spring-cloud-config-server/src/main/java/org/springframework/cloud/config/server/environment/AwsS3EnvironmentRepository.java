@@ -62,12 +62,20 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private final ConfigServerProperties serverProperties;
 
+	private final boolean useApplicationAsDirectory;
+
 	protected int order = Ordered.LOWEST_PRECEDENCE;
 
 	public AwsS3EnvironmentRepository(S3Client s3Client, String bucketName, ConfigServerProperties server) {
+		this(s3Client, bucketName, false, server);
+	}
+
+	public AwsS3EnvironmentRepository(S3Client s3Client, String bucketName, boolean useApplicationAsDirectory,
+			ConfigServerProperties server) {
 		this.s3Client = s3Client;
 		this.bucketName = bucketName;
 		this.serverProperties = server;
+		this.useApplicationAsDirectory = useApplicationAsDirectory;
 	}
 
 	@Override
@@ -213,7 +221,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		if (profile != null) {
 			try {
 				YamlS3ConfigFile configFileDocument = new ProfileSpecificYamlDocumentS3ConfigFile(application, profile,
-						label, bucketName, s3Client);
+						label, bucketName, useApplicationAsDirectory, s3Client);
 				configFileDocument.setShouldIncludeWithEmptyProperties(false);
 				configFiles.add(configFileDocument);
 			}
@@ -226,7 +234,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 		try {
 			YamlS3ConfigFile configFile = new NonProfileSpecificYamlDocumentS3ConfigFile(application, null, label,
-					bucketName, s3Client);
+					bucketName, useApplicationAsDirectory, s3Client);
 			configFiles.add(configFile);
 		}
 		catch (Exception e) {
@@ -243,7 +251,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			String label) {
 		try {
 			YamlS3ConfigFile configFile = new ProfileSpecificYamlS3ConfigFile(application, profile, label, bucketName,
-					s3Client);
+					useApplicationAsDirectory, s3Client);
 			return List.of(configFile);
 		}
 		catch (Exception e) {
@@ -262,7 +270,8 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			LOG.debug("Getting S3 config file for " + application + " " + profile + " " + label);
 		}
 		try {
-			return new PropertyS3ConfigFile(application, profile, label, bucketName, s3Client);
+			return new PropertyS3ConfigFile(application, profile, label, bucketName, useApplicationAsDirectory,
+					s3Client);
 		}
 		catch (Exception propertyException) {
 			if (LOG.isDebugEnabled()) {
@@ -270,7 +279,8 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 						+ "> label <" + label + ">.  Trying json extension", propertyException);
 			}
 			try {
-				return new JsonS3ConfigFile(application, profile, label, bucketName, s3Client);
+				return new JsonS3ConfigFile(application, profile, label, bucketName, useApplicationAsDirectory,
+						s3Client);
 			}
 			catch (Exception jsonException) {
 				if (LOG.isDebugEnabled()) {
@@ -330,12 +340,16 @@ abstract class S3ConfigFile {
 
 	private boolean shouldIncludeWithEmptyProperties = true;
 
-	protected S3ConfigFile(String application, String profile, String label, String bucketName, S3Client s3Client) {
+	private final boolean useApplicationAsDirectory;
+
+	protected S3ConfigFile(String application, String profile, String label, String bucketName,
+			boolean useApplicationAsDirectory, S3Client s3Client) {
 		this.application = application;
 		this.profile = profile;
 		this.label = label;
 		this.bucketName = bucketName;
 		this.s3Client = s3Client;
+		this.useApplicationAsDirectory = useApplicationAsDirectory;
 	}
 
 	String getVersion() {
@@ -396,6 +410,9 @@ abstract class S3ConfigFile {
 			objectKeyPrefix.append(label).append(PATH_SEPARATOR);
 		}
 		objectKeyPrefix.append(application);
+		if (this.useApplicationAsDirectory) {
+			objectKeyPrefix.append(PATH_SEPARATOR).append("application");
+		}
 		if (!ObjectUtils.isEmpty(profile) && includeProfile) {
 			objectKeyPrefix.append("-").append(profile);
 		}
@@ -404,6 +421,9 @@ abstract class S3ConfigFile {
 
 	private String createPropertySourceName(String app, String profile) {
 		StringBuilder propertySourceName = new StringBuilder().append("s3:").append(app);
+		if (this.useApplicationAsDirectory) {
+			propertySourceName.append(PATH_SEPARATOR).append("application");
+		}
 		if (profile != null) {
 			propertySourceName.append("-").append(profile);
 		}
@@ -414,8 +434,9 @@ abstract class S3ConfigFile {
 
 class PropertyS3ConfigFile extends S3ConfigFile {
 
-	PropertyS3ConfigFile(String application, String profile, String label, String bucketName, S3Client s3Client) {
-		super(application, profile, label, bucketName, s3Client);
+	PropertyS3ConfigFile(String application, String profile, String label, String bucketName,
+			boolean useApplicationAsDirectory, S3Client s3Client) {
+		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client);
 		this.properties = read();
 	}
 
@@ -446,13 +467,16 @@ class YamlS3ConfigFile extends S3ConfigFile {
 
 	final YamlProcessor.DocumentMatcher[] documentMatchers;
 
-	YamlS3ConfigFile(String application, String profile, String label, String bucketName, S3Client s3Client) {
-		this(application, profile, label, bucketName, s3Client, new YamlProcessor.DocumentMatcher[] {});
+	YamlS3ConfigFile(String application, String profile, String label, String bucketName,
+			boolean useApplicationAsDirectory, S3Client s3Client) {
+		this(application, profile, label, bucketName, useApplicationAsDirectory, s3Client,
+				new YamlProcessor.DocumentMatcher[] {});
 	}
 
-	YamlS3ConfigFile(String application, String profile, String label, String bucketName, S3Client s3Client,
+	YamlS3ConfigFile(String application, String profile, String label, String bucketName,
+			boolean useApplicationAsDirectory, S3Client s3Client,
 			final YamlProcessor.DocumentMatcher... documentMatchers) {
-		super(application, profile, label, bucketName, s3Client);
+		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client);
 		this.documentMatchers = documentMatchers;
 		this.properties = read();
 
@@ -495,8 +519,8 @@ class YamlS3ConfigFile extends S3ConfigFile {
 class ProfileSpecificYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
 
 	ProfileSpecificYamlDocumentS3ConfigFile(String application, String profile, String label, String bucketName,
-			S3Client s3Client) {
-		super(application, profile, label, bucketName, s3Client,
+			boolean useApplicationAsDirectory, S3Client s3Client) {
+		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client,
 				properties -> profileMatchesActivateProperty(profile, properties) ? YamlProcessor.MatchStatus.FOUND
 						: YamlProcessor.MatchStatus.NOT_FOUND);
 	}
@@ -516,9 +540,10 @@ class ProfileSpecificYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
 class NonProfileSpecificYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
 
 	NonProfileSpecificYamlDocumentS3ConfigFile(String application, String profile, String label, String bucketName,
-			S3Client s3Client) {
-		super(application, profile, label, bucketName, s3Client, properties -> !onProfilePropertyExists(properties)
-				? YamlProcessor.MatchStatus.FOUND : YamlProcessor.MatchStatus.NOT_FOUND);
+			boolean useApplicationAsDirectory, S3Client s3Client) {
+		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client,
+				properties -> !onProfilePropertyExists(properties) ? YamlProcessor.MatchStatus.FOUND
+						: YamlProcessor.MatchStatus.NOT_FOUND);
 	}
 
 }
@@ -526,8 +551,8 @@ class NonProfileSpecificYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
 class ProfileSpecificYamlS3ConfigFile extends YamlS3ConfigFile {
 
 	ProfileSpecificYamlS3ConfigFile(String application, String profile, String label, String bucketName,
-			S3Client s3Client) {
-		super(application, profile, label, bucketName, s3Client,
+			boolean useApplicationAsDirectory, S3Client s3Client) {
+		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client,
 				properties -> !onProfilePropertyExists(properties) ? YamlProcessor.MatchStatus.ABSTAIN
 						: profileMatchesActivateProperty(profile, properties) ? YamlProcessor.MatchStatus.FOUND
 								: YamlProcessor.MatchStatus.NOT_FOUND);
@@ -539,8 +564,9 @@ class JsonS3ConfigFile extends YamlS3ConfigFile {
 
 	// YAML is a superset of JSON, which means you can parse JSON with a YAML parser
 
-	JsonS3ConfigFile(String application, String profile, String label, String bucketName, S3Client s3Client) {
-		super(application, profile, label, bucketName, s3Client);
+	JsonS3ConfigFile(String application, String profile, String label, String bucketName,
+			boolean useApplicationAsDirectory, S3Client s3Client) {
+		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client);
 		this.properties = read();
 	}
 
