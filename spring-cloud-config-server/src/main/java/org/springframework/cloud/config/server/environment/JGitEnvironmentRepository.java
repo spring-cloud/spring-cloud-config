@@ -152,8 +152,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	/**
 	 * This lock is used to ensure thread safety between accessing the local git repo from
-	 * both the ResourceController and the EnvironmentController.  See
-	 * <a href="https://github.com/spring-cloud/spring-cloud-config/issues/2681">#2681</a>.
+	 * both the ResourceController and the EnvironmentController. See <a href=
+	 * "https://github.com/spring-cloud/spring-cloud-config/issues/2681">#2681</a>.
 	 */
 	private final Object LOCK = new Object();
 
