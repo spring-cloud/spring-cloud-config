@@ -16,6 +16,7 @@
 
 package sample;
 
+import java.io.File;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterAll;
@@ -58,8 +59,11 @@ public class ConfigServerAndClientMultiLabelTests {
 
 	@BeforeAll
 	public static void startConfigServer() {
+		String testResourcesDir = new File("src/test/resources").getAbsolutePath();
 		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
-				"--spring.profiles.active=native", "--server.port=" + configPort, "--spring.config.name=server");
+				"--spring.profiles.active=native", "--server.port=" + configPort, "--spring.config.name=server",
+				"--spring.cloud.config.server.native.search-locations=file://" + testResourcesDir + ",file://"
+						+ testResourcesDir + "/config");
 
 		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}
