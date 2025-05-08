@@ -29,7 +29,7 @@
 		<bintray.package>config</bintray.package>
 		<spring-cloud-commons.version>4.2.2-SNAPSHOT</spring-cloud-commons.version>
 		<aws-java-sdk.version>2.29.52</aws-java-sdk.version>
-		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
+		<google-api-services-iam.version>v1-rev20250502-2.0.0</google-api-services-iam.version>
 		<wiremock.version>2.35.2</wiremock.version>
 		<spring-cloud-aws.version>3.2.1</spring-cloud-aws.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
