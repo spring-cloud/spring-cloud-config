@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -175,14 +175,9 @@ public class EncryptionController {
 	private String stripFormData(String data, MediaType type, boolean cipher) {
 
 		if (data.endsWith("=") && !type.equals(MediaType.TEXT_PLAIN)) {
-			try {
-				data = URLDecoder.decode(data, "UTF-8");
-				if (cipher) {
-					data = data.replace(" ", "+");
-				}
-			}
-			catch (UnsupportedEncodingException e) {
-				// Really?
+			data = URLDecoder.decode(data, StandardCharsets.UTF_8);
+			if (cipher) {
+				data = data.replace(" ", "+");
 			}
 			String candidate = data.substring(0, data.length() - 1);
 			if (cipher) {

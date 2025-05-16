@@ -56,6 +56,7 @@ import org.eclipse.jgit.transport.TrackingRefUpdate;
 import org.eclipse.jgit.util.FileUtils;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
@@ -148,6 +149,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private boolean tryMasterBranch;
 
 	private final ObservationRegistry observationRegistry;
+
+	/**
+	 * This lock is used to ensure thread safety between accessing the local git repo from
+	 * both the ResourceController and the EnvironmentController. See <a href=
+	 * "https://github.com/spring-cloud/spring-cloud-config/issues/2681">#2681</a>.
+	 */
+	private final Object LOCK = new Object();
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties,
 			ObservationRegistry observationRegistry) {
@@ -253,13 +261,22 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	@Override
+	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		synchronized (LOCK) {
+			return super.findOne(application, profile, label, includeOrigin);
+		}
+	}
+
+	@Override
 	public synchronized Locations getLocations(String application, String profile, String label) {
 		if (label == null) {
 			label = this.defaultLabel;
 		}
 		String version;
 		try {
-			version = refresh(label);
+			synchronized (LOCK) {
+				version = refresh(label);
+			}
 		}
 		catch (Exception e) {
 			if (this.defaultLabel.equals(label) && JGitEnvironmentProperties.MAIN_LABEL.equals(this.defaultLabel)
