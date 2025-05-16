@@ -9,14 +9,13 @@ $ keytool -genkeypair -alias mytestkey -keyalg RSA \
   -keypass changeme -keystore server.jks -storepass letmein -storetype JKS
 ----
 
-NOTE:  When using JDK 11 or above you may get the following warning when using the command above.  In this case
-you probably want to make sure the `keypass` and `storepass` values match.
+NOTE:  When using JDK 11 or above, you may get the following warning when using the command above.  In this case
+you probably want to ensure the `keypass` and `storepass` values match.
 ----
-Warning:  Different store and key passwords not supported for PKCS12 KeyStores. Ignoring user-specified -keypass value.
+WARNING:  Different store and key passwords are not supported for PKCS12 KeyStores. Ignoring user-specified -keypass value.
 ----
 
-Put the `server.jks` file in the classpath (for instance) and then, in
-your `application.properties`, for the Config Server, create the following settings:
+Put the `server.jks` file in the classpath (for instance) and then, in your `application.properties` create the following settings:
 
 [source,yaml]
 ----
@@ -27,6 +26,7 @@ encrypt:
     alias: mytestkey
     secret: changeme
 ----
-----
-Warning: In the erlier versions `bootstrap.yml` was used instead of application.properties (or application.yml or application.yaml)
-----
+
+TIP: If you want to use `bootstrap.yml` instead of `application.properties`
+you must first enable it through `spring.cloud.bootstrap.enabled=true` or include
+the dependency (maven, gradle) as `groupId:org.springframework.cloud` and `artifactId:spring-cloud-starter-bootstrap`.
