@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -155,7 +156,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 * both the ResourceController and the EnvironmentController. See <a href=
 	 * "https://github.com/spring-cloud/spring-cloud-config/issues/2681">#2681</a>.
 	 */
-	private final Object LOCK = new Object();
+	private final ReentrantLock LOCK = new ReentrantLock();
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties,
 			ObservationRegistry observationRegistry) {
@@ -262,8 +263,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	@Override
 	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-		synchronized (LOCK) {
+		LOCK.lock();
+		try {
 			return super.findOne(application, profile, label, includeOrigin);
+		}
+		finally {
+			LOCK.unlock();
 		}
 	}
 
@@ -274,8 +279,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		}
 		String version;
 		try {
-			synchronized (LOCK) {
+			try {
+				LOCK.lock();
 				version = refresh(label);
+			}
+			finally {
+				LOCK.unlock();
 			}
 		}
 		catch (Exception e) {
@@ -283,7 +292,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 					&& tryMasterBranch) {
 				logger.info("Could not refresh default label " + label, e);
 				logger.info("Will try to refresh master label instead.");
-				version = refresh(JGitEnvironmentProperties.MASTER_LABEL);
+				LOCK.lock();
+				try {
+					version = refresh(JGitEnvironmentProperties.MASTER_LABEL);
+				}
+				finally {
+					LOCK.unlock();
+				}
 			}
 			else {
 				throw e;
