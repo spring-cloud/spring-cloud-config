@@ -503,7 +503,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		boolean shouldPull;
 
 		if (this.refreshRate < 0 || (this.refreshRate > 0
-				&& System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000))) {
+				&& System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000L))) {
 			return false;
 		}
 
