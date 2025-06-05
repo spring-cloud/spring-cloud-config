@@ -809,6 +809,7 @@ public class JGitEnvironmentRepositoryTests {
 
 		// Verify no fetch nor merge.
 		verify(git, never()).fetch();
+		verify(git).checkout();
 		verify(git).merge();
 	}
 
