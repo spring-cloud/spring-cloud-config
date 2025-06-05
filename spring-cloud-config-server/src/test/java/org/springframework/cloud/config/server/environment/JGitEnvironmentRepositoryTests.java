@@ -87,6 +87,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -285,8 +286,8 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
 		envRepository.setUri("http://somegitserver/somegitrepo");
 		envRepository.afterPropertiesSet();
-		verify(mockCloneCommand, times(0)).call();
-		verify(mockGit, times(0)).fetch();
+		verify(mockCloneCommand, never()).call();
+		verify(mockGit, never()).fetch();
 	}
 
 	@Test
@@ -303,8 +304,8 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setUri("file://somefilesystem/somegitrepo");
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
-		verify(mockCloneCommand, times(0)).call();
-		verify(mockGit, times(0)).fetch();
+		verify(mockCloneCommand, never()).call();
+		verify(mockGit, never()).fetch();
 	}
 
 	@Test
@@ -638,7 +639,7 @@ public class JGitEnvironmentRepositoryTests {
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", null);
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
-		verify(git, times(0)).branchDelete();
+		verify(git, never()).branchDelete();
 	}
 
 	private Repository stubbedRepo() {
@@ -753,7 +754,7 @@ public class JGitEnvironmentRepositoryTests {
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
-		verify(git, times(0)).branchDelete();
+		verify(git, never()).branchDelete();
 	}
 
 	@Test
@@ -806,8 +807,8 @@ public class JGitEnvironmentRepositoryTests {
 
 		repo.refresh("master");
 
-		// Verify no fetch but merge only.
-		verify(git, times(0)).fetch();
+		// Verify no fetch nor merge.
+		verify(git, never()).fetch();
 		verify(git).merge();
 	}
 
@@ -865,7 +866,7 @@ public class JGitEnvironmentRepositoryTests {
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
 
-		verify(git, times(0)).branchDelete();
+		verify(git, never()).branchDelete();
 	}
 
 	@Test
@@ -1425,9 +1426,9 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.afterPropertiesSet();
 		verify(mockCloneCommand, times(1)).call();
 		// Checkout/List Branch/Checkout setName should not be called
-		verify(mockCheckoutCommand, times(0)).call();
-		verify(mockListBranchCommand, times(0)).call();
-		verify(mockCheckoutCommand, times(0)).setName(anyString());
+		verify(mockCheckoutCommand, never()).call();
+		verify(mockListBranchCommand, never()).call();
+		verify(mockCheckoutCommand, never()).setName(anyString());
 	}
 
 	class MockCloneCommand extends CloneCommand {
