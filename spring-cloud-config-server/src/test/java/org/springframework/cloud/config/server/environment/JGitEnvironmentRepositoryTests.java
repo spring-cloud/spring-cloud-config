@@ -97,6 +97,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author Dave Syer
  * @author Gareth Clay
+ * @author Henri Tremblay
  */
 public class JGitEnvironmentRepositoryTests {
 

@@ -71,6 +71,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOf
  * @author Roy Clarkson
  * @author Daniel Lavoie
  * @author Ryan Lynch
+ * @author Henri Tremblay
  */
 public class JGitEnvironmentRepositoryIntegrationTests {
 

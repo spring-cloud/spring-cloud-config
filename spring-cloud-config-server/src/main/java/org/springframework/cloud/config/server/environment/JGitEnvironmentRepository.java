@@ -79,6 +79,7 @@ import static org.eclipse.jgit.transport.ReceiveCommand.Type.DELETE;
  * @author Ryan Lynch
  * @author Gareth Clay
  * @author ChaoDong Xi
+ * @author Henri Tremblay
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -156,7 +157,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 *
 	 * @implNote
 	 * The field is not volatile since we tend to lock around the {@link #refresh(String)} method which uses it.
-	 * However, this method is public si maybe it's a bad bet.
+	 * However, this method is public so maybe it's a bad bet.
 	 */
 	private String previousLabel = "$%^&"; // none existing branch
 
