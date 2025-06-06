@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.cloud</groupId>
 	<artifactId>spring-cloud-config</artifactId>
-	<version>4.3.1-SNAPSHOT</version>
+	<version>5.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Config</name>
 	<description>Spring Cloud Config</description>
@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>4.3.1-SNAPSHOT</version>
+		<version>5.0.0-SNAPSHOT</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<scm>
@@ -27,9 +27,10 @@
 	</scm>
 	<properties>
 		<bintray.package>config</bintray.package>
-		<spring-cloud-commons.version>4.3.1-SNAPSHOT</spring-cloud-commons.version>
+		<spring-cloud-commons.version>5.0.0-SNAPSHOT</spring-cloud-commons.version>
 		<aws-java-sdk.version>2.31.58</aws-java-sdk.version>
 		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
+		<google-cloud-iamcredentials.version>2.60.0</google-cloud-iamcredentials.version>
 		<wiremock.version>2.35.2</wiremock.version>
 		<spring-cloud-aws.version>3.3.1</spring-cloud-aws.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
@@ -81,6 +82,11 @@
 				<groupId>com.google.apis</groupId>
 				<artifactId>google-api-services-iam</artifactId>
 				<version>${google-api-services-iam.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>google-cloud-iamcredentials</artifactId>
+				<version>${google-cloud-iamcredentials.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.google.auth</groupId>

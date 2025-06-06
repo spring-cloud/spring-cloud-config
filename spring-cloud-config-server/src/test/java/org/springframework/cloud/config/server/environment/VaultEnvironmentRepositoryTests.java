@@ -71,7 +71,8 @@ public class VaultEnvironmentRepositoryTests {
 		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 
-		assertThat(requestHeaderCaptor.getValue().getHeaders()).containsEntry("X-Vault-Token", List.of("token"));
+		assertThat(requestHeaderCaptor.getValue().getHeaders().containsHeader("X-Vault-Token")).isTrue();
+		assertThat(requestHeaderCaptor.getValue().getHeaders().get("X-Vault-Token")).isEqualTo(List.of("token"));
 	}
 
 	@Test
@@ -244,7 +245,8 @@ public class VaultEnvironmentRepositoryTests {
 		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
 
-		assertThat(requestHeaderCaptor.getValue().getHeaders()).containsEntry("X-Vault-Token", List.of("token"));
+		assertThat(requestHeaderCaptor.getValue().getHeaders().containsHeader("X-Vault-Token")).isTrue();
+		assertThat(requestHeaderCaptor.getValue().getHeaders().get("X-Vault-Token")).isEqualTo(List.of("token"));
 	}
 
 	@Test
@@ -277,9 +279,11 @@ public class VaultEnvironmentRepositoryTests {
 
 		vaultEnvironmentRepository(properties).findOne("myapp", null, "lbl");
 
-		assertThat(requestHeaderCaptor.getValue().getHeaders()).containsEntry("X-Vault-Namespace",
-				List.of("mynamespace"));
-		assertThat(requestHeaderCaptor.getValue().getHeaders()).containsEntry("X-Vault-Token", List.of("token"));
+		assertThat(requestHeaderCaptor.getValue().getHeaders().containsHeader("X-Vault-Namespace")).isTrue();
+		assertThat(requestHeaderCaptor.getValue().getHeaders().get("X-Vault-Namespace"))
+			.isEqualTo(List.of("mynamespace"));
+		assertThat(requestHeaderCaptor.getValue().getHeaders().containsHeader("X-Vault-Token")).isTrue();
+		assertThat(requestHeaderCaptor.getValue().getHeaders().get("X-Vault-Token")).isEqualTo(List.of("token"));
 	}
 
 	@Test

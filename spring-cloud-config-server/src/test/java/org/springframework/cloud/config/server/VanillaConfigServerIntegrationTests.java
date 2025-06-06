@@ -94,7 +94,7 @@ public class VanillaConfigServerIntegrationTests {
 		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
 				"http://localhost:" + this.port + "/invalid/default", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
-		assertThat(response.getStatusCodeValue()).isEqualTo(500);
+		assertThat(response.getStatusCode().value()).isEqualTo(500);
 	}
 
 }

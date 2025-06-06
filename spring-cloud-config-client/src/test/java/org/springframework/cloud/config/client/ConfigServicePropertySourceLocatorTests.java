@@ -254,7 +254,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		String username = "user";
 		String password = "pass";
 		factory(defaults).addAuthorizationToken(headers, username, password);
-		assertThat(headers).hasSize(1);
+		assertThat(headers.size()).isEqualTo(1);
 	}
 
 	@Test
@@ -265,7 +265,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		String username = "user";
 		String password = null;
 		factory(defaults).addAuthorizationToken(headers, username, password);
-		assertThat(headers).hasSize(1);
+		assertThat(headers.size()).isEqualTo(1);
 	}
 
 	@Test
