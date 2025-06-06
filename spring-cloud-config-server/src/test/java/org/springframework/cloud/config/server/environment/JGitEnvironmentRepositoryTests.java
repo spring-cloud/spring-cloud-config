@@ -85,6 +85,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
@@ -800,17 +801,35 @@ public class JGitEnvironmentRepositoryTests {
 		repo.setUri("http://somegitserver/somegitrepo");
 		repo.setBasedir(this.basedir);
 
-		// Set the refresh rate to 2 seconds and last update before 100ms. There should be
-		// no remote repo fetch.
+		// Set the refresh rate to 10 seconds and last update before 100ms. There should be
+		// no remote repo fetch and not merge.
 		repo.setLastRefresh(System.currentTimeMillis() - 100);
-		repo.setRefreshRate(2);
+		repo.setRefreshRate(10);
 
 		repo.refresh("master");
 
 		// Verify no fetch nor merge.
 		verify(git, never()).fetch();
 		verify(git).checkout();
-		verify(git).merge();
+		verify(git, never()).merge();
+
+		// the checkout should not be called anymore since we are on the same branch
+		clearInvocations(git);
+		repo.refresh("master");
+
+		// Verify no fetch, checkout or merge
+		verify(git, never()).fetch();
+		verify(git, never()).checkout();
+		verify(git, never()).merge();
+
+		// checkout another branch, but still before the cache expires
+		clearInvocations(git);
+		repo.refresh("staging");
+
+		// Verify no fetch, a checkout and still no merge
+		verify(git, never()).fetch();
+		verify(git).checkout();
+		verify(git, never()).merge();
 	}
 
 	@Test

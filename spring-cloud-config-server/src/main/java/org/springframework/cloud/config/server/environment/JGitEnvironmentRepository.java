@@ -152,6 +152,15 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private final ObservationRegistry observationRegistry;
 
 	/**
+	 * Contains the previousLabel that was checked out to prevent doing it again.
+	 *
+	 * @implNote
+	 * The field is not volatile since we tend to lock around the {@link #refresh(String)} method which uses it.
+	 * However, this method is public si maybe it's a bad bet.
+	 */
+	private String previousLabel = "$%^&"; // none existing branch
+
+	/**
 	 * This lock is used to ensure thread safety between accessing the local git repo from
 	 * both the ResourceController and the EnvironmentController. See <a href=
 	 * "https://github.com/spring-cloud/spring-cloud-config/issues/2681">#2681</a>.
@@ -325,18 +334,27 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		Git git = null;
 		try {
 			git = createGitClient();
+
+			// If we need to pull (which means we need to refresh from the remote),
+			//   we need to fetch, checkout and merge, even on the same label, because if that label is a tag and someone nastily moved it, we need a checkout
+			// If we do not need to pull
+			//   case a -> we are on the same label, we should do nothing
+			//   case b -> we should checkout
 			if (shouldPull(git)) {
 				FetchResult fetchStatus = fetch(git, label);
 				if (this.deleteUntrackedBranches && fetchStatus != null) {
 					deleteUntrackedLocalBranches(fetchStatus.getTrackingRefUpdates(), git);
 				}
-			}
 
-			// checkout after fetch so we can get any new branches, tags, ect.
-			// if nothing to update so just checkout and merge.
-			// Merge because remote branch could have been updated before
-			checkout(git, label);
-			tryMerge(git, label);
+				// checkout after fetch, so we can get any new branches, tags, etc.
+				checkout(git, label);
+				// merge because remote branch could have been updated
+				tryMerge(git, label);
+			}
+			else if (!label.equals(this.previousLabel)) {
+				// checkout the new label
+				checkout(git, label);
+			}
 
 			// always return what is currently HEAD as the version
 			return git.getRepository().findRef("HEAD").getObjectId().getName();
@@ -496,7 +514,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			// works for tags and local branches
 			checkout.setName(label);
 		}
-		return checkout.call();
+		Ref call = checkout.call();
+		previousLabel = label; // do it after the call to prevent changing it when it fails
+		return call;
 	}
 
 	protected boolean shouldPull(Git git) throws GitAPIException {
