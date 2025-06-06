@@ -581,7 +581,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		configureCommand(fetch);
 		try {
 			FetchResult result = fetch.call();
-			if (result.getTrackingRefUpdates() != null && result.getTrackingRefUpdates().size() > 0) {
+			if (result.getTrackingRefUpdates() != null && !result.getTrackingRefUpdates().isEmpty()) {
 				this.logger.info("Fetched for remote " + label + " and found " + result.getTrackingRefUpdates().size()
 						+ " updates");
 			}
