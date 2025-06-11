@@ -33,7 +33,7 @@
 		<google-api-services-iam.version>v2-rev20250502-2.0.0</google-api-services-iam.version>
 		<google-cloud-iamcredentials.version>2.60.0</google-cloud-iamcredentials.version>
 		<wiremock.version>2.35.2</wiremock.version>
-		<spring-cloud-aws.version>3.3.1</spring-cloud-aws.version>
+		<spring-cloud-aws.version>3.4.0</spring-cloud-aws.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failsOnViolation>true
 		</maven-checkstyle-plugin.failsOnViolation>
