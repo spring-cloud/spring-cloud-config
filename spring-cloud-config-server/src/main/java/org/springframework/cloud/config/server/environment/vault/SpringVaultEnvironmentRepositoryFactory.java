@@ -37,17 +37,7 @@ public class SpringVaultEnvironmentRepositoryFactory
 
 	private final EnvironmentWatch watch;
 
-	private SpringVaultClientConfiguration clientConfiguration;
-
-	private SpringVaultTemplateBuilder vaultTemplateBuilder;
-
-	@Deprecated
-	public SpringVaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-			SpringVaultClientConfiguration clientConfiguration) {
-		this.request = request;
-		this.watch = watch;
-		this.clientConfiguration = clientConfiguration;
-	}
+	private final SpringVaultTemplateBuilder vaultTemplateBuilder;
 
 	public SpringVaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
 			SpringVaultTemplateBuilder vaultTemplateBuilder) {
@@ -58,8 +48,7 @@ public class SpringVaultEnvironmentRepositoryFactory
 
 	@Override
 	public SpringVaultEnvironmentRepository build(VaultEnvironmentProperties vaultProperties) {
-		VaultTemplate vaultTemplate = this.vaultTemplateBuilder != null
-				? this.vaultTemplateBuilder.build(vaultProperties) : clientConfiguration.vaultTemplate();
+		VaultTemplate vaultTemplate = this.vaultTemplateBuilder.build(vaultProperties);
 
 		VaultKeyValueOperations accessStrategy = buildVaultAccessStrategy(vaultProperties, vaultTemplate);
 
