@@ -53,12 +53,6 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	private final boolean acceptEmpty;
 
-	@Deprecated
-	public ConfigServerHealthIndicator(EnvironmentRepository environmentRepository) {
-		this.environmentRepository = environmentRepository;
-		this.acceptEmpty = true;
-	}
-
 	// autowired required or boot constructor binding produces an error
 	@Autowired
 	public ConfigServerHealthIndicator(EnvironmentRepository environmentRepository, ConfigServerProperties properties) {

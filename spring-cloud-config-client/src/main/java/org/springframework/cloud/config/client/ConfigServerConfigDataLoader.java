@@ -395,9 +395,4 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		return null;
 	}
 
-	@Deprecated
-	protected void addAuthorizationToken(ConfigClientProperties configClientProperties, HttpHeaders httpHeaders,
-			String username, String password) {
-	}
-
 }

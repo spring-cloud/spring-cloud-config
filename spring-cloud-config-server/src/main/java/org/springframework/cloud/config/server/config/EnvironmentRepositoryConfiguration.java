@@ -34,7 +34,6 @@ import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -64,7 +63,6 @@ import org.springframework.cloud.config.server.environment.GoogleSecretManagerEn
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.HttpClient4BuilderCustomizer;
 import org.springframework.cloud.config.server.environment.HttpClientConfigurableHttpConnectionFactory;
-import org.springframework.cloud.config.server.environment.HttpClientVaultRestTemplateFactory;
 import org.springframework.cloud.config.server.environment.HttpRequestConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
@@ -86,8 +84,6 @@ import org.springframework.cloud.config.server.environment.SvnEnvironmentReposit
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
-import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
-import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientConfiguration;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository;
@@ -128,12 +124,11 @@ import org.springframework.vault.core.VaultTemplate;
 		AwsSecretsManagerEnvironmentProperties.class, AwsParameterStoreEnvironmentProperties.class,
 		GoogleSecretManagerEnvironmentProperties.class, MongoDbEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultConfiguration.class,
-		VaultRepositoryConfiguration.class, SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
-		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
-		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
-		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
-		AwsParameterStoreRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class,
-		MongoRepositoryConfiguration.class,
+		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class, CredhubRepositoryConfiguration.class,
+		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
+		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class, AwsS3RepositoryConfiguration.class,
+		AwsSecretsManagerRepositoryConfiguration.class, AwsParameterStoreRepositoryConfiguration.class,
+		GoogleSecretManagerRepositoryConfiguration.class, MongoRepositoryConfiguration.class,
 		// DefaultRepositoryConfiguration must be last
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
@@ -278,21 +273,6 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnMissingClass("org.springframework.vault.core.VaultTemplate")
-	@SuppressWarnings("deprecation")
-	static class VaultFactoryConfig {
-
-		@Bean
-		public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
-				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-				Optional<VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory> vaultRestTemplateFactory,
-				ConfigTokenProvider tokenProvider) {
-			return new VaultEnvironmentRepositoryFactory(request, watch, vaultRestTemplateFactory, tokenProvider);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(SecretManagerServiceClient.class)
 	static class GoogleSecretManagerFactoryConfig {
 
@@ -300,19 +280,6 @@ public class EnvironmentRepositoryConfiguration {
 		public GoogleSecretManagerEnvironmentRepositoryFactory googleSecretManagerEnvironmentRepositoryFactory(
 				ObjectProvider<HttpServletRequest> request) {
 			return new GoogleSecretManagerEnvironmentRepositoryFactory(request);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(HttpClient.class)
-	@ConditionalOnMissingClass("org.springframework.vault.core.VaultTemplate")
-	@SuppressWarnings("deprecation")
-	static class VaultHttpClientConfig {
-
-		@Bean
-		public VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory vaultRestTemplateFactory() {
-			return new HttpClientVaultRestTemplateFactory();
 		}
 
 	}
@@ -488,20 +455,6 @@ class SvnRepositoryConfiguration {
 	@Bean
 	public SvnKitEnvironmentRepository svnKitEnvironmentRepository(SvnEnvironmentRepositoryFactory factory,
 			SvnKitEnvironmentProperties environmentProperties) {
-		return factory.build(environmentProperties);
-	}
-
-}
-
-@Configuration(proxyBeanMethods = false)
-@ConditionalOnMissingClass("org.springframework.vault.core.VaultTemplate")
-@Profile("vault")
-@SuppressWarnings("deprecation")
-class VaultRepositoryConfiguration {
-
-	@Bean
-	public VaultEnvironmentRepository vaultEnvironmentRepository(VaultEnvironmentRepositoryFactory factory,
-			VaultEnvironmentProperties environmentProperties) throws Exception {
 		return factory.build(environmentProperties);
 	}
 

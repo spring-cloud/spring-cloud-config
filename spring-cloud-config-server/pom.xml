@@ -261,8 +261,6 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<start-class>org.springframework.cloud.config.server.ConfigServerApplication
-		</start-class>
 	</properties>
 	<build>
 		<plugins>
