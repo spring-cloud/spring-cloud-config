@@ -31,6 +31,7 @@ import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.boot.context.config.ConfigData;
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.boot.context.config.ConfigDataEnvironmentUpdateListener;
 import org.springframework.boot.context.config.ConfigDataLocation;
@@ -150,6 +151,26 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 								ConfigDataLocation location, ConfigDataResource resource) {
 							propertySourceToConfigData.put(propertySource,
 									new PropertySourceConfigData(location, resource));
+						}
+
+						@Override
+						public ConfigData.Options onConfigDataOptions(ConfigData configData,
+								org.springframework.core.env.PropertySource<?> propertySource,
+								ConfigData.Options options) {
+							String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+							// Unless the request from the client includes profiles we
+							// should not return profile
+							// specific property sources if profiles are activated. The
+							// client will make a second request
+							// after activating all the profiles to get profile specific
+							// property sources
+							if (profiles.length == 0 || "default".equalsIgnoreCase(profiles[0])) {
+								return ConfigDataEnvironmentUpdateListener.super.onConfigDataOptions(configData,
+										propertySource, options)
+									.with(ConfigData.Option.IGNORE_PROFILES);
+							}
+							return ConfigDataEnvironmentUpdateListener.super.onConfigDataOptions(configData,
+									propertySource, options);
 						}
 					});
 
