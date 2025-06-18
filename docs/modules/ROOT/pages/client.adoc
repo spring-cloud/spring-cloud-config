@@ -253,7 +253,7 @@ If you use another form of security, you might need to xref:client.adoc#custom-r
 === Health Indicator
 
 The Config Client supplies a Spring Boot Health Indicator that attempts to load configuration from the Config Server.
-The health indicator can be disabled by setting `health.config.enabled=false`.
+The health indicator can be disabled by setting `management.health.config.enabled=false`.
 The response is also cached for performance reasons.
 The default cache time to live is 5 minutes.
 To change that value, set the `health.config.time-to-live` property (in milliseconds).
