@@ -46,21 +46,6 @@ public class MultipleJGitEnvironmentRepositoryFactory
 
 	private final List<HttpClient4BuilderCustomizer> customizers;
 
-	@Deprecated
-	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
-			TransportConfigCallbackFactory transportConfigCallbackFactory) {
-		this(environment, server, Optional.empty(), transportConfigCallbackFactory,
-				new GitCredentialsProviderFactory());
-	}
-
-	@Deprecated
-	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
-			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
-			TransportConfigCallbackFactory transportConfigCallbackFactory) {
-		this(environment, server, connectionFactory, transportConfigCallbackFactory,
-				new GitCredentialsProviderFactory());
-	}
-
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
 			TransportConfigCallbackFactory transportConfigCallbackFactory,

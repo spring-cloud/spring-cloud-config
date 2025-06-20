@@ -200,11 +200,6 @@ public class ConfigServerConfigDataLocationResolver
 		return context.getBootstrapContext().getOrElse(BindHandler.class, null);
 	}
 
-	@Deprecated
-	protected RestTemplate createRestTemplate(ConfigClientProperties properties) {
-		return null;
-	}
-
 	protected Log getLog() {
 		return this.log;
 	}
@@ -250,11 +245,6 @@ public class ConfigServerConfigDataLocationResolver
 
 		bootstrapContext.registerIfAbsent(RestTemplate.class, context -> {
 			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);
-			RestTemplate restTemplate = createRestTemplate(factory.getProperties());
-			if (restTemplate != null) {
-				// shouldn't normally happen
-				return restTemplate;
-			}
 			return factory.create();
 		});
 
