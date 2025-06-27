@@ -48,7 +48,6 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.SVNKitEnvironmentRepositoryIntegrationTests;
 import org.springframework.cloud.config.server.environment.SVNKitEnvironmentRepositoryTests;
-import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.resource.GenericResourceRepositoryTests;
 import org.springframework.cloud.config.server.resource.ResourceControllerIntegrationTests;
 import org.springframework.cloud.config.server.resource.ResourceControllerTests;
@@ -64,15 +63,13 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
 @RunWith(Suite.class)
 @SuiteClasses({ NativeConfigServerIntegrationTests.class, GenericResourceRepositoryTests.class,
 		ResourceControllerTests.class, ResourceControllerIntegrationTests.class, ConfigClientOnIntegrationTests.class,
-		ConfigServerApplicationTests.class, VanillaConfigServerIntegrationTests.class,
-		MultipleJGitEnvironmentRepositoryIntegrationTests.class, EnvironmentEncryptorEnvironmentRepositoryTests.class,
-		SVNKitEnvironmentRepositoryIntegrationTests.class,
+		VanillaConfigServerIntegrationTests.class, MultipleJGitEnvironmentRepositoryIntegrationTests.class,
+		EnvironmentEncryptorEnvironmentRepositoryTests.class, SVNKitEnvironmentRepositoryIntegrationTests.class,
 		MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests.class, JdbcEnvironmentRepositoryTests.class,
 		CompositeEnvironmentRepositoryTests.class, JGitEnvironmentRepositoryConcurrencyTests.class,
 		NativeEnvironmentRepositoryTests.class, JGitEnvironmentRepositoryTests.class,
-		SVNKitEnvironmentRepositoryTests.class, VaultEnvironmentRepositoryTests.class,
-		MultipleJGitEnvironmentRepositoryTests.class, JGitEnvironmentRepositoryIntegrationTests.class,
-		MultipleJGitEnvironmentProfilePlaceholderRepositoryTests.class,
+		SVNKitEnvironmentRepositoryTests.class, MultipleJGitEnvironmentRepositoryTests.class,
+		JGitEnvironmentRepositoryIntegrationTests.class, MultipleJGitEnvironmentProfilePlaceholderRepositoryTests.class,
 		MultipleJGitEnvironmentLabelPlaceholderRepositoryTests.class, GitCredentialsProviderFactoryTests.class,
 		AwsCodeCommitCredentialsProviderTests.class, TransportConfigurationIntegrationTests.FileBasedCallbackTest.class,
 		ConfigClientOffIntegrationTests.class, TransportConfigurationIntegrationTests.PropertyBasedCallbackTest.class,
