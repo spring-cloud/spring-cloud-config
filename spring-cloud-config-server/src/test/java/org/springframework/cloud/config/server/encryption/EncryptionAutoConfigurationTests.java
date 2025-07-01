@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2023 the original author or authors.
+ * Copyright 2002-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ package org.springframework.cloud.config.server.encryption;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.tomcat.autoconfigure.servlet.TomcatServletWebServerAutoConfiguration;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
 import org.springframework.cloud.config.server.config.DefaultTextEncryptionAutoConfiguration;
 import org.springframework.cloud.config.server.config.RsaEncryptionAutoConfiguration;
@@ -41,7 +41,7 @@ public class EncryptionAutoConfigurationTests {
 	public void defaultNoKeyAutoConfigurationTest() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
-				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
 			.properties("server.port=0")
 			.run();
@@ -56,7 +56,7 @@ public class EncryptionAutoConfigurationTests {
 	public void defaultKeyStoreAutoConfigurationTest() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
-				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
 			.properties("server.port=0", "encrypt.key-store.location=classpath:server.jks",
 					"encrypt.key-store.password=letmein", "encrypt.key-store.alias=myKey")
@@ -72,7 +72,7 @@ public class EncryptionAutoConfigurationTests {
 	public void defaultKeyAutoConfigurationTest() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
-				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
 			.properties("server.port=0", "encrypt.key=mykey")
 			.run();
@@ -88,7 +88,7 @@ public class EncryptionAutoConfigurationTests {
 	public void bootstrapNoKeyAutoConfigurationTest() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
-				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
 			.properties("server.port=0", "spring.cloud.bootstrap.enabled=true")
 			.run();
@@ -103,7 +103,7 @@ public class EncryptionAutoConfigurationTests {
 	public void bootstrapKeyAutoConfigurationTests() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
-				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
 			.properties("server.port=0", "spring.cloud.bootstrap.enabled=true", "encrypt.key=mykey")
 			.run();
@@ -117,7 +117,7 @@ public class EncryptionAutoConfigurationTests {
 	public void bootstrapKeyStoreAutoConfigurationTest() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				DefaultTextEncryptionAutoConfiguration.class, RsaEncryptionAutoConfiguration.class,
-				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
 			.properties("server.port=0", "spring.cloud.bootstrap.enabled=true",
 					"encrypt.key-store.location=classpath:server.jks", "encrypt.key-store.password=letmein",
