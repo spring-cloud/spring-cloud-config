@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2024 the original author or authors.
+ * Copyright 2014-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.springframework.aot.generate.GeneratedFiles;
 import org.springframework.aot.hint.ReflectionHints;
 import org.springframework.aot.test.generate.TestGenerationContext;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
-import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebApplicationContext;
+import org.springframework.boot.web.context.servlet.AnnotationConfigServletWebApplicationContext;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepositoryFactory;

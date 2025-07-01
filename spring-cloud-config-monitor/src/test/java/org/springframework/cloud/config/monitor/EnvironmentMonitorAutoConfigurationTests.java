@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@ import java.util.Collection;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.tomcat.autoconfigure.servlet.TomcatServletWebServerAutoConfiguration;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.cloud.bus.BusProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +41,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 	@Test
 	public void testExtractorsCount() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
-				EnvironmentMonitorAutoConfiguration.class, ServletWebServerFactoryAutoConfiguration.class,
+				EnvironmentMonitorAutoConfiguration.class, TomcatServletWebServerAutoConfiguration.class,
 				ServerProperties.class, PropertyPlaceholderAutoConfiguration.class)
 			.properties("server.port=-1")
 			.run();
@@ -56,7 +56,7 @@ public class EnvironmentMonitorAutoConfigurationTests {
 	public void testCanAddCustomPropertyPathNotificationExtractor() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
 				CustomPropertyPathNotificationExtractorConfig.class, EnvironmentMonitorAutoConfiguration.class,
-				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
 			.properties("server.port=-1")
 			.run();
