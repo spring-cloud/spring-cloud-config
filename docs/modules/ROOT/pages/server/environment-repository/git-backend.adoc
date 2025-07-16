@@ -64,7 +64,7 @@ spring:
 You can also support a "`one repository per profile`" policy by using a similar pattern but with
 `\{profile}`.
 
-Additionally, using the special string "(\{special-string})" within your `\{application}` parameters can enable support for multiple
+Additionally, using the special string `(\{special-string})` within your `\{application}` parameters can enable support for multiple
 organizations, as shown in the following example:
 
 [source,yaml]
@@ -223,10 +223,13 @@ JGit requires RSA keys in PEM format. Below is an example ssh-keygen (from opens
 ssh-keygen -m PEM -t rsa -b 4096 -f ~/config_server_deploy_key.rsa
 ```
 
-Warning: When working with SSH keys, the expected ssh private-key must begin with ```-----BEGIN RSA PRIVATE KEY-----```. If the key starts with ```-----BEGIN OPENSSH PRIVATE KEY-----``` then the RSA key will not load when spring-cloud-config server is started. The error looks like:
+[WARNING]
+=====
+When working with SSH keys, the expected ssh private-key must begin with ```-----BEGIN RSA PRIVATE KEY-----```. If the key starts with ```-----BEGIN OPENSSH PRIVATE KEY-----``` then the RSA key will not load when spring-cloud-config server is started. The error looks like:
 ```
 - Error in object 'spring.cloud.config.server.git': codes [PrivateKeyIsValid.spring.cloud.config.server.git,PrivateKeyIsValid]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [spring.cloud.config.server.git.,]; arguments []; default message []]; default message [Property 'spring.cloud.config.server.git.privateKey' is not a valid private key]
 ```
+=====
 
 To correct the above error the RSA key must be converted to PEM format. An example using openssh is provided above for generating a new key in the appropriate format.
 
