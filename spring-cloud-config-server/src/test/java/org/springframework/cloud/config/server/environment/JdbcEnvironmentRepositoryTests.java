@@ -208,7 +208,7 @@ public class JdbcEnvironmentRepositoryTests {
 		properties.setSqlWithoutProfile(
 				"SELECT SHOULD_FAIL from TABLE_NOTEXIST where APPLICATION=? and PROFILE is null and LABEL=?");
 		JdbcEnvironmentRepository repository = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
-				properties);
+				properties, new JdbcEnvironmentRepository.PropertiesResultSetExtractor());
 		assertThatThrownBy(() -> repository.findOne("foo", "bar", "")).isInstanceOf(DataAccessException.class);
 	}
 
