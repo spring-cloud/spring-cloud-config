@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -322,7 +322,7 @@ public class ResourceControllerTests {
 	}
 
 	@Test
-	public void whenSupportedResourceWithDecrpyt_thenSuccess() throws Exception {
+	public void whenSupportedResourceWithDecrypt_thenSuccess() throws Exception {
 		// given
 		String decryptedStr = "{\"foo\": \"decrypted\"}";
 		ResourceEncryptor resourceEncryptor = mock(ResourceEncryptor.class);
@@ -341,7 +341,7 @@ public class ResourceControllerTests {
 	}
 
 	@Test
-	public void whenUnkownResourceWithDecrpyt_thenNothingChanged() throws Exception {
+	public void whenUnknownResourceWithDecrypt_thenNothingChanged() throws Exception {
 		// given
 		String decryptedStr = "{\"foo\": \"decrypted\"}";
 		ResourceEncryptor resourceEncryptor = mock(ResourceEncryptor.class);
