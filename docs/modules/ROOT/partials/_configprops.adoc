@@ -17,8 +17,8 @@
 |spring.cloud.config.override-system-properties | `+++true+++` | Flag to indicate that the external properties should override system properties. Default true.
 |spring.cloud.config.password |  | The password to use (HTTP Basic) when contacting the remote server.
 |spring.cloud.config.profile | `+++default+++` | The default profile to use when fetching remote configuration (comma-separated). Default is "default".
-|spring.cloud.config.request-connect-timeout |  | timeout on waiting to connect to the Config Server.
-|spring.cloud.config.request-read-timeout |  | timeout on waiting to read data from the Config Server.
+|spring.cloud.config.request-connect-timeout | `+++0+++` | timeout on waiting to connect to the Config Server.
+|spring.cloud.config.request-read-timeout | `+++0+++` | timeout on waiting to read data from the Config Server.
 |spring.cloud.config.retry.initial-interval | `+++1000+++` | Initial retry interval in milliseconds.
 |spring.cloud.config.retry.max-attempts | `+++6+++` | Maximum number of attempts.
 |spring.cloud.config.retry.max-interval | `+++2000+++` | Maximum interval for backoff.
