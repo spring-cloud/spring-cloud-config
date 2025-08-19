@@ -17,7 +17,7 @@
 	<properties>
 		<jgit.version>7.3.0.202506031305-r</jgit.version>
 		<spring-vault.version>4.0.0-M2</spring-vault.version>
-		<spring-credhub.version>2.1.1.RELEASE</spring-credhub.version>
+		<spring-credhub.version>3.4.1-SNAPSHOT</spring-credhub.version>
 		<spring-retry.version>2.0.10</spring-retry.version>
 	</properties>
 	<dependencyManagement>
