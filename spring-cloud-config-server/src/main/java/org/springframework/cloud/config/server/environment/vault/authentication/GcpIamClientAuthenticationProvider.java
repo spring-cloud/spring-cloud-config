@@ -17,9 +17,10 @@
 package org.springframework.cloud.config.server.environment.vault.authentication;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Base64;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.auth.oauth2.GoogleCredentials;
 
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod;
@@ -27,9 +28,8 @@ import org.springframework.cloud.config.server.environment.vault.SpringVaultClie
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.vault.authentication.ClientAuthentication;
-import org.springframework.vault.authentication.GcpCredentialSupplier;
-import org.springframework.vault.authentication.GcpIamAuthentication;
-import org.springframework.vault.authentication.GcpIamAuthenticationOptions;
+import org.springframework.vault.authentication.GcpIamCredentialsAuthentication;
+import org.springframework.vault.authentication.GcpIamCredentialsAuthenticationOptions;
 import org.springframework.web.client.RestOperations;
 
 public class GcpIamClientAuthenticationProvider extends SpringVaultClientAuthenticationProvider {
@@ -49,45 +49,48 @@ public class GcpIamClientAuthenticationProvider extends SpringVaultClientAuthent
 
 		Assert.hasText(gcp.getRole(), missingPropertyForAuthMethod("gcp-iam.role", AuthenticationMethod.GCP_IAM));
 
-		GcpIamAuthenticationOptions.GcpIamAuthenticationOptionsBuilder builder = GcpIamAuthenticationOptions.builder()
+		GcpIamCredentialsAuthenticationOptions.GcpIamCredentialsAuthenticationOptionsBuilder builder = GcpIamCredentialsAuthenticationOptions
+			.builder()
 			.path(gcp.getGcpPath())
 			.role(gcp.getRole())
 			.jwtValidity(gcp.getJwtValidity());
 
 		if (StringUtils.hasText(gcp.getProjectId())) {
-			builder.projectId(gcp.getProjectId());
+			builder.serviceAccountId(gcp.getProjectId());
 		}
 
 		if (StringUtils.hasText(gcp.getServiceAccountId())) {
 			builder.serviceAccountId(gcp.getServiceAccountId());
 		}
 
-		GcpCredentialSupplier supplier = GcpCredentialProvider.getGoogleCredential(gcp);
-		builder.credential(supplier.get());
+		builder.credentials(GcpCredentialProvider.getGoogleCredential(gcp));
 
-		GcpIamAuthenticationOptions options = builder.build();
+		GcpIamCredentialsAuthenticationOptions options = builder.build();
 
-		return new GcpIamAuthentication(options, vaultRestOperations);
+		return new GcpIamCredentialsAuthentication(options, vaultRestOperations);
 	}
 
 	@SuppressWarnings("deprecation")
 	private static class GcpCredentialProvider {
 
-		public static GcpCredentialSupplier getGoogleCredential(VaultEnvironmentProperties.GcpIamProperties gcp) {
-			return () -> {
-
+		public static GoogleCredentials getGoogleCredential(VaultEnvironmentProperties.GcpIamProperties gcp) {
+			try {
 				VaultEnvironmentProperties.GcpCredentials credentialProperties = gcp.getCredentials();
 				if (credentialProperties.getLocation() != null) {
-					return GoogleCredential.fromStream(credentialProperties.getLocation().getInputStream());
+					return GoogleCredentials.fromStream(credentialProperties.getLocation().getInputStream());
 				}
 
 				if (StringUtils.hasText(credentialProperties.getEncodedKey())) {
-					return GoogleCredential.fromStream(
+					return GoogleCredentials.fromStream(
 							new ByteArrayInputStream(Base64.getDecoder().decode(credentialProperties.getEncodedKey())));
 				}
 
-				return GoogleCredential.getApplicationDefault();
-			};
+				return GoogleCredentials.getApplicationDefault();
+			}
+			catch (IOException e) {
+				// TODO log
+				return GoogleCredentials.newBuilder().build();
+			}
 		}
 
 	}

@@ -18,7 +18,7 @@ package org.springframework.cloud.config.monitor;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.util.MultiValueMap;
+import org.springframework.http.HttpHeaders;
 
 /**
  * @author lly 835
@@ -32,7 +32,7 @@ public class GogsPropertyPathNotificationExtractor extends BasePropertyPathNotif
 	private static final String HEADERS_VALUE = "push";
 
 	@Override
-	protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
+	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {
 		return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
 	}
 

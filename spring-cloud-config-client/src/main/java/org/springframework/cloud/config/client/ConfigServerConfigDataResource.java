@@ -124,8 +124,8 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 
 	private boolean uriEqual(String thisUriString, String thatUriString) {
 		try {
-			UriComponents thisUri = UriComponentsBuilder.fromHttpUrl(thisUriString).build();
-			UriComponents thatUri = UriComponentsBuilder.fromHttpUrl(thatUriString).build();
+			UriComponents thisUri = UriComponentsBuilder.fromUriString(thisUriString).build();
+			UriComponents thatUri = UriComponentsBuilder.fromUriString(thatUriString).build();
 			return Objects.equals(thisUri.getHost(), thatUri.getHost())
 					&& Objects.equals(thisUri.getPort(), thatUri.getPort())
 					&& Objects.equals(thisUri.getPath(), thatUri.getPath());
@@ -138,7 +138,7 @@ public class ConfigServerConfigDataResource extends ConfigDataResource {
 	private int urisHashCode(String[] uris) {
 		return Arrays.stream(uris).mapToInt(uriString -> {
 			try {
-				UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(uriString).build();
+				UriComponents uriComponents = UriComponentsBuilder.fromUriString(uriString).build();
 				return Objects.hash(uriComponents.getHost(), uriComponents.getPath(), uriComponents.getPort());
 			}
 			catch (Exception e) {

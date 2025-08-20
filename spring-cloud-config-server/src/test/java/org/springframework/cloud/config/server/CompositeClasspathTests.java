@@ -46,8 +46,9 @@ public class CompositeClasspathTests {
 
 	}
 
-	@ClassPathExclusions({ "spring-jdbc-*.jar", "spring-data-redis-*.jar", "spring-boot-actuator-*.jar" })
-	public static class NoActuatorTests {
+	@ClassPathExclusions({ "spring-jdbc-*.jar", "spring-data-redis-*.jar", "spring-boot-actuator-*.jar",
+			"spring-boot-health-*.jar" })
+	public static class NoActuatorOrHealthTests {
 
 		@Test
 		public void contextLoads() {
