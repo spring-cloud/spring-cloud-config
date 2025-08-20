@@ -63,7 +63,7 @@ import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.ClientCertificateAuthentication;
 import org.springframework.vault.authentication.CubbyholeAuthentication;
 import org.springframework.vault.authentication.GcpComputeAuthentication;
-import org.springframework.vault.authentication.GcpIamCredentialsAuthentication;
+import org.springframework.vault.authentication.GcpIamAuthentication;
 import org.springframework.vault.authentication.KubernetesAuthentication;
 import org.springframework.vault.authentication.PcfAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
@@ -231,7 +231,7 @@ class SpringVaultClientConfigurationTests {
 		properties.getGcpIam().setServiceAccountId("service-account");
 		properties.getGcpIam().getCredentials().setEncodedKey(base64(GCE_JSON));
 
-		assertClientAuthenticationOfType(properties, GcpIamCredentialsAuthentication.class);
+		assertClientAuthenticationOfType(properties, GcpIamAuthentication.class);
 	}
 
 	@Test

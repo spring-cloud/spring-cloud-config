@@ -21,7 +21,7 @@ import java.util.Map;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpHeaders;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
 /**
@@ -34,7 +34,7 @@ import org.springframework.util.StringUtils;
 public class BitbucketPropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
 	@Override
-	public PropertyPathNotification extract(HttpHeaders headers, Map<String, Object> request) {
+	public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> request) {
 		if (("repo:push".equals(headers.getFirst("X-Event-Key"))
 				|| "pullrequest:fulfilled".equals(headers.getFirst("X-Event-Key")))
 				&& StringUtils.hasText(headers.getFirst("X-Hook-UUID"))) {

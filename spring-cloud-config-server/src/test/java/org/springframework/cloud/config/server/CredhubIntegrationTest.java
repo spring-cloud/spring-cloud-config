@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.credhub.core.credential.CredHubCredentialOperations;
 import org.springframework.credhub.support.CredentialDetails;
@@ -26,7 +27,6 @@ import org.springframework.credhub.support.CredentialSummary;
 import org.springframework.credhub.support.CredentialType;
 import org.springframework.credhub.support.SimpleCredentialName;
 import org.springframework.credhub.support.json.JsonCredential;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.when;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
  */
 public class CredhubIntegrationTest {
 
-	@MockitoBean
+	@MockBean
 	private CredHubOperations credHubOperations;
 
 	@BeforeEach

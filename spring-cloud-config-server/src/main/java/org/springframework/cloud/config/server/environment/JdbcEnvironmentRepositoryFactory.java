@@ -28,6 +28,11 @@ public class JdbcEnvironmentRepositoryFactory
 
 	private final JdbcEnvironmentRepository.PropertiesResultSetExtractor extractor;
 
+	@Deprecated
+	public JdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc) {
+		this(jdbc, new JdbcEnvironmentRepository.PropertiesResultSetExtractor());
+	}
+
 	public JdbcEnvironmentRepositoryFactory(JdbcTemplate jdbc,
 			JdbcEnvironmentRepository.PropertiesResultSetExtractor extractor) {
 		this.jdbc = jdbc;

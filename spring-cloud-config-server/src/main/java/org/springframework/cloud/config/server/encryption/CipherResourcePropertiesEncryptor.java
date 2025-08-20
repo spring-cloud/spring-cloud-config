@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2025 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class CipherResourcePropertiesEncryptor extends AbstractCipherResourceEnc
 
 	@Override
 	public String decrypt(String text, Environment environment) throws IOException {
-		Set<String> valsToDecrypt = new HashSet<String>();
+		Set<String> valsToDecrpyt = new HashSet<String>();
 		Properties properties = new Properties();
 		StringBuffer sb = new StringBuffer();
 		properties.load(new ByteArrayInputStream(text.getBytes()));
@@ -58,11 +58,11 @@ public class CipherResourcePropertiesEncryptor extends AbstractCipherResourceEnc
 		for (Object value : properties.values()) {
 			String valueStr = value.toString();
 			if (valueStr.startsWith(CIPHER_MARKER)) {
-				valsToDecrypt.add(valueStr);
+				valsToDecrpyt.add(valueStr);
 			}
 		}
 
-		for (String value : valsToDecrypt) {
+		for (String value : valsToDecrpyt) {
 			String decryptedValue = decryptValue(value.replace(CIPHER_MARKER, ""), environment.getName(),
 					environment.getProfiles());
 			text = text.replace(value, decryptedValue);

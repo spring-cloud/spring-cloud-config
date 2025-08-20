@@ -26,11 +26,11 @@ import java.util.List;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.gax.core.FixedCredentialsProvider;
-import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
-import com.google.api.services.cloudresourcemanager.v3.model.TestIamPermissionsRequest;
-import com.google.api.services.cloudresourcemanager.v3.model.TestIamPermissionsResponse;
+import com.google.api.services.cloudresourcemanager.CloudResourceManager;
+import com.google.api.services.cloudresourcemanager.model.TestIamPermissionsRequest;
+import com.google.api.services.cloudresourcemanager.model.TestIamPermissionsResponse;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -163,7 +163,7 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 			GoogleCredentials credential = new GoogleCredentials(accessToken);
 			HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credential);
 			service = new CloudResourceManager.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-					GsonFactory.getDefaultInstance(), requestInitializer)
+					JacksonFactory.getDefaultInstance(), requestInitializer)
 				.setApplicationName(APPLICATION_NAME)
 				.build();
 			List<String> permissionsList = Arrays.asList(ACCESS_SECRET_PERMISSION);

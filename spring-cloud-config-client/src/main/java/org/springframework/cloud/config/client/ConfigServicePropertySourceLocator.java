@@ -337,6 +337,19 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		this.restTemplate = restTemplate;
 	}
 
+	/**
+	 * Adds the provided headers to the request.
+	 */
+	@Deprecated
+	public static class GenericRequestHeaderInterceptor
+			extends ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor {
+
+		public GenericRequestHeaderInterceptor(Map<String, String> headers) {
+			super(headers);
+		}
+
+	}
+
 	static class ConfigServiceOrigin implements Origin {
 
 		private final String remotePropertySource;

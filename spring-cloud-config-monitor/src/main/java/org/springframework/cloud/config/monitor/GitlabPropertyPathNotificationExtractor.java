@@ -18,7 +18,7 @@ package org.springframework.cloud.config.monitor;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpHeaders;
+import org.springframework.util.MultiValueMap;
 
 /**
  * @author Dave Syer
@@ -28,7 +28,7 @@ import org.springframework.http.HttpHeaders;
 public class GitlabPropertyPathNotificationExtractor extends BasePropertyPathNotificationExtractor {
 
 	@Override
-	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {
+	protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
 		return "Push Hook".equals(headers.getFirst("X-Gitlab-Event"));
 	}
 

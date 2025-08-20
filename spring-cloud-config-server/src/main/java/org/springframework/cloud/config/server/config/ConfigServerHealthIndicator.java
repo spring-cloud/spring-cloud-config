@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.health.contributor.AbstractHealthIndicator;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.Status;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
@@ -52,6 +52,12 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 	private String downHealthStatus = Status.DOWN.getCode();
 
 	private final boolean acceptEmpty;
+
+	@Deprecated
+	public ConfigServerHealthIndicator(EnvironmentRepository environmentRepository) {
+		this.environmentRepository = environmentRepository;
+		this.acceptEmpty = true;
+	}
 
 	// autowired required or boot constructor binding produces an error
 	@Autowired

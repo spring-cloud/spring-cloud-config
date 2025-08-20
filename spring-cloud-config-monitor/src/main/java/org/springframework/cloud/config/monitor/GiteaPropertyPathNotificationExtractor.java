@@ -22,7 +22,7 @@ import java.util.Set;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpHeaders;
+import org.springframework.util.MultiValueMap;
 
 /**
  * @author Juan Pablo Santos Rodríguez
@@ -46,7 +46,7 @@ public class GiteaPropertyPathNotificationExtractor extends BasePropertyPathNoti
 	}
 
 	@Override
-	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {
+	protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
 		return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
 	}
 

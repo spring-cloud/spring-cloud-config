@@ -39,6 +39,8 @@ import static org.mockito.Mockito.when;
  */
 public class SpringVaultEnvironmentRepositoryFactoryTests {
 
+	private final SpringVaultClientConfiguration clientConfiguration = mock(SpringVaultClientConfiguration.class);
+
 	private final SpringVaultTemplateBuilder vaultTemplateBuilder = mock(SpringVaultTemplateBuilder.class);
 
 	private final VaultTemplate vaultTemplate = new VaultTemplate(VaultEndpoint.create("localhost", 8200),
@@ -47,16 +49,16 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 	@Test
 	public void buildForVersion1() {
 		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
-		when(vaultTemplateBuilder.build(properties)).thenReturn(vaultTemplate);
+		when(clientConfiguration.vaultTemplate()).thenReturn(vaultTemplate);
 
 		SpringVaultEnvironmentRepository environmentRepository = new SpringVaultEnvironmentRepositoryFactory(
-				mockHttpRequest(), new EnvironmentWatch.Default(), vaultTemplateBuilder)
+				mockHttpRequest(), new EnvironmentWatch.Default(), clientConfiguration)
 			.build(properties);
 
 		VaultKeyValueOperations keyValueTemplate = environmentRepository.getKeyValueTemplate();
 		assertThat(keyValueTemplate.getApiVersion()).isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_1);
-		verify(vaultTemplateBuilder).build(properties);
-		verifyNoMoreInteractions(vaultTemplateBuilder);
+		verify(clientConfiguration).vaultTemplate();
+		verifyNoMoreInteractions(clientConfiguration, vaultTemplateBuilder);
 	}
 
 	@Test
@@ -71,23 +73,23 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 		VaultKeyValueOperations keyValueTemplate = environmentRepository.getKeyValueTemplate();
 		assertThat(keyValueTemplate.getApiVersion()).isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_1);
 		verify(vaultTemplateBuilder).build(properties);
-		verifyNoMoreInteractions(vaultTemplateBuilder);
+		verifyNoMoreInteractions(clientConfiguration, vaultTemplateBuilder);
 	}
 
 	@Test
 	public void buildForVersion2() {
 		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
 		properties.setKvVersion(2);
-		when(vaultTemplateBuilder.build(properties)).thenReturn(vaultTemplate);
+		when(clientConfiguration.vaultTemplate()).thenReturn(vaultTemplate);
 
 		SpringVaultEnvironmentRepository environmentRepository = new SpringVaultEnvironmentRepositoryFactory(
-				mockHttpRequest(), new EnvironmentWatch.Default(), vaultTemplateBuilder)
+				mockHttpRequest(), new EnvironmentWatch.Default(), clientConfiguration)
 			.build(properties);
 
 		VaultKeyValueOperations keyValueTemplate = environmentRepository.getKeyValueTemplate();
 		assertThat(keyValueTemplate.getApiVersion()).isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
-		verify(vaultTemplateBuilder).build(properties);
-		verifyNoMoreInteractions(vaultTemplateBuilder);
+		verify(clientConfiguration).vaultTemplate();
+		verifyNoMoreInteractions(clientConfiguration, vaultTemplateBuilder);
 	}
 
 	@Test
@@ -103,7 +105,7 @@ public class SpringVaultEnvironmentRepositoryFactoryTests {
 		VaultKeyValueOperations keyValueTemplate = environmentRepository.getKeyValueTemplate();
 		assertThat(keyValueTemplate.getApiVersion()).isEqualTo(VaultKeyValueOperationsSupport.KeyValueBackend.KV_2);
 		verify(vaultTemplateBuilder).build(properties);
-		verifyNoMoreInteractions(vaultTemplateBuilder);
+		verifyNoMoreInteractions(clientConfiguration, vaultTemplateBuilder);
 	}
 
 	@SuppressWarnings("unchecked")

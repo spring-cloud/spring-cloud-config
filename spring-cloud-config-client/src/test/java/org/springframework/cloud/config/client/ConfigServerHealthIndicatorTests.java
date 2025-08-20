@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2025 the original author or authors.
+ * Copyright 2014-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.boot.health.contributor.Status;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -64,7 +64,7 @@ public class ConfigServerHealthIndicatorTests {
 	@Test
 	public void testServerUp() {
 		setupPropertySources();
-		Map<String, Object> details = this.indicator.health(true).getDetails();
+		Map<String, Object> details = this.indicator.getHealth(true).getDetails();
 		List<String> propertySources = (List) details.get("propertySources");
 		assertThat(propertySources).contains("bootstrapProperties-test");
 		assertThat(propertySources).contains("configserver:test");

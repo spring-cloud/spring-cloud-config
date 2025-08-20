@@ -71,6 +71,11 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private String defaultLabel;
 
+	@Deprecated
+	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
+		this(jdbc, properties, new PropertiesResultSetExtractor());
+	}
+
 	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties,
 			PropertiesResultSetExtractor extractor) {
 		this.jdbc = jdbc;

@@ -18,7 +18,6 @@ package org.springframework.cloud.config.monitor;
 
 import java.util.Map;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.util.MultiValueMap;
 
 /**
@@ -31,10 +30,6 @@ import org.springframework.util.MultiValueMap;
  */
 public interface PropertyPathNotificationExtractor {
 
-	default PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> payload) {
-		return extract(new HttpHeaders(headers), payload);
-	}
-
-	PropertyPathNotification extract(HttpHeaders headers, Map<String, Object> payload);
+	PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> payload);
 
 }

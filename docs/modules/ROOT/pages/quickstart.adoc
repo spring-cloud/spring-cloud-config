@@ -3,97 +3,14 @@
 
 This quick start walks through using both the server and the client of Spring Cloud Config Server.
 
-First create a Spring Boot application with a dependency on `org.springframework.cloud:spring-cloud-config-server`.
+First, start the server, as follows:
 
-.pom.xml
-[source,xml]
 ----
-...
-  <properties>
-    <java.version>21</java.version>
-    <spring-cloud.version>2025.1.0</spring-cloud.version>
-  </properties>
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-config-server</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-dependencies</artifactId>
-        <version>${spring-cloud.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-...
+$ cd spring-cloud-config-server
+$ ../mvnw spring-boot:run
 ----
 
-.build.gradle
-[source,json]
-----
-...
-ext {
-  set('springCloudVersion', "2025.1.0")
-}
-
-dependencies {
-  implementation 'org.springframework.cloud:spring-cloud-config-server'
-}
-
-dependencyManagement {
-  imports {
-    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-  }
-}
-...
-----
-
-In the main application class add the `@EnableConfigServer` annotation.
-
-.ConfigServerApplication.java
-[source,java]
-----
-@EnableConfigServer
-@SpringBootApplication
-public class ConfigServerApplication {
-
-	public static void main(String[] args) {
-		new SpringApplicationBuilder(ConfigServerApplication.class).run(args);
-	}
-
-}
-----
-
-Finally in your `application.yaml` file (or `application.properties`) add the following properties.
-
-.application.yaml
-[source,yaml]
-----
-spring:
-  application:
-    name: configserver
-  cloud:
-    config:
-      server:
-        git:
-          uri: https://github.com/spring-cloud-samples/config-repo
-          repos:
-            - patterns: multi-repo-demo-*
-              uri: https://github.com/spring-cloud-samples/config-repo
-server:
-  port: 8888
-----
+The server is a Spring Boot application, so you can run it from your IDE if you prefer to do so (the main class is `ConfigServerApplication`).
 
 Next try out a client, as follows:
 

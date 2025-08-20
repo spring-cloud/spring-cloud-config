@@ -18,7 +18,7 @@ package org.springframework.cloud.config.monitor;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpHeaders;
+import org.springframework.util.MultiValueMap;
 
 /**
  * @author lly 835
@@ -32,7 +32,7 @@ public class GiteePropertyPathNotificationExtractor extends BasePropertyPathNoti
 	private static final String HEADERS_VALUE = "Push Hook";
 
 	@Override
-	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {
+	protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
 		return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
 	}
 

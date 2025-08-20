@@ -1189,11 +1189,12 @@ public class JGitEnvironmentRepositoryTests {
 
 		// refresh()->merge
 		MergeResult mergeResult = mock(MergeResult.class);
-		MergeResult.MergeStatus mergeStatus = MergeResult.MergeStatus.MERGED;
+		MergeResult.MergeStatus mergeStatus = mock(MergeResult.MergeStatus.class);
 		MergeCommand mergeCommand = mock(MergeCommand.class);
 		when(git.merge()).thenReturn(mergeCommand);
 		when(mergeCommand.call()).thenReturn(mergeResult);
 		when(mergeResult.getMergeStatus()).thenReturn(mergeStatus);
+		when(mergeStatus.isSuccessful()).thenReturn(true);
 
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());

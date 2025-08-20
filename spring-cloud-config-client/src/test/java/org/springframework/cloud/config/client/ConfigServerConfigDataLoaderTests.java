@@ -263,7 +263,7 @@ public class ConfigServerConfigDataLoaderTests {
 		String username = "user";
 		String password = "pass";
 		factory(properties).addAuthorizationToken(headers, username, password);
-		assertThat(headers.size()).isEqualTo(1);
+		assertThat(headers).hasSize(1);
 	}
 
 	@Test
@@ -272,7 +272,7 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 		String username = "user";
 		factory(properties).addAuthorizationToken(headers, username, null);
-		assertThat(headers.size()).isEqualTo(1);
+		assertThat(headers).hasSize(1);
 	}
 
 	@Test
