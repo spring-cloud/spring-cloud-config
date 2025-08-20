@@ -24,8 +24,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.web.server.test.LocalServerPort;
+import org.springframework.boot.web.server.test.client.TestRestTemplate;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
