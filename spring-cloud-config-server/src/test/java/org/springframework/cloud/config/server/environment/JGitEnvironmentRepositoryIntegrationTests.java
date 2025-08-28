@@ -71,6 +71,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOf
  * @author Roy Clarkson
  * @author Daniel Lavoie
  * @author Ryan Lynch
+ * @author Henri Tremblay
  */
 public class JGitEnvironmentRepositoryIntegrationTests {
 
@@ -533,12 +534,13 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		StreamUtils.copy("foo: barNewCommit", Charset.defaultCharset(), out);
 		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
 		testData.getServerGit().getGit().commit().setMessage("Updated for pull").call();
+		testData.getServerGit().getGit().tag().setName("testTag").call();
 		String updatedRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
 
 		// Set refresh rate to 60 seconds (now it will fetch the remote repo only once)
 		testData.getRepository().setRefreshRate(60);
 
-		// Ask test label configuration first
+		// Ask test label configuration first, it will fetch but fail on the checkout
 		try {
 			testData.getRepository().findOne("bar", "staging", "test");
 			fail("Should have thrown NoSuchLabelException.");
@@ -547,10 +549,16 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 			// OK
 		}
 
-		// do a normal request and verify we get the new version
+		// do a normal request, the previous branch was the "master" branch, so it won't move
 		environment = testData.getRepository().findOne("bar", "staging", "master");
-		assertThat(updatedRemoteVersion).isEqualTo(environment.getVersion());
+		assertThat(startingRemoteVersion).isEqualTo(environment.getVersion());
 		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
+		assertThat("bar").isEqualTo(fooProperty);
+
+		// get the test tag which is on the latest commit. It was fetched so it will be found
+		environment = testData.getRepository().findOne("bar", "staging", "testTag");
+		assertThat(updatedRemoteVersion).isEqualTo(environment.getVersion());
+		fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
 		assertThat("barNewCommit").isEqualTo(fooProperty);
 
 		// request the prior commit ID and make sure we get it
