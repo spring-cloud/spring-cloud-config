@@ -172,7 +172,7 @@ public class ConfigServerConfigDataLocationResolver
 				Properties properties = StringUtils
 					.splitArrayElementsIntoProperties(StringUtils.delimitedListToStringArray(paramStr, "&"), "=");
 				if (properties != null) {
-					PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+					PropertyMapper map = PropertyMapper.get();
 					map.from(() -> properties.getProperty("fail-fast"))
 						.as(Boolean::valueOf)
 						.to(configClientProperties::setFailFast);
