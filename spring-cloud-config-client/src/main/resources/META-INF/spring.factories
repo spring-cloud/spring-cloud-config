@@ -4,7 +4,7 @@ org.springframework.cloud.config.client.ConfigServiceBootstrapConfiguration,\
 org.springframework.cloud.config.client.DiscoveryClientConfigServiceBootstrapConfiguration
 
 # Environment PostProcessor
-org.springframework.boot.env.EnvironmentPostProcessor=\
+org.springframework.boot.EnvironmentPostProcessor=\
 org.springframework.cloud.config.client.ConfigServerConfigDataMissingEnvironmentPostProcessor
 
 org.springframework.boot.diagnostics.FailureAnalyzer=\
@@ -20,5 +20,5 @@ org.springframework.boot.context.config.ConfigDataLoader=\
 org.springframework.cloud.config.client.ConfigServerConfigDataLoader
 
 # Spring Boot BootstrapRegistryInitializers
-org.springframework.boot.BootstrapRegistryInitializer=\
+org.springframework.boot.bootstrap.BootstrapRegistryInitializer=\
 org.springframework.cloud.config.client.ConfigClientRetryBootstrapper
