@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -78,6 +79,7 @@ import static org.eclipse.jgit.transport.ReceiveCommand.Type.DELETE;
  * @author Ryan Lynch
  * @author Gareth Clay
  * @author ChaoDong Xi
+ * @author Henri Tremblay
  */
 public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		implements EnvironmentRepository, SearchPathLocator, InitializingBean {
@@ -151,11 +153,20 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private final ObservationRegistry observationRegistry;
 
 	/**
+	 * Contains the previousLabel that was checked out to prevent doing it again.
+	 *
+	 * @implNote
+	 * The field is not volatile since we tend to lock around the {@link #refresh(String)} method which uses it.
+	 * However, this method is public so maybe it's a bad bet.
+	 */
+	private String previousLabel = "$%^&"; // none existing branch
+
+	/**
 	 * This lock is used to ensure thread safety between accessing the local git repo from
 	 * both the ResourceController and the EnvironmentController. See <a href=
 	 * "https://github.com/spring-cloud/spring-cloud-config/issues/2681">#2681</a>.
 	 */
-	private final Object LOCK = new Object();
+	private final ReentrantLock LOCK = new ReentrantLock();
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties,
 			ObservationRegistry observationRegistry) {
@@ -262,8 +273,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	@Override
 	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin) {
-		synchronized (LOCK) {
+		LOCK.lock();
+		try {
 			return super.findOne(application, profile, label, includeOrigin);
+		}
+		finally {
+			LOCK.unlock();
 		}
 	}
 
@@ -274,8 +289,12 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		}
 		String version;
 		try {
-			synchronized (LOCK) {
+			try {
+				LOCK.lock();
 				version = refresh(label);
+			}
+			finally {
+				LOCK.unlock();
 			}
 		}
 		catch (Exception e) {
@@ -283,7 +302,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 					&& tryMasterBranch) {
 				logger.info("Could not refresh default label " + label, e);
 				logger.info("Will try to refresh master label instead.");
-				version = refresh(JGitEnvironmentProperties.MASTER_LABEL);
+				LOCK.lock();
+				try {
+					version = refresh(JGitEnvironmentProperties.MASTER_LABEL);
+				}
+				finally {
+					LOCK.unlock();
+				}
 			}
 			else {
 				throw e;
@@ -310,18 +335,27 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		Git git = null;
 		try {
 			git = createGitClient();
+
+			// If we need to pull (which means we need to refresh from the remote),
+			//   we need to fetch, checkout and merge, even on the same label, because if that label is a tag and someone nastily moved it, we need a checkout
+			// If we do not need to pull
+			//   case a -> we are on the same label, we should do nothing
+			//   case b -> we should checkout
 			if (shouldPull(git)) {
 				FetchResult fetchStatus = fetch(git, label);
 				if (this.deleteUntrackedBranches && fetchStatus != null) {
 					deleteUntrackedLocalBranches(fetchStatus.getTrackingRefUpdates(), git);
 				}
-			}
 
-			// checkout after fetch so we can get any new branches, tags, ect.
-			// if nothing to update so just checkout and merge.
-			// Merge because remote branch could have been updated before
-			checkout(git, label);
-			tryMerge(git, label);
+				// checkout after fetch, so we can get any new branches, tags, etc.
+				checkout(git, label);
+				// merge because remote branch could have been updated
+				tryMerge(git, label);
+			}
+			else if (!label.equals(this.previousLabel)) {
+				// checkout the new label
+				checkout(git, label);
+			}
 
 			// always return what is currently HEAD as the version
 			return git.getRepository().findRef("HEAD").getObjectId().getName();
@@ -481,14 +515,16 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			// works for tags and local branches
 			checkout.setName(label);
 		}
-		return checkout.call();
+		Ref call = checkout.call();
+		previousLabel = label; // do it after the call to prevent changing it when it fails
+		return call;
 	}
 
 	protected boolean shouldPull(Git git) throws GitAPIException {
 		boolean shouldPull;
 
 		if (this.refreshRate < 0 || (this.refreshRate > 0
-				&& System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000))) {
+				&& System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000L))) {
 			return false;
 		}
 
@@ -566,7 +602,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		configureCommand(fetch);
 		try {
 			FetchResult result = fetch.call();
-			if (result.getTrackingRefUpdates() != null && result.getTrackingRefUpdates().size() > 0) {
+			if (result.getTrackingRefUpdates() != null && !result.getTrackingRefUpdates().isEmpty()) {
 				this.logger.info("Fetched for remote " + label + " and found " + result.getTrackingRefUpdates().size()
 						+ " updates");
 			}
