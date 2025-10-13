@@ -89,8 +89,6 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<start-class>sample.Application</start-class>
-		<java.version>1.8</java.version>
 	</properties>
 
 	<build>
@@ -102,11 +100,6 @@
 					<skip>true</skip>
 				</configuration>
 			</plugin>
-			<!-- FIXME: 3.0.0 -->
-			<!--<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>-->
 		</plugins>
 	</build>
 
