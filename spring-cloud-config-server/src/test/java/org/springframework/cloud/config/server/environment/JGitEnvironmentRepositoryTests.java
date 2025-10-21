@@ -65,12 +65,10 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.Rule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -80,7 +78,6 @@ import org.springframework.cloud.config.server.support.PassphraseCredentialsProv
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -97,9 +94,6 @@ import static org.mockito.Mockito.when;
  * @author Gareth Clay
  */
 public class JGitEnvironmentRepositoryTests {
-
-	@Rule
-	public final ExpectedException exception = ExpectedException.none();
 
 	RefDatabase database = Mockito.mock(RefDatabase.class);
 
@@ -164,7 +158,7 @@ public class JGitEnvironmentRepositoryTests {
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
 		assertThat(version).as("version was null").isNotNull();
-		assertTrue("version length was wrong", version.length() >= 40 && version.length() <= 64);
+		assertThat(version.length() >= 40 && version.length() <= 64).isTrue();
 	}
 
 	@Test
@@ -910,7 +904,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
+		assertThat(mockCloneCommand.getCredentialsProvider()).isInstanceOf(UsernamePasswordCredentialsProvider.class);
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		CredentialItem.Username usernameCredential = new CredentialItem.Username();
@@ -999,7 +993,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
+		assertThat(mockCloneCommand.getCredentialsProvider()).isInstanceOf(UsernamePasswordCredentialsProvider.class);
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		CredentialItem.Username usernameCredential = new CredentialItem.Username();
@@ -1026,7 +1020,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof AwsCodeCommitCredentialProvider);
+		assertThat(mockCloneCommand.getCredentialsProvider()).isInstanceOf(AwsCodeCommitCredentialProvider.class);
 	}
 
 	@Test

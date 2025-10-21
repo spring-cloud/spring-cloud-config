@@ -19,9 +19,9 @@ package org.springframework.cloud.config.server.encryption;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.test.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.http.HttpEntity;
@@ -43,12 +43,14 @@ public class EncryptionIntegrationTests {
 	@DirtiesContext
 	public static class ConfigSymmetricEncryptionIntegrationTests {
 
-		@Autowired
-		private TestRestTemplate testRestTemplate;
+		@LocalServerPort
+		private int port;
 
 		@Test
 		public void symmetricEncryptionEnabled() throws Exception {
-			ResponseEntity<String> entity = this.testRestTemplate.getForEntity("/encrypt/status", String.class);
+			TestRestTemplate testRestTemplate = new TestRestTemplate();
+			ResponseEntity<String> entity = testRestTemplate
+				.getForEntity("http://localhost:" + port + "/encrypt/status", String.class);
 			assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		}
 
@@ -62,12 +64,14 @@ public class EncryptionIntegrationTests {
 	@DirtiesContext
 	public static class BootstrapConfigSymmetricEncryptionIntegrationTests {
 
-		@Autowired
-		private TestRestTemplate testRestTemplate;
+		@LocalServerPort
+		private int port;
 
 		@Test
 		public void symmetricEncryptionBootstrapConfig() throws Exception {
-			ResponseEntity<String> entity = this.testRestTemplate.getForEntity("/encrypt/status", String.class);
+			TestRestTemplate testRestTemplate = new TestRestTemplate();
+			ResponseEntity<String> entity = testRestTemplate
+				.getForEntity("http://localhost:" + port + "/encrypt/status", String.class);
 			assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		}
 
@@ -81,12 +85,14 @@ public class EncryptionIntegrationTests {
 	@DirtiesContext
 	public static class KeystoreConfigurationIntegrationTests {
 
-		@Autowired
-		private TestRestTemplate testRestTemplate;
+		@LocalServerPort
+		private int port;
 
 		@Test
 		public void keystoreBootstrapConfig() throws Exception {
-			ResponseEntity<String> entity = this.testRestTemplate.getForEntity("/encrypt/status", String.class);
+			TestRestTemplate testRestTemplate = new TestRestTemplate();
+			ResponseEntity<String> entity = testRestTemplate
+				.getForEntity("http://localhost:" + port + "/encrypt/status", String.class);
 			assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		}
 
@@ -100,8 +106,8 @@ public class EncryptionIntegrationTests {
 	@DirtiesContext
 	public static class KeystoreConfigurationEncryptionOnlyIntegrationTests {
 
-		@Autowired
-		private TestRestTemplate testRestTemplate;
+		@LocalServerPort
+		private int port;
 
 		@BeforeAll
 		public static void setupTest() throws Exception {
@@ -110,20 +116,23 @@ public class EncryptionIntegrationTests {
 
 		@Test
 		public void shouldOnlySupportEncryption() {
-			ResponseEntity<String> entity = this.testRestTemplate.getForEntity("/keystore-bootstrap/encrypt",
-					String.class);
+			TestRestTemplate testRestTemplate = new TestRestTemplate();
+			ResponseEntity<String> entity = testRestTemplate
+				.getForEntity("http://localhost:" + port + "/keystore-bootstrap/encrypt", String.class);
 			assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 			assertThat(entity.getBody()).contains(
 					"{cipher}{key:mytestkey}AQCohs2V6P8/UiG6a4TF/CZTCBdt5Q7wvNvcyf6vs2ByK2ZYSM77Nu0sOAduxUpMbVwJ/syecmkIXR+hU3EfT2uqPieA7/v5n33ppqIQ9JAt5JggdYIGe+wX25zU3DTXOOJdAAMzNX+zjOVyCh0QtmJf/kFslg6NqQq0E+kSg3zBi3AnkKj5BLnLIxkjxzKA4mnDXpSm7ekLZZP2iQSYSW/82AC7UOLLzTqwInMI3tJLW1e9Ne+LDsjmSxA+nkK9zhidtXPwb/SPaNF74cJCEf9mgzzKYwJlwqChLzJt8UQ1jHwRc8B6FufmizUHSp27nxdtVB4HMqh3nNsMCy137Ces58T09ZS/y/cYNRxcFbp78MHFHUqAgbC0B/p5t6h4XbQ=");
 
 			HttpEntity<String> encryptionRequest = new HttpEntity<>("valueToBeEncrypted");
-			entity = this.testRestTemplate.postForEntity("/encrypt", encryptionRequest, String.class);
+			entity = testRestTemplate.postForEntity("http://localhost:" + port + "/encrypt", encryptionRequest,
+					String.class);
 			assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
 			HttpHeaders decryptionRequestHeaders = new HttpHeaders();
 			decryptionRequestHeaders.setContentType(MediaType.TEXT_PLAIN);
 			HttpEntity<String> decryptionRequest = new HttpEntity<>(entity.getBody(), decryptionRequestHeaders);
-			entity = this.testRestTemplate.postForEntity("/decrypt", decryptionRequest, String.class);
+			entity = testRestTemplate.postForEntity("http://localhost:" + port + "/decrypt", decryptionRequest,
+					String.class);
 			assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 		}
 

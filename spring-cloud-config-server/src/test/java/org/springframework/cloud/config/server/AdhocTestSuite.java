@@ -17,9 +17,8 @@
 package org.springframework.cloud.config.server;
 
 import org.junit.jupiter.api.Disabled;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
 import org.springframework.cloud.config.server.config.ConfigServerHealthIndicatorTests;
 import org.springframework.cloud.config.server.config.CustomCompositeEnvironmentRepositoryTests;
@@ -60,8 +59,8 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
  *
  * @author Dave Syer
  */
-@RunWith(Suite.class)
-@SuiteClasses({ NativeConfigServerIntegrationTests.class, GenericResourceRepositoryTests.class,
+@Suite
+@SelectClasses({ NativeConfigServerIntegrationTests.class, GenericResourceRepositoryTests.class,
 		ResourceControllerTests.class, ResourceControllerIntegrationTests.class, ConfigClientOnIntegrationTests.class,
 		VanillaConfigServerIntegrationTests.class, MultipleJGitEnvironmentRepositoryIntegrationTests.class,
 		EnvironmentEncryptorEnvironmentRepositoryTests.class, SVNKitEnvironmentRepositoryIntegrationTests.class,

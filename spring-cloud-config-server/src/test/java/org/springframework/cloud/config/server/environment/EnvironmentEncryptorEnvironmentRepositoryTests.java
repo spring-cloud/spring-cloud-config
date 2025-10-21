@@ -21,10 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -38,9 +36,6 @@ import static org.mockito.Mockito.when;
  * @author Roy Clarkson
  */
 public class EnvironmentEncryptorEnvironmentRepositoryTests {
-
-	@Rule
-	public ExpectedException expected = ExpectedException.none();
 
 	private EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
 

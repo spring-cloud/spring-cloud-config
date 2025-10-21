@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.runners.Parameterized.Parameters;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -40,7 +39,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class CipherEnvironmentEncryptorTests {
 
-	@Parameters
 	public static List<Object[]> params() {
 		List<Object[]> list = new ArrayList<>();
 		list.add(new Object[] { "deadbeef", "foo" });
