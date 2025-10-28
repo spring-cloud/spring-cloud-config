@@ -195,7 +195,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 					repositoryUri = repository.getUri();
 					// Skip URIs with placeholders - they cannot be resolved at startup
 					if (repositoryUri != null && repositoryUri.contains("{")) {
-						if (log.isDebugEnabled()) {
+						if (log.isWarnEnabled()) {
 							log.warn("Skipping file monitoring for placeholder URI: " + repositoryUri);
 						}
 						continue;
