@@ -193,6 +193,13 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 			try {
 				for (AbstractScmEnvironmentRepository repository : scmRepositories) {
 					repositoryUri = repository.getUri();
+					// Skip URIs with placeholders - they cannot be resolved at startup
+					if (repositoryUri != null && repositoryUri.contains("{")) {
+						if (log.isWarnEnabled()) {
+							log.warn("Skipping file monitoring for placeholder URI: " + repositoryUri);
+						}
+						continue;
+					}
 					Resource resource = this.resourceLoader.getResource(repositoryUri);
 					if (resource instanceof FileSystemResource || resource instanceof FileUrlResource) {
 						paths.add(Paths.get(resource.getURI()));
