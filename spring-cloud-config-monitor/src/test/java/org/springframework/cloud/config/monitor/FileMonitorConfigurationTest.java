@@ -145,6 +145,58 @@ public class FileMonitorConfigurationTest {
 		assertOnDirectory(2);
 	}
 
+	@Test
+	public void testStart_withPlaceholderUriShouldBeSkipped() {
+		// given
+		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(
+				"file:/var/opt/config-service/{application}");
+		addScmRepository(repository);
+
+		// when
+		fileMonitorConfiguration.start();
+
+		// then
+		Set<Path> directory = getDirectory();
+		assertThat(directory).isNotNull();
+		assertThat(directory).isEmpty();
+	}
+
+	@Test
+	public void testStart_withMixedPlaceholderAndValidUriShouldSkipOnlyPlaceholder() {
+		// given
+		AbstractScmEnvironmentRepository placeholderRepository = createScmEnvironmentRepository(
+				"file:/var/opt/config-service/{application}");
+		AbstractScmEnvironmentRepository validRepository = createScmEnvironmentRepository(SAMPLE_PATH);
+		addScmRepository(placeholderRepository);
+		addScmRepository(validRepository);
+
+		// when
+		fileMonitorConfiguration.start();
+
+		// then
+		assertOnDirectory(1);
+	}
+
+	@Test
+	public void testStart_withMultiplePlaceholderTypesShouldBeSkipped() {
+		// given
+		AbstractScmEnvironmentRepository applicationPlaceholder = createScmEnvironmentRepository(
+				"file:/config/{application}");
+		AbstractScmEnvironmentRepository profilePlaceholder = createScmEnvironmentRepository("file:/config/{profile}");
+		AbstractScmEnvironmentRepository labelPlaceholder = createScmEnvironmentRepository("file:/config/{label}");
+		addScmRepository(applicationPlaceholder);
+		addScmRepository(profilePlaceholder);
+		addScmRepository(labelPlaceholder);
+
+		// when
+		fileMonitorConfiguration.start();
+
+		// then
+		Set<Path> directory = getDirectory();
+		assertThat(directory).isNotNull();
+		assertThat(directory).isEmpty();
+	}
+
 	private void addScmRepository(AbstractScmEnvironmentRepository... repository) {
 		repositories.addAll(Arrays.asList(repository));
 		ReflectionTestUtils.setField(fileMonitorConfiguration, "scmRepositories", repositories);
