@@ -3,14 +3,97 @@
 
 This quick start walks through using both the server and the client of Spring Cloud Config Server.
 
-First, start the server, as follows:
+First create a Spring Boot application with a dependency on `org.springframework.cloud:spring-cloud-config-server`.
 
+.pom.xml
+[source,xml]
 ----
-$ cd spring-cloud-config-server
-$ ../mvnw spring-boot:run
+...
+  <properties>
+    <java.version>21</java.version>
+    <spring-cloud.version>2025.1.0</spring-cloud.version>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-config-server</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+...
 ----
 
-The server is a Spring Boot application, so you can run it from your IDE if you prefer to do so (the main class is `ConfigServerApplication`).
+.build.gradle
+[source,json]
+----
+...
+ext {
+  set('springCloudVersion', "2025.1.0")
+}
+
+dependencies {
+  implementation 'org.springframework.cloud:spring-cloud-config-server'
+}
+
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+  }
+}
+...
+----
+
+In the main application class add the `@EnableConfigServer` annotation.
+
+.ConfigServerApplication.java
+[source,java]
+----
+@EnableConfigServer
+@SpringBootApplication
+public class ConfigServerApplication {
+
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(ConfigServerApplication.class).run(args);
+	}
+
+}
+----
+
+Finally in your `application.yaml` file (or `application.properties`) add the following properties.
+
+.application.yaml
+[source,yaml]
+----
+spring:
+  application:
+    name: configserver
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          repos:
+            - patterns: multi-repo-demo-*
+              uri: https://github.com/spring-cloud-samples/config-repo
+server:
+  port: 8888
+----
 
 Next try out a client, as follows:
 
@@ -58,13 +141,16 @@ For example:
 ----
 curl localhost:8888/foo/development
 curl localhost:8888/foo/development/master
-curl localhost:8888/foo/development,db/master
+curl localhost:8888/foo/development,db/master,dev
 curl localhost:8888/foo-development.yml
 curl localhost:8888/foo-db.properties
 curl localhost:8888/master/foo-db.properties
 ----
 
-where `application` is injected as the `spring.config.name` in the `SpringApplication` (what is normally `application` in a regular Spring Boot app), `profile` is an active profile (or comma-separated list of properties), and `label` is an optional git label (defaults to `master`.)
+where `application` is injected as the `spring.config.name` in the `SpringApplication` (what is normally `application` in a regular Spring Boot app), `profile` is an active profile (or comma-separated list of properties), and `label` is an optional git label (defaults to `main`.)
+
+Just like with profiles, you can provide a comma separated list of labels and if the environment repositories used by the config server
+supports labels it will return all property sources for those labels.
 
 Spring Cloud Config Server pulls configuration for remote clients from various sources. The following example gets configuration from a git repository (which must be provided), as shown in the following example:
 

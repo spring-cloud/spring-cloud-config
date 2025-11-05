@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -100,7 +100,8 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 	public void vanilla() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties("spring.cloud.config.server.git.uri:" + uri).run();
+			.properties("spring.cloud.config.server.git.uri:" + uri)
+			.run();
 		final EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		ExecutorService threads = Executors.newFixedThreadPool(4);
 		List<Future<Boolean>> tasks = new ArrayList<Future<Boolean>>();
@@ -131,7 +132,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 	public void concurrentRefreshContextAndGetLabels() throws Exception {
 		// Prepare the repo
 		final JGitConfigServerTestData testData = JGitConfigServerTestData
-				.prepareClonedGitRepository(TestConfiguration.class);
+			.prepareClonedGitRepository(TestConfiguration.class);
 		JGitEnvironmentRepository repository = testData.getRepository();
 		repository.setCloneOnStart(true);
 		repository.setGitFactory(new DelayedGitFactoryMock());

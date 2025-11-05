@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,42 +16,23 @@
 
 package org.springframework.cloud.config.client;
 
-import java.lang.reflect.Field;
-
 import org.apache.commons.logging.Log;
 
 import org.springframework.retry.support.RetryTemplate;
-import org.springframework.util.ReflectionUtils;
 
 public final class RetryTemplateFactory {
-
-	private static final Field field;
-
-	static {
-		field = ReflectionUtils.findField(RetryTemplate.class, "logger");
-		if (field != null) {
-			ReflectionUtils.makeAccessible(field);
-		}
-	}
 
 	private RetryTemplateFactory() {
 
 	}
 
 	public static RetryTemplate create(RetryProperties properties, Log log) {
-		RetryTemplate retryTemplate = RetryTemplate
-				.builder().maxAttempts(properties.getMaxAttempts()).exponentialBackoff(properties.getInitialInterval(),
-						properties.getMultiplier(), properties.getMaxInterval(), properties.isUseRandomPolicy())
-				.build();
-		try {
-			field.set(retryTemplate, log);
-		}
-		catch (IllegalAccessException e) {
-			if (log.isErrorEnabled()) {
-				log.error("error setting retry log", e);
-			}
-		}
-		return retryTemplate;
+		return RetryTemplate.builder()
+			.maxAttempts(properties.getMaxAttempts())
+			.exponentialBackoff(properties.getInitialInterval(), properties.getMultiplier(),
+					properties.getMaxInterval(), properties.isUseRandomPolicy())
+			.withLogger(log)
+			.build();
 	}
 
 }

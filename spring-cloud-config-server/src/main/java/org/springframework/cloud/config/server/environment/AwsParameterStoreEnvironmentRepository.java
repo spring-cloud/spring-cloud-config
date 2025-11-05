@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -90,8 +91,12 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 		String profileSeparator = environmentProperties.getProfileSeparator();
 		String defaultProfile = configServerProperties.getDefaultProfile();
 
-		List<String> orderedProfiles = Stream.concat(Arrays.stream(profiles).filter(p -> !p.equals(defaultProfile)),
-				Arrays.stream(new String[] { defaultProfile })).collect(Collectors.toList());
+		List<String> reversedProfiles = new ArrayList<>(Arrays.asList(profiles));
+		Collections.reverse(reversedProfiles);
+		List<String> orderedProfiles = Stream
+			.concat(reversedProfiles.stream().filter(p -> !p.equals(defaultProfile)),
+					Arrays.stream(new String[] { defaultProfile }))
+			.collect(Collectors.toList());
 
 		if (application.equals(defaultApplication)) {
 			for (String profile : orderedProfiles) {
@@ -140,9 +145,12 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 	private Map<String, String> getPropertiesByParameterPath(String path) {
 		Map<String, String> result = new HashMap<>();
 
-		GetParametersByPathRequest request = GetParametersByPathRequest.builder().path(path)
-				.recursive(environmentProperties.isRecursive()).withDecryption(environmentProperties.isDecryptValues())
-				.maxResults(environmentProperties.getMaxResults()).build();
+		GetParametersByPathRequest request = GetParametersByPathRequest.builder()
+			.path(path)
+			.recursive(environmentProperties.isRecursive())
+			.withDecryption(environmentProperties.isDecryptValues())
+			.maxResults(environmentProperties.getMaxResults())
+			.build();
 
 		GetParametersByPathResponse response = awsSsmClient.getParametersByPath(request);
 
@@ -151,7 +159,7 @@ public class AwsParameterStoreEnvironmentRepository implements EnvironmentReposi
 
 			while (StringUtils.hasLength(response.nextToken())) {
 				response = awsSsmClient
-						.getParametersByPath(request.toBuilder().nextToken(response.nextToken()).build());
+					.getParametersByPath(request.toBuilder().nextToken(response.nextToken()).build());
 
 				addParametersToProperties(path, response.parameters(), result);
 			}

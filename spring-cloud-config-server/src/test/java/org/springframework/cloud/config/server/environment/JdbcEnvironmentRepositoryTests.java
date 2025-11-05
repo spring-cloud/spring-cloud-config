@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceInitializationAutoConfiguration;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepositoryTests.ApplicationConfiguration;
@@ -53,7 +53,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void basicProperties() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -72,7 +73,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void testDefaultProfile() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -91,7 +93,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void testProfileNotExist() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "not_exist", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "not_exist", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "not_exist" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -106,7 +109,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void testApplicationNotExist() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("not_exist", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("not_exist", "bar", "");
 		assertThat(env.getName()).isEqualTo("not_exist");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -121,7 +125,8 @@ public class JdbcEnvironmentRepositoryTests {
 	public void testApplicationProfileBothNotExist() {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("not_exist", "not_exist", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("not_exist", "not_exist", "");
 		assertThat(env.getName()).isEqualTo("not_exist");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "not_exist" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -137,7 +142,8 @@ public class JdbcEnvironmentRepositoryTests {
 		properties.setSqlWithoutProfile(
 				"SELECT MY_KEY, MY_VALUE from MY_PROPERTIES where APPLICATION=? and PROFILE is null and LABEL=?");
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -157,7 +163,8 @@ public class JdbcEnvironmentRepositoryTests {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		properties.setSql("SELECT MY_KEY, MY_VALUE from MY_PROPERTIES where APPLICATION=? and PROFILE=? and LABEL=?");
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "default", "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -183,7 +190,8 @@ public class JdbcEnvironmentRepositoryTests {
 		properties.setSqlWithoutProfile(
 				"SELECT SHOULD_FAIL from TABLE_NOTEXIST where APPLICATION=? and PROFILE is null and LABEL=?");
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("master");
@@ -200,7 +208,7 @@ public class JdbcEnvironmentRepositoryTests {
 		properties.setSqlWithoutProfile(
 				"SELECT SHOULD_FAIL from TABLE_NOTEXIST where APPLICATION=? and PROFILE is null and LABEL=?");
 		JdbcEnvironmentRepository repository = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource),
-				properties);
+				properties, new JdbcEnvironmentRepository.PropertiesResultSetExtractor());
 		assertThatThrownBy(() -> repository.findOne("foo", "bar", "")).isInstanceOf(DataAccessException.class);
 	}
 
@@ -209,7 +217,8 @@ public class JdbcEnvironmentRepositoryTests {
 		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
 		properties.setDefaultLabel("main");
 		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
-				new JdbcEnvironmentRepository.PropertiesResultSetExtractor()).findOne("foo", "bar", "");
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo", "bar", "");
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getProfiles()).isEqualTo(new String[] { "bar" });
 		assertThat(env.getLabel()).isEqualTo("main");
@@ -220,7 +229,23 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("application-bar");
 	}
 
-	@ImportAutoConfiguration(SqlInitializationAutoConfiguration.class)
+	@Test
+	public void testMultipleLabels() {
+		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		properties.setDefaultLabel("main");
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("application", "default", "main,master");
+		assertThat(env.getName()).isEqualTo("application");
+		assertThat(env.getProfiles()).isEqualTo(new String[] { "default" });
+		assertThat(env.getLabel()).isEqualTo("main,master");
+		assertThat(env.getPropertySources()).isNotEmpty();
+		assertThat(env.getPropertySources().get(0).getSource().get("a.b.c")).isEqualTo("application-default");
+		assertThat(env.getPropertySources().get(1).getSource().get("a.b.c")).isEqualTo("application-null");
+		assertThat(env.getPropertySources().get(2).getSource().get("e.f.g")).isEqualTo("application-default");
+	}
+
+	@ImportAutoConfiguration(DataSourceInitializationAutoConfiguration.class)
 	@Configuration(proxyBeanMethods = false)
 	protected static class ApplicationConfiguration {
 

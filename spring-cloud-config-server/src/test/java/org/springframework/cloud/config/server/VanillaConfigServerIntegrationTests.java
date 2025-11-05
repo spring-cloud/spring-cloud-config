@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import org.eclipse.jgit.util.SystemReader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
@@ -73,7 +73,7 @@ public class VanillaConfigServerIntegrationTests {
 	@Test
 	public void resourseEndpointsWork() {
 		String text = new TestRestTemplate()
-				.getForObject("http://localhost:" + this.port + "/foo/development/master/bar.properties", String.class);
+			.getForObject("http://localhost:" + this.port + "/foo/development/master/bar.properties", String.class);
 
 		String expected = "foo: bar";
 		assertThat(text).as("invalid content").isEqualTo(expected);
@@ -94,7 +94,7 @@ public class VanillaConfigServerIntegrationTests {
 		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
 				"http://localhost:" + this.port + "/invalid/default", HttpMethod.GET, getV2AcceptEntity(),
 				Environment.class);
-		assertThat(response.getStatusCodeValue()).isEqualTo(500);
+		assertThat(response.getStatusCode().value()).isEqualTo(500);
 	}
 
 }

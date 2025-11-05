@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,12 +65,10 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.Rule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -80,7 +78,6 @@ import org.springframework.cloud.config.server.support.PassphraseCredentialsProv
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -97,9 +94,6 @@ import static org.mockito.Mockito.when;
  * @author Gareth Clay
  */
 public class JGitEnvironmentRepositoryTests {
-
-	@Rule
-	public final ExpectedException exception = ExpectedException.none();
 
 	RefDatabase database = Mockito.mock(RefDatabase.class);
 
@@ -133,7 +127,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -145,7 +139,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
+			.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
@@ -157,14 +151,14 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("sub", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(1);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
+			.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
 		assertThat(version).as("version was null").isNotNull();
-		assertTrue("version length was wrong", version.length() >= 40 && version.length() <= 64);
+		assertThat(version.length() >= 40 && version.length() <= 64).isTrue();
 	}
 
 	@Test
@@ -176,7 +170,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
+			.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
@@ -186,7 +180,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "raw");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -196,7 +190,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "foo");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -206,8 +200,15 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
+	}
+
+	@Test
+	public void multipleLabels() {
+		this.repository.setBasedir(this.basedir);
+		Environment environment = this.repository.findOne("bar", "staging", "master,foo,raw");
+		assertThat(environment.getPropertySources()).hasSize(6);
 	}
 
 	@Test
@@ -218,7 +219,7 @@ public class JGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -519,6 +520,32 @@ public class JGitEnvironmentRepositoryTests {
 		repo.setRefreshRate(30);
 
 		shouldPull = repo.shouldPull(git);
+
+		assertThat(shouldPull).as("shouldPull was true").isFalse();
+	}
+
+	@Test
+	public void shouldNotRefreshWhenNegativeValue() throws Exception {
+		Git git = mock(Git.class);
+		StatusCommand statusCommand = mock(StatusCommand.class);
+		Status status = mock(Status.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+
+		when(git.status()).thenReturn(statusCommand);
+		when(git.getRepository()).thenReturn(repository);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(storedConfig.getString("remote", "origin", "url")).thenReturn("http://example/git");
+		when(statusCommand.call()).thenReturn(status);
+		when(status.isClean()).thenReturn(true);
+
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(-1);
+
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
+				ObservationRegistry.NOOP);
+
+		boolean shouldPull = repo.shouldPull(git);
 
 		assertThat(shouldPull).as("shouldPull was true").isFalse();
 	}
@@ -877,7 +904,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
+		assertThat(mockCloneCommand.getCredentialsProvider()).isInstanceOf(UsernamePasswordCredentialsProvider.class);
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		CredentialItem.Username usernameCredential = new CredentialItem.Username();
@@ -966,7 +993,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
+		assertThat(mockCloneCommand.getCredentialsProvider()).isInstanceOf(UsernamePasswordCredentialsProvider.class);
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		CredentialItem.Username usernameCredential = new CredentialItem.Username();
@@ -993,7 +1020,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof AwsCodeCommitCredentialProvider);
+		assertThat(mockCloneCommand.getCredentialsProvider()).isInstanceOf(AwsCodeCommitCredentialProvider.class);
 	}
 
 	@Test
@@ -1156,12 +1183,11 @@ public class JGitEnvironmentRepositoryTests {
 
 		// refresh()->merge
 		MergeResult mergeResult = mock(MergeResult.class);
-		MergeResult.MergeStatus mergeStatus = mock(MergeResult.MergeStatus.class);
+		MergeResult.MergeStatus mergeStatus = MergeResult.MergeStatus.MERGED;
 		MergeCommand mergeCommand = mock(MergeCommand.class);
 		when(git.merge()).thenReturn(mergeCommand);
 		when(mergeCommand.call()).thenReturn(mergeResult);
 		when(mergeResult.getMergeStatus()).thenReturn(mergeStatus);
-		when(mergeStatus.isSuccessful()).thenReturn(true);
 
 		SearchPathLocator.Locations locations = this.repository.getLocations("bar", "staging", "master");
 		assertThat(newObjectId.getName()).isEqualTo(locations.getVersion());
@@ -1263,7 +1289,7 @@ public class JGitEnvironmentRepositoryTests {
 		// Mock calls on list and checkout commands
 		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
 		when(mockCheckoutCommand.call()).thenThrow(new RefNotFoundException("Ref main cannot be resolved"))
-				.thenReturn(mockMasterRef);
+			.thenReturn(mockMasterRef);
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		properties.setTryMasterBranch(true);
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment, properties,
@@ -1314,7 +1340,7 @@ public class JGitEnvironmentRepositoryTests {
 		// Mock calls on list and checkout commands
 		when(mockListBranchCommand.call()).thenReturn(repositoryRefsList);
 		when(mockCheckoutCommand.call()).thenThrow(new RefNotFoundException("Ref main cannot be resolved"))
-				.thenReturn(mockMasterRef);
+			.thenReturn(mockMasterRef);
 		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
 		properties.setTryMasterBranch(false);
 		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment, properties,

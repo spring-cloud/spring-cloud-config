@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public class HostKeyAndAlgoBothExistValidator
 	public boolean isValid(MultipleJGitEnvironmentProperties sshUriProperties, ConstraintValidatorContext context) {
 		Set<Boolean> validationResults = new HashSet<>();
 		List<JGitEnvironmentProperties> extractedProperties = this.sshPropertyValidator
-				.extractRepoProperties(sshUriProperties);
+			.extractRepoProperties(sshUriProperties);
 
 		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
 			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
@@ -73,10 +73,11 @@ public class HostKeyAndAlgoBothExistValidator
 			ConstraintValidatorContext context) {
 		if (hasText(sshUriProperties.getHostKeyAlgorithm()) && !hasText(sshUriProperties.getHostKey())) {
 			context.disableDefaultConstraintViolation();
-			context.buildConstraintViolationWithTemplate(
-					format("Property '%shostKey' must be set when '%shostKeyAlgorithm' is specified",
-							GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
-					.addConstraintViolation();
+			context
+				.buildConstraintViolationWithTemplate(
+						format("Property '%shostKey' must be set when '%shostKeyAlgorithm' is specified",
+								GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
+				.addConstraintViolation();
 			return false;
 		}
 		return true;
@@ -86,10 +87,11 @@ public class HostKeyAndAlgoBothExistValidator
 			ConstraintValidatorContext context) {
 		if (hasText(sshUriProperties.getHostKey()) && !hasText(sshUriProperties.getHostKeyAlgorithm())) {
 			context.disableDefaultConstraintViolation();
-			context.buildConstraintViolationWithTemplate(
-					format("Property '%shostKeyAlgorithm' must be set when '%shostKey' is specified",
-							GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
-					.addConstraintViolation();
+			context
+				.buildConstraintViolationWithTemplate(
+						format("Property '%shostKeyAlgorithm' must be set when '%shostKey' is specified",
+								GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
+				.addConstraintViolation();
 			return false;
 		}
 		return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,10 +65,12 @@ public class ConfigClientConfigDataLoaderTest {
 		when(responseEntity.getBody()).thenReturn(environment);
 		when(rest.exchange(eq("http://localhost:8888/{name}/{profile}"), eq(HttpMethod.GET),
 				ArgumentMatchers.any(HttpEntity.class), eq(Environment.class), eq("application"),
-				ArgumentMatchers.<String>any())).thenReturn(responseEntity);
+				ArgumentMatchers.<String>any()))
+			.thenReturn(responseEntity);
 		when(rest.exchange(eq("http://localhost:8888/{name}/{profile}"), eq(HttpMethod.GET),
 				ArgumentMatchers.any(HttpEntity.class), eq(Environment.class), eq("foo"),
-				ArgumentMatchers.<String>any())).thenReturn(responseEntity);
+				ArgumentMatchers.<String>any()))
+			.thenReturn(responseEntity);
 		context = setup(rest).run();
 		verify(rest).exchange(eq("http://localhost:8888/{name}/{profile}"), eq(HttpMethod.GET),
 				ArgumentMatchers.any(HttpEntity.class), eq(Environment.class), eq("application"),
@@ -86,7 +88,7 @@ public class ConfigClientConfigDataLoaderTest {
 	SpringApplicationBuilder setup(RestTemplate restTemplate, String... env) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(
 				DiscoveryClientConfigDataConfigurationTests.TestConfig.class)
-						.properties("spring.config.import=classpath:applicationname.yaml, optional:configserver:");
+			.properties("spring.config.import=classpath:applicationname.yaml, optional:configserver:");
 		builder.addBootstrapRegistryInitializer(
 				registry -> registry.register(RestTemplate.class, context -> restTemplate));
 

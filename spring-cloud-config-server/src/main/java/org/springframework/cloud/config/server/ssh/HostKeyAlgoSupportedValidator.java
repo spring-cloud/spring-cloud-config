@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ public class HostKeyAlgoSupportedValidator
 		context.disableDefaultConstraintViolation();
 		Set<Boolean> validationResults = new HashSet<>();
 		List<JGitEnvironmentProperties> extractedProperties = this.sshPropertyValidator
-				.extractRepoProperties(sshUriProperties);
+			.extractRepoProperties(sshUriProperties);
 
 		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
 			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
@@ -78,8 +78,10 @@ public class HostKeyAlgoSupportedValidator
 		if (hasText(sshUriProperties.getHostKeyAlgorithm())
 				&& !VALID_HOST_KEY_ALGORITHMS.contains(sshUriProperties.getHostKeyAlgorithm())) {
 
-			context.buildConstraintViolationWithTemplate(format("Property '%shostKeyAlgorithm' must be one of %s",
-					GIT_PROPERTY_PREFIX, VALID_HOST_KEY_ALGORITHMS)).addConstraintViolation();
+			context
+				.buildConstraintViolationWithTemplate(format("Property '%shostKeyAlgorithm' must be one of %s",
+						GIT_PROPERTY_PREFIX, VALID_HOST_KEY_ALGORITHMS))
+				.addConstraintViolation();
 			return false;
 		}
 		return true;

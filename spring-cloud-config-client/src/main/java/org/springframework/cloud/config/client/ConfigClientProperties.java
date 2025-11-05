@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.config.client;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -144,6 +144,11 @@ public class ConfigClientProperties {
 	private String mediaType = EnvironmentMediaType.V2_JSON;
 
 	/**
+	 * The charset to read the resource from the config server.
+	 */
+	private Charset charset = StandardCharsets.UTF_8;
+
+	/**
 	 * Discovery properties.
 	 */
 	private Discovery discovery = new Discovery();
@@ -182,6 +187,13 @@ public class ConfigClientProperties {
 	 * Additional headers used to create the client request.
 	 */
 	private Map<String, String> headers = new HashMap<>();
+
+	/**
+	 * If set to true the client will send all labels to the server instead of sending one
+	 * at a time. Support for this would require a config server version of 4.2.0 or
+	 * higher.
+	 */
+	private boolean sendAllLabels = false;
 
 	ConfigClientProperties() {
 	}
@@ -286,6 +298,14 @@ public class ConfigClientProperties {
 		this.mediaType = mediaType;
 	}
 
+	public Charset getCharset() {
+		return charset;
+	}
+
+	public void setCharset(Charset charset) {
+		this.charset = charset;
+	}
+
 	public Discovery getDiscovery() {
 		return this.discovery;
 	}
@@ -350,6 +370,14 @@ public class ConfigClientProperties {
 		this.headers = headers;
 	}
 
+	public boolean isSendAllLabels() {
+		return sendAllLabels;
+	}
+
+	public void setSendAllLabels(boolean sendAllLabels) {
+		this.sendAllLabels = sendAllLabels;
+	}
+
 	private Credentials extractCredentials(int index) {
 		Credentials result = new Credentials();
 		int noOfUrl = this.uri.length;
@@ -368,8 +396,10 @@ public class ConfigClientProperties {
 			if (ObjectUtils.isEmpty(userInfo) || ":".equals(userInfo)) {
 				return result;
 			}
-			String bare = UriComponentsBuilder.fromHttpUrl(uri).userInfo(null).build().toUriString();
-			result.uri = bare;
+			result.uri = UriComponentsBuilder.fromUriString(uri, UriComponentsBuilder.ParserType.WHAT_WG)
+				.userInfo(null)
+				.build()
+				.toUriString();
 
 			// if userInfo does not contain a :, then append a : to it
 			if (!userInfo.contains(":")) {
@@ -392,11 +422,11 @@ public class ConfigClientProperties {
 				result.username = explicitCredentials.username;
 			}
 
-			result.password = URLDecoder.decode(result.password, StandardCharsets.UTF_8.toString());
-			result.username = URLDecoder.decode(result.username, StandardCharsets.UTF_8.toString());
+			result.password = URLDecoder.decode(result.password, StandardCharsets.UTF_8);
+			result.username = URLDecoder.decode(result.username, StandardCharsets.UTF_8);
 			return result;
 		}
-		catch (MalformedURLException | UnsupportedEncodingException e) {
+		catch (MalformedURLException e) {
 			throw new IllegalStateException("Invalid URL: " + uri, e);
 		}
 	}
@@ -437,7 +467,7 @@ public class ConfigClientProperties {
 				+ Arrays.toString(this.uri) + ", mediaType=" + this.mediaType + ", discovery=" + this.discovery
 				+ ", failFast=" + this.failFast + ", token=" + this.token + ", requestConnectTimeout="
 				+ this.requestConnectTimeout + ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
-				+ this.sendState + ", headers=" + this.headers + "]";
+				+ this.sendState + ", headers=" + this.headers + ", sendAllLabels=" + this.sendAllLabels + "]";
 	}
 
 	/**

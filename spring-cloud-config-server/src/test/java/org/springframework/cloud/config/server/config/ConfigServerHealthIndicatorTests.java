@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.health.contributor.Status;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerHealthIndicator.Repository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
@@ -52,21 +52,21 @@ public class ConfigServerHealthIndicatorTests {
 	@BeforeEach
 	public void init() {
 		initMocks(this);
-		this.indicator = new ConfigServerHealthIndicator(this.repository);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, new ConfigServerProperties());
 		this.indicator.init();
 	}
 
 	@Test
 	public void defaultStatusWorks() {
 		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-				.thenReturn(this.environment);
+			.thenReturn(this.environment);
 		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);
 	}
 
 	@Test
 	public void exceptionStatusIsDownByDefault() {
 		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-				.thenThrow(new RuntimeException());
+			.thenThrow(new RuntimeException());
 		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(Status.DOWN);
 	}
 
@@ -74,7 +74,7 @@ public class ConfigServerHealthIndicatorTests {
 	public void exceptionDownStatusMayBeCustomized() {
 		ReflectionTestUtils.setField(this.indicator, "downHealthStatus", "CUSTOM");
 		when(this.repository.findOne(anyString(), anyString(), Mockito.<String>isNull(), anyBoolean()))
-				.thenThrow(new RuntimeException());
+			.thenThrow(new RuntimeException());
 		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(new Status(("CUSTOM")));
 	}
 
@@ -84,6 +84,43 @@ public class ConfigServerHealthIndicatorTests {
 		repo.setName("myname");
 		repo.setProfiles("myprofile");
 		repo.setLabel("mylabel");
+		this.indicator.setRepositories(Collections.singletonMap("myname", repo));
+		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);
+	}
+
+	@Test
+	public void acceptEmptyFalseNoRepos() {
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setAcceptEmpty(false);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
+		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.DOWN);
+	}
+
+	@Test
+	public void acceptEmptyFalseNoPropertySources() {
+		Repository repo = new Repository();
+		repo.setName("myname");
+		repo.setProfiles("myprofile");
+		repo.setLabel("mylabel");
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setAcceptEmpty(false);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
+		this.indicator.setRepositories(Collections.singletonMap("myname", repo));
+		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.DOWN);
+	}
+
+	@Test
+	public void acceptEmptyTrueNoPropertySources() {
+		Repository repo = new Repository();
+		repo.setName("myname");
+		repo.setProfiles("myprofile");
+		repo.setLabel("mylabel");
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setAcceptEmpty(true);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
 		this.indicator.setRepositories(Collections.singletonMap("myname", repo));
 		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
 		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.UP);

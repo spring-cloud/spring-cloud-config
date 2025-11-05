@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,7 +93,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -120,7 +120,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/sub/application.yml");
+			.isEqualTo(this.repository.getUri() + "/sub/application.yml");
 		assertVersion(environment);
 	}
 
@@ -129,7 +129,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "raw");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -138,7 +138,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "foo");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -147,7 +147,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -163,7 +163,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("test1-svc", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
+			.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
 		assertVersion(environment);
 	}
 
@@ -174,7 +174,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		assertThat(environment.getLabel()).isEqualTo("raw");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(this.repository.getUri() + "/bar.properties");
+			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
 	}
 
@@ -184,7 +184,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		assertThat(environment.getLabel()).isEqualTo(JGitEnvironmentProperties.MAIN_LABEL);
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
+			.isEqualTo(getUri("*test1*") + "/test1-svc.properties");
 		assertVersion(environment);
 	}
 
@@ -235,20 +235,20 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.afterPropertiesSet();
 
 		assertThat(repo1Username).as("Repo1 has its own username which should not be overwritten")
-				.isEqualTo(repo1.getUsername());
+			.isEqualTo(repo1.getUsername());
 		assertThat(repo1Password).as("Repo1 has its own password which should not be overwritten")
-				.isEqualTo(repo1.getPassword());
+			.isEqualTo(repo1.getPassword());
 		assertThat(multiRepoPassphrase)
-				.as("Repo1 did not specify a passphrase so this should have been copied from the multi repo")
-				.isEqualTo(repo1.getPassphrase());
+			.as("Repo1 did not specify a passphrase so this should have been copied from the multi repo")
+			.isEqualTo(repo1.getPassphrase());
 		assertThat(multiRepoUsername)
-				.as("Repo2 did not specify a username so this should have been copied from the multi repo")
-				.isEqualTo(repo2.getUsername());
+			.as("Repo2 did not specify a username so this should have been copied from the multi repo")
+			.isEqualTo(repo2.getUsername());
 		assertThat(multiRepoPassword)
-				.as("Repo2 did not specify a username so this should have been copied from the multi repo")
-				.isEqualTo(repo2.getPassword());
+			.as("Repo2 did not specify a username so this should have been copied from the multi repo")
+			.isEqualTo(repo2.getPassword());
 		assertThat(repo2Passphrase).as("Repo2 has its own passphrase which should not have been overwritten")
-				.isEqualTo(repo2.getPassphrase());
+			.isEqualTo(repo2.getPassphrase());
 	}
 
 	@Test
@@ -268,20 +268,20 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.setSkipSslValidation(false);
 		this.repository.afterPropertiesSet();
 		assertThat(repo1.isSkipSslValidation())
-				.as("If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
-				.isFalse();
+			.as("If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
+			.isFalse();
 		assertThat(repo2.isSkipSslValidation())
-				.as("If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
-				.isTrue();
+			.as("If skip SSL validation is false at multi-repo level, then per-repo settings take priority")
+			.isTrue();
 
 		this.repository.setSkipSslValidation(true);
 		this.repository.afterPropertiesSet();
-		assertThat(repo1.isSkipSslValidation()).as(
-				"If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos")
-				.isTrue();
-		assertThat(repo2.isSkipSslValidation()).as(
-				"If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos")
-				.isTrue();
+		assertThat(repo1.isSkipSslValidation())
+			.as("If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos")
+			.isTrue();
+		assertThat(repo2.isSkipSslValidation())
+			.as("If explicitly set to skip SSL validation at the multi-repo level, then apply same setting to sub-repos")
+			.isTrue();
 	}
 
 	@Test
@@ -313,8 +313,9 @@ public class MultipleJGitEnvironmentRepositoryTests {
 			this.repository.setBasedir(basedir);
 
 			this.repository.afterPropertiesSet();
-		}).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("Basedir does not exist and can not be created:");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("Basedir does not exist and can not be created:");
 	}
 
 	@Test

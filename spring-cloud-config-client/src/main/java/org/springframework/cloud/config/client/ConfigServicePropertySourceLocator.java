@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -91,7 +92,8 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		if (environment.getActiveProfiles().length > 0) {
 			List<String> finalCombinedProfiles = combinedProfiles;
 			List<String> filteredActiveProfiles = Stream.of(environment.getActiveProfiles())
-					.filter(s -> !finalCombinedProfiles.contains(s)).collect(Collectors.toList());
+				.filter(s -> !finalCombinedProfiles.contains(s))
+				.collect(Collectors.toList());
 			combinedProfiles.addAll(filteredActiveProfiles);
 		}
 		else if (environment.getDefaultProfiles().length > 0 && combinedProfiles.isEmpty()) {
@@ -259,6 +261,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 		}
 		ResponseEntity<Environment> response = null;
 		List<MediaType> acceptHeader = Collections.singletonList(MediaType.parseMediaType(properties.getMediaType()));
+		List<Charset> acceptCharsetHeader = Collections.singletonList(properties.getCharset());
 
 		for (int i = 0; i < noOfUrls; i++) {
 			Credentials credentials = properties.getCredentials(i);
@@ -271,6 +274,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			try {
 				HttpHeaders headers = new HttpHeaders();
 				headers.setAccept(acceptHeader);
+				headers.setAcceptCharset(acceptCharsetHeader);
 				requestTemplateFactory.addAuthorizationToken(headers, username, password);
 				if (StringUtils.hasText(token)) {
 					headers.add(TOKEN_HEADER, token);
@@ -303,7 +307,22 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				}
 			}
 
-			if (response == null || response.getStatusCode() != HttpStatus.OK) {
+			if (response == null) {
+				if (i < noOfUrls - 1 && defaultProperties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info("Failed to fetch configs from server at  : " + uri
+							+ ". The response was null. Will try the next url if available.");
+					continue;
+				}
+
+				return null;
+			}
+			else if (response.getStatusCode() != HttpStatus.OK) {
+				if (i < noOfUrls - 1 && defaultProperties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info("Failed to fetch configs from server at  : " + uri
+							+ ". Will try the next url if available. StatusCode : " + response.getStatusCode());
+					continue;
+				}
+
 				return null;
 			}
 
@@ -316,19 +335,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	public void setRestTemplate(RestTemplate restTemplate) {
 		this.restTemplate = restTemplate;
-	}
-
-	/**
-	 * Adds the provided headers to the request.
-	 */
-	@Deprecated
-	public static class GenericRequestHeaderInterceptor
-			extends ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor {
-
-		public GenericRequestHeaderInterceptor(Map<String, String> headers) {
-			super(headers);
-		}
-
 	}
 
 	static class ConfigServiceOrigin implements Origin {

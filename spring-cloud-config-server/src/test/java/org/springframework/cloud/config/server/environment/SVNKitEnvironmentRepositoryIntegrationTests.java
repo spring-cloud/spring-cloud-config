@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,7 +78,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 	public void vanilla() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+			.profiles("subversion")
+			.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertThat(environment.getPropertySources()).hasSize(2);
@@ -88,7 +89,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 	public void update() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+			.profiles("subversion")
+			.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "trunk");
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("bar");
@@ -118,7 +120,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 	public void defaultLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+			.profiles("subversion")
+			.run("--spring.cloud.config.server.svn.uri=" + uri);
 		SvnKitEnvironmentRepository repository = this.context.getBean(SvnKitEnvironmentRepository.class);
 		assertThat(repository.getDefaultLabel()).isEqualTo("trunk");
 	}
@@ -129,7 +132,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 			String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
 					"target/config");
 			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+				.profiles("subversion")
+				.run("--spring.cloud.config.server.svn.uri=" + uri);
 			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 			Environment environment = repository.findOne("bar", "staging", "unknownlabel");
 			assertThat(environment.getPropertySources()).isEmpty();
@@ -140,7 +144,8 @@ public class SVNKitEnvironmentRepositoryIntegrationTests {
 	public void branchLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo", "target/config");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.profiles("subversion").run("--spring.cloud.config.server.svn.uri=" + uri);
+			.profiles("subversion")
+			.run("--spring.cloud.config.server.svn.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "demobranch");
 		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");

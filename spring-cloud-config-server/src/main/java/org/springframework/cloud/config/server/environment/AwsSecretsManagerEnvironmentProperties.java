@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import jakarta.validation.constraints.Pattern;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
-import org.springframework.core.Ordered;
 
 /**
  * @author Tejas Pandilwar
@@ -62,7 +61,7 @@ public class AwsSecretsManagerEnvironmentProperties implements EnvironmentReposi
 	/**
 	 * The order of the environment repository.
 	 */
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private int order = DEFAULT_ORDER;
 
 	/**
 	 * Prefix indicating first level for every property loaded from AWS Secrets Manager.

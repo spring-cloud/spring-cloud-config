@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import org.mockito.ArgumentCaptor;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.RsaSecretEncryptor;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
-import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
@@ -46,13 +46,13 @@ public class EncryptionControllerTests {
 	@Test
 	public void cannotDecryptWithoutKey() {
 		assertThatExceptionOfType(EncryptionTooWeakException.class)
-				.isThrownBy(() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
+			.isThrownBy(() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
 	}
 
 	@Test
 	public void cannotDecryptWithNoopEncryptor() {
 		assertThatExceptionOfType(EncryptionTooWeakException.class)
-				.isThrownBy(() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
+			.isThrownBy(() -> this.controller.decrypt("foo", MediaType.TEXT_PLAIN));
 	}
 
 	@Test
@@ -127,7 +127,7 @@ public class EncryptionControllerTests {
 	}
 
 	@Test
-	public void encryptDecyptTextWithCurlyBrace() {
+	public void encryptDecryptTextWithCurlyBrace() {
 		this.controller = new EncryptionController(new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
 
 		String plain = "textwith}brace";

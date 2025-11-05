@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,40 +65,42 @@ public class PropertyPathEndpointTests {
 	@Test
 	public void testNotifyAll() {
 		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "application.yml"))
-				.toString()).isEqualTo("[*]");
+			.toString()).isEqualTo("[*]");
 	}
 
 	@Test
 	public void testNotifyAllWithProfile() {
-		assertThat(this.endpoint
-				.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "application-local.yml")).toString())
-						.isEqualTo("[application-local, *]");
+		assertThat(
+				this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "application-local.yml"))
+					.toString())
+			.isEqualTo("[application-local, *]");
 	}
 
 	@Test
 	public void testNotifyOne() {
 		assertThat(
 				this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo.yml")).toString())
-						.isEqualTo("[foo]");
+			.isEqualTo("[foo]");
 	}
 
 	@Test
 	public void testNotifyOneWithWindowsPath() {
-		assertThat(this.endpoint
-				.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "C:\\config\\foo.yml")).toString())
-						.isEqualTo("[foo]");
+		assertThat(
+				this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "C:\\config\\foo.yml"))
+					.toString())
+			.isEqualTo("[foo]");
 	}
 
 	@Test
 	public void testNotifyOneWithProfile() {
 		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo-local.yml"))
-				.toString()).isEqualTo("[foo-local, foo]");
+			.toString()).isEqualTo("[foo-local, foo]");
 	}
 
 	@Test
 	public void testNotifyMultiDash() {
 		assertThat(this.endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo-local-dev.yml"))
-				.toString()).isEqualTo("[foo-local-dev, foo-local, foo]");
+			.toString()).isEqualTo("[foo-local-dev, foo-local, foo]");
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -38,9 +36,6 @@ import static org.mockito.Mockito.when;
  * @author Roy Clarkson
  */
 public class EnvironmentEncryptorEnvironmentRepositoryTests {
-
-	@Rule
-	public ExpectedException expected = ExpectedException.none();
 
 	private EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
 
@@ -60,8 +55,11 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		map.put("a.b.c", "d");
 		this.environment.add(new PropertySource("one", map));
 		when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master", false).getPropertySources().get(0).getSource()
-				.toString()).isEqualTo("{foo=bar}");
+		assertThat(this.controller.findOne("foo", "bar", "master", false)
+			.getPropertySources()
+			.get(0)
+			.getSource()
+			.toString()).isEqualTo("{foo=bar}");
 	}
 
 	@Test
@@ -71,8 +69,11 @@ public class EnvironmentEncryptorEnvironmentRepositoryTests {
 		map.put("bar", "foo");
 		this.environment.add(new PropertySource("one", map));
 		when(this.repository.findOne("foo", "bar", "master", false)).thenReturn(this.environment);
-		assertThat(this.controller.findOne("foo", "bar", "master", false).getPropertySources().get(0).getSource()
-				.toString()).isEqualTo("{foo=${bar}}");
+		assertThat(this.controller.findOne("foo", "bar", "master", false)
+			.getPropertySources()
+			.get(0)
+			.getSource()
+			.toString()).isEqualTo("{foo=${bar}}");
 	}
 
 }

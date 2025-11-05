@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -313,6 +313,17 @@ public class PropertyBasedSshSessionFactoryTest {
 	}
 
 	@Test
+	public void connectTimeoutIsUsed() {
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		setupSessionFactory(sshKey);
+
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
+
+		assertThat(sshConfig.getValue("ConnectTimeout")).isEqualTo("5");
+	}
+
+	@Test
 	public void sshConfigFileIsNotUsed() {
 		setupSessionFactory(new JGitEnvironmentProperties());
 
@@ -361,7 +372,8 @@ public class PropertyBasedSshSessionFactoryTest {
 		List<KeyPair> kayPairs;
 		try {
 			Spliterator<KeyPair> spliterator = ((KeyIdentityProvider) factory.getDefaultKeys(new File(".")))
-					.loadKeys(session).spliterator();
+				.loadKeys(session)
+				.spliterator();
 
 			kayPairs = StreamSupport.stream(spliterator, false).collect(Collectors.toList());
 		}
@@ -374,26 +386,26 @@ public class PropertyBasedSshSessionFactoryTest {
 
 	private PublicKey getSshHostKey(String hostname) {
 		InetSocketAddress address = setupSocketAddress(hostname);
-		List<PublicKey> publicKeys = factory.getServerKeyDatabase(null, null).lookup("address", address,
-				mock(ServerKeyDatabase.Configuration.class));
+		List<PublicKey> publicKeys = factory.getServerKeyDatabase(null, null)
+			.lookup("address", address, mock(ServerKeyDatabase.Configuration.class));
 
 		return publicKeys.isEmpty() ? null : publicKeys.get(0);
 	}
 
 	private boolean isKnownKeyForHost(PublicKey publicKey, String hostname) {
 		InetSocketAddress address = setupSocketAddress(hostname);
-		return factory.getServerKeyDatabase(null, null).accept("address", address, publicKey,
-				mock(ServerKeyDatabase.Configuration.class), null);
+		return factory.getServerKeyDatabase(null, null)
+			.accept("address", address, publicKey, mock(ServerKeyDatabase.Configuration.class), null);
 	}
 
 	private SshConfigStore.HostConfig getSshHostConfig(String hostname) {
-		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName").lookup(hostname, 22,
-				"userName");
+		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName")
+			.lookup(hostname, 22, "userName");
 	}
 
 	private SshConfigStore.HostConfig getDefaultSshHostConfig(String hostName, int port, String username) {
 		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName")
-				.lookupDefault(hostName, port, username);
+			.lookupDefault(hostName, port, username);
 	}
 
 	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {

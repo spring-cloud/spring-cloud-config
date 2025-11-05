@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,14 +73,19 @@ public class JGitConfigServerTestData {
 		else {
 			clonedRepoDir.mkdirs();
 		}
-		Git clonedGit = Git.cloneRepository().setURI("file://" + remoteRepoDir.getAbsolutePath())
-				.setDirectory(clonedRepoDir).setBranch("master").setCloneAllBranches(true).call();
+		Git clonedGit = Git.cloneRepository()
+			.setURI("file://" + remoteRepoDir.getAbsolutePath())
+			.setDirectory(clonedRepoDir)
+			.setBranch("master")
+			.setCloneAllBranches(true)
+			.call();
 
 		// setup our test spring application pointing to the local repo
 		Collection<String> properties = new ArrayList<>(additionalProperties);
 		properties.add("spring.cloud.config.server.git.uri:" + "file://" + clonedRepoDir.getAbsolutePath());
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(sources).web(WebApplicationType.NONE)
-				.properties(properties.toArray(new String[0])).run();
+			.properties(properties.toArray(new String[0]))
+			.run();
 		JGitEnvironmentRepository repository = context.getBean(JGitEnvironmentRepository.class);
 
 		return new JGitConfigServerTestData(new JGitConfigServerTestData.LocalGit(remoteGit, remoteRepoDir),

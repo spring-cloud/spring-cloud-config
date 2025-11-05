@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
 
 package org.springframework.cloud.config.server.encryption;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,10 +31,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.codec.Hex;
+import org.springframework.security.crypto.encrypt.RsaKeyHolder;
+import org.springframework.security.crypto.encrypt.RsaSecretEncryptor;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
-import org.springframework.security.rsa.crypto.RsaKeyHolder;
-import org.springframework.security.rsa.crypto.RsaSecretEncryptor;
-import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -175,14 +175,9 @@ public class EncryptionController {
 	private String stripFormData(String data, MediaType type, boolean cipher) {
 
 		if (data.endsWith("=") && !type.equals(MediaType.TEXT_PLAIN)) {
-			try {
-				data = URLDecoder.decode(data, "UTF-8");
-				if (cipher) {
-					data = data.replace(" ", "+");
-				}
-			}
-			catch (UnsupportedEncodingException e) {
-				// Really?
+			data = URLDecoder.decode(data, StandardCharsets.UTF_8);
+			if (cipher) {
+				data = data.replace(" ", "+");
 			}
 			String candidate = data.substring(0, data.length() - 1);
 			if (cipher) {
@@ -194,7 +189,7 @@ public class EncryptionController {
 						}
 						catch (IllegalArgumentException e) {
 							try {
-								Base64Utils.decode(candidate.getBytes());
+								Base64.getDecoder().decode(candidate.getBytes());
 								return candidate;
 							}
 							catch (IllegalArgumentException ex) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ public class AwsS3EnvironmentRepositoryFactory
 		final S3Client client = clientBuilder.build();
 
 		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(client,
-				environmentProperties.getBucket(), server);
+				environmentProperties.getBucket(), environmentProperties.isUseDirectoryLayout(), server);
 		repository.setOrder(environmentProperties.getOrder());
 		return repository;
 	}

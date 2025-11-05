@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,11 @@ package org.springframework.cloud.config.server;
 import org.eclipse.jgit.junit.MockSystemReader;
 import org.eclipse.jgit.util.SystemReader;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
@@ -41,6 +42,7 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
  */
 public class CompositeIntegrationTests {
 
+	@Nested
 	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
@@ -49,7 +51,7 @@ public class CompositeIntegrationTests {
 					"spring.cloud.config.server.git.order:1" },
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "git", "subversion" })
-	public static class StaticTests {
+	class StaticTests {
 
 		@LocalServerPort
 		private int port;
@@ -73,7 +75,8 @@ public class CompositeIntegrationTests {
 			assertThat(3).isEqualTo(environment.getPropertySources().size());
 			assertThat("overrides").isEqualTo(environment.getPropertySources().get(0).getName());
 			assertThat(environment.getPropertySources().get(1).getName().contains("config-repo")
-					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo")).isTrue();
+					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo"))
+				.isTrue();
 			assertThat(environment.getPropertySources().get(2).getName()).contains("svn-config-repo");
 			ConfigServerTestUtils.assertConfigEnabled(environment);
 		}
@@ -91,6 +94,58 @@ public class CompositeIntegrationTests {
 
 	}
 
+	@Nested
+	@SpringBootTest(classes = TestConfigServerApplication.class, properties = {
+			"spring.config.name:compositeconfigserver", "spring.cloud.config.server.composite[0].type: svn",
+			"spring.cloud.config.server.composite[0].uri:file:///./target/repos/svn-config-repo",
+			"spring.cloud.config.server.composite[0].order:2", "spring.cloud.config.server.composite[1].type: git",
+			"spring.cloud.config.server.composite[1].uri:file:./target/repos/config-repo",
+			"spring.cloud.config.server.composite[1].order:1" }, webEnvironment = RANDOM_PORT)
+	@ActiveProfiles({ "test", "composite" })
+	class StaticCompositeTests {
+
+		@LocalServerPort
+		private int port;
+
+		@BeforeAll
+		public static void init() throws Exception {
+			// mock Git configuration to make tests independent of local Git configuration
+			SystemReader.setInstance(new MockSystemReader());
+
+			ConfigServerTestUtils.prepareLocalRepo();
+			ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/svn-config-repo",
+					"target/repos/svn-config-repo");
+		}
+
+		@Test
+		public void contextLoads() {
+			ResponseEntity<Environment> response = new TestRestTemplate().exchange(
+					"http://localhost:" + this.port + "/foo/development", HttpMethod.GET, getV2AcceptEntity(),
+					Environment.class);
+			Environment environment = response.getBody();
+			assertThat(3).isEqualTo(environment.getPropertySources().size());
+			assertThat("overrides").isEqualTo(environment.getPropertySources().get(0).getName());
+			assertThat(environment.getPropertySources().get(1).getName().contains("config-repo")
+					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo"))
+				.isTrue();
+			assertThat(environment.getPropertySources().get(2).getName()).contains("svn-config-repo");
+			ConfigServerTestUtils.assertConfigEnabled(environment);
+		}
+
+		@Test
+		public void resourceEndpointsWork() {
+			// This request will get the file from the Git Repo because its order is first
+			// The SVN repo should have the content foo: bar
+			String text = new TestRestTemplate().getForObject(
+					"http://localhost:" + this.port + "/foo/development/composite/bar.properties", String.class);
+
+			String expected = "foo: barconfig\n";
+			assertThat(expected).isEqualTo(text).as("invalid content");
+		}
+
+	}
+
+	@Nested
 	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.svn.uri:file:///./target/repos/svn-config-repo",
@@ -99,7 +154,7 @@ public class CompositeIntegrationTests {
 					"spring.cloud.config.server.git.order:1", "spring.cloud.config.server.reverseLocationOrder:true" },
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "git", "subversion" })
-	public static class ReverseLocationOrderTest {
+	class ReverseLocationOrderTest {
 
 		@LocalServerPort
 		private int port;
@@ -129,6 +184,7 @@ public class CompositeIntegrationTests {
 
 	}
 
+	@Nested
 	@SpringBootTest(classes = TestConfigServerApplication.class,
 			properties = { "spring.config.name:compositeconfigserver",
 					"spring.cloud.config.server.composite[0].uri:file:./target/repos/config-repo",
@@ -137,7 +193,7 @@ public class CompositeIntegrationTests {
 					"spring.cloud.config.server.composite[1].type:svn" },
 			webEnvironment = RANDOM_PORT)
 	@ActiveProfiles({ "test", "composite" })
-	public static class ListTests {
+	class ListTests {
 
 		@LocalServerPort
 		private int port;
@@ -161,7 +217,8 @@ public class CompositeIntegrationTests {
 			assertThat(environment.getPropertySources()).hasSize(3);
 			assertThat("overrides").isEqualTo(environment.getPropertySources().get(0).getName());
 			assertThat(environment.getPropertySources().get(1).getName().contains("config-repo")
-					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo")).isTrue();
+					&& !environment.getPropertySources().get(1).getName().contains("svn-config-repo"))
+				.isTrue();
 			assertThat(environment.getPropertySources().get(2).getName()).contains("svn-config-repo");
 			ConfigServerTestUtils.assertConfigEnabled(environment);
 		}

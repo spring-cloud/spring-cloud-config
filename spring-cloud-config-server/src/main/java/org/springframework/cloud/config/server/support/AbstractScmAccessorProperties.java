@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 package org.springframework.cloud.config.server.support;
 
 import java.io.File;
-
-import org.springframework.core.Ordered;
 
 /**
  * @author Dylan Roberts
@@ -63,7 +61,7 @@ public class AbstractScmAccessorProperties implements EnvironmentRepositoryPrope
 	private boolean strictHostKeyChecking = true;
 
 	/** The order of the environment repository. */
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private int order = DEFAULT_ORDER;
 
 	/** The default label to be used with the remote repository. */
 	private String defaultLabel;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,8 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 	private static final Log logger = LogFactory.getLog(CipherEnvironmentEncryptor.class);
 
 	private final VaultKeyValueOperations keyValueTemplate;
+
+	private boolean prefixInvalidProperties = true;
 
 	public VaultEnvironmentEncryptor(VaultKeyValueOperations keyValueTemplate) {
 		this.keyValueTemplate = keyValueTemplate;
@@ -102,8 +104,10 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 						}
 					}
 					catch (Exception e) {
-						value = "<n/a>";
-						name = "invalid." + name;
+						if (this.prefixInvalidProperties) {
+							value = "<n/a>";
+							name = "invalid." + name;
+						}
 						String message = "Cannot resolve key: " + key + " (" + e.getClass() + ": " + e.getMessage()
 								+ ")";
 						if (logger.isDebugEnabled()) {
@@ -119,6 +123,10 @@ public class VaultEnvironmentEncryptor implements EnvironmentEncryptor {
 			result.add(new PropertySource(source.getName(), map));
 		}
 		return result;
+	}
+
+	public void setPrefixInvalidProperties(boolean prefixInvalidProperties) {
+		this.prefixInvalidProperties = prefixInvalidProperties;
 	}
 
 }

@@ -25,7 +25,7 @@ After it has gathered all activated profiles it will load any additional configu
 Due to this you may see multiple requests being made to the Spring Cloud Config Server to fetch configuration.  This
 is normal and is a side effect of how Spring Boot loads configuration when using `spring.config.import`.  In previous
 versions of Spring Cloud Config there was only a single request made but this meant you could not activate profiles
-from configuration coming from the Config Server.  The additional request with just the 'default` profile now makes
+from configuration coming from the Config Server.  The additional request with just the `default` profile now makes
 this possible.
 
 NOTE: A `bootstrap` file (properties or yaml) is *not* needed for the Spring Boot Config Data method of import via `spring.config.import`.
@@ -95,6 +95,10 @@ The default behavior is to retry six times with an initial backoff interval of 1
 You can configure these properties (and others) by setting the `spring.cloud.config.retry.*` configuration properties.
 To use a random exponential backoff policy set `spring.cloud.config.retry.useRandomPolicy` to `true`.
 
+NOTE:  When `spring.cloud.config.retry.useRandomPolicy` is `true` the `max-attempts`, `initial-interval`, `max-interval`, and `multiplier` properties will
+still have an effect even when using a random exponential backoff policy.  The details on how they are used can be found in the
+`ExponentialRandomBackOffPolicy` and `ExponentialBackOffPolicy` in https://github.com/spring-projects/spring-retry[Spring Retry].
+
 TIP: To take full control of the retry behavior and are using legacy bootstrap, add a `@Bean` of type `RetryOperationsInterceptor` with an ID of `configServerRetryInterceptor`.
 Spring Retry has a `RetryInterceptorBuilder` that supports creating one.
 
@@ -126,9 +130,27 @@ You can override all of them by setting `spring.cloud.config.\*` (where `*` is `
 The `label` is useful for rolling back to previous versions of configuration.
 With the default Config Server implementation, it can be a git label, branch name, or commit ID.
 Label can also be provided as a comma-separated list.
-In that case, the items in the list are tried one by one until one succeeds.
 This behavior can be useful when working on a feature branch.
 For instance, you might want to align the config label with your branch but make it optional (in that case, use `spring.cloud.config.label=myfeature,develop`).
+
+[[requesting-multiple-labels]]
+== Requesting Multiple Labels
+
+Prior to Spring Cloud Config 4.2.0, if you set `spring.cloud.config.label` to a comma-separated list of labels, the Config Client would
+try each label by making a request to the Config Server until it found one that worked.  This meant that if the first label was found, subsequent labels would not be tried.
+
+As of Spring Cloud Config 4.2.0 if you set `spring.cloud.config.label` to a comma-separated list of labels **AND** set
+`spring.cloud.config.send-all-labels` the Config Client will make a single request to the Config Server with the comma-separated list of labels
+and if **THE CONFIG SERVER IS USING VERSION 4.2.0 OR LATER** it will return a single response with property sources for all the labels.
+
+NOTE: Setting `spring.cloud-config.send-all-labels` to `true`, setting `spring.cloud.config.label` to a comma-separated list of labels,
+and using a Config Server version prior to 4.2.0 will result in unexpected behavior because the Config Server will try and find a label
+that matches the comma-separated list value and will not try and split apart the labels.
+
+By sending all labels in a single request you can reduce the number of requests made to the Config Server.
+
+`spring.cloud.config.send-all-labels` is set to `false` by default so the old behavior is still the default, and it also maintains
+compatibility with older versions of the Config Server.
 
 [[specifying-multiple-urls-for-the-config-server]]
 == Specifying Multiple URLs for the Config Server
@@ -150,6 +172,19 @@ If you want to configure timeout thresholds:
 
 * Read timeouts can be configured by using the property `spring.cloud.config.request-read-timeout`.
 * Connection timeouts can be configured by using the property `spring.cloud.config.request-connect-timeout`.
+
+[[configuring-charsets]]
+== Configuring Charset
+
+If you want to configure a specific charset the resources should be delivered by the server, you need to apply it via charset.
+----
+spring:
+  cloud:
+    config:
+      charset: UTF-8
+----
+
+The charset configuration property is defined as `java.nio.charset.Charset`
 
 [[security]]
 == Security
@@ -292,7 +327,7 @@ If you use another form of security, you might need to xref:client.adoc#custom-r
 === Health Indicator
 
 The Config Client supplies a Spring Boot Health Indicator that attempts to load configuration from the Config Server.
-The health indicator can be disabled by setting `health.config.enabled=false`.
+The health indicator can be disabled by setting `management.health.config.enabled=false`.
 The response is also cached for performance reasons.
 The default cache time to live is 5 minutes.
 To change that value, set the `health.config.time-to-live` property (in milliseconds).
@@ -421,5 +456,5 @@ ifndef::releaseTrain[]
 [[appendix]]
 == Appendices
 
-include:../:_observability.adoc[]
+include::observability.adoc[]
 endif::[]

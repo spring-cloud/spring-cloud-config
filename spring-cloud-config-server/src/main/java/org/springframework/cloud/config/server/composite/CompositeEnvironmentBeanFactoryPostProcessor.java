@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
+import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
 
 /**
@@ -60,13 +61,16 @@ public class CompositeEnvironmentBeanFactoryPostProcessor implements BeanFactory
 			propertiesClass = (Class<? extends EnvironmentRepositoryProperties>) factoryTypes[1];
 			EnvironmentRepositoryProperties properties = bindProperties(i, propertiesClass, this.environment);
 			AbstractBeanDefinition propertiesDefinition = BeanDefinitionBuilder
-					.genericBeanDefinition(EnvironmentRepositoryProperties.class, () -> properties).getBeanDefinition();
+				.genericBeanDefinition(EnvironmentRepositoryProperties.class, () -> properties)
+				.getBeanDefinition();
 			String propertiesBeanName = String.format("%s-env-repo-properties%d", type, i);
 			registry.registerBeanDefinition(propertiesBeanName, propertiesDefinition);
 
 			AbstractBeanDefinition beanDefinition = BeanDefinitionBuilder
-					.genericBeanDefinition(EnvironmentRepository.class).setFactoryMethodOnBean("build", factoryName)
-					.addConstructorArgValue(properties).getBeanDefinition();
+				.genericBeanDefinition(EnvironmentRepository.class)
+				.setFactoryMethodOnBean("build", factoryName)
+				.addConstructorArgValue(properties)
+				.getBeanDefinition();
 			String beanName = String.format("%s-env-repo%d", type, i);
 			registry.registerBeanDefinition(beanName, beanDefinition);
 		}
@@ -77,7 +81,11 @@ public class CompositeEnvironmentBeanFactoryPostProcessor implements BeanFactory
 		Binder binder = Binder.get(environment);
 		String environmentConfigurationPropertyName = String.format("spring.cloud.config.server.composite[%d]", index);
 		P properties = binder.bindOrCreate(environmentConfigurationPropertyName, propertiesClass);
-		properties.setOrder(index + 1);
+		if (properties instanceof Ordered
+				&& ((Ordered) properties).getOrder() == EnvironmentRepositoryProperties.DEFAULT_ORDER) {
+			// The order is not set, it is the default so set it to the order in the list
+			properties.setOrder(index + 1);
+		}
 		return properties;
 	}
 

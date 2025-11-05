@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ public class GenericResourceRepositoryTests {
 	@BeforeEach
 	public void init() {
 		this.context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class).web(WebApplicationType.NONE)
-				.run();
+			.run();
 		this.nativeRepository = new NativeEnvironmentRepository(this.context.getEnvironment(),
 				new NativeEnvironmentProperties(), ObservationRegistry.NOOP);
 		this.repository = new GenericResourceRepository(this.nativeRepository);
@@ -97,9 +97,9 @@ public class GenericResourceRepositoryTests {
 	@Test
 	public void locateMissingResource() {
 		Assertions
-				.assertThatThrownBy(
-						() -> assertThat(this.repository.findOne("blah", "default", "master", "foo.txt")).isNotNull())
-				.isInstanceOf(NoSuchResourceException.class);
+			.assertThatThrownBy(
+					() -> assertThat(this.repository.findOne("blah", "default", "master", "foo.txt")).isNotNull())
+			.isInstanceOf(NoSuchResourceException.class);
 	}
 
 	@Test
@@ -109,7 +109,7 @@ public class GenericResourceRepositoryTests {
 			this.repository.findOne("blah", "local", "master", "..%2F..%2Fdata-jdbc.sql");
 		}).isInstanceOf(NoSuchResourceException.class);
 		Assertions.assertThat(capturedOutput.getAll())
-				.contains("Path contains \"../\" after call to StringUtils#cleanPath");
+			.contains("Path contains \"../\" after call to StringUtils#cleanPath");
 	}
 
 	@Test

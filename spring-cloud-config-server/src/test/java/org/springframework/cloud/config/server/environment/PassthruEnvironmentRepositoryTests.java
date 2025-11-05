@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,8 +35,9 @@ public class PassthruEnvironmentRepositoryTests {
 	public void originTrackedPropertySourceWithoutOriginWorks() {
 		MockEnvironment mockEnvironment = new MockEnvironment();
 		mockEnvironment.setProperty("normalKey", "normalValue");
-		mockEnvironment.getPropertySources().addFirst(new OriginTrackedMapPropertySource("myorigintrackedsource",
-				Collections.singletonMap("keyNoOrigin", "valueNoOrigin")));
+		mockEnvironment.getPropertySources()
+			.addFirst(new OriginTrackedMapPropertySource("myorigintrackedsource",
+					Collections.singletonMap("keyNoOrigin", "valueNoOrigin")));
 		PassthruEnvironmentRepository repository = new PassthruEnvironmentRepository(mockEnvironment);
 		Environment environment = repository.findOne("testapp", "default", "master", true);
 		assertThat(environment).isNotNull();

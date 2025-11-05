@@ -2,7 +2,7 @@
 = Encryption and Decryption
 
 IMPORTANT: To use the encryption and decryption features you need the full-strength JCE installed in your JVM (it is not included by default).
-You can download the "`Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files`" from Oracle and follow the installation instructions (essentially, you need to replace the two policy files in the JRE lib/security directory with the ones that you downloaded).
+You can download the "`Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files`" from Oracle and follow the installation instructions (essentially, you need to replace the two policy files in the JRE lib/security directory with the ones that you downloaded). This is only applicable for old versions of Java. Starting from Java 9, and definitively from Java 8u161 onwards, unlimited strength cryptography is enabled by default
 
 If the remote property sources contain encrypted content (values starting with `\{cipher}`), they are decrypted before sending to clients over HTTP.
 The main advantage of this setup is that the property values need not be in plain text when they are "`at rest`" (for example, in a git repository).
@@ -77,3 +77,76 @@ AQAjPgt3eFZQXwt8tsHAVv/QHiY5sI2dRcR+...
 
 NOTE: The `--key` argument is mandatory (despite having a `--` prefix).
 
+== Decryption Errors
+
+When the config server fails to decrypt a value it will create an `invalid` property in the HTTP response.
+
+For example
+
+[source,json]
+----
+{
+    "label": null,
+    "name": "application",
+    "profiles": [
+        "prd"
+    ],
+    "propertySources": [
+        {
+            "name": "file:/demo/configserver/application-prd.yaml",
+            "source": {
+                "invalid.SharedPassword": "<n/a>"
+            }
+        },
+        {
+            "name": "file:/demo/configserver/application.yaml",
+            "source": {
+                "SharedPassword": "Fill_me_in"
+            }
+        }
+    ],
+    "state": null,
+    "version": null
+}
+
+----
+
+In the example above the config server could not decrypt the value of `SharedPassword` in `application-prd.yaml`
+so the config server prefixed the property name with `invalid`.
+
+If this response was received by the Config Client and then added to the app's `Environment` and the client
+requested the value of `SharedPassword` it would get `Fill_me_in`.
+
+If you do not want the config server to prefix properties it can't decrypt wit `invalid` then you can set
+`spring.cloud.config.server.encrypt.prefix-invalid-properties` to `false`.  If you do this then the same response from
+the config server would look like this:
+
+[source,json]
+----
+    "label": null,
+    "name": "application",
+    "profiles": [
+        "prd"
+    ],
+    "propertySources": [
+        {
+            "name": "file:/demo/configserver/application-prd.yaml",
+            "source": {
+                "SharedPassword": "AYBKlpcZpaR36OcRDQjNIQl6fmnddAQhetMw/uyTpnn5fDj+unJ9QOEbqiPc9fX0N+CC8i+EJiN6nlH9Xqu6sH1tX/P6zg1CIy+ct/1RWGNbmQ256jc6vQaXhiN8sA8Mr6QiqYnMoBd+Jni/Miir5G3a7G9MmjbEUASKJOhUlIFKqL1IqB81RBT/cv0bg9kAiy5VBF1WppxP/PwtjECzbeUi2Y1jbpYb98rnc/qmRO3ZJam9fDNcPpW09qGFhGgJIujca257F7G4guS2w/7haVzNoyRiwHzZ14oL8AIxHLMBSJJF19ULlsMAkROj9o9TnwhL9r4rX9sAWk28c5eq77+iVpmlT3yoRdZqvMqffzKiibDlzz95Gmms7V7mctxrhNVOOWTwMSJvk94Y9ZPenljKgPJIV3Z1cqqx+W8JxFFeelOuYvMEe4bOVBh1TepGzzdWVdYbylgXJy35uRTZ2drybUe5+jc0hiAuujHz0zdY1FwOHfwzSsSidlYn4syPeuytnxTzn7fbWXeXetTTtDlmLRf8MBSzXzDFWNH0cNGOCQ=="
+            }
+        },
+        {
+            "name": "file:/demo/configserver/application.yaml",
+            "source": {
+                "SharedPassword": "Fill_me_in"
+            }
+        }
+    ],
+    "state": null,
+    "version": null
+}
+----
+
+In this case if the config client were to receive the above response and requested that value
+of `SharedPassword` from the `Environment` it would get the encrypted value back instead of
+`Fill_me_in`.

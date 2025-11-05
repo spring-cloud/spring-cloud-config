@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ public class EnvironmentRepositoryPropertySourceLocator implements PropertySourc
 	public org.springframework.core.env.PropertySource<?> locate(Environment environment) {
 		CompositePropertySource composite = new CompositePropertySource("configService");
 		for (PropertySource source : this.repository.findOne(this.name, this.profiles, this.label, false)
-				.getPropertySources()) {
+			.getPropertySources()) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) source.getSource();
 			composite.addPropertySource(new MapPropertySource(source.getName(), map));

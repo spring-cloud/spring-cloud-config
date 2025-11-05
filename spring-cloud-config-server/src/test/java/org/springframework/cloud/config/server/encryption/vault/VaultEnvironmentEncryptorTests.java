@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2020 the original author or authors.
+ * Copyright 2020-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ public class VaultEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(secret);
+			.isEqualTo(secret);
 	}
 
 	@Test
@@ -73,7 +73,7 @@ public class VaultEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isNull();
+			.isNull();
 	}
 
 	@Test
@@ -88,11 +88,11 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(value);
+			.isEqualTo(value);
 	}
 
 	@Test
@@ -107,14 +107,39 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
-				.isEqualTo("<n/a>");
+			.isEqualTo("<n/a>");
+	}
+
+	@Test
+	public void shouldNotPrefixInvalidPropertyWithNoKeyValue() {
+		// given
+		String accounts = "accounts/mypay";
+		String value = "{vault}:" + accounts;
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+		encryptor.setPrefixInvalidProperties(false);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+
+		// then
+		Environment processedEnvironment = encryptor.decrypt(environment);
+
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
+			.isNull();
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName()))
+			.isEqualTo(accounts);
 	}
 
 	@Test
@@ -129,14 +154,14 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
-				.isEqualTo("<n/a>");
+			.isEqualTo("<n/a>");
 	}
 
 	@Test
@@ -151,14 +176,14 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
-				.isEqualTo("<n/a>");
+			.isEqualTo("<n/a>");
 	}
 
 	@Test
@@ -173,14 +198,14 @@ public class VaultEnvironmentEncryptorTests {
 		// when
 		Environment environment = new Environment("name", "profile", "label");
 		environment
-				.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
+			.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(), value)));
 
 		// then
 		Environment processedEnvironment = encryptor.decrypt(environment);
 
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
-				.isEqualTo("<n/a>");
+			.isEqualTo("<n/a>");
 	}
 
 	private VaultResponse withVaultResponse(String key, Object value) {

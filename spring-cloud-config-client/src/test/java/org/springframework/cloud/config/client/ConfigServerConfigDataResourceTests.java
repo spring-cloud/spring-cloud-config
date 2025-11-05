@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -150,7 +150,7 @@ class ConfigServerConfigDataResourceTests {
 		r1Properties.setUri(new String[] { "http://localhost:8888", "http://localhost:9999", "http://localhost:7777" });
 		ConfigClientProperties r2Properties = new ConfigClientProperties();
 		r2Properties
-				.setUri(new String[] { "https://localhost:7777", "https://localhost:8888", "https://localhost:9999" });
+			.setUri(new String[] { "https://localhost:7777", "https://localhost:8888", "https://localhost:9999" });
 		ConfigServerConfigDataResource r1 = new ConfigServerConfigDataResource(r1Properties, true,
 				mock(Profiles.class));
 		ConfigServerConfigDataResource r2 = new ConfigServerConfigDataResource(r2Properties, true,

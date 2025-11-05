@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class HttpClientConfigurableHttpConnectionFactoryTest {
 
@@ -63,10 +67,31 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 
 		HttpConnection actualConnection = this.connectionFactory.create(new URL(url));
 
-		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
-				.findFirst().get();
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values()
+			.stream()
+			.findFirst()
+			.get();
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+	}
+
+	@Test
+	public void customizeHttpClient() throws Exception {
+		String url = "http://localhost/test.git";
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(url);
+		HttpClient4BuilderCustomizer customizer = mock(HttpClient4BuilderCustomizer.class);
+		this.connectionFactory.addConfiguration(properties, List.of(customizer));
+
+		HttpConnection actualConnection = this.connectionFactory.create(new URL(url));
+
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values()
+			.stream()
+			.findFirst()
+			.get();
+		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
+		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
+		verify(customizer, times(1)).customize(any(HttpClientBuilder.class));
 	}
 
 	@Test
@@ -78,8 +103,10 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 
 		HttpConnection actualConnection = this.connectionFactory.create(new URL(url + "/some/path.properties"));
 
-		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
-				.findFirst().get();
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values()
+			.stream()
+			.findFirst()
+			.get();
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -91,10 +118,12 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		this.connectionFactory.addConfiguration(properties);
 
 		HttpConnection actualConnection = this.connectionFactory
-				.create(new URL("http://localhost/value-test.git" + "/some/path.properties"));
+			.create(new URL("http://localhost/value-test.git" + "/some/path.properties"));
 
-		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
-				.findFirst().get();
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values()
+			.stream()
+			.findFirst()
+			.get();
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -105,11 +134,13 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		properties.setUri("https://localhost/v1/repos/pvvts_configs-{application}");
 		this.connectionFactory.addConfiguration(properties);
 
-		HttpConnection actualConnection = this.connectionFactory.create(
-				new URL("https://localhost/v1/repos/pvvts_configs-applicationPasswords" + "/some/path.properties"));
+		HttpConnection actualConnection = this.connectionFactory
+			.create(new URL("https://localhost/v1/repos/pvvts_configs-applicationPasswords" + "/some/path.properties"));
 
-		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
-				.findFirst().get();
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values()
+			.stream()
+			.findFirst()
+			.get();
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -126,7 +157,7 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		HttpConnection actualConnection = this.connectionFactory.create(new URL(properties1.getUri()));
 
 		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
-				.get(properties1.getUri());
+			.get(properties1.getUri());
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -143,7 +174,7 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		HttpConnection actualConnection = this.connectionFactory.create(new URL(properties1.getUri()));
 
 		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
-				.get(properties1.getUri());
+			.get(properties1.getUri());
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -161,9 +192,9 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		this.connectionFactory.addConfiguration(properties3);
 
 		HttpConnection actualConnection = this.connectionFactory
-				.create(new URL("https://github.com/user/user-MultiApps.git/info/refs?service=git-upload-pack"));
+			.create(new URL("https://github.com/user/user-MultiApps.git/info/refs?service=git-upload-pack"));
 		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
-				.get(properties2.getUri());
+			.get(properties2.getUri());
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -181,7 +212,7 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 				new URL(properties2.getUri().replace("{placeholder1}", "value1").replace("{placeholder2}", "value2")));
 
 		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
-				.get(properties2.getUri());
+			.get(properties2.getUri());
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -211,12 +242,12 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		this.connectionFactory.addConfiguration(properties1);
 		this.connectionFactory.addConfiguration(properties2);
 
-		HttpConnection actualConnection = this.connectionFactory.create(
-				new URL(properties2.getUri().replace("{placeholder1}", "value1").replace("{placeholder2}", "value2")
-						+ "/some/path.properties"));
+		HttpConnection actualConnection = this.connectionFactory
+			.create(new URL(properties2.getUri().replace("{placeholder1}", "value1").replace("{placeholder2}", "value2")
+					+ "/some/path.properties"));
 
 		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri
-				.get(properties2.getUri());
+			.get(properties2.getUri());
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -228,10 +259,12 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		this.connectionFactory.addConfiguration(properties);
 
 		HttpConnection actualConnection = this.connectionFactory
-				.create(new URL("http://server.com/server-test.git" + "/some/path.properties"));
+			.create(new URL("http://server.com/server-test.git" + "/some/path.properties"));
 
-		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
-				.findFirst().get();
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values()
+			.stream()
+			.findFirst()
+			.get();
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -243,10 +276,12 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		this.connectionFactory.addConfiguration(properties);
 
 		HttpConnection actualConnection = this.connectionFactory
-				.create(new URL("http://server.com/hello-foo/server-test.git" + "/some/path.properties"));
+			.create(new URL("http://server.com/hello-foo/server-test.git" + "/some/path.properties"));
 
-		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
-				.findFirst().get();
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values()
+			.stream()
+			.findFirst()
+			.get();
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -258,10 +293,12 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		this.connectionFactory.addConfiguration(properties);
 
 		HttpConnection actualConnection = this.connectionFactory
-				.create(new URL("http://localhost/val-testval.git" + "/some/path.properties"));
+			.create(new URL("http://localhost/val-testval.git" + "/some/path.properties"));
 
-		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values().stream()
-				.findFirst().get();
+		HttpClientBuilder expectedHttpClientBuilder = this.connectionFactory.httpClientBuildersByUri.values()
+			.stream()
+			.findFirst()
+			.get();
 		HttpClientBuilder actualHttpClientBuilder = getActualHttpClientBuilder(actualConnection);
 		assertThat(actualHttpClientBuilder).isSameAs(expectedHttpClientBuilder);
 	}
@@ -279,8 +316,9 @@ public class HttpClientConfigurableHttpConnectionFactoryTest {
 		List<?> closables = (List<?>) ReflectionUtils.getField(closeablesField, actualHttpClient);
 		return closables.stream().map(o -> {
 			Field builderField = Arrays.stream(o.getClass().getDeclaredFields())
-					.filter(field -> HttpClientBuilder.class.isAssignableFrom(field.getType())).findFirst()
-					.orElse(null);
+				.filter(field -> HttpClientBuilder.class.isAssignableFrom(field.getType()))
+				.findFirst()
+				.orElse(null);
 			if (builderField != null) {
 				ReflectionUtils.makeAccessible(builderField);
 				return ReflectionUtils.getField(builderField, o);

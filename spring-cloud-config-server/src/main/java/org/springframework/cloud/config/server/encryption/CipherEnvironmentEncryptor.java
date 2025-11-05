@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,8 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 
 	private final TextEncryptorLocator encryptor;
 
+	private boolean prefixInvalidProperties = true;
+
 	private EnvironmentPrefixHelper helper = new EnvironmentPrefixHelper();
 
 	@Autowired
@@ -69,13 +71,15 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 					try {
 						value = value.substring("{cipher}".length());
 						value = encryptor
-								.locate(this.helper.getEncryptorKeys(name,
-										StringUtils.arrayToCommaDelimitedString(environment.getProfiles()), value))
-								.decrypt(this.helper.stripPrefix(value));
+							.locate(this.helper.getEncryptorKeys(name,
+									StringUtils.arrayToCommaDelimitedString(environment.getProfiles()), value))
+							.decrypt(this.helper.stripPrefix(value));
 					}
 					catch (Exception e) {
-						value = "<n/a>";
-						name = "invalid." + name;
+						if (this.prefixInvalidProperties) {
+							value = "<n/a>";
+							name = "invalid." + name;
+						}
 						String message = "Cannot decrypt key: " + key + " (" + e.getClass() + ": " + e.getMessage()
 								+ ")";
 						if (logger.isDebugEnabled()) {
@@ -91,6 +95,10 @@ public class CipherEnvironmentEncryptor implements EnvironmentEncryptor {
 			result.add(new PropertySource(source.getName(), map));
 		}
 		return result;
+	}
+
+	public void setPrefixInvalidProperties(boolean prefixInvalidProperties) {
+		this.prefixInvalidProperties = prefixInvalidProperties;
 	}
 
 }

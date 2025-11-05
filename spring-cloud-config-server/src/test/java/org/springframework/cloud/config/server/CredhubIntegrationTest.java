@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.cloud.config.server;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.credhub.core.credential.CredHubCredentialOperations;
 import org.springframework.credhub.support.CredentialDetails;
@@ -27,6 +26,7 @@ import org.springframework.credhub.support.CredentialSummary;
 import org.springframework.credhub.support.CredentialType;
 import org.springframework.credhub.support.SimpleCredentialName;
 import org.springframework.credhub.support.json.JsonCredential;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.when;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
  */
 public class CredhubIntegrationTest {
 
-	@MockBean
+	@MockitoBean
 	private CredHubOperations credHubOperations;
 
 	@BeforeEach
@@ -46,12 +46,12 @@ public class CredhubIntegrationTest {
 		String expectedPath = "/myapp/master/default";
 		SimpleCredentialName togglesCredentialName = new SimpleCredentialName(expectedPath + "/toggles");
 		when(credhubCredentialOperations.findByPath(expectedPath))
-				.thenReturn(singletonList(new CredentialSummary(togglesCredentialName)));
+			.thenReturn(singletonList(new CredentialSummary(togglesCredentialName)));
 		JsonCredential credentials = new JsonCredential();
 		credentials.put("key", "value");
 		when(credhubCredentialOperations.getByName(new SimpleCredentialName(expectedPath + "/toggles"),
-				JsonCredential.class)).thenReturn(
-						new CredentialDetails<>("id1", togglesCredentialName, CredentialType.JSON, credentials));
+				JsonCredential.class))
+			.thenReturn(new CredentialDetails<>("id1", togglesCredentialName, CredentialType.JSON, credentials));
 
 		when(this.credHubOperations.credentials()).thenReturn(credhubCredentialOperations);
 	}

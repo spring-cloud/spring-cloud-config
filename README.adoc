@@ -5,9 +5,7 @@ Edit the files in the src/main/asciidoc/ directory instead.
 ////
 
 
-image::https://circleci.com/gh/spring-cloud/spring-cloud-config/tree/master.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud/spring-cloud-config/tree/master"]
 image::https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/master/graph/badge.svg["Codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/master"]
-image::https://api.codacy.com/project/badge/Grade/f064024a072c477e97dca6ed5a70fccd?branch=master["Codacy code quality", link="https://www.codacy.com/app/Spring-Cloud/spring-cloud-config?branch=master&utm_source=github.com&utm_medium=referral&utm_content=spring-cloud/spring-cloud-config&utm_campaign=Badge_Grade"]
 
 
 [[features]]
@@ -99,7 +97,7 @@ build succeed, please raise a ticket to get the settings added to
 source control.
 
 The projects that require middleware (i.e. Redis) for testing generally
-require that a local instance of [Docker](https://www.docker.com/get-started) is installed and running.
+require that a local instance of https://www.docker.com/get-started[Docker] is installed and running.
 
 [[documentation]]
 == Documentation
@@ -118,7 +116,7 @@ a modified file in the correct place. Just commit it and push the change.
 [[working-with-the-code]]
 == Working with the code
 If you don't have an IDE preference we would recommend that you use
-https://www.springsource.com/developer/sts[Spring Tools Suite] or
+https://spring.io/tools[Spring Tools Suite] or
 https://eclipse.org[Eclipse] when working with the code. We use the
 https://eclipse.org/m2e/[m2eclipse] eclipse plugin for maven support. Other IDEs and tools
 should also work without issue as long as they use Maven 3.3.3 or better.
@@ -183,21 +181,17 @@ tracker for issues and merging pull requests into main. If you want
 to contribute even something trivial please do not hesitate, but
 follow the guidelines below.
 
-[[sign-the-contributor-license-agreement]]
-== Sign the Contributor License Agreement
+[[developer-certificate-of-origin]]
+== Developer Certificate of Origin (DCO)
 
-Before we accept a non-trivial patch or pull request we will need you to sign the
-https://cla.pivotal.io/sign/spring[Contributor License Agreement].
-Signing the contributor's agreement does not grant anyone commit rights to the main
-repository, but it does mean that we can accept your contributions, and you will get an
-author credit if we do.  Active contributors might be asked to join the core team, and
-given the ability to merge pull requests.
+All commits must include a __Signed-off-by__ trailer at the end of each commit message to indicate that the contributor agrees to the Developer Certificate of Origin.
+For additional details, please refer to the blog post https://spring.io/blog/2025/01/06/hello-dco-goodbye-cla-simplifying-contributions-to-spring[Hello DCO, Goodbye CLA: Simplifying Contributions to Spring].
 
 [[code-of-conduct]]
 == Code of Conduct
-This project adheres to the Contributor Covenant https://github.com/spring-cloud/spring-cloud-build/blob/main/docs/src/main/asciidoc/code-of-conduct.adoc[code of
+This project adheres to the Contributor Covenant https://github.com/spring-cloud/spring-cloud-build/blob/main/docs/modules/ROOT/partials/code-of-conduct.adoc[code of
 conduct]. By participating, you  are expected to uphold this code. Please report
-unacceptable behavior to spring-code-of-conduct@pivotal.io.
+unacceptable behavior to code-of-conduct@spring.io.
 
 [[code-conventions-and-housekeeping]]
 == Code Conventions and Housekeeping
@@ -290,7 +284,7 @@ Checkstyle rules are *disabled by default*. To add checkstyle to your project ju
 
 If you need to suppress some rules (e.g. line length needs to be longer), then it's enough for you to define a file under `${project.root}/src/checkstyle/checkstyle-suppressions.xml` with your suppressions. Example:
 
-.projectRoot/src/checkstyle/checkstyle-suppresions.xml
+.projectRoot/src/checkstyle/checkstyle-suppressions.xml
 ----
 <?xml version="1.0"?>
 <!DOCTYPE suppressions PUBLIC
@@ -304,10 +298,11 @@ If you need to suppress some rules (e.g. line length needs to be longer), then i
 
 It's advisable to copy the `${spring-cloud-build.rootFolder}/.editorconfig` and `${spring-cloud-build.rootFolder}/.springformat` to your project. That way, some default formatting rules will be applied. You can do so by running this script:
 
-```bash
+[source,bash]
+----
 $ curl https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/main/.editorconfig -o .editorconfig
 $ touch .springformat
-```
+----
 
 [[ide-setup]]
 == IDE setup
@@ -339,13 +334,13 @@ The following files can be found in the https://github.com/spring-cloud/spring-c
 
 .Code style
 
-image::intellij-code-style.png[Code style]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/main/docs/modules/ROOT/assets/images/intellij-code-style.png[Code style]
 
 Go to `File` -> `Settings` -> `Editor` -> `Code style`. There click on the icon next to the `Scheme` section. There, click on the `Import Scheme` value and pick the `Intellij IDEA code style XML` option. Import the `spring-cloud-build-tools/src/main/resources/intellij/Intellij_Spring_Boot_Java_Conventions.xml` file.
 
 .Inspection profiles
 
-image::intellij-inspections.png[Code style]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/main/docs/modules/ROOT/assets/images/intellij-inspections.png[Code style]
 
 Go to `File` -> `Settings` -> `Editor` -> `Inspections`. There click on the icon next to the `Profile` section. There, click on the `Import Profile` and import the `spring-cloud-build-tools/src/main/resources/intellij/Intellij_Project_Defaults.xml` file.
 
@@ -353,7 +348,7 @@ Go to `File` -> `Settings` -> `Editor` -> `Inspections`. There click on the icon
 
 To have Intellij work with Checkstyle, you have to install the `Checkstyle` plugin. It's advisable to also install the `Assertions2Assertj` to automatically convert the JUnit assertions
 
-image::intellij-checkstyle.png[Checkstyle]
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/main/docs/modules/ROOT/assets/images/intellij-checkstyle.png[Checkstyle]
 
 Go to `File` -> `Settings` -> `Other settings` -> `Checkstyle`. There click on the `+` icon in the `Configuration file` section. There, you'll have to define where the checkstyle rules should be picked from. In the image above, we've picked the rules from the cloned Spring Cloud Build repository. However, you can point to the Spring Cloud Build's GitHub repository (e.g. for the `checkstyle.xml` : `https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/main/spring-cloud-build-tools/src/main/resources/checkstyle.xml`). We need to provide the following variables:
 
@@ -371,7 +366,7 @@ Spring Cloud Build brings along the  `basepom:duplicate-finder-maven-plugin`, th
 [[duplicate-finder-configuration]]
 === Duplicate Finder configuration
 
-Duplicate finder is *enabled by default* and will run in the `verify` phase of your Maven build, but it will only take effect in your project if you add the `duplicate-finder-maven-plugin` to the `build` section of the projecst's `pom.xml`.
+Duplicate finder is *enabled by default* and will run in the `verify` phase of your Maven build, but it will only take effect in your project if you add the `duplicate-finder-maven-plugin` to the `build` section of the project's `pom.xml`.
 
 .pom.xml
 [source,xml]

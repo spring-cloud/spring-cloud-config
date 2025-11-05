@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package org.springframework.cloud.config.server.support;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -52,7 +52,7 @@ public abstract class PathUtils {
 			try {
 				// Use URLDecoder (vs UriUtils) to preserve potentially decoded UTF-8
 				// chars
-				String decodedPath = URLDecoder.decode(location, "UTF-8");
+				String decodedPath = URLDecoder.decode(location, StandardCharsets.UTF_8);
 				if (isInvalidLocation(decodedPath)) {
 					return true;
 				}
@@ -61,7 +61,7 @@ public abstract class PathUtils {
 					return true;
 				}
 			}
-			catch (IllegalArgumentException | UnsupportedEncodingException ex) {
+			catch (IllegalArgumentException ex) {
 				// Should never happen...
 			}
 		}
@@ -94,7 +94,7 @@ public abstract class PathUtils {
 			try {
 				// Use URLDecoder (vs UriUtils) to preserve potentially decoded UTF-8
 				// chars
-				String decodedPath = URLDecoder.decode(path, "UTF-8");
+				String decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
 				if (isInvalidPath(decodedPath)) {
 					return true;
 				}
@@ -103,7 +103,7 @@ public abstract class PathUtils {
 					return true;
 				}
 			}
-			catch (IllegalArgumentException | UnsupportedEncodingException ex) {
+			catch (IllegalArgumentException ex) {
 				// Should never happen...
 			}
 		}
@@ -269,7 +269,8 @@ public abstract class PathUtils {
 		}
 		locationPath = (locationPath.endsWith("/") || locationPath.isEmpty() ? locationPath : locationPath + "/");
 		String encodedLocationPath = locationPath.endsWith("/")
-				? locationPath.substring(0, locationPath.length() - 1) + URLEncoder.encode("/", "UTF-8") : locationPath;
+				? locationPath.substring(0, locationPath.length() - 1) + URLEncoder.encode("/", StandardCharsets.UTF_8)
+				: locationPath;
 		return ((resourcePath.startsWith(locationPath) || resourcePath.startsWith(encodedLocationPath))
 				&& !isInvalidEncodedPath(resourcePath));
 	}

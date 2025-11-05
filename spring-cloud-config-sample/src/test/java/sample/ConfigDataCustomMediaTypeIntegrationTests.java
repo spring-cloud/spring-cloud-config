@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,15 +82,17 @@ public class ConfigDataCustomMediaTypeIntegrationTests {
 	@SuppressWarnings("unchecked")
 	public void noOriginWithMediaTypeApplicationJson() {
 		MutablePropertySources sources = env.getPropertySources();
-		sources.stream().filter(propertySource -> propertySource.getName().startsWith("configserver:")).findFirst()
-				.ifPresent(propertySource -> {
-					if (propertySource instanceof OriginLookup) {
-						OriginLookup<String> originLookup = (OriginLookup) propertySource;
-						Origin origin = originLookup.getOrigin("info.foo");
-						// because media-type was set as application/json, no origin
-						assertThat(origin).as("origin was not null").isNull();
-					}
-				});
+		sources.stream()
+			.filter(propertySource -> propertySource.getName().startsWith("configserver:"))
+			.findFirst()
+			.ifPresent(propertySource -> {
+				if (propertySource instanceof OriginLookup) {
+					OriginLookup<String> originLookup = (OriginLookup) propertySource;
+					Origin origin = originLookup.getOrigin("info.foo");
+					// because media-type was set as application/json, no origin
+					assertThat(origin).as("origin was not null").isNull();
+				}
+			});
 		assertThat(env.getProperty("info.foo")).isEqualTo("bar");
 	}
 

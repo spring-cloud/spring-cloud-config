@@ -21,6 +21,8 @@ import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -29,9 +31,6 @@ import javax.net.ssl.SSLContext;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -205,18 +204,19 @@ public class ConfigClientRequestTemplateFactory {
 		SSLContextFactory factory = new SSLContextFactory(client.getTls());
 		SSLContext sslContext = factory.createSSLContext();
 		SSLConnectionSocketFactoryBuilder sslConnectionSocketFactoryBuilder = SSLConnectionSocketFactoryBuilder
-				.create();
+			.create();
 		sslConnectionSocketFactoryBuilder.setSslContext(sslContext);
 		SocketConfig.Builder socketBuilder = createSocketBuilderForTls(client);
 		PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-				.setDefaultSocketConfig(socketBuilder.build())
-				.setSSLSocketFactory(sslConnectionSocketFactoryBuilder.build()).build();
+			.setDefaultSocketConfig(socketBuilder.build())
+			.setSSLSocketFactory(sslConnectionSocketFactoryBuilder.build())
+			.build();
 		return connectionManager;
 	}
 
 	protected SocketConfig.Builder createSocketBuilderForTls(ConfigClientProperties client) {
 		SocketConfig.Builder socketBuilder = SocketConfig.custom()
-				.setSoTimeout(Timeout.of(client.getRequestReadTimeout(), TimeUnit.MILLISECONDS));
+			.setSoTimeout(Timeout.of(client.getRequestReadTimeout(), TimeUnit.MILLISECONDS));
 		return socketBuilder;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,18 +37,18 @@ public class SpringVaultEnvironmentRepositoryFactory
 
 	private final EnvironmentWatch watch;
 
-	private final SpringVaultClientConfiguration clientConfiguration;
+	private final SpringVaultTemplateBuilder vaultTemplateBuilder;
 
 	public SpringVaultEnvironmentRepositoryFactory(ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-			SpringVaultClientConfiguration clientConfiguration) {
+			SpringVaultTemplateBuilder vaultTemplateBuilder) {
 		this.request = request;
 		this.watch = watch;
-		this.clientConfiguration = clientConfiguration;
+		this.vaultTemplateBuilder = vaultTemplateBuilder;
 	}
 
 	@Override
 	public SpringVaultEnvironmentRepository build(VaultEnvironmentProperties vaultProperties) {
-		VaultTemplate vaultTemplate = clientConfiguration.vaultTemplate();
+		VaultTemplate vaultTemplate = this.vaultTemplateBuilder.build(vaultProperties);
 
 		VaultKeyValueOperations accessStrategy = buildVaultAccessStrategy(vaultProperties, vaultTemplate);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,10 @@ package org.springframework.cloud.config.server.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -29,11 +32,13 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -98,17 +103,21 @@ public class ResourceController {
 
 	@GetMapping("/{name}/{profile}/{label}/**")
 	public String retrieve(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
-			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders,
+			@RequestHeader(value = HttpHeaders.ACCEPT_CHARSET, required = false,
+					defaultValue = "UTF-8") String acceptedCharset)
 			throws IOException {
 		String path = getFilePath(request, name, profile, label);
-		return retrieve(request, name, profile, label, path, resolvePlaceholders);
+		return retrieve(request, name, profile, label, path, resolvePlaceholders, acceptedCharset);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel")
 	public String retrieveDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
-			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders)
+			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders,
+			@RequestHeader(value = HttpHeaders.ACCEPT_CHARSET, required = false,
+					defaultValue = "UTF-8") String acceptedCharset)
 			throws IOException {
-		return retrieve(request, name, profile, null, path, resolvePlaceholders);
+		return retrieve(request, name, profile, null, path, resolvePlaceholders, acceptedCharset);
 	}
 
 	private String getFilePath(ServletWebRequest request, String name, String profile, String label) {
@@ -130,7 +139,7 @@ public class ResourceController {
 	 * the files on disk.
 	 */
 	synchronized String retrieve(ServletWebRequest request, String name, String profile, String label, String path,
-			boolean resolvePlaceholders) throws IOException {
+			boolean resolvePlaceholders, String acceptedCharset) throws IOException {
 		name = Environment.normalize(name);
 		label = Environment.normalize(label);
 		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
@@ -140,10 +149,19 @@ public class ResourceController {
 		}
 		// ensure InputStream will be closed to prevent file locks on Windows
 		try (InputStream is = resource.getInputStream()) {
-			String text = StreamUtils.copyToString(is, Charset.forName("UTF-8"));
+
+			Charset charset = StandardCharsets.UTF_8;
+			try {
+				charset = Charset.forName(acceptedCharset);
+			}
+			catch (UnsupportedCharsetException e) {
+				logger.warn("The accepted charset received from the client is not supported. Using UTF-8 instead.", e);
+			}
+
+			String text = StreamUtils.copyToString(is, charset);
 			String ext = StringUtils.getFilenameExtension(resource.getFilename());
 			if (ext != null) {
-				ext = ext.toLowerCase();
+				ext = ext.toLowerCase(Locale.ROOT);
 			}
 			Environment environment = this.environmentRepository.findOne(name, profile, label, false);
 			if (resolvePlaceholders) {
@@ -165,9 +183,9 @@ public class ResourceController {
 	/*
 	 * Used only for unit tests.
 	 */
-	String retrieve(String name, String profile, String label, String path, boolean resolvePlaceholders)
-			throws IOException {
-		return retrieve(null, name, profile, label, path, resolvePlaceholders);
+	String retrieve(String name, String profile, String label, String path, boolean resolvePlaceholders,
+			String acceptedCharset) throws IOException {
+		return retrieve(null, name, profile, label, path, resolvePlaceholders, acceptedCharset);
 	}
 
 	@GetMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

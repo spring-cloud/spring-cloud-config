@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,11 +54,11 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 	Map<String, HttpClientBuilder> httpClientBuildersByUri = new LinkedHashMap<>();
 
 	@Override
-	public void addConfiguration(MultipleJGitEnvironmentProperties environmentProperties)
-			throws GeneralSecurityException {
-		addHttpClient(environmentProperties);
+	public void addConfiguration(MultipleJGitEnvironmentProperties environmentProperties,
+			List<HttpClient4BuilderCustomizer> customizers) throws GeneralSecurityException {
+		addHttpClient(environmentProperties, customizers);
 		for (JGitEnvironmentProperties repo : environmentProperties.getRepos().values()) {
-			addHttpClient(repo);
+			addHttpClient(repo, customizers);
 		}
 	}
 
@@ -81,9 +81,10 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 		}
 	}
 
-	private void addHttpClient(JGitEnvironmentProperties properties) throws GeneralSecurityException {
+	private void addHttpClient(JGitEnvironmentProperties properties, List<HttpClient4BuilderCustomizer> customizers)
+			throws GeneralSecurityException {
 		if (properties.getUri() != null && properties.getUri().startsWith("http")) {
-			this.httpClientBuildersByUri.put(properties.getUri(), HttpClient4Support.builder(properties));
+			this.httpClientBuildersByUri.put(properties.getUri(), HttpClient4Support.builder(properties, customizers));
 		}
 	}
 
@@ -116,8 +117,10 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 			 * which have no placeholders. That is the one we want to use in the case
 			 * there are multiple matches.
 			 */
-			List<String> keys = builderMap.keySet().stream().filter(key -> !PLACEHOLDER_PATTERN.matcher(key).find())
-					.collect(Collectors.toList());
+			List<String> keys = builderMap.keySet()
+				.stream()
+				.filter(key -> !PLACEHOLDER_PATTERN.matcher(key).find())
+				.collect(Collectors.toList());
 
 			if (keys.size() == 1) {
 				return builderMap.get(keys.get(0));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import jakarta.validation.constraints.NotEmpty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
 import org.springframework.cloud.config.server.support.HttpEnvironmentRepositoryProperties;
-import org.springframework.core.Ordered;
 import org.springframework.core.io.Resource;
 import org.springframework.validation.annotation.Validated;
 
@@ -83,7 +82,7 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	 */
 	private Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
 
-	private int order = Ordered.LOWEST_PRECEDENCE;
+	private int order = DEFAULT_ORDER;
 
 	/**
 	 * Value to indicate which version of Vault kv backend is used. Defaults to 1.
@@ -100,6 +99,17 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	 * Static vault token. Required if {@link #authentication} is {@code TOKEN}.
 	 */
 	private String token;
+
+	/**
+	 * Flag to indicate that the repository should use 'label' as well as
+	 * 'application-name' and 'profile', for vault secrets. By default, the vault secrets
+	 * are expected to be in 'application-name,profile' path. When this flag enabled, they
+	 * are expected to be in `application-name,profile,label' path. To maintain
+	 * compatibility this flag is not enabled by default.
+	 */
+	private boolean enableLabel = false;
+
+	private String defaultLabel = "main";
 
 	private AppRoleProperties appRole = new AppRoleProperties();
 
@@ -227,6 +237,22 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 	public void setToken(String token) {
 		this.token = token;
+	}
+
+	public boolean isEnableLabel() {
+		return enableLabel;
+	}
+
+	public void setEnableLabel(boolean enableLabel) {
+		this.enableLabel = enableLabel;
+	}
+
+	public String getDefaultLabel() {
+		return defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 	public AppRoleProperties getAppRole() {

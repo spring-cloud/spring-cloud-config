@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.runners.Parameterized.Parameters;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -40,7 +39,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class CipherEnvironmentEncryptorTests {
 
-	@Parameters
 	public static List<Object[]> params() {
 		List<Object[]> list = new ArrayList<>();
 		list.add(new Object[] { "deadbeef", "foo" });
@@ -63,7 +61,7 @@ public class CipherEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(secret);
+			.isEqualTo(secret);
 	}
 
 	@ParameterizedTest
@@ -83,7 +81,7 @@ public class CipherEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(secret);
+			.isEqualTo(secret);
 	}
 
 	@ParameterizedTest
@@ -97,7 +95,7 @@ public class CipherEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(null);
+			.isEqualTo(null);
 	}
 
 	@ParameterizedTest
@@ -116,7 +114,58 @@ public class CipherEnvironmentEncryptorTests {
 
 		// then
 		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
-				.isEqualTo(secret);
+			.isEqualTo(secret);
+	}
+
+	@ParameterizedTest
+	@MethodSource("params")
+	public void shouldDecryptFailed(String salt, String key) {
+		TextEncryptor textEncryptor = new EncryptorFactory(salt).create(key);
+		CipherEnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(keys -> textEncryptor);
+		encryptor.setPrefixInvalidProperties(true);
+		// given
+		String secret = randomUUID().toString();
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		String encrypted = "{cipher}" + new EncryptorFactory(salt).create("dummykey").encrypt(secret);
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				new PropertyValueDescriptor(encrypted, "encrypted value"))));
+
+		// then
+		assertThat(encryptor.decrypt(environment)
+			.getPropertySources()
+			.get(0)
+			.getSource()
+			.get("invalid." + environment.getName())).isEqualTo("<n/a>");
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+			.isNull();
+	}
+
+	@ParameterizedTest
+	@MethodSource("params")
+	public void decryptFailedWithoutInvalidPrefix(String salt, String key) {
+		TextEncryptor textEncryptor = new EncryptorFactory(salt).create(key);
+		CipherEnvironmentEncryptor encryptor = new CipherEnvironmentEncryptor(keys -> textEncryptor);
+		encryptor.setPrefixInvalidProperties(false);
+		// given
+		String secret = randomUUID().toString();
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		String encryptedSecret = new EncryptorFactory(salt).create("dummykey").encrypt(secret);
+		String encrypted = "{cipher}" + encryptedSecret;
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				new PropertyValueDescriptor(encrypted, "encrypted value"))));
+
+		// then
+		assertThat(encryptor.decrypt(environment)
+			.getPropertySources()
+			.get(0)
+			.getSource()
+			.get("invalid." + environment.getName())).isNull();
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+			.isEqualTo(encryptedSecret);
 	}
 
 }

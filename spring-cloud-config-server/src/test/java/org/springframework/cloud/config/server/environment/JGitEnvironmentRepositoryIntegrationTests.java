@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,7 +103,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void vanilla() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties("spring.cloud.config.server.git.uri:" + uri).run();
+			.properties("spring.cloud.config.server.git.uri:" + uri)
+			.run();
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
@@ -117,9 +118,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			String uri = ConfigServerTestUtils.prepareLocalRepo();
 			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties("spring.cloud.config.server.git.uri:" + uri,
-							"spring.cloud.config.server.git.tryMasterBranch:false")
-					.run();
+				.properties("spring.cloud.config.server.git.uri:" + uri,
+						"spring.cloud.config.server.git.tryMasterBranch:false")
+				.run();
 			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 			Environment environment = repository.findOne("bar", "staging", null);
 		});
@@ -130,7 +131,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		ConfigServerTestUtils.prepareLocalRepo();
 		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.run("--spring.cloud.config.server.git.uri=" + uri);
+			.run("--spring.cloud.config.server.git.uri=" + uri);
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("bar");
@@ -171,7 +172,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		String commitToRevertBeforePull = git.log().setMaxCount(1).call().iterator().next().getName();
 
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.run("--spring.cloud.config.server.git.uri=" + uri);
+			.run("--spring.cloud.config.server.git.uri=" + uri);
 
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 
@@ -200,7 +201,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThat(conflictingCommit).isEqualTo(locations.getVersion());
 
 		assertThat(git.status().call().isClean()).as("Local repository is not cleaned after retrieving resources.")
-				.isTrue();
+			.isTrue();
 	}
 
 	@Test
@@ -216,8 +217,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void nested() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				// TODO: why didn't .properties() work for me?
-				.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=sub");
+			// TODO: why didn't .properties() work for me?
+			.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=sub");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
@@ -227,9 +228,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void nestedWithApplicationPlaceholders() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("nested-repo");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				// TODO: why didn't .properties() work for me?
-				.run("--spring.cloud.config.server.git.uri=" + uri,
-						"--spring.cloud.config.server.git.searchPaths={application}");
+			// TODO: why didn't .properties() work for me?
+			.run("--spring.cloud.config.server.git.uri=" + uri,
+					"--spring.cloud.config.server.git.searchPaths={application}");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("foo,bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(3);
@@ -240,23 +241,23 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void verifyPropertySourceOrdering() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("ordering-repo");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=**");
+			.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=**");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("application", "test", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isEqualTo("file:././target/repos/ordering-repo//project/sub/application-test.yml");
+			.isEqualTo("file:././target/repos/ordering-repo//project/sub/application-test.yml");
 		assertThat(environment.getPropertySources().get(1).getName())
-				.isEqualTo("file:././target/repos/ordering-repo//project/application.yml");
+			.isEqualTo("file:././target/repos/ordering-repo//project/application.yml");
 	}
 
 	@Test
 	public void nestedWithProfilePlaceholders() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("nested-repo");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				// TODO: why didn't .properties() work for me?
-				.run("--spring.cloud.config.server.git.uri=" + uri,
-						"--spring.cloud.config.server.git.searchPaths={profile}");
+			// TODO: why didn't .properties() work for me?
+			.run("--spring.cloud.config.server.git.uri=" + uri,
+					"--spring.cloud.config.server.git.searchPaths={profile}");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("staging", "foo,bar", "master");
 		assertThat(environment.getPropertySources()).hasSize(3);
@@ -265,20 +266,22 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	@Test
 	public void singleElementArrayIndexSearchPath() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("nested-repo");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE).run(
-				"--spring.cloud.config.server.git.uri=" + uri,
-				"--spring.cloud.config.server.git.searchPaths[0]={application}");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+			.run("--spring.cloud.config.server.git.uri=" + uri,
+					"--spring.cloud.config.server.git.searchPaths[0]={application}");
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertThat(repository.getSearchPaths()).containsExactly("{application}");
 		assertThat(Arrays.equals(repository.getSearchPaths(), new JGitEnvironmentRepository(repository.getEnvironment(),
-				new JGitEnvironmentProperties(), ObservationRegistry.NOOP).getSearchPaths())).isFalse();
+				new JGitEnvironmentProperties(), ObservationRegistry.NOOP)
+			.getSearchPaths())).isFalse();
 	}
 
 	@Test
 	public void defaultLabel() throws Exception {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				.properties("spring.cloud.config.server.git.uri:" + uri).run();
+			.properties("spring.cloud.config.server.git.uri:" + uri)
+			.run();
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertThat(repository.getDefaultLabel()).isEqualTo(JGitEnvironmentProperties.MAIN_LABEL);
 	}
@@ -288,7 +291,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			String uri = ConfigServerTestUtils.prepareLocalRepo();
 			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties("spring.cloud.config.server.git.uri:" + uri).run();
+				.properties("spring.cloud.config.server.git.uri:" + uri)
+				.run();
 			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 			repository.findOne("bar", "staging", "unknownlabel");
 		});
@@ -298,8 +302,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void findOne_CloneOnStartTrue_FindOneSuccess() throws Exception {
 		ConfigServerTestUtils.prepareLocalRepo();
 		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE).run(
-				"--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.cloneOnStart=true");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+			.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.cloneOnStart=true");
 		EnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertThat(((JGitEnvironmentRepository) repository).isCloneOnStart()).isTrue();
 		Environment environment = repository.findOne("bar", "staging", "master");
@@ -313,8 +317,8 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void findOne_FileAddedToRepo_FindOneSuccess() throws Exception {
 		ConfigServerTestUtils.prepareLocalRepo();
 		String uri = ConfigServerTestUtils.copyLocalRepo("config-copy");
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE).run(
-				"--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.cloneOnStart=true");
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+			.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.cloneOnStart=true");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("bar");
@@ -332,9 +336,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void findOne_NestedSearchPath_FindOneSuccess() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-				// TODO: why didn't .properties() work for me?
-				.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=sub",
-						"--spring.cloud.config.server.git.cloneOnStart=true");
+			// TODO: why didn't .properties() work for me?
+			.run("--spring.cloud.config.server.git.uri=" + uri, "--spring.cloud.config.server.git.searchPaths=sub",
+					"--spring.cloud.config.server.git.cloneOnStart=true");
 		EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 		Environment environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
@@ -345,9 +349,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			String uri = ConfigServerTestUtils.prepareLocalRepo();
 			this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties("spring.cloud.config.server.git.uri:" + uri,
-							"--spring.cloud.config.server.git.cloneOnStart=true")
-					.run();
+				.properties("spring.cloud.config.server.git.uri:" + uri,
+						"--spring.cloud.config.server.git.cloneOnStart=true")
+				.run();
 			EnvironmentRepository repository = this.context.getBean(EnvironmentRepository.class);
 			repository.findOne("bar", "staging", "unknownlabel");
 		});
@@ -356,7 +360,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	@Test
 	public void testVersionUpdate() throws Exception {
 		JGitConfigServerTestData testData = JGitConfigServerTestData
-				.prepareClonedGitRepository(TestConfiguration.class);
+			.prepareClonedGitRepository(TestConfiguration.class);
 
 		// get our starting versions
 		String startingLocalVersion = getCommitID(testData.getClonedGit().getGit(), "master");
@@ -397,7 +401,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	@Test
 	public void testNewRemoteBranch() throws Exception {
 		JGitConfigServerTestData testData = JGitConfigServerTestData
-				.prepareClonedGitRepository(TestConfiguration.class);
+			.prepareClonedGitRepository(TestConfiguration.class);
 
 		Environment environment = testData.getRepository().findOne("bar", "staging", "master");
 		Object fooProperty = ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo");
@@ -422,7 +426,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	@Test
 	public void testNewRemoteTag() throws Exception {
 		JGitConfigServerTestData testData = JGitConfigServerTestData
-				.prepareClonedGitRepository(TestConfiguration.class);
+			.prepareClonedGitRepository(TestConfiguration.class);
 
 		Git serverGit = testData.getServerGit().getGit();
 
@@ -462,7 +466,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	@Test
 	public void testNewCommitID() throws Exception {
 		JGitConfigServerTestData testData = JGitConfigServerTestData
-				.prepareClonedGitRepository(TestConfiguration.class);
+			.prepareClonedGitRepository(TestConfiguration.class);
 
 		// get our starting versions
 		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
@@ -505,7 +509,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	 */
 	public void testNewCommitIDWithRefreshRate() throws Exception {
 		JGitConfigServerTestData testData = JGitConfigServerTestData
-				.prepareClonedGitRepository(TestConfiguration.class);
+			.prepareClonedGitRepository(TestConfiguration.class);
 
 		// get our starting versions
 		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
@@ -560,7 +564,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void testUnknownLabelWithRemote() throws Exception {
 		assertThatExceptionOfType(NoSuchLabelException.class).isThrownBy(() -> {
 			JGitConfigServerTestData testData = JGitConfigServerTestData
-					.prepareClonedGitRepository(TestConfiguration.class);
+				.prepareClonedGitRepository(TestConfiguration.class);
 			testData.getRepository().findOne("bar", "staging", "BADLabel");
 		});
 	}
@@ -575,9 +579,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void passphrase() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		final String passphrase = "thisismypassphrase";
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE).run(
-				"--spring.cloud.config.server.git.uri=" + uri,
-				"--spring.cloud.config.server.git.passphrase=" + passphrase);
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+			.run("--spring.cloud.config.server.git.uri=" + uri,
+					"--spring.cloud.config.server.git.passphrase=" + passphrase);
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertThat(repository.getPassphrase()).contains(passphrase);
 	}
@@ -586,9 +590,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void strictHostKeyChecking() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("config-repo");
 		final boolean strictHostKeyChecking = true;
-		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE).run(
-				"--spring.cloud.config.server.git.uri=" + uri,
-				"--spring.cloud.config.server.git.strict-host-key-checking=" + strictHostKeyChecking);
+		this.context = new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
+			.run("--spring.cloud.config.server.git.uri=" + uri,
+					"--spring.cloud.config.server.git.strict-host-key-checking=" + strictHostKeyChecking);
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertThat(strictHostKeyChecking).isEqualTo(repository.isStrictHostKeyChecking());
 	}
@@ -597,7 +601,9 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	public void shouldSetTransportConfigCallback() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo();
 		this.context = new SpringApplicationBuilder(TestConfigurationWithTransportConfigCallback.class)
-				.web(WebApplicationType.NONE).properties("spring.cloud.config.server.git.uri:" + uri).run();
+			.web(WebApplicationType.NONE)
+			.properties("spring.cloud.config.server.git.uri:" + uri)
+			.run();
 
 		JGitEnvironmentRepository repository = this.context.getBean(JGitEnvironmentRepository.class);
 		assertThat(repository.getTransportConfigCallback()).isNotNull();
@@ -606,7 +612,7 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	@Test
 	public void testShouldReturnEnvironmentFromLocalBranchInCaseRemoteDeleted() throws Exception {
 		JGitConfigServerTestData testData = JGitConfigServerTestData
-				.prepareClonedGitRepository(TestConfiguration.class);
+			.prepareClonedGitRepository(TestConfiguration.class);
 
 		String branchToDelete = "branchToDelete";
 		testData.getServerGit().getGit().branchCreate().setName(branchToDelete).call();

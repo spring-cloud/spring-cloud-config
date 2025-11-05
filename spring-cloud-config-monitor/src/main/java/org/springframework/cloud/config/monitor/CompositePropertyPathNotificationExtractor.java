@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.util.Map;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.annotation.Order;
-import org.springframework.util.MultiValueMap;
+import org.springframework.http.HttpHeaders;
 
 /**
  * A {@link PropertyPathNotificationExtractor} that cycles through a set of (ordered)
@@ -47,7 +47,7 @@ public class CompositePropertyPathNotificationExtractor implements PropertyPathN
 	}
 
 	@Override
-	public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> request) {
+	public PropertyPathNotification extract(HttpHeaders headers, Map<String, Object> request) {
 		for (PropertyPathNotificationExtractor extractor : this.extractors) {
 			PropertyPathNotification result = extractor.extract(headers, request);
 			if (result != null) {
@@ -61,7 +61,7 @@ public class CompositePropertyPathNotificationExtractor implements PropertyPathN
 	private static class SimplePropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
 		@Override
-		public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> request) {
+		public PropertyPathNotification extract(HttpHeaders headers, Map<String, Object> request) {
 			Object object = request.get("path");
 			if (object instanceof String) {
 				return new PropertyPathNotification((String) object);

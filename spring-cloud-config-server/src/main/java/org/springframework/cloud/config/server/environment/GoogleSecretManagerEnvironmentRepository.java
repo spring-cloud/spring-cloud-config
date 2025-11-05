@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.Map;
 
 import com.google.cloud.secretmanager.v1.Secret;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.StringUtils;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.environment.Environment;
@@ -32,6 +31,7 @@ import org.springframework.cloud.config.server.environment.secretmanager.GoogleS
 import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerAccessStrategyFactory;
 import org.springframework.cloud.config.server.environment.secretmanager.HttpHeaderGoogleConfigProvider;
 import org.springframework.core.Ordered;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -64,17 +64,17 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-		if (StringUtils.isEmpty(label)) {
+		if (!StringUtils.hasText(label)) {
 			label = "master";
 		}
-		if (StringUtils.isEmpty(profile)) {
+		if (!StringUtils.hasText(profile)) {
 			profile = "default";
 		}
 		if (!profile.startsWith("default")) {
 			profile = "default," + profile;
 		}
 		String[] profiles = org.springframework.util.StringUtils
-				.trimArrayElements(org.springframework.util.StringUtils.commaDelimitedListToStringArray(profile));
+			.trimArrayElements(org.springframework.util.StringUtils.commaDelimitedListToStringArray(profile));
 		Environment result = new Environment(application, profile, label, null, null);
 		if (tokenMandatory) {
 			if (accessStrategy.checkRemotePermissions()) {
@@ -110,9 +110,12 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 				result.put(accessStrategy.getSecretName(secret),
 						accessStrategy.getSecretValue(secret, new GoogleSecretComparatorByVersion()));
 			}
-			else if (StringUtils.isNotBlank(prefix) && accessStrategy.getSecretName(secret).startsWith(prefix)) {
-				result.put(StringUtils.removeStart(accessStrategy.getSecretName(secret), prefix),
-						accessStrategy.getSecretValue(secret, new GoogleSecretComparatorByVersion()));
+			else if (StringUtils.hasText(prefix) && accessStrategy.getSecretName(secret).startsWith(prefix)) {
+				String secretName = accessStrategy.getSecretName(secret);
+				if (secretName.startsWith(prefix)) {
+					secretName = secretName.replaceFirst(prefix, "");
+				}
+				result.put(secretName, accessStrategy.getSecretValue(secret, new GoogleSecretComparatorByVersion()));
 			}
 		}
 		return result;

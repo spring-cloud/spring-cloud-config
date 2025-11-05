@@ -1,2 +1,8 @@
 org.springframework.aot.hint.RuntimeHintsRegistrar=\
 org.springframework.cloud.config.server.config.ConfigServerRuntimeHints
+
+org.springframework.beans.factory.aot.BeanFactoryInitializationAotProcessor= \
+org.springframework.cloud.config.server.aot.CompositeEnvironmentBeanFactoryInitializationAotProcessor
+
+org.springframework.beans.factory.aot.BeanRegistrationExcludeFilter=\
+org.springframework.cloud.config.server.aot.CompositeEnvironmentBeanFactoryInitializationAotProcessor

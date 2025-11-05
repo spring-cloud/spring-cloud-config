@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2020 the original author or authors.
+ * Copyright 2020-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.cloud.config.server.encryption.vault.VaultEnvironmentEncryptor;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository;
@@ -34,10 +35,16 @@ import org.springframework.vault.core.VaultTemplate;
 @Profile("vault")
 public class VaultEncryptionAutoConfiguration {
 
+	@Value("${spring.cloud.config.server.encrypt.prefixInvalidProperties:${spring.cloud.config.server.encrypt.prefix-invalid-properties:true}}")
+	private boolean prefixInvalidProperties;
+
 	@Bean
 	public VaultEnvironmentEncryptor vaultEnvironmentEncryptor(
 			SpringVaultEnvironmentRepository vaultEnvironmentRepository) {
-		return new VaultEnvironmentEncryptor(vaultEnvironmentRepository.getKeyValueTemplate());
+		VaultEnvironmentEncryptor vaultEnvironmentEncryptor = new VaultEnvironmentEncryptor(
+				vaultEnvironmentRepository.getKeyValueTemplate());
+		vaultEnvironmentEncryptor.setPrefixInvalidProperties(this.prefixInvalidProperties);
+		return vaultEnvironmentEncryptor;
 	}
 
 }

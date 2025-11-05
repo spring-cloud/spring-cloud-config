@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import org.mockito.Mockito;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.cloud.config.environment.Environment;
@@ -70,14 +70,15 @@ public class ConfigClientOffIntegrationTests {
 	@Test
 	public void contextLoads() {
 		Environment environment = new TestRestTemplate()
-				.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
+			.getForObject("http://localhost:" + this.port + "/foo/development/", Environment.class);
 		assertThat(environment.getPropertySources()).isEmpty();
 	}
 
 	@Test
 	public void configClientDisabled() throws Exception {
 		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(this.context,
-				ConfigServicePropertySourceLocator.class).length).isEqualTo(0);
+				ConfigServicePropertySourceLocator.class).length)
+			.isEqualTo(0);
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -88,7 +89,7 @@ public class ConfigClientOffIntegrationTests {
 		public EnvironmentRepository environmentRepository() {
 			EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
 			given(repository.findOne(anyString(), anyString(), anyString(), anyBoolean()))
-					.willReturn(new Environment("", ""));
+				.willReturn(new Environment("", ""));
 			return repository;
 		}
 
@@ -96,7 +97,7 @@ public class ConfigClientOffIntegrationTests {
 		public ResourceRepository resourceRepository() {
 			ResourceRepository repository = Mockito.mock(ResourceRepository.class);
 			given(repository.findOne(anyString(), anyString(), anyString(), anyString()))
-					.willReturn(new ByteArrayResource("".getBytes()));
+				.willReturn(new ByteArrayResource("".getBytes()));
 			return repository;
 		}
 

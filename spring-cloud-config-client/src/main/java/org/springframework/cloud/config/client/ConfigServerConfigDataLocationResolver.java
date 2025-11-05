@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@ package org.springframework.cloud.config.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 
-import org.springframework.boot.BootstrapRegistry;
-import org.springframework.boot.BootstrapRegistry.InstanceSupplier;
-import org.springframework.boot.ConfigurableBootstrapContext;
+import org.springframework.boot.bootstrap.BootstrapRegistry;
+import org.springframework.boot.bootstrap.BootstrapRegistry.InstanceSupplier;
+import org.springframework.boot.bootstrap.ConfigurableBootstrapContext;
 import org.springframework.boot.context.config.ConfigDataLocation;
 import org.springframework.boot.context.config.ConfigDataLocationNotFoundException;
 import org.springframework.boot.context.config.ConfigDataLocationResolver;
@@ -36,10 +37,16 @@ import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.logging.DeferredLogFactory;
+import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
+import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
+import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
 import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -53,6 +60,8 @@ public class ConfigServerConfigDataLocationResolver
 	 * Prefix for Config Server imports.
 	 */
 	public static final String PREFIX = "configserver:";
+	static final boolean RSA_IS_PRESENT = ClassUtils
+		.isPresent("org.springframework.security.crypto.encrypt.RsaSecretEncryptor", null);
 
 	private final Log log;
 
@@ -65,6 +74,41 @@ public class ConfigServerConfigDataLocationResolver
 		return -1;
 	}
 
+	/*
+	 * Depending on whether encrypt.key is set as an environment or system property we may
+	 * have created a TextEncryptor implementation or just created a
+	 * FailsafeTextEncryptor. This is because when TextEncryptorConfigBootstrapper runs we
+	 * have not yet loaded any configuration files (application.yaml | properties etc).
+	 * However, at this point when the ConfigServerConfigDataLocationResolver is resolving
+	 * configuration we would have resolved the configuration files on the classpath at
+	 * least so we can potentially create a properly configured TextEncryptor. So if the
+	 * FailsafeTextEncryptor is in the context and we can create a TextEncryptor then we
+	 * set the delegate in the FailsafeTextEncryptor so that we can decrypt any encrypted
+	 * properties at this point.
+	 */
+	protected void setTextEncryptorDelegate(ConfigDataLocationResolverContext context) {
+		if (context.getBootstrapContext().isRegistered(TextEncryptor.class)) {
+			Binder binder = context.getBinder();
+			KeyProperties keyProperties = binder.bindOrCreate(KeyProperties.PREFIX, Bindable.of(KeyProperties.class));
+			boolean textEncryptorRegistered = context.getBootstrapContext().isRegistered(TextEncryptor.class);
+			if (TextEncryptorUtils.keysConfigured(keyProperties) && textEncryptorRegistered) {
+				TextEncryptor textEncryptor = context.getBootstrapContext().get(TextEncryptor.class);
+				if (textEncryptor instanceof TextEncryptorUtils.FailsafeTextEncryptor failsafeTextEncryptor) {
+					TextEncryptor delegate;
+					if (RSA_IS_PRESENT) {
+						RsaProperties rsaProperties = binder.bindOrCreate(RsaProperties.PREFIX,
+								Bindable.of(RsaProperties.class));
+						delegate = TextEncryptorUtils.createTextEncryptor(keyProperties, rsaProperties);
+					}
+					else {
+						delegate = new EncryptorFactory(keyProperties.getSalt()).create(keyProperties.getKey());
+					}
+					failsafeTextEncryptor.setDelegate(delegate);
+				}
+			}
+		}
+	}
+
 	protected PropertyHolder loadProperties(ConfigDataLocationResolverContext context, String uris) {
 		Binder binder = context.getBinder();
 		BindHandler bindHandler = getBindHandler(context);
@@ -72,34 +116,36 @@ public class ConfigServerConfigDataLocationResolver
 		ConfigClientProperties configClientProperties;
 		if (context.getBootstrapContext().isRegistered(ConfigClientProperties.class)) {
 			configClientProperties = binder
-					.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
-					.orElseGet(ConfigClientProperties::new);
+				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
+				.orElseGet(ConfigClientProperties::new);
 			boolean discoveryEnabled = context.getBinder()
-					.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(context)).orElse(false);
+				.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(context))
+				.orElse(false);
 			// In the case where discovery is enabled we need to extract the config server
 			// uris, username, and password
-			// from the properties from the context. These are set in
+			// from the ConfigServiceMonitor. These are set in
 			// ConfigServerInstanceMonitor.refresh which will only
 			// be called the first time we fetch configuration.
+			// They will continue to be updated as HeartbeatEvents are received.
 			if (discoveryEnabled) {
-				ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()
-						.get(ConfigClientProperties.class);
+				ConfigServerInstanceMonitor instanceMonitor = context.getBootstrapContext()
+					.get(ConfigServerInstanceMonitor.class);
 
-				configClientProperties.setUri(bootstrapConfigClientProperties.getUri());
-				configClientProperties.setPassword(bootstrapConfigClientProperties.getPassword());
-				configClientProperties.setUsername(bootstrapConfigClientProperties.getUsername());
+				configClientProperties.setUri(instanceMonitor.getUri());
+				configClientProperties.setPassword(instanceMonitor.getPassword());
+				configClientProperties.setUsername(instanceMonitor.getUsername());
 			}
 		}
 		else {
 			configClientProperties = binder
-					.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
-					.orElseGet(ConfigClientProperties::new);
+				.bind(ConfigClientProperties.PREFIX, Bindable.of(ConfigClientProperties.class), bindHandler)
+				.orElseGet(ConfigClientProperties::new);
 		}
 		if (!StringUtils.hasText(configClientProperties.getName())
 				|| "application".equals(configClientProperties.getName())) {
 			// default to spring.application.name if name isn't set
 			String applicationName = binder.bind("spring.application.name", Bindable.of(String.class), bindHandler)
-					.orElse("application");
+				.orElse("application");
 			configClientProperties.setName(applicationName);
 		}
 		ConfigClientOAuth2Properties oauth2Properties = binder
@@ -115,7 +161,7 @@ public class ConfigServerConfigDataLocationResolver
 		holder.properties = configClientProperties;
 		// bind retry, override later
 		holder.retryProperties = binder.bind(RetryProperties.PREFIX, RetryProperties.class)
-				.orElseGet(RetryProperties::new);
+			.orElseGet(RetryProperties::new);
 
 		if (StringUtils.hasText(uris)) {
 			String[] uri = StringUtils.commaDelimitedListToStringArray(uris);
@@ -132,19 +178,24 @@ public class ConfigServerConfigDataLocationResolver
 			}
 			if (StringUtils.hasText(paramStr)) {
 				Properties properties = StringUtils
-						.splitArrayElementsIntoProperties(StringUtils.delimitedListToStringArray(paramStr, "&"), "=");
+					.splitArrayElementsIntoProperties(StringUtils.delimitedListToStringArray(paramStr, "&"), "=");
 				if (properties != null) {
-					PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
-					map.from(() -> properties.getProperty("fail-fast")).as(Boolean::valueOf)
-							.to(configClientProperties::setFailFast);
-					map.from(() -> properties.getProperty("max-attempts")).as(Integer::valueOf)
-							.to(holder.retryProperties::setMaxAttempts);
-					map.from(() -> properties.getProperty("max-interval")).as(Long::valueOf)
-							.to(holder.retryProperties::setMaxInterval);
-					map.from(() -> properties.getProperty("multiplier")).as(Double::valueOf)
-							.to(holder.retryProperties::setMultiplier);
-					map.from(() -> properties.getProperty("initial-interval")).as(Long::valueOf)
-							.to(holder.retryProperties::setInitialInterval);
+					PropertyMapper map = PropertyMapper.get();
+					map.from(() -> properties.getProperty("fail-fast"))
+						.as(Boolean::valueOf)
+						.to(configClientProperties::setFailFast);
+					map.from(() -> properties.getProperty("max-attempts"))
+						.as(Integer::valueOf)
+						.to(holder.retryProperties::setMaxAttempts);
+					map.from(() -> properties.getProperty("max-interval"))
+						.as(Long::valueOf)
+						.to(holder.retryProperties::setMaxInterval);
+					map.from(() -> properties.getProperty("multiplier"))
+						.as(Double::valueOf)
+						.to(holder.retryProperties::setMultiplier);
+					map.from(() -> properties.getProperty("initial-interval"))
+						.as(Long::valueOf)
+						.to(holder.retryProperties::setInitialInterval);
 				}
 			}
 			configClientProperties.setUri(uri);
@@ -155,11 +206,6 @@ public class ConfigServerConfigDataLocationResolver
 
 	private BindHandler getBindHandler(ConfigDataLocationResolverContext context) {
 		return context.getBootstrapContext().getOrElse(BindHandler.class, null);
-	}
-
-	@Deprecated
-	protected RestTemplate createRestTemplate(ConfigClientProperties properties) {
-		return null;
 	}
 
 	protected Log getLog() {
@@ -189,6 +235,7 @@ public class ConfigServerConfigDataLocationResolver
 	public List<ConfigServerConfigDataResource> resolveProfileSpecific(
 			ConfigDataLocationResolverContext resolverContext, ConfigDataLocation location, Profiles profiles)
 			throws ConfigDataLocationNotFoundException {
+		setTextEncryptorDelegate(resolverContext);
 		String uris = location.getNonPrefixedValue(getPrefix());
 		PropertyHolder propertyHolder = loadProperties(resolverContext, uris);
 		ConfigClientProperties properties = propertyHolder.properties;
@@ -196,21 +243,21 @@ public class ConfigServerConfigDataLocationResolver
 		ConfigurableBootstrapContext bootstrapContext = resolverContext.getBootstrapContext();
 		bootstrapContext.register(ConfigClientProperties.class,
 				InstanceSupplier.of(properties).withScope(BootstrapRegistry.Scope.PROTOTYPE));
-		bootstrapContext.addCloseListener(event -> event.getApplicationContext().getBeanFactory().registerSingleton(
-				"configDataConfigClientProperties", event.getBootstrapContext().get(ConfigClientProperties.class)));
+		bootstrapContext.addCloseListener(event -> event.getApplicationContext()
+			.getBeanFactory()
+			.registerSingleton("configDataConfigClientProperties",
+					event.getBootstrapContext().get(ConfigClientProperties.class)));
 
 		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class,
 				context -> new ConfigClientRequestTemplateFactory(log, context.get(ConfigClientProperties.class)));
 
 		bootstrapContext.registerIfAbsent(RestTemplate.class, context -> {
 			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);
-			RestTemplate restTemplate = createRestTemplate(factory.getProperties());
-			if (restTemplate != null) {
-				// shouldn't normally happen
-				return restTemplate;
-			}
 			return factory.create();
 		});
+
+		bootstrapContext.registerIfAbsent(PropertyResolver.class,
+				context -> new PropertyResolver(resolverContext.getBinder(), getBindHandler(resolverContext)));
 
 		ConfigServerConfigDataResource resource = new ConfigServerConfigDataResource(properties, location.isOptional(),
 				profiles);
@@ -219,18 +266,20 @@ public class ConfigServerConfigDataLocationResolver
 		resource.setRetryProperties(propertyHolder.retryProperties);
 
 		boolean discoveryEnabled = resolverContext.getBinder()
-				.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(resolverContext))
-				.orElse(false);
+			.bind(CONFIG_DISCOVERY_ENABLED, Bindable.of(Boolean.class), getBindHandler(resolverContext))
+			.orElse(false);
 
-		boolean retryEnabled = resolverContext.getBinder().bind(ConfigClientProperties.PREFIX + ".fail-fast",
-				Bindable.of(Boolean.class), getBindHandler(resolverContext)).orElse(false);
+		boolean retryEnabled = resolverContext.getBinder()
+			.bind(ConfigClientProperties.PREFIX + ".fail-fast", Bindable.of(Boolean.class),
+					getBindHandler(resolverContext))
+			.orElse(false);
 
 		if (discoveryEnabled) {
 			log.debug(LogMessage.format("discovery enabled"));
 			// register ConfigServerInstanceMonitor
 			bootstrapContext.registerIfAbsent(ConfigServerInstanceMonitor.class, context -> {
 				ConfigServerInstanceProvider.Function function = context
-						.get(ConfigServerInstanceProvider.Function.class);
+					.get(ConfigServerInstanceProvider.Function.class);
 
 				ConfigServerInstanceProvider instanceProvider;
 				if (ConfigClientRetryBootstrapper.RETRY_IS_PRESENT && retryEnabled) {
@@ -261,9 +310,10 @@ public class ConfigServerConfigDataLocationResolver
 			// config client uri
 			bootstrapContext.addCloseListener(event -> {
 				ConfigServerInstanceMonitor configServerInstanceMonitor = event.getBootstrapContext()
-						.get(ConfigServerInstanceMonitor.class);
-				event.getApplicationContext().getBeanFactory().registerSingleton("configServerInstanceMonitor",
-						configServerInstanceMonitor);
+					.get(ConfigServerInstanceMonitor.class);
+				event.getApplicationContext()
+					.getBeanFactory()
+					.registerSingleton("configServerInstanceMonitor", configServerInstanceMonitor);
 			});
 		}
 
@@ -271,6 +321,31 @@ public class ConfigServerConfigDataLocationResolver
 		locations.add(resource);
 
 		return locations;
+	}
+
+	public static class PropertyResolver {
+
+		private final Binder binder;
+
+		private final BindHandler bindHandler;
+
+		public PropertyResolver(Binder binder, BindHandler bindHandler) {
+			this.binder = binder;
+			this.bindHandler = bindHandler;
+		}
+
+		public <T> T get(String key, Class<T> type, T defaultValue) {
+			return binder.bind(key, Bindable.of(type)).orElse(defaultValue);
+		}
+
+		public <T> T resolveConfigurationProperties(String prefix, Class<T> type, Supplier<T> defaultValue) {
+			return binder.bind(prefix, Bindable.of(type), bindHandler).orElseGet(defaultValue);
+		}
+
+		public <T> T resolveOrCreateConfigurationProperties(String prefix, Class<T> type) {
+			return binder.bindOrCreate(prefix, Bindable.of(type), bindHandler);
+		}
+
 	}
 
 	private class PropertyHolder {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,12 +66,13 @@ public abstract class BaseDiscoveryClientConfigServiceBootstrapConfigurationTest
 
 	void givenDiscoveryClientReturnsInfoOnThirdTry() {
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Collections.<ServiceInstance>emptyList())
-				.willReturn(Collections.<ServiceInstance>emptyList()).willReturn(Collections.singletonList(this.info));
+			.willReturn(Collections.<ServiceInstance>emptyList())
+			.willReturn(Collections.singletonList(this.info));
 	}
 
 	void expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup() {
 		assertThat(this.context.getBeanNamesForType(DiscoveryClientConfigServiceBootstrapConfiguration.class).length)
-				.isEqualTo(1);
+			.isEqualTo(1);
 	}
 
 	void expectConfigClientPropertiesHasDefaultConfiguration() {

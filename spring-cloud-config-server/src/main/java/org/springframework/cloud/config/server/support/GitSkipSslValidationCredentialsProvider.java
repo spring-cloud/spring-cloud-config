@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.support;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
@@ -53,7 +54,7 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 	 * @return {@code true} if it can be handled
 	 */
 	public static boolean canHandle(String uri) {
-		return uri != null && uri.toLowerCase().startsWith("https://");
+		return uri != null && uri.toLowerCase(Locale.ROOT).startsWith("https://");
 	}
 
 	private static String stripFormattingPlaceholders(String string) {
@@ -78,7 +79,7 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 			if (item instanceof CredentialItem.YesNoType && item.getPromptText() != null
 					&& (item.getPromptText().equals(JGitText.get().sslTrustNow)
 							|| item.getPromptText()
-									.startsWith(stripFormattingPlaceholders(JGitText.get().sslTrustForRepo))
+								.startsWith(stripFormattingPlaceholders(JGitText.get().sslTrustForRepo))
 							|| item.getPromptText().equals(JGitText.get().sslTrustAlways))) {
 				continue;
 			}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,11 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -98,26 +101,38 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 			environment.add(new PropertySource("overrides", overrides));
 		}
 
-		for (String profile : profiles) {
-			addPropertySource(environment, application, profile, label);
-			if (!defaultApplication.equals(application)) {
-				addPropertySource(environment, defaultApplication, profile, label);
+		List<String> labels;
+		if (StringUtils.hasText(label) && label.contains(",")) {
+			labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+			Collections.reverse(labels);
+		}
+		else {
+			labels = Collections.singletonList(label);
+		}
+
+		List<String> reversedProfiles = new ArrayList<>(Arrays.asList(profiles));
+		Collections.reverse(reversedProfiles);
+		if (!reversedProfiles.contains(defaultProfile)) {
+			reversedProfiles.add(defaultProfile);
+		}
+
+		List<String> applications = Arrays.asList(StringUtils.commaDelimitedListToStringArray(application));
+		Collections.reverse(applications);
+		if (!applications.contains(defaultApplication)) {
+			applications = new ArrayList<>(applications);
+			applications.add(defaultApplication);
+		}
+
+		for (String l : labels) {
+			for (String profile : reversedProfiles) {
+				for (String app : applications) {
+					addPropertySource(environment, app, profile, l);
+				}
+			}
+			for (String app : applications) {
+				addPropertySource(environment, app, null, l);
 			}
 		}
-
-		if (!Arrays.asList(profiles).contains(defaultProfile)) {
-			addPropertySource(environment, application, defaultProfile, label);
-		}
-
-		if (!Arrays.asList(profiles).contains(defaultProfile) && !defaultApplication.equals(application)) {
-			addPropertySource(environment, defaultApplication, defaultProfile, label);
-		}
-
-		if (!defaultApplication.equals(application)) {
-			addPropertySource(environment, application, null, label);
-		}
-
-		addPropertySource(environment, defaultApplication, null, label);
 
 		return environment;
 	}

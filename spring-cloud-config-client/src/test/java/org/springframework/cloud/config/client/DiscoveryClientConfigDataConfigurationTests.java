@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,16 +25,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import org.springframework.boot.BootstrapRegistry;
-import org.springframework.boot.BootstrapRegistryInitializer;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.bootstrap.BootstrapRegistry;
+import org.springframework.boot.bootstrap.BootstrapRegistryInitializer;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
+import org.springframework.cloud.endpoint.event.RefreshEvent;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,16 +67,17 @@ public class DiscoveryClientConfigDataConfigurationTests {
 	@Test
 	public void offByDefault() {
 		context = new SpringApplicationBuilder(TestConfig.class)
-				.properties("spring.config.import=optional:configserver:")
-				.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
-					try {
-						event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);
-						fail("ConfigServerInstanceMonitor was created when it shouldn't");
-					}
-					catch (IllegalStateException e) {
-						// expected
-					}
-				})).run();
+			.properties("spring.config.import=optional:configserver:")
+			.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
+				try {
+					event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);
+					fail("ConfigServerInstanceMonitor was created when it shouldn't");
+				}
+				catch (IllegalStateException e) {
+					// expected
+				}
+			}))
+			.run();
 	}
 
 	@Test
@@ -131,6 +133,30 @@ public class DiscoveryClientConfigDataConfigurationTests {
 	}
 
 	@Test
+	public void verifyInstanceMonitorUpdates() {
+		ServiceInstance info1 = new DefaultServiceInstance("app1:8888", "app", "localhost", 8888, true);
+		ServiceInstance info2 = new DefaultServiceInstance("app2:8888", "app", "localhost1", 8888, false);
+		givenDiscoveryClientReturnsInfo(info1, info2);
+
+		setupAndRun();
+
+		verifyDiscoveryClientCalledOnce();
+
+		ConfigServerInstanceMonitor instanceMonitor = this.context.getBean(ConfigServerInstanceMonitor.class);
+		assertThat(instanceMonitor.getUri().length).isEqualTo(2);
+		assertThat(instanceMonitor.getUri()[0]).isEqualTo("https://localhost:8888/");
+		assertThat(instanceMonitor.getUri()[1]).isEqualTo("http://localhost1:8888/");
+
+		givenDiscoveryClientReturnsInfo(info1);
+
+		context.publishEvent(new HeartbeatEvent(this.context, "new"));
+		context.publishEvent(new RefreshEvent(this.context, "new", null));
+		instanceMonitor = this.context.getBean(ConfigServerInstanceMonitor.class);
+		assertThat(instanceMonitor.getUri().length).isEqualTo(1);
+		assertThat(instanceMonitor.getUri()[0]).isEqualTo("https://localhost:8888/");
+	}
+
+	@Test
 	public void setsPasssword() {
 		this.info.getMetadata().put("password", "bar");
 		givenDiscoveryClientReturnsInfo();
@@ -169,7 +195,8 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
 		context = setup("spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.fail-fast=true").run();
+				"spring.cloud.config.fail-fast=true")
+			.run();
 
 		verifyDiscoveryClientCalledThreeTimes();
 
@@ -183,7 +210,7 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
 		context = setup("spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10")
-				.run();
+			.run();
 
 		verifyDiscoveryClientCalledOnce();
 		expectConfigClientPropertiesHasDefaultConfiguration();
@@ -194,9 +221,9 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsNoInfo();
 
 		assertThatThrownBy(() -> context = setup("spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true").run())
-						.isInstanceOf(IllegalStateException.class)
-						.hasMessageContaining("No instances found of configserver");
+				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true")
+			.run()).isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("No instances found of configserver");
 	}
 
 	@Test
@@ -204,7 +231,8 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsNoInfo();
 
 		context = setup("spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.fail-fast=false").run();
+				"spring.cloud.config.fail-fast=false")
+			.run();
 
 		expectConfigClientPropertiesHasDefaultConfiguration();
 	}
@@ -215,13 +243,13 @@ public class DiscoveryClientConfigDataConfigurationTests {
 
 	SpringApplicationBuilder setup(boolean addInstanceProvider, String... env) {
 		SpringApplicationBuilder builder = new SpringApplicationBuilder(TestConfig.class)
-				.properties(addDefaultEnv(env));
+			.properties(addDefaultEnv(env));
 		if (addInstanceProvider) {
 			builder.addBootstrapRegistryInitializer(instanceProviderBootstrapper());
 			// ignore actual calls to config server since we're just testing discovery
 			// client.
 			builder.addBootstrapRegistryInitializer(registry -> registry
-					.register(ConfigServerBootstrapper.LoaderInterceptor.class, ctx -> loadContext -> null));
+				.register(ConfigServerBootstrapper.LoaderInterceptor.class, ctx -> loadContext -> null));
 		}
 		return builder.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
 			ConfigServerInstanceMonitor monitor = event.getBootstrapContext().get(ConfigServerInstanceMonitor.class);
@@ -262,7 +290,8 @@ public class DiscoveryClientConfigDataConfigurationTests {
 
 	void givenDiscoveryClientReturnsInfoOnThirdTry() {
 		given(this.client.getInstances(DEFAULT_CONFIG_SERVER)).willReturn(Collections.emptyList())
-				.willReturn(Collections.emptyList()).willReturn(Collections.singletonList(this.info));
+			.willReturn(Collections.emptyList())
+			.willReturn(Collections.singletonList(this.info));
 	}
 
 	void verifyDiscoveryClientCalledOnce() {

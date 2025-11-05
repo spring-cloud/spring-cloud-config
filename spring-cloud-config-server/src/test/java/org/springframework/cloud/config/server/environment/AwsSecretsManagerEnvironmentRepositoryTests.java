@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 the original author or authors.
+ * Copyright 2016-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -51,9 +52,9 @@ import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SECRETSMANAGER;
+import static wiremock.org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 /**
  * @author Tejas Pandilwar
@@ -65,16 +66,19 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Container
 	private static final LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(SECRETSMANAGER);
+			DockerImageName.parse("localstack/localstack:4.0.3"))
+		.withServices(SECRETSMANAGER);
 
 	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
 	private final StaticCredentialsProvider staticCredentialsProvider = StaticCredentialsProvider
-			.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
+		.create(AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey()));
 
 	private final SecretsManagerClient smClient = SecretsManagerClient.builder()
-			.region(Region.of(localstack.getRegion())).credentialsProvider(staticCredentialsProvider)
-			.endpointOverride(localstack.getEndpointOverride(SECRETSMANAGER)).build();
+		.region(Region.of(localstack.getRegion()))
+		.credentialsProvider(staticCredentialsProvider)
+		.endpointOverride(localstack.getEndpointOverride(SECRETSMANAGER))
+		.build();
 
 	private final ConfigServerProperties configServerProperties = new ConfigServerProperties();
 
@@ -250,18 +254,18 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@AfterEach
 	public void cleanUp() {
 		markedForDeletion
-				.forEach(value -> smClient.restoreSecret(RestoreSecretRequest.builder().secretId(value).build()));
+			.forEach(value -> smClient.restoreSecret(RestoreSecretRequest.builder().secretId(value).build()));
 		markedForDeletion.clear();
 
 		toBeRemoved.forEach(value -> smClient
-				.deleteSecret(DeleteSecretRequest.builder().secretId(value).forceDeleteWithoutRecovery(true).build()));
+			.deleteSecret(DeleteSecretRequest.builder().secretId(value).forceDeleteWithoutRecovery(true).build()));
 		toBeRemoved.clear();
 	}
 
 	@Test
 	public void testFindOneWithNullApplicationAndNonExistingProfileAndNullLabelWhenDefaultLabelIsSet() {
 		String application = null;
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
 		String defaultApplication = configServerProperties.getDefaultApplicationName();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
@@ -332,7 +336,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(defaultApplication, profiles, defaultLabel, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -395,7 +399,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithDefaultApplicationAndNonExistingProfileAndNullLabelWhenDefaultLabelIsSet() {
 		String application = configServerProperties.getDefaultApplicationName();
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
 
@@ -438,7 +442,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -449,7 +453,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndNullProfileAndNullLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = null;
 		String defaultProfile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
@@ -475,7 +479,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndDefaultProfileAndNullLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
@@ -500,8 +504,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndNonExistingProfileAndNullLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
 
@@ -525,7 +529,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndExistingProfileAndNullLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = "prod";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
@@ -544,7 +548,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -621,7 +625,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNullLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
 
@@ -653,7 +657,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfileAndNullLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
 
@@ -677,7 +681,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfileForFooAndNullLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
 
@@ -763,8 +767,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
-		expectedEnv.addAll(
-				Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
+		expectedEnv
+			.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -809,14 +813,68 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
+		expectedEnv.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
 		putSecrets(expectedEnv);
 
 		Environment resultEnv = labeledRepository.findOne(application, profile, defaultLabel);
 
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
+	public void testFindOneWithExistingApplicationAndMultipleExistingProfileAndExistingLabelWhenMultipleLabelIsSet() {
+		String application = "foo";
+		String profile = "prod,east";
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+		String label = "release,latest";
+
+		Map<String, PropertySource> propertySources = Map.of("aws:secrets:/secret/foo-prod/",
+				new PropertySource("aws:secrets:/secret/foo-prod/", getFooProdProperties()),
+				"aws:secrets:/secret/foo-east/",
+				new PropertySource("aws:secrets:/secret/foo-east/", getFooEastProperties()), "aws:secrets:/secret/foo/",
+				new PropertySource("aws:secrets:/secret/foo/", getFooProperties()), "aws:secrets:/secret/foo-default/",
+				new PropertySource("aws:secrets:/secret/foo-default/", getFooDefaultProperties()),
+				"aws:secrets:/secret/application-prod/",
+				new PropertySource("aws:secrets:/secret/application-prod/", getApplicationProdProperties()),
+				"aws:secrets:/secret/application-default/",
+				new PropertySource("aws:secrets:/secret/application-default/", getApplicationDefaultProperties()),
+				"aws:secrets:/secret/application/",
+				new PropertySource("aws:secrets:/secret/application/", getApplicationProperties()),
+				"aws:secrets:/secret/application-east/",
+				new PropertySource("aws:secrets:/secret/application-east/", getApplicationEastProperties()));
+
+		// Expected environment
+		Environment expectedEnv = new Environment(application, profiles, label, null, null);
+		expectedEnv.addAll(Arrays.asList(
+				// "latest" label
+				propertySources.get("aws:secrets:/secret/foo-prod/"),
+				propertySources.get("aws:secrets:/secret/application-default/"),
+				propertySources.get("aws:secrets:/secret/application/"),
+				// "release" label
+				propertySources.get("aws:secrets:/secret/foo-east/"),
+				propertySources.get("aws:secrets:/secret/application-east/"),
+				propertySources.get("aws:secrets:/secret/application-prod/"),
+				propertySources.get("aws:secrets:/secret/foo-default/"),
+				propertySources.get("aws:secrets:/secret/foo/")));
+
+		// Secrets setup
+		putSecrets("release",
+				Arrays.asList(propertySources.get("aws:secrets:/secret/foo-east/"),
+						propertySources.get("aws:secrets:/secret/application-east/"),
+						propertySources.get("aws:secrets:/secret/application-prod/"),
+						propertySources.get("aws:secrets:/secret/foo-default/"),
+						propertySources.get("aws:secrets:/secret/foo/")));
+
+		putSecrets("latest",
+				Arrays.asList(propertySources.get("aws:secrets:/secret/foo-prod/"),
+						propertySources.get("aws:secrets:/secret/application-default/"),
+						propertySources.get("aws:secrets:/secret/application/")));
+
+		// Test
+		Environment resultEnv = labeledRepository.findOne(application, profile, label);
 		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
 	}
 
@@ -849,8 +907,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, defaultLabel, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooProperties, applicationProperties));
+		expectedEnv.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -863,7 +921,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithNullApplicationAndNullProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = null;
 		String profile = null;
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String defaultApplication = configServerProperties.getDefaultApplicationName();
 		String defaultProfile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
@@ -880,8 +938,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithNullApplicationAndNonExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = null;
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String defaultApplication = configServerProperties.getDefaultApplicationName();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -898,7 +956,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithNullApplicationAndDefaultProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = null;
 		String profile = configServerProperties.getDefaultProfile();
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String defaultApplication = configServerProperties.getDefaultApplicationName();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -915,7 +973,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithNullApplicationAndExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = null;
 		String profile = "prod";
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String defaultApplication = configServerProperties.getDefaultApplicationName();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -932,7 +990,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithDefaultApplicationAndNullProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = configServerProperties.getDefaultApplicationName();
 		String profile = null;
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String defaultProfile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
@@ -949,7 +1007,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithDefaultApplicationAndDefaultProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = configServerProperties.getDefaultApplicationName();
 		String profile = configServerProperties.getDefaultProfile();
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -964,8 +1022,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithDefaultApplicationAndNonExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = configServerProperties.getDefaultApplicationName();
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -981,7 +1039,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithDefaultApplicationAndExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = configServerProperties.getDefaultApplicationName();
 		String profile = "prod";
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -995,9 +1053,9 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndNullProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = null;
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String defaultProfile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
@@ -1012,9 +1070,9 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndDefaultProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = configServerProperties.getDefaultProfile();
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1028,9 +1086,9 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndNonExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1044,9 +1102,9 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = "prod";
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1062,7 +1120,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithExistingApplicationAndNullProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
 		String profile = null;
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String defaultProfile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
 
@@ -1079,7 +1137,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithExistingApplicationAndDefaultProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
 		String profile = configServerProperties.getDefaultProfile();
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1094,8 +1152,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1110,8 +1168,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1126,8 +1184,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfileForFooAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1143,7 +1201,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithExistingApplicationAndExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
 		String profile = "prod";
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1159,7 +1217,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithExistingApplicationAndExistingProfileAndNoDefaultProfilesAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
 		String profile = "prod";
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1175,7 +1233,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithExistingApplicationAndMultipleExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
 		String profile = "prod,east";
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1191,7 +1249,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	public void testFindOneWithExistingApplicationAndMultipleExistingProfileAndNoDefaultsAndNonExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
 		String profile = "prod,east";
-		String label = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
@@ -1233,7 +1291,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithNullApplicationAndNonExistingProfileAndExistingLabelWhenDefaultLabelIsSet() {
 		String application = null;
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
 		String label = "release";
 		String defaultApplication = configServerProperties.getDefaultApplicationName();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
@@ -1304,7 +1362,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(defaultApplication, profiles, label, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1367,7 +1425,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithDefaultApplicationAndNonExistingProfileAndExistingLabelWhenDefaultLabelIsSet() {
 		String application = configServerProperties.getDefaultApplicationName();
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
 		String label = "release";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -1410,7 +1468,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1421,7 +1479,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndNullProfileAndExistingLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = null;
 		String label = "release";
 		String defaultProfile = configServerProperties.getDefaultProfile();
@@ -1447,7 +1505,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndDefaultProfileAndExistingLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = configServerProperties.getDefaultProfile();
 		String label = "release";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
@@ -1472,8 +1530,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndNonExistingProfileAndExistingLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
 		String label = "release";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -1497,7 +1555,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndExistingProfileAndExistingLabelWhenDefaultLabelIsSet() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = "prod";
 		String label = "release";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
@@ -1516,7 +1574,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
 		expectedEnv
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1593,9 +1651,44 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testFindOneWithExistingApplicationAndDefaultProfileAndExistingLabelWhenMultipleLabelIsSet() {
+		String application = "foo";
+		String profile = configServerProperties.getDefaultProfile();
+		String label = "release,test";
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+
+		String fooPropertiesName = "aws:secrets:/secret/foo/";
+		PropertySource fooProperties = new PropertySource(fooPropertiesName, getFooReleaseProperties());
+
+		String fooDefaultPropertiesName = "aws:secrets:/secret/foo-default/";
+		PropertySource fooDefaultProperties = new PropertySource(fooDefaultPropertiesName,
+				getFooDefaultReleaseProperties());
+
+		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
+		PropertySource applicationDefaultProperties = new PropertySource(applicationDefaultPropertiesName,
+				getApplicationDefaultReleaseProperties());
+
+		String applicationPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationReleaseProperties());
+
+		Environment expectedEnv = new Environment(application, profiles, label, null, null);
+		expectedEnv.addAll(Arrays.asList(applicationDefaultProperties, fooProperties));
+
+		putSecrets("release", Collections.singletonList(fooProperties));
+		putSecrets("dev", Collections.singletonList(fooDefaultProperties));
+		putSecrets("test", Collections.singletonList(applicationDefaultProperties));
+		putSecrets("", Collections.singletonList(applicationProperties));
+
+		Environment resultEnv = labeledRepository.findOne(application, profile, label);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String label = "release";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -1628,7 +1721,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfileAndExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String label = "release";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -1652,7 +1745,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfileForFooAndExistingLabelWhenDefaultLabelIsSet() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String label = "release";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -1739,8 +1832,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationReleaseProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
-		expectedEnv.addAll(
-				Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
+		expectedEnv
+			.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1786,8 +1879,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastReleaseProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
+		expectedEnv.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
 		putSecrets(expectedEnv);
@@ -1826,8 +1919,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastReleaseProperties());
 
 		Environment expectedEnv = new Environment(application, profiles, label, null, null);
-		expectedEnv.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooProperties, applicationProperties));
+		expectedEnv.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(expectedEnv);
 
@@ -1932,7 +2025,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithNullApplicationAndNonExistingProfile() {
 		String application = null;
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
 		String defaultApplication = configServerProperties.getDefaultApplicationName();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -2000,7 +2093,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment environment = new Environment(defaultApplication, profiles, null, null, null);
 		environment
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
@@ -2061,7 +2154,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithDefaultApplicationAndNonExistingProfile() {
 		String application = configServerProperties.getDefaultApplicationName();
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
@@ -2102,7 +2195,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment environment = new Environment(application, profiles, null, null, null);
 		environment
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
@@ -2113,7 +2206,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndNullProfile() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = null;
 		String defaultProfile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(defaultProfile);
@@ -2138,7 +2231,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndDefaultProfile() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = configServerProperties.getDefaultProfile();
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -2162,8 +2255,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndNonExistingProfile() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
-		String profile = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String applicationDefaultPropertiesName = "aws:secrets:/secret/application-default/";
@@ -2186,7 +2279,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 	@Test
 	public void testFindOneWithNonExistingApplicationAndExistingProfile() {
-		String application = randomAlphabetic(RandomUtils.nextInt(3, 25));
+		String application = randomAlphabetic(new Random().nextInt(3, 25));
 		String profile = "prod";
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
@@ -2204,7 +2297,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 
 		Environment environment = new Environment(application, profiles, null, null, null);
 		environment
-				.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
+			.addAll(Arrays.asList(applicationProdProperties, applicationDefaultProperties, applicationProperties));
 
 		putSecrets(environment);
 
@@ -2279,7 +2372,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfile() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
@@ -2310,7 +2403,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfile() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
@@ -2333,7 +2426,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfileForFoo() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
@@ -2416,8 +2509,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationProperties());
 
 		Environment environment = new Environment(application, profiles, null, null, null);
-		environment.addAll(
-				Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
+		environment
+			.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooProperties, applicationProperties));
 
 		putSecrets(environment);
 
@@ -2461,8 +2554,8 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastProperties());
 
 		Environment environment = new Environment(application, profiles, null, null, null);
-		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
+		environment.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooDefaultProperties, applicationDefaultProperties, fooProperties,
 				applicationProperties));
 
 		putSecrets(environment);
@@ -2500,8 +2593,33 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 				getApplicationEastProperties());
 
 		Environment environment = new Environment(application, profiles, null, null, null);
-		environment.addAll(Arrays.asList(fooProdProperties, applicationProdProperties, fooEastProperties,
-				applicationEastProperties, fooProperties, applicationProperties));
+		environment.addAll(Arrays.asList(fooEastProperties, applicationEastProperties, fooProdProperties,
+				applicationProdProperties, fooProperties, applicationProperties));
+
+		putSecrets(environment);
+
+		Environment resultEnv = repository.findOne(application, profile, null);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(environment);
+	}
+
+	@Test
+	public void testFindOneWithExistingApplicationAndOrderedMultipleExistingProfileAndNoDefaults() {
+		String application = "foo";
+		String profile = "profile1,profile2,profile3";
+		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+
+		String fooProfile1PropertiesName = "aws:secrets:/secret/foo-profile1/";
+		PropertySource fooProfile1Properties = new PropertySource(fooProfile1PropertiesName, getFooDefaultProperties());
+
+		String fooProfile2PropertiesName = "aws:secrets:/secret/foo-profile2/";
+		PropertySource fooProfile2Properties = new PropertySource(fooProfile2PropertiesName, getFooEastProperties());
+
+		String fooProfile3PropertiesName = "aws:secrets:/secret/foo-profile3/";
+		PropertySource fooProfile3Properties = new PropertySource(fooProfile3PropertiesName, getFooProdProperties());
+
+		Environment environment = new Environment(application, profiles, null, null, null);
+		environment.addAll(Arrays.asList(fooProfile3Properties, fooProfile2Properties, fooProfile1Properties));
 
 		putSecrets(environment);
 
@@ -2561,7 +2679,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	@Test
 	public void testFindOneWithExistingApplicationAndNonExistingProfileAndNoDefaultProfileForFooMarkedForDeletion() {
 		String application = "foo";
-		String profile = randomAlphabetic(RandomUtils.nextInt(2, 25));
+		String profile = randomAlphabetic(new Random().nextInt(2, 25));
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 
 		String fooPropertiesName = "aws:secrets:/secret/foo/";
@@ -2589,6 +2707,106 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testFindOneWithMultipleExistingApplicationsAndExistingProfileAndNullLabelWhenDefaultLabelIsSet() {
+		String applications = "app1,app2";
+		String profile = "prod";
+		String[] applicationArray = StringUtils.commaDelimitedListToStringArray(applications);
+		List<String> reversedApplications = Arrays.asList(applicationArray);
+		Collections.reverse(reversedApplications);
+		String defaultLabel = labeledEnvironmentProperties.getDefaultLabel();
+
+		Environment expectedEnv = new Environment(applications, StringUtils.commaDelimitedListToStringArray(profile),
+				defaultLabel, null, null);
+
+		for (String app : reversedApplications) {
+			String appPropertiesName = "aws:secrets:/secret/" + app + "-prod/";
+			PropertySource appProperties = new PropertySource(appPropertiesName, getFooProdProperties());
+			expectedEnv.add(appProperties);
+			putSecrets(defaultLabel, Collections.singletonList(appProperties));
+		}
+
+		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
+		expectedEnv.add(applicationProdProperties);
+		putSecrets(defaultLabel, Collections.singletonList(applicationProdProperties));
+
+		String applicationPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource applicationProperties = new PropertySource(applicationPropertiesName,
+				getApplicationProperties());
+		expectedEnv.add(applicationProperties);
+		putSecrets(defaultLabel, Collections.singletonList(applicationProperties));
+
+		Environment resultEnv = labeledRepository.findOne(applications, profile, defaultLabel);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
+	public void testFindOneWithMultipleExistingApplicationsAndDefaultProfileAndExistingLabelWhenDefaultLabelIsSet() {
+		String applications = "app1,app2,app3";
+		String profile = configServerProperties.getDefaultProfile();
+		String label = "release";
+		String[] applicationArray = StringUtils.commaDelimitedListToStringArray(applications);
+		List<String> reversedApplications = Arrays.asList(applicationArray);
+		Collections.reverse(reversedApplications);
+
+		Environment expectedEnv = new Environment(applications, StringUtils.commaDelimitedListToStringArray(profile),
+				label, null, null);
+
+		for (String app : reversedApplications) {
+			String appPropertiesName = "aws:secrets:/secret/" + app + "/";
+			PropertySource appProperties = new PropertySource(appPropertiesName, getFooReleaseProperties());
+			expectedEnv.add(appProperties);
+			putSecrets(label, Collections.singletonList(appProperties));
+		}
+
+		String defaultAppPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource defaultAppProperties = new PropertySource(defaultAppPropertiesName,
+				getApplicationReleaseProperties());
+		expectedEnv.add(defaultAppProperties);
+		putSecrets(label, Collections.singletonList(defaultAppProperties));
+
+		Environment resultEnv = labeledRepository.findOne(applications, profile, label);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
+	public void testFindOneWithMultipleExistingApplicationsAndNonExistingProfileAndNonExistingLabelWhenDefaultLabelIsSet() {
+		String applications = "app1,app2";
+		String profile = randomAlphabetic(new Random().nextInt(3, 25));
+		String label = randomAlphabetic(new Random().nextInt(3, 25));
+		String[] applicationArray = StringUtils.commaDelimitedListToStringArray(applications);
+		List<String> reversedApplications = Arrays.asList(applicationArray);
+		Collections.reverse(reversedApplications);
+
+		Environment expectedEnv = new Environment(applications, StringUtils.commaDelimitedListToStringArray(profile),
+				label, null, null);
+
+		for (String app : reversedApplications) {
+			String appPropertiesName = "aws:secrets:/secret/" + app + "/";
+			PropertySource appProperties = new PropertySource(appPropertiesName, getFooProperties());
+			expectedEnv.add(appProperties);
+			putSecrets(label, Collections.singletonList(appProperties));
+		}
+
+		String applicationProdPropertiesName = "aws:secrets:/secret/application-prod/";
+		PropertySource applicationProdProperties = new PropertySource(applicationProdPropertiesName,
+				getApplicationProdProperties());
+		putSecrets(label, Collections.singletonList(applicationProdProperties));
+
+		String defaultAppPropertiesName = "aws:secrets:/secret/application/";
+		PropertySource defaultAppProperties = new PropertySource(defaultAppPropertiesName, getApplicationProperties());
+		expectedEnv.add(defaultAppProperties);
+		putSecrets(label, Collections.singletonList(defaultAppProperties));
+
+		Environment resultEnv = labeledRepository.findOne(applications, profile, label);
+
+		assertThat(resultEnv).usingRecursiveComparison().withStrictTypeChecking().isEqualTo(expectedEnv);
+	}
+
+	@Test
 	public void factoryCustomizableWithRegion() {
 		AwsSecretsManagerEnvironmentRepositoryFactory factory = new AwsSecretsManagerEnvironmentRepositoryFactory(
 				new ConfigServerProperties());
@@ -2612,14 +2830,21 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	private void putSecrets(Environment environment) {
 		String label = environment.getLabel() != null ? environment.getLabel()
 				: environmentProperties.getDefaultLabel();
-		for (PropertySource ps : environment.getPropertySources()) {
+		putSecrets(label, environment.getPropertySources());
+	}
+
+	private void putSecrets(String label, List<PropertySource> propertySources) {
+		for (PropertySource ps : propertySources) {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 			String secrets = getSecrets(ps);
 			CreateSecretResponse response = smClient
-					.createSecret(CreateSecretRequest.builder().name(path).secretString(secrets).build());
+				.createSecret(CreateSecretRequest.builder().name(path).secretString(secrets).build());
 			if (!ObjectUtils.isEmpty(label)) {
-				smClient.updateSecretVersionStage(UpdateSecretVersionStageRequest.builder().secretId(path)
-						.moveToVersionId(response.versionId()).versionStage(label).build());
+				smClient.updateSecretVersionStage(UpdateSecretVersionStageRequest.builder()
+					.secretId(path)
+					.moveToVersionId(response.versionId())
+					.versionStage(label)
+					.build());
 			}
 			toBeRemoved.add(path);
 		}

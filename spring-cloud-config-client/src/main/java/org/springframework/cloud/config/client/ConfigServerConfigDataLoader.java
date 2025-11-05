@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,6 +57,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.springframework.cloud.config.client.ConfigClientProperties.DEFAULT_PROFILE;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 
@@ -67,6 +69,8 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 	public static final String CONFIG_CLIENT_PROPERTYSOURCE_NAME = "configClient";
 
 	private static final EnumSet<Option> ALL_OPTIONS = EnumSet.allOf(Option.class);
+
+	private static final String OVERRIDES_NAME = "configserver:overrides";
 
 	protected final Log logger;
 
@@ -110,12 +114,19 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		Exception error = null;
 		String errorBody = null;
 		try {
-			String[] labels = new String[] { "" };
-			if (StringUtils.hasText(properties.getLabel())) {
-				labels = StringUtils.commaDelimitedListToStringArray(properties.getLabel());
+			String labelProperty = properties.getLabel();
+			String[] labels;
+			if (!properties.isSendAllLabels() && StringUtils.hasText(labelProperty)) {
+				labels = StringUtils.commaDelimitedListToStringArray(labelProperty);
+			}
+			else {
+				// This could contain a comma separated list of labels sent directly to
+				// the config server
+				// For this to work you would need to be using a config server version of
+				// 4.2.0 or later
+				labels = new String[] { StringUtils.hasText(labelProperty) ? labelProperty : "" };
 			}
 			String state = ConfigClientStateHolder.getState();
-			// Try all the labels until one works
 			for (String label : labels) {
 				Environment result = getRemoteEnvironment(context, resource, label.trim(), state);
 				if (result != null) {
@@ -124,7 +135,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					// result.getPropertySources() can be null if using xml
 					if (result.getPropertySources() != null) {
 						for (org.springframework.cloud.config.environment.PropertySource source : result
-								.getPropertySources()) {
+							.getPropertySources()) {
 							@SuppressWarnings("unchecked")
 							Map<String, Object> map = translateOrigins(source.getName(),
 									(Map<String, Object>) source.getSource());
@@ -157,7 +168,6 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 							String propertySourceName = propertySource.getName();
 							List<Option> options = new ArrayList<>();
 							options.add(Option.IGNORE_IMPORTS);
-							options.add(Option.IGNORE_PROFILES);
 							// TODO: the profile is now available on the backend
 							// in a future minor, add the profile associated with a
 							// PropertySource see
@@ -169,9 +179,16 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 								// - is the default profile-separator for property sources
 								// TODO This is error prone logic see
 								// https://github.com/spring-cloud/spring-cloud-config/issues/2291
-								if (propertySourceName.matches(".*[-,]" + profile + ".*")) {
+								// When we see the overrides property source name we
+								// should always prioritize those
+								// properties over everything else, even profile specific
+								// property sources so also
+								// label this property source profile specific.
+								if (OVERRIDES_NAME.equals(propertySourceName) || (!DEFAULT_PROFILE.equals(profile)
+										&& propertySourceName.matches(".*[-,]" + profile + "\\b.*"))) {
 									// // TODO: switch to Options.with() when implemented
 									options.add(Option.PROFILE_SPECIFIC);
+									options.add(Option.IGNORE_PROFILES);
 								}
 							}
 							return ConfigData.Options.of(options.toArray(new Option[0]));
@@ -214,7 +231,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		}
 		if (logger.isDebugEnabled()) {
 			List<org.springframework.cloud.config.environment.PropertySource> propertySourceList = result
-					.getPropertySources();
+				.getPropertySources();
 			if (propertySourceList != null) {
 				int propertyCount = 0;
 				for (org.springframework.cloud.config.environment.PropertySource propertySource : propertySourceList) {
@@ -269,7 +286,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		String[] uris;
 		boolean discoveryEnabled = properties.getDiscovery().isEnabled();
 		ConfigClientProperties bootstrapConfigClientProperties = context.getBootstrapContext()
-				.get(ConfigClientProperties.class);
+			.get(ConfigClientProperties.class);
 		// In the case where discovery is enabled we need to extract the config server
 		// uris, username, and password
 		// from the properties from the context. These are set in
@@ -295,9 +312,10 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		}
 		ResponseEntity<Environment> response = null;
 		List<MediaType> acceptHeader = Collections.singletonList(MediaType.parseMediaType(properties.getMediaType()));
+		List<Charset> acceptCharsetHeader = Collections.singletonList(properties.getCharset());
 
 		ConfigClientRequestTemplateFactory requestTemplateFactory = context.getBootstrapContext()
-				.get(ConfigClientRequestTemplateFactory.class);
+			.get(ConfigClientRequestTemplateFactory.class);
 
 		for (int i = 0; i < noOfUrls; i++) {
 			String username;
@@ -319,6 +337,11 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 			try {
 				HttpHeaders headers = new HttpHeaders();
 				headers.setAccept(acceptHeader);
+				headers.setAcceptCharset(acceptCharsetHeader);
+				requestTemplateFactory.addAuthorizationToken(headers, username, password);
+				if (StringUtils.hasText(token)) {
+					headers.add(TOKEN_HEADER, token);
+				}
 				if (StringUtils.hasText(state) && properties.isSendState()) {
 					headers.add(STATE_HEADER, state);
 				}
@@ -364,7 +387,22 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 				}
 			}
 
-			if (response == null || response.getStatusCode() != HttpStatus.OK) {
+			if (response == null) {
+				if (i < noOfUrls - 1 && properties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info("Failed to fetch configs from server at  : " + uri
+							+ ". The response was null. Will try the next url if available.");
+					continue;
+				}
+
+				return null;
+			}
+			else if (response.getStatusCode() != HttpStatus.OK) {
+				if (i < noOfUrls - 1 && properties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info("Failed to fetch configs from server at  : " + uri
+							+ ". Will try the next url if available. StatusCode : " + response.getStatusCode());
+					continue;
+				}
+
 				return null;
 			}
 
@@ -373,11 +411,6 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		}
 
 		return null;
-	}
-
-	@Deprecated
-	protected void addAuthorizationToken(ConfigClientProperties configClientProperties, HttpHeaders httpHeaders,
-			String username, String password) {
 	}
 
 }

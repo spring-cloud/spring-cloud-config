@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.util.MultiValueMap;
+import org.springframework.http.HttpHeaders;
 
 /**
  * @author Dave Syer
@@ -30,7 +30,7 @@ import org.springframework.util.MultiValueMap;
 public abstract class BasePropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
 	@Override
-	public PropertyPathNotification extract(MultiValueMap<String, String> headers, Map<String, Object> request) {
+	public PropertyPathNotification extract(HttpHeaders headers, Map<String, Object> request) {
 		if (requestBelongsToGitRepoManager(headers)) {
 			if (request.get("commits") instanceof Collection) {
 				Set<String> paths = new LinkedHashSet<>();
@@ -61,6 +61,6 @@ public abstract class BasePropertyPathNotificationExtractor implements PropertyP
 		}
 	}
 
-	protected abstract boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers);
+	protected abstract boolean requestBelongsToGitRepoManager(HttpHeaders headers);
 
 }

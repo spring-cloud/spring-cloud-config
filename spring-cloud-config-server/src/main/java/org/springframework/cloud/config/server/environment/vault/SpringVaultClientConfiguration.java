@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,14 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties.AuthenticationMethod;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.vault.VaultException;
 import org.springframework.vault.authentication.ClientAuthentication;
+import org.springframework.vault.authentication.SessionManager;
 import org.springframework.vault.client.RestTemplateBuilder;
 import org.springframework.vault.client.VaultClients;
 import org.springframework.vault.client.VaultEndpoint;
@@ -76,8 +78,12 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 	@Override
 	public VaultEndpoint vaultEndpoint() {
 
-		URI baseUrl = UriComponentsBuilder.newInstance().scheme(vaultProperties.getScheme())
-				.host(vaultProperties.getHost()).port(vaultProperties.getPort()).build().toUri();
+		URI baseUrl = UriComponentsBuilder.newInstance()
+			.scheme(vaultProperties.getScheme())
+			.host(vaultProperties.getHost())
+			.port(vaultProperties.getPort())
+			.build()
+			.toUri();
 
 		return VaultEndpoint.from(baseUrl);
 	}
@@ -93,6 +99,28 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 		}
 
 		return restTemplateBuilder;
+	}
+
+	/*
+	 * We provide our own SessionManager bean here overriding what is done in {@link
+	 * AbstractVaultConfiguration} because when a Vault token is provided via a HTTP
+	 * header (meaning our ConfigTokenProvider is an instance of {@link
+	 * HttpRequestConfigTokenProvider}). If we don't then {@link
+	 * AbstractVaultConfiguration} will create an instance of {@link
+	 * LifecycleAwareSessionManager} which persists the token until it is revoked. This
+	 * means any subsequent requests to the config server will use whatever token is
+	 * persisted in {@link LifecycleAwareSessionManager} and not what is set in the
+	 * header. By using {@link StatelessSessionManager} when a token is provided via a
+	 * header, we ensure that the token we use to make the request to Vault is the one
+	 * provided in the header.
+	 */
+	@Override
+	@Bean
+	public SessionManager sessionManager() {
+		if (vaultProperties.getAuthentication() == null && !StringUtils.hasText(vaultProperties.getToken())) {
+			return new StatelessSessionManager(clientAuthentication());
+		}
+		return super.sessionManager();
 	}
 
 	@Override
@@ -125,7 +153,8 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 	@Override
 	public RestOperations restOperations() {
 		return restTemplateBuilder(vaultEndpointProvider(),
-				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory()).build();
+				clientHttpRequestFactoryWrapper().getClientHttpRequestFactory())
+			.build();
 	}
 
 	private SslConfiguration.KeyStoreConfiguration getKeyStoreConfiguration(Resource resourceProperty,

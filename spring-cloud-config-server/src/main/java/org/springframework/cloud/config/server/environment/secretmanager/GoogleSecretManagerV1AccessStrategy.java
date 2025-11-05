@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,11 @@ import java.util.List;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.gax.core.FixedCredentialsProvider;
-import com.google.api.services.cloudresourcemanager.CloudResourceManager;
-import com.google.api.services.cloudresourcemanager.model.TestIamPermissionsRequest;
-import com.google.api.services.cloudresourcemanager.model.TestIamPermissionsResponse;
+import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
+import com.google.api.services.cloudresourcemanager.v3.model.TestIamPermissionsRequest;
+import com.google.api.services.cloudresourcemanager.v3.model.TestIamPermissionsResponse;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -45,7 +45,6 @@ import com.google.cloud.secretmanager.v1.SecretManagerServiceSettings;
 import com.google.cloud.secretmanager.v1.SecretName;
 import com.google.cloud.secretmanager.v1.SecretVersion;
 import com.google.cloud.secretmanager.v1.SecretVersionName;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -53,6 +52,7 @@ import org.springframework.cloud.config.server.environment.GoogleSecretManagerEn
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerAccessStrategy {
@@ -71,10 +71,11 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 
 	public GoogleSecretManagerV1AccessStrategy(RestTemplate rest, GoogleConfigProvider configProvider,
 			String serviceAccountFile) throws IOException {
-		if (StringUtils.isNotEmpty(serviceAccountFile)) {
+		if (StringUtils.hasText(serviceAccountFile)) {
 			GoogleCredentials creds = GoogleCredentials.fromStream(new FileInputStream(new File(serviceAccountFile)));
 			this.client = SecretManagerServiceClient.create(SecretManagerServiceSettings.newBuilder()
-					.setCredentialsProvider(FixedCredentialsProvider.create(creds)).build());
+				.setCredentialsProvider(FixedCredentialsProvider.create(creds))
+				.build());
 		}
 		else {
 			this.client = SecretManagerServiceClient.create();
@@ -100,7 +101,7 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 
 		// Get all secrets.
 		SecretManagerServiceClient.ListSecretsPagedResponse pagedListSecretResponse = client
-				.listSecrets(listSecretRequest);
+			.listSecrets(listSecretRequest);
 
 		List<Secret> result = new ArrayList<Secret>();
 		pagedListSecretResponse.iterateAll().forEach(result::add);
@@ -114,11 +115,12 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 
 		// Create the request.
 		ListSecretVersionsRequest listVersionRequest = ListSecretVersionsRequest.newBuilder()
-				.setParent(parent.toString()).build();
+			.setParent(parent.toString())
+			.build();
 
 		// Get all versions.
 		SecretManagerServiceClient.ListSecretVersionsPagedResponse pagedListVersionResponse = client
-				.listSecretVersions(listVersionRequest);
+			.listSecretVersions(listVersionRequest);
 		List<SecretVersion> result = new ArrayList<SecretVersion>();
 		pagedListVersionResponse.iterateAll().forEach(result::add);
 		return result;
@@ -138,8 +140,9 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 		if (winner != null) {
 			SecretVersionName name = SecretVersionName.parse(winner.getName());
 			// Access the secret version.
-			AccessSecretVersionRequest request = AccessSecretVersionRequest.newBuilder().setName(name.toString())
-					.build();
+			AccessSecretVersionRequest request = AccessSecretVersionRequest.newBuilder()
+				.setName(name.toString())
+				.build();
 			AccessSecretVersionResponse response = client.accessSecretVersion(request);
 			result = response.getPayload().getData().toStringUtf8();
 		}
@@ -160,14 +163,16 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 			GoogleCredentials credential = new GoogleCredentials(accessToken);
 			HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credential);
 			service = new CloudResourceManager.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-					JacksonFactory.getDefaultInstance(), requestInitializer).setApplicationName(APPLICATION_NAME)
-							.build();
+					GsonFactory.getDefaultInstance(), requestInitializer)
+				.setApplicationName(APPLICATION_NAME)
+				.build();
 			List<String> permissionsList = Arrays.asList(ACCESS_SECRET_PERMISSION);
 
 			TestIamPermissionsRequest requestBody = new TestIamPermissionsRequest().setPermissions(permissionsList);
 
 			TestIamPermissionsResponse testIamPermissionsResponse = service.projects()
-					.testIamPermissions(getProjectId(), requestBody).execute();
+				.testIamPermissions(getProjectId(), requestBody)
+				.execute();
 
 			if (testIamPermissionsResponse.getPermissions() != null && testIamPermissionsResponse.size() >= 1) {
 				return Boolean.TRUE;
@@ -198,8 +203,10 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 		catch (Exception e) {
 			// not in GCP
 			HttpEntity<String> entity = new HttpEntity<String>("parameters", getMetadataHttpHeaders());
-			result = rest.exchange(GoogleSecretManagerEnvironmentProperties.GOOGLE_METADATA_PROJECT_URL, HttpMethod.GET,
-					entity, String.class).getBody();
+			result = rest
+				.exchange(GoogleSecretManagerEnvironmentProperties.GOOGLE_METADATA_PROJECT_URL, HttpMethod.GET, entity,
+						String.class)
+				.getBody();
 		}
 		return result;
 	}

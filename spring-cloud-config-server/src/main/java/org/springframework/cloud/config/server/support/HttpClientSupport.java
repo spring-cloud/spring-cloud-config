@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,21 +50,23 @@ public final class HttpClientSupport {
 			throws GeneralSecurityException {
 		HttpClientBuilder httpClientBuilder = HttpClients.custom();
 		PoolingHttpClientConnectionManagerBuilder connectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder
-				.create();
+			.create();
 
 		if (environmentProperties.isSkipSslValidation()) {
 			SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 			sslContextBuilder.loadTrustMaterial(null, (certificate, authType) -> true);
 			SSLConnectionSocketFactory sslConnectionSocketFactory = SSLConnectionSocketFactoryBuilder.create()
-					.setSslContext(sslContextBuilder.build()).setHostnameVerifier(new NoopHostnameVerifier()).build();
+				.setSslContext(sslContextBuilder.build())
+				.setHostnameVerifier(new NoopHostnameVerifier())
+				.build();
 			connectionManagerBuilder.setSSLSocketFactory(sslConnectionSocketFactory);
 		}
 
 		if (!CollectionUtils.isEmpty(environmentProperties.getProxy())) {
 			ProxyHostProperties httpsProxy = environmentProperties.getProxy()
-					.get(ProxyHostProperties.ProxyForScheme.HTTPS);
+				.get(ProxyHostProperties.ProxyForScheme.HTTPS);
 			ProxyHostProperties httpProxy = environmentProperties.getProxy()
-					.get(ProxyHostProperties.ProxyForScheme.HTTP);
+				.get(ProxyHostProperties.ProxyForScheme.HTTP);
 
 			httpClientBuilder.setRoutePlanner(new SchemeBasedRoutePlanner(httpsProxy, httpProxy));
 			httpClientBuilder.setDefaultCredentialsProvider(new ProxyHostCredentialsProvider(httpProxy, httpsProxy));
@@ -83,9 +85,9 @@ public final class HttpClientSupport {
 
 		int timeout = environmentProperties.getTimeout() * 1000;
 		connectionManagerBuilder
-				.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(timeout, TimeUnit.MILLISECONDS).build());
-		return httpClientBuilder.setConnectionManager(connectionManagerBuilder.build()).setDefaultRequestConfig(
-				RequestConfig.custom().setConnectTimeout(timeout, TimeUnit.MILLISECONDS).build());
+			.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(timeout, TimeUnit.MILLISECONDS).build());
+		return httpClientBuilder.setConnectionManager(connectionManagerBuilder.build())
+			.setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(timeout, TimeUnit.MILLISECONDS).build());
 	}
 
 }

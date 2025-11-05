@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,13 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.RandomUtils;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersByPathRequest;
@@ -42,12 +42,12 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.util.StringUtils;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentProperties.DEFAULT_PATH_SEPARATOR;
+import static wiremock.org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 /**
  * Unit test is must for testing paginated logic, since doing it with integration test is
@@ -112,10 +112,12 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 		for (PropertySource ps : environment.getPropertySources()) {
 			String path = StringUtils.delete(ps.getName(), environmentProperties.getOrigin());
 
-			GetParametersByPathRequest request = GetParametersByPathRequest.builder().path(path)
-					.recursive(environmentProperties.isRecursive())
-					.withDecryption(environmentProperties.isDecryptValues())
-					.maxResults(environmentProperties.getMaxResults()).build();
+			GetParametersByPathRequest request = GetParametersByPathRequest.builder()
+				.path(path)
+				.recursive(environmentProperties.isRecursive())
+				.withDecryption(environmentProperties.isDecryptValues())
+				.maxResults(environmentProperties.getMaxResults())
+				.build();
 
 			Set<Parameter> parameters = getParameters(ps, path, withSlashesForPropertyName);
 
@@ -132,8 +134,10 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 					if (i == 0) {
 						nextToken = generateNextToken();
 
-						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
-								.nextToken(nextToken).build();
+						GetParametersByPathResponse responseClone = response.toBuilder()
+							.parameters(chunk)
+							.nextToken(nextToken)
+							.build();
 
 						when(ssmClient.getParametersByPath(eq(request))).thenReturn(responseClone);
 					}
@@ -148,8 +152,10 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 
 						GetParametersByPathRequest requestClone = request.toBuilder().nextToken(nextToken).build();
 
-						GetParametersByPathResponse responseClone = response.toBuilder().parameters(chunk)
-								.nextToken(newNextToken).build();
+						GetParametersByPathResponse responseClone = response.toBuilder()
+							.parameters(chunk)
+							.nextToken(newNextToken)
+							.build();
 
 						when(ssmClient.getParametersByPath(eq(requestClone))).thenReturn(responseClone);
 
@@ -165,10 +171,13 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 
 	private Set<Parameter> getParameters(PropertySource propertySource, String path,
 			boolean withSlashesForPropertyName) {
-		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter
-				.builder().name(path + (withSlashesForPropertyName
-						? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR) : p.getKey()))
-				.type(ParameterType.STRING).value((String) p.getValue()).version(1L).build();
+		Function<Map.Entry<?, ?>, Parameter> mapper = p -> Parameter.builder()
+			.name(path + (withSlashesForPropertyName ? ((String) p.getKey()).replace(".", DEFAULT_PATH_SEPARATOR)
+					: p.getKey()))
+			.type(ParameterType.STRING)
+			.value((String) p.getValue())
+			.version(1L)
+			.build();
 
 		return propertySource.getSource().entrySet().stream().map(mapper).collect(Collectors.toSet());
 	}
@@ -177,13 +186,13 @@ public class AWSParameterStoreEnvironmentRepositoryUnitTest {
 		AtomicInteger counter = new AtomicInteger();
 
 		Collector<Parameter, ?, Map<Integer, Set<Parameter>>> collector = Collectors
-				.groupingBy(p -> counter.getAndIncrement() / environmentProperties.getMaxResults(), Collectors.toSet());
+			.groupingBy(p -> counter.getAndIncrement() / environmentProperties.getMaxResults(), Collectors.toSet());
 
 		return new ArrayList<>(parameters.stream().collect(collector).values());
 	}
 
 	private String generateNextToken() {
-		String random = randomAlphabetic(RandomUtils.nextInt(3, 33));
+		String random = randomAlphabetic(new Random().nextInt(3, 33));
 
 		return Base64.getEncoder().encodeToString(random.getBytes(StandardCharsets.UTF_8));
 	}

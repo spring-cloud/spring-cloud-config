@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,7 +93,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		Assertions.assertThatThrownBy(() -> {
 			String repoUrl = "https://myrepo/repo.git";
 			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties(gitProperties(repoUrl, null, AUTHENTICATED_HTTPS_PROXY)).run();
+				.properties(gitProperties(repoUrl, null, AUTHENTICATED_HTTPS_PROXY))
+				.run();
 			HttpClient httpClient = getHttpClientForUrl(repoUrl);
 			makeRequest(httpClient, "https://somehost");
 		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(AUTHENTICATED_HTTPS_PROXY.getHost());
@@ -105,7 +106,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		Assertions.assertThatThrownBy(() -> {
 			String repoUrl = "https://myrepo/repo.git";
 			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
+				.properties(gitProperties(repoUrl, null, HTTPS_PROXY))
+				.run();
 			HttpClient httpClient = getHttpClientForUrl(repoUrl);
 			makeRequest(httpClient, "https://somehost");
 		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTPS_PROXY.getHost());
@@ -116,7 +118,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		Assertions.assertThatThrownBy(() -> {
 			String repoUrl = "https://myrepo/{placeholder1}/{placeholder2}-repo.git";
 			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
+				.properties(gitProperties(repoUrl, null, HTTPS_PROXY))
+				.run();
 			HttpClient httpClient = getHttpClientForUrl(
 					"https://myrepo/someplaceholdervalue/anotherplaceholdervalue-repo.git");
 			makeRequest(httpClient, "https://somehost");
@@ -128,7 +131,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		Assertions.assertThatThrownBy(() -> {
 			String repoUrl = "https://myrepo/repo.git";
 			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties(gitProperties(repoUrl, null, HTTPS_PROXY)).run();
+				.properties(gitProperties(repoUrl, null, HTTPS_PROXY))
+				.run();
 			HttpClient httpClient = getHttpClientForUrl(repoUrl);
 			makeRequest(httpClient, "http://somehost");
 		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTPS_PROXY.getHost());
@@ -139,7 +143,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		Assertions.assertThatThrownBy(() -> {
 			String repoUrl = "https://myrepo/repo.git";
 			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties(gitProperties(repoUrl, AUTHENTICATED_HTTP_PROXY, null)).run();
+				.properties(gitProperties(repoUrl, AUTHENTICATED_HTTP_PROXY, null))
+				.run();
 			HttpClient httpClient = getHttpClientForUrl(repoUrl);
 			makeRequest(httpClient, "http://somehost");
 		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(AUTHENTICATED_HTTP_PROXY.getHost());
@@ -150,7 +155,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		Assertions.assertThatThrownBy(() -> {
 			String repoUrl = "https://myrepo/repo.git";
 			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
+				.properties(gitProperties(repoUrl, HTTP_PROXY, null))
+				.run();
 			HttpClient httpClient = getHttpClientForUrl(repoUrl);
 			makeRequest(httpClient, "http://somehost");
 		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTP_PROXY.getHost());
@@ -161,7 +167,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		Assertions.assertThatThrownBy(() -> {
 			String repoUrl = "https://myrepo/{placeholder}-repo.git";
 			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
+				.properties(gitProperties(repoUrl, HTTP_PROXY, null))
+				.run();
 			HttpClient httpClient = getHttpClientForUrl("https://myrepo/someplaceholdervalue-repo.git");
 			makeRequest(httpClient, "http://somehost");
 		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTP_PROXY.getHost());
@@ -172,7 +179,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 		Assertions.assertThatThrownBy(() -> {
 			String repoUrl = "https://myrepo/repo.git";
 			new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-					.properties(gitProperties(repoUrl, HTTP_PROXY, null)).run();
+				.properties(gitProperties(repoUrl, HTTP_PROXY, null))
+				.run();
 			HttpClient httpClient = getHttpClientForUrl(repoUrl);
 			makeRequest(httpClient, "https://somehost");
 		}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTP_PROXY.getHost());
@@ -198,7 +206,8 @@ public class ConfigurableHttpConnectionFactoryIntegrationTests {
 				});
 				String repoUrl = "https://myrepo/repo.git";
 				new SpringApplicationBuilder(TestConfiguration.class).web(WebApplicationType.NONE)
-						.properties(new String[] { "spring.cloud.config.server.git.uri=" + repoUrl }).run();
+					.properties(new String[] { "spring.cloud.config.server.git.uri=" + repoUrl })
+					.run();
 				HttpClient httpClient = getHttpClientForUrl(repoUrl);
 				makeRequest(httpClient, "http://somehost");
 			}).hasCauseInstanceOf(UnknownHostException.class).hasMessageContaining(HTTP_PROXY.getHost());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,6 +116,15 @@ public class SVNKitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void testMultipleLabels() {
+		Environment environment = this.repository.findOne("bar", "staging", "branches/demobranch,trunk");
+		assertThat(environment.getPropertySources()).hasSize(3);
+		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
+		assertThat(environment.getPropertySources().get(1).getName()).contains("application.yml");
+		assertThat(environment.getPropertySources().get(2).getName()).contains("branches/demobranch/bar.properties");
+	}
+
+	@Test
 	public void invalidLabel() {
 		Assertions.assertThatThrownBy(() -> {
 			Environment environment = this.repository.findOne("bar", "staging", "unknownlabel");
@@ -148,7 +157,8 @@ public class SVNKitEnvironmentRepositoryTests {
 				FileUtils.delete(basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 			}
 			new SpringApplicationBuilder(TestApplication.class).profiles("subversion")
-					.properties("server.port=8888", "spring.cloud.config.server.svn.uri:" + uri).run(args);
+				.properties("server.port=8888", "spring.cloud.config.server.svn.uri:" + uri)
+				.run(args);
 		}
 
 	}

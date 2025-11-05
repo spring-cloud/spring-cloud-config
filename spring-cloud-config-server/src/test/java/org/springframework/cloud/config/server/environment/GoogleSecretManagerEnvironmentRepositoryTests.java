@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 the original author or authors.
+ * Copyright 2016-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,8 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		properties.setVersion(1);
 		assertThat(GoogleSecretManagerAccessStrategyFactory.forVersion(null, null, properties,
-				mock) instanceof GoogleSecretManagerV1AccessStrategy).isTrue();
+				mock) instanceof GoogleSecretManagerV1AccessStrategy)
+			.isTrue();
 	}
 
 	@Test
@@ -95,14 +96,22 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		SecretManagerServiceClient.ListSecretVersionsPagedResponse response = mock(
 				SecretManagerServiceClient.ListSecretVersionsPagedResponse.class);
-		SecretVersion secret1 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/1")
-				.setState(SecretVersion.State.ENABLED).build();
-		SecretVersion secret2 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/4")
-				.setState(SecretVersion.State.ENABLED).build();
-		SecretVersion secret3 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/9")
-				.setState(SecretVersion.State.ENABLED).build();
-		SecretVersion secret4 = SecretVersion.newBuilder().setName("projects/test-project/secrets/test/versions/12")
-				.setState(SecretVersion.State.ENABLED).build();
+		SecretVersion secret1 = SecretVersion.newBuilder()
+			.setName("projects/test-project/secrets/test/versions/1")
+			.setState(SecretVersion.State.ENABLED)
+			.build();
+		SecretVersion secret2 = SecretVersion.newBuilder()
+			.setName("projects/test-project/secrets/test/versions/4")
+			.setState(SecretVersion.State.ENABLED)
+			.build();
+		SecretVersion secret3 = SecretVersion.newBuilder()
+			.setName("projects/test-project/secrets/test/versions/9")
+			.setState(SecretVersion.State.ENABLED)
+			.build();
+		SecretVersion secret4 = SecretVersion.newBuilder()
+			.setName("projects/test-project/secrets/test/versions/12")
+			.setState(SecretVersion.State.ENABLED)
+			.build();
 		List<SecretVersion> secrets = new ArrayList<SecretVersion>();
 		secrets.add(secret1);
 		secrets.add(secret2);
@@ -128,7 +137,8 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		};
 		Mockito.doReturn(accessSecretVersionResponse).when(mock).accessSecretVersion(ArgumentMatchers.argThat(matcher));
 		assertThat(strategy.getSecretValue(Secret.newBuilder().setName("projects/test-project/secrets/test").build(),
-				new GoogleSecretComparatorByVersion())).isEqualTo("test-value");
+				new GoogleSecretComparatorByVersion()))
+			.isEqualTo("test-value");
 	}
 
 }

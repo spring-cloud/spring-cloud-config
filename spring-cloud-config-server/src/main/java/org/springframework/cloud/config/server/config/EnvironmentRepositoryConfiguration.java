@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,14 +30,13 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.ssm.SsmClient;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.health.contributor.AbstractHealthIndicator;
 import org.springframework.cloud.config.server.composite.CompositeEnvironmentBeanFactoryPostProcessor;
 import org.springframework.cloud.config.server.composite.ConditionalOnMissingSearchPathLocator;
 import org.springframework.cloud.config.server.composite.ConditionalOnSearchPathLocator;
@@ -62,12 +61,15 @@ import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.HttpClient4BuilderCustomizer;
 import org.springframework.cloud.config.server.environment.HttpClientConfigurableHttpConnectionFactory;
-import org.springframework.cloud.config.server.environment.HttpClientVaultRestTemplateFactory;
 import org.springframework.cloud.config.server.environment.HttpRequestConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.MongoDbEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.MongoDbEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.MongoDbEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepositoryFactory;
@@ -82,14 +84,15 @@ import org.springframework.cloud.config.server.environment.SvnEnvironmentReposit
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.SvnKitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
-import org.springframework.cloud.config.server.environment.VaultEnvironmentRepository;
-import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.vault.SpringVaultClientAuthenticationProvider;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultClientConfiguration;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.vault.SpringVaultTemplateBuilder;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport;
 import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -98,6 +101,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.credhub.core.CredHubOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.vault.core.VaultTemplate;
@@ -111,19 +115,20 @@ import org.springframework.vault.core.VaultTemplate;
  * @author Scott Frederick
  * @author Tejas Pandilwar
  * @author Iulian Antohe
+ * @author Alexandros Pappas
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({ SvnKitEnvironmentProperties.class, CredhubEnvironmentProperties.class,
 		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
 		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
 		AwsSecretsManagerEnvironmentProperties.class, AwsParameterStoreEnvironmentProperties.class,
-		GoogleSecretManagerEnvironmentProperties.class })
+		GoogleSecretManagerEnvironmentProperties.class, MongoDbEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultConfiguration.class,
-		VaultRepositoryConfiguration.class, SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class,
-		CredhubRepositoryConfiguration.class, SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class,
-		GitRepositoryConfiguration.class, RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
-		AwsS3RepositoryConfiguration.class, AwsSecretsManagerRepositoryConfiguration.class,
-		AwsParameterStoreRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class,
+		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class, CredhubRepositoryConfiguration.class,
+		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
+		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class, AwsS3RepositoryConfiguration.class,
+		AwsSecretsManagerRepositoryConfiguration.class, AwsParameterStoreRepositoryConfiguration.class,
+		GoogleSecretManagerRepositoryConfiguration.class, MongoRepositoryConfiguration.class,
 		// DefaultRepositoryConfiguration must be last
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
@@ -146,8 +151,9 @@ public class EnvironmentRepositoryConfiguration {
 	protected static class ConfigServerActuatorConfiguration {
 
 		@Bean
-		public ConfigServerHealthIndicator configServerHealthIndicator(EnvironmentRepository repository) {
-			return new ConfigServerHealthIndicator(repository);
+		public ConfigServerHealthIndicator configServerHealthIndicator(EnvironmentRepository repository,
+				ConfigServerProperties configServerProperties) {
+			return new ConfigServerHealthIndicator(repository, configServerProperties);
 		}
 
 	}
@@ -184,11 +190,12 @@ public class EnvironmentRepositoryConfiguration {
 				Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
 				Optional<TransportConfigCallback> customTransportConfigCallback,
 				Optional<GoogleCloudSourceSupport> googleCloudSourceSupport,
-				GitCredentialsProviderFactory gitCredentialsProviderFactory) {
+				GitCredentialsProviderFactory gitCredentialsProviderFactory,
+				List<HttpClient4BuilderCustomizer> customizers) {
 			final TransportConfigCallbackFactory transportConfigCallbackFactory = new TransportConfigCallbackFactory(
 					customTransportConfigCallback.orElse(null), googleCloudSourceSupport.orElse(null));
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, jgitHttpConnectionFactory,
-					transportConfigCallbackFactory, gitCredentialsProviderFactory);
+					transportConfigCallbackFactory, gitCredentialsProviderFactory, customizers);
 		}
 
 		@Bean
@@ -266,21 +273,6 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnMissingClass("org.springframework.vault.core.VaultTemplate")
-	@SuppressWarnings("deprecation")
-	static class VaultFactoryConfig {
-
-		@Bean
-		public VaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
-				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-				Optional<VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory> vaultRestTemplateFactory,
-				ConfigTokenProvider tokenProvider) {
-			return new VaultEnvironmentRepositoryFactory(request, watch, vaultRestTemplateFactory, tokenProvider);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(SecretManagerServiceClient.class)
 	static class GoogleSecretManagerFactoryConfig {
 
@@ -293,28 +285,21 @@ public class EnvironmentRepositoryConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(HttpClient.class)
-	@ConditionalOnMissingClass("org.springframework.vault.core.VaultTemplate")
-	@SuppressWarnings("deprecation")
-	static class VaultHttpClientConfig {
-
-		@Bean
-		public VaultEnvironmentRepositoryFactory.VaultRestTemplateFactory vaultRestTemplateFactory() {
-			return new HttpClientVaultRestTemplateFactory();
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(VaultTemplate.class)
 	@Import(SpringVaultClientConfiguration.class)
 	static class SpringVaultFactoryConfig {
 
 		@Bean
+		public SpringVaultTemplateBuilder springVaultTemplateBuilder(ConfigTokenProvider configTokenProvider,
+				List<SpringVaultClientAuthenticationProvider> authProviders, ApplicationContext applicationContext) {
+			return new SpringVaultTemplateBuilder(configTokenProvider, authProviders, applicationContext);
+		}
+
+		@Bean
 		public SpringVaultEnvironmentRepositoryFactory vaultEnvironmentRepositoryFactory(
 				ObjectProvider<HttpServletRequest> request, EnvironmentWatch watch,
-				SpringVaultClientConfiguration vaultClientConfiguration) {
-			return new SpringVaultEnvironmentRepositoryFactory(request, watch, vaultClientConfiguration);
+				SpringVaultTemplateBuilder springVaultTemplateBuilder) {
+			return new SpringVaultEnvironmentRepositoryFactory(request, watch, springVaultTemplateBuilder);
 		}
 
 	}
@@ -372,6 +357,19 @@ public class EnvironmentRepositoryConfiguration {
 				ObjectProvider<ObservationRegistry> observationRegistry) {
 			return new NativeEnvironmentRepositoryFactory(environment, properties,
 					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP));
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(MongoTemplate.class)
+	@ConditionalOnProperty(value = "spring.cloud.config.server.mongodb.enabled", matchIfMissing = true)
+	static class MongoDbFactoryConfig {
+
+		@Bean
+		@ConditionalOnBean(MongoTemplate.class)
+		public MongoDbEnvironmentRepositoryFactory mongoDbEnvironmentRepositoryFactory(MongoTemplate mongoTemplate) {
+			return new MongoDbEnvironmentRepositoryFactory(mongoTemplate);
 		}
 
 	}
@@ -457,20 +455,6 @@ class SvnRepositoryConfiguration {
 	@Bean
 	public SvnKitEnvironmentRepository svnKitEnvironmentRepository(SvnEnvironmentRepositoryFactory factory,
 			SvnKitEnvironmentProperties environmentProperties) {
-		return factory.build(environmentProperties);
-	}
-
-}
-
-@Configuration(proxyBeanMethods = false)
-@ConditionalOnMissingClass("org.springframework.vault.core.VaultTemplate")
-@Profile("vault")
-@SuppressWarnings("deprecation")
-class VaultRepositoryConfiguration {
-
-	@Bean
-	public VaultEnvironmentRepository vaultEnvironmentRepository(VaultEnvironmentRepositoryFactory factory,
-			VaultEnvironmentProperties environmentProperties) throws Exception {
 		return factory.build(environmentProperties);
 	}
 
@@ -573,6 +557,21 @@ class GoogleSecretManagerRepositoryConfiguration {
 	public GoogleSecretManagerEnvironmentRepository googleSecretManagerEnvironmentRepository(
 			GoogleSecretManagerEnvironmentRepositoryFactory factory,
 			GoogleSecretManagerEnvironmentProperties environmentProperties) throws Exception {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration(proxyBeanMethods = false)
+@Profile("mongodb")
+@ConditionalOnClass(MongoTemplate.class)
+@ConditionalOnProperty(value = "spring.cloud.config.server.mongodb.enabled", matchIfMissing = true)
+class MongoRepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnBean(MongoTemplate.class)
+	public MongoDbEnvironmentRepository mongoDbEnvironmentRepository(MongoDbEnvironmentRepositoryFactory factory,
+			MongoDbEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 

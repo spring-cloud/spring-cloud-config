@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,6 +97,8 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 			private OpenSshConfigFile.HostEntry updateIfNeeded(OpenSshConfigFile.HostEntry hostEntry, String hostName) {
 				JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(hostName);
 
+				hostEntry.setValue(SshConstants.CONNECT_TIMEOUT, String.valueOf(sshProperties.getTimeout()));
+
 				if (sshProperties.getHostKey() == null || !sshProperties.isStrictHostKeyChecking()) {
 					hostEntry.setValue(SshConstants.STRICT_HOST_KEY_CHECKING, SshConstants.NO);
 				}
@@ -162,7 +164,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
 				try {
 					return AuthorizedKeyEntry.parseAuthorizedKeyEntry(hostKeyAlgorithm + " " + hostKey)
-							.resolvePublicKey(null, null);
+						.resolvePublicKey(null, null);
 				}
 				catch (IOException | GeneralSecurityException e) {
 					throw new RuntimeException(e);
@@ -234,7 +236,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 			JGitEnvironmentProperties sshProperties = findEnvironmentProperties(sshKeysByHostname, remoteAddress);
 
 			ProxyHostProperties proxyHostProperties = sshProperties.getProxy()
-					.get(ProxyHostProperties.ProxyForScheme.HTTP);
+				.get(ProxyHostProperties.ProxyForScheme.HTTP);
 
 			if (proxyHostProperties == null || !proxyHostProperties.connectionInformationProvided()) {
 				return null;

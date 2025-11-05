@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -143,6 +143,58 @@ public class FileMonitorConfigurationTest {
 
 		// then
 		assertOnDirectory(2);
+	}
+
+	@Test
+	public void testStart_withPlaceholderUriShouldBeSkipped() {
+		// given
+		AbstractScmEnvironmentRepository repository = createScmEnvironmentRepository(
+				"file:/var/opt/config-service/{application}");
+		addScmRepository(repository);
+
+		// when
+		fileMonitorConfiguration.start();
+
+		// then
+		Set<Path> directory = getDirectory();
+		assertThat(directory).isNotNull();
+		assertThat(directory).isEmpty();
+	}
+
+	@Test
+	public void testStart_withMixedPlaceholderAndValidUriShouldSkipOnlyPlaceholder() {
+		// given
+		AbstractScmEnvironmentRepository placeholderRepository = createScmEnvironmentRepository(
+				"file:/var/opt/config-service/{application}");
+		AbstractScmEnvironmentRepository validRepository = createScmEnvironmentRepository(SAMPLE_PATH);
+		addScmRepository(placeholderRepository);
+		addScmRepository(validRepository);
+
+		// when
+		fileMonitorConfiguration.start();
+
+		// then
+		assertOnDirectory(1);
+	}
+
+	@Test
+	public void testStart_withMultiplePlaceholderTypesShouldBeSkipped() {
+		// given
+		AbstractScmEnvironmentRepository applicationPlaceholder = createScmEnvironmentRepository(
+				"file:/config/{application}");
+		AbstractScmEnvironmentRepository profilePlaceholder = createScmEnvironmentRepository("file:/config/{profile}");
+		AbstractScmEnvironmentRepository labelPlaceholder = createScmEnvironmentRepository("file:/config/{label}");
+		addScmRepository(applicationPlaceholder);
+		addScmRepository(profilePlaceholder);
+		addScmRepository(labelPlaceholder);
+
+		// when
+		fileMonitorConfiguration.start();
+
+		// then
+		Set<Path> directory = getDirectory();
+		assertThat(directory).isNotNull();
+		assertThat(directory).isEmpty();
 	}
 
 	private void addScmRepository(AbstractScmEnvironmentRepository... repository) {

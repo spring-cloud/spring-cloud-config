@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import io.micrometer.observation.ObservationRegistry;
@@ -42,30 +44,27 @@ public class MultipleJGitEnvironmentRepositoryFactory
 
 	private final GitCredentialsProviderFactory gitCredentialsProviderFactory;
 
-	@Deprecated
-	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
-			TransportConfigCallbackFactory transportConfigCallbackFactory) {
-		this(environment, server, Optional.empty(), transportConfigCallbackFactory,
-				new GitCredentialsProviderFactory());
-	}
-
-	@Deprecated
-	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
-			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
-			TransportConfigCallbackFactory transportConfigCallbackFactory) {
-		this(environment, server, connectionFactory, transportConfigCallbackFactory,
-				new GitCredentialsProviderFactory());
-	}
+	private final List<HttpClient4BuilderCustomizer> customizers;
 
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
 			TransportConfigCallbackFactory transportConfigCallbackFactory,
 			GitCredentialsProviderFactory gitCredentialsProviderFactory) {
+		this(environment, server, connectionFactory, transportConfigCallbackFactory, gitCredentialsProviderFactory,
+				Collections.EMPTY_LIST);
+	}
+
+	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
+			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
+			TransportConfigCallbackFactory transportConfigCallbackFactory,
+			GitCredentialsProviderFactory gitCredentialsProviderFactory,
+			List<HttpClient4BuilderCustomizer> customizers) {
 		this.environment = environment;
 		this.server = server;
 		this.connectionFactory = connectionFactory;
 		this.transportConfigCallbackFactory = transportConfigCallbackFactory;
 		this.gitCredentialsProviderFactory = gitCredentialsProviderFactory;
+		this.customizers = customizers;
 	}
 
 	@Override
@@ -73,7 +72,7 @@ public class MultipleJGitEnvironmentRepositoryFactory
 			throws Exception {
 		if (this.connectionFactory.isPresent()) {
 			HttpTransport.setConnectionFactory(this.connectionFactory.get());
-			this.connectionFactory.get().addConfiguration(environmentProperties);
+			this.connectionFactory.get().addConfiguration(environmentProperties, this.customizers);
 		}
 
 		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
@@ -84,7 +83,7 @@ public class MultipleJGitEnvironmentRepositoryFactory
 		}
 		repository.setGitCredentialsProviderFactory(gitCredentialsProviderFactory);
 		repository.getRepos()
-				.forEach((name, repo) -> repo.setGitCredentialsProviderFactory(gitCredentialsProviderFactory));
+			.forEach((name, repo) -> repo.setGitCredentialsProviderFactory(gitCredentialsProviderFactory));
 		return repository;
 	}
 

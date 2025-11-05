@@ -6,18 +6,18 @@
 	<parent>
 		<artifactId>spring-cloud-dependencies-parent</artifactId>
 		<groupId>org.springframework.cloud</groupId>
-		<version>4.1.1-SNAPSHOT</version>
+		<version>5.0.0-SNAPSHOT</version>
 		<relativePath/>
 	</parent>
 	<artifactId>spring-cloud-config-dependencies</artifactId>
-	<version>4.1.1-SNAPSHOT</version>
+	<version>5.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>spring-cloud-config-dependencies</name>
 	<description>Spring Cloud Config Dependencies</description>
 	<properties>
-		<jgit.version>6.6.1.202309021850-r</jgit.version>
-		<spring-vault.version>3.1.0</spring-vault.version>
-		<spring-credhub.version>2.1.1.RELEASE</spring-credhub.version>
+		<jgit.version>7.4.0.202509020913-r</jgit.version>
+		<spring-vault.version>4.0.0-M3</spring-vault.version>
+		<spring-credhub.version>3.5.0</spring-credhub.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -74,7 +74,7 @@
 			<dependency>
 				<groupId>org.tmatesoft.svnkit</groupId>
 				<artifactId>svnkit</artifactId>
-				<version>1.10.1</version>
+				<version>1.10.11</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

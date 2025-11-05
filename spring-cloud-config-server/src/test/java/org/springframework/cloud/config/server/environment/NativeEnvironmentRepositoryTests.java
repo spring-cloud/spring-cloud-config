@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,8 +47,9 @@ public class NativeEnvironmentRepositoryTests {
 	@BeforeEach
 	public void init() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(NativeEnvironmentRepositoryTests.class)
-				.properties("logging.level.org.springframework.boot.context.config=TRACE").web(WebApplicationType.NONE)
-				.run();
+			.properties("logging.level.org.springframework.boot.context.config=TRACE")
+			.web(WebApplicationType.NONE)
+			.run();
 		this.repository = new NativeEnvironmentRepository(context.getEnvironment(), new NativeEnvironmentProperties(),
 				ObservationRegistry.NOOP);
 		this.repository.setVersion("myversion");
@@ -86,7 +87,7 @@ public class NativeEnvironmentRepositoryTests {
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isNotEqualTo(environment.getPropertySources().get(1).getName());
+			.isNotEqualTo(environment.getPropertySources().get(1).getName());
 	}
 
 	@Test
@@ -97,7 +98,7 @@ public class NativeEnvironmentRepositoryTests {
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isNotEqualTo(environment.getPropertySources().get(1).getName());
+			.isNotEqualTo(environment.getPropertySources().get(1).getName());
 	}
 
 	@Test
@@ -108,7 +109,7 @@ public class NativeEnvironmentRepositoryTests {
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
-				.isNotEqualTo(environment.getPropertySources().get(1).getName());
+			.isNotEqualTo(environment.getPropertySources().get(1).getName());
 	}
 
 	@Test
@@ -244,6 +245,16 @@ public class NativeEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void locationAddMultipleLabelLocations() {
+		this.repository.setSearchLocations("classpath:/test/dev/");
+		Environment environment = this.repository.findOne("foo", "development", "ignore,applicationxyz");
+		assertThat(environment.getPropertySources()).hasSize(3);
+		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("app");
+		assertThat(environment.getPropertySources().get(1).getSource().get("foo")).isEqualTo("default-app");
+		assertThat(environment.getPropertySources().get(2).getSource().get("foo")).isEqualTo("dev_bar");
+	}
+
+	@Test
 	public void tryToStartReactive() {
 		this.repository.setSearchLocations("classpath:/test/reactive/");
 		Environment environment = this.repository.findOne("foo", "master", "default");
@@ -316,11 +327,12 @@ public class NativeEnvironmentRepositoryTests {
 		this.repository.setSearchLocations("classpath:/test/bad-syntax");
 		NativeEnvironmentRepository repo = this.repository;
 		assertThatExceptionOfType(FailedToConstructEnvironmentException.class)
-				.isThrownBy(() -> repo.findOne("foo", "master", "default")).withMessage(
-						"Could not construct context for config=foo profile=master label=default includeOrigin=false; nested exception is while constructing a mapping\n"
-								+ " in 'reader', line 1, column 1:\n" + "    key: value\n" + "    ^\n"
-								+ "found duplicate key key\n" + " in 'reader', line 2, column 1:\n" + "    key: value\n"
-								+ "    ^\n");
+			.isThrownBy(() -> repo.findOne("foo", "master", "default"))
+			.withMessage(
+					"Could not construct context for config=foo profile=master label=default includeOrigin=false; nested exception is while constructing a mapping\n"
+							+ " in 'reader', line 1, column 1:\n" + "    key: value\n" + "    ^\n"
+							+ "found duplicate key key\n" + " in 'reader', line 2, column 1:\n" + "    key: value\n"
+							+ "    ^\n");
 	}
 
 	@Test

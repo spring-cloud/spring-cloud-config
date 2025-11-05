@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,21 +34,22 @@ public class ApplicationFailFastTests {
 	@Test
 	public void bootstrapContextFails() {
 		assertThatThrownBy(() -> {
-			new SpringApplicationBuilder().sources(Application.class).run("--spring.config.use-legacy-processing=true",
-					"--server.port=0", "--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
-					"--spring.cloud.config.uri=http://serverhostdoesnotexist:1234");
+			new SpringApplicationBuilder().sources(Application.class)
+				.run("--spring.config.use-legacy-processing=true", "--server.port=0",
+						"--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
+						"--spring.cloud.config.uri=http://serverhostdoesnotexist:1234");
 		}).as("Exception not caused by fail fast").hasMessageContaining("fail fast");
 	}
 
 	@Test
 	public void configDataContextFailsFast(CapturedOutput output) {
 		assertThatThrownBy(() -> {
-			new SpringApplicationBuilder().sources(Application.class, PropertyInjectionConfiguration.class).run(
-					"--server.port=0", "--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
-					"--spring.config.import=optional:configserver:http://serverhostdoesnotexist:1234",
-					"--spring.cloud.config.server.enabled=false", "--logging.level.org.springframework.retry=TRACE",
-					"--logging.level.org.springframework.cloud.config=TRACE",
-					"--logging.level.org.springframework.boot.context.config=TRACE");
+			new SpringApplicationBuilder().sources(Application.class, PropertyInjectionConfiguration.class)
+				.run("--server.port=0", "--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
+						"--spring.config.import=optional:configserver:http://serverhostdoesnotexist:1234",
+						"--spring.cloud.config.server.enabled=false", "--logging.level.org.springframework.retry=TRACE",
+						"--logging.level.org.springframework.cloud.config=TRACE",
+						"--logging.level.org.springframework.boot.context.config=TRACE");
 		}).as("Exception not caused by fail fast").hasMessageContaining("fail fast");
 		assertThat(output).contains("Retry: count=5").doesNotContain("Could not resolve placeholder");
 	}

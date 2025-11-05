@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,6 +31,7 @@ import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.boot.context.config.ConfigData;
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;
 import org.springframework.boot.context.config.ConfigDataEnvironmentUpdateListener;
 import org.springframework.boot.context.config.ConfigDataLocation;
@@ -150,12 +152,32 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 							propertySourceToConfigData.put(propertySource,
 									new PropertySourceConfigData(location, resource));
 						}
+
+						@Override
+						public ConfigData.Options onConfigDataOptions(ConfigData configData,
+								org.springframework.core.env.PropertySource<?> propertySource,
+								ConfigData.Options options) {
+							String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+							// Unless the request from the client includes profiles we
+							// should not return profile
+							// specific property sources if profiles are activated. The
+							// client will make a second request
+							// after activating all the profiles to get profile specific
+							// property sources
+							if (profiles.length == 0 || "default".equalsIgnoreCase(profiles[0])) {
+								return ConfigDataEnvironmentUpdateListener.super.onConfigDataOptions(configData,
+										propertySource, options)
+									.with(ConfigData.Option.IGNORE_PROFILES);
+							}
+							return ConfigDataEnvironmentUpdateListener.super.onConfigDataOptions(configData,
+									propertySource, options);
+						}
 					});
 
 			environment.getPropertySources().remove("config-data-setup");
 			return clean(ObservationEnvironmentRepositoryWrapper
-					.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment))
-					.findOne(config, profile, label, includeOrigin), propertySourceToConfigData);
+				.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment))
+				.findOne(config, profile, label, includeOrigin), propertySourceToConfigData);
 		}
 		catch (Exception e) {
 			String msg = String.format("Could not construct context for config=%s profile=%s label=%s includeOrigin=%b",
@@ -210,9 +232,19 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		if (this.addLabelLocations) {
 			for (String location : locations) {
 				if (StringUtils.hasText(label)) {
-					String labelled = location + label.trim() + "/";
-					if (isDirectory(labelled)) {
-						output.add(labelled);
+					List<String> labels;
+					if (label.contains(",")) {
+						labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+						Collections.reverse(labels);
+					}
+					else {
+						labels = Collections.singletonList(label);
+					}
+					for (String l : labels) {
+						String labelled = location + l + "/";
+						if (isDirectory(labelled)) {
+							output.add(labelled);
+						}
 					}
 				}
 			}
@@ -338,8 +370,9 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				break;
 			}
 			if (locations != null) {
-				matches = Arrays.stream(locations).map(this::cleanFileLocation)
-						.anyMatch(location -> location.startsWith(finalPattern));
+				matches = Arrays.stream(locations)
+					.map(this::cleanFileLocation)
+					.anyMatch(location -> location.startsWith(finalPattern));
 				if (matches) {
 					break;
 				}

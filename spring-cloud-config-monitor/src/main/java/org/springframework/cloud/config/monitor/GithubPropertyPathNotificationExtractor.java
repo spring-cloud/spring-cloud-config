@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.cloud.config.monitor;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.util.MultiValueMap;
+import org.springframework.http.HttpHeaders;
 
 /**
  * @author Dave Syer
@@ -28,7 +28,7 @@ import org.springframework.util.MultiValueMap;
 public class GithubPropertyPathNotificationExtractor extends BasePropertyPathNotificationExtractor {
 
 	@Override
-	protected boolean requestBelongsToGitRepoManager(MultiValueMap<String, String> headers) {
+	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {
 		return "push".equals(headers.getFirst("X-Github-Event"));
 	}
 

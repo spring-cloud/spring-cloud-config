@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,9 +82,20 @@ public class FileBasedSshSessionFactoryTest {
 		assertThat(configStore).isNull();
 	}
 
+	@Test
+	public void connectTimeoutIsUsed() {
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		setupSessionFactory(sshKey);
+
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
+
+		assertThat(sshConfig.getValue("ConnectTimeout")).isEqualTo("5");
+	}
+
 	private SshConfigStore.HostConfig getSshHostConfig(String hostName) {
-		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName").lookup(hostName, 22,
-				"userName");
+		return factory.createSshConfigStore(new File("dummy"), new File("dummy"), "localUserName")
+			.lookup(hostName, 22, "userName");
 	}
 
 	private void setupSessionFactory(JGitEnvironmentProperties sshKey) {

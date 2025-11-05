@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,13 +32,15 @@ public class ConfigServerBootstrapConfigurationTests {
 	public void withHealthIndicator() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				PropertySourceBootstrapConfiguration.class, ConfigServiceBootstrapConfiguration.class)
-						.child(ConfigClientAutoConfiguration.class).properties("spring.cloud.bootstrap.enabled=true")
-						.web(WebApplicationType.NONE).run();
+			.child(ConfigClientAutoConfiguration.class)
+			.properties("spring.cloud.bootstrap.enabled=true")
+			.web(WebApplicationType.NONE)
+			.run();
 		assertThat(BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context, ConfigClientProperties.class).length)
-				.isEqualTo(1);
+			.isEqualTo(1);
 		assertThat(
 				BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context, ConfigServerHealthIndicator.class).length)
-						.isEqualTo(1);
+			.isEqualTo(1);
 		context.close();
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -64,7 +64,8 @@ public class AwsS3IntegrationTests {
 
 	@Container
 	static LocalStackContainer localstack = new LocalStackContainer(
-			DockerImageName.parse("localstack/localstack:1.3.1")).withServices(LocalStackContainer.Service.S3);
+			DockerImageName.parse("localstack/localstack:4.0.3"))
+		.withServices(LocalStackContainer.Service.S3);
 
 	private static ConfigurableApplicationContext server;
 
@@ -102,6 +103,15 @@ public class AwsS3IntegrationTests {
 		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("data-dev.properties"),
 				RequestBody.fromString("bar=1"));
 		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("main/foo.properties"),
+				RequestBody.fromString("foo=1"));
+		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("dev/foo.properties"),
+				RequestBody.fromString("devfoo=1"));
+		LOG.info("object response " + objectResponse);
+		objectResponse = s3Client.putObject((request) -> request.bucket("test-bucket").key("test/foo.properties"),
+				RequestBody.fromString("testfoo=1"));
+		LOG.info("object response " + objectResponse);
 	}
 
 	@AfterAll
@@ -118,9 +128,19 @@ public class AwsS3IntegrationTests {
 		Environment env = rest.getForObject(configServerUrl + "/application/default", Environment.class);
 		assertThat(env.getPropertySources().get(0).getSource().get("foo")).isEqualTo("1");
 		assertThat(rest.getForObject(configServerUrl + "/application/default/main/data.txt", String.class))
-				.isEqualTo("this is a test in main");
+			.isEqualTo("this is a test in main");
 		assertThat(rest.getForObject(configServerUrl + "/application/default/data.txt?useDefaultLabel", String.class))
-				.isEqualTo("this is a test");
+			.isEqualTo("this is a test");
+	}
+
+	@Test
+	public void testMultipleLabels() throws IOException {
+		RestTemplate rest = new RestTemplateBuilder().build();
+		String configServerUrl = "http://localhost:" + configServerPort;
+		Environment env = rest.getForObject(configServerUrl + "/foo/default/main,dev,test", Environment.class);
+		assertThat(env.getPropertySources().get(0).getSource().get("testfoo")).isEqualTo("1");
+		assertThat(env.getPropertySources().get(1).getSource().get("devfoo")).isEqualTo("1");
+		assertThat(env.getPropertySources().get(2).getSource().get("foo")).isEqualTo("1");
 	}
 
 	@Test
@@ -139,8 +159,10 @@ public class AwsS3IntegrationTests {
 
 		@Bean
 		S3Client s3Client() {
-			return S3Client.builder().region(Region.of(localstack.getRegion()))
-					.endpointOverride(localstack.getEndpointOverride(LocalStackContainer.Service.S3)).build();
+			return S3Client.builder()
+				.region(Region.of(localstack.getRegion()))
+				.endpointOverride(localstack.getEndpointOverride(LocalStackContainer.Service.S3))
+				.build();
 		}
 
 		@Bean

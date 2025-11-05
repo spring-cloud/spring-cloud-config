@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -82,8 +83,9 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(),
-				any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(), any(Class.class), anyString(),
+					anyString());
 
 		HttpEntity httpEntity = argumentCaptor.getValue();
 		assertThat(httpEntity.getHeaders().getAccept()).containsExactly(MediaType.parseMediaType(V2_JSON));
@@ -102,8 +104,9 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		assertThat(locator.locateCollection(this.environment)).isNotNull();
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(),
-				any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), argumentCaptor.capture(), any(Class.class), anyString(),
+					anyString());
 
 		HttpEntity httpEntity = argumentCaptor.getValue();
 		assertThat(httpEntity.getHeaders().getAccept()).containsExactly(MediaType.parseMediaType("application/json"));
@@ -125,7 +128,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		mockRequestResponseWithProfile(new ResponseEntity<>(body, HttpStatus.OK), "override-profile");
 		this.locator.setRestTemplate(this.restTemplate);
 		TestPropertyValues.of("spring.cloud.config.profile:override-profile", "spring.profiles.active: foo")
-				.applyTo(this.environment);
+			.applyTo(this.environment);
 		assertThat(this.locator.locateCollection(this.environment).size()).isEqualTo(2);
 	}
 
@@ -155,8 +158,10 @@ public class ConfigServicePropertySourceLocatorTests {
 			this.locator.setRestTemplate(this.restTemplate);
 			TestPropertyValues.of("spring.cloud.config.label:release/v1.0.1").applyTo(this.environment);
 			this.locator.locateCollection(this.environment);
-		}).isInstanceOf(IllegalStateException.class).hasMessageContaining(
-				"Could not locate PropertySource and the fail fast property is set, failing: None of labels [release/v1.0.1] found");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining(
+					"Could not locate PropertySource and the fail fast property is set, failing: None of labels [release/v1.0.1] found");
 	}
 
 	@Test
@@ -177,8 +182,10 @@ public class ConfigServicePropertySourceLocatorTests {
 			this.locator = new ConfigServicePropertySourceLocator(defaults);
 			this.locator.setRestTemplate(restTemplate);
 			this.locator.locateCollection(this.environment);
-		}).isInstanceOf(IllegalStateException.class).hasCauseInstanceOf(HttpServerErrorException.class)
-				.hasMessageContaining("fail fast property is set");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasCauseInstanceOf(HttpServerErrorException.class)
+			.hasMessageContaining("fail fast property is set");
 	}
 
 	@Test
@@ -192,8 +199,9 @@ public class ConfigServicePropertySourceLocatorTests {
 			this.locator = new ConfigServicePropertySourceLocator(defaults);
 			this.locator.setRestTemplate(restTemplate);
 			this.locator.locateCollection(this.environment);
-		}).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("fail fast property is set, failing: None of labels [] found");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("fail fast property is set, failing: None of labels [] found");
 	}
 
 	@Test
@@ -214,7 +222,7 @@ public class ConfigServicePropertySourceLocatorTests {
 			ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
 			ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
 			Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
-					.thenReturn(request);
+				.thenReturn(request);
 			ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
 			defaults.setFailFast(true);
 			defaults.setUsername("username");
@@ -222,8 +230,9 @@ public class ConfigServicePropertySourceLocatorTests {
 			defaults.getHeaders().put(AUTHORIZATION, "Basic dXNlcm5hbWU6cGFzc3dvcmQNCg==");
 			this.locator = new ConfigServicePropertySourceLocator(defaults);
 			this.locator.locateCollection(this.environment);
-		}).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("Could not locate PropertySource and the fail fast property is set, failing");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("Could not locate PropertySource and the fail fast property is set, failing");
 	}
 
 	@Test
@@ -245,7 +254,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		String username = "user";
 		String password = "pass";
 		factory(defaults).addAuthorizationToken(headers, username, password);
-		assertThat(headers).hasSize(1);
+		assertThat(headers.size()).isEqualTo(1);
 	}
 
 	@Test
@@ -256,7 +265,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		String username = "user";
 		String password = null;
 		factory(defaults).addAuthorizationToken(headers, username, password);
-		assertThat(headers).hasSize(1);
+		assertThat(headers.size()).isEqualTo(1);
 	}
 
 	@Test
@@ -268,8 +277,9 @@ public class ConfigServicePropertySourceLocatorTests {
 			String username = "user";
 			String password = "pass";
 			factory(defaults).addAuthorizationToken(headers, username, password);
-		}).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("You must set either 'password' or 'authorization'");
+		})
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("You must set either 'password' or 'authorization'");
 	}
 
 	@Test
@@ -321,6 +331,61 @@ public class ConfigServicePropertySourceLocatorTests {
 	@Test
 	public void shouldUseNextUriFor_500_And_ALWAYS_Strategy() throws Exception {
 		assertNextUriIsTried(ConfigClientProperties.MultipleUriStrategy.ALWAYS, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_NoExceptionNotOK_And_CONNECTION_TIMEOUT_ONLY_Strategy_FailFastIsFalse()
+			throws Exception {
+		// At the time of this writing, TEMPORARY_REDIRECT will not cause an exception to
+		// be thrown back to
+		// getRemoteEnvironment, but since status is not OK, the method returns null and
+		// locate method will
+		// simply return null since fail-fast=false. (Second URL is never tried, due to
+		// the strategy.
+
+		// Set up with two URIs.
+		ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
+		String badURI = "http://baduri";
+		String goodURI = "http://localhost:8888";
+		String[] uris = new String[] { badURI, goodURI };
+		clientProperties.setUri(uris);
+		clientProperties.setFailFast(false);
+		// Strategy is CONNECTION_TIMEOUT_ONLY, so it should not try the next URI for
+		// TEMPORARY_REDIRECT
+		clientProperties.setMultipleUriStrategy(ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY);
+		this.locator = new ConfigServicePropertySourceLocator(clientProperties);
+		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+		RestTemplate restTemplate1 = new RestTemplate(requestFactory);
+		mockRequestResponse(requestFactory, badURI, HttpStatus.TEMPORARY_REDIRECT);
+		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+		this.locator.setRestTemplate(restTemplate1);
+		assertThat(this.locator.locateCollection(this.environment)).isEqualTo(Collections.emptyList());
+	}
+
+	@Test
+	public void shouldUseNextUriFor_NoExceptionNotOK_And_CONNECTION_TIMEOUT_ONLY_Strategy_WithFailFastIsTrue()
+			throws Exception {
+		// At the time of this writing, TEMPORARY_REDIRECT will not cause an exception to
+		// be thrown back to
+		// getRemoteEnvironment, but since status is not OK, the method returns null and
+		// locate method will
+		// throw an IllegalStateException with no cause, since fail-fast=true. Second URL
+		// is never tried, due to the strategy.
+		assertNextUriIsNotTried(true, ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY,
+				HttpStatus.TEMPORARY_REDIRECT, null // IllegalStateException has no cause,
+													// because getRemoteEnvironment did
+													// not throw an exception
+		);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_NoExceptionNotOK_And_ALWAYS_Strategy() throws Exception {
+		// At the time of this writing, TEMPORARY_REDIRECT will not cause an exception to
+		// be thrown back to
+		// getRemoteEnvironment, but since status is not OK, the method will treat it the
+		// same as an exception and
+		// thus try the next URL.
+		assertNextUriIsTried(ConfigClientProperties.MultipleUriStrategy.ALWAYS, HttpStatus.TEMPORARY_REDIRECT);
 	}
 
 	@Test
@@ -396,7 +461,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Iterator<ClientHttpRequestInterceptor> iterator = restTemplate.getInterceptors().iterator();
 		while (iterator.hasNext()) {
 			GenericRequestHeaderInterceptor genericRequestHeaderInterceptor = (GenericRequestHeaderInterceptor) iterator
-					.next();
+				.next();
 			assertThat(genericRequestHeaderInterceptor.getHeaders()).doesNotContainKeys(AUTHORIZATION);
 		}
 	}
@@ -450,6 +515,12 @@ public class ConfigServicePropertySourceLocatorTests {
 
 	private void assertNextUriIsNotTried(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy,
 			HttpStatus firstUriResponse, Class<? extends Exception> expectedCause) {
+		assertNextUriIsNotTried(true, multipleUriStrategy, firstUriResponse, expectedCause);
+	}
+
+	private void assertNextUriIsNotTried(boolean failFast,
+			ConfigClientProperties.MultipleUriStrategy multipleUriStrategy, HttpStatus firstUriResponse,
+			Class<? extends Exception> expectedCause) {
 		AbstractThrowableAssert throwableAssert = Assertions.assertThatThrownBy(() -> {
 			// Set up with two URIs.
 			ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
@@ -457,7 +528,7 @@ public class ConfigServicePropertySourceLocatorTests {
 			String goodURI = "http://localhost:8888";
 			String[] uris = new String[] { badURI, goodURI };
 			clientProperties.setUri(uris);
-			clientProperties.setFailFast(true);
+			clientProperties.setFailFast(failFast);
 			// Strategy is CONNECTION_TIMEOUT_ONLY, so it should not try the next URI for
 			// INTERNAL_SERVER_ERROR
 			clientProperties.setMultipleUriStrategy(multipleUriStrategy);
@@ -557,11 +628,13 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		if (baseURI == null) {
 			Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
-					.thenReturn(request);
+				.thenReturn(request);
 		}
 		else {
-			Mockito.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
-					Mockito.any(HttpMethod.class))).thenReturn(request);
+			Mockito
+				.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
+						Mockito.any(HttpMethod.class)))
+				.thenReturn(request);
 		}
 
 		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());
@@ -571,7 +644,6 @@ public class ConfigServicePropertySourceLocatorTests {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		Mockito.when(response.getHeaders()).thenReturn(headers);
 		Mockito.when(response.getStatusCode()).thenReturn(status);
-		Mockito.when(response.getRawStatusCode()).thenReturn(status.value());
 		Mockito.when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));
 	}
 
@@ -579,27 +651,30 @@ public class ConfigServicePropertySourceLocatorTests {
 	private void mockRequestResponseWithLabel(ResponseEntity<?> response, String label) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
 				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString(),
-				ArgumentMatchers.eq(label))).thenReturn(response);
+				ArgumentMatchers.eq(label)))
+			.thenReturn(response);
 	}
 
 	private void mockRequestResponseWithProfile(ResponseEntity<?> response, String profiles) {
 		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
 				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), ArgumentMatchers.eq(profiles)))
-				.thenReturn(response);
+			.thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestResponseWithoutLabel(ResponseEntity<?> response) {
-		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
-				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString()))
-				.thenReturn(response);
+		Mockito
+			.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
+					Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString()))
+			.thenReturn(response);
 	}
 
 	@SuppressWarnings("unchecked")
 	private void mockRequestTimedOut() {
-		Mockito.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
-				Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString()))
-				.thenThrow(ResourceAccessException.class);
+		Mockito
+			.when(this.restTemplate.exchange(Mockito.any(String.class), Mockito.any(HttpMethod.class),
+					Mockito.any(HttpEntity.class), Mockito.any(Class.class), anyString(), anyString()))
+			.thenThrow(ResourceAccessException.class);
 	}
 
 	private void mockRequestTimedOut(ClientHttpRequestFactory requestFactory, String baseURI) throws Exception {
@@ -607,11 +682,13 @@ public class ConfigServicePropertySourceLocatorTests {
 
 		if (baseURI == null) {
 			Mockito.when(requestFactory.createRequest(Mockito.any(URI.class), Mockito.any(HttpMethod.class)))
-					.thenReturn(request);
+				.thenReturn(request);
 		}
 		else {
-			Mockito.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
-					Mockito.any(HttpMethod.class))).thenReturn(request);
+			Mockito
+				.when(requestFactory.createRequest(Mockito.eq(new URI(baseURI + "/application/default")),
+						Mockito.any(HttpMethod.class)))
+				.thenReturn(request);
 		}
 
 		Mockito.when(request.getHeaders()).thenReturn(new HttpHeaders());

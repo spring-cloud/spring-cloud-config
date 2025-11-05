@@ -21,7 +21,10 @@ spring:
               profiles: development
 ----
 
-You can disable the Health Indicator by setting `management.health.config.enabled=false`.
+You can disable the Health Indicator by setting `spring.cloud.config.server.health.enabled=false`.
 
 Also, you can provide a custom `down` status of your own by setting property `spring.cloud.config.server.health.down-health-status` (valued to `"DOWN'` by default).
+
+NOTE: If `spring.cloud.config.server.accept-empty` is `false` and the health indicator check returns
+does not return any repository data the health indicator will return `DOWN` status.
 

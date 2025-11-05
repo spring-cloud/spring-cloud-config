@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,31 +43,29 @@ public class ConfigServerConfigDataNoImportIntegrationTests {
 	@Test
 	public void exceptionThrownIfNoImport(CapturedOutput output) {
 		Assertions
-				.assertThatThrownBy(() -> new SpringApplicationBuilder(Config.class).web(WebApplicationType.NONE)
-						.run("--spring.application.name=" + APP_NAME))
-				.isInstanceOf(ConfigDataMissingEnvironmentPostProcessor.ImportException.class);
+			.assertThatThrownBy(() -> new SpringApplicationBuilder(Config.class).web(WebApplicationType.NONE)
+				.run("--spring.application.name=" + APP_NAME))
+			.isInstanceOf(ConfigDataMissingEnvironmentPostProcessor.ImportException.class);
 
 		assertThat(output).contains("No spring.config.import property has been defined")
-				.contains("Add a spring.config.import=configserver: property to your configuration");
+			.contains("Add a spring.config.import=configserver: property to your configuration");
 	}
 
 	@Test
 	public void exceptionThrownIfImportMissing(CapturedOutput output) {
-		Assertions
-				.assertThatThrownBy(() -> new SpringApplicationBuilder(Config.class).web(WebApplicationType.NONE).run(
-						"--spring.config.import=optional:file:somefile.properties",
-						"--spring.application.name=" + APP_NAME))
-				.isInstanceOf(ConfigDataMissingEnvironmentPostProcessor.ImportException.class);
+		Assertions.assertThatThrownBy(() -> new SpringApplicationBuilder(Config.class).web(WebApplicationType.NONE)
+			.run("--spring.config.import=optional:file:somefile.properties", "--spring.application.name=" + APP_NAME))
+			.isInstanceOf(ConfigDataMissingEnvironmentPostProcessor.ImportException.class);
 
 		assertThat(output).contains("spring.config.import property is missing a " + PREFIX)
-				.contains("Add a spring.config.import=configserver: property to your configuration");
+			.contains("Add a spring.config.import=configserver: property to your configuration");
 	}
 
 	@Test
 	public void noExceptionThrownIfConfigDisabled() {
 		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(Config.class)
-				.web(WebApplicationType.NONE)
-				.run("--spring.cloud.config.enabled=false", "--spring.application.name=" + APP_NAME)) {
+			.web(WebApplicationType.NONE)
+			.run("--spring.cloud.config.enabled=false", "--spring.application.name=" + APP_NAME)) {
 			// nothing to do
 		}
 	}
@@ -75,8 +73,8 @@ public class ConfigServerConfigDataNoImportIntegrationTests {
 	@Test
 	public void noExceptionThrownIfImportCheckDisabled() {
 		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(Config.class)
-				.web(WebApplicationType.NONE)
-				.run("--spring.cloud.config.import-check.enabled=false", "--spring.application.name=" + APP_NAME)) {
+			.web(WebApplicationType.NONE)
+			.run("--spring.cloud.config.import-check.enabled=false", "--spring.application.name=" + APP_NAME)) {
 			// nothing to do
 		}
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,8 @@ public class FileBasedSshSessionFactory extends SshdSessionFactory {
 
 				hostEntry.setValue(SshConstants.STRICT_HOST_KEY_CHECKING,
 						sshProperties.isStrictHostKeyChecking() ? SshConstants.YES : SshConstants.NO);
+
+				hostEntry.setValue(SshConstants.CONNECT_TIMEOUT, String.valueOf(sshProperties.getTimeout()));
 
 				return hostEntry;
 			}

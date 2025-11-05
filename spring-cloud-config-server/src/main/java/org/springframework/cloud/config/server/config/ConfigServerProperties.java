@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -203,12 +203,19 @@ public class ConfigServerProperties {
 
 	@Override
 	public String toString() {
-		return new ToStringCreator(this).append("enabled", enabled).append("bootstrap", bootstrap)
-				.append("prefix", prefix).append("defaultLabel", defaultLabel).append("overrides", overrides)
-				.append("stripDocumentFromYaml", stripDocumentFromYaml).append("acceptEmpty", acceptEmpty)
-				.append("defaultApplicationName", defaultApplicationName).append("defaultProfile", defaultProfile)
-				.append("failOnCompositeError", failOnCompositeError).append("encrypt", encrypt)
-				.append("reverseLocationOrder", reverseLocationOrder).toString();
+		return new ToStringCreator(this).append("enabled", enabled)
+			.append("bootstrap", bootstrap)
+			.append("prefix", prefix)
+			.append("defaultLabel", defaultLabel)
+			.append("overrides", overrides)
+			.append("stripDocumentFromYaml", stripDocumentFromYaml)
+			.append("acceptEmpty", acceptEmpty)
+			.append("defaultApplicationName", defaultApplicationName)
+			.append("defaultProfile", defaultProfile)
+			.append("failOnCompositeError", failOnCompositeError)
+			.append("encrypt", encrypt)
+			.append("reverseLocationOrder", reverseLocationOrder)
+			.toString();
 
 	}
 
@@ -246,8 +253,9 @@ public class ConfigServerProperties {
 
 		@Override
 		public String toString() {
-			return new ToStringCreator(this).append("enabled", enabled).append("plainTextEncrypt", plainTextEncrypt)
-					.toString();
+			return new ToStringCreator(this).append("enabled", enabled)
+				.append("plainTextEncrypt", plainTextEncrypt)
+				.toString();
 
 		}
 

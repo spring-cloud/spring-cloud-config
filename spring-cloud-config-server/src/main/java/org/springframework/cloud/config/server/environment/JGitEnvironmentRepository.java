@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,7 @@ import org.eclipse.jgit.transport.TrackingRefUpdate;
 import org.eclipse.jgit.util.FileUtils;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.UrlResource;
@@ -148,6 +149,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	private boolean tryMasterBranch;
 
 	private final ObservationRegistry observationRegistry;
+
+	/**
+	 * This lock is used to ensure thread safety between accessing the local git repo from
+	 * both the ResourceController and the EnvironmentController. See <a href=
+	 * "https://github.com/spring-cloud/spring-cloud-config/issues/2681">#2681</a>.
+	 */
+	private final Object LOCK = new Object();
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties,
 			ObservationRegistry observationRegistry) {
@@ -253,13 +261,22 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	@Override
+	public synchronized Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+		synchronized (LOCK) {
+			return super.findOne(application, profile, label, includeOrigin);
+		}
+	}
+
+	@Override
 	public synchronized Locations getLocations(String application, String profile, String label) {
 		if (label == null) {
 			label = this.defaultLabel;
 		}
 		String version;
 		try {
-			version = refresh(label);
+			synchronized (LOCK) {
+				version = refresh(label);
+			}
 		}
 		catch (Exception e) {
 			if (this.defaultLabel.equals(label) && JGitEnvironmentProperties.MAIN_LABEL.equals(this.defaultLabel)
@@ -446,10 +463,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private List<String> deleteBranches(Git git, Collection<String> branchesToDelete) throws GitAPIException {
 		DeleteBranchCommand deleteBranchCommand = git.branchDelete()
-				.setBranchNames(branchesToDelete.toArray(new String[0]))
-				// local branch can contain data which is not merged to HEAD - force
-				// delete it anyway, since local copy should be R/O
-				.setForce(true);
+			.setBranchNames(branchesToDelete.toArray(new String[0]))
+			// local branch can contain data which is not merged to HEAD - force
+			// delete it anyway, since local copy should be R/O
+			.setForce(true);
 		List<String> resultList = deleteBranchCommand.call();
 		this.logger.info(format("Deleted %s branches from %s branches to delete.", resultList, branchesToDelete));
 		return resultList;
@@ -470,7 +487,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	protected boolean shouldPull(Git git) throws GitAPIException {
 		boolean shouldPull;
 
-		if (this.refreshRate > 0 && System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000)) {
+		if (this.refreshRate < 0 || (this.refreshRate > 0
+				&& System.currentTimeMillis() - this.lastRefresh < (this.refreshRate * 1000))) {
 			return false;
 		}
 
@@ -650,8 +668,9 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private Git cloneToBasedir() throws GitAPIException {
-		CloneCommand clone = this.gitFactory.getCloneCommandByCloneRepository().setURI(getUri())
-				.setDirectory(getBasedir());
+		CloneCommand clone = this.gitFactory.getCloneCommandByCloneRepository()
+			.setURI(getUri())
+			.setDirectory(getBasedir());
 		configureCommand(clone);
 		try {
 			return clone.call();
@@ -708,8 +727,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	private void trackBranch(Git git, CheckoutCommand checkout, String label) {
-		checkout.setCreateBranch(true).setName(label).setUpstreamMode(SetupUpstreamMode.TRACK)
-				.setStartPoint("origin/" + label);
+		checkout.setCreateBranch(true)
+			.setName(label)
+			.setUpstreamMode(SetupUpstreamMode.TRACK)
+			.setStartPoint("origin/" + label);
 	}
 
 	private boolean isBranch(Git git, String label) throws GitAPIException {

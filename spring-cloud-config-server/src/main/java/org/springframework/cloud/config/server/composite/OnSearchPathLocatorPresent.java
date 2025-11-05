@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,11 +54,11 @@ public class OnSearchPathLocatorPresent extends SpringBootCondition {
 		boolean foundSearchPathLocator = repositoryTypes.stream().anyMatch(SearchPathLocator.class::isAssignableFrom);
 		if (required && !foundSearchPathLocator) {
 			return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnSearchPathLocator.class)
-					.notAvailable(SearchPathLocator.class.getTypeName()));
+				.notAvailable(SearchPathLocator.class.getTypeName()));
 		}
 		if (!required && foundSearchPathLocator) {
 			return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnMissingSearchPathLocator.class)
-					.available(SearchPathLocator.class.getTypeName()));
+				.available(SearchPathLocator.class.getTypeName()));
 		}
 		return ConditionOutcome.match();
 	}

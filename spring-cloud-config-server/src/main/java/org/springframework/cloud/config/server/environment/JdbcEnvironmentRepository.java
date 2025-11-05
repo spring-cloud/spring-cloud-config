@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,11 +71,6 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 
 	private String defaultLabel;
 
-	@Deprecated
-	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties) {
-		this(jdbc, properties, new PropertiesResultSetExtractor());
-	}
-
 	public JdbcEnvironmentRepository(JdbcTemplate jdbc, JdbcEnvironmentProperties properties,
 			PropertiesResultSetExtractor extractor) {
 		this.jdbc = jdbc;
@@ -119,15 +114,25 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		List<String> envs = new ArrayList<>(new LinkedHashSet<>(Arrays.asList(profiles)));
 		Collections.reverse(applications);
 		Collections.reverse(envs);
-		for (String env : envs) {
-			for (String app : applications) {
-				addPropertySource(environment, app, env, label);
-			}
+		List<String> labels;
+		if (label.contains(",")) {
+			labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+			Collections.reverse(labels);
 		}
-		// add properties without profile, equivalent to foo.yml, application.yml
-		if (!configIncomplete) {
-			for (String app : applications) {
-				addPropertySource(environment, app, null, label);
+		else {
+			labels = Collections.singletonList(label);
+		}
+		for (String l : labels) {
+			for (String env : envs) {
+				for (String app : applications) {
+					addPropertySource(environment, app, env, l);
+				}
+			}
+			// add properties without profile, equivalent to foo.yml, application.yml
+			if (!configIncomplete) {
+				for (String app : applications) {
+					addPropertySource(environment, app, null, l);
+				}
 			}
 		}
 		return environment;

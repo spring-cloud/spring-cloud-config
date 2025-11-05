@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.ClientCertificateAuthentication;
 import org.springframework.vault.authentication.CubbyholeAuthentication;
 import org.springframework.vault.authentication.GcpComputeAuthentication;
-import org.springframework.vault.authentication.GcpIamAuthentication;
+import org.springframework.vault.authentication.GcpIamCredentialsAuthentication;
 import org.springframework.vault.authentication.KubernetesAuthentication;
 import org.springframework.vault.authentication.PcfAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
@@ -156,9 +156,9 @@ class SpringVaultClientConfigurationTests {
 		assertClientAuthenticationOfType(properties, AzureMsiAuthentication.class);
 
 		AzureMsiAuthentication clientAuthentication = (AzureMsiAuthentication) getConfiguration(properties)
-				.clientAuthentication();
+			.clientAuthentication();
 		AzureMsiAuthenticationOptions options = (AzureMsiAuthenticationOptions) ReflectionTestUtils
-				.getField(clientAuthentication, "options");
+			.getField(clientAuthentication, "options");
 
 		assertThat(options.getIdentityTokenServiceUri()).isEqualTo(DEFAULT_IDENTITY_TOKEN_SERVICE_URI);
 		assertThat(options.getInstanceMetadataServiceUri()).isEqualTo(DEFAULT_INSTANCE_METADATA_SERVICE_URI);
@@ -231,7 +231,7 @@ class SpringVaultClientConfigurationTests {
 		properties.getGcpIam().setServiceAccountId("service-account");
 		properties.getGcpIam().getCredentials().setEncodedKey(base64(GCE_JSON));
 
-		assertClientAuthenticationOfType(properties, GcpIamAuthentication.class);
+		assertClientAuthenticationOfType(properties, GcpIamCredentialsAuthentication.class);
 	}
 
 	@Test
@@ -347,11 +347,13 @@ class SpringVaultClientConfigurationTests {
 	@SuppressWarnings("deprecation")
 	public void springVaultClientConfigurationIsAProxy() {
 		new WebApplicationContextRunner().withPropertyValues("spring.profiles.active=vault")
-				.withConfiguration(UserConfigurations.of(ConfigServerConfiguration.class))
-				.withConfiguration(AutoConfigurations.of(ConfigServerAutoConfiguration.class)).run(context -> {
-					assertThat(context).getBean(SpringVaultClientConfiguration.class).isNotNull()
-							.matches(svcc -> ClassUtils.isCglibProxyClassName(svcc.getClass().getName()), "is a proxy");
-				});
+			.withConfiguration(UserConfigurations.of(ConfigServerConfiguration.class))
+			.withConfiguration(AutoConfigurations.of(ConfigServerAutoConfiguration.class))
+			.run(context -> {
+				assertThat(context).getBean(SpringVaultClientConfiguration.class)
+					.isNotNull()
+					.matches(svcc -> ClassUtils.isCglibProxyClassName(svcc.getClass().getName()), "is a proxy");
+			});
 	}
 
 }

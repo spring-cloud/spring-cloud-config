@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package sample;
 
+import java.io.File;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterAll;
@@ -24,8 +25,8 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -57,8 +58,11 @@ public class ConfigDataOrderingIntegrationTests {
 
 	@BeforeAll
 	public static void startConfigServer() {
+		String testResourcesDir = new File("src/test/resources").getAbsolutePath();
 		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
-				"--spring.profiles.active=native", "--server.port=" + configPort, "--spring.config.name=server");
+				"--spring.profiles.active=native", "--server.port=" + configPort, "--spring.config.name=server",
+				"--spring.cloud.config.server.native.search-locations=file://" + testResourcesDir + ",file://"
+						+ testResourcesDir + "/config");
 
 		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}
@@ -75,7 +79,7 @@ public class ConfigDataOrderingIntegrationTests {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void contextLoads() {
 		ResponseEntity<Map> response = new TestRestTemplate()
-				.getForEntity("http://localhost:" + this.port + BASE_PATH + "/env/my.prop", Map.class);
+			.getForEntity("http://localhost:" + this.port + BASE_PATH + "/env/my.prop", Map.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		Map res = response.getBody();
 		assertThat(res).containsKey("propertySources");

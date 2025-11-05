@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -193,6 +193,13 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 			try {
 				for (AbstractScmEnvironmentRepository repository : scmRepositories) {
 					repositoryUri = repository.getUri();
+					// Skip URIs with placeholders - they cannot be resolved at startup
+					if (repositoryUri != null && repositoryUri.contains("{")) {
+						if (log.isWarnEnabled()) {
+							log.warn("Skipping file monitoring for placeholder URI: " + repositoryUri);
+						}
+						continue;
+					}
 					Resource resource = this.resourceLoader.getResource(repositoryUri);
 					if (resource instanceof FileSystemResource || resource instanceof FileUrlResource) {
 						paths.add(Paths.get(resource.getURI()));

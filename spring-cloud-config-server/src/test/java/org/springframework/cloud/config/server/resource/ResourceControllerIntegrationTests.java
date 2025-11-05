@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
@@ -86,9 +86,9 @@ public class ResourceControllerIntegrationTests {
 	public void environmentNoLabel() throws Exception {
 		when(this.repository.findOne("foo", "default", "master", false)).thenReturn(new Environment("foo", "default"));
 		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
-				.andExpect(MockMvcResultMatchers.status().isOk());
+			.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", "master", false);
 		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
 	}
@@ -96,11 +96,11 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void resource() throws Exception {
 		when(this.repository.findOne("foo", "default", "master", false))
-				.thenReturn(new Environment("foo", "default", "master"));
+			.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt"))
-				.andExpect(MockMvcResultMatchers.status().isOk());
+			.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", "master", false);
 		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
 	}
@@ -108,12 +108,12 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void resourceHttp() throws Exception {
 		when(this.repository.findOne("foo", "default", "master", false))
-				.thenReturn(new Environment("foo", "default", "master"));
+			.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", "master", "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 
 		ResponseEntity<String> response = new TestRestTemplate()
-				.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
+			.getForEntity("http://localhost:" + port + "/foo/default/master/foo.txt", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		verify(this.repository).findOne("foo", "default", "master", false);
 		verify(this.resources).findOne("foo", "default", "master", "foo.txt");
@@ -122,10 +122,10 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void resourceHttpDoesNotExist() throws Exception {
 		when(this.resources.findOne("foo", "default", "master", "doesNotExist.txt"))
-				.thenThrow(new NoSuchResourceException("Does not exist"));
+			.thenThrow(new NoSuchResourceException("Does not exist"));
 
 		ResponseEntity<String> response = new TestRestTemplate()
-				.getForEntity("http://localhost:" + port + "/foo/default/master/doesNotExist.txt", String.class);
+			.getForEntity("http://localhost:" + port + "/foo/default/master/doesNotExist.txt", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		verify(this.resources).findOne("foo", "default", "master", "doesNotExist.txt");
 	}
@@ -133,11 +133,11 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void resourceNoLabel() throws Exception {
 		when(this.repository.findOne("foo", "default", null, false))
-				.thenReturn(new Environment("foo", "default", "master"));
+			.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt").param("useDefaultLabel", ""))
-				.andExpect(MockMvcResultMatchers.status().isOk());
+			.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", null, false);
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
@@ -145,12 +145,12 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void resourceNoLabelHttp() throws Exception {
 		when(this.repository.findOne("foo", "default", null, false))
-				.thenReturn(new Environment("foo", "default", "master"));
+			.thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
 
 		ResponseEntity<String> response = new TestRestTemplate()
-				.getForEntity("http://localhost:" + port + "/foo/default/foo.txt?useDefaultLabel", String.class);
+			.getForEntity("http://localhost:" + port + "/foo/default/foo.txt?useDefaultLabel", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		verify(this.repository).findOne("foo", "default", null, false);
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
@@ -160,10 +160,12 @@ public class ResourceControllerIntegrationTests {
 	public void binaryResourceNoLabel() throws Exception {
 		when(this.repository.findOne("foo", "default", null)).thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
-				.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
-		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt").param("useDefaultLabel", "")
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		this.mvc
+			.perform(MockMvcRequestBuilders.get("/foo/default/foo.txt")
+				.param("useDefaultLabel", "")
 				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
-				.andExpect(MockMvcResultMatchers.status().isOk());
+			.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", null);
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
 	}
@@ -171,9 +173,9 @@ public class ResourceControllerIntegrationTests {
 	@Test
 	public void resourceWithMissingLabel() throws Exception {
 		when(this.resources.findOne("foo", "default", "missing", "foo.txt"))
-				.thenThrow(new NoSuchLabelException("Planned"));
+			.thenThrow(new NoSuchLabelException("Planned"));
 		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/missing/foo.txt"))
-				.andExpect(MockMvcResultMatchers.status().isNotFound());
+			.andExpect(MockMvcResultMatchers.status().isNotFound());
 	}
 
 	@SpringBootConfiguration

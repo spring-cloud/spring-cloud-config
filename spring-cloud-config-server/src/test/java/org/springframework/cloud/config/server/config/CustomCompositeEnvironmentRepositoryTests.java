@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -73,7 +73,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate()
-					.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
+				.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());
@@ -124,7 +124,7 @@ public class CustomCompositeEnvironmentRepositoryTests {
 		@Test
 		public void contextLoads() {
 			Environment environment = new TestRestTemplate()
-					.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
+				.getForObject("http://localhost:" + this.port + "/foo/development", Environment.class);
 			List<PropertySource> propertySources = environment.getPropertySources();
 			assertThat(3).isEqualTo(propertySources.size());
 			assertThat("overrides").isEqualTo(propertySources.get(0).getName());

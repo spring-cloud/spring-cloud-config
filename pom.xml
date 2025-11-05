@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.cloud</groupId>
 	<artifactId>spring-cloud-config</artifactId>
-	<version>4.1.1-SNAPSHOT</version>
+	<version>5.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Config</name>
 	<description>Spring Cloud Config</description>
@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>4.1.1-SNAPSHOT</version>
+		<version>5.0.0-SNAPSHOT</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<scm>
@@ -25,14 +25,74 @@
 		</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>dsyer</id>
+			<name>Dave Syer</name>
+			<email>david.syer at broadcom.com</email>
+			<organization>Broadcom, Inc.</organization>
+			<organizationUrl>https://www.spring.io</organizationUrl>
+			<roles>
+				<role>lead</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>sgibb</id>
+			<name>Spencer Gibb</name>
+			<email>spencer.gibb at broadcom.com</email>
+			<organization>Broadcom, Inc.</organization>
+			<organizationUrl>https://www.spring.io</organizationUrl>
+			<roles>
+				<role>lead</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>mgrzejszczak</id>
+			<name>Marcin Grzejszczak</name>
+			<email>>marcin.grzejszczak at broadcom.com</email>
+			<organization>Broadcom, Inc.</organization>
+			<organizationUrl>https://www.spring.io</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>rbaxter</id>
+			<name>Ryan Baxter</name>
+			<email>ryan.baxter at broadcom.com</email>
+			<organization>Broadcom, Inc.</organization>
+			<organizationUrl>https://www.spring.io</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>omaciaszeksharma</id>
+			<name>Olga Maciaszek-Sharma</name>
+			<email>olga.maciaszek-sharma at broadcom.com</email>
+			<organization>Broadcom, Inc.</organization>
+			<organizationUrl>https://www.spring.io</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
+	</developers>
+
 	<properties>
 		<bintray.package>config</bintray.package>
-		<spring-cloud-commons.version>4.1.1-SNAPSHOT</spring-cloud-commons.version>
-		<aws-java-sdk.version>2.17.195</aws-java-sdk.version>
-		<google-api-services-iam.version>v1-rev20201112-1.30.10</google-api-services-iam.version>
-		<testcontainers.version>1.17.3</testcontainers.version>
-		<wiremock.version>2.31.0</wiremock.version>
-		<spring-cloud-aws.version>3.0.0</spring-cloud-aws.version>
+		<spring-cloud-commons.version>5.0.0-SNAPSHOT</spring-cloud-commons.version>
+		<aws-java-sdk.version>2.37.4</aws-java-sdk.version>
+		<google-libraries-bom.version>26.71.0</google-libraries-bom.version>
+		<google-api-services-iam.version>v2-rev20250502-2.0.0</google-api-services-iam.version>
+		<google-cloud-iamcredentials.version>2.60.0</google-cloud-iamcredentials.version>
+		<wiremock.version>2.35.2</wiremock.version>
+		<spring-cloud-aws.version>3.4.0</spring-cloud-aws.version>
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failsOnViolation>true
 		</maven-checkstyle-plugin.failsOnViolation>
@@ -79,31 +139,21 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>libraries-bom</artifactId>
+				<version>${google-libraries-bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
 				<groupId>com.google.apis</groupId>
 				<artifactId>google-api-services-iam</artifactId>
 				<version>${google-api-services-iam.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.google.auth</groupId>
-				<artifactId>google-auth-library-oauth2-http</artifactId>
-				<version>0.22.0</version>
-			</dependency>
-			<dependency>
-				<groupId>com.google.cloud</groupId>
-				<artifactId>google-cloud-secretmanager</artifactId>
-				<version>1.0.1</version>
-			</dependency>
-			<dependency>
 				<groupId>com.google.apis</groupId>
 				<artifactId>google-api-services-cloudresourcemanager</artifactId>
-				<version>v1-rev20200210-1.30.9</version>
-			</dependency>
-			<dependency>
-				<groupId>org.testcontainers</groupId>
-				<artifactId>testcontainers-bom</artifactId>
-				<version>${testcontainers.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
+				<version>v3-rev20250606-2.0.0</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.tomakehurst</groupId>
@@ -112,14 +162,29 @@
 			</dependency>
 			<dependency>
 				<groupId>io.awspring.cloud</groupId>
-				<artifactId>spring-cloud-aws-dependencies</artifactId>
+				<artifactId>spring-cloud-aws-s3</artifactId>
 				<version>${spring-cloud-aws.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<profiles>
+		<profile>
+			<id>central</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<configuration>
+							<excludeArtifacts>
+								<artifact>spring-cloud-config-client-tls-tests</artifact>
+								<artifact>spring-cloud-config-sample</artifact>
+							</excludeArtifacts>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<profile>
 			<id>spring</id>
 			<repositories>

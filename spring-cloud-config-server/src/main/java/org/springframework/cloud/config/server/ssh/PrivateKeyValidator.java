@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 		context.disableDefaultConstraintViolation();
 		Set<Boolean> validationResults = new HashSet<>();
 		List<JGitEnvironmentProperties> extractedProperties = this.sshPropertyValidator
-				.extractRepoProperties(sshUriProperties);
+			.extractRepoProperties(sshUriProperties);
 
 		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
 			if (extractedProperty.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
@@ -72,10 +72,11 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 	private boolean isPrivateKeyPresent(JGitEnvironmentProperties sshUriProperties,
 			ConstraintValidatorContext context) {
 		if (!hasText(sshUriProperties.getPrivateKey())) {
-			context.buildConstraintViolationWithTemplate(
-					format("Property '%sprivateKey' must be set when '%signoreLocalSshSettings' is specified",
-							GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
-					.addConstraintViolation();
+			context
+				.buildConstraintViolationWithTemplate(
+						format("Property '%sprivateKey' must be set when '%signoreLocalSshSettings' is specified",
+								GIT_PROPERTY_PREFIX, GIT_PROPERTY_PREFIX))
+				.addConstraintViolation();
 			return false;
 		}
 		return true;
@@ -87,9 +88,10 @@ public class PrivateKeyValidator implements ConstraintValidator<PrivateKeyIsVali
 			return true;
 		}
 
-		context.buildConstraintViolationWithTemplate(
-				format("Property '%sprivateKey' is not a valid private key", GIT_PROPERTY_PREFIX))
-				.addConstraintViolation();
+		context
+			.buildConstraintViolationWithTemplate(
+					format("Property '%sprivateKey' is not a valid private key", GIT_PROPERTY_PREFIX))
+			.addConstraintViolation();
 		return false;
 	}
 

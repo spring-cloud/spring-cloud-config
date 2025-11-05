@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.springframework.credhub.core.CredHubOperations;
 public class CredhubEnvironmentRepositoryFactory
 		implements EnvironmentRepositoryFactory<CredhubEnvironmentRepository, CredhubEnvironmentProperties> {
 
-	private CredHubOperations credhubOperations;
+	private final CredHubOperations credhubOperations;
 
 	public CredhubEnvironmentRepositoryFactory(CredHubOperations credhubOperations) {
 		this.credhubOperations = credhubOperations;
@@ -33,9 +33,7 @@ public class CredhubEnvironmentRepositoryFactory
 
 	@Override
 	public CredhubEnvironmentRepository build(CredhubEnvironmentProperties environmentProperties) {
-		CredhubEnvironmentRepository repository = new CredhubEnvironmentRepository(this.credhubOperations);
-		repository.setOrder(environmentProperties.getOrder());
-		return repository;
+		return new CredhubEnvironmentRepository(this.credhubOperations, environmentProperties);
 	}
 
 }
