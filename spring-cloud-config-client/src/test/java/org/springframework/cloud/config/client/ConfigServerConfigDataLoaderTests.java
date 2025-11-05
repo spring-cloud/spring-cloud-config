@@ -851,14 +851,15 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setLabel(null);
 		properties.setConfigClientOAuth2Properties(new ConfigClientOAuth2Properties());
 		properties.getConfigClientOAuth2Properties()
-				.setTokenUri("http://localhost:9999/realms/test-realm/protocol/openid-connect/token");
+			.setTokenUri("http://localhost:9999/realms/test-realm/protocol/openid-connect/token");
 		Map<String, String> tokenHeader = new HashMap<>();
 		tokenHeader.put(AUTHORIZATION, "Bearer " + UUID.randomUUID());
 		properties.setHeaders(tokenHeader);
 		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), null);
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
-				httpEntityArgumentCaptor.capture(), any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), httpEntityArgumentCaptor.capture(), any(Class.class),
+					anyString(), anyString());
 
 		Mockito.verify(this.restTemplate, Mockito.times(1)).setInterceptors(any());
 
@@ -872,12 +873,13 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setConfigClientOAuth2Properties(new ConfigClientOAuth2Properties());
 		properties.setLabel(null);
 		properties.getConfigClientOAuth2Properties()
-				.setTokenUri("http://localhost:9999/realms/test-realm/protocol/openid-connect/token");
+			.setTokenUri("http://localhost:9999/realms/test-realm/protocol/openid-connect/token");
 		properties.setSendState(false);
 		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), "stale");
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
-				httpEntityArgumentCaptor.capture(), any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), httpEntityArgumentCaptor.capture(), any(Class.class),
+					anyString(), anyString());
 
 		Mockito.verify(this.restTemplate, Mockito.times(0)).setInterceptors(any());
 
@@ -891,8 +893,9 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setLabel(null);
 		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), "stale");
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
-				httpEntityArgumentCaptor.capture(), any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), httpEntityArgumentCaptor.capture(), any(Class.class),
+					anyString(), anyString());
 
 		Mockito.verify(this.restTemplate, Mockito.times(0)).setInterceptors(any());
 
@@ -908,8 +911,9 @@ public class ConfigServerConfigDataLoaderTests {
 				+ Arrays.toString(Base64.getEncoder().encode("YaddaYaddaYadda".getBytes(StandardCharsets.UTF_8))));
 		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), "stale");
 
-		Mockito.verify(this.restTemplate).exchange(anyString(), any(HttpMethod.class),
-				httpEntityArgumentCaptor.capture(), any(Class.class), anyString(), anyString());
+		Mockito.verify(this.restTemplate)
+			.exchange(anyString(), any(HttpMethod.class), httpEntityArgumentCaptor.capture(), any(Class.class),
+					anyString(), anyString());
 
 		Mockito.verify(this.restTemplate, Mockito.times(0)).setInterceptors(any());
 

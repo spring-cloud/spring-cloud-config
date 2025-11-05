@@ -149,12 +149,13 @@ public class ConfigServerConfigDataLocationResolver
 			configClientProperties.setName(applicationName);
 		}
 		ConfigClientOAuth2Properties oauth2Properties = binder
-				.bind(ConfigClientOAuth2Properties.PREFIX, Bindable.of(ConfigClientOAuth2Properties.class), bindHandler)
-				.orElse(null);
+			.bind(ConfigClientOAuth2Properties.PREFIX, Bindable.of(ConfigClientOAuth2Properties.class), bindHandler)
+			.orElse(null);
 		configClientProperties.setConfigClientOAuth2Properties(oauth2Properties);
 
 		EncryptorConfig encryptorConfig = binder
-				.bind(EncryptorConfig.PREFIX, Bindable.of(EncryptorConfig.class), bindHandler).orElse(null);
+			.bind(EncryptorConfig.PREFIX, Bindable.of(EncryptorConfig.class), bindHandler)
+			.orElse(null);
 		configClientProperties.setEncryptorConfig(encryptorConfig);
 
 		PropertyHolder holder = new PropertyHolder();

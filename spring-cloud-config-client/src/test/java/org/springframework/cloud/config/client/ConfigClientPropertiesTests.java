@@ -203,7 +203,7 @@ public class ConfigClientPropertiesTests {
 		properties.setEncryptorConfig(encryptorConfig);
 
 		assertThat(oauth2Properties.getTokenUri())
-				.isEqualTo("http://localhost:9080/realms/test-realm/protocol/openid-connect/token");
+			.isEqualTo("http://localhost:9080/realms/test-realm/protocol/openid-connect/token");
 		assertThat(oauth2Properties.getClientId()).isEqualTo("clientId");
 		assertThat(oauth2Properties.getClientSecret()).isEqualTo("clientSecret");
 		assertThat(oauth2Properties.getOauthUsername()).isEqualTo("oauthUsername");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,12 +87,12 @@ class ConfigClientRequestTemplateFactoryTest {
 		AccessTokenResponse tokenResponse = tokenOpt.get();
 		assertThat(tokenResponse.getAccessToken()).isNotNull();
 		assertThat(tokenResponse.getAccessToken())
-				.startsWith("eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJVQ2RaakhjZ0tFU0NFV0w3V1JlMWpnaVR");
+			.startsWith("eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJVQ2RaakhjZ0tFU0NFV0w3V1JlMWpnaVR");
 		assertThat(tokenResponse.getAccessToken()).endsWith("WH0IQ1w8HgjRFBBkOhtp");
 		assertThat(tokenResponse.getTokenType()).isNotNull();
 		assertThat(tokenResponse.getTokenType()).isEqualTo("Bearer");
 		assertThat(tokenResponse.getBearerHeader())
-				.isEqualTo(tokenResponse.getTokenType() + " " + tokenResponse.getAccessToken());
+			.isEqualTo(tokenResponse.getTokenType() + " " + tokenResponse.getAccessToken());
 		assertThat(templateFactory.getLog()).isNotNull();
 		assertThat(templateFactory.getProperties()).isNotNull();
 	}
@@ -113,12 +113,12 @@ class ConfigClientRequestTemplateFactoryTest {
 				TOKEN_RESPONSE);
 		assertThat(tokenOpt).isPresent();
 		AccessTokenResponse tokenResponse = tokenOpt.get();
-		mockWebServer.enqueue(new MockResponse().setBody(TOKEN_RESPONSE).setHeader(HttpHeaders.CONTENT_TYPE,
-				MediaType.APPLICATION_JSON_VALUE));
+		mockWebServer.enqueue(new MockResponse().setBody(TOKEN_RESPONSE)
+			.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
 		// when
 		RestTemplate restTemplate = templateFactory.create();
 		List<ClientHttpRequestInterceptor> interceptors = List
-				.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(properties.getHeaders()));
+			.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(properties.getHeaders()));
 		restTemplate.setInterceptors(interceptors);
 
 		// then
@@ -126,14 +126,15 @@ class ConfigClientRequestTemplateFactoryTest {
 		assertThat(restTemplate.getInterceptors()).isNotNull();
 		assertThat(restTemplate.getInterceptors()).isNotEmpty();
 		ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor genericInterceptor = (ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor) restTemplate
-				.getInterceptors().get(0);
+			.getInterceptors()
+			.get(0);
 		assertThat(genericInterceptor.getHeaders()).isNotNull();
 		assertThat(properties.getHeaders()).isNotNull();
 		assertThat(properties.getHeaders()).isNotEmpty();
 		String header = properties.getHeaders().get(AUTHORIZATION);
 		assertThat(header).isEqualTo(tokenResponse.getTokenType() + " " + tokenResponse.getAccessToken());
 		assertThat(genericInterceptor.getHeaders().get(AUTHORIZATION))
-				.isEqualTo(properties.getHeaders().get(AUTHORIZATION));
+			.isEqualTo(properties.getHeaders().get(AUTHORIZATION));
 
 	}
 
@@ -171,8 +172,8 @@ class ConfigClientRequestTemplateFactoryTest {
 		properties.setConfigClientOAuth2Properties(oauth2Properties);
 
 		ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG, properties);
-		mockWebServer.enqueue(new MockResponse().setBody("TOKEN_RESPONSE").setHeader(HttpHeaders.CONTENT_TYPE,
-				MediaType.APPLICATION_JSON_VALUE));
+		mockWebServer.enqueue(new MockResponse().setBody("TOKEN_RESPONSE")
+			.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
 
 		// when
 		templateFactory.create();
@@ -193,7 +194,7 @@ class ConfigClientRequestTemplateFactoryTest {
 		properties.setConfigClientOAuth2Properties(new ConfigClientOAuth2Properties());
 		properties.getConfigClientOAuth2Properties().setGrantType("client_credentials");
 		properties.getConfigClientOAuth2Properties()
-				.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
+			.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
 		properties.getConfigClientOAuth2Properties().setOauthUsername("oauthUsername");
 		properties.getConfigClientOAuth2Properties().setOauthPassword("oauthPassword");
 
@@ -229,14 +230,14 @@ class ConfigClientRequestTemplateFactoryTest {
 				TOKEN_RESPONSE);
 		assertThat(tokenOpt).isPresent();
 		AccessTokenResponse tokenResponse = tokenOpt.get();
-		mockWebServer.enqueue(new MockResponse().setBody(TOKEN_RESPONSE).setHeader(HttpHeaders.CONTENT_TYPE,
-				MediaType.APPLICATION_JSON_VALUE));
+		mockWebServer.enqueue(new MockResponse().setBody(TOKEN_RESPONSE)
+			.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
 		// second one for refresh
-		mockWebServer.enqueue(new MockResponse().setBody(TOKEN_RESPONSE).setHeader(HttpHeaders.CONTENT_TYPE,
-				MediaType.APPLICATION_JSON_VALUE));
+		mockWebServer.enqueue(new MockResponse().setBody(TOKEN_RESPONSE)
+			.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
 		RestTemplate restTemplate = templateFactory.create();
 		List<ClientHttpRequestInterceptor> interceptors = List
-				.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(properties.getHeaders()));
+			.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(properties.getHeaders()));
 		restTemplate.setInterceptors(interceptors);
 		// when
 		templateFactory.refreshJwt(restTemplate);
@@ -246,14 +247,15 @@ class ConfigClientRequestTemplateFactoryTest {
 		assertThat(restTemplate.getInterceptors()).isNotNull();
 		assertThat(restTemplate.getInterceptors()).isNotEmpty();
 		ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor genericInterceptor = (ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor) restTemplate
-				.getInterceptors().get(0);
+			.getInterceptors()
+			.get(0);
 		assertThat(genericInterceptor.getHeaders()).isNotNull();
 		assertThat(properties.getHeaders()).isNotNull();
 		assertThat(properties.getHeaders()).isNotEmpty();
 		String header = properties.getHeaders().get(AUTHORIZATION);
 		assertThat(header).isEqualTo(tokenResponse.getTokenType() + " " + tokenResponse.getAccessToken());
 		assertThat(genericInterceptor.getHeaders().get(AUTHORIZATION))
-				.isEqualTo(properties.getHeaders().get(AUTHORIZATION));
+			.isEqualTo(properties.getHeaders().get(AUTHORIZATION));
 
 	}
 

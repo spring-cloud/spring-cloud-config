@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +37,9 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.http.HttpEntity;
@@ -143,12 +144,14 @@ public class ConfigClientRequestTemplateFactory {
 	}
 
 	private Optional<AccessTokenResponse> parseTokenResponse(String tokenJson) {
+		JsonMapper objectMapper = JsonMapper.builder()
+			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+			.build();
 		try {
-			ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-					false);
 			return Optional.of(objectMapper.readValue(tokenJson, AccessTokenResponse.class));
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
+			log.warn("Failed to parse token response: " + tokenJson, e);
 			return Optional.empty();
 		}
 	}
@@ -158,8 +161,8 @@ public class ConfigClientRequestTemplateFactory {
 				&& jwtExpired(properties.getHeaders().get(AUTHORIZATION))) {
 
 			handleOAuthToken(restTemplate);
-			List<ClientHttpRequestInterceptor> interceptors = List.of(
-					new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(properties.getHeaders()));
+			List<ClientHttpRequestInterceptor> interceptors = List
+				.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(properties.getHeaders()));
 			restTemplate.setInterceptors(interceptors);
 		}
 	}

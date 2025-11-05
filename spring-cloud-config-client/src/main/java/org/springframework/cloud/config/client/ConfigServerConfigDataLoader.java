@@ -348,8 +348,8 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 				if (properties.getConfigClientOAuth2Properties() != null) {
 					if (!properties.getHeaders().isEmpty()) {
 						List<ClientHttpRequestInterceptor> interceptors = List
-								.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(
-										properties.getHeaders()));
+							.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(
+									properties.getHeaders()));
 						restTemplate.setInterceptors(interceptors);
 					}
 					else {
