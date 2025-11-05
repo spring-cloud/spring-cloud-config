@@ -271,7 +271,7 @@ It can also be done in the Spring Application.
 ----
 import org.springframework.cloud.config.client.EncryptorConfig;
 
-@EnableEncryptableProperties //enable Jayspt encryption
+@EnableEncryptableProperties //enable Jasypt encryption
 @SpringBootApplication
 public class MyBootApplication {
 

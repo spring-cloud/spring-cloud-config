@@ -46,6 +46,10 @@
 			<artifactId>spring-cloud-starter</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>tools.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
 		</dependency>
@@ -115,12 +119,6 @@
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>mockwebserver</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>tools.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>3.0.1</version>
-			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 

@@ -29,6 +29,9 @@ import javax.net.ssl.SSLContext;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -37,9 +40,6 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.http.HttpEntity;
@@ -144,14 +144,12 @@ public class ConfigClientRequestTemplateFactory {
 	}
 
 	private Optional<AccessTokenResponse> parseTokenResponse(String tokenJson) {
-		JsonMapper objectMapper = JsonMapper.builder()
-			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-			.build();
 		try {
+			ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+					false);
 			return Optional.of(objectMapper.readValue(tokenJson, AccessTokenResponse.class));
 		}
-		catch (JacksonException e) {
-			log.warn("Failed to parse token response: " + tokenJson, e);
+		catch (JsonProcessingException e) {
 			return Optional.empty();
 		}
 	}
@@ -172,7 +170,8 @@ public class ConfigClientRequestTemplateFactory {
 		if (oAuth2Properties != null && header.startsWith("Bearer ")) {
 			String[] tokenParts = header.split(" ");
 			DecodedJWT decodedJWT = JWT.decode(tokenParts[1]);
-			return decodedJWT.getExpiresAtAsInstant().isBefore(Instant.now());
+			Instant expiresAt = decodedJWT.getExpiresAtAsInstant();
+			return expiresAt != null && expiresAt.isBefore(Instant.now());
 		}
 		else {
 			return false;

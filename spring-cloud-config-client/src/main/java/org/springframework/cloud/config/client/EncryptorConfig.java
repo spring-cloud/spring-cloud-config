@@ -39,12 +39,12 @@ public class EncryptorConfig {
 	public static final String PREFIX = "spring.cloud.config.encryptor";
 
 	/**
-	 * The Jayspt encryption password System Property.
+	 * The Jasypt encryption password System Property.
 	 */
 	public static final String ENCRYPTOR_SYSTEM_PROPERTY = "jasypt.encryptor.password";
 
 	/**
-	 * The Jayspt Encryptor.
+	 * The Jasypt Encryptor.
 	 */
 	private StringEncryptor encryptor;
 
