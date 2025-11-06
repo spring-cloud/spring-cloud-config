@@ -58,6 +58,8 @@ public class EncryptorConfig {
 	 */
 	private Integer encryptorIterations;
 
+	private String encryptorPassword = "";
+
 	public String getEncryptorAlgorithm() {
 		return encryptorAlgorithm;
 	}
@@ -97,12 +99,7 @@ public class EncryptorConfig {
 
 	public void buildEncryptor() {
 		SimplePBEByteEncryptor byteEncryptor = new SimplePBEByteEncryptor();
-		String password = System.getProperty(ENCRYPTOR_SYSTEM_PROPERTY);
-		if (!StringUtils.hasText(password)) {
-			throw new IllegalStateException("Jasypt encryption password system property '" + ENCRYPTOR_SYSTEM_PROPERTY
-					+ "' is not set or is empty. Please configure it to enable encryption.");
-		}
-		byteEncryptor.setPassword(password);
+		byteEncryptor.setPassword(encryptorPassword);
 		if (StringUtils.hasText(this.encryptorAlgorithm)) {
 			byteEncryptor.setAlgorithm(this.encryptorAlgorithm);
 		}
@@ -110,6 +107,10 @@ public class EncryptorConfig {
 		byteEncryptor.setSaltGenerator(new RandomSaltGenerator());
 
 		encryptor = new SimplePBEStringEncryptor(byteEncryptor);
+	}
+
+	void setEncryptorPassword(String password) {
+		this.encryptorPassword = password;
 	}
 
 }

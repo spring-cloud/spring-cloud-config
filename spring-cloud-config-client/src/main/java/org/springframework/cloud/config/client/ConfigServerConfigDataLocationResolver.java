@@ -155,7 +155,10 @@ public class ConfigServerConfigDataLocationResolver
 
 		EncryptorConfig encryptorConfig = binder
 			.bind(EncryptorConfig.PREFIX, Bindable.of(EncryptorConfig.class), bindHandler)
-			.orElse(null);
+			.orElseGet(EncryptorConfig::new);
+		encryptorConfig.setEncryptorPassword(
+				binder.bind(EncryptorConfig.ENCRYPTOR_SYSTEM_PROPERTY, Bindable.of(String.class), bindHandler)
+					.orElse(null));
 		configClientProperties.setEncryptorConfig(encryptorConfig);
 
 		PropertyHolder holder = new PropertyHolder();
