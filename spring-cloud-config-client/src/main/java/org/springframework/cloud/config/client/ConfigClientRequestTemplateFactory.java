@@ -158,7 +158,7 @@ public class ConfigClientRequestTemplateFactory {
 	}
 
 	protected void refreshJwt(RestTemplate restTemplate) {
-		if (properties.getHeaders().containsKey(AUTHORIZATION)
+		if (properties.getHeaders() != null && properties.getHeaders().containsKey(AUTHORIZATION)
 				&& jwtExpired(properties.getHeaders().get(AUTHORIZATION))) {
 
 			handleOAuthToken(restTemplate);

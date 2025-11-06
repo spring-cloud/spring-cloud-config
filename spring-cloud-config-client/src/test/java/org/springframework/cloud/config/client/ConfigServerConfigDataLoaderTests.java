@@ -907,8 +907,8 @@ public class ConfigServerConfigDataLoaderTests {
 		Environment body = new Environment("test", "local");
 		mockRequestResponseWithoutLabel(new ResponseEntity<>(body, HttpStatus.OK));
 		properties.setLabel(null);
-		properties.setToken("Basic "
-				+ Base64.getEncoder().encodeToString("YaddaYaddaYadda".getBytes(StandardCharsets.UTF_8)));
+		properties.setToken(
+				"Basic " + Base64.getEncoder().encodeToString("YaddaYaddaYadda".getBytes(StandardCharsets.UTF_8)));
 		this.loader.getRemoteEnvironment(context, resource, properties.getLabel(), "stale");
 
 		Mockito.verify(this.restTemplate)

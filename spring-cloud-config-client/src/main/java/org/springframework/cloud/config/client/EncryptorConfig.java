@@ -97,7 +97,12 @@ public class EncryptorConfig {
 
 	public void buildEncryptor() {
 		SimplePBEByteEncryptor byteEncryptor = new SimplePBEByteEncryptor();
-		byteEncryptor.setPassword(System.getProperty(ENCRYPTOR_SYSTEM_PROPERTY));
+		String password = System.getProperty(ENCRYPTOR_SYSTEM_PROPERTY);
+		if (!StringUtils.hasText(password)) {
+			throw new IllegalStateException("Jasypt encryption password system property '" + ENCRYPTOR_SYSTEM_PROPERTY
+					+ "' is not set or is empty. Please configure it to enable encryption.");
+		}
+		byteEncryptor.setPassword(password);
 		if (StringUtils.hasText(this.encryptorAlgorithm)) {
 			byteEncryptor.setAlgorithm(this.encryptorAlgorithm);
 		}
