@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -172,9 +173,15 @@ public class ConfigClientRequestTemplateFactory {
 		ConfigClientOAuth2Properties oAuth2Properties = properties.getConfigClientOAuth2Properties();
 		if (oAuth2Properties != null && header.startsWith("Bearer ")) {
 			String[] tokenParts = header.split(" ");
-			DecodedJWT decodedJWT = JWT.decode(tokenParts[1]);
-			Instant expiresAt = decodedJWT.getExpiresAtAsInstant();
-			return expiresAt != null && expiresAt.isBefore(Instant.now());
+			try {
+				DecodedJWT decodedJWT = JWT.decode(tokenParts[1]);
+				Instant expiresAt = decodedJWT.getExpiresAtAsInstant();
+				return expiresAt != null && expiresAt.isBefore(Instant.now());
+			}
+			catch (JWTDecodeException ex) {
+				log.warn("Failed to decode JWT token: " + ex.getMessage());
+				return false;
+			}
 		}
 		else {
 			return false;
