@@ -346,7 +346,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					headers.add(STATE_HEADER, state);
 				}
 				if (properties.getConfigClientOAuth2Properties() != null) {
-					if (!properties.getHeaders().isEmpty()) {
+					if (properties.getHeaders() != null && !properties.getHeaders().isEmpty()) {
 						List<ClientHttpRequestInterceptor> interceptors = List
 							.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(
 									properties.getHeaders()));

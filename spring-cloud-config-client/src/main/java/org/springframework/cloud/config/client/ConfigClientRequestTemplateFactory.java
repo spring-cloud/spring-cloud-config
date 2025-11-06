@@ -100,6 +100,9 @@ public class ConfigClientRequestTemplateFactory {
 	private void handleOAuthToken(RestTemplate template) {
 		if (properties.getConfigClientOAuth2Properties() != null) {
 			Map<String, String> headers = properties.getHeaders();
+			if (headers == null) {
+				headers = new java.util.HashMap<>();
+			}
 			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
 			Optional<AccessTokenResponse> responseOpt = getOAuthToken(template,
 					properties.getConfigClientOAuth2Properties().getTokenUri());
