@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -102,7 +103,7 @@ public class ConfigClientRequestTemplateFactory {
 		if (properties.getConfigClientOAuth2Properties() != null) {
 			Map<String, String> headers = properties.getHeaders();
 			if (headers == null) {
-				headers = new java.util.HashMap<>();
+				headers = new HashMap<>();
 			}
 			headers.remove(AUTHORIZATION); // To avoid redundant addition of header
 			Optional<AccessTokenResponse> responseOpt = getOAuthToken(template,
