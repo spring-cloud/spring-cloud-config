@@ -111,6 +111,7 @@ public class ConfigClientOAuth2Properties {
 
 	@Override
 	public String toString() {
+		// Note: Sensitive fields (clientSecret, oauthPassword) are intentionally excluded
 		return "ConfigClientOAuth2Properties{" + "tokenUri='" + tokenUri + '\'' + ", grantType='" + grantType + '\''
 				+ ", clientId='" + clientId + '\'' + ", oauthUsername='" + oauthUsername + '\'' + '}';
 	}

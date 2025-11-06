@@ -346,14 +346,15 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					headers.add(STATE_HEADER, state);
 				}
 				if (properties.getConfigClientOAuth2Properties() != null) {
+					// Refresh JWT token if needed (checks expiration and gets new token
+					// if required)
+					requestTemplateFactory.refreshJwt(restTemplate);
+					// Set interceptors to include OAuth2 token in all requests
 					if (properties.getHeaders() != null && !properties.getHeaders().isEmpty()) {
 						List<ClientHttpRequestInterceptor> interceptors = List
 							.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(
 									properties.getHeaders()));
 						restTemplate.setInterceptors(interceptors);
-					}
-					else {
-						requestTemplateFactory.refreshJwt(restTemplate);
 					}
 				}
 				else {

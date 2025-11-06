@@ -287,4 +287,118 @@ class ConfigClientRequestTemplateFactoryTest {
 		assertThat(actualExpired).isFalse();
 	}
 
+	@Test
+	void whenCreate_givenNoTokenUri_thenIllegalState() {
+		// given
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		ConfigClientOAuth2Properties oauth2Properties = new ConfigClientOAuth2Properties();
+		oauth2Properties.setGrantType("client_credentials");
+		oauth2Properties.setClientId("clientId");
+		oauth2Properties.setClientSecret("clientSecret");
+		properties.setConfigClientOAuth2Properties(oauth2Properties);
+
+		// when
+		try {
+			ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG,
+					properties);
+			templateFactory.create();
+		}
+		catch (IllegalStateException e) {
+			// then
+			assertThat(e.getMessage()).contains("OAuth2 token URI property is required");
+		}
+	}
+
+	@Test
+	void whenCreate_givenInvalidTokenUri_thenIllegalState() {
+		// given
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		ConfigClientOAuth2Properties oauth2Properties = new ConfigClientOAuth2Properties();
+		oauth2Properties.setTokenUri("not-a-valid-url");
+		oauth2Properties.setGrantType("client_credentials");
+		oauth2Properties.setClientId("clientId");
+		oauth2Properties.setClientSecret("clientSecret");
+		properties.setConfigClientOAuth2Properties(oauth2Properties);
+
+		// when
+		try {
+			ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG,
+					properties);
+			templateFactory.create();
+		}
+		catch (IllegalStateException e) {
+			// then
+			assertThat(e.getMessage()).contains("OAuth2 token URI must be a valid URL");
+		}
+	}
+
+	@Test
+	void whenCreate_givenClientCredentialsWithoutClientId_thenIllegalState() {
+		// given
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		ConfigClientOAuth2Properties oauth2Properties = new ConfigClientOAuth2Properties();
+		oauth2Properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
+		oauth2Properties.setGrantType("client_credentials");
+		oauth2Properties.setClientSecret("clientSecret");
+		// clientId is missing
+		properties.setConfigClientOAuth2Properties(oauth2Properties);
+
+		// when
+		try {
+			ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG,
+					properties);
+			templateFactory.create();
+		}
+		catch (IllegalStateException e) {
+			// then
+			assertThat(e.getMessage())
+				.contains("client_id and client_secret are required for client_credentials grant type");
+		}
+	}
+
+	@Test
+	void whenCreate_givenPasswordGrantWithoutUsername_thenIllegalState() {
+		// given
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		ConfigClientOAuth2Properties oauth2Properties = new ConfigClientOAuth2Properties();
+		oauth2Properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
+		oauth2Properties.setGrantType("password");
+		oauth2Properties.setOauthPassword("password");
+		// username is missing
+		properties.setConfigClientOAuth2Properties(oauth2Properties);
+
+		// when
+		try {
+			ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG,
+					properties);
+			templateFactory.create();
+		}
+		catch (IllegalStateException e) {
+			// then
+			assertThat(e.getMessage()).contains("username and password are required for password grant type");
+		}
+	}
+
+	@Test
+	void whenCreate_givenUnsupportedGrantType_thenIllegalState() {
+		// given
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		ConfigClientOAuth2Properties oauth2Properties = new ConfigClientOAuth2Properties();
+		oauth2Properties.setTokenUri(idpUrl + "/realms/test-realm/protocol/openid-connect/token");
+		oauth2Properties.setGrantType("authorization_code");
+		properties.setConfigClientOAuth2Properties(oauth2Properties);
+
+		// when
+		try {
+			ConfigClientRequestTemplateFactory templateFactory = new ConfigClientRequestTemplateFactory(LOG,
+					properties);
+			templateFactory.create();
+		}
+		catch (IllegalStateException e) {
+			// then
+			assertThat(e.getMessage()).contains("Unsupported grant type");
+			assertThat(e.getMessage()).contains("authorization_code");
+		}
+	}
+
 }

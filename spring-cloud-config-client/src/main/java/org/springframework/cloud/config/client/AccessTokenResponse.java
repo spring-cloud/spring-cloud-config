@@ -47,7 +47,15 @@ public class AccessTokenResponse {
 	}
 
 	public String getBearerHeader() {
-		return getTokenType() + " " + getAccessToken();
+		String tokenType = getTokenType();
+		if (tokenType == null) {
+			tokenType = "Bearer"; // Default to Bearer if not specified
+		}
+		String accessToken = getAccessToken();
+		if (accessToken == null) {
+			throw new IllegalStateException("Access token is required for Bearer header");
+		}
+		return tokenType + " " + accessToken;
 	}
 
 }

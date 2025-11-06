@@ -57,6 +57,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
@@ -112,6 +113,12 @@ public class ConfigClientRequestTemplateFactory {
 				AccessTokenResponse accessTokenResponse = responseOpt.get();
 				headers.put(AUTHORIZATION, accessTokenResponse.getBearerHeader());
 				properties.setHeaders(headers);
+				if (log.isDebugEnabled()) {
+					log.debug("Successfully obtained OAuth2 access token");
+				}
+			}
+			else {
+				log.warn("Failed to obtain OAuth2 access token. Requests to config server may fail.");
 			}
 		}
 	}
@@ -121,10 +128,41 @@ public class ConfigClientRequestTemplateFactory {
 		if (oauth2Properties.getGrantType() == null) {
 			throw new IllegalStateException("OAuth2 Grant Type property required.");
 		}
+		if (!StringUtils.hasText(tokenUri)) {
+			throw new IllegalStateException("OAuth2 token URI property is required.");
+		}
+		// Validate tokenUri is a valid URL format
+		try {
+			new java.net.URL(tokenUri);
+		}
+		catch (java.net.MalformedURLException e) {
+			throw new IllegalStateException("OAuth2 token URI must be a valid URL: " + tokenUri, e);
+		}
+
+		// Validate grant-type-specific requirements
+		String grantType = oauth2Properties.getGrantType();
+		if ("client_credentials".equals(grantType)) {
+			if (!StringUtils.hasText(oauth2Properties.getClientId())
+					|| !StringUtils.hasText(oauth2Properties.getClientSecret())) {
+				throw new IllegalStateException(
+						"client_id and client_secret are required for client_credentials grant type");
+			}
+		}
+		else if ("password".equals(grantType)) {
+			if (!StringUtils.hasText(oauth2Properties.getOauthUsername())
+					|| !StringUtils.hasText(oauth2Properties.getOauthPassword())) {
+				throw new IllegalStateException("username and password are required for password grant type");
+			}
+		}
+		else {
+			throw new IllegalStateException("Unsupported grant type: " + grantType
+					+ ". Supported grant types are: client_credentials, password");
+		}
+
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.put("grant_type", List.of(oauth2Properties.getGrantType()));
+		map.put("grant_type", List.of(grantType));
 		if (StringUtils.hasText(oauth2Properties.getClientId())) {
 			map.put("client_id", List.of(oauth2Properties.getClientId()));
 			map.put("client_secret", List.of(decryptProperty(oauth2Properties.getClientSecret())));
@@ -135,11 +173,24 @@ public class ConfigClientRequestTemplateFactory {
 		}
 		HttpEntity<MultiValueMap<String, String>> requestBodyFormUrlEncoded = new HttpEntity<>(map, httpHeaders);
 
-		String tokenJson = template.postForObject(tokenUri, requestBodyFormUrlEncoded, String.class);
-		return parseTokenResponse(tokenJson);
+		try {
+			String tokenJson = template.postForObject(tokenUri, requestBodyFormUrlEncoded, String.class);
+			if (tokenJson == null) {
+				log.warn("OAuth2 token request returned null response from " + tokenUri);
+				return Optional.empty();
+			}
+			return parseTokenResponse(tokenJson);
+		}
+		catch (RestClientException e) {
+			log.error("Failed to obtain OAuth2 token from " + tokenUri, e);
+			return Optional.empty();
+		}
 	}
 
 	private String decryptProperty(String property) {
+		if (property == null) {
+			return null;
+		}
 		if (encryptorConfig != null) {
 			return encryptorConfig.decryptProperty(property);
 		}
@@ -160,13 +211,23 @@ public class ConfigClientRequestTemplateFactory {
 	}
 
 	protected void refreshJwt(RestTemplate restTemplate) {
-		if (properties.getHeaders() != null && properties.getHeaders().containsKey(AUTHORIZATION)
-				&& jwtExpired(properties.getHeaders().get(AUTHORIZATION))) {
-
-			handleOAuthToken(restTemplate);
-			List<ClientHttpRequestInterceptor> interceptors = List
-				.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(properties.getHeaders()));
-			restTemplate.setInterceptors(interceptors);
+		if (properties.getConfigClientOAuth2Properties() != null) {
+			// If headers already exist and token is expired, refresh it
+			if (properties.getHeaders() != null && properties.getHeaders().containsKey(AUTHORIZATION)
+					&& jwtExpired(properties.getHeaders().get(AUTHORIZATION))) {
+				handleOAuthToken(restTemplate);
+			}
+			// If no headers exist yet, get initial token
+			else if (properties.getHeaders() == null || !properties.getHeaders().containsKey(AUTHORIZATION)) {
+				handleOAuthToken(restTemplate);
+			}
+			// Always set interceptors if headers are present
+			if (properties.getHeaders() != null && !properties.getHeaders().isEmpty()) {
+				List<ClientHttpRequestInterceptor> interceptors = List
+					.of(new ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor(
+							properties.getHeaders()));
+				restTemplate.setInterceptors(interceptors);
+			}
 		}
 	}
 
