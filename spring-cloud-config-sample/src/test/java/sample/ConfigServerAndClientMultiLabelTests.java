@@ -60,10 +60,12 @@ public class ConfigServerAndClientMultiLabelTests {
 	@BeforeAll
 	public static void startConfigServer() {
 		String testResourcesDir = new File("src/test/resources").getAbsolutePath();
-		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
-				"--spring.profiles.active=native", "--server.port=" + configPort, "--spring.config.name=server",
-				"--spring.cloud.config.server.native.search-locations=file://" + testResourcesDir + ",file://"
-						+ testResourcesDir + "/config");
+		server = SpringApplication.run(
+				new Class[] { org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
+						DisableSpringSecurityConfig.class },
+				new String[] { "--spring.profiles.active=native", "--server.port=" + configPort,
+						"--spring.config.name=server", "--spring.cloud.config.server.native.search-locations=file://"
+								+ testResourcesDir + ",file://" + testResourcesDir + "/config" });
 
 		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}

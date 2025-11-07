@@ -59,10 +59,12 @@ public class ConfigDataOrderingVaultIntegrationTests {
 
 	@BeforeAll
 	public static void startConfigServer() throws IOException, InterruptedException {
-		server = SpringApplication.run(TestConfigServerApplication.class,
-				"--spring.config.location=classpath:/vaultordering/", "--spring.config.name=server",
-				"--server.port=" + configServerPort,
-				"--spring.cloud.config.server.vault.port=" + vaultContainer.getFirstMappedPort());
+		server = SpringApplication.run(
+				new Class[] { org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
+						DisableSpringSecurityConfig.class },
+				new String[] { "--spring.config.location=classpath:/vaultordering/", "--spring.config.name=server",
+						"--server.port=" + configServerPort,
+						"--spring.cloud.config.server.vault.port=" + vaultContainer.getFirstMappedPort() });
 
 		execInVault("vault", "kv", "put", "secret/client-app,dev", "my.prop=value-in-dev");
 		execInVault("vault", "kv", "put", "secret/client-app,prod", "my.prop=value-in-prod");

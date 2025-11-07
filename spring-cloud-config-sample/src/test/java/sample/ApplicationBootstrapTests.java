@@ -70,10 +70,12 @@ public class ApplicationBootstrapTests {
 		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
 		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
 		System.setProperty("repo1", repo);
-		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
+		server = SpringApplication.run(
+				new Class[] { org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
+						DisableSpringSecurityConfig.class },
 				// FIXME: configdata why is use legacy needed here and above?
-				"--spring.config.use-legacy-processing=true", "--server.port=" + configPort,
-				"--spring.config.name=compositeserver", "--repo1=" + repo);
+				new String[] { "--spring.config.use-legacy-processing=true", "--server.port=" + configPort,
+						"--spring.config.name=compositeserver", "--repo1=" + repo });
 		System.setProperty("config.port", "" + configPort);
 	}
 

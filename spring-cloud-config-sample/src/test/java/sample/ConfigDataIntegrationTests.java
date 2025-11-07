@@ -57,9 +57,11 @@ public class ConfigDataIntegrationTests {
 	public static void startConfigServer() throws IOException {
 		String baseDir = ConfigServerTestUtils.getBaseDirectory("spring-cloud-config-sample");
 		String repo = ConfigServerTestUtils.prepareLocalRepo(baseDir, "target/repos", "config-repo", "target/config");
-		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
-				"--server.port=" + configPort, "--spring.config.name=server",
-				"--spring.cloud.config.server.git.uri=" + repo);
+		server = SpringApplication.run(
+				new Class[] { org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
+						DisableSpringSecurityConfig.class },
+				new String[] { "--server.port=" + configPort, "--spring.config.name=server",
+						"--spring.cloud.config.server.git.uri=" + repo });
 
 		System.setProperty("spring.cloud.config.uri", "http://localhost:" + configPort);
 	}

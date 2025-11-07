@@ -49,9 +49,11 @@ public class ServerNativeApplicationTests {
 	@BeforeAll
 	public static void startConfigServer() throws IOException {
 		String repo = ConfigServerTestUtils.prepareLocalRepo();
-		server = SpringApplication.run(org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
-				"--server.port=" + configPort, "--spring.config.name=server",
-				"--spring.cloud.config.server.git.uri=" + repo, "--spring.profiles.active=native");
+		server = SpringApplication.run(
+				new Class[] { org.springframework.cloud.config.server.test.TestConfigServerApplication.class,
+						DisableSpringSecurityConfig.class },
+				new String[] { "--server.port=" + configPort, "--spring.config.name=server",
+						"--spring.cloud.config.server.git.uri=" + repo, "--spring.profiles.active=native" });
 		/*
 		 * FIXME configPort = ((EmbeddedWebApplicationContext) server)
 		 * .getEmbeddedServletContainer().getPort();

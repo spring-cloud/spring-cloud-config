@@ -34,7 +34,7 @@ public class ApplicationFailFastTests {
 	@Test
 	public void bootstrapContextFails() {
 		assertThatThrownBy(() -> {
-			new SpringApplicationBuilder().sources(Application.class)
+			new SpringApplicationBuilder().sources(Application.class, DisableSpringSecurityConfig.class)
 				.run("--spring.config.use-legacy-processing=true", "--server.port=0",
 						"--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
 						"--spring.cloud.config.uri=http://serverhostdoesnotexist:1234");
@@ -44,7 +44,8 @@ public class ApplicationFailFastTests {
 	@Test
 	public void configDataContextFailsFast(CapturedOutput output) {
 		assertThatThrownBy(() -> {
-			new SpringApplicationBuilder().sources(Application.class, PropertyInjectionConfiguration.class)
+			new SpringApplicationBuilder()
+				.sources(Application.class, PropertyInjectionConfiguration.class, DisableSpringSecurityConfig.class)
 				.run("--server.port=0", "--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
 						"--spring.config.import=optional:configserver:http://serverhostdoesnotexist:1234",
 						"--spring.cloud.config.server.enabled=false", "--logging.level.org.springframework.retry=TRACE",
