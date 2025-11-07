@@ -48,6 +48,21 @@ public class AppRunner implements AutoCloseable {
 			SpringApplicationBuilder builder = new SpringApplicationBuilder(appClass);
 			builder.properties("spring.jmx.enabled=false");
 			builder.properties(String.format("server.port=%d", availabeTcpPort()));
+
+			// Disable Micrometer/Observation auto-configurations that cause startup
+			// failures
+			// in test environment (ArrayIndexOutOfBoundsException from
+			// SimpleMeterRegistry).
+			// This prevents repeated application restarts and avoids transient port
+			// binding errors.
+			// These metrics-related components are not needed for TLS client/server
+			// tests.
+			builder.properties("spring.autoconfigure.exclude="
+					+ "org.springframework.boot.micrometer.metrics.autoconfigure.MetricsAutoConfiguration,"
+					+ "org.springframework.boot.micrometer.metrics.autoconfigure.export.simple.SimpleMetricsExportAutoConfiguration,"
+					+ "org.springframework.boot.micrometer.observation.autoconfigure.ObservationAutoConfiguration,"
+					+ "org.springframework.boot.webmvc.autoconfigure.WebMvcObservationAutoConfiguration");
+
 			builder.properties(props());
 
 			app = builder.build().run();
