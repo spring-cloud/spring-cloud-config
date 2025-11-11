@@ -127,6 +127,39 @@ class ConfigClientRequestTemplateFactoryOAuth2Tests {
 	}
 
 	@Test
+	void restTemplateAddsBearerTokenFromKeycloakUsingClientCredentialsAndIssuerUri() {
+		// given OAuth2 client configuration pointing to Keycloak issuer endpoint
+		String issuerUri = keycloak.getAuthServerUrl() + "/realms/test-realm";
+
+		ConfigClientProperties props = new ConfigClientProperties();
+		props.getOauth2().setEnabled(true);
+
+		OAuth2ClientProperties.Provider provider = props.getOauth2().getProvider();
+		provider.setIssuerUri(issuerUri);
+
+		OAuth2ClientProperties.Registration registration = props.getOauth2().getRegistration();
+		registration.setClientId("config-client");
+		registration.setClientSecret("my-client-secret");
+		registration.setAuthorizationGrantType("client_credentials");
+
+		ConfigClientRequestTemplateFactory factory = new ConfigClientRequestTemplateFactory(log, props);
+		RestTemplate restTemplate = factory.create();
+
+		// when
+		String url = "http://localhost:" + mockServer.getLocalPort() + "/secure";
+		ResponseEntity<String> response = restTemplate.getForEntity(URI.create(url), String.class);
+
+		// then
+		assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+		assertThat(response.getBody()).isEqualTo("ok");
+
+		HttpRequest[] recorded = mockClient.retrieveRecordedRequests(request().withPath("/secure"));
+		assertThat(recorded).hasSize(1);
+		String authHeader = recorded[0].getFirstHeader("Authorization");
+		assertThat(authHeader).isNotNull().startsWith("Bearer ");
+	}
+
+	@Test
 	void restTemplateDoesNotAddAuthorizationHeaderWhenOauth2Disabled() {
 		// given ConfigClientProperties with OAuth2 disabled
 		ConfigClientProperties props = new ConfigClientProperties();
