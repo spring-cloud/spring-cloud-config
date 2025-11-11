@@ -214,6 +214,27 @@ spring:
 
 The `spring.cloud.config.password` and `spring.cloud.config.username` values override anything that is provided in the URI.
 
+If you use OAuth2 security on the server, clients need to know the client ID and client secret.
+You can specify the client ID and client secret via separate properties, as shown in the following example:
+
+[source,yaml]
+----
+
+spring:
+  cloud:
+    config:
+     uri: https://myconfig.mycompany.com
+     oauth2:
+	    enabled: true
+		provider:
+		   token-uri: https://auth.acme.com/oauth/token
+		registration:
+			client-id: client-id
+			client-secret: client-secret
+			authorization-grant-type: client_credentials
+
+----
+
 If you deploy your apps on Cloud Foundry, the best way to provide the password is through service credentials (such as in the URI, since it does not need to be in a config file).
 The following example works locally and for a user-provided service on Cloud Foundry named `configserver`:
 
