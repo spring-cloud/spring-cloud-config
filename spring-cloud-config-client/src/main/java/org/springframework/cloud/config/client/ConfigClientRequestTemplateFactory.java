@@ -18,9 +18,10 @@ package org.springframework.cloud.config.client;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -35,6 +36,8 @@ import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
 
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientProperties;
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientPropertiesMapper;
 import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
@@ -44,6 +47,16 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
@@ -77,13 +90,65 @@ public class ConfigClientRequestTemplateFactory {
 
 		ClientHttpRequestFactory requestFactory = createHttpRequestFactory(properties);
 		RestTemplate template = new RestTemplate(requestFactory);
+
+		final List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
 		Map<String, String> headers = new HashMap<>(properties.getHeaders());
 		headers.remove(AUTHORIZATION); // To avoid redundant addition of header
 		if (!headers.isEmpty()) {
-			template.setInterceptors(Arrays.asList(new GenericRequestHeaderInterceptor(headers)));
+			interceptors.add(new GenericRequestHeaderInterceptor(headers));
 		}
 
+		if (properties.getOauth2().isEnabled()) {
+			ClientHttpRequestInterceptor oauth2Interceptor = createOauth2Interceptor(properties.getOauth2());
+			interceptors.add(oauth2Interceptor);
+		}
+		template.setInterceptors(interceptors);
+
 		return template;
+	}
+
+	private ClientHttpRequestInterceptor createOauth2Interceptor(ConfigClientProperties.OAuth2Properties properties) {
+		final OAuth2AuthorizedClientManager authorizedClientManager = createAuthorizedClientManager(properties);
+		OAuth2ClientHttpRequestInterceptor oauth2Interceptor = new OAuth2ClientHttpRequestInterceptor(
+				authorizedClientManager);
+		oauth2Interceptor
+			.setClientRegistrationIdResolver(request -> ConfigClientProperties.OAuth2Properties.CLIENT_REGISTRATION_ID);
+		return oauth2Interceptor;
+	}
+
+	private OAuth2AuthorizedClientManager createAuthorizedClientManager(
+			ConfigClientProperties.OAuth2Properties properties) {
+
+		OAuth2AuthorizedClientProvider authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder()
+			.clientCredentials()
+			.refreshToken()
+			.build();
+
+		ClientRegistrationRepository clientRegistrationRepository = clientRegistrationRepository(properties);
+
+		OAuth2AuthorizedClientService authorizedClientService = new InMemoryOAuth2AuthorizedClientService(
+				clientRegistrationRepository);
+
+		AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+				clientRegistrationRepository, authorizedClientService);
+		authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
+		return authorizedClientManager;
+	}
+
+	private ClientRegistrationRepository clientRegistrationRepository(
+			ConfigClientProperties.OAuth2Properties properties) {
+		OAuth2ClientProperties oauth2ClientProperties = new OAuth2ClientProperties();
+		properties.getRegistration().setProvider(null); // In case it was set in config
+														// properties
+		oauth2ClientProperties.getRegistration()
+			.put(ConfigClientProperties.OAuth2Properties.CLIENT_REGISTRATION_ID, properties.getRegistration());
+		oauth2ClientProperties.getProvider()
+			.put(ConfigClientProperties.OAuth2Properties.CLIENT_REGISTRATION_ID, properties.getProvider());
+		oauth2ClientProperties.afterPropertiesSet();
+
+		List<ClientRegistration> registrations = new ArrayList<>(
+				new OAuth2ClientPropertiesMapper(oauth2ClientProperties).asClientRegistrations().values());
+		return new InMemoryClientRegistrationRepository(registrations);
 	}
 
 	protected ClientHttpRequestFactory createHttpRequestFactory(ConfigClientProperties client) {
