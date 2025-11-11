@@ -82,6 +82,7 @@ import org.springframework.core.env.StandardEnvironment;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -215,6 +216,40 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.repository.findOne("bar", "staging", "master,foo,raw");
 		assertThat(environment.getPropertySources()).hasSize(6);
+	}
+
+	@Test
+	public void multipleLabelsWithFailureButContinues() {
+		try {
+			this.repository.setBasedir(this.basedir);
+			this.repository.setContinueOnMultipleLabelFailure(true);
+			Environment environment = this.repository.findOne("bar", "staging", "master,doesnotexist,foo,raw");
+			assertThat(environment.getPropertySources()).hasSize(6);
+		}
+		finally {
+			this.repository.setContinueOnMultipleLabelFailure(false);
+		}
+	}
+
+	@Test
+	public void singleLabelWithFailureButContinues() {
+		try {
+			this.repository.setBasedir(this.basedir);
+			this.repository.setContinueOnMultipleLabelFailure(true);
+			assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "doesnotexist"))
+				.isInstanceOf(NoSuchLabelException.class);
+
+		}
+		finally {
+			this.repository.setContinueOnMultipleLabelFailure(false);
+		}
+	}
+
+	@Test
+	public void multipleLabelsWithFailure() {
+		this.repository.setBasedir(this.basedir);
+		assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "master,doesnotexist,foo,raw"))
+			.isInstanceOf(NoSuchLabelException.class);
 	}
 
 	@Test
