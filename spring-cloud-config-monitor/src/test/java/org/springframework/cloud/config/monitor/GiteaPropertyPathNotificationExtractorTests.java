@@ -18,9 +18,9 @@ package org.springframework.cloud.config.monitor;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;

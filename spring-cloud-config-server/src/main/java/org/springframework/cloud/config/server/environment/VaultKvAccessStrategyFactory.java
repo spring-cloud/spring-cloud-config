@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestOperations;

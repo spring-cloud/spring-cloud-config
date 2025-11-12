@@ -25,13 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
@@ -72,17 +72,17 @@ public class EnvironmentController {
 
 	private EnvironmentRepository repository;
 
-	private ObjectMapper objectMapper;
+	private JsonMapper objectMapper;
 
 	private boolean stripDocument = true;
 
 	private boolean acceptEmpty = true;
 
 	public EnvironmentController(EnvironmentRepository repository) {
-		this(repository, new ObjectMapper());
+		this(repository, new JsonMapper());
 	}
 
-	public EnvironmentController(EnvironmentRepository repository, ObjectMapper objectMapper) {
+	public EnvironmentController(EnvironmentRepository repository, JsonMapper objectMapper) {
 		this.repository = repository;
 		this.objectMapper = objectMapper;
 	}

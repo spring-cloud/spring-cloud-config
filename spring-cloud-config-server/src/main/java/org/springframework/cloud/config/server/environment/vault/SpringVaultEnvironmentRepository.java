@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.config.server.environment.vault;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.config.server.environment.AbstractVaultEnvironmentRepository;
@@ -37,7 +37,7 @@ public class SpringVaultEnvironmentRepository extends AbstractVaultEnvironmentRe
 
 	private VaultKeyValueOperations keyValueTemplate;
 
-	private final ObjectMapper objectMapper;
+	private final JsonMapper objectMapper;
 
 	private String path = "";
 
@@ -48,7 +48,7 @@ public class SpringVaultEnvironmentRepository extends AbstractVaultEnvironmentRe
 		if (properties.getKvVersion() == 2 && StringUtils.hasText(properties.getPathToKey())) {
 			path = properties.getPathToKey() + "/";
 		}
-		this.objectMapper = new ObjectMapper();
+		this.objectMapper = new JsonMapper();
 	}
 
 	protected String read(String key) {
@@ -57,7 +57,7 @@ public class SpringVaultEnvironmentRepository extends AbstractVaultEnvironmentRe
 			try {
 				return objectMapper.writeValueAsString(response.getData());
 			}
-			catch (JsonProcessingException e) {
+			catch (JacksonException e) {
 				throw new RuntimeException("Error creating Vault response", e);
 			}
 		}

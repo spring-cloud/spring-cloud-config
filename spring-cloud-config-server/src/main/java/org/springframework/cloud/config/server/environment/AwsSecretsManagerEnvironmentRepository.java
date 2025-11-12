@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
@@ -33,6 +30,8 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueReques
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -51,7 +50,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 
 	private static final Log log = LogFactory.getLog(AwsSecretsManagerEnvironmentRepository.class);
 
-	private final ObjectMapper objectMapper;
+	private final JsonMapper objectMapper;
 
 	private final SecretsManagerClient awsSmClient;
 
@@ -68,7 +67,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 		this.configServerProperties = configServerProperties;
 		this.environmentProperties = environmentProperties;
 		this.order = environmentProperties.getOrder();
-		this.objectMapper = new ObjectMapper();
+		this.objectMapper = new JsonMapper();
 	}
 
 	@Override
@@ -175,7 +174,7 @@ public class AwsSecretsManagerEnvironmentRepository implements EnvironmentReposi
 				}
 			}
 		}
-		catch (InvalidRequestException | ResourceNotFoundException | IOException e) {
+		catch (InvalidRequestException | ResourceNotFoundException e) {
 			log.debug(String.format(
 					"Skip adding propertySource. Unable to load secrets from AWS Secrets Manager for secretId=%s",
 					path), e);
