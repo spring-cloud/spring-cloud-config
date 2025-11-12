@@ -21,9 +21,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.core.ObjectReadContext;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.util.StringUtils;
@@ -55,8 +57,17 @@ abstract class AbstractCipherResourceEncryptor implements ResourceEncryptor {
 
 	protected String decryptWithJacksonParser(String text, String name, String[] profiles, JsonFactory factory)
 			throws IOException {
+		return decryptWithJacksonParser(text, name, profiles, factory.createParser(ObjectReadContext.empty(), text));
+	}
+
+	protected String decryptWithJacksonParser(String text, String name, String[] profiles, YAMLFactory factory)
+			throws IOException {
+		return decryptWithJacksonParser(text, name, profiles, factory.createParser(ObjectReadContext.empty(), text));
+	}
+
+	protected String decryptWithJacksonParser(String text, String name, String[] profiles, JsonParser parser)
+			throws IOException {
 		Set<String> valsToDecrypt = new HashSet<String>();
-		JsonParser parser = factory.createParser(text);
 		JsonToken token;
 
 		while ((token = parser.nextToken()) != null) {

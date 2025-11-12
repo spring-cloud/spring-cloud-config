@@ -32,7 +32,7 @@ import org.mockito.Mockito;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mongodb.MongoDBContainer;
-import wiremock.com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -75,7 +75,7 @@ public class MongoDbEnvironmentRepositoryTests {
 		mongoTemplate.dropCollection("properties");
 		InputStream inputStream = new ClassPathResource("/data-mongo.json").getInputStream();
 		String json = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-		List<Document> documents = Arrays.asList(new ObjectMapper().readValue(json, Document[].class));
+		List<Document> documents = Arrays.asList(new JsonMapper().readValue(json, Document[].class));
 		mongoTemplate.getCollection("properties").insertMany(documents);
 	}
 

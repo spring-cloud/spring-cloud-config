@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonFactory;
+import tools.jackson.core.json.JsonFactory;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.stereotype.Component;
