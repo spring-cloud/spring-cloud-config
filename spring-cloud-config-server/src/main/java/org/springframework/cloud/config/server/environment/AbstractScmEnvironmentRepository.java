@@ -39,6 +39,8 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	private final EnvironmentCleaner cleaner = new EnvironmentCleaner();
 
+	private boolean isContinueOnMultipleLabelFailure;
+
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
 	private final ObservationRegistry observationRegistry;
@@ -46,12 +48,14 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
 			ObservationRegistry observationRegistry) {
 		super(environment);
+		this.isContinueOnMultipleLabelFailure = false;
 		this.observationRegistry = observationRegistry;
 	}
 
 	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
 			AbstractScmAccessorProperties properties, ObservationRegistry observationRegistry) {
 		super(environment, properties);
+		this.isContinueOnMultipleLabelFailure = properties.isContinueOnMultipleLabelFailure();
 		this.order = properties.getOrder();
 		this.observationRegistry = observationRegistry;
 	}
@@ -66,10 +70,21 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 		var environment = new Environment(application, StringUtils.commaDelimitedListToStringArray(profile), label, "",
 				"");
 
-		for (String l : splitAndReorder(label)) {
-			var e = findOneInternal(application, profile, l, includeOrigin);
-			environment.addAll(e.getPropertySources());
-			environment.setVersion(concat(e.getVersion(), environment.getVersion()));
+		List<String> labels = splitAndReorder(label);
+		for (String l : labels) {
+			try {
+				var e = findOneInternal(application, profile, l, includeOrigin);
+				environment.addAll(e.getPropertySources());
+				environment.setVersion(concat(e.getVersion(), environment.getVersion()));
+			}
+			catch (Exception e) {
+				logger.warn("Could not find label " + l + " for application " + application + " and profile " + profile,
+						e);
+				if (labels.size() == 1 || !this.isContinueOnMultipleLabelFailure) {
+					throw e;
+				}
+				logger.debug("is-continue-on-multiple-label-failure is true, continuing with next label");
+			}
 		}
 
 		return this.cleaner.clean(environment, getWorkingDirectory().toURI().toString(), getUri());
@@ -120,6 +135,14 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	public void setOrder(int order) {
 		this.order = order;
+	}
+
+	boolean isContinueOnMultipleLabelFailure() {
+		return isContinueOnMultipleLabelFailure;
+	}
+
+	void setContinueOnMultipleLabelFailure(boolean continueOnMultipleLabelFailure) {
+		isContinueOnMultipleLabelFailure = continueOnMultipleLabelFailure;
 	}
 
 }
