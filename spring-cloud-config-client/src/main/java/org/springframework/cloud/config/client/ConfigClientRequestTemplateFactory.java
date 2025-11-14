@@ -93,7 +93,7 @@ public class ConfigClientRequestTemplateFactory {
 				HttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager).build();
 				HttpComponentsClientHttpRequestFactory result = new HttpComponentsClientHttpRequestFactory(httpClient);
 
-				result.setConnectTimeout(client.getRequestConnectTimeout());
+				result.setConnectionRequestTimeout(client.getRequestConnectTimeout());
 				return result;
 
 			}
