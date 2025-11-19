@@ -38,7 +38,8 @@ public class MongoDbEnvironmentRepositoryConfigurationTests {
 	@Test
 	public void mongoDbEnvironmentRepositoryBeansConfiguredWhenDefault() {
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-			.withPropertyValues("spring.profiles.active=test,mongodb", "spring.main.web-application-type=none")
+			.withPropertyValues("spring.profiles.active=test,mongodb", "spring.main.web-application-type=none",
+					"management.metrics.use-global-registry=false")
 			.run(context -> {
 				assertThat(context).hasSingleBean(MongoDbEnvironmentRepositoryFactory.class);
 				assertThat(context).hasSingleBean(MongoDbEnvironmentRepository.class);
@@ -71,7 +72,8 @@ public class MongoDbEnvironmentRepositoryConfigurationTests {
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 			.withPropertyValues("spring.profiles.active=test,mongodb", "spring.main.web-application-type=none",
 					"spring.cloud.config.server.git.uri:" + uri,
-					"spring.cloud.config.server.mongodb.enabled:" + mongoDbEnabled)
+					"spring.cloud.config.server.mongodb.enabled:" + mongoDbEnabled,
+					"management.metrics.use-global-registry=false")
 			.run(consumer);
 	}
 
