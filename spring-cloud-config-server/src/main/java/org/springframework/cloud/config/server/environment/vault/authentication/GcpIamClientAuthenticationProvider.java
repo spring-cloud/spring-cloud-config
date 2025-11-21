@@ -71,7 +71,7 @@ public class GcpIamClientAuthenticationProvider extends SpringVaultClientAuthent
 	}
 
 	@SuppressWarnings("deprecation")
-	private static class GcpCredentialProvider {
+	private static final class GcpCredentialProvider {
 
 		public static GoogleCredentials getGoogleCredential(VaultEnvironmentProperties.GcpIamProperties gcp) {
 			try {

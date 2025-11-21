@@ -92,7 +92,7 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 			.run(consumer);
 	}
 
-	private static class CustomResultSetExtractor extends JdbcEnvironmentRepository.PropertiesResultSetExtractor {
+	private static final class CustomResultSetExtractor extends JdbcEnvironmentRepository.PropertiesResultSetExtractor {
 
 		@Override
 		public Map<String, Object> extractData(ResultSet rs) throws SQLException, DataAccessException {

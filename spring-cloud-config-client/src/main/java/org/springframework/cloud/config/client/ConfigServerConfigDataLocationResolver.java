@@ -340,7 +340,7 @@ public class ConfigServerConfigDataLocationResolver
 
 	}
 
-	private class PropertyHolder {
+	private static final class PropertyHolder {
 
 		ConfigClientProperties properties;
 

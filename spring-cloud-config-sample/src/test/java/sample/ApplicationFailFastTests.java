@@ -55,7 +55,7 @@ public class ApplicationFailFastTests {
 	}
 
 	@Component
-	private static class PropertyInjectionConfiguration {
+	private static final class PropertyInjectionConfiguration {
 
 		@Value("${some.property}")
 		private String someProperty;

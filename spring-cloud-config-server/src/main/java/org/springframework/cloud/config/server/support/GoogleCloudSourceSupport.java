@@ -114,7 +114,7 @@ public final class GoogleCloudSourceSupport {
 
 	}
 
-	private static class ApplicationDefaultCredentialsProvider implements CredentialsProvider {
+	private static final class ApplicationDefaultCredentialsProvider implements CredentialsProvider {
 
 		@Override
 		public Map<String, String> getAuthorizationHeaders() {

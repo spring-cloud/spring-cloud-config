@@ -70,7 +70,7 @@ public class AwsIamClientAuthenticationProvider extends SpringVaultClientAuthent
 		return new AwsIamAuthentication(options, vaultRestOperations);
 	}
 
-	private static class AwsCredentialProvider {
+	private static final class AwsCredentialProvider {
 
 		private static AwsCredentialsProvider getAwsCredentialsProvider() {
 

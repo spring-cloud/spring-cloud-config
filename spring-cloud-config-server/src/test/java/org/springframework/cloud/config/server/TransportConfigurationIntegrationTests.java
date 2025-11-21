@@ -420,7 +420,7 @@ public class TransportConfigurationIntegrationTests {
 
 	}
 
-	private static class TestProperties {
+	private static final class TestProperties {
 
 		private static final String TEST_PRIVATE_KEY_1 = "-----BEGIN RSA PRIVATE KEY-----\n"
 				+ "MIIEpAIBAAKCAQEAoqyz6YaYMTr7L8GLPSQpAQXaM04gRx4CCsGK2kfLQdw4BlqI\n"

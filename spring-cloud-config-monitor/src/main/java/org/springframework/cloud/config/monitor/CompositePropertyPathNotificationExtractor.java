@@ -58,7 +58,7 @@ public class CompositePropertyPathNotificationExtractor implements PropertyPathN
 	}
 
 	@Order(Ordered.LOWEST_PRECEDENCE - 200)
-	private static class SimplePropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
+	private static final class SimplePropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
 		@Override
 		public PropertyPathNotification extract(HttpHeaders headers, Map<String, Object> request) {

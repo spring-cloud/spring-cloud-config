@@ -188,7 +188,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 
 	}
 
-	private static class DelayedGitFactoryMock extends JGitEnvironmentRepository.JGitFactory {
+	private static final class DelayedGitFactoryMock extends JGitEnvironmentRepository.JGitFactory {
 
 		@Override
 		public Git getGitByOpen(File file) throws IOException {
@@ -221,7 +221,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 
 	}
 
-	private static class DelayedCloneCommand extends CloneCommand {
+	private static final class DelayedCloneCommand extends CloneCommand {
 
 		@Override
 		public Git call() throws GitAPIException, InvalidRemoteException, TransportException {
