@@ -88,7 +88,7 @@
 		<bintray.package>config</bintray.package>
 		<spring-cloud-commons.version>5.0.1-SNAPSHOT</spring-cloud-commons.version>
 		<aws-java-sdk.version>2.39.6</aws-java-sdk.version>
-		<google-libraries-bom.version>26.71.0</google-libraries-bom.version>
+		<google-libraries-bom.version>26.72.0</google-libraries-bom.version>
 		<google-api-services-iam.version>v2-rev20250502-2.0.0</google-api-services-iam.version>
 		<google-cloud-iamcredentials.version>2.60.0</google-cloud-iamcredentials.version>
 		<wiremock.version>2.35.2</wiremock.version>
