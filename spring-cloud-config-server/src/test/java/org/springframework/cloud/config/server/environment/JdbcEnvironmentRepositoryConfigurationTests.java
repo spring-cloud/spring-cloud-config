@@ -42,7 +42,9 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 	@Test
 	public void jdbcEnvironmentRepositoryBeansConfiguredWhenDefault() throws IOException {
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
-			.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
+			.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none",
+					"management.metrics.use-global-registry=false", "management.metrics.export.simple.enabled=false",
+					"management.observations.enabled=false", "management.tracing.enabled=false")
 			.run(context -> {
 				assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
 				assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
@@ -54,7 +56,9 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 	public void jdbcEnvironmentRepositoryBeansConfiguredWitCustomResultSetExtractor() {
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 			.withBean(CustomResultSetExtractor.class, CustomResultSetExtractor::new)
-			.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none")
+			.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none",
+					"management.metrics.use-global-registry=false", "management.metrics.export.simple.enabled=false",
+					"management.observations.enabled=false", "management.tracing.enabled=false")
 			.run(context -> {
 				assertThat(context).hasSingleBean(JdbcEnvironmentRepositoryFactory.class);
 				assertThat(context).hasSingleBean(JdbcEnvironmentRepository.class);
@@ -88,7 +92,9 @@ public class JdbcEnvironmentRepositoryConfigurationTests {
 		new WebApplicationContextRunner().withUserConfiguration(TestConfigServerApplication.class)
 			.withPropertyValues("spring.profiles.active=test,jdbc", "spring.main.web-application-type=none",
 					"spring.cloud.config.server.git.uri:" + uri,
-					"spring.cloud.config.server.jdbc.enabled:" + jdbcEnabled)
+					"spring.cloud.config.server.jdbc.enabled:" + jdbcEnabled,
+					"management.metrics.use-global-registry=false", "management.metrics.export.simple.enabled=false",
+					"management.observations.enabled=false", "management.tracing.enabled=false")
 			.run(consumer);
 	}
 
