@@ -228,7 +228,7 @@ public class EnvironmentController {
 
 		if (resolvePlaceholders) {
 			yaml = resolvePlaceholders(prepareEnvironment(environment), yaml);
-			yaml = yaml.replaceAll(": \\{cipher}([0-9a-f]+)", ": '{cipher}$1'");
+			yaml = yaml.replaceAll(": \\{(.+)", ": '{$1'");
 		}
 
 		return getSuccess(yaml);
