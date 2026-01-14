@@ -60,7 +60,8 @@ public class SpringVaultTemplateBuilder {
 	private boolean isStaticToken(VaultEnvironmentProperties vaultProperties) {
 		boolean hasToken = StringUtils.hasText(vaultProperties.getToken());
 		boolean isDefaultAuth = vaultProperties.getAuthentication() == null;
-		boolean isTokenAuth = vaultProperties.getAuthentication() == VaultEnvironmentProperties.AuthenticationMethod.TOKEN;
+		boolean isTokenAuth = vaultProperties
+			.getAuthentication() == VaultEnvironmentProperties.AuthenticationMethod.TOKEN;
 
 		return hasToken && (isDefaultAuth || isTokenAuth);
 	}

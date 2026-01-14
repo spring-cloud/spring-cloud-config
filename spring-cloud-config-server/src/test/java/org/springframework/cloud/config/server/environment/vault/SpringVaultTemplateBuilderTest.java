@@ -44,7 +44,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -137,13 +137,9 @@ class SpringVaultTemplateBuilderTest {
 		ConfigTokenProvider defaultTokenProvider = mock(ConfigTokenProvider.class);
 		ApplicationContext mockContext = mock(ApplicationContext.class);
 
-		SpringVaultTemplateBuilder builder = new SpringVaultTemplateBuilder(
-			defaultTokenProvider,
-			Collections.emptyList(),
-			mockContext
-		);
-
-		assertThrows(Exception.class, () -> builder.build(properties));
+		SpringVaultTemplateBuilder builder = new SpringVaultTemplateBuilder(defaultTokenProvider,
+				Collections.emptyList(), mockContext);
+		assertThatThrownBy(() -> builder.build(properties)).isInstanceOf(Exception.class);
 		verifyNoInteractions(defaultTokenProvider);
 	}
 
