@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.VaultEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.vault.authentication.AppRoleClientAuthenticationProvider;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -43,6 +44,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * @author Kaveh Shamsi
@@ -122,6 +126,21 @@ class SpringVaultTemplateBuilderTest {
 		verify(1, postRequestedFor(urlEqualTo("/v1/auth/approle/login")).withRequestBody(equalToJson("""
 					{"role_id": "role-id", "secret_id": "secret-id"}
 				""")));
+	}
+
+	@Test
+	void buildShouldUseStaticTokenWhenAuthenticationIsToken() {
+		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		properties.setToken("my-static-token");
+		properties.setAuthentication(VaultEnvironmentProperties.AuthenticationMethod.TOKEN);
+
+		ConfigTokenProvider defaultTokenProvider = mock(ConfigTokenProvider.class);
+		ApplicationContext mockContext = mock(ApplicationContext.class);
+
+		SpringVaultTemplateBuilder builder = new SpringVaultTemplateBuilder(defaultTokenProvider,
+				Collections.emptyList(), mockContext);
+		assertThatThrownBy(() -> builder.build(properties)).isInstanceOf(Exception.class);
+		verifyNoInteractions(defaultTokenProvider);
 	}
 
 	private static StaticApplicationContext givenApplicationContext(ConfigTokenProvider defaultTokenProvider) {
