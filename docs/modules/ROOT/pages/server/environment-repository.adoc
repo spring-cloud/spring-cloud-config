@@ -39,3 +39,36 @@ You can set `spring.cloud.config.server.accept-empty` to `false` so that Server 
 
 NOTE:  You cannot place `spring.main.*` properties in a remote `EnvironmentRepository`.  These properties are used as part of the application initialization.
 
+== File Content Resolution
+
+The Config Server can resolve the content of local files and serve them as Base64 encoded values.
+This is particularly useful for serving binary files, such as SSL keystores or certificates, within configuration properties.
+
+To enable this feature, you must set the following property (it is disabled by default for security reasons):
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        file-resolving:
+          enabled: true
+----
+
+WARNING: Enabling this feature allows the Config Server to read files from the local file system where the server is running. Ensure that the process has appropriate file system permissions and is running in a secure environment.
+
+When this feature is enabled, you can use the `{file}` prefix in your configuration values followed by the path to the file.
+The Config Server will read the file, encode its content to a Base64 string, and replace the property value.
+
+For example, in your backing repository (e.g., Git or Native), you can define a property like this:
+
+[source,yaml]
+----
+server:
+  ssl:
+    key-store: {file}/etc/certs/keystore.jks
+    key-password: my-secret-password
+----
+
+In this example, the Config Server reads `/etc/certs/keystore.jks`, encodes it, and returns the Base64 string as the value of `server.ssl.key-store`.
