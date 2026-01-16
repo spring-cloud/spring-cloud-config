@@ -56,6 +56,9 @@ The following table describes configurable Vault properties:
 |backend
 |secret
 
+|fullKeyPath
+|false
+
 |defaultKey
 |application
 
@@ -163,6 +166,28 @@ secret/application
 Properties written to `secret/application` are available to <<_vault_server,all applications using the Config Server>>.
 An application with the name, `myApp`, would have any properties written to `secret/myApp` and `secret/application` available to it.
 When `myApp` has the `dev` profile enabled, properties written to all of the above paths would be available to it, with properties in the first path in the list taking priority over the others.
+
+[[full-key-path]]
+== Disambiguating Composite Property Sources
+
+By default, the config server generates property source names based on the vault key, e.g. `vault:myApp` in the example above.
+When composite vault backends have the same vault key, the config server client will overwrite preceding property sources.
+
+With `fullKeyPath` set to `true`, the property sources will contain the full backend path,
+e.g. `vault:secret/backendA/myApp` and `vault:secret/backendB/myApp`.
+
+[source,yaml]
+----
+spring.cloud.config.server.composite:
+  - type: vault
+    fullKeyPath: true
+    # ...
+    backend: secret/backendA
+  - type: vault
+    fullKeyPath: true
+    # ...
+    backend: secret/backendB
+----
 
 [[enabling-serach-by-label]]
 == Enabling Search by Label
