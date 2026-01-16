@@ -64,6 +64,14 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 	protected String defaultKey;
 
 	/**
+	 * The backend path in Vault where the secrets are stored. Used to disambiguate
+	 * multiple vault paths ending in the same key.
+	 */
+	protected String backend;
+
+	protected Boolean fullKeyPath;
+
+	/**
 	 * Vault profile separator. Defaults to comma.
 	 */
 	@NotEmpty
@@ -81,6 +89,8 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 		this.profileSeparator = properties.getProfileSeparator();
 		this.enableLabel = properties.isEnableLabel();
 		this.defaultLabel = properties.getDefaultLabel();
+		this.backend = properties.getBackend();
+		this.fullKeyPath = properties.isFullKeyPath();
 		this.order = properties.getOrder();
 		this.request = request;
 		this.watch = watch;
@@ -100,6 +110,8 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 		var profiles = normalize(profile, DEFAULT_PROFILE);
 		var applications = normalize(application, this.defaultKey);
 
+		var backendPathPrefix = "vault:" + (this.fullKeyPath ? this.backend + "/" : "");
+
 		for (String prof : profiles) {
 			for (String app : applications) {
 				var key = vaultKey(app, prof, label);
@@ -112,7 +124,7 @@ public abstract class AbstractVaultEnvironmentRepository implements EnvironmentR
 					var properties = yaml.getObject();
 
 					if (properties != null && !properties.isEmpty()) {
-						environment.add(new PropertySource("vault:" + key, properties));
+						environment.add(new PropertySource(backendPathPrefix + key, properties));
 					}
 				}
 			}
