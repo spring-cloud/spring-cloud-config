@@ -84,6 +84,23 @@ public class SpringVaultEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void findOneWithBackend() {
+		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
+
+		var properties = new VaultEnvironmentProperties();
+		properties.setBackend("custom-path");
+		properties.setFullKeyPath(true);
+
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, null);
+
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources()).hasSize(1);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:custom-path/myapp");
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
+	}
+
+	@Test
 	public void findOneWithSlashesInBackend() {
 		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
 		when(keyValueTemplate.get("application")).thenReturn(withVaultResponse("def-foo", "def-bar"));
