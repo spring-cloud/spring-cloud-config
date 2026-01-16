@@ -174,7 +174,7 @@ By default, the config server generates property source names based on the vault
 When composite vault backends have the same vault key, the config server client will overwrite preceding property sources.
 
 With `fullKeyPath` set to `true`, the property sources will contain the full backend path,
-e.g. `vault:secret/backendA/myApp` and `vault:secret/backendB/myApp`.
+e.g. `vault:secret/backendA/myApp` and `vault:secret/backendB/myApp`, preventing overwriting the preceding property source.
 
 [source,yaml]
 ----
