@@ -58,17 +58,33 @@ spring:
 
 WARNING: Enabling this feature allows the Config Server to read files from the local file system where the server is running. Ensure that the process has appropriate file system permissions and is running in a secure environment.
 
-When this feature is enabled, you can use the `{file}` prefix in your configuration values followed by the path to the file.
+==== Usage
+
+You can use the `{file}` prefix in your configuration values followed by the path to the file.
 The Config Server will read the file, encode its content to a Base64 string, and replace the property value.
 
-For example, in your backing repository (e.g., Git or Native), you can define a property like this:
+**1. Absolute Path**
+
+You can reference files on the Config Server's local file system using an absolute path:
 
 [source,yaml]
 ----
 server:
   ssl:
     key-store: {file}/etc/certs/keystore.jks
-    key-password: my-secret-password
 ----
 
-In this example, the Config Server reads `/etc/certs/keystore.jks`, encodes it, and returns the Base64 string as the value of `server.ssl.key-store`.
+**2. Relative Path (Repository-aware)**
+
+If you are using a repository that supports search paths (like Git, SVN, or Native), you can reference files **relative to the repository root** by starting the path with a dot (`.`):
+
+[source,yaml]
+----
+server:
+  ssl:
+    # Resolves 'certs/keystore.jks' located inside the Git repository
+    key-store: {file}./certs/keystore.jks
+----
+
+In this case, the Config Server will look for the file inside the cloned repository directory.
+If the repository does not support search paths (e.g., JDBC, Vault), relative paths will be ignored.

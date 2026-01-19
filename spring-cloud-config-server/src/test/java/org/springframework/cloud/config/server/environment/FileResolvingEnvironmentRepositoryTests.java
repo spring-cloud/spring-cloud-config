@@ -30,12 +30,14 @@ import org.junit.jupiter.api.io.TempDir;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.withSettings;
 
 /**
  * Tests for {@link FileResolvingEnvironmentRepository}.
@@ -119,5 +121,68 @@ class FileResolvingEnvironmentRepositoryTests {
 		Map<?, ?> resultMap = resultEnv.getPropertySources().get(0).getSource();
 
 		assertThat(String.valueOf(resultMap.get("my.secret"))).isNotEqualTo("{file}" + secretFile.getAbsolutePath());
+	}
+
+	@Test
+	void findOneShouldResolveRelativePathUsingLocations() throws Exception {
+		String filename = "relative-secret.txt";
+		File secretFile = new File(tempDir, filename);
+		String content = "relative-content";
+		Files.writeString(secretFile.toPath(), content);
+
+		EnvironmentRepository delegate = mock(EnvironmentRepository.class, withSettings().extraInterfaces(SearchPathLocator.class));
+
+		Locations locations = new Locations("app", "dev", "label", "version",
+			new String[] { "file:" + tempDir.getAbsolutePath() + "/" });
+
+		given(((SearchPathLocator) delegate).getLocations(anyString(), anyString(), any()))
+			.willReturn(locations);
+
+		Environment originalEnv = new Environment("app", "dev");
+		Map<String, Object> sourceMap = new HashMap<>();
+		sourceMap.put("my.relative", "{file}./" + filename);
+		originalEnv.add(new PropertySource("test-source", sourceMap));
+
+		given(delegate.findOne(anyString(), anyString(), any())).willReturn(originalEnv);
+
+		FileResolvingEnvironmentRepository repository = new FileResolvingEnvironmentRepository(delegate);
+		Environment resultEnv = repository.findOne("app", "dev", null);
+
+		assertThat(resultEnv).isNotNull();
+		Map<?, ?> resultMap = resultEnv.getPropertySources().get(0).getSource();
+
+		String expectedBase64 = Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8));
+		assertThat(String.valueOf(resultMap.get("my.relative"))).isEqualTo(expectedBase64);
+	}
+
+	@Test
+	void findOneShouldIgnoreRelativePathIfDelegateIsNotSearchPathLocator() {
+		EnvironmentRepository delegate = mock(EnvironmentRepository.class);
+
+		Environment originalEnv = new Environment("app", "dev");
+		Map<String, Object> sourceMap = new HashMap<>();
+		sourceMap.put("my.ignored", "{file}./some/relative/path.txt");
+		originalEnv.add(new PropertySource("test-source", sourceMap));
+
+		given(delegate.findOne(anyString(), anyString(), any())).willReturn(originalEnv);
+
+		FileResolvingEnvironmentRepository repository = new FileResolvingEnvironmentRepository(delegate);
+		Environment resultEnv = repository.findOne("app", "dev", null);
+
+		Map<?, ?> resultMap = resultEnv.getPropertySources().get(0).getSource();
+		assertThat(String.valueOf(resultMap.get("my.ignored"))).isEqualTo("{file}./some/relative/path.txt");
+	}
+
+	@Test
+	void getLocationsShouldDelegateToUnderlyingRepository() {
+		EnvironmentRepository delegate = mock(EnvironmentRepository.class, withSettings().extraInterfaces(SearchPathLocator.class));
+
+		Locations expectedLocations = new Locations("app", "dev", "label", "v1", new String[] { "file:/tmp" });
+		given(((SearchPathLocator) delegate).getLocations("app", "dev", null)).willReturn(expectedLocations);
+
+		FileResolvingEnvironmentRepository repository = new FileResolvingEnvironmentRepository(delegate);
+		Locations result = repository.getLocations("app", "dev", null);
+
+		assertThat(result).isSameAs(expectedLocations);
 	}
 }
