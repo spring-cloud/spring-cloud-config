@@ -196,6 +196,20 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void yamlWithBraceInValue() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a.src", "{cipher}123456");
+		map.put("b.src", "{string");
+		map.put("a.dst", "${a.src}");
+		map.put("b.dst", "${b.src}");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", true).getBody();
+		assertThat(yaml).isEqualTo(
+				"a:\n  src: '{cipher}123456'\n  dst: '{cipher}123456'\nb:\n  src: '{string'\n  dst: '{string'\n");
+	}
+
+	@Test
 	public void arrayOverridenInEnvironment() throws Exception {
 		// Add original values first source
 		Map<String, Object> oneMap = new LinkedHashMap<String, Object>();
