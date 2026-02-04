@@ -17,7 +17,7 @@ on:
       branches:
         description: "Which branch should be built (can be a comma-separated list of branches)"
         required: true
-        default: '4.2.x'
+        default: '4.3.x'
         type: string
 
 jobs:
