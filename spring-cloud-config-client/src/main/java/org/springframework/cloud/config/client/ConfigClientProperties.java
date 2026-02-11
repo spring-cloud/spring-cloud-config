@@ -28,6 +28,7 @@ import java.util.Map;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientProperties;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.configuration.TlsProperties;
 import org.springframework.core.env.Environment;
@@ -184,6 +185,8 @@ public class ConfigClientProperties {
 	 * higher.
 	 */
 	private boolean sendAllLabels = false;
+
+	private OAuth2Properties oauth2 = new OAuth2Properties();
 
 	ConfigClientProperties() {
 	}
@@ -352,6 +355,14 @@ public class ConfigClientProperties {
 		this.sendAllLabels = sendAllLabels;
 	}
 
+	public OAuth2Properties getOauth2() {
+		return oauth2;
+	}
+
+	public void setOauth2(OAuth2Properties oauth2) {
+		this.oauth2 = oauth2;
+	}
+
 	private Credentials extractCredentials(int index) {
 		Credentials result = new Credentials();
 		int noOfUrl = this.uri.length;
@@ -441,7 +452,8 @@ public class ConfigClientProperties {
 				+ Arrays.toString(this.uri) + ", mediaType=" + this.mediaType + ", discovery=" + this.discovery
 				+ ", failFast=" + this.failFast + ", token=" + this.token + ", requestConnectTimeout="
 				+ this.requestConnectTimeout + ", requestReadTimeout=" + this.requestReadTimeout + ", sendState="
-				+ this.sendState + ", headers=" + this.headers + ", sendAllLabels=" + this.sendAllLabels + "]";
+				+ this.sendState + ", headers=" + this.headers + ", sendAllLabels=" + this.sendAllLabels + ", oauth2"
+				+ this.oauth2 + "]";
 	}
 
 	/**
@@ -523,6 +535,54 @@ public class ConfigClientProperties {
 		 * Try the next URL in the list only if no response was received.
 		 */
 		CONNECTION_TIMEOUT_ONLY
+
+	}
+
+	public static class OAuth2Properties {
+
+		/**
+		 * Default client registration id.
+		 */
+		public static final String CLIENT_REGISTRATION_ID = "config-oauth2-client";
+
+		/**
+		 * Flag to say that the remote configuration server is configured with OAuth2.
+		 * Default false.;
+		 */
+		private boolean enabled = false;
+
+		private OAuth2ClientProperties.Provider provider = new OAuth2ClientProperties.Provider();
+
+		private OAuth2ClientProperties.Registration registration = new OAuth2ClientProperties.Registration();
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public OAuth2ClientProperties.Provider getProvider() {
+			return provider;
+		}
+
+		public void setProvider(OAuth2ClientProperties.Provider provider) {
+			this.provider = provider;
+		}
+
+		public OAuth2ClientProperties.Registration getRegistration() {
+			return registration;
+		}
+
+		public void setRegistration(OAuth2ClientProperties.Registration registration) {
+			this.registration = registration;
+		}
+
+		@Override
+		public String toString() {
+			return "OAuth2Properties [" + "enabled=" + enabled + "]";
+		}
 
 	}
 
