@@ -16,7 +16,7 @@
 	<description>Spring Cloud Config Dependencies</description>
 	<properties>
 		<jgit.version>7.4.0.202509020913-r</jgit.version>
-		<spring-vault.version>4.0.0</spring-vault.version>
+		<spring-vault.version>4.0.1</spring-vault.version>
 		<spring-credhub.version>3.5.1</spring-credhub.version>
 	</properties>
 	<dependencyManagement>
