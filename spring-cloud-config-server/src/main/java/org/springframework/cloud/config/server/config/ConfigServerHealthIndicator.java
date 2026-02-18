@@ -51,7 +51,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	private String downHealthStatus = Status.DOWN.getCode();
 
-	private final boolean acceptEmpty;
+	private boolean acceptEmpty;
 
 	// autowired required or boot constructor binding produces an error
 	@Autowired
@@ -110,7 +110,7 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 			// If accept-empty is false and no repositories are found, meaning details is
 			// empty, then set status to DOWN
 			// If there are details but none of them have sources, then set status to DOWN
-			builder.down().withDetail("acceptEmpty", this.acceptEmpty);
+			builder.status(this.downHealthStatus).withDetail("acceptEmpty", this.acceptEmpty);
 		}
 		builder.withDetail("repositories", details);
 
@@ -130,6 +130,14 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 
 	public void setDownHealthStatus(String downHealthStatus) {
 		this.downHealthStatus = downHealthStatus;
+	}
+
+	public boolean isAcceptEmpty() {
+		return acceptEmpty;
+	}
+
+	public void setAcceptEmpty(boolean acceptEmpty) {
+		this.acceptEmpty = acceptEmpty;
 	}
 
 	/**
