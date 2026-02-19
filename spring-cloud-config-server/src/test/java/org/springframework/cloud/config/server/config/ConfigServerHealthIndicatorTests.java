@@ -99,6 +99,16 @@ public class ConfigServerHealthIndicatorTests {
 	}
 
 	@Test
+	public void acceptEmptyFalseNoReposCustomizedDownStatus() {
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setAcceptEmpty(false);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
+		ReflectionTestUtils.setField(this.indicator, "downHealthStatus", "CUSTOM");
+		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(new Status(("CUSTOM")));
+	}
+
+	@Test
 	public void acceptEmptyFalseNoPropertySources() {
 		Repository repo = new Repository();
 		repo.setName("myname");
