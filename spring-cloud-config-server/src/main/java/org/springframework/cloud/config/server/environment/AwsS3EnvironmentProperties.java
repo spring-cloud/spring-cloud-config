@@ -16,11 +16,15 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
 
 /**
  * @author Clay McCoy
+ * @author Geonwook Ham
  */
 @ConfigurationProperties("spring.cloud.config.server.awss3")
 public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperties {
@@ -47,6 +51,16 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 	private boolean useDirectoryLayout;
 
 	private int order = DEFAULT_ORDER;
+
+	private List<String> searchPaths = new ArrayList<>();
+
+	public List<String> getSearchPaths() {
+		return searchPaths;
+	}
+
+	public void setSearchPaths(List<String> searchPaths) {
+		this.searchPaths = searchPaths;
+	}
 
 	public String getRegion() {
 		return region;
