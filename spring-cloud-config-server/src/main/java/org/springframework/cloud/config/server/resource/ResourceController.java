@@ -142,8 +142,8 @@ public class ResourceController {
 	 */
 	synchronized String retrieve(ServletWebRequest request, String name, String profile, String label, String path,
 			boolean resolvePlaceholders, String acceptedCharset) throws IOException {
-		name = Environment.normalize(name);
-		label = Environment.normalize(label);
+		name = normalize(name);
+		label = normalize(label);
 		if (isInvalidEncodedLocation(profile)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}
@@ -185,6 +185,13 @@ public class ResourceController {
 		}
 	}
 
+	private String normalize(String part) {
+		if (isInvalidEncodedLocation(part)) {
+			throw new InvalidEnvironmentRequestException("Invalid request");
+		}
+		return Environment.normalize(part);
+	}
+
 	/*
 	 * Used only for unit tests.
 	 */
@@ -216,8 +223,8 @@ public class ResourceController {
 
 	private synchronized byte[] binary(ServletWebRequest request, String name, String profile, String label,
 			String path) throws IOException {
-		name = Environment.normalize(name);
-		label = Environment.normalize(label);
+		name = normalize(name);
+		label = normalize(label);
 		if (isInvalidEncodedLocation(profile)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}

@@ -156,6 +156,14 @@ public class ResourceControllerTests {
 	}
 
 	@Test
+	public void labelPlaceholderWithSlashAndDotDot() {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		assertThatThrownBy(() -> this.controller.retrieve("dev", "bar", "..(_)spam", "foo.txt", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+	}
+
+	@Test
 	public void profilePlaceholderNullLabel() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{profile}");
 		String resource = this.controller.retrieve("bar", "dev", null, "spam/foo.txt", true, "UTF-8");
@@ -265,6 +273,14 @@ public class ResourceControllerTests {
 		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
 		byte[] resource = this.controller.binary("dev", "bar", "dev(_)spam", "foo.txt");
 		assertThat(new String(resource)).isEqualToIgnoringNewLines("foo: dev_bar/spam");
+	}
+
+	@Test
+	public void labelPlaceholderWithSlashForBinaryAndDotDot() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		assertThatThrownBy(() -> this.controller.binary("dev", "bar", "..(_)spam", "foo.txt"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
 	}
 
 	@Test
