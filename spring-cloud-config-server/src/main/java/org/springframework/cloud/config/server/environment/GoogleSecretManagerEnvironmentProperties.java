@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
 
@@ -36,6 +39,20 @@ public class GoogleSecretManagerEnvironmentProperties implements EnvironmentRepo
 	private boolean tokenMandatory = true;
 
 	private Integer version = 1;
+
+	/**
+	 * When {@code token-mandatory} is {@code false}: only these project IDs may be used
+	 * with client-supplied {@code X-Project-ID}. When empty, client-supplied project IDs
+	 * are rejected. When {@code token-mandatory} is {@code true}, this list is ignored
+	 * for the header; use {@code X-Config-Token} permission checks instead.
+	 */
+	private List<String> allowedProjectIds = new ArrayList<>();
+
+	/**
+	 * Used when {@code X-Project-ID} is absent and the metadata server is unavailable
+	 * (for example local development). Not validated against {@link #allowedProjectIds}.
+	 */
+	private String projectId;
 
 	/**
 	 * The metadata URL to get the project ID from.
@@ -89,6 +106,22 @@ public class GoogleSecretManagerEnvironmentProperties implements EnvironmentRepo
 
 	public void setServiceAccount(String serviceAccount) {
 		this.serviceAccount = serviceAccount;
+	}
+
+	public List<String> getAllowedProjectIds() {
+		return this.allowedProjectIds;
+	}
+
+	public void setAllowedProjectIds(List<String> allowedProjectIds) {
+		this.allowedProjectIds = allowedProjectIds != null ? allowedProjectIds : new ArrayList<>();
+	}
+
+	public String getProjectId() {
+		return this.projectId;
+	}
+
+	public void setProjectId(String projectId) {
+		this.projectId = projectId;
 	}
 
 }

@@ -34,8 +34,8 @@ public final class GoogleSecretManagerAccessStrategyFactory {
 		switch (properties.getVersion()) {
 			case 1:
 				try {
-					return new GoogleSecretManagerV1AccessStrategy(rest, configProvider,
-							properties.getServiceAccount());
+					return new GoogleSecretManagerV1AccessStrategy(rest, configProvider, properties.getServiceAccount(),
+							new GcpProjectResolutionSupport(properties));
 				}
 				catch (Exception e) {
 					throw new RepositoryException("Cannot create service client", e);
@@ -52,7 +52,8 @@ public final class GoogleSecretManagerAccessStrategyFactory {
 
 		switch (properties.getVersion()) {
 			case 1:
-				return new GoogleSecretManagerV1AccessStrategy(rest, configProvider, client);
+				return new GoogleSecretManagerV1AccessStrategy(rest, configProvider, client,
+						new GcpProjectResolutionSupport(properties));
 			default:
 				throw new IllegalArgumentException(
 						"No support for given Google Secret manager backend version " + properties.getVersion());

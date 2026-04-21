@@ -50,6 +50,10 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 
 	private GoogleConfigProvider configProvider;
 
+	private final RestTemplate rest;
+
+	private final GoogleSecretManagerEnvironmentProperties properties;
+
 	private final int order;
 
 	public GoogleSecretManagerEnvironmentRepository(ObjectProvider<HttpServletRequest> request, RestTemplate rest,
@@ -59,6 +63,8 @@ public class GoogleSecretManagerEnvironmentRepository implements EnvironmentRepo
 		this.configProvider = new HttpHeaderGoogleConfigProvider(request);
 		this.accessStrategy = GoogleSecretManagerAccessStrategyFactory.forVersion(rest, configProvider, properties);
 		this.tokenMandatory = properties.getTokenMandatory();
+		this.rest = rest;
+		this.properties = properties;
 		this.order = properties.getOrder();
 	}
 
