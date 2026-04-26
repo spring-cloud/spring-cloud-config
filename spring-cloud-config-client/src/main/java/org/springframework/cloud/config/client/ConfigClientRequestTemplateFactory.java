@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -35,6 +36,7 @@ import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
 
+import org.springframework.boot.restclient.observation.ObservationRestTemplateCustomizer;
 import org.springframework.cloud.configuration.SSLContextFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
@@ -44,6 +46,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.observation.DefaultClientRequestObservationConvention;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
@@ -54,9 +57,20 @@ public class ConfigClientRequestTemplateFactory {
 
 	private final ConfigClientProperties properties;
 
+	private final ObservationRegistry observationRegistry;
+
 	public ConfigClientRequestTemplateFactory(Log log, ConfigClientProperties properties) {
 		this.log = log;
 		this.properties = properties;
+		this.observationRegistry = ObservationRegistry.NOOP;
+
+	}
+
+	public ConfigClientRequestTemplateFactory(Log log, ConfigClientProperties properties,
+			ObservationRegistry observationRegistry) {
+		this.log = log;
+		this.properties = properties;
+		this.observationRegistry = observationRegistry;
 	}
 
 	public Log getLog() {
@@ -81,6 +95,11 @@ public class ConfigClientRequestTemplateFactory {
 		headers.remove(AUTHORIZATION); // To avoid redundant addition of header
 		if (!headers.isEmpty()) {
 			template.setInterceptors(Arrays.asList(new GenericRequestHeaderInterceptor(headers)));
+		}
+
+		if (observationRegistry != null && observationRegistry != ObservationRegistry.NOOP) {
+			new ObservationRestTemplateCustomizer(observationRegistry, new DefaultClientRequestObservationConvention())
+				.customize(template);
 		}
 
 		return template;
