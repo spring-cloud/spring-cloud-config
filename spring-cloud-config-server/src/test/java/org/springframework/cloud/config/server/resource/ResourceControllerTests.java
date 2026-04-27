@@ -149,6 +149,14 @@ public class ResourceControllerTests {
 	}
 
 	@Test
+	public void applicationPlaceholderStartsWithSlash() {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		assertThatThrownBy(() -> this.controller.retrieve("(_)dev", "bar", null, "foo.txt", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+	}
+
+	@Test
 	public void labelPlaceholderWithSlash() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
 		String resource = this.controller.retrieve("dev", "bar", "dev(_)spam", "foo.txt", true, "UTF-8");
@@ -159,6 +167,22 @@ public class ResourceControllerTests {
 	public void labelPlaceholderWithSlashAndDotDot() {
 		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
 		assertThatThrownBy(() -> this.controller.retrieve("dev", "bar", "..(_)spam", "foo.txt", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+	}
+
+	@Test
+	public void labelPlaceholderStartsWithSlash() {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		assertThatThrownBy(() -> this.controller.retrieve("dev", "bar", "(_)spam", "foo.txt", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+	}
+
+	@Test
+	public void pathWithSlashAndDotDot() {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		assertThatThrownBy(() -> this.controller.retrieve("dev", "bar", "dev", "../foo.txt", true, "UTF-8"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class)
 			.hasMessageContaining("Invalid request");
 	}
@@ -269,6 +293,14 @@ public class ResourceControllerTests {
 	}
 
 	@Test
+	public void applicationPlaceholderStartsWithSlashBinary() {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		assertThatThrownBy(() -> this.controller.binary("(_)spam", "bar", null, "foo.txt"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+	}
+
+	@Test
 	public void labelPlaceholderWithSlashForBinary() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
 		byte[] resource = this.controller.binary("dev", "bar", "dev(_)spam", "foo.txt");
@@ -279,6 +311,22 @@ public class ResourceControllerTests {
 	public void labelPlaceholderWithSlashForBinaryAndDotDot() throws Exception {
 		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
 		assertThatThrownBy(() -> this.controller.binary("dev", "bar", "..(_)spam", "foo.txt"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+	}
+
+	@Test
+	public void labelPlaceholderStartsWithSlashBinary() {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		assertThatThrownBy(() -> this.controller.binary("dev", "bar", "(_)spam", "foo.txt"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+	}
+
+	@Test
+	public void pathWithSlashAndDotDotForBinary() throws Exception {
+		this.environmentRepository.setSearchLocations("classpath:/test/{label}");
+		assertThatThrownBy(() -> this.controller.binary("dev", "bar", "dev", "../foo.txt"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class)
 			.hasMessageContaining("Invalid request");
 	}
@@ -406,6 +454,11 @@ public class ResourceControllerTests {
 				true, "UTF-8"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
 		assertThatThrownBy(() -> this.controller.binary("application", "bar,%2e%2e,foo", "label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(
+				() -> this.controller.retrieve("application", "bar%2ffoo", "label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("application", "bar%2ffoo", "label", "template.json"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 

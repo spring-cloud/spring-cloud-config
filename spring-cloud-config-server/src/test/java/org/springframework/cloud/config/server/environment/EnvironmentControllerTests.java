@@ -525,8 +525,20 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void nameStartsWithSlash() {
+		assertThatThrownBy(() -> this.controller.labelled("(_)spam", "bar", null))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
 	public void labelWithPreviousDirectory() {
 		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "..(_).."))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void labelStartsWithSlash() {
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "(_)spam"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
@@ -563,6 +575,8 @@ class EnvironmentControllerTests {
 		assertThatThrownBy(() -> this.controller.labelled("application", "%2e%2e", "label"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
 		assertThatThrownBy(() -> this.controller.labelled("application", "bar,%2e%2e,foo", "label"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("application", "bar%2Ffoo", "label"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 

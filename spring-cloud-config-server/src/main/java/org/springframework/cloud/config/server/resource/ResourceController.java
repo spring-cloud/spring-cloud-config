@@ -50,6 +50,7 @@ import org.springframework.web.util.UrlPathHelper;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 import static org.springframework.cloud.config.server.support.PathUtils.isInvalidEncodedLocation;
+import static org.springframework.cloud.config.server.support.PathUtils.isInvalidProfiles;
 
 /**
  * An HTTP endpoint for serving up templated plain text resources from an underlying
@@ -144,9 +145,10 @@ public class ResourceController {
 			boolean resolvePlaceholders, String acceptedCharset) throws IOException {
 		name = normalize(name);
 		label = normalize(label);
-		if (isInvalidEncodedLocation(profile)) {
+		if (isInvalidProfiles(profile)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}
+		path = normalize(path);
 		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
 		if (checkNotModified(request, resource)) {
 			// Content was not modified. Just return.
@@ -225,9 +227,10 @@ public class ResourceController {
 			String path) throws IOException {
 		name = normalize(name);
 		label = normalize(label);
-		if (isInvalidEncodedLocation(profile)) {
+		if (isInvalidProfiles(profile)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}
+		path = normalize(path);
 		Resource resource = this.resourceRepository.findOne(name, profile, label, path);
 		if (checkNotModified(request, resource)) {
 			// Content was not modified. Just return.

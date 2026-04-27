@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.config.server.environment.InvalidEnvironmentRequestException;
 import org.springframework.cloud.context.encrypt.KeyFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -42,6 +43,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.springframework.cloud.config.server.support.PathUtils.isInvalidEncodedLocation;
+import static org.springframework.cloud.config.server.support.PathUtils.isInvalidProfiles;
 
 /**
  * @author Dave Syer
@@ -144,6 +148,13 @@ public class EncryptionController {
 	}
 
 	private TextEncryptor getEncryptor(String name, String profiles, String data) {
+		if (isInvalidEncodedLocation(name)) {
+			throw new InvalidEnvironmentRequestException("Invalid request");
+		}
+		if (isInvalidProfiles(profiles)) {
+			throw new InvalidEnvironmentRequestException("Invalid request");
+		}
+
 		if (encryptorLocator == null) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Text encryptorLocator is null.");

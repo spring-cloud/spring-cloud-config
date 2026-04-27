@@ -51,6 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 import static org.springframework.cloud.config.server.support.PathUtils.isInvalidEncodedLocation;
+import static org.springframework.cloud.config.server.support.PathUtils.isInvalidProfiles;
 
 /**
  * @author Dave Syer
@@ -131,7 +132,7 @@ public class EnvironmentController {
 		try {
 			name = normalize(name);
 			label = normalize(label);
-			if (isInvalidEncodedLocation(profiles)) {
+			if (isInvalidProfiles(profiles)) {
 				throw new InvalidEnvironmentRequestException("Invalid request");
 			}
 			Environment environment = this.repository.findOne(name, profiles, label, includeOrigin);
