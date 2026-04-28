@@ -18,9 +18,18 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,12 +57,12 @@ import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
 import org.eclipse.jgit.lib.BranchTrackingStatus;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.TrackingRefUpdate;
-import org.eclipse.jgit.util.FileUtils;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.environment.Environment;
@@ -375,8 +384,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private void initClonedRepository() throws GitAPIException, IOException {
 		if (!getUri().startsWith(FILE_URI_PREFIX)) {
-			deleteBaseDirIfExists();
-			Git git = cloneToBasedir();
+			Path resolvedBasedir = recreateSecureBasedirForClone();
+			Git git = cloneToBasedir(resolvedBasedir);
 			if (git != null) {
 				git.close();
 			}
@@ -634,43 +643,166 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		}
 	}
 
-	// Synchronize here so that multiple requests don't all try and delete the
-	// base dir
-	// together (this is a once only operation, so it only holds things up on
-	// the first
-	// request).
+	/**
+	 * Materializes {@link #getBasedir()} for remote clones and prepares a consistent
+	 * on-disk layout. Remote URIs clone into a freshly created real directory
+	 * ({@link #recreateSecureBasedirForClone} narrows TOCTOU on the leaf path).
+	 * {@code file:} URIs still open the repository at the configured URI, but that path
+	 * is validated separately so a symlink at the URI cannot redirect JGit outside the
+	 * intended tree.
+	 *
+	 * Synchronize here so that multiple requests don't all try and delete the base dir
+	 * together (this is a once only operation, so it only holds things up on the first
+	 * request).
+	 */
 	private synchronized Git copyRepository() throws IOException, GitAPIException {
-		deleteBaseDirIfExists();
-		getBasedir().mkdirs();
-		Assert.state(getBasedir().exists(), "Could not create basedir: " + getBasedir());
+		Path resolvedBasedir = recreateSecureBasedirForClone();
+		Assert.state(Files.exists(resolvedBasedir, LinkOption.NOFOLLOW_LINKS),
+				"Could not create basedir: " + getBasedir());
 		if (getUri().startsWith(FILE_URI_PREFIX)) {
 			return copyFromLocalRepository();
 		}
 		else {
-			return cloneToBasedir();
+			return cloneToBasedir(resolvedBasedir);
 		}
 	}
 
+	/**
+	 * Opens the local working copy. For {@code file:} URIs the working directory is the
+	 * configured path itself, so the same path hardening as
+	 * {@link #copyFromLocalRepository()} must run here when {@code .git} already exists
+	 * (the usual first-request path).
+	 */
 	private Git openGitRepository() throws IOException {
-		Git git = this.gitFactory.getGitByOpen(getWorkingDirectory());
-		return git;
+		if (getUri().startsWith(FILE_URI_PREFIX)) {
+			return openValidatedLocalFileGitRepository();
+		}
+		return this.gitFactory.getGitByOpen(getWorkingDirectory());
 	}
 
+	/**
+	 * Delegates to {@link #openValidatedLocalFileGitRepository()} for path validation.
+	 */
 	private Git copyFromLocalRepository() throws IOException {
-		Git git;
-		File remote = new UrlResource(StringUtils.cleanPath(getUri())).getFile();
-		Assert.state(remote.isDirectory(), "No directory at " + getUri());
-		File gitDir = new File(remote, ".git");
-		Assert.state(gitDir.exists(), "No .git at " + getUri());
-		Assert.state(gitDir.isDirectory(), "No .git directory at " + getUri());
-		git = this.gitFactory.getGitByOpen(remote);
+		return openValidatedLocalFileGitRepository();
+	}
+
+	/**
+	 * Resolves and validates a {@code file:} repository path (no symbolic links at the
+	 * repository root or {@code .git}, {@link Path#toRealPath} without following links)
+	 * before opening it with JGit.
+	 */
+	private Path resolveValidatedLocalFileRepositoryRoot() throws IOException {
+		File remoteFile = new UrlResource(StringUtils.cleanPath(getUri())).getFile();
+		Path remotePath = remoteFile.toPath().toAbsolutePath().normalize();
+		if (!Files.exists(remotePath, LinkOption.NOFOLLOW_LINKS)) {
+			throw new IllegalStateException("No directory at " + getUri());
+		}
+		// Reject a symlink as the repository root: some JDKs still resolve paths in ways
+		// that obscure a symlink final component; fail closed for local TOCTOU / escape.
+		if (Files.isSymbolicLink(remotePath)) {
+			throw new IllegalStateException(
+					"Local git URI must not use a symbolic link as the repository directory: " + getUri());
+		}
+		Path remoteReal;
+		try {
+			// Canonicalize without following links so intermediate symlink segments fail.
+			remoteReal = remotePath.toRealPath(LinkOption.NOFOLLOW_LINKS);
+		}
+		catch (IOException ex) {
+			throw new IllegalStateException(
+					"Local git URI path cannot be resolved without symbolic links in the path: " + getUri(), ex);
+		}
+		if (!Files.isDirectory(remoteReal, LinkOption.NOFOLLOW_LINKS)) {
+			throw new IllegalStateException("No directory at " + getUri());
+		}
+		Path gitDir = remoteReal.resolve(".git");
+		if (!Files.exists(gitDir, LinkOption.NOFOLLOW_LINKS)) {
+			throw new IllegalStateException("No .git at " + getUri());
+		}
+		// Disallow .git as a symlink to another tree (check-then-open escape).
+		if (Files.isSymbolicLink(gitDir)) {
+			throw new IllegalStateException("Local git URI must not use a symbolic link for .git: " + getUri());
+		}
+		Path gitDirReal;
+		try {
+			gitDirReal = gitDir.toRealPath(LinkOption.NOFOLLOW_LINKS);
+		}
+		catch (IOException ex) {
+			throw new IllegalStateException(
+					"Local git .git path cannot be resolved without symbolic links in the path: " + getUri(), ex);
+		}
+		if (!Files.isDirectory(gitDirReal, LinkOption.NOFOLLOW_LINKS)) {
+			throw new IllegalStateException("No .git directory at " + getUri());
+		}
+		return remoteReal;
+	}
+
+	/**
+	 * Opens {@code file:} repos only after
+	 * {@link #resolveValidatedLocalFileRepositoryRoot()} and re-checks JGit's resolved
+	 * paths so an open cannot land outside the hardened root.
+	 */
+	private Git openValidatedLocalFileGitRepository() throws IOException {
+		Path remoteRoot = resolveValidatedLocalFileRepositoryRoot();
+		Git git = this.gitFactory.getGitByOpen(remoteRoot.toFile());
+		assertOpenedLocalRepositoryPathsUnderRoot(git, remoteRoot);
 		return git;
 	}
 
-	private Git cloneToBasedir() throws GitAPIException {
+	/**
+	 * Ensure JGit did not resolve the repository to a location outside the hardened
+	 * {@code file:} URI root (defense in depth after {@link Path#toRealPath} checks).
+	 */
+	private void assertOpenedLocalRepositoryPathsUnderRoot(Git git, Path remoteRoot) {
+		Repository repository = git.getRepository();
+		File gitDirectoryFile = repository.getDirectory();
+		if (gitDirectoryFile != null) {
+			Path gitDirResolved = resolveStrictRealPath(gitDirectoryFile.toPath());
+			assertPathUnderRemoteRoot(gitDirResolved, remoteRoot);
+		}
+		if (!repository.isBare()) {
+			File workTree = repository.getWorkTree();
+			if (workTree != null) {
+				Path workResolved = resolveStrictRealPath(workTree.toPath());
+				assertPathUnderRemoteRoot(workResolved, remoteRoot);
+			}
+		}
+	}
+
+	/**
+	 * Resolves {@code path} without following symbolic links (consistent with pre-open
+	 * checks).
+	 */
+	private static Path resolveStrictRealPath(Path path) {
+		try {
+			return path.toAbsolutePath().normalize().toRealPath(LinkOption.NOFOLLOW_LINKS);
+		}
+		catch (IOException ex) {
+			throw new IllegalStateException(
+					"Could not resolve repository path without following symbolic links: " + path, ex);
+		}
+	}
+
+	/**
+	 * Ensures JGit did not report work tree or git dir outside the URI we validated.
+	 */
+	private static void assertPathUnderRemoteRoot(Path candidate, Path remoteRoot) {
+		Path normalized = candidate.toAbsolutePath().normalize();
+		Path root = remoteRoot.toAbsolutePath().normalize();
+		if (!normalized.startsWith(root)) {
+			throw new IllegalStateException(
+					"Opened repository location is outside the resolved local git URI root: " + candidate);
+		}
+	}
+
+	private Git cloneToBasedir(Path resolvedBasedir) throws IOException, GitAPIException {
+		// Another local actor could swap the path between prepare and clone; confirm the
+		// configured basedir still resolves to the directory we created.
+		assertBasedirStillResolvesTo(resolvedBasedir);
 		CloneCommand clone = this.gitFactory.getCloneCommandByCloneRepository()
 			.setURI(getUri())
-			.setDirectory(getBasedir());
+			.setDirectory(resolvedBasedir.toFile());
 		configureCommand(clone);
 		try {
 			return clone.call();
@@ -682,16 +814,134 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		}
 	}
 
+	/**
+	 * Recreates {@link #getBasedir()} as an empty directory suitable for cloning: parent
+	 * directories are ensured with {@link Files#createDirectories}, the previous leaf
+	 * (including if it was a symbolic link) is removed, then
+	 * {@link Files#createDirectory} creates the leaf exclusively so a concurrent local
+	 * swap to a symlink at the same path is likely to surface as
+	 * {@link FileAlreadyExistsException} instead of cloning into an unexpected location.
+	 * The path is re-checked immediately before clone. This narrows the local TOCTOU
+	 * window around the {@code basedir} leaf; administrators should still place
+	 * {@code basedir} under a directory only the server user controls.
+	 */
+	private Path recreateSecureBasedirForClone() throws IOException {
+		Path base = getBasedir().toPath().toAbsolutePath().normalize();
+		Path parent = base.getParent();
+		if (parent == null) {
+			throw new IllegalStateException("Basedir cannot be a filesystem root: " + getBasedir());
+		}
+		Files.createDirectories(parent);
+		// Remove prior leaf (directory contents, symlink, or stale file) so
+		// createDirectory
+		// can claim the path exclusively.
+		ensureBasedirLeafAbsentOrRemovable(base);
+		try {
+			// Fails if a concurrent process recreated the path (e.g. as a symlink) first.
+			Files.createDirectory(base);
+		}
+		catch (FileAlreadyExistsException ex) {
+			throw new IllegalStateException(
+					"Could not create exclusive local clone directory (path already exists): " + getBasedir(), ex);
+		}
+		return base.toRealPath(LinkOption.NOFOLLOW_LINKS);
+	}
+
+	/**
+	 * Clears or removes only the {@code basedir} leaf path so
+	 * {@link Files#createDirectory} can run on a clean name; symlinks are deleted without
+	 * traversing their targets.
+	 */
+	private void ensureBasedirLeafAbsentOrRemovable(Path base) throws IOException {
+		if (!Files.exists(base, LinkOption.NOFOLLOW_LINKS)) {
+			return;
+		}
+		if (Files.isSymbolicLink(base)) {
+			Files.delete(base);
+			return;
+		}
+		deleteBaseDirIfExists();
+		if (Files.exists(base, LinkOption.NOFOLLOW_LINKS)) {
+			Files.delete(base);
+		}
+	}
+
+	/**
+	 * Verifies {@link #getBasedir()} still resolves to the same real directory as right
+	 * after {@link #recreateSecureBasedirForClone()} (mitigates TOCTOU on the leaf path).
+	 */
+	private void assertBasedirStillResolvesTo(Path expectedReal) throws IOException {
+		Path base = getBasedir().toPath().toAbsolutePath().normalize();
+		Path current;
+		try {
+			current = base.toRealPath(LinkOption.NOFOLLOW_LINKS);
+		}
+		catch (IOException ex) {
+			throw new IllegalStateException("Could not re-resolve basedir before clone: " + getBasedir(), ex);
+		}
+		if (!current.equals(expectedReal)) {
+			throw new IllegalStateException(
+					"Local clone directory changed before clone (possible path substitution): " + getBasedir());
+		}
+	}
+
+	/**
+	 * Removes all entries under {@link #getBasedir()} without following symbolic links,
+	 * so a symlink cannot cause deletion outside the base directory. The base directory
+	 * itself is left in place (same behavior as the prior implementation).
+	 * <p>
+	 * {@link FileVisitOption#FOLLOW_LINKS} is not used, so a directory symlink entry is
+	 * deleted as a link rather than recursing into the link target.
+	 */
 	private void deleteBaseDirIfExists() {
-		if (getBasedir().exists()) {
-			for (File file : getBasedir().listFiles()) {
-				try {
-					FileUtils.delete(file, FileUtils.RECURSIVE);
-				}
-				catch (IOException e) {
-					throw new IllegalStateException("Failed to initialize base directory", e);
-				}
-			}
+		File basedirFile = getBasedir();
+		if (!Files.exists(basedirFile.toPath(), LinkOption.NOFOLLOW_LINKS)) {
+			return;
+		}
+		Path base = basedirFile.toPath().toAbsolutePath().normalize();
+		try {
+			// Empty enum set => do not follow directory symlinks into foreign trees.
+			Files.walkFileTree(base, EnumSet.noneOf(FileVisitOption.class), Integer.MAX_VALUE,
+					new SimpleFileVisitor<Path>() {
+
+						@Override
+						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+							// Defense in depth if the walk ever yielded a path outside
+							// base.
+							assertPathUnderBase(file, base);
+							Files.delete(file);
+							return FileVisitResult.CONTINUE;
+						}
+
+						@Override
+						public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+							throw exc;
+						}
+
+						@Override
+						public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+							if (exc != null) {
+								throw exc;
+							}
+							assertPathUnderBase(dir, base);
+							if (!dir.equals(base)) {
+								Files.delete(dir);
+							}
+							return FileVisitResult.CONTINUE;
+						}
+
+					});
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Failed to initialize base directory", e);
+		}
+	}
+
+	private static void assertPathUnderBase(Path candidate, Path base) {
+		Path normalized = candidate.toAbsolutePath().normalize();
+		Path normalizedBase = base.toAbsolutePath().normalize();
+		if (!normalized.startsWith(normalizedBase)) {
+			throw new IllegalStateException("Refusing to delete outside base directory: " + candidate);
 		}
 	}
 
