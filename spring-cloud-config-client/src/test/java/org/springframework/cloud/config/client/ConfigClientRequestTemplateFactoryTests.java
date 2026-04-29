@@ -35,7 +35,7 @@ public class ConfigClientRequestTemplateFactoryTests {
 		// 1. set up the factory
 		ConfigClientProperties properties = new ConfigClientProperties();
 		ObservationRegistry registry = ObservationRegistry.create();
-		ConfigClientRequestTemplateFactory factory = new ConfigClientRequestTemplateFactory(
+		ObservationConfigClientRequestTemplateFactory factory = new ObservationConfigClientRequestTemplateFactory(
 				LogFactory.getLog(getClass()), properties, registry);
 
 		// 2. create the RestTemplate
@@ -64,7 +64,7 @@ public class ConfigClientRequestTemplateFactoryTests {
 		// 1. set up the factory
 		ConfigClientProperties properties = new ConfigClientProperties();
 		ObservationRegistry registry = ObservationRegistry.NOOP;
-		ConfigClientRequestTemplateFactory factory = new ConfigClientRequestTemplateFactory(
+		ObservationConfigClientRequestTemplateFactory factory = new ObservationConfigClientRequestTemplateFactory(
 				LogFactory.getLog(getClass()), properties, registry);
 
 		// 2. create the RestTemplate

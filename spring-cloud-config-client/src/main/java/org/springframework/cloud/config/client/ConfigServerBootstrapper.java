@@ -19,8 +19,6 @@ package org.springframework.cloud.config.client;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import io.micrometer.observation.ObservationRegistry;
-
 import org.springframework.boot.bootstrap.BootstrapContext;
 import org.springframework.boot.bootstrap.BootstrapRegistry;
 import org.springframework.boot.bootstrap.BootstrapRegistry.InstanceSupplier;
@@ -37,8 +35,6 @@ public class ConfigServerBootstrapper implements BootstrapRegistryInitializer {
 
 	private LoaderInterceptor loaderInterceptor;
 
-	private ObservationRegistry observationRegistry;
-
 	static ConfigServerBootstrapper create() {
 		return new ConfigServerBootstrapper();
 	}
@@ -50,11 +46,6 @@ public class ConfigServerBootstrapper implements BootstrapRegistryInitializer {
 		return this;
 	}
 
-	public ConfigServerBootstrapper withObservationRegistry(ObservationRegistry observationRegistry) {
-		this.observationRegistry = observationRegistry;
-		return this;
-	}
-
 	public ConfigServerBootstrapper withLoaderInterceptor(LoaderInterceptor loaderInterceptor) {
 		this.loaderInterceptor = loaderInterceptor;
 		return this;
@@ -62,10 +53,6 @@ public class ConfigServerBootstrapper implements BootstrapRegistryInitializer {
 
 	@Override
 	public void initialize(BootstrapRegistry registry) {
-
-		if (observationRegistry != null) {
-			registry.register(ObservationRegistry.class, InstanceSupplier.of(observationRegistry));
-		}
 		if (restTemplateFactory != null) {
 			registry.register(RestTemplate.class, restTemplateFactory::apply);
 		}

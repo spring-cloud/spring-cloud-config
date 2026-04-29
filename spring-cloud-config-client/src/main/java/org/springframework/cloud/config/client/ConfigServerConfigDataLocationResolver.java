@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 
 import org.springframework.boot.bootstrap.BootstrapRegistry;
@@ -241,9 +240,13 @@ public class ConfigServerConfigDataLocationResolver
 			.registerSingleton("configDataConfigClientProperties",
 					event.getBootstrapContext().get(ConfigClientProperties.class)));
 
-		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class,
-				context -> new ConfigClientRequestTemplateFactory(log, context.get(ConfigClientProperties.class),
-						context.getOrElse(ObservationRegistry.class, ObservationRegistry.NOOP)));
+		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class, context -> {
+			ConfigClientProperties props = context.get(ConfigClientProperties.class);
+			if (ClassUtils.isPresent("io.micrometer.observation.ObservationRegistry", null)) {
+				return ObservationConfigClientRequestTemplateFactory.createWithObservation(context, log, props);
+			}
+			return new ConfigClientRequestTemplateFactory(log, props);
+		});
 
 		bootstrapContext.registerIfAbsent(RestTemplate.class, context -> {
 			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);

@@ -98,7 +98,8 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 		try {
 			ObservationRegistry registry = ObservationRegistry.create();
 			context = new SpringApplicationBuilder(TestConfig.class)
-				.addBootstrapRegistryInitializer(ConfigServerBootstrapper.create().withObservationRegistry(registry))
+				.addBootstrapRegistryInitializer(
+						ObservationConfigServerBootstrapper.create().withObservationRegistry(registry))
 				.addBootstrapRegistryInitializer(reg -> reg.addCloseListener(event -> {
 					BootstrapContext bootstrapContext = event.getBootstrapContext();
 					ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
