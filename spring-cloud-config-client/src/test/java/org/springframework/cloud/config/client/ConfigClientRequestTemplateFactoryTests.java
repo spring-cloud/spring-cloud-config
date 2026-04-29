@@ -32,45 +32,45 @@ public class ConfigClientRequestTemplateFactoryTests {
 
 	@Test
 	void shouldInstrumentRestTemplateWhenObservationRegistryProvided() {
-		// 1. montar a factory
+		// 1. set up the factory
 		ConfigClientProperties properties = new ConfigClientProperties();
 		ObservationRegistry registry = ObservationRegistry.create();
 		ConfigClientRequestTemplateFactory factory = new ConfigClientRequestTemplateFactory(
 				LogFactory.getLog(getClass()), properties, registry);
 
-		// 2. criar o RestTemplate
+		// 2. create the RestTemplate
 		RestTemplate restTemplate = factory.create();
 
-		// 3. verificar os interceptors
+		// 3. verify the observation registry
 		assertThat(restTemplate.getObservationRegistry()).isEqualTo(registry);
 	}
 
 	@Test
 	void shouldNotInstrumentRestTemplateWhenObservationRegistryNotProvided() {
-		// 1. montar a factory
+		// 1. set up the factory
 		ConfigClientProperties properties = new ConfigClientProperties();
 		ConfigClientRequestTemplateFactory factory = new ConfigClientRequestTemplateFactory(
 				LogFactory.getLog(getClass()), properties);
 
-		// 2. criar o RestTemplate
+		// 2. create the RestTemplate
 		RestTemplate restTemplate = factory.create();
 
-		// 3. verificar os interceptors
+		// 3. verify the observation registry
 		assertThat(restTemplate.getObservationRegistry()).isEqualTo(ObservationRegistry.NOOP);
 	}
 
 	@Test
 	void shouldNotInstrumentRestTemplateWhenObservationRegistryIsNoop() {
-		// 1. montar a factory
+		// 1. set up the factory
 		ConfigClientProperties properties = new ConfigClientProperties();
 		ObservationRegistry registry = ObservationRegistry.NOOP;
 		ConfigClientRequestTemplateFactory factory = new ConfigClientRequestTemplateFactory(
-				LogFactory.getLog(getClass()), properties, ObservationRegistry.NOOP);
+				LogFactory.getLog(getClass()), properties, registry);
 
-		// 2. criar o RestTemplate
+		// 2. create the RestTemplate
 		RestTemplate restTemplate = factory.create();
 
-		// 3. verificar os interceptors
+		// 3. verify the observation registry
 		assertThat(restTemplate.getObservationRegistry()).isEqualTo(ObservationRegistry.NOOP);
 	}
 

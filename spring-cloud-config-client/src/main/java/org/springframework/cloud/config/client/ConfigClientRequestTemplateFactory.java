@@ -57,12 +57,12 @@ public class ConfigClientRequestTemplateFactory {
 
 	private final ConfigClientProperties properties;
 
-	private final ObservationRegistry observationRegistry;
+	private final ObservationRestTemplateCustomizer observationRestTemplateCustomizer;
 
 	public ConfigClientRequestTemplateFactory(Log log, ConfigClientProperties properties) {
 		this.log = log;
 		this.properties = properties;
-		this.observationRegistry = ObservationRegistry.NOOP;
+		this.observationRestTemplateCustomizer = null;
 
 	}
 
@@ -70,7 +70,10 @@ public class ConfigClientRequestTemplateFactory {
 			ObservationRegistry observationRegistry) {
 		this.log = log;
 		this.properties = properties;
-		this.observationRegistry = observationRegistry;
+		this.observationRestTemplateCustomizer = observationRegistry != ObservationRegistry.NOOP
+				? new ObservationRestTemplateCustomizer(observationRegistry,
+						new DefaultClientRequestObservationConvention())
+				: null;
 	}
 
 	public Log getLog() {
@@ -97,9 +100,8 @@ public class ConfigClientRequestTemplateFactory {
 			template.setInterceptors(Arrays.asList(new GenericRequestHeaderInterceptor(headers)));
 		}
 
-		if (observationRegistry != null && observationRegistry != ObservationRegistry.NOOP) {
-			new ObservationRestTemplateCustomizer(observationRegistry, new DefaultClientRequestObservationConvention())
-				.customize(template);
+		if (observationRestTemplateCustomizer != null) {
+			observationRestTemplateCustomizer.customize(template);
 		}
 
 		return template;
