@@ -318,17 +318,17 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		for (CredentialItem i : items) {
 			if (i instanceof CredentialItem.Username) {
 				((CredentialItem.Username) i).setValue(awsAccessKey);
-				this.logger.trace("Returning username " + awsAccessKey);
+				this.logger.trace("Setting AWS Access Key in CredentialItem");
 				continue;
 			}
 			if (i instanceof CredentialItem.Password) {
 				((CredentialItem.Password) i).setValue(codeCommitPassword.toCharArray());
-				this.logger.trace("Returning password " + codeCommitPassword);
+				this.logger.trace("Setting password in CredentialItem");
 				continue;
 			}
 			if (i instanceof CredentialItem.StringType && i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
 				((CredentialItem.StringType) i).setValue(codeCommitPassword);
-				this.logger.trace("Returning password string " + codeCommitPassword);
+				this.logger.trace("Setting password in CredentialItem");
 				continue;
 			}
 			throw new UnsupportedCredentialItem(uri, i.getClass().getName() + ":" + i.getPromptText()); //$NON-NLS-1$
