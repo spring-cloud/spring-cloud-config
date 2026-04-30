@@ -24,7 +24,7 @@ public class ObservationConfigServerBootstrapper extends ConfigServerBootstrappe
 
 	private ObservationRegistry observationRegistry;
 
-	static ObservationConfigServerBootstrapper create() {
+	public static ObservationConfigServerBootstrapper create() {
 		return new ObservationConfigServerBootstrapper();
 	}
 

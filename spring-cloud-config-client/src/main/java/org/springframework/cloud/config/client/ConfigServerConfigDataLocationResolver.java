@@ -242,7 +242,7 @@ public class ConfigServerConfigDataLocationResolver
 
 		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class, context -> {
 			ConfigClientProperties props = context.get(ConfigClientProperties.class);
-			if (ClassUtils.isPresent("io.micrometer.observation.ObservationRegistry", null) && ClassUtils
+			if (ClassUtils
 				.isPresent("org.springframework.boot.restclient.observation.ObservationRestTemplateCustomizer", null)) {
 				return ObservationConfigClientRequestTemplateFactory.createWithObservation(context, log, props);
 			}
