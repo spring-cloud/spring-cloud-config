@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -26,6 +27,7 @@ import org.springframework.boot.bootstrap.BootstrapContext;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.test.ClassPathExclusions;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,14 +46,13 @@ public class ConfigServerConfigDataWithoutMicrometerTests {
 				BootstrapContext bootstrapContext = event.getBootstrapContext();
 				ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
 
-				ConfigClientRequestTemplateFactory templateFactory = bootstrapContext
-					.get(ConfigClientRequestTemplateFactory.class);
-				beanFactory.registerSingleton("factory", templateFactory);
+				RestTemplate restTemplate = bootstrapContext.get(RestTemplate.class);
+				beanFactory.registerSingleton("restTemplate", restTemplate);
 			}))
 			.run("--spring.config.import=optional:configserver:")) {
 			assertThat(context).isNotNull();
-
-			assertThat(context.getBean("factory")).isNotInstanceOf(ObservationConfigClientRequestTemplateFactory.class);
+			assertThat(context.getBean(RestTemplate.class).getObservationRegistry())
+				.isEqualTo(ObservationRegistry.NOOP);
 		}
 	}
 
