@@ -18,9 +18,11 @@ package org.springframework.cloud.config.client;
 
 import org.junit.jupiter.api.Test;
 
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.bootstrap.BootstrapContext;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.test.ClassPathExclusions;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -31,15 +33,25 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Luccas Asaphe
  *
  */
-@ClassPathExclusions({ "spring-boot-starter-actuator-*.jar", "spring-boot-restclient-*.jar" })
+@ClassPathExclusions({ "spring-boot-restclient-*.jar" })
 public class ConfigServerConfigDataWithoutMicrometerTests {
 
 	@Test
 	void contextStartsWithoutMicrometer() {
 		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfig.class)
 			.web(WebApplicationType.NONE)
+			.addBootstrapRegistryInitializer(registry -> registry.addCloseListener(event -> {
+				BootstrapContext bootstrapContext = event.getBootstrapContext();
+				ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
+
+				ConfigClientRequestTemplateFactory templateFactory = bootstrapContext
+					.get(ConfigClientRequestTemplateFactory.class);
+				beanFactory.registerSingleton("factory", templateFactory);
+			}))
 			.run("--spring.config.import=optional:configserver:")) {
 			assertThat(context).isNotNull();
+
+			assertThat(context.getBean("factory")).isNotInstanceOf(ObservationConfigClientRequestTemplateFactory.class);
 		}
 	}
 
