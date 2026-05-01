@@ -21,6 +21,7 @@ import org.springframework.cloud.config.server.support.EnvironmentRepositoryProp
 
 /**
  * @author Clay McCoy
+ * @author Noah Hanka
  */
 @ConfigurationProperties("spring.cloud.config.server.awss3")
 public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperties {
@@ -41,10 +42,16 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 	private String bucket;
 
 	/**
-	 * Use application name as intermediate directory. Analogous to `searchPaths:
-	 * {application}` from Git backend.
+	 * Use application name as intermediate directory. Analogous to \`searchPaths:
+	 * {application}\` from Git backend.
 	 */
 	private boolean useDirectoryLayout;
+
+	/**
+	 * Thread pool size for fetching properties from S3 in parallel. If set to 0 or less,
+	 * fetching will be sequential.
+	 */
+	private int poolSize = 0;
 
 	private int order = DEFAULT_ORDER;
 
@@ -78,6 +85,14 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 
 	public void setUseDirectoryLayout(boolean useDirectoryLayout) {
 		this.useDirectoryLayout = useDirectoryLayout;
+	}
+
+	public int getPoolSize() {
+		return poolSize;
+	}
+
+	public void setPoolSize(int poolSize) {
+		this.poolSize = poolSize;
 	}
 
 	public int getOrder() {

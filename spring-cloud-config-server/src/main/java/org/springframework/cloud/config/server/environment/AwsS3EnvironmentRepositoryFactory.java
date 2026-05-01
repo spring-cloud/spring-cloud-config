@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 
@@ -38,8 +41,13 @@ public class AwsS3EnvironmentRepositoryFactory
 		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 		final S3Client client = clientBuilder.build();
 
+		Executor executor = null;
+		if (environmentProperties.getPoolSize() > 0) {
+			executor = Executors.newFixedThreadPool(environmentProperties.getPoolSize());
+		}
+
 		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(client,
-				environmentProperties.getBucket(), environmentProperties.isUseDirectoryLayout(), server);
+				environmentProperties.getBucket(), environmentProperties.isUseDirectoryLayout(), server, executor);
 		repository.setOrder(environmentProperties.getOrder());
 		return repository;
 	}
