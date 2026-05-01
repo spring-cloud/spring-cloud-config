@@ -21,7 +21,6 @@ import org.springframework.cloud.config.server.support.EnvironmentRepositoryProp
 
 /**
  * @author Clay McCoy
- * @author Noah Hanka
  */
 @ConfigurationProperties("spring.cloud.config.server.awss3")
 public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperties {
@@ -42,8 +41,8 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 	private String bucket;
 
 	/**
-	 * Use application name as intermediate directory. Analogous to \`searchPaths:
-	 * {application}\` from Git backend.
+	 * Use application name as intermediate directory. Analogous to `searchPaths:
+	 * {application}` from Git backend.
 	 */
 	private boolean useDirectoryLayout;
 
