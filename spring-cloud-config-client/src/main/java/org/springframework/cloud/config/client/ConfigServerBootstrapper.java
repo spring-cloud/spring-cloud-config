@@ -35,7 +35,7 @@ public class ConfigServerBootstrapper implements BootstrapRegistryInitializer {
 
 	private LoaderInterceptor loaderInterceptor;
 
-	public static ConfigServerBootstrapper create() {
+	static ConfigServerBootstrapper create() {
 		return new ConfigServerBootstrapper();
 	}
 

@@ -93,13 +93,10 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 	}
 
 	@Test
-	void customizableObservationRegistry() {
+	void restTemplateIsInstrumentedWithObservation() {
 		ConfigurableApplicationContext context = null;
 		try {
-			ObservationRegistry registry = ObservationRegistry.create();
 			context = new SpringApplicationBuilder(TestConfig.class)
-				.addBootstrapRegistryInitializer(
-						ObservationConfigServerBootstrapper.create().withObservationRegistry(registry))
 				.addBootstrapRegistryInitializer(reg -> reg.addCloseListener(event -> {
 					BootstrapContext bootstrapContext = event.getBootstrapContext();
 					ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
@@ -111,7 +108,8 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 
 			RestTemplateHolder holder = context.getBean(RestTemplateHolder.class);
 			assertThat(holder).isNotNull();
-			assertThat(holder.restTemplate.getObservationRegistry()).isEqualTo(registry);
+			assertThat(holder.restTemplate.getObservationRegistry()).isNotNull();
+			assertThat(holder.restTemplate.getObservationRegistry()).isNotSameAs(ObservationRegistry.NOOP);
 		}
 		finally {
 			if (context != null) {
