@@ -79,6 +79,8 @@ public class EnvironmentController {
 
 	private boolean acceptEmpty = true;
 
+	private boolean validateProfiles = true;
+
 	public EnvironmentController(EnvironmentRepository repository) {
 		this(repository, new JsonMapper());
 	}
@@ -103,6 +105,15 @@ public class EnvironmentController {
 	 */
 	public void setAcceptEmpty(boolean acceptEmpty) {
 		this.acceptEmpty = acceptEmpty;
+	}
+
+	/**
+	 * Flag to indicate that spring profiles are to be validated (default true). If set to
+	 * false, then profiles with invalid characters (e.g. '-') will throw an exception.
+	 * @param validateProfiles the flag to set
+	 */
+	public void setValidateProfiles(boolean validateProfiles) {
+		this.validateProfiles = validateProfiles;
 	}
 
 	@GetMapping(path = "/{name}/{profiles:(?!.*\\b\\.(?:ya?ml|properties|json)\\b).*}",
@@ -132,7 +143,7 @@ public class EnvironmentController {
 		try {
 			name = normalize(name);
 			label = normalize(label);
-			if (isInvalidProfiles(profiles)) {
+			if (this.validateProfiles && isInvalidProfiles(profiles)) {
 				throw new InvalidEnvironmentRequestException("Invalid request");
 			}
 			Environment environment = this.repository.findOne(name, profiles, label, includeOrigin);

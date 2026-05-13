@@ -44,6 +44,7 @@ import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
@@ -578,6 +579,12 @@ class EnvironmentControllerTests {
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
 		assertThatThrownBy(() -> this.controller.labelled("application", "bar%2Ffoo", "label"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void invalidProfileTestsDisabled() {
+		this.controller.setValidateProfiles(false);
+		assertThatNoException().isThrownBy(() -> this.controller.labelled("application", "bar,..,foo", "label"));
 	}
 
 	abstract class MockMvcTestCases {

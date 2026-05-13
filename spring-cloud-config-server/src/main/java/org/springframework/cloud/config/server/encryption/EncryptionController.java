@@ -66,6 +66,8 @@ public class EncryptionController {
 
 	private String defaultProfile = "default";
 
+	private boolean validateProfiles = true;
+
 	public EncryptionController(TextEncryptorLocator encryptorLocator) {
 		this.encryptorLocator = encryptorLocator;
 	}
@@ -151,7 +153,7 @@ public class EncryptionController {
 		if (isInvalidEncodedLocation(name)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}
-		if (isInvalidProfiles(profiles)) {
+		if (this.validateProfiles && isInvalidProfiles(profiles)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}
 
@@ -264,6 +266,10 @@ public class EncryptionController {
 		body.put("status", "INVALID");
 		body.put("description", "Text not encrypted with this key");
 		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+	}
+
+	public void setValidateProfiles(boolean validateProfiles) {
+		this.validateProfiles = validateProfiles;
 	}
 
 }
