@@ -17,10 +17,12 @@
 package org.springframework.cloud.config.server.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.config.server.encryption.EncryptionController;
 import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 /**
  * @author Bartosz Wojtkiewicz
@@ -36,11 +38,18 @@ public class ConfigServerEncryptionConfiguration {
 	@Autowired
 	private ConfigServerProperties properties;
 
+	@Autowired
+	private Environment environment;
+
 	@Bean
 	public EncryptionController encryptionController() {
 		EncryptionController controller = new EncryptionController(this.encryptor);
 		controller.setDefaultApplicationName(this.properties.getDefaultApplicationName());
 		controller.setDefaultProfile(this.properties.getDefaultProfile());
+		boolean validateProfiles = Binder.get(this.environment)
+			.bind("spring.profiles.validate", Boolean.class)
+			.orElse(true);
+		controller.setValidateProfiles(validateProfiles);
 		return controller;
 	}
 

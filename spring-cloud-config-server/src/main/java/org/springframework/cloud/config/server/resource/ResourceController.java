@@ -82,6 +82,8 @@ public class ResourceController {
 
 	private boolean plainTextEncryptEnabled = false;
 
+	private boolean validateProfiles = true;
+
 	public ResourceController(ResourceRepository resourceRepository, EnvironmentRepository environmentRepository,
 			Map<String, ResourceEncryptor> resourceEncryptorMap) {
 		this.resourceRepository = resourceRepository;
@@ -102,6 +104,15 @@ public class ResourceController {
 
 	public void setPlainTextEncryptEnabled(boolean plainTextEncryptEnabled) {
 		this.plainTextEncryptEnabled = plainTextEncryptEnabled;
+	}
+
+	/**
+	 * Flag to indicate that spring profiles are to be validated (default true). If set to
+	 * false, then profiles with invalid characters (e.g. '-') will throw an exception.
+	 * @param validateProfiles the flag to set
+	 */
+	public void setValidateProfiles(boolean validateProfiles) {
+		this.validateProfiles = validateProfiles;
 	}
 
 	@GetMapping("/{name}/{profile}/{label}/**")
@@ -145,7 +156,7 @@ public class ResourceController {
 			boolean resolvePlaceholders, String acceptedCharset) throws IOException {
 		name = normalize(name);
 		label = normalize(label);
-		if (isInvalidProfiles(profile)) {
+		if (this.validateProfiles && isInvalidProfiles(profile)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}
 		path = normalize(path);
@@ -227,7 +238,7 @@ public class ResourceController {
 			String path) throws IOException {
 		name = normalize(name);
 		label = normalize(label);
-		if (isInvalidProfiles(profile)) {
+		if (this.validateProfiles && isInvalidProfiles(profile)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}
 		path = normalize(path);
