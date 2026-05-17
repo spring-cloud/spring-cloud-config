@@ -36,7 +36,6 @@ import tools.jackson.databind.json.JsonMapper;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.cloud.config.server.support.PathUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -51,6 +50,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
+import static org.springframework.cloud.config.server.support.PathUtils.isInvalidEncodedLocation;
+import static org.springframework.cloud.config.server.support.PathUtils.isInvalidProfiles;
 
 /**
  * @author Dave Syer
@@ -78,6 +79,8 @@ public class EnvironmentController {
 
 	private boolean acceptEmpty = true;
 
+	private boolean validateProfiles = true;
+
 	public EnvironmentController(EnvironmentRepository repository) {
 		this(repository, new JsonMapper());
 	}
@@ -102,6 +105,15 @@ public class EnvironmentController {
 	 */
 	public void setAcceptEmpty(boolean acceptEmpty) {
 		this.acceptEmpty = acceptEmpty;
+	}
+
+	/**
+	 * Flag to indicate that spring profiles are to be validated (default true). If set to
+	 * false, then profiles with invalid characters (e.g. '-') will throw an exception.
+	 * @param validateProfiles the flag to set
+	 */
+	public void setValidateProfiles(boolean validateProfiles) {
+		this.validateProfiles = validateProfiles;
 	}
 
 	@GetMapping(path = "/{name}/{profiles:(?!.*\\b\\.(?:ya?ml|properties|json)\\b).*}",
@@ -131,6 +143,9 @@ public class EnvironmentController {
 		try {
 			name = normalize(name);
 			label = normalize(label);
+			if (this.validateProfiles && isInvalidProfiles(profiles)) {
+				throw new InvalidEnvironmentRequestException("Invalid request");
+			}
 			Environment environment = this.repository.findOne(name, profiles, label, includeOrigin);
 			if (!this.acceptEmpty && (environment == null || environment.getPropertySources().isEmpty())) {
 				throw new EnvironmentNotFoundException("Profile Not found");
@@ -145,7 +160,7 @@ public class EnvironmentController {
 	}
 
 	private String normalize(String part) {
-		if (PathUtils.isInvalidEncodedLocation(part)) {
+		if (isInvalidEncodedLocation(part)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}
 		return Environment.normalize(part);

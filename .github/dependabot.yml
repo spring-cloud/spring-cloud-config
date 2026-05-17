@@ -35,15 +35,24 @@ updates:
   - package-ecosystem: npm
     target-branch: docs-build
     directory: /
+    ignore:
+      # antora 3.2.0-alpha.12 is not compatible with the version of node we use so do not update it
+      - dependency-name: "antora"
     schedule:
       interval: weekly
   - package-ecosystem: npm
     target-branch: main
     directory: /docs
+    ignore:
+      # antora 3.2.0-alpha.12 is not compatible with the version of node we use so do not update it
+      - dependency-name: "antora"
     schedule:
       interval: weekly
   - package-ecosystem: npm
     target-branch: 4.3.x
     directory: /docs
+    ignore:
+      # antora 3.2.0-alpha.12 is not compatible with the version of node we use so do not update it
+      - dependency-name: "antora"
     schedule:
       interval: weekly

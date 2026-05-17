@@ -14,6 +14,7 @@
 *** xref:server/environment-repository/aws-s3-backend.adoc[]
 *** xref:server/environment-repository/aws-parameter-store-backend.adoc[]
 *** xref:server/environment-repository/aws-secrets-manager-backend.adoc[]
+*** xref:server/environment-repository/gcp-secret-manager-backend.adoc[]
 *** xref:server/environment-repository/credhub-backend.adoc[]
 *** xref:server/environment-repository/mongo-backend.adoc[]
 *** xref:server/environment-repository/composite-repositories.adoc[]

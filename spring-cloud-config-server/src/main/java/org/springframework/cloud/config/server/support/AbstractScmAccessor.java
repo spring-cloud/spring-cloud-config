@@ -38,6 +38,8 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Base class for components that want to access a source control management system.
@@ -150,7 +152,19 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 			// If there's no context path add one
 			uri = uri + "/";
 		}
+		validateNoTemplateInAuthority(uri);
 		this.uri = uri;
+	}
+
+	private void validateNoTemplateInAuthority(String urlTemplate) {
+		UriComponents components = UriComponentsBuilder.fromUriString(urlTemplate).build();
+		// If the port is templated this call will throw an Exception
+		components.getPort();
+		String host = components.getHost();
+		if (host != null && (host.contains("{") || host.contains("}"))) {
+			throw new IllegalArgumentException("Template placeholders not allowed in host: " + urlTemplate);
+		}
+
 	}
 
 	public File getBasedir() {

@@ -13,6 +13,33 @@ For example, if the label is `foo/bar`, replacing the slash would result in the 
 The inclusion of the special string `(\{special-string})` can also be applied to the `\{application}` parameter.
 If you use a command-line client such as curl, be careful with the brackets in the URL -- you should escape them from the shell with single quotes ('').
 
+[[git-backend-local-path-hardening]]
+== Local Path Hardening
+
+When the Git backend touches the local file system, it applies extra checks to
+reduce time-of-check/time-of-use (TOCTOU) issues and unwanted symbolic-link
+behavior. These mitigations complement normal host hardening (permissions,
+separate service accounts, and non-world-writable parent directories); they do
+not replace it.
+
+*`file:` repositories (`spring.cloud.config.server.git.uri`)*::
+Before JGit opens a `file:` repository, the server resolves the configured path and
+rejects a symbolic link used as the repository root or as the `.git` entry.
+Paths are canonicalized with `Path#toRealPath` using `LinkOption.NOFOLLOW_LINKS`
+so intermediate symlink segments are not followed silently. After the
+repository is opened, the work tree and git directory that JGit reports are
+checked to stay under the same resolved root. Configure a concrete directory
+path for `file:` URIs (not a path whose final name is a symlink to a repository
+elsewhere).
+
+*Remote clones and `spring.cloud.config.server.git.basedir`*::
+When the server clones into `basedir`, it prepares an empty leaf directory
+(including removing a prior symlink at that path when present), creates the leaf
+with an exclusive directory create when the OS allows it, clears old content
+without following directory symlinks during recursive delete, and re-resolves
+`basedir` immediately before invoking JGit's clone so a concurrent replacement of
+the path is more likely to be detected.
+
 [[skipping-ssl-certificate-validation]]
 == Skipping SSL Certificate Validation
 

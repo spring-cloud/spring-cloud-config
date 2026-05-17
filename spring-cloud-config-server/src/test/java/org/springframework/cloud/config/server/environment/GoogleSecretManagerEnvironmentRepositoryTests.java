@@ -34,6 +34,7 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
+import org.springframework.cloud.config.server.environment.secretmanager.GcpProjectResolutionSupport;
 import org.springframework.cloud.config.server.environment.secretmanager.GoogleConfigProvider;
 import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretComparatorByVersion;
 import org.springframework.cloud.config.server.environment.secretmanager.GoogleSecretManagerAccessStrategyFactory;
@@ -74,7 +75,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 	public void testGetSecrets() throws IOException {
 		RestTemplate rest = mock(RestTemplate.class);
 		GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
-		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER, true)).thenReturn("test-project");
+		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER, false)).thenReturn("test-project");
 		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		SecretManagerServiceClient.ListSecretsPagedResponse response = mock(
 				SecretManagerServiceClient.ListSecretsPagedResponse.class);
@@ -83,7 +84,10 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		secrets.add(secret);
 		when(response.iterateAll()).thenReturn(secrets);
 		Mockito.doReturn(response).when(mock).listSecrets(any(ListSecretsRequest.class));
-		GoogleSecretManagerV1AccessStrategy strategy = new GoogleSecretManagerV1AccessStrategy(rest, provider, mock);
+		GoogleSecretManagerEnvironmentProperties properties = new GoogleSecretManagerEnvironmentProperties();
+		properties.setAllowedProjectIds(List.of("test-project"));
+		GoogleSecretManagerV1AccessStrategy strategy = new GoogleSecretManagerV1AccessStrategy(rest, provider, mock,
+				new GcpProjectResolutionSupport(properties));
 		assertThat(strategy.getSecrets()).hasSize(1);
 	}
 
@@ -92,7 +96,7 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 	public void testGetSecretValues() {
 		RestTemplate rest = mock(RestTemplate.class);
 		GoogleConfigProvider provider = mock(HttpHeaderGoogleConfigProvider.class);
-		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER, true)).thenReturn("test-project");
+		when(provider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER, false)).thenReturn("test-project");
 		SecretManagerServiceClient mock = mock(SecretManagerServiceClient.class);
 		SecretManagerServiceClient.ListSecretVersionsPagedResponse response = mock(
 				SecretManagerServiceClient.ListSecretVersionsPagedResponse.class);
@@ -119,7 +123,8 @@ public class GoogleSecretManagerEnvironmentRepositoryTests {
 		secrets.add(secret4);
 		when(response.iterateAll()).thenReturn(secrets);
 		Mockito.doReturn(response).when(mock).listSecretVersions(any(ListSecretVersionsRequest.class));
-		GoogleSecretManagerV1AccessStrategy strategy = new GoogleSecretManagerV1AccessStrategy(rest, provider, mock);
+		GoogleSecretManagerV1AccessStrategy strategy = new GoogleSecretManagerV1AccessStrategy(rest, provider, mock,
+				new GcpProjectResolutionSupport(new GoogleSecretManagerEnvironmentProperties()));
 		AccessSecretVersionResponse accessSecretVersionResponse = mock(AccessSecretVersionResponse.class);
 		SecretPayload payload = mock(SecretPayload.class);
 		ByteString data = mock(ByteString.class);

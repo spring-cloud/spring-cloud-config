@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -48,10 +49,7 @@ import com.google.cloud.secretmanager.v1.SecretVersionName;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentProperties;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -69,6 +67,18 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 
 	private static Log logger = LogFactory.getLog(GoogleSecretManagerV1AccessStrategy.class);
 
+	private GcpProjectResolutionSupport projectResolutionSupport;
+
+	/**
+	 * Constructs a new instance of {@code GoogleSecretManagerV1AccessStrategy}. This
+	 * constructor is deprecated and marked for removal.
+	 * @param rest the {@code RestTemplate} instance used for making HTTP requests
+	 * @param configProvider the {@code GoogleConfigProvider} instance providing
+	 * configuration values
+	 * @param serviceAccountFile the path to the Google Cloud service account JSON file
+	 * @throws IOException if an I/O error occurs while reading the service account file
+	 */
+	@Deprecated(forRemoval = true)
 	public GoogleSecretManagerV1AccessStrategy(RestTemplate rest, GoogleConfigProvider configProvider,
 			String serviceAccountFile) throws IOException {
 		if (StringUtils.hasText(serviceAccountFile)) {
@@ -84,6 +94,45 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 		this.configProvider = configProvider;
 	}
 
+	/**
+	 * Constructs a new instance of {@code GoogleSecretManagerV1AccessStrategy}.
+	 * @param rest the RestTemplate instance used for making HTTP requests
+	 * @param configProvider the GoogleConfigProvider instance providing configuration
+	 * values
+	 * @param serviceAccountFile the path to the Google Cloud service account JSON file.
+	 * If this parameter is non-empty, credentials will be loaded using the specified
+	 * file.
+	 * @param gcpProjectResolutionSupport the GcpProjectResolutionSupport instance
+	 * providing support for resolving the Google Cloud project to use
+	 * @throws IOException if an I/O error occurs while reading the service account file
+	 */
+	public GoogleSecretManagerV1AccessStrategy(RestTemplate rest, GoogleConfigProvider configProvider,
+			String serviceAccountFile, GcpProjectResolutionSupport gcpProjectResolutionSupport) throws IOException {
+		if (StringUtils.hasText(serviceAccountFile)) {
+			GoogleCredentials creds = GoogleCredentials.fromStream(new FileInputStream(new File(serviceAccountFile)));
+			this.client = SecretManagerServiceClient.create(SecretManagerServiceSettings.newBuilder()
+				.setCredentialsProvider(FixedCredentialsProvider.create(creds))
+				.build());
+		}
+		else {
+			this.client = SecretManagerServiceClient.create();
+		}
+		this.rest = rest;
+		this.configProvider = configProvider;
+		this.projectResolutionSupport = gcpProjectResolutionSupport;
+	}
+
+	/**
+	 * Constructor for the GoogleSecretManagerV1AccessStrategy class. This constructor is
+	 * deprecated and will be removed in a future release. Use a constructor that passes
+	 * {@code GcpProjectResolutionSupport}.
+	 * @param rest the RestTemplate instance used for making HTTP requests
+	 * @param configProvider the GoogleConfigProvider instance providing configuration
+	 * values
+	 * @param client the SecretManagerServiceClient instance used for interacting with
+	 * Google Secret Manager
+	 */
+	@Deprecated(forRemoval = true)
 	public GoogleSecretManagerV1AccessStrategy(RestTemplate rest, GoogleConfigProvider configProvider,
 			SecretManagerServiceClient client) {
 		this.client = client;
@@ -91,10 +140,32 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 		this.configProvider = configProvider;
 	}
 
+	/**
+	 * Constructs a new instance of {@code GoogleSecretManagerV1AccessStrategy}.
+	 * @param rest the {@code RestTemplate} instance used for making HTTP requests
+	 * @param configProvider the {@code GoogleConfigProvider} instance providing
+	 * configuration values
+	 * @param client the {@code SecretManagerServiceClient} instance used for interacting
+	 * with Google Secret Manager
+	 * @param projectResolutionSupport the {@code GcpProjectResolutionSupport} instance
+	 * providing support for resolving the Google Cloud project to use
+	 */
+	public GoogleSecretManagerV1AccessStrategy(RestTemplate rest, GoogleConfigProvider configProvider,
+			SecretManagerServiceClient client, GcpProjectResolutionSupport projectResolutionSupport) {
+		this.client = client;
+		this.rest = rest;
+		this.configProvider = configProvider;
+		this.projectResolutionSupport = projectResolutionSupport;
+	}
+
 	@Override
 	public List<Secret> getSecrets() {
+		String projectId = getProjectId();
+		if (projectId == null) {
+			return Collections.emptyList();
+		}
 		// Build the parent name.
-		ProjectName project = ProjectName.of(getProjectId());
+		ProjectName project = ProjectName.of(projectId);
 
 		// Create the request.
 		ListSecretsRequest listSecretRequest = ListSecretsRequest.newBuilder().setParent(project.toString()).build();
@@ -170,8 +241,12 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 
 			TestIamPermissionsRequest requestBody = new TestIamPermissionsRequest().setPermissions(permissionsList);
 
+			String projectId = getProjectId();
+			if (projectId == null) {
+				return Boolean.FALSE;
+			}
 			TestIamPermissionsResponse testIamPermissionsResponse = service.projects()
-				.testIamPermissions(getProjectId(), requestBody)
+				.testIamPermissions(projectId, requestBody)
 				.execute();
 
 			if (testIamPermissionsResponse.getPermissions() != null && testIamPermissionsResponse.size() >= 1) {
@@ -193,22 +268,18 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 	}
 
 	/**
-	 * @return the Project Id.
+	 * @return the project id
 	 */
 	private String getProjectId() {
-		String result = null;
-		try {
-			result = configProvider.getValue(HttpHeaderGoogleConfigProvider.PROJECT_ID_HEADER, true);
+		if (projectResolutionSupport != null) {
+			String project = projectResolutionSupport.resolve(configProvider, rest);
+			if (project != null) {
+				return project;
+			}
 		}
-		catch (Exception e) {
-			// not in GCP
-			HttpEntity<String> entity = new HttpEntity<String>("parameters", getMetadataHttpHeaders());
-			result = rest
-				.exchange(GoogleSecretManagerEnvironmentProperties.GOOGLE_METADATA_PROJECT_URL, HttpMethod.GET, entity,
-						String.class)
-				.getBody();
-		}
-		return result;
+		logger.warn(
+				"Unable to resolve project id.  This could be because you are not passing GcpProjectResolutionSupport to GoogleSecretManagerV1AccessStrategy,the X-Project-ID header was not set in the request or the project ID from the header is not configured in the project allow list, the project ID could not be retrieved via http://metadata.google.internal/computeMetadata/v1/project/project-id, or no default project ID was set in the configuration.");
+		return null;
 	}
 
 	private static HttpHeaders getMetadataHttpHeaders() {
