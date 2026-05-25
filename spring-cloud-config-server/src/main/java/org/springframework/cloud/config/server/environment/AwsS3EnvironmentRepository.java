@@ -22,7 +22,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,6 +47,7 @@ import static org.springframework.cloud.config.server.environment.AwsS3Environme
 
 /**
  * @author Clay McCoy
+ * @author Noah Hanka
  * @author Scott Frederick
  * @author Daniel Aiken
  */
@@ -64,18 +67,26 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private final boolean useApplicationAsDirectory;
 
+	private final Executor executor;
+
 	protected int order = Ordered.LOWEST_PRECEDENCE;
 
 	public AwsS3EnvironmentRepository(S3Client s3Client, String bucketName, ConfigServerProperties server) {
-		this(s3Client, bucketName, false, server);
+		this(s3Client, bucketName, false, server, null);
 	}
 
 	public AwsS3EnvironmentRepository(S3Client s3Client, String bucketName, boolean useApplicationAsDirectory,
 			ConfigServerProperties server) {
+		this(s3Client, bucketName, useApplicationAsDirectory, server, null);
+	}
+
+	public AwsS3EnvironmentRepository(S3Client s3Client, String bucketName, boolean useApplicationAsDirectory,
+			ConfigServerProperties server, Executor executor) {
 		this.s3Client = s3Client;
 		this.bucketName = bucketName;
 		this.serverProperties = server;
 		this.useApplicationAsDirectory = useApplicationAsDirectory;
+		this.executor = (executor != null) ? executor : Runnable::run;
 	}
 
 	@Override
@@ -126,77 +137,70 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private void addPropertySources(Environment environment, List<String> apps, String[] profiles,
 			List<String> labels) {
+		List<S3ConfigFile> allConfigs = new ArrayList<>();
 		for (String label : labels) {
 			// If we have profiles, add property sources with those profiles
 			for (String profile : profiles) {
-				addPropertySourcesForApps(apps,
-						app -> addProfileSpecificPropertySource(environment, app, profile, label));
+				apps.forEach(app -> allConfigs.addAll(getProfileSpecificS3ConfigFiles(app, profile, label)));
 			}
 		}
 
 		// If we have no profiles just add property sources for all apps
 		if (profiles.length == 0) {
 			for (String label : labels) {
-				addPropertySourcesForApps(apps,
-						app -> addNonProfileSpecificPropertySource(environment, app, null, label));
+				apps.forEach(app -> allConfigs.addAll(getNonProfileSpecificS3ConfigFiles(app, null, label)));
 			}
 		}
 		else {
 			for (String label : labels) {
 				// If we have profiles, we still need to add property sources from files
-				// that
-				// are not profile specific but we pass
-				// along the profiles as well so we can check if any non-profile specific
-				// YAML
-				// files have profile specific documents
-				// within them
+				// that are not profile specific but we pass along the profiles as well
+				// so we can check if any non-profile specific YAML files have profile
+				// specific documents within them
 				for (String profile : profiles) {
-					addPropertySourcesForApps(apps,
-							app -> addNonProfileSpecificPropertySource(environment, app, profile, label));
+					apps.forEach(app -> allConfigs.addAll(getNonProfileSpecificS3ConfigFiles(app, profile, label)));
 				}
 			}
 		}
+
+		List<CompletableFuture<Void>> futures = allConfigs.stream()
+			.map(config -> CompletableFuture.runAsync(config::read, executor))
+			.collect(Collectors.toList());
+		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+		for (S3ConfigFile s3ConfigFile : allConfigs) {
+			addPropertySource(environment, s3ConfigFile);
+		}
 	}
 
-	private void addPropertySourcesForApps(List<String> apps, Consumer<String> addPropertySource) {
-		apps.forEach(addPropertySource);
-	}
-
-	private void addProfileSpecificPropertySource(Environment environment, String app, String profile, String label) {
-		List<S3ConfigFile> s3ConfigFiles = getS3ConfigFile(app, profile, label, this::getS3PropertiesOrJsonConfigFile,
+	private List<S3ConfigFile> getProfileSpecificS3ConfigFiles(String app, String profile, String label) {
+		return getS3ConfigFile(app, profile, label, this::getS3PropertiesOrJsonConfigFile,
 				this::getProfileSpecificS3ConfigFileYaml);
-		addPropertySource(environment, s3ConfigFiles);
 	}
 
-	private void addNonProfileSpecificPropertySource(Environment environment, String app, String profile,
-			String label) {
-		List<S3ConfigFile> s3ConfigFiles = getS3ConfigFile(app, profile, label,
-				this::getNonProfileSpecificPropertiesOrJsonConfigFile, this::getNonProfileSpecificS3ConfigFileYaml);
-		addPropertySource(environment, s3ConfigFiles);
+	private List<S3ConfigFile> getNonProfileSpecificS3ConfigFiles(String app, String profile, String label) {
+		return getS3ConfigFile(app, profile, label, this::getNonProfileSpecificPropertiesOrJsonConfigFile,
+				this::getNonProfileSpecificS3ConfigFileYaml);
 	}
 
-	private void addPropertySource(Environment environment, List<S3ConfigFile> s3ConfigFiles) {
-		for (S3ConfigFile s3ConfigFile : s3ConfigFiles) {
-			final Properties config = s3ConfigFile.read();
-			// This logic handles the case where the s3 file is a YAML file that is
-			// not profile specific (ie it does not have -<profile> in the name)
-			// and does not have any profile specific documents in it. In this case we do
-			// not want to include this
-			// property source we only want to include the document for the default
-			// profile. When we create
-			// the S3ConfigFile for this file we set the
-			// shouldIncludeWithEmptyProperties to false
-			// in ProfileSpecificYamlDocumentS3ConfigFile for this specific case.
-			if (config != null) {
-				if (!config.isEmpty() || s3ConfigFile.isShouldIncludeWithEmptyProperties()) {
-					environment.setVersion(s3ConfigFile.getVersion());
-					config.putAll(serverProperties.getOverrides());
-					PropertySource propertySource = new PropertySource(s3ConfigFile.getName(), config);
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Adding property source to environment " + propertySource);
-					}
-					environment.add(propertySource);
+	private void addPropertySource(Environment environment, S3ConfigFile s3ConfigFile) {
+		final Properties config = s3ConfigFile.read();
+		// This logic handles the case where the s3 file is a YAML file that is
+		// not profile specific (ie it does not have -<profile> in the name)
+		// and does not have any profile specific documents in it. In this case we do
+		// not want to include this property source we only want to include the
+		// document for the default profile. When we create the S3ConfigFile for
+		// this file we set the shouldIncludeWithEmptyProperties to false
+		// in ProfileSpecificYamlDocumentS3ConfigFile for this specific case.
+		if (config != null) {
+			if (!config.isEmpty() || s3ConfigFile.isShouldIncludeWithEmptyProperties()) {
+				environment.setVersion(s3ConfigFile.getVersion());
+				config.putAll(serverProperties.getOverrides());
+				PropertySource propertySource = new PropertySource(s3ConfigFile.getName(), config);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Adding property source to environment " + propertySource);
 				}
+				environment.add(propertySource);
 			}
 		}
 	}
@@ -348,8 +352,8 @@ abstract class S3ConfigFile {
 		this.profile = profile;
 		this.label = label;
 		this.bucketName = bucketName;
-		this.s3Client = s3Client;
 		this.useApplicationAsDirectory = useApplicationAsDirectory;
+		this.s3Client = s3Client;
 	}
 
 	String getVersion() {
@@ -437,11 +441,10 @@ class PropertyS3ConfigFile extends S3ConfigFile {
 	PropertyS3ConfigFile(String application, String profile, String label, String bucketName,
 			boolean useApplicationAsDirectory, S3Client s3Client) {
 		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client);
-		this.properties = read();
 	}
 
 	@Override
-	public Properties read() {
+	public synchronized Properties read() {
 		if (this.properties != null) {
 			return this.properties;
 		}
@@ -453,6 +456,7 @@ class PropertyS3ConfigFile extends S3ConfigFile {
 			LOG.warn("Exception thrown when reading property file", e);
 			throw new IllegalStateException("Cannot load environment", e);
 		}
+		this.properties = props;
 		return props;
 	}
 
@@ -478,8 +482,6 @@ class YamlS3ConfigFile extends S3ConfigFile {
 			final YamlProcessor.DocumentMatcher... documentMatchers) {
 		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client);
 		this.documentMatchers = documentMatchers;
-		this.properties = read();
-
 	}
 
 	protected static boolean profileMatchesActivateProperty(String profile, Properties properties) {
@@ -493,7 +495,7 @@ class YamlS3ConfigFile extends S3ConfigFile {
 	}
 
 	@Override
-	public Properties read() {
+	public synchronized Properties read() {
 		if (properties != null) {
 			return properties;
 		}
@@ -501,7 +503,8 @@ class YamlS3ConfigFile extends S3ConfigFile {
 		try (InputStream in = getObject()) {
 			yaml.setResources(new InputStreamResource(in));
 			yaml.setDocumentMatchers(documentMatchers);
-			return yaml.getObject();
+			this.properties = yaml.getObject();
+			return this.properties;
 		}
 		catch (Exception e) {
 			LOG.warn("Could not read YAML file", e);
@@ -567,7 +570,6 @@ class JsonS3ConfigFile extends YamlS3ConfigFile {
 	JsonS3ConfigFile(String application, String profile, String label, String bucketName,
 			boolean useApplicationAsDirectory, S3Client s3Client) {
 		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client);
-		this.properties = read();
 	}
 
 	@Override

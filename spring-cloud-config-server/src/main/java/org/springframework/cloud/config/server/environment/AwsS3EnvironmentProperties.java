@@ -46,6 +46,12 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 	 */
 	private boolean useDirectoryLayout;
 
+	/**
+	 * Thread pool size for fetching properties from S3 in parallel. If set to 0 or less,
+	 * fetching will be sequential.
+	 */
+	private int poolSize = 0;
+
 	private int order = DEFAULT_ORDER;
 
 	public String getRegion() {
@@ -78,6 +84,14 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 
 	public void setUseDirectoryLayout(boolean useDirectoryLayout) {
 		this.useDirectoryLayout = useDirectoryLayout;
+	}
+
+	public int getPoolSize() {
+		return poolSize;
+	}
+
+	public void setPoolSize(int poolSize) {
+		this.poolSize = poolSize;
 	}
 
 	public int getOrder() {
