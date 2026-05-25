@@ -243,6 +243,7 @@ public class EnvironmentController {
 
 		if (resolvePlaceholders) {
 			yaml = resolvePlaceholders(prepareEnvironment(environment), yaml);
+			yaml = yaml.replaceAll(": \\{(.+)", ": '{$1'");
 		}
 
 		return getSuccess(yaml);
