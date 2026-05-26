@@ -47,6 +47,10 @@ public class GiteaPropertyPathNotificationExtractor extends BasePropertyPathNoti
 
 	@Override
 	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {
+		return isGiteaRequest(headers);
+	}
+
+	public static boolean isGiteaRequest(MultiValueMap<String, String> headers) {
 		return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
 	}
 

@@ -46,7 +46,8 @@ import org.springframework.web.bind.annotation.RestController;
  *
  */
 @RestController
-@RequestMapping(path = "${spring.cloud.config.monitor.endpoint.path:}/monitor")
+@RequestMapping(
+		path = "${spring.cloud.config.server.monitor.endpoint.path:${spring.cloud.config.monitor.endpoint.path:}}/monitor")
 public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 
 	private static Log log = LogFactory.getLog(PropertyPathEndpoint.class);

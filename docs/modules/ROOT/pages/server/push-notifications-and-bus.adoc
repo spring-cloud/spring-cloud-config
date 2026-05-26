@@ -20,3 +20,97 @@ NOTE: The `RefreshRemoteApplicationEvent` is transmitted only if the `spring-clo
 
 NOTE: The default configuration also detects filesystem changes in local git repositories. In that case, the webhook is not used. However, as soon as you edit a config file, a refresh is broadcast.
 
+[[webhook-secret-validation]]
+== Webhook Secret Validation
+
+To prevent unauthenticated parties from triggering configuration refreshes, the Config Server can validate incoming webhook requests against a shared secret configured in your repository provider. When a secret is configured for a provider, the `/monitor` endpoint will reject any request from that provider that does not carry a valid signature or token, returning HTTP 403.
+
+IMPORTANT: If no secrets are configured at all, the `/monitor` endpoint will reject *all* incoming webhook requests. You must configure a webhook secret for each provider whose webhooks you want to accept.
+
+Each provider uses a different mechanism to sign requests. The Config Server supports the following:
+
+[cols="1,2,2"]
+|===
+|Provider |Mechanism |Property
+
+|GitHub
+|HMAC-SHA256 of the raw request body, sent in the `X-Hub-Signature-256` header as `sha256=<hex>`
+|`spring.cloud.config.server.monitor.github.webhook-secret`
+
+|GitLab
+|Plain secret token sent verbatim in the `X-Gitlab-Token` header
+|`spring.cloud.config.server.monitor.gitlab.webhook-secret`
+
+|Bitbucket Cloud
+|HMAC-SHA256 of the raw request body, sent in the `X-Hub-Signature` header as `sha256=<hex>`
+|`spring.cloud.config.server.monitor.bitbucket.webhook-secret`
+
+|Bitbucket Server / Data Center
+|HMAC-SHA256 of the raw request body, sent in the `X-Hub-Signature` header as `sha256=<hex>`
+|`spring.cloud.config.server.monitor.bitbucket.webhook-secret`
+
+|Gogs
+|HMAC-SHA256 of the raw request body, sent in the `X-Gogs-Signature` header (no prefix)
+|`spring.cloud.config.server.monitor.gogs.webhook-secret`
+
+|Gitea
+|HMAC-SHA256 of the raw request body, sent in the `X-Gitea-Signature` header (no prefix)
+|`spring.cloud.config.server.monitor.gitea.webhook-secret`
+
+|Gitee
+|See <<gitee-validation,Gitee validation modes>> below
+|`spring.cloud.config.server.monitor.gitee.webhook-secret`
+
+|===
+
+[[gitee-validation]]
+=== Gitee Validation Modes
+
+Gitee supports two webhook authentication modes, selected by whether the `X-Gitee-Timestamp` header is present in the request:
+
+* **Signature mode** (recommended): When `X-Gitee-Timestamp` is present, the `X-Gitee-Token` header contains a Base64-encoded HMAC-SHA256 of `<timestamp>\n<secret>`, keyed with the secret. The Config Server also rejects requests whose timestamp differs from the server clock by more than one hour.
+* **Password mode**: When `X-Gitee-Timestamp` is absent, the `X-Gitee-Token` header is compared directly against the configured secret.
+
+Configure the mode on the Gitee webhook settings page. Signature mode is recommended because it prevents replay attacks.
+
+[[disabling-webhook-validation]]
+=== Disabling Webhook Validation
+
+The validation filter is enabled by default. To disable it entirely, set:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        monitor:
+          validation-filter-enabled: false
+----
+
+You can also disable validation for a specific provider while keeping its webhook events processed, by setting its `validation-enabled` property to `false`:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        monitor:
+          github:
+            validation-enabled: false
+----
+
+To disable a provider's `/monitor` integration altogether (both validation and event processing), set its `enabled` property to `false`:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        monitor:
+          github:
+            enabled: false
+----
+

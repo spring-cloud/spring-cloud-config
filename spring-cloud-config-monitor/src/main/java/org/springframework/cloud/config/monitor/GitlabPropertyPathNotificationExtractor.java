@@ -29,6 +29,10 @@ public class GitlabPropertyPathNotificationExtractor extends BasePropertyPathNot
 
 	@Override
 	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {
+		return isGitlabRequest(headers);
+	}
+
+	public static boolean isGitlabRequest(HttpHeaders headers) {
 		return "Push Hook".equals(headers.getFirst("X-Gitlab-Event"));
 	}
 

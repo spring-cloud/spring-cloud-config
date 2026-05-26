@@ -33,6 +33,20 @@ import org.springframework.util.StringUtils;
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
 public class BitbucketPropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
+	public static boolean isBitbucketRequest(MultiValueMap<String, String> headers) {
+		String eventKey = headers.getFirst("X-Event-Key");
+		if (eventKey == null) {
+			return false;
+		}
+		if (StringUtils.hasText(headers.getFirst("X-Hook-UUID"))) {
+			return "repo:push".equals(eventKey) || "pullrequest:fulfilled".equals(eventKey);
+		}
+		if (StringUtils.hasText(headers.getFirst("X-Request-Id"))) {
+			return "repo:refs_changed".equals(eventKey) || "pr:merged".equals(eventKey);
+		}
+		return false;
+	}
+
 	@Override
 	public PropertyPathNotification extract(HttpHeaders headers, Map<String, Object> request) {
 		if (("repo:push".equals(headers.getFirst("X-Event-Key"))

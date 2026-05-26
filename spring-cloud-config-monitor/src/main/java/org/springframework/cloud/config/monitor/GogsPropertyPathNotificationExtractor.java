@@ -33,6 +33,10 @@ public class GogsPropertyPathNotificationExtractor extends BasePropertyPathNotif
 
 	@Override
 	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {
+		return isGogsRequest(headers);
+	}
+
+	public static boolean isGogsRequest(HttpHeaders headers) {
 		return HEADERS_VALUE.equals(headers.getFirst(HEADERS_KEY));
 	}
 

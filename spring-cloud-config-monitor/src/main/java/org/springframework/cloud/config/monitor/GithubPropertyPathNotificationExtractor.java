@@ -29,6 +29,10 @@ public class GithubPropertyPathNotificationExtractor extends BasePropertyPathNot
 
 	@Override
 	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {
+		return isGithubRequest(headers);
+	}
+
+	public static boolean isGithubRequest(HttpHeaders headers) {
 		return "push".equals(headers.getFirst("X-Github-Event"));
 	}
 

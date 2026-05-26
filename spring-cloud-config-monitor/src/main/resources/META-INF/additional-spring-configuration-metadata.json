@@ -1,0 +1,12 @@
+{
+	"properties": [
+		{
+			"name": "spring.cloud.config.monitor.endpoint.path",
+			"type": "java.lang.String",
+			"deprecation": {
+				"replacement": "spring.cloud.config.server.monitor.endpoint.path",
+				"level": "warning"
+			}
+		}
+	]
+}
