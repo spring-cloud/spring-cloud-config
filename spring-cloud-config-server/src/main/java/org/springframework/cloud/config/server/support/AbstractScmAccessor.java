@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.support;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,10 +37,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import static org.springframework.cloud.config.server.support.ScmFileUtils.deleteDirectoryContents;
 
 /**
  * Base class for components that want to access a source control management system.
@@ -117,7 +119,15 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 				@Override
 				public void run() {
 					try {
-						FileSystemUtils.deleteRecursively(basedir);
+						if (!Files.exists(basedir, LinkOption.NOFOLLOW_LINKS)) {
+							return;
+						}
+						if (Files.isSymbolicLink(basedir)) {
+							Files.delete(basedir);
+							return;
+						}
+						deleteDirectoryContents(basedir);
+						Files.delete(basedir);
 					}
 					catch (IOException e) {
 						AbstractScmAccessor.this.logger.warn("Failed to delete temporary directory on exit: " + e);

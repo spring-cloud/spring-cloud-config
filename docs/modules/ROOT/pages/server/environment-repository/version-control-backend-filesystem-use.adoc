@@ -9,6 +9,48 @@ Some operating systems https://serverfault.com/questions/377348/when-does-tmp-ge
 This can lead to unexpected behavior, such as missing properties.
 To avoid this problem, change the directory that Config Server uses by setting `spring.cloud.config.server.git.basedir` or `spring.cloud.config.server.svn.basedir` to a directory that does not reside in the system temp structure.
 
+[[version-control-backend-local-path-hardening]]
+== Local Path Hardening
+
+When a version-control backend (Git or SVN) touches the local file system, extra
+checks are applied to reduce time-of-check/time-of-use (TOCTOU) exposure and
+unwanted symbolic-link behavior.
+These mitigations complement normal host hardening (file-system permissions,
+dedicated service accounts, and non-world-writable parent directories); they do
+not replace it.
+
+*`file:` repository URIs*::
+Before the SCM client opens a `file:` repository, the server resolves the
+configured path and rejects any symbolic link found at the repository root or in
+any intermediate path component.
+Every segment of the path is checked individually with
+`LinkOption.NOFOLLOW_LINKS`, so placing a symlink in a parent directory rather
+than at the leaf is not a bypass.
+For Git, the `.git` entry inside the repository root is additionally verified to
+be a real directory rather than a symlink.
+Configure a concrete, non-symlinked directory path for all `file:` URIs.
+
+*Working directory and `basedir` (`spring.cloud.config.server.[git|svn].basedir`)*::
+When the server clones or checks out into `basedir`, it prepares an empty leaf
+directory — including removing any prior symlink at that path — then creates the
+leaf with an exclusive OS-level directory create so a concurrent replacement of
+the path surfaces as an error rather than silently redirecting the SCM operation.
+Old content is removed without following directory symlinks during the recursive
+delete.
+The resolved `basedir` path is re-verified immediately before invoking the SCM
+client to narrow the window for a concurrent path substitution.
+For SVN, the working directory and its `.svn` metadata directory are also
+re-verified before each update operation.
+
+*Temporary directory cleanup*::
+When `basedir` is created automatically (the default when no explicit value is
+configured), a JVM shutdown hook is registered to delete it on process exit.
+That hook uses a symlink-safe recursive delete: it does not follow directory
+symlinks, and it checks whether `basedir` itself has been replaced by a symlink
+before proceeding.
+If a symlink replacement is detected, only the symlink is removed; files outside
+the intended temporary directory are not affected.
+
 [[errors-with-multiple-labels]]
 == Error Handling With Multiple Labels
 

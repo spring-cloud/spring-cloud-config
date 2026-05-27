@@ -18,10 +18,15 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 
 import io.micrometer.observation.ObservationRegistry;
 import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.util.FileUtils;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -166,6 +171,92 @@ public class SVNKitEnvironmentRepositoryTests {
 			Environment environment = this.repository.findOne("bar", "staging", "unknownlabel");
 			assertThat(environment.getPropertySources()).isEmpty();
 		}).isInstanceOf(NoSuchLabelException.class);
+	}
+
+	@Test
+	public void basedirAsSymlinkIsRejectedOnCheckout() throws Exception {
+		File realTarget = new File("target/config-real-basedir-for-symlink-test");
+		realTarget.mkdirs();
+		Path link = new File("target/config-symlink-basedir").toPath().toAbsolutePath();
+		try {
+			Files.deleteIfExists(link);
+			Files.createSymbolicLink(link, realTarget.toPath().toAbsolutePath());
+		}
+		catch (IOException | UnsupportedOperationException | SecurityException ex) {
+			Assumptions.abort("Cannot create symbolic link for test: " + ex.getMessage());
+		}
+		try {
+			this.repository.setBasedir(link.toFile());
+			assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "trunk"))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("symbolic link");
+		}
+		finally {
+			Files.deleteIfExists(link);
+			FileUtils.delete(realTarget, FileUtils.RECURSIVE | FileUtils.RETRY);
+		}
+	}
+
+	@Test
+	public void svnMetaDirAsSymlinkIsRejected() throws Exception {
+		this.repository.setBasedir(this.basedir);
+		this.repository.findOne("bar", "staging", "trunk");
+
+		Path svnMetaDir = this.basedir.toPath().resolve(".svn");
+		Assumptions.assumeTrue(Files.isDirectory(svnMetaDir, LinkOption.NOFOLLOW_LINKS),
+				".svn must exist as a real directory after checkout");
+
+		Path backup = this.basedir.toPath().resolve(".svn-backup-for-symlink-test");
+		Files.deleteIfExists(backup);
+		Files.move(svnMetaDir, backup);
+		try {
+			Files.createSymbolicLink(svnMetaDir, backup);
+		}
+		catch (IOException | UnsupportedOperationException | SecurityException ex) {
+			Files.move(backup, svnMetaDir);
+			Assumptions.abort("Cannot create symbolic link for test: " + ex.getMessage());
+		}
+		try {
+			assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "trunk"))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("symbolic link")
+				.hasMessageContaining(".svn");
+		}
+		finally {
+			Files.deleteIfExists(svnMetaDir);
+			if (Files.exists(backup)) {
+				Files.move(backup, svnMetaDir);
+			}
+		}
+	}
+
+	@Test
+	public void fileUriAsSymlinkIsRejected() throws Exception {
+		String realUri = ConfigServerTestUtils.prepareLocalSvnRepo("src/test/resources/" + REPOSITORY_NAME,
+				"target/repos/" + REPOSITORY_NAME);
+		File realDir = new File(URI.create(realUri));
+		Path realPath = realDir.toPath().toAbsolutePath();
+		Path parent = realPath.getParent();
+		Assumptions.assumeTrue(parent != null);
+		Path link = parent.resolve(REPOSITORY_NAME + "-uri-symlink");
+		try {
+			Files.deleteIfExists(link);
+			Files.createSymbolicLink(link, realPath);
+		}
+		catch (IOException | UnsupportedOperationException | SecurityException ex) {
+			Assumptions.abort("Cannot create symbolic link for test: " + ex.getMessage());
+		}
+		try {
+			String symlinkUri = link.toUri().toString();
+			this.repository.setUri(symlinkUri);
+			this.repository.setBasedir(this.basedir);
+			assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "trunk"))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("symbolic link");
+		}
+		finally {
+			Files.deleteIfExists(link);
+		}
 	}
 
 	@Test
