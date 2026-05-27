@@ -32,6 +32,9 @@ import org.springframework.util.PropertyPlaceholderHelper;
  */
 public class EnvironmentPropertySource extends PropertySource<Environment> {
 
+	// Use PropertyPlaceholderHelper directly to trim whitespace from keys
+	private static final PropertyPlaceholderHelper helper = new PropertyPlaceholderHelper("${", "}", ":", null, true);
+
 	// "\${" (from text) or "\\${" from JSON to signal escaped placeholder
 	private static final Pattern ESCAPED_PLACEHOLDERS = Pattern.compile("[\\\\]{1,2}\\$\\{");
 
@@ -68,7 +71,6 @@ public class EnvironmentPropertySource extends PropertySource<Environment> {
 	 * Use this before serializing to YAML or JSON so that the serializer handles
 	 * multiline values and escaping natively.
 	 */
-	@SuppressWarnings("unchecked")
 	public static Map<String, Object> resolveMapPlaceholders(StandardEnvironment env, Map<String, Object> map) {
 		Map<String, Object> resolved = new LinkedHashMap<>();
 		for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -77,7 +79,6 @@ public class EnvironmentPropertySource extends PropertySource<Environment> {
 		return resolved;
 	}
 
-	@SuppressWarnings("unchecked")
 	private static Object resolveValue(StandardEnvironment env, Object value) {
 		if (value instanceof String s) {
 			return resolveStringValue(env, s);
@@ -103,8 +104,6 @@ public class EnvironmentPropertySource extends PropertySource<Environment> {
 		}
 		// Mask escaped placeholders
 		String masked = ESCAPED_PLACEHOLDERS.matcher(value).replaceAll("\\$_{");
-		// Use PropertyPlaceholderHelper directly to trim whitespace from keys
-		PropertyPlaceholderHelper helper = new PropertyPlaceholderHelper("${", "}", ":", null, true);
 		String resolved = helper.replacePlaceholders(masked, (placeholder) -> env.getProperty(placeholder.strip()));
 		return resolved.replace("$_{", "${");
 	}

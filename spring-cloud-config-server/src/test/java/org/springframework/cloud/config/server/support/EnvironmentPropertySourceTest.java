@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.support;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -44,13 +46,13 @@ public class EnvironmentPropertySourceTest {
 	@Test
 	public void singleValuePlaceholderResolved() {
 		Environment environment = new Environment("test", "default");
-		java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("foo", "bar");
 		map.put("ref", "${foo}");
 		environment.add(new PropertySource("one", map));
 		StandardEnvironment prepared = prepareEnvironment(environment);
 
-		Map<String, Object> input = new java.util.LinkedHashMap<>();
+		Map<String, Object> input = new LinkedHashMap<>();
 		input.put("foo", "bar");
 		input.put("ref", "${foo}");
 
@@ -62,13 +64,13 @@ public class EnvironmentPropertySourceTest {
 	@Test
 	public void multilineValuePlaceholderResolved() {
 		Environment environment = new Environment("test", "default");
-		java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("greeting", "hello\nworld\n");
 		map.put("ref", "${greeting}");
 		environment.add(new PropertySource("one", map));
 		StandardEnvironment prepared = prepareEnvironment(environment);
 
-		Map<String, Object> input = new java.util.LinkedHashMap<>();
+		Map<String, Object> input = new LinkedHashMap<>();
 		input.put("greeting", "hello\nworld\n");
 		input.put("ref", "${greeting}");
 
@@ -78,18 +80,17 @@ public class EnvironmentPropertySourceTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void nestedMapPlaceholderResolved() {
 		Environment environment = new Environment("test", "default");
-		java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("greeting", "hello\nworld\n");
 		map.put("nested.ref", "${greeting}");
 		environment.add(new PropertySource("one", map));
 		StandardEnvironment prepared = prepareEnvironment(environment);
 
-		Map<String, Object> nested = new java.util.LinkedHashMap<>();
+		Map<String, Object> nested = new LinkedHashMap<>();
 		nested.put("ref", "${greeting}");
-		Map<String, Object> input = new java.util.LinkedHashMap<>();
+		Map<String, Object> input = new LinkedHashMap<>();
 		input.put("greeting", "hello\nworld\n");
 		input.put("nested", nested);
 
@@ -100,34 +101,33 @@ public class EnvironmentPropertySourceTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void listPlaceholderResolved() {
 		Environment environment = new Environment("test", "default");
-		java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("greeting", "hello\nworld\n");
 		map.put("items[0]", "${greeting}");
 		environment.add(new PropertySource("one", map));
 		StandardEnvironment prepared = prepareEnvironment(environment);
 
-		Map<String, Object> input = new java.util.LinkedHashMap<>();
+		Map<String, Object> input = new LinkedHashMap<>();
 		input.put("greeting", "hello\nworld\n");
-		input.put("items", java.util.List.of("${greeting}"));
+		input.put("items", List.of("${greeting}"));
 
 		Map<String, Object> resolved = resolveMapPlaceholders(prepared, input);
 
-		java.util.List<Object> items = (java.util.List<Object>) resolved.get("items");
+		List<Object> items = (List<Object>) resolved.get("items");
 		assertThat(items.get(0)).isEqualTo("hello\nworld\n");
 	}
 
 	@Test
 	public void escapedPlaceholderPreservedInMap() {
 		Environment environment = new Environment("test", "default");
-		java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("literal", "\\${not.a.ref}");
 		environment.add(new PropertySource("one", map));
 		StandardEnvironment prepared = prepareEnvironment(environment);
 
-		Map<String, Object> input = new java.util.LinkedHashMap<>();
+		Map<String, Object> input = new LinkedHashMap<>();
 		input.put("literal", "\\${not.a.ref}");
 
 		Map<String, Object> resolved = resolveMapPlaceholders(prepared, input);
@@ -139,7 +139,6 @@ public class EnvironmentPropertySourceTest {
 	public void endToEndMultilineYaml() {
 		// Source YAML has a multiline value and a reference to it
 		String sourceYaml = "greeting: |\n  hello\n  world\nref: ${greeting}\n";
-		@SuppressWarnings("unchecked")
 		Map<String, Object> parsed = new Yaml().load(sourceYaml);
 
 		Environment environment = new Environment("test", "default");
@@ -170,7 +169,6 @@ public class EnvironmentPropertySourceTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void endToEndSequenceWithMultilineValue() {
 		String sourceYaml = "greeting: |\n  hello\n  world\nitems:\n- ${greeting}\n- ref: ${greeting}\n";
 		Map<String, Object> parsed = new Yaml().load(sourceYaml);
