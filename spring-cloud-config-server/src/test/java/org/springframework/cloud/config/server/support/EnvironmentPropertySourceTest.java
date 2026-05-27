@@ -182,7 +182,7 @@ public class EnvironmentPropertySourceTest {
 
 		// Verify YAML is valid and values are resolved
 		Map<String, Object> reparsed = new Yaml().load(yaml);
-		java.util.List<Object> items = (java.util.List<Object>) reparsed.get("items");
+		List<Object> items = (List<Object>) reparsed.get("items");
 		assertThat(items.get(0)).isEqualTo("hello\nworld\n");
 		Map<String, Object> secondItem = (Map<String, Object>) items.get(1);
 		assertThat(secondItem.get("ref")).isEqualTo("hello\nworld\n");
@@ -191,12 +191,12 @@ public class EnvironmentPropertySourceTest {
 	@Test
 	public void defaultValueUsedWhenKeyMissing() {
 		Environment environment = new Environment("test", "default");
-		java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("ref", "${MISSING:fallback value}");
 		environment.add(new PropertySource("one", map));
 		StandardEnvironment prepared = prepareEnvironment(environment);
 
-		Map<String, Object> input = new java.util.LinkedHashMap<>();
+		Map<String, Object> input = new LinkedHashMap<>();
 		input.put("ref", "${MISSING:fallback value}");
 
 		Map<String, Object> resolved = resolveMapPlaceholders(prepared, input);
@@ -207,13 +207,13 @@ public class EnvironmentPropertySourceTest {
 	@Test
 	public void defaultValueOverriddenWhenKeyExists() {
 		Environment environment = new Environment("test", "default");
-		java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("greeting", "hello");
 		map.put("ref", "${greeting:fallback}");
 		environment.add(new PropertySource("one", map));
 		StandardEnvironment prepared = prepareEnvironment(environment);
 
-		Map<String, Object> input = new java.util.LinkedHashMap<>();
+		Map<String, Object> input = new LinkedHashMap<>();
 		input.put("greeting", "hello");
 		input.put("ref", "${greeting:fallback}");
 
@@ -225,12 +225,12 @@ public class EnvironmentPropertySourceTest {
 	@Test
 	public void unresolvablePlaceholderLeftIntact() {
 		Environment environment = new Environment("test", "default");
-		java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+		Map<String, Object> map = new LinkedHashMap<>();
 		map.put("ref", "${MISSING}");
 		environment.add(new PropertySource("one", map));
 		StandardEnvironment prepared = prepareEnvironment(environment);
 
-		Map<String, Object> input = new java.util.LinkedHashMap<>();
+		Map<String, Object> input = new LinkedHashMap<>();
 		input.put("ref", "${MISSING}");
 
 		Map<String, Object> resolved = resolveMapPlaceholders(prepared, input);
