@@ -33,7 +33,8 @@ import org.springframework.util.PropertyPlaceholderHelper;
 public class EnvironmentPropertySource extends PropertySource<Environment> {
 
 	// Use PropertyPlaceholderHelper directly to trim whitespace from keys
-	private static final PropertyPlaceholderHelper helper = new PropertyPlaceholderHelper("${", "}", ":", null, true);
+	private static final PropertyPlaceholderHelper PROPERTY_PLACEHOLDER_HELPER = new PropertyPlaceholderHelper("${",
+			"}", ":", null, true);
 
 	// "\${" (from text) or "\\${" from JSON to signal escaped placeholder
 	private static final Pattern ESCAPED_PLACEHOLDERS = Pattern.compile("[\\\\]{1,2}\\$\\{");
@@ -104,7 +105,8 @@ public class EnvironmentPropertySource extends PropertySource<Environment> {
 		}
 		// Mask escaped placeholders
 		String masked = ESCAPED_PLACEHOLDERS.matcher(value).replaceAll("\\$_{");
-		String resolved = helper.replacePlaceholders(masked, (placeholder) -> env.getProperty(placeholder.strip()));
+		String resolved = PROPERTY_PLACEHOLDER_HELPER.replacePlaceholders(masked,
+				(placeholder) -> env.getProperty(placeholder.strip()));
 		return resolved.replace("$_{", "${");
 	}
 
