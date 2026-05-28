@@ -49,6 +49,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolveMapPlaceholders;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
 import static org.springframework.cloud.config.server.support.PathUtils.isInvalidEncodedLocation;
 import static org.springframework.cloud.config.server.support.PathUtils.isInvalidProfiles;
@@ -199,10 +200,10 @@ public class EnvironmentController {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToMap(environment);
-		String json = this.objectMapper.writeValueAsString(properties);
 		if (resolvePlaceholders) {
-			json = resolvePlaceholders(prepareEnvironment(environment), json);
+			properties = resolveMapPlaceholders(prepareEnvironment(environment), properties);
 		}
+		String json = this.objectMapper.writeValueAsString(properties);
 		return getSuccess(json, MediaType.APPLICATION_JSON);
 	}
 
@@ -230,6 +231,9 @@ public class EnvironmentController {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> result = convertToMap(environment);
+		if (resolvePlaceholders) {
+			result = resolveMapPlaceholders(prepareEnvironment(environment), result);
+		}
 		if (this.stripDocument && result.size() == 1 && result.keySet().iterator().next().equals("document")) {
 			Object value = result.get("document");
 			if (value instanceof Collection) {
@@ -240,11 +244,6 @@ public class EnvironmentController {
 			}
 		}
 		String yaml = new Yaml().dumpAsMap(result);
-
-		if (resolvePlaceholders) {
-			yaml = resolvePlaceholders(prepareEnvironment(environment), yaml);
-		}
-
 		return getSuccess(yaml);
 	}
 

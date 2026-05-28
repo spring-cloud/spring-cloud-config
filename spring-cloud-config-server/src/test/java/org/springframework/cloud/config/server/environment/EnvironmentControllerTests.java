@@ -525,6 +525,37 @@ class EnvironmentControllerTests {
 		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
 	}
 
+	private void whenMultilinePlaceholders() {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("multiline", "line1\nline2\nline3\n");
+		map.put("ref", "${multiline}");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+	}
+
+	@Test
+	public void multilinePlaceholderResolvedInYaml() throws Exception {
+		whenMultilinePlaceholders();
+		String yaml = this.controller.yaml("foo", "bar", true).getBody();
+		Map<String, Object> map = new Yaml().load(yaml);
+		assertThat(map).containsEntry("multiline", "line1\nline2\nline3\n");
+		assertThat(map).containsEntry("ref", "line1\nline2\nline3\n");
+	}
+
+	@Test
+	public void multilinePlaceholderResolvedInJson() throws Exception {
+		whenMultilinePlaceholders();
+		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
+		JSONAssert.assertEquals("{\"multiline\":\"line1\\nline2\\nline3\\n\",\"ref\":\"line1\\nline2\\nline3\\n\"}",
+				json, JSONCompareMode.STRICT);
+	}
+
+	@Test
+	public void nameStartsWithSlash() {
+		assertThatThrownBy(() -> this.controller.labelled("(_)spam", "bar", null))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
 	@Test
 	public void nameStartsWithSlash() {
 		assertThatThrownBy(() -> this.controller.labelled("(_)spam", "bar", null))

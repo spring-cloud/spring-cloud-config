@@ -16,20 +16,30 @@
 
 package org.springframework.cloud.config.server.support;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.util.PropertyPlaceholderHelper;
 
 /**
  * @author Spencer Gibb
  */
 public class EnvironmentPropertySource extends PropertySource<Environment> {
 
+	// Use PropertyPlaceholderHelper directly to trim whitespace from keys
+	private static final PropertyPlaceholderHelper PROPERTY_PLACEHOLDER_HELPER = new PropertyPlaceholderHelper("${",
+			"}", ":", null, true);
+
 	// "\${" (from text) or "\\${" from JSON to signal escaped placeholder
 	private static final Pattern ESCAPED_PLACEHOLDERS = Pattern.compile("[\\\\]{1,2}\\$\\{");
+
+	private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
 
 	public EnvironmentPropertySource(Environment sources) {
 		super("cloudEnvironment", sources);
@@ -43,10 +53,61 @@ public class EnvironmentPropertySource extends PropertySource<Environment> {
 		return standardEnvironment;
 	}
 
+	/**
+	 * Resolve placeholders in flat text (used for .properties output). Handles escaped
+	 * placeholders (\${...}) by masking and restoring them.
+	 */
 	public static String resolvePlaceholders(StandardEnvironment preparedEnvironment, String text) {
 		// Mask out escaped placeholders
 		text = ESCAPED_PLACEHOLDERS.matcher(text).replaceAll("\\$_{");
 		return preparedEnvironment.resolvePlaceholders(text).replace("$_{", "${");
+	}
+
+	/**
+	 * Resolve placeholders in a nested Map structure. Walks all values recursively,
+	 * resolving any String values that contain ${...} expressions. Returns a new Map with
+	 * resolved values — the original is not modified.
+	 *
+	 * <p>
+	 * Use this before serializing to YAML or JSON so that the serializer handles
+	 * multiline values and escaping natively.
+	 */
+	public static Map<String, Object> resolveMapPlaceholders(StandardEnvironment env, Map<String, Object> map) {
+		Map<String, Object> resolved = new LinkedHashMap<>();
+		for (Map.Entry<String, Object> entry : map.entrySet()) {
+			resolved.put(entry.getKey(), resolveValue(env, entry.getValue()));
+		}
+		return resolved;
+	}
+
+	private static Object resolveValue(StandardEnvironment env, Object value) {
+		if (value instanceof String s) {
+			return resolveStringValue(env, s);
+		}
+		else if (value instanceof Map) {
+			Map<String, Object> mapValue = (Map<String, Object>) value;
+			Map<String, Object> resolved = new LinkedHashMap<>();
+			for (Map.Entry<String, Object> entry : mapValue.entrySet()) {
+				resolved.put(entry.getKey(), resolveValue(env, entry.getValue()));
+			}
+			return resolved;
+		}
+		else if (value instanceof List) {
+			List<Object> listValue = (List<Object>) value;
+			return listValue.stream().map(item -> resolveValue(env, item)).collect(Collectors.toList());
+		}
+		return value;
+	}
+
+	private static String resolveStringValue(StandardEnvironment env, String value) {
+		if (!PLACEHOLDER_PATTERN.matcher(value).find()) {
+			return value;
+		}
+		// Mask escaped placeholders
+		String masked = ESCAPED_PLACEHOLDERS.matcher(value).replaceAll("\\$_{");
+		String resolved = PROPERTY_PLACEHOLDER_HELPER.replacePlaceholders(masked,
+				(placeholder) -> env.getProperty(placeholder.strip()));
+		return resolved.replace("$_{", "${");
 	}
 
 	@Override
