@@ -1,0 +1,16 @@
+demo:
+  base: base-value
+---
+spring:
+  config:
+    activate:
+      on-profile: "!my-profile"
+demo:
+  negatedProfileMarker: present-when-my-profile-is-not-active
+---
+spring:
+  config:
+    activate:
+      on-profile: "!other-profile"
+demo:
+  otherNegatedMarker: present-when-other-profile-is-not-active

@@ -37,6 +37,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.Profiles;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -139,6 +140,11 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			for (String label : labels) {
 				addPropertySourcesForApps(apps,
 						app -> addNonProfileSpecificPropertySource(environment, app, null, label));
+				// Even with no profiles, negated profile documents (e.g. on-profile:
+				// "!my-profile") should be included because no profile is active,
+				// so all negations are satisfied
+				addPropertySourcesForApps(apps,
+						app -> addNegatedProfilePropertySource(environment, app, profiles, label));
 			}
 		}
 		else {
@@ -154,12 +160,43 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 					addPropertySourcesForApps(apps,
 							app -> addNonProfileSpecificPropertySource(environment, app, profile, label));
 				}
+				// Handle documents with negated profile expressions (e.g. on-profile:
+				// "!my-profile")
+				// once per label rather than once per profile to avoid duplicates
+				addPropertySourcesForApps(apps,
+						app -> addNegatedProfilePropertySource(environment, app, profiles, label));
 			}
 		}
 	}
 
 	private void addPropertySourcesForApps(List<String> apps, Consumer<String> addPropertySource) {
 		apps.forEach(addPropertySource);
+	}
+
+	private void addNegatedProfilePropertySource(Environment environment, String app, String[] allProfiles,
+			String label) {
+		List<S3ConfigFile> s3ConfigFiles = getNegatedProfileS3ConfigFileYaml(app, allProfiles, label);
+		addPropertySource(environment, s3ConfigFiles);
+	}
+
+	private List<S3ConfigFile> getNegatedProfileS3ConfigFileYaml(String application, String[] allProfiles,
+			String label) {
+		List<S3ConfigFile> configFiles = new ArrayList<>();
+		try {
+			S3ConfigFile configFile = new NegatedProfileYamlDocumentS3ConfigFile(application, label, bucketName,
+					useApplicationAsDirectory, s3Client, allProfiles);
+			configFiles.add(configFile);
+		}
+		catch (IllegalStateException e) {
+			LOG.warn("Could not read YAML file using application <" + application + "> label <" + label + ">.", e);
+		}
+		catch (Exception e) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Did not find negated profile yaml document in non-profile specific file using application <"
+						+ application + "> label <" + label + ">.");
+			}
+		}
+		return configFiles;
 	}
 
 	private void addProfileSpecificPropertySource(Environment environment, String app, String profile, String label) {
@@ -573,6 +610,48 @@ class JsonS3ConfigFile extends YamlS3ConfigFile {
 	@Override
 	protected List<String> getExtensions() {
 		return List.of("json");
+	}
+
+}
+
+class NegatedProfileYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
+
+	NegatedProfileYamlDocumentS3ConfigFile(String application, String label, String bucketName,
+			boolean useApplicationAsDirectory, S3Client s3Client, String[] allProfiles) {
+		super(application, null, label, bucketName, useApplicationAsDirectory, s3Client, properties -> {
+			Object onProfileValue = properties.get("spring.config.activate.on-profile");
+			if (onProfileValue == null) {
+				onProfileValue = properties.get("spring.config.activate.onProfile");
+			}
+			if (onProfileValue == null) {
+				return YamlProcessor.MatchStatus.NOT_FOUND;
+			}
+			String expression = onProfileValue.toString().trim();
+			// Simple positive profile names are already handled by
+			// ProfileSpecificYamlDocumentS3ConfigFile. Only process complex or negated
+			// expressions here to avoid adding duplicate property sources.
+			if (isSimpleProfileName(expression)) {
+				return YamlProcessor.MatchStatus.NOT_FOUND;
+			}
+			List<String> allProfilesList = Arrays.asList(allProfiles);
+			boolean matches = Profiles.of(expression).matches(allProfilesList::contains);
+			return matches ? YamlProcessor.MatchStatus.FOUND : YamlProcessor.MatchStatus.NOT_FOUND;
+		});
+	}
+
+	private static boolean isSimpleProfileName(String expression) {
+		return !expression.contains("!") && !expression.contains("&") && !expression.contains("|")
+				&& !expression.contains("(") && !expression.contains(",");
+	}
+
+	@Override
+	protected String buildObjectKeyPrefix() {
+		return super.buildObjectKeyPrefix(false);
+	}
+
+	@Override
+	public boolean isShouldIncludeWithEmptyProperties() {
+		return false;
 	}
 
 }
