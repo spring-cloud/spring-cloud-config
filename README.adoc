@@ -113,6 +113,13 @@ parsing or rendering it, just copying it to `${main.basedir}`
 any changes in the README it will then show up after a Maven build as
 a modified file in the correct place. Just commit it and push the change.
 
+You can generate the docs site using the following command:
+
+[indent=0]
+----
+	./mvnw -pl docs -P docs antora:antora
+----
+
 [[working-with-the-code]]
 == Working with the code
 If you don't have an IDE preference we would recommend that you use
@@ -155,20 +162,6 @@ following command:
 The generated eclipse projects can be imported by selecting `import existing projects`
 from the `file` menu.
 
-
-[[jce]]
-== JCE
-
-If you get an exception due to "Illegal key size" and you are using Sun’s JDK, you need to install the Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files.
-See the following links for more information:
-
-https://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html[Java 6 JCE]
-
-https://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html[Java 7 JCE]
-
-https://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html[Java 8 JCE]
-
-Extract the JCE files into the `JDK/jre/lib/security` folder for whichever version of JRE/JDK x64/x86 you use.
 
 [[contributing]]
 = Contributing
