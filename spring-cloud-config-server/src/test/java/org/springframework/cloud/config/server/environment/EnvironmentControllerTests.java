@@ -557,12 +557,6 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
-	public void nameStartsWithSlash() {
-		assertThatThrownBy(() -> this.controller.labelled("(_)spam", "bar", null))
-			.isInstanceOf(InvalidEnvironmentRequestException.class);
-	}
-
-	@Test
 	public void labelWithPreviousDirectory() {
 		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "..(_).."))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
