@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,23 +43,6 @@ public class GitCredentialsProviderFactory {
 	 * https://git-codecommit.${AWS_REGION}.amazonaws.com/${repoPath}. Enabled by default.
 	 */
 	protected boolean awsCodeCommitEnabled = true;
-
-	/**
-	 * Search for a credential provider that will handle the specified URI. If not found,
-	 * and the username or passphrase has text, then create a default using the provided
-	 * username and password or passphrase. Otherwise null.
-	 * @param uri the URI of the repository (cannot be null)
-	 * @param username the username provided for the repository (may be null)
-	 * @param password the password provided for the repository (may be null)
-	 * @param passphrase the passphrase to unlock the ssh private key (may be null)
-	 * @return the first matched credentials provider or the default or null.
-	 * @deprecated in favour of
-	 * {@link #createFor(String, String, String, String, boolean)}
-	 */
-	@Deprecated
-	public CredentialsProvider createFor(String uri, String username, String password, String passphrase) {
-		return createFor(uri, username, password, passphrase, false);
-	}
 
 	/**
 	 * Search for a credential provider that will handle the specified URI. If not found,

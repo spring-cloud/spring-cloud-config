@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,9 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 	/** Vault backend. Defaults to secret. */
 	private String backend = "secret";
+
+	/** Include the full key path in the PropertySource name. Defaults to false */
+	private boolean fullKeyPath = false;
 
 	/**
 	 * The key in vault shared by all applications. Defaults to application. Set to empty
@@ -161,6 +164,14 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 	public void setBackend(String backend) {
 		this.backend = backend;
+	}
+
+	public boolean isFullKeyPath() {
+		return fullKeyPath;
+	}
+
+	public void setFullKeyPath(boolean fullKeyPath) {
+		this.fullKeyPath = fullKeyPath;
 	}
 
 	public String getDefaultKey() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -335,19 +335,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	public void setRestTemplate(RestTemplate restTemplate) {
 		this.restTemplate = restTemplate;
-	}
-
-	/**
-	 * Adds the provided headers to the request.
-	 */
-	@Deprecated
-	public static class GenericRequestHeaderInterceptor
-			extends ConfigClientRequestTemplateFactory.GenericRequestHeaderInterceptor {
-
-		public GenericRequestHeaderInterceptor(Map<String, String> headers) {
-			super(headers);
-		}
-
 	}
 
 	static class ConfigServiceOrigin implements Origin {

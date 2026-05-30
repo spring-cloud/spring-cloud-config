@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.observation.ObservationRegistry;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.config.server.encryption.EnvironmentEncryptor;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentController;
@@ -38,6 +39,7 @@ import org.springframework.cloud.config.server.resource.ResourceRepository;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -69,10 +71,18 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 		private Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
 
 		@Autowired(required = false)
-		private ObjectMapper objectMapper = new ObjectMapper();
+		private JsonMapper objectMapper = new JsonMapper();
 
 		@Autowired(required = false)
 		private ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
+
+		private boolean validateProfiles = true;
+
+		EnvironmentControllerConfiguration(Environment environment) {
+			this.validateProfiles = Binder.get(environment)
+				.bind("spring.profiles.validate", Boolean.class)
+				.orElse(true);
+		}
 
 		@Bean
 		public EnvironmentController environmentController(EnvironmentRepository envRepository,
@@ -86,6 +96,7 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 					this.objectMapper);
 			controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
 			controller.setAcceptEmpty(server.isAcceptEmpty());
+			controller.setValidateProfiles(this.validateProfiles);
 			return controller;
 		}
 
@@ -97,6 +108,7 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 					this.resourceEncryptorMap);
 			controller.setEncryptEnabled(server.getEncrypt().isEnabled());
 			controller.setPlainTextEncryptEnabled(server.getEncrypt().isPlainTextEncrypt());
+			controller.setValidateProfiles(this.validateProfiles);
 			return controller;
 		}
 
@@ -118,6 +130,10 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnBean(org.springframework.cloud.context.scope.refresh.RefreshScope.class)
 	static class RefreshableEnvironmentControllerConfiguration extends EnvironmentControllerConfiguration {
+
+		RefreshableEnvironmentControllerConfiguration(Environment environment) {
+			super(environment);
+		}
 
 		@Override
 		@Bean

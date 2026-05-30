@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,18 +25,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.config.environment.PropertySource;
-import org.springframework.cloud.config.server.support.PathUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,7 +49,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
+import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolveMapPlaceholders;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
+import static org.springframework.cloud.config.server.support.PathUtils.isInvalidEncodedLocation;
+import static org.springframework.cloud.config.server.support.PathUtils.isInvalidProfiles;
 
 /**
  * @author Dave Syer
@@ -72,17 +74,19 @@ public class EnvironmentController {
 
 	private EnvironmentRepository repository;
 
-	private ObjectMapper objectMapper;
+	private JsonMapper objectMapper;
 
 	private boolean stripDocument = true;
 
 	private boolean acceptEmpty = true;
 
+	private boolean validateProfiles = true;
+
 	public EnvironmentController(EnvironmentRepository repository) {
-		this(repository, new ObjectMapper());
+		this(repository, new JsonMapper());
 	}
 
-	public EnvironmentController(EnvironmentRepository repository, ObjectMapper objectMapper) {
+	public EnvironmentController(EnvironmentRepository repository, JsonMapper objectMapper) {
 		this.repository = repository;
 		this.objectMapper = objectMapper;
 	}
@@ -102,6 +106,15 @@ public class EnvironmentController {
 	 */
 	public void setAcceptEmpty(boolean acceptEmpty) {
 		this.acceptEmpty = acceptEmpty;
+	}
+
+	/**
+	 * Flag to indicate that spring profiles are to be validated (default true). If set to
+	 * false, then profiles with invalid characters (e.g. '-') will throw an exception.
+	 * @param validateProfiles the flag to set
+	 */
+	public void setValidateProfiles(boolean validateProfiles) {
+		this.validateProfiles = validateProfiles;
 	}
 
 	@GetMapping(path = "/{name}/{profiles:(?!.*\\b\\.(?:ya?ml|properties|json)\\b).*}",
@@ -131,6 +144,9 @@ public class EnvironmentController {
 		try {
 			name = normalize(name);
 			label = normalize(label);
+			if (this.validateProfiles && isInvalidProfiles(profiles)) {
+				throw new InvalidEnvironmentRequestException("Invalid request");
+			}
 			Environment environment = this.repository.findOne(name, profiles, label, includeOrigin);
 			if (!this.acceptEmpty && (environment == null || environment.getPropertySources().isEmpty())) {
 				throw new EnvironmentNotFoundException("Profile Not found");
@@ -145,7 +161,7 @@ public class EnvironmentController {
 	}
 
 	private String normalize(String part) {
-		if (PathUtils.isInvalidEncodedLocation(part)) {
+		if (isInvalidEncodedLocation(part)) {
 			throw new InvalidEnvironmentRequestException("Invalid request");
 		}
 		return Environment.normalize(part);
@@ -184,10 +200,10 @@ public class EnvironmentController {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToMap(environment);
-		String json = this.objectMapper.writeValueAsString(properties);
 		if (resolvePlaceholders) {
-			json = resolvePlaceholders(prepareEnvironment(environment), json);
+			properties = resolveMapPlaceholders(prepareEnvironment(environment), properties);
 		}
+		String json = this.objectMapper.writeValueAsString(properties);
 		return getSuccess(json, MediaType.APPLICATION_JSON);
 	}
 
@@ -215,6 +231,9 @@ public class EnvironmentController {
 		validateProfiles(profiles);
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> result = convertToMap(environment);
+		if (resolvePlaceholders) {
+			result = resolveMapPlaceholders(prepareEnvironment(environment), result);
+		}
 		if (this.stripDocument && result.size() == 1 && result.keySet().iterator().next().equals("document")) {
 			Object value = result.get("document");
 			if (value instanceof Collection) {
@@ -225,11 +244,6 @@ public class EnvironmentController {
 			}
 		}
 		String yaml = new Yaml().dumpAsMap(result);
-
-		if (resolvePlaceholders) {
-			yaml = resolvePlaceholders(prepareEnvironment(environment), yaml);
-		}
-
 		return getSuccess(yaml);
 	}
 

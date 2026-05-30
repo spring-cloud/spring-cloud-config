@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 the original author or authors.
+ * Copyright 2016-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -45,6 +42,9 @@ import software.amazon.awssdk.services.secretsmanager.model.CreateSecretResponse
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.RestoreSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.UpdateSecretVersionStageRequest;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -101,7 +101,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 	private final AwsSecretsManagerEnvironmentRepository ignoreLabelRepository = new AwsSecretsManagerEnvironmentRepository(
 			smClient, configServerProperties, ignoreLabelEnvironmentProperties);
 
-	private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
+	private final JsonMapper objectMapper = JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT).build();
 
 	private final List<String> toBeRemoved = new ArrayList<>();
 
@@ -2863,7 +2863,7 @@ public class AwsSecretsManagerEnvironmentRepositoryTests {
 		try {
 			return objectMapper.writeValueAsString(map);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			log.error("Unable to generate secret string", e);
 		}
 		return "";

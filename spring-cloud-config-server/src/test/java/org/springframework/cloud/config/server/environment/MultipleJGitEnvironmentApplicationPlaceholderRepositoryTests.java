@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Dave Syer
@@ -113,6 +114,15 @@ public class MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests {
 		assertThat(environment.getPropertySources().get(0).getName())
 			.isEqualTo(getUri("*").replace("{application}", "test2-config-repo") + "/application.properties");
 		assertVersion(environment);
+	}
+
+	@Test
+	void invalidAuthorityTests() {
+		assertThatThrownBy(() -> createRepository("test", "*-config-repo", "http://{profile}:8080/test1-config-repo"))
+			.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(
+				() -> createRepository("test", "*-config-repo", "http://localhost:{profile}/test1-config-repo"))
+			.isInstanceOf(IllegalStateException.class);
 	}
 
 	@Test

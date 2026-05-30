@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -188,7 +188,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 
 	}
 
-	private static class DelayedGitFactoryMock extends JGitEnvironmentRepository.JGitFactory {
+	private static final class DelayedGitFactoryMock extends JGitEnvironmentRepository.JGitFactory {
 
 		@Override
 		public Git getGitByOpen(File file) throws IOException {
@@ -221,7 +221,7 @@ public class JGitEnvironmentRepositoryConcurrencyTests {
 
 	}
 
-	private static class DelayedCloneCommand extends CloneCommand {
+	private static final class DelayedCloneCommand extends CloneCommand {
 
 		@Override
 		public Git call() throws GitAPIException, InvalidRemoteException, TransportException {

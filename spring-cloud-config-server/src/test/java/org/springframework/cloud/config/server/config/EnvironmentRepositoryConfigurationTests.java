@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,6 +83,19 @@ public class EnvironmentRepositoryConfigurationTests {
 	}
 
 	@Test
+	public void configServerActuatorConfigurationWithDefaultSettings() {
+		new ApplicationContextRunner().withConfiguration(
+				AutoConfigurations.of(EnvironmentRepositoryConfigurationTests.EnableConfigurationPropertiesBeans.class,
+						EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class,
+						ConfigServerProperties.class))
+			.run((context) -> {
+				ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
+				assertThat(ReflectionTestUtils.getField(healthIndicator, "downHealthStatus")).isEqualTo("DOWN");
+				assertThat(ReflectionTestUtils.getField(healthIndicator, "acceptEmpty")).isEqualTo(true);
+			});
+	}
+
+	@Test
 	public void configServerActuatorConfigurationWithCustomHealthStatus() {
 		new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(
@@ -93,6 +106,35 @@ public class EnvironmentRepositoryConfigurationTests {
 			.run((context) -> {
 				ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
 				assertThat(ReflectionTestUtils.getField(healthIndicator, "downHealthStatus")).isEqualTo("CUSTOMIZED");
+			});
+	}
+
+	@Test
+	public void configServerActuatorConfigurationWithServerAcceptEmptyFalse() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(
+					EnvironmentRepositoryConfigurationTests.EnableConfigurationPropertiesBeans.class,
+					EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class,
+					ConfigServerProperties.class))
+			.withPropertyValues("spring.cloud.config.server.accept-empty=false")
+			.run((context) -> {
+				ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
+				assertThat(ReflectionTestUtils.getField(healthIndicator, "acceptEmpty")).isEqualTo(false);
+			});
+	}
+
+	@Test
+	public void configServerActuatorConfigurationWithOverriddenAcceptEmptyTrue() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(
+					EnvironmentRepositoryConfigurationTests.EnableConfigurationPropertiesBeans.class,
+					EnvironmentRepositoryConfiguration.ConfigServerActuatorConfiguration.class,
+					ConfigServerProperties.class))
+			.withPropertyValues("spring.cloud.config.server.accept-empty=false",
+					"spring.cloud.config.server.health.accept-empty=true")
+			.run((context) -> {
+				ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
+				assertThat(ReflectionTestUtils.getField(healthIndicator, "acceptEmpty")).isEqualTo(true);
 			});
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -170,6 +171,279 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(propertySources.get(4).getName()).isEqualTo("s3:application"); // application.yaml
 		assertThat(propertySources.get(4).getSource().get("app")).isEqualTo("yaml");
 		// @formatter:on
+	}
+
+	@Test
+	public void negatedProfileDocumentIncludedWhenNoProfilesRequested() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-negated-profile.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		// null profiles → no active profiles → "!my-profile" should always match
+		final Environment env = envRepo.findOne("application", null, null);
+
+		List<PropertySource> propertySources = env.getPropertySources();
+		Optional<PropertySource> negatedProfileSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.negatedProfileMarker"))
+			.findFirst();
+		assertThat(negatedProfileSource).as("negated profile document should be present when no profiles are active")
+			.isPresent();
+		assertThat(negatedProfileSource.get().getSource().get("demo.negatedProfileMarker"))
+			.isEqualTo("present-when-my-profile-is-not-active");
+	}
+
+	@Test
+	public void negatedProfileDocumentIncludedWhenProfileNotActive() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-negated-profile.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		final Environment env = envRepo.findOne("application", "default", null);
+
+		List<PropertySource> propertySources = env.getPropertySources();
+		Optional<PropertySource> negatedProfileSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.negatedProfileMarker"))
+			.findFirst();
+		assertThat(negatedProfileSource)
+			.as("negated profile document should be present when 'my-profile' is not active")
+			.isPresent();
+		assertThat(negatedProfileSource.get().getSource().get("demo.negatedProfileMarker"))
+			.isEqualTo("present-when-my-profile-is-not-active");
+
+		Optional<PropertySource> baseSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.base"))
+			.findFirst();
+		assertThat(baseSource).as("non-profile-specific document should be present").isPresent();
+		assertThat(baseSource.get().getSource().get("demo.base")).isEqualTo("base-value");
+	}
+
+	@Test
+	public void negatedProfileDocumentExcludedWhenProfileIsActive() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-negated-profile.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		final Environment env = envRepo.findOne("application", "my-profile", null);
+
+		List<PropertySource> propertySources = env.getPropertySources();
+		boolean hasNegatedProfileMarker = propertySources.stream()
+			.anyMatch(ps -> ps.getSource().containsKey("demo.negatedProfileMarker"));
+		assertThat(hasNegatedProfileMarker)
+			.as("negated profile document should NOT be present when 'my-profile' is active")
+			.isFalse();
+
+		Optional<PropertySource> baseSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.base"))
+			.findFirst();
+		assertThat(baseSource).as("non-profile-specific document should still be present").isPresent();
+		assertThat(baseSource.get().getSource().get("demo.base")).isEqualTo("base-value");
+	}
+
+	@Test
+	public void negatedProfileDocumentExcludedWhenNegatedProfileIsOneOfMultipleActiveProfiles() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-negated-profile.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		// "my-profile" is among the active profiles, so "!my-profile" should not match
+		final Environment env = envRepo.findOne("application", "my-profile,other-profile", null);
+
+		List<PropertySource> propertySources = env.getPropertySources();
+		boolean hasNegatedProfileMarker = propertySources.stream()
+			.anyMatch(ps -> ps.getSource().containsKey("demo.negatedProfileMarker"));
+		assertThat(hasNegatedProfileMarker)
+			.as("negated profile document should NOT be present when 'my-profile' is among the active profiles")
+			.isFalse();
+	}
+
+	@Test
+	public void negatedProfileDocumentIncludedWhenNegatedProfileIsAbsentFromMultipleActiveProfiles()
+			throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-negated-profile.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		// neither "default" nor "other-profile" is "my-profile", so "!my-profile" should
+		// match
+		final Environment env = envRepo.findOne("application", "default,other-profile", null);
+
+		List<PropertySource> propertySources = env.getPropertySources();
+		Optional<PropertySource> negatedProfileSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.negatedProfileMarker"))
+			.findFirst();
+		assertThat(negatedProfileSource)
+			.as("negated profile document should be present when 'my-profile' is absent from all active profiles")
+			.isPresent();
+		assertThat(negatedProfileSource.get().getSource().get("demo.negatedProfileMarker"))
+			.isEqualTo("present-when-my-profile-is-not-active");
+	}
+
+	@Test
+	public void twoNegatedProfileDocumentsBothIncludedWhenNeitherProfileIsActive() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-two-negated-profiles.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		final Environment env = envRepo.findOne("application", "default", null);
+
+		List<PropertySource> propertySources = env.getPropertySources();
+
+		// Both negated profile documents match and are merged into one property source
+		Optional<PropertySource> negatedSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.negatedProfileMarker")
+					|| ps.getSource().containsKey("demo.otherNegatedMarker"))
+			.findFirst();
+		assertThat(negatedSource)
+			.as("negated profile documents should be present when neither 'my-profile' nor 'other-profile' is active")
+			.isPresent();
+		assertThat(negatedSource.get().getSource().get("demo.negatedProfileMarker"))
+			.isEqualTo("present-when-my-profile-is-not-active");
+		assertThat(negatedSource.get().getSource().get("demo.otherNegatedMarker"))
+			.isEqualTo("present-when-other-profile-is-not-active");
+
+		Optional<PropertySource> baseSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.base"))
+			.findFirst();
+		assertThat(baseSource).as("non-profile-specific document should be present").isPresent();
+		assertThat(baseSource.get().getSource().get("demo.base")).isEqualTo("base-value");
+	}
+
+	@Test
+	public void twoNegatedProfileDocumentsOnlyOneIncludedWhenOneProfileIsActive() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-two-negated-profiles.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		// "my-profile" is active, so the "!my-profile" document should be excluded
+		// but the "!other-profile" document should still be included
+		final Environment env = envRepo.findOne("application", "my-profile", null);
+
+		List<PropertySource> propertySources = env.getPropertySources();
+
+		boolean hasNegatedProfileMarker = propertySources.stream()
+			.anyMatch(ps -> ps.getSource().containsKey("demo.negatedProfileMarker"));
+		assertThat(hasNegatedProfileMarker)
+			.as("'!my-profile' document should NOT be present when 'my-profile' is active")
+			.isFalse();
+
+		Optional<PropertySource> otherNegatedSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.otherNegatedMarker"))
+			.findFirst();
+		assertThat(otherNegatedSource)
+			.as("'!other-profile' document should still be present when 'my-profile' is active")
+			.isPresent();
+		assertThat(otherNegatedSource.get().getSource().get("demo.otherNegatedMarker"))
+			.isEqualTo("present-when-other-profile-is-not-active");
+
+		Optional<PropertySource> baseSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.base"))
+			.findFirst();
+		assertThat(baseSource).as("non-profile-specific document should still be present").isPresent();
+		assertThat(baseSource.get().getSource().get("demo.base")).isEqualTo("base-value");
+	}
+
+	@Test
+	public void complexProfileExpressionsAreEvaluatedCorrectly() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-complex-profile-expressions.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		// profile1 active, profile2 not active
+		// "profile1 & !profile2" -> true
+		// "!(profile1 & profile2)" -> !(true & false) -> true
+		// "!profile1 | !profile2" -> false | true -> true
+		Environment env = envRepo.findOne("application", "profile1", null);
+		List<PropertySource> sources = env.getPropertySources();
+
+		assertThat(sources.stream().anyMatch(ps -> ps.getSource().containsKey("demo.andExpression")))
+			.as("'profile1 & !profile2' should match when profile1 active, profile2 not active")
+			.isTrue();
+		assertThat(sources.stream().anyMatch(ps -> ps.getSource().containsKey("demo.notAndExpression")))
+			.as("'!(profile1 & profile2)' should match when not both profiles active")
+			.isTrue();
+		assertThat(sources.stream().anyMatch(ps -> ps.getSource().containsKey("demo.orNegatedExpression")))
+			.as("'!profile1 | !profile2' should match when at least one profile is not active")
+			.isTrue();
+	}
+
+	@Test
+	public void complexProfileExpressionsAreExcludedWhenNotSatisfied() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-complex-profile-expressions.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		// both profile1 and profile2 active
+		// "profile1 & !profile2" -> true & false -> false
+		// "!(profile1 & profile2)" -> !(true & true) -> false
+		// "!profile1 | !profile2" -> false | false -> false
+		Environment env = envRepo.findOne("application", "profile1,profile2", null);
+		List<PropertySource> sources = env.getPropertySources();
+
+		assertThat(sources.stream().anyMatch(ps -> ps.getSource().containsKey("demo.andExpression")))
+			.as("'profile1 & !profile2' should NOT match when both profiles are active")
+			.isFalse();
+		assertThat(sources.stream().anyMatch(ps -> ps.getSource().containsKey("demo.notAndExpression")))
+			.as("'!(profile1 & profile2)' should NOT match when both profiles are active")
+			.isFalse();
+		assertThat(sources.stream().anyMatch(ps -> ps.getSource().containsKey("demo.orNegatedExpression")))
+			.as("'!profile1 | !profile2' should NOT match when both profiles are active")
+			.isFalse();
+	}
+
+	@Test
+	public void negatedProfileDocumentIncludedWhenProfileNotActive_ApplicationDirVariant() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-negated-profile.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application/application.yaml", yamlString);
+
+		final Environment env = envRepoApplicationDir.findOne("application", "default", null);
+
+		List<PropertySource> propertySources = env.getPropertySources();
+		Optional<PropertySource> negatedProfileSource = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.negatedProfileMarker"))
+			.findFirst();
+		assertThat(negatedProfileSource)
+			.as("negated profile document should be present when 'my-profile' is not active")
+			.isPresent();
+		assertThat(negatedProfileSource.get().getSource().get("demo.negatedProfileMarker"))
+			.isEqualTo("present-when-my-profile-is-not-active");
+	}
+
+	@Test
+	public void negatedProfileDocumentExcludedWhenNegatedProfileIsOneOfMultipleActiveProfiles_ApplicationDirVariant()
+			throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-negated-profile.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application/application.yaml", yamlString);
+
+		final Environment env = envRepoApplicationDir.findOne("application", "my-profile,other-profile", null);
+
+		boolean hasNegatedProfileMarker = env.getPropertySources()
+			.stream()
+			.anyMatch(ps -> ps.getSource().containsKey("demo.negatedProfileMarker"));
+		assertThat(hasNegatedProfileMarker)
+			.as("negated profile document should NOT be present when 'my-profile' is among the active profiles")
+			.isFalse();
+	}
+
+	@Test
+	public void complexProfileExpressionsAreEvaluatedCorrectly_ApplicationDirVariant() throws IOException {
+		Resource resource = new ClassPathResource("awss3/application-with-complex-profile-expressions.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application/application.yaml", yamlString);
+
+		Environment env = envRepoApplicationDir.findOne("application", "profile1", null);
+		List<PropertySource> sources = env.getPropertySources();
+
+		assertThat(sources.stream().anyMatch(ps -> ps.getSource().containsKey("demo.andExpression")))
+			.as("'profile1 & !profile2' should match when profile1 active, profile2 not active")
+			.isTrue();
+		assertThat(sources.stream().anyMatch(ps -> ps.getSource().containsKey("demo.notAndExpression")))
+			.as("'!(profile1 & profile2)' should match when not both profiles active")
+			.isTrue();
+		assertThat(sources.stream().anyMatch(ps -> ps.getSource().containsKey("demo.orNegatedExpression")))
+			.as("'!profile1 | !profile2' should match when at least one profile is not active")
+			.isTrue();
 	}
 
 	@Test

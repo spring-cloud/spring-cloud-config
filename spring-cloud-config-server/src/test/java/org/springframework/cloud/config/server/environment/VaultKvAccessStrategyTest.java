@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.io.IOException;
-import java.lang.reflect.UndeclaredThrowableException;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.cloud.config.server.environment.VaultKvAccessStrategy.VaultResponse;
 
@@ -33,7 +30,7 @@ public class VaultKvAccessStrategyTest {
 
 	private static final String FOO_BAR = "{\"foo\":\"bar\"}";
 
-	private ObjectMapper objectMapper = new ObjectMapper();
+	private JsonMapper objectMapper = new JsonMapper();
 
 	private static VaultKvAccessStrategySupport getStrategy(int version) {
 		return (VaultKvAccessStrategySupport) VaultKvAccessStrategyFactory.forVersion(null, "foo", version, "");
@@ -75,12 +72,7 @@ public class VaultKvAccessStrategyTest {
 	}
 
 	private VaultResponse getVaultResponse(String json) {
-		try {
-			return this.objectMapper.readValue(json, VaultResponse.class);
-		}
-		catch (IOException e) {
-			throw new UndeclaredThrowableException(e);
-		}
+		return this.objectMapper.readValue(json, VaultResponse.class);
 	}
 
 }

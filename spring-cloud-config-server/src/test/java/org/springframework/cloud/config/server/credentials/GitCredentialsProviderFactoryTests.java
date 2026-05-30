@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ public class GitCredentialsProviderFactoryTests {
 
 	@Test
 	public void testCreateForHttpsServerWithoutSpecifyingSkipSslValidation() {
-		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER, PASSWORD, null);
+		CredentialsProvider provider = this.factory.createFor(HTTPS_GIT_REPO, USER, PASSWORD, null, false);
 		assertThat(provider).isNotNull();
 		assertThat(provider instanceof UsernamePasswordCredentialsProvider)
 			.as("deprecated createFor() should not enable ssl validation skipping")

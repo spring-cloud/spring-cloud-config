@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ public final class GoogleSecretManagerAccessStrategyFactory {
 		switch (properties.getVersion()) {
 			case 1:
 				try {
-					return new GoogleSecretManagerV1AccessStrategy(rest, configProvider,
-							properties.getServiceAccount());
+					return new GoogleSecretManagerV1AccessStrategy(rest, configProvider, properties.getServiceAccount(),
+							new GcpProjectResolutionSupport(properties));
 				}
 				catch (Exception e) {
 					throw new RepositoryException("Cannot create service client", e);
@@ -52,7 +52,8 @@ public final class GoogleSecretManagerAccessStrategyFactory {
 
 		switch (properties.getVersion()) {
 			case 1:
-				return new GoogleSecretManagerV1AccessStrategy(rest, configProvider, client);
+				return new GoogleSecretManagerV1AccessStrategy(rest, configProvider, client,
+						new GcpProjectResolutionSupport(properties));
 			default:
 				throw new IllegalArgumentException(
 						"No support for given Google Secret manager backend version " + properties.getVersion());

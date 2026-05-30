@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,6 +81,23 @@ public class SpringVaultEnvironmentRepositoryTests {
 		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
 		assertThat(e.getPropertySources().get(1).getName()).isEqualTo("vault:application");
 		assertThat(e.getPropertySources().get(1).getSource()).isEqualTo(Map.of("def-foo", "def-bar"));
+	}
+
+	@Test
+	public void findOneWithBackend() {
+		when(keyValueTemplate.get("myapp")).thenReturn(withVaultResponse("foo", "bar"));
+
+		var properties = new VaultEnvironmentProperties();
+		properties.setBackend("custom-path");
+		properties.setFullKeyPath(true);
+
+		var e = springVaultEnvironmentRepository(properties).findOne("myapp", null, null);
+
+		assertThat(e.getName()).isEqualTo("myapp");
+
+		assertThat(e.getPropertySources()).hasSize(1);
+		assertThat(e.getPropertySources().get(0).getName()).isEqualTo("vault:custom-path/myapp");
+		assertThat(e.getPropertySources().get(0).getSource()).isEqualTo(Map.of("foo", "bar"));
 	}
 
 	@Test

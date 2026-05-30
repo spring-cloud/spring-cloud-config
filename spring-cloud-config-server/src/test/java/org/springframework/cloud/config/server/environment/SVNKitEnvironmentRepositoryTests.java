@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.StandardEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 /**
  * @author Michael Prankl
@@ -122,6 +123,41 @@ public class SVNKitEnvironmentRepositoryTests {
 		assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
 		assertThat(environment.getPropertySources().get(1).getName()).contains("application.yml");
 		assertThat(environment.getPropertySources().get(2).getName()).contains("branches/demobranch/bar.properties");
+	}
+
+	@Test
+	public void testMultipleLabelsWithFailure() {
+		assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "branches/demobranch,doesnotexist,trunk"))
+			.isInstanceOf(NoSuchLabelException.class);
+	}
+
+	@Test
+	public void testSingleLabelWithFailure() {
+		try {
+			this.repository.setContinueOnMultipleLabelFailure(true);
+			assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "doesnotexist"))
+				.isInstanceOf(NoSuchLabelException.class);
+		}
+		finally {
+			this.repository.setContinueOnMultipleLabelFailure(false);
+		}
+	}
+
+	@Test
+	public void testMultipleLabelsWithContinueOnFailure() {
+		try {
+			this.repository.setContinueOnMultipleLabelFailure(true);
+			Environment environment = this.repository.findOne("bar", "staging",
+					"branches/demobranch,doesnotexist,trunk");
+			assertThat(environment.getPropertySources()).hasSize(3);
+			assertThat(environment.getPropertySources().get(0).getName()).contains("bar.properties");
+			assertThat(environment.getPropertySources().get(1).getName()).contains("application.yml");
+			assertThat(environment.getPropertySources().get(2).getName())
+				.contains("branches/demobranch/bar.properties");
+		}
+		finally {
+			this.repository.setContinueOnMultipleLabelFailure(false);
+		}
 	}
 
 	@Test

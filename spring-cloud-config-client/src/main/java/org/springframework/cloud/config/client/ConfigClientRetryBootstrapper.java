@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.config.client;
 
-import org.springframework.boot.BootstrapRegistry;
-import org.springframework.boot.BootstrapRegistryInitializer;
+import org.springframework.boot.bootstrap.BootstrapRegistry;
+import org.springframework.boot.bootstrap.BootstrapRegistryInitializer;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoaderInterceptor;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.ClassUtils;

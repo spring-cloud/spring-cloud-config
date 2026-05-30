@@ -9,3 +9,13 @@ Some operating systems https://serverfault.com/questions/377348/when-does-tmp-ge
 This can lead to unexpected behavior, such as missing properties.
 To avoid this problem, change the directory that Config Server uses by setting `spring.cloud.config.server.git.basedir` or `spring.cloud.config.server.svn.basedir` to a directory that does not reside in the system temp structure.
 
+[[errors-with-multiple-labels]]
+== Error Handling With Multiple Labels
+
+If a request is made to the config server and the request contains multiple labels the config server
+will return property sources for each label.  However if trying to fetch one of those labels results in
+an error, the config server will return an error without trying any remaining labels.
+
+If you prefer to have the config server ignore any errors when a label is invalid and try all
+labels before returning an error you can set `spring.cloud.config.server.[git | svn].continue-on-multiple-label-failure=true`.
+

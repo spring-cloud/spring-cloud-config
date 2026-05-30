@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.health.contributor.Status;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.server.config.ConfigServerHealthIndicator.Repository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
@@ -96,6 +96,16 @@ public class ConfigServerHealthIndicatorTests {
 		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
 		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
 		assertThat(this.indicator.health().getStatus()).as("wrong default status").isEqualTo(Status.DOWN);
+	}
+
+	@Test
+	public void acceptEmptyFalseNoReposCustomizedDownStatus() {
+		ConfigServerProperties configServerProperties = new ConfigServerProperties();
+		configServerProperties.setAcceptEmpty(false);
+		this.indicator = new ConfigServerHealthIndicator(this.repository, configServerProperties);
+		ReflectionTestUtils.setField(this.indicator, "downHealthStatus", "CUSTOM");
+		when(this.repository.findOne("myname", "myprofile", "mylabel", false)).thenReturn(this.environment);
+		assertThat(this.indicator.health().getStatus()).as("wrong exception status").isEqualTo(new Status(("CUSTOM")));
 	}
 
 	@Test

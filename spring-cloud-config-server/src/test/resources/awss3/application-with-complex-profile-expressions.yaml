@@ -1,0 +1,23 @@
+demo:
+  base: base-value
+---
+spring:
+  config:
+    activate:
+      on-profile: "profile1 & !profile2"
+demo:
+  andExpression: present-when-profile1-active-and-profile2-not-active
+---
+spring:
+  config:
+    activate:
+      on-profile: "!(profile1 & profile2)"
+demo:
+  notAndExpression: present-when-not-both-profile1-and-profile2-active
+---
+spring:
+  config:
+    activate:
+      on-profile: "!profile1 | !profile2"
+demo:
+  orNegatedExpression: present-when-profile1-or-profile2-not-active

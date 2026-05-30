@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,8 @@
 package org.springframework.cloud.config.server;
 
 import org.junit.jupiter.api.Disabled;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
 import org.springframework.cloud.config.server.config.ConfigServerHealthIndicatorTests;
 import org.springframework.cloud.config.server.config.CustomCompositeEnvironmentRepositoryTests;
@@ -48,7 +47,6 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.environment.SVNKitEnvironmentRepositoryIntegrationTests;
 import org.springframework.cloud.config.server.environment.SVNKitEnvironmentRepositoryTests;
-import org.springframework.cloud.config.server.environment.VaultEnvironmentRepositoryTests;
 import org.springframework.cloud.config.server.resource.GenericResourceRepositoryTests;
 import org.springframework.cloud.config.server.resource.ResourceControllerIntegrationTests;
 import org.springframework.cloud.config.server.resource.ResourceControllerTests;
@@ -61,18 +59,16 @@ import org.springframework.cloud.config.server.ssh.SshUriPropertyProcessorTest;
  *
  * @author Dave Syer
  */
-@RunWith(Suite.class)
-@SuiteClasses({ NativeConfigServerIntegrationTests.class, GenericResourceRepositoryTests.class,
+@Suite
+@SelectClasses({ NativeConfigServerIntegrationTests.class, GenericResourceRepositoryTests.class,
 		ResourceControllerTests.class, ResourceControllerIntegrationTests.class, ConfigClientOnIntegrationTests.class,
-		ConfigServerApplicationTests.class, VanillaConfigServerIntegrationTests.class,
-		MultipleJGitEnvironmentRepositoryIntegrationTests.class, EnvironmentEncryptorEnvironmentRepositoryTests.class,
-		SVNKitEnvironmentRepositoryIntegrationTests.class,
+		VanillaConfigServerIntegrationTests.class, MultipleJGitEnvironmentRepositoryIntegrationTests.class,
+		EnvironmentEncryptorEnvironmentRepositoryTests.class, SVNKitEnvironmentRepositoryIntegrationTests.class,
 		MultipleJGitEnvironmentApplicationPlaceholderRepositoryTests.class, JdbcEnvironmentRepositoryTests.class,
 		CompositeEnvironmentRepositoryTests.class, JGitEnvironmentRepositoryConcurrencyTests.class,
 		NativeEnvironmentRepositoryTests.class, JGitEnvironmentRepositoryTests.class,
-		SVNKitEnvironmentRepositoryTests.class, VaultEnvironmentRepositoryTests.class,
-		MultipleJGitEnvironmentRepositoryTests.class, JGitEnvironmentRepositoryIntegrationTests.class,
-		MultipleJGitEnvironmentProfilePlaceholderRepositoryTests.class,
+		SVNKitEnvironmentRepositoryTests.class, MultipleJGitEnvironmentRepositoryTests.class,
+		JGitEnvironmentRepositoryIntegrationTests.class, MultipleJGitEnvironmentProfilePlaceholderRepositoryTests.class,
 		MultipleJGitEnvironmentLabelPlaceholderRepositoryTests.class, GitCredentialsProviderFactoryTests.class,
 		AwsCodeCommitCredentialsProviderTests.class, TransportConfigurationIntegrationTests.FileBasedCallbackTest.class,
 		ConfigClientOffIntegrationTests.class, TransportConfigurationIntegrationTests.PropertyBasedCallbackTest.class,

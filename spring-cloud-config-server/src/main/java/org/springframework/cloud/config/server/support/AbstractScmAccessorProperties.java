@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,6 +65,11 @@ public class AbstractScmAccessorProperties implements EnvironmentRepositoryPrope
 
 	/** The default label to be used with the remote repository. */
 	private String defaultLabel;
+
+	/**
+	 * Flag to indicate whether to continue on multiple label failure. Defaults to false.
+	 */
+	private boolean continueOnMultipleLabelFailure = false;
 
 	public String getUri() {
 		return this.uri;
@@ -137,6 +142,14 @@ public class AbstractScmAccessorProperties implements EnvironmentRepositoryPrope
 
 	public void setDefaultLabel(String defaultLabel) {
 		this.defaultLabel = defaultLabel;
+	}
+
+	public boolean isContinueOnMultipleLabelFailure() {
+		return continueOnMultipleLabelFailure;
+	}
+
+	public void setContinueOnMultipleLabelFailure(boolean continueOnMultipleLabelFailure) {
+		this.continueOnMultipleLabelFailure = continueOnMultipleLabelFailure;
 	}
 
 }

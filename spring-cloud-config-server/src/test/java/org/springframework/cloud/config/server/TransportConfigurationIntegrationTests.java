@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -420,7 +420,7 @@ public class TransportConfigurationIntegrationTests {
 
 	}
 
-	private static class TestProperties {
+	private static final class TestProperties {
 
 		private static final String TEST_PRIVATE_KEY_1 = "-----BEGIN RSA PRIVATE KEY-----\n"
 				+ "MIIEpAIBAAKCAQEAoqyz6YaYMTr7L8GLPSQpAQXaM04gRx4CCsGK2kfLQdw4BlqI\n"

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,10 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,12 +69,11 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.SystemReader;
-import org.junit.Rule;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -79,9 +82,11 @@ import org.springframework.cloud.config.server.support.GitSkipSslValidationCrede
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.io.UrlResource;
+import org.springframework.util.StringUtils;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -97,9 +102,6 @@ import static org.mockito.Mockito.when;
  * @author Gareth Clay
  */
 public class JGitEnvironmentRepositoryTests {
-
-	@Rule
-	public final ExpectedException exception = ExpectedException.none();
 
 	RefDatabase database = Mockito.mock(RefDatabase.class);
 
@@ -138,6 +140,80 @@ public class JGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void fileUriRejectsRepositoryWhenResolvedPathUsesSymlinkFinalComponent() throws Exception {
+		String realUri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
+		File realDir = new UrlResource(StringUtils.cleanPath(realUri)).getFile();
+		Path realPath = realDir.toPath().toAbsolutePath().normalize();
+		Path parent = realPath.getParent();
+		Assumptions.assumeTrue(parent != null);
+		Path link = parent.resolve("another-config-repo-symlink-link");
+		try {
+			Files.deleteIfExists(link);
+			Files.createSymbolicLink(link, realPath);
+		}
+		catch (IOException | UnsupportedOperationException | SecurityException ex) {
+			Assumptions.abort("Cannot create symbolic link for test: " + ex.getMessage());
+		}
+		try {
+			this.repository.setUri(link.toUri().toString());
+			this.repository.setBasedir(this.basedir);
+			assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "master"))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Cannot load environment")
+				.cause()
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("symbolic link");
+		}
+		finally {
+			Files.deleteIfExists(link);
+		}
+	}
+
+	@Test
+	public void fileUriRejectsDotGitAsSymbolicLink() throws Exception {
+		String realUri = ConfigServerTestUtils.prepareLocalRepo("test2-config-repo");
+		File realDir = new UrlResource(StringUtils.cleanPath(realUri)).getFile();
+		Path repoRoot = realDir.toPath().toAbsolutePath().normalize();
+		Path gitPath = repoRoot.resolve(".git");
+		Path backup = repoRoot.resolve(".git-backup-for-symlink-test");
+		Files.deleteIfExists(backup);
+		try {
+			try {
+				Files.move(gitPath, backup, StandardCopyOption.ATOMIC_MOVE);
+			}
+			catch (AtomicMoveNotSupportedException ex) {
+				Files.move(gitPath, backup, StandardCopyOption.REPLACE_EXISTING);
+			}
+			try {
+				Files.createSymbolicLink(gitPath, backup);
+			}
+			catch (IOException | UnsupportedOperationException | SecurityException ex) {
+				Assumptions.abort("Cannot create symbolic link for test: " + ex.getMessage());
+			}
+			this.repository.setUri(realUri);
+			this.repository.setBasedir(this.basedir);
+			assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "master"))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("Cannot load environment")
+				.cause()
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("symbolic link")
+				.hasMessageContaining(".git");
+		}
+		finally {
+			Files.deleteIfExists(gitPath);
+			if (Files.exists(backup)) {
+				try {
+					Files.move(backup, gitPath, StandardCopyOption.REPLACE_EXISTING);
+				}
+				catch (IOException ex) {
+					// best-effort restore for other tests using the same fixture path
+				}
+			}
+		}
+	}
+
+	@Test
 	public void nested() throws IOException {
 		String uri = ConfigServerTestUtils.prepareLocalRepo("another-config-repo");
 		this.repository.setUri(uri);
@@ -164,7 +240,7 @@ public class JGitEnvironmentRepositoryTests {
 	private void assertVersion(Environment environment) {
 		String version = environment.getVersion();
 		assertThat(version).as("version was null").isNotNull();
-		assertTrue("version length was wrong", version.length() >= 40 && version.length() <= 64);
+		assertThat(version.length() >= 40 && version.length() <= 64).isTrue();
 	}
 
 	@Test
@@ -215,6 +291,40 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setBasedir(this.basedir);
 		Environment environment = this.repository.findOne("bar", "staging", "master,foo,raw");
 		assertThat(environment.getPropertySources()).hasSize(6);
+	}
+
+	@Test
+	public void multipleLabelsWithFailureButContinues() {
+		try {
+			this.repository.setBasedir(this.basedir);
+			this.repository.setContinueOnMultipleLabelFailure(true);
+			Environment environment = this.repository.findOne("bar", "staging", "master,doesnotexist,foo,raw");
+			assertThat(environment.getPropertySources()).hasSize(6);
+		}
+		finally {
+			this.repository.setContinueOnMultipleLabelFailure(false);
+		}
+	}
+
+	@Test
+	public void singleLabelWithFailureButContinues() {
+		try {
+			this.repository.setBasedir(this.basedir);
+			this.repository.setContinueOnMultipleLabelFailure(true);
+			assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "doesnotexist"))
+				.isInstanceOf(NoSuchLabelException.class);
+
+		}
+		finally {
+			this.repository.setContinueOnMultipleLabelFailure(false);
+		}
+	}
+
+	@Test
+	public void multipleLabelsWithFailure() {
+		this.repository.setBasedir(this.basedir);
+		assertThatThrownBy(() -> this.repository.findOne("bar", "staging", "master,doesnotexist,foo,raw"))
+			.isInstanceOf(NoSuchLabelException.class);
 	}
 
 	@Test
@@ -910,7 +1020,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
+		assertThat(mockCloneCommand.getCredentialsProvider()).isInstanceOf(UsernamePasswordCredentialsProvider.class);
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		CredentialItem.Username usernameCredential = new CredentialItem.Username();
@@ -999,7 +1109,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof UsernamePasswordCredentialsProvider);
+		assertThat(mockCloneCommand.getCredentialsProvider()).isInstanceOf(UsernamePasswordCredentialsProvider.class);
 
 		CredentialsProvider provider = mockCloneCommand.getCredentialsProvider();
 		CredentialItem.Username usernameCredential = new CredentialItem.Username();
@@ -1026,7 +1136,7 @@ public class JGitEnvironmentRepositoryTests {
 		envRepository.setCloneOnStart(true);
 		envRepository.afterPropertiesSet();
 
-		assertTrue(mockCloneCommand.getCredentialsProvider() instanceof AwsCodeCommitCredentialProvider);
+		assertThat(mockCloneCommand.getCredentialsProvider()).isInstanceOf(AwsCodeCommitCredentialProvider.class);
 	}
 
 	@Test

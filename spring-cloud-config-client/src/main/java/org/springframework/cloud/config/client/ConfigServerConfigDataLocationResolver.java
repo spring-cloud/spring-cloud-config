@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 
-import org.springframework.boot.BootstrapRegistry;
-import org.springframework.boot.BootstrapRegistry.InstanceSupplier;
-import org.springframework.boot.ConfigurableBootstrapContext;
+import org.springframework.boot.bootstrap.BootstrapRegistry;
+import org.springframework.boot.bootstrap.BootstrapRegistry.InstanceSupplier;
+import org.springframework.boot.bootstrap.ConfigurableBootstrapContext;
 import org.springframework.boot.context.config.ConfigDataLocation;
 import org.springframework.boot.context.config.ConfigDataLocationNotFoundException;
 import org.springframework.boot.context.config.ConfigDataLocationResolver;
@@ -172,7 +172,7 @@ public class ConfigServerConfigDataLocationResolver
 				Properties properties = StringUtils
 					.splitArrayElementsIntoProperties(StringUtils.delimitedListToStringArray(paramStr, "&"), "=");
 				if (properties != null) {
-					PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+					PropertyMapper map = PropertyMapper.get();
 					map.from(() -> properties.getProperty("fail-fast"))
 						.as(Boolean::valueOf)
 						.to(configClientProperties::setFailFast);
@@ -198,11 +198,6 @@ public class ConfigServerConfigDataLocationResolver
 
 	private BindHandler getBindHandler(ConfigDataLocationResolverContext context) {
 		return context.getBootstrapContext().getOrElse(BindHandler.class, null);
-	}
-
-	@Deprecated
-	protected RestTemplate createRestTemplate(ConfigClientProperties properties) {
-		return null;
 	}
 
 	protected Log getLog() {
@@ -250,11 +245,6 @@ public class ConfigServerConfigDataLocationResolver
 
 		bootstrapContext.registerIfAbsent(RestTemplate.class, context -> {
 			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);
-			RestTemplate restTemplate = createRestTemplate(factory.getProperties());
-			if (restTemplate != null) {
-				// shouldn't normally happen
-				return restTemplate;
-			}
 			return factory.create();
 		});
 
@@ -350,7 +340,7 @@ public class ConfigServerConfigDataLocationResolver
 
 	}
 
-	private class PropertyHolder {
+	private static final class PropertyHolder {
 
 		ConfigClientProperties properties;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,21 +45,6 @@ public class MultipleJGitEnvironmentRepositoryFactory
 	private final GitCredentialsProviderFactory gitCredentialsProviderFactory;
 
 	private final List<HttpClient4BuilderCustomizer> customizers;
-
-	@Deprecated
-	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
-			TransportConfigCallbackFactory transportConfigCallbackFactory) {
-		this(environment, server, Optional.empty(), transportConfigCallbackFactory,
-				new GitCredentialsProviderFactory());
-	}
-
-	@Deprecated
-	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
-			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
-			TransportConfigCallbackFactory transportConfigCallbackFactory) {
-		this(environment, server, connectionFactory, transportConfigCallbackFactory,
-				new GitCredentialsProviderFactory());
-	}
 
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			Optional<ConfigurableHttpConnectionFactory> connectionFactory,

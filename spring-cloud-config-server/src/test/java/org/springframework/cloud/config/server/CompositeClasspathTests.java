@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,8 +46,9 @@ public class CompositeClasspathTests {
 
 	}
 
-	@ClassPathExclusions({ "spring-jdbc-*.jar", "spring-data-redis-*.jar", "spring-boot-actuator-*.jar" })
-	public static class NoActuatorTests {
+	@ClassPathExclusions({ "spring-jdbc-*.jar", "spring-data-redis-*.jar", "spring-boot-actuator-*.jar",
+			"spring-boot-health-*.jar" })
+	public static class NoActuatorOrHealthTests {
 
 		@Test
 		public void contextLoads() {

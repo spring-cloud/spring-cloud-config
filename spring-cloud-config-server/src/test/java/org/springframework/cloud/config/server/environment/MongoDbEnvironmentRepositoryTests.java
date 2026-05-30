@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,15 +29,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import wiremock.com.fasterxml.jackson.databind.ObjectMapper;
+import org.testcontainers.mongodb.MongoDBContainer;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -48,11 +49,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 /**
  * @author Alexandros Pappas
  */
-@SpringBootTest
+@SpringBootTest(classes = TestConfigServerApplication.class, properties = { "spring.config.name:configserver" },
+		webEnvironment = RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("mongodb")
 @Testcontainers
@@ -72,7 +75,7 @@ public class MongoDbEnvironmentRepositoryTests {
 		mongoTemplate.dropCollection("properties");
 		InputStream inputStream = new ClassPathResource("/data-mongo.json").getInputStream();
 		String json = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-		List<Document> documents = Arrays.asList(new ObjectMapper().readValue(json, Document[].class));
+		List<Document> documents = Arrays.asList(new JsonMapper().readValue(json, Document[].class));
 		mongoTemplate.getCollection("properties").insertMany(documents);
 	}
 

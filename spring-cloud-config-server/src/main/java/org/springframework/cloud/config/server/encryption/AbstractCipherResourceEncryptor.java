@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.core.ObjectReadContext;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.util.StringUtils;
@@ -55,17 +57,26 @@ abstract class AbstractCipherResourceEncryptor implements ResourceEncryptor {
 
 	protected String decryptWithJacksonParser(String text, String name, String[] profiles, JsonFactory factory)
 			throws IOException {
-		Set<String> valsToDecrpyt = new HashSet<String>();
-		JsonParser parser = factory.createParser(text);
+		return decryptWithJacksonParser(text, name, profiles, factory.createParser(ObjectReadContext.empty(), text));
+	}
+
+	protected String decryptWithJacksonParser(String text, String name, String[] profiles, YAMLFactory factory)
+			throws IOException {
+		return decryptWithJacksonParser(text, name, profiles, factory.createParser(ObjectReadContext.empty(), text));
+	}
+
+	protected String decryptWithJacksonParser(String text, String name, String[] profiles, JsonParser parser)
+			throws IOException {
+		Set<String> valsToDecrypt = new HashSet<String>();
 		JsonToken token;
 
 		while ((token = parser.nextToken()) != null) {
 			if (token.equals(JsonToken.VALUE_STRING) && parser.getValueAsString().startsWith(CIPHER_MARKER)) {
-				valsToDecrpyt.add(parser.getValueAsString().trim());
+				valsToDecrypt.add(parser.getValueAsString().trim());
 			}
 		}
 
-		for (String value : valsToDecrpyt) {
+		for (String value : valsToDecrypt) {
 			String decryptedValue = decryptValue(value.replace(CIPHER_MARKER, ""), name, profiles);
 			text = text.replace(value, decryptedValue);
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the original author or authors.
+ * Copyright 2013-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
@@ -524,9 +525,46 @@ class EnvironmentControllerTests {
 		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
 	}
 
+	private void whenMultilinePlaceholders() {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("multiline", "line1\nline2\nline3\n");
+		map.put("ref", "${multiline}");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+	}
+
+	@Test
+	public void multilinePlaceholderResolvedInYaml() throws Exception {
+		whenMultilinePlaceholders();
+		String yaml = this.controller.yaml("foo", "bar", true).getBody();
+		Map<String, Object> map = new Yaml().load(yaml);
+		assertThat(map).containsEntry("multiline", "line1\nline2\nline3\n");
+		assertThat(map).containsEntry("ref", "line1\nline2\nline3\n");
+	}
+
+	@Test
+	public void multilinePlaceholderResolvedInJson() throws Exception {
+		whenMultilinePlaceholders();
+		String json = this.controller.jsonProperties("foo", "bar", true).getBody();
+		JSONAssert.assertEquals("{\"multiline\":\"line1\\nline2\\nline3\\n\",\"ref\":\"line1\\nline2\\nline3\\n\"}",
+				json, JSONCompareMode.STRICT);
+	}
+
+	@Test
+	public void nameStartsWithSlash() {
+		assertThatThrownBy(() -> this.controller.labelled("(_)spam", "bar", null))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
 	@Test
 	public void labelWithPreviousDirectory() {
 		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "..(_).."))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void labelStartsWithSlash() {
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "(_)spam"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
@@ -552,6 +590,26 @@ class EnvironmentControllerTests {
 	public void nameWithPoundEncoded() {
 		assertThatThrownBy(() -> this.controller.labelled("foo%23", "bar", "mylabel"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void invalidProfileTests() {
+		assertThatThrownBy(() -> this.controller.labelled("application", "bar,..,foo", "label"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("application", "..", "label"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("application", "%2e%2e", "label"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("application", "bar,%2e%2e,foo", "label"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("application", "bar%2Ffoo", "label"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void invalidProfileTestsDisabled() {
+		this.controller.setValidateProfiles(false);
+		assertThatNoException().isThrownBy(() -> this.controller.labelled("application", "bar,..,foo", "label"));
 	}
 
 	abstract class MockMvcTestCases {

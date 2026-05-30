@@ -4,10 +4,9 @@
 
 Since `4.0.0`, Spring Cloud Config Server supports Spring AOT transformations. As of `4.1.0` it also supports GraalVM native images, as long as GraalVM 21 or higher is used, however it requires the user to add some workarounds for known GraalVM issues, as described below.
 
+[IMPORTANT]
 ====
-
-IMPORTANT::
-Due to [a bug](https://github.com/oracle/graal/issues/5134) in Graal's `FileSystemProvider` a configuration workaround needs to be added to allow the Config Server to run as a native image.  You will need to add the following options to your GraalVM build plugin setup (please refer to https://www.graalvm.org/[GraalVM] Maven or Gradle plugin documentation for more details):
+Due to https://github.com/oracle/graal/issues/5134[a bug] in Graal's `FileSystemProvider` a configuration workaround needs to be added to allow the Config Server to run as a native image.  You will need to add the following options to your GraalVM build plugin setup (please refer to https://graalvm.github.io/native-build-tools/latest/maven-plugin.html[Maven plugin for GraalVM] or https://graalvm.github.io/native-build-tools/latest/gradle-plugin.html[Gradle plugin for GraalVM] for more details):
 
 [source,indent=0]
 ----
@@ -18,13 +17,11 @@ Due to [a bug](https://github.com/oracle/graal/issues/5134) in Graal's `FileSyst
 --initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$Default
 --initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$NonceAndIV
 ----
-
-NOTE:: Adding the additional build time initializations can affect performance, but it still may offer gains as compared to a regular JVM run. Make sure to measure and compare for your application.
-
 ====
 
-TIP::
-If you are connecting with your config data backend over SSH, keep in mind that GraalVM requires https://www.graalvm.org/latest/reference-manual/native-image/dynamic-features/JCASecurityServices/#provider-registration[security provider registration using `java.security`]
+NOTE: Adding the additional build time initializations can affect performance, but it still may offer gains as compared to a regular JVM run. Make sure to measure and compare for your application.
+
+TIP: If you are connecting with your config data backend over SSH, keep in mind that GraalVM requires https://www.graalvm.org/latest/reference-manual/native-image/dynamic-features/JCASecurityServices/#provider-registration[security provider registration using `java.security`]
 
 WARNING: Refresh scope is not supported with native images. If you are going to run your config client application as a native image, make sure to set `spring.cloud.refresh.enabled` property to `false`.
 

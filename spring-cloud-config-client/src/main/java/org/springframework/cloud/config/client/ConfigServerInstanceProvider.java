@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.retry.annotation.Retryable;
 
 /**
@@ -41,11 +40,6 @@ public class ConfigServerInstanceProvider {
 	private BindHandler bindHandler;
 
 	private Binder binder;
-
-	@Deprecated
-	public ConfigServerInstanceProvider(DiscoveryClient client) {
-		this.function = client::getInstances;
-	}
 
 	public ConfigServerInstanceProvider(Function function) {
 		this.function = function;

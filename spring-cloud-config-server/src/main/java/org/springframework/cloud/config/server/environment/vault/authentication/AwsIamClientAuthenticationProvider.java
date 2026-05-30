@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ public class AwsIamClientAuthenticationProvider extends SpringVaultClientAuthent
 		return new AwsIamAuthentication(options, vaultRestOperations);
 	}
 
-	private static class AwsCredentialProvider {
+	private static final class AwsCredentialProvider {
 
 		private static AwsCredentialsProvider getAwsCredentialsProvider() {
 
