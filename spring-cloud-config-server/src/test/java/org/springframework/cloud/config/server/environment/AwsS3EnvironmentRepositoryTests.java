@@ -771,71 +771,54 @@ public class AwsS3EnvironmentRepositoryTests {
 	@Test
 	public void searchPath_placeholderOnly_shouldResolveExactFile() {
 		List<String> paths = List.of("{label}/{application}-{profile}.yml");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/foo-bar.yml", yamlContent);
 
 		Environment env = repo.findOne("foo", "bar", "v1");
 		assertThat(env.getPropertySources()).hasSize(1);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/foo-bar.yml");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/foo-bar.yml");
 	}
 
 	// 2) Wildcard only (.properties)
 	@Test
 	public void searchPath_wildcardOnly_shouldResolveAllProperties() {
 		List<String> paths = List.of("{label}/common/*.properties");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/common/a.properties", "a=1\n");
 		putFiles("v1/common/b.properties", "b=2\n");
 
 		Environment env = repo.findOne("app", "", "v1");
 		assertThat(env.getPropertySources()).hasSize(2);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/common/a.properties");
-		assertThat(env.getPropertySources().get(1).getName())
-			.contains("v1/common/b.properties");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/common/a.properties");
+		assertThat(env.getPropertySources().get(1).getName()).contains("v1/common/b.properties");
 	}
 
 	// 3) Placeholder + wildcard combined
 	@Test
 	public void searchPath_placeholderAndWildcard_shouldResolveMatchingKeys() {
-		List<String> paths = List.of(
-			"{label}/{application}-{profile}.yml",
-			"{label}/common/*.properties"
-		);
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		List<String> paths = List.of("{label}/{application}-{profile}.yml", "{label}/common/*.properties");
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/foo-bar.yml", yamlContent);
 		putFiles("v1/common/foo.properties", "k=v\n");
 
 		Environment env = repo.findOne("foo", "bar", "v1");
 		assertThat(env.getPropertySources()).hasSize(2);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/foo-bar.yml");
-		assertThat(env.getPropertySources().get(1).getName())
-			.contains("v1/common/foo.properties");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/foo-bar.yml");
+		assertThat(env.getPropertySources().get(1).getName()).contains("v1/common/foo.properties");
 	}
 
 	// 4) Order matters
 	@Test
 	public void searchPaths_orderMatters_forPropertySourceOrder() {
-		List<String> paths = List.of(
-			"{label}/common/*.properties",
-			"{label}/{application}-{profile}.yml"
-		);
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		List<String> paths = List.of("{label}/common/*.properties", "{label}/{application}-{profile}.yml");
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/common/foo.properties", "k=v\n");
 		putFiles("v1/foo-bar.yml", yamlContent);
 
 		Environment env = repo.findOne("foo", "bar", "v1");
 		assertThat(env.getPropertySources()).hasSize(2);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/common/foo.properties");
-		assertThat(env.getPropertySources().get(1).getName())
-			.contains("v1/foo-bar.yml");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/common/foo.properties");
+		assertThat(env.getPropertySources().get(1).getName()).contains("v1/foo-bar.yml");
 	}
 
 	// 5) Extension preserved
@@ -844,8 +827,7 @@ public class AwsS3EnvironmentRepositoryTests {
 		List<String> exts = List.of("yml", "yaml", "properties", "json");
 		return exts.stream().map(ext -> DynamicTest.dynamicTest(ext, () -> {
 			List<String> paths = List.of("{label}/foo-bar." + ext);
-			AwsS3EnvironmentRepository repo =
-				new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+			AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 
 			String content = "key=v\n";
 			if (ext.equals("yml") || ext.equals("yaml")) {
@@ -858,8 +840,7 @@ public class AwsS3EnvironmentRepositoryTests {
 
 			Environment env = repo.findOne("foo", "bar", "v1");
 			assertThat(env.getPropertySources()).hasSize(1);
-			assertThat(env.getPropertySources().get(0).getName())
-				.contains("v1/foo-bar." + ext);
+			assertThat(env.getPropertySources().get(0).getName()).contains("v1/foo-bar." + ext);
 		}));
 	}
 
@@ -867,23 +848,20 @@ public class AwsS3EnvironmentRepositoryTests {
 	@Test
 	public void searchPaths_applicationAsDirectory_shouldStillHonorSearchPaths() {
 		List<String> paths = List.of("{label}/{application}/foo.*");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", true, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", true, server, paths);
 		putFiles("v1/foo/foo.properties", "k=v\n");
 		putFiles("v1/foo/foo.json", jsonContent);
 
 		Environment env = repo.findOne("foo", "", "v1");
 		assertThat(env.getPropertySources()).hasSize(1);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/foo/foo.properties");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/foo/foo.properties");
 	}
 
 	// 7) Multi-document YAML should not be split
 	@Test
 	public void multiDocumentYaml_withSearchPaths_shouldNotSplitDocuments() throws IOException {
 		List<String> paths = List.of("{label}/{application}.yml");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 
 		String multi = "---\na: 1\n---\nb: 2\n";
 		putFiles("lab/app.yml", multi);
@@ -891,20 +869,15 @@ public class AwsS3EnvironmentRepositoryTests {
 		Environment env = repo.findOne("app", "", "lab");
 		assertThat(env.getPropertySources()).hasSize(1);
 		@SuppressWarnings("unchecked")
-		Map<String, Object> map = (Map<String, Object>)
-			env.getPropertySources().get(0).getSource();
+		Map<String, Object> map = (Map<String, Object>) env.getPropertySources().get(0).getSource();
 		assertThat(map).containsEntry("a", 1).containsEntry("b", 2);
 	}
 
 	// 8) Deduplication across patterns
 	@Test
 	public void searchPaths_deduplication_shouldOnlyAddOnce() {
-		List<String> paths = List.of(
-			"{label}/foo.yml",
-			"{label}/{application}.yml"
-		);
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		List<String> paths = List.of("{label}/foo.yml", "{label}/{application}.yml");
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/foo.yml", yamlContent);
 
 		Environment env = repo.findOne("foo", "", "v1");
@@ -915,120 +888,102 @@ public class AwsS3EnvironmentRepositoryTests {
 	@Test
 	public void searchPaths_literalStopsAtProperties() {
 		List<String> paths = List.of("{label}/{application}");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/app.properties", "foo=bar\nflag=false\n");
 		putFiles("v1/app.json", jsonContent);
 		putFiles("v1/app.yml", yamlContent);
 
 		Environment env = repo.findOne("app", "", "v1");
 		assertThat(env.getPropertySources()).hasSize(1);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/app.properties");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/app.properties");
 	}
 
 	// 10) Literal stops at .json
 	@Test
 	public void searchPaths_literalStopsAtJson() {
 		List<String> paths = List.of("{label}/{application}");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/app.json", jsonContent);
 		putFiles("v1/app.yml", yamlContent);
 
 		Environment env = repo.findOne("app", "", "v1");
 		assertThat(env.getPropertySources()).hasSize(1);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/app.json");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/app.json");
 	}
 
 	// 11) Literal stops at .yml
 	@Test
 	public void searchPaths_literalStopsAtYaml() {
 		List<String> paths = List.of("{label}/{application}");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/app.yml", yamlContent);
 
 		Environment env = repo.findOne("app", "", "v1");
 		assertThat(env.getPropertySources()).hasSize(1);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/app.yml");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/app.yml");
 	}
 
 	// 12) Dot-wildcard auto-extension (.properties preferred)
 	@Test
 	public void searchPaths_dotWildcardAutoExtProperties() {
 		List<String> paths = List.of("{label}/{application}.*");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/app.properties", "x=1\n");
 		putFiles("v1/app.json", jsonContent);
 
 		Environment env = repo.findOne("app", "", "v1");
 		assertThat(env.getPropertySources()).hasSize(1);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/app.properties");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/app.properties");
 	}
 
 	// 13) Literal directory scan
 	@Test
 	public void searchPaths_literalDirectoryScan() {
 		List<String> paths = List.of("{label}/{application}");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/app/foo.properties", "a=1\n");
 		putFiles("v1/app/sub/bar.yml", "bar: 2\n");
 
 		Environment env = repo.findOne("app", "", "v1");
 		assertThat(env.getPropertySources()).hasSize(2);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/app/foo.properties");
-		assertThat(env.getPropertySources().get(1).getName())
-			.contains("v1/app/sub/bar.yml");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/app/foo.properties");
+		assertThat(env.getPropertySources().get(1).getName()).contains("v1/app/sub/bar.yml");
 	}
 
 	// 14) Double-wildcard nested directories
 	@Test
 	public void searchPaths_doubleWildcardNested() {
 		List<String> paths = List.of("{label}/**/*.properties");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("v1/foo/a.properties", "a=1\n");
 		putFiles("v1/foo/sub/b.properties", "b=2\n");
 
 		Environment env = repo.findOne("app", "", "v1");
 		assertThat(env.getPropertySources()).hasSize(2);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("v1/foo/a.properties");
-		assertThat(env.getPropertySources().get(1).getName())
-			.contains("v1/foo/sub/b.properties");
+		assertThat(env.getPropertySources().get(0).getName()).contains("v1/foo/a.properties");
+		assertThat(env.getPropertySources().get(1).getName()).contains("v1/foo/sub/b.properties");
 	}
 
 	// 15) Single-character wildcard
 	@Test
 	public void searchPaths_singleCharacterWildcard_shouldMatchExactlyOneChar() {
 		List<String> paths = List.of("{label}/data-?.yml");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
-		putFiles("lab/data-a.yml", "a:1\n");
-		putFiles("lab/data-b.yml", "b:2\n");
-		putFiles("lab/data-10.yml", "x:3\n"); // should not match
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		putFiles("lab/data-a.yml", "a: 1\n");
+		putFiles("lab/data-b.yml", "b: 2\n");
+		putFiles("lab/data-10.yml", "x: 3\n"); // should not match
 
 		Environment env = repo.findOne("app", "", "lab");
 		assertThat(env.getPropertySources()).hasSize(2);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("lab/data-a.yml");
-		assertThat(env.getPropertySources().get(1).getName())
-			.contains("lab/data-b.yml");
+		assertThat(env.getPropertySources().get(0).getName()).contains("lab/data-a.yml");
+		assertThat(env.getPropertySources().get(1).getName()).contains("lab/data-b.yml");
 	}
 
 	// 16) Wildcard at start (empty prefix)
 	@Test
 	public void searchPaths_wildcardAtStart_prefixExtractionEmpty_shouldMatchAll() {
 		List<String> paths = List.of("{label}/*.yml");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("lab/app.yml", yamlContent);
 		putFiles("lab/other.yml", yamlContent);
 
@@ -1043,31 +998,27 @@ public class AwsS3EnvironmentRepositoryTests {
 		serverWithDefaultLabel.setDefaultLabel("main");
 
 		List<String> paths = List.of("{label}/foo-bar.yml");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, serverWithDefaultLabel, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false,
+				serverWithDefaultLabel, paths);
 
 		putFiles("main/foo-bar.yml", yamlContent);
 
 		Environment env = repo.findOne("foo", "", "");
 		assertThat(env.getPropertySources()).hasSize(1);
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("main/foo-bar.yml");
+		assertThat(env.getPropertySources().get(0).getName()).contains("main/foo-bar.yml");
 	}
 
 	// 18) Multiple labels applied in reverse order
 	@Test
 	public void searchPaths_multipleLabels_shouldApplyForEachLabelInReverseOrder() {
 		List<String> paths = List.of("{label}/{application}.yml");
-		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 		putFiles("lab1/app.yml", yamlContent);
 		putFiles("lab2/app.yml", yamlContent);
 
 		Environment env = repo.findOne("app", "", "lab1,lab2");
-		assertThat(env.getPropertySources().get(0).getName())
-			.contains("lab2/app.yml");
-		assertThat(env.getPropertySources().get(1).getName())
-			.contains("lab1/app.yml");
+		assertThat(env.getPropertySources().get(0).getName()).contains("lab2/app.yml");
+		assertThat(env.getPropertySources().get(1).getName()).contains("lab1/app.yml");
 	}
 
 	private String putFiles(String fileName, String propertyContent) {

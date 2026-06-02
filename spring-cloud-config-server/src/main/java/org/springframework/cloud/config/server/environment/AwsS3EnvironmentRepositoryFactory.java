@@ -41,10 +41,8 @@ public class AwsS3EnvironmentRepositoryFactory
 		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 		final S3Client client = clientBuilder.build();
 
-		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(client,
-				environmentProperties.getBucket(), environmentProperties.isUseDirectoryLayout(), server, environmentProperties.getSearchPaths());
-		repository.setOrder(environmentProperties.getOrder());
-		return repository;
+		return new AwsS3EnvironmentRepository(client, environmentProperties.getBucket(),
+				environmentProperties.isUseDirectoryLayout(), server, environmentProperties.getSearchPaths());
 	}
 
 }
