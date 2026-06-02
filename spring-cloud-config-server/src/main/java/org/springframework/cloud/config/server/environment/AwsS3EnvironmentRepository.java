@@ -120,8 +120,8 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 		String[] profileArray = parseProfiles(profiles);
 		List<String> apps = Arrays.asList(StringUtils.commaDelimitedListToStringArray(application.replace(" ", "")));
-		if (searchPaths.isEmpty() && !apps.contains(serverProperties.getDefaultApplicationName())) {
-			Collections.reverse(apps);
+		Collections.reverse(apps);
+		if (!apps.contains(serverProperties.getDefaultApplicationName())) {
 			apps = new ArrayList<>(apps);
 			apps.add(serverProperties.getDefaultApplicationName());
 		}
@@ -149,22 +149,10 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private void addPropertySources(Environment environment, List<String> apps, String[] profiles,
 			List<String> labels) {
-		if (!this.searchPaths.isEmpty()) {
-			for (String label : labels) {
-				for (String profile : profiles) {
-					for (String app : apps) {
-						List<S3ConfigFile> s3ConfigFiles = getS3ConfigFileWithSearchPaths(app, profile, label);
-						addPropertySource(environment, s3ConfigFiles);
-					}
-				}
-			}
-			return;
-		}
 		for (String label : labels) {
-			// If we have profiles, add property sources with those profiles
 			for (String profile : profiles) {
 				addPropertySourcesForApps(apps,
-						app -> addProfileSpecificPropertySource(environment, app, profile, label));
+					app -> addProfileSpecificPropertySource(environment, app, profile, label));
 			}
 		}
 
@@ -176,8 +164,10 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 				// Even with no profiles, negated profile documents (e.g. on-profile:
 				// "!my-profile") should be included because no profile is active,
 				// so all negations are satisfied
-				addPropertySourcesForApps(apps,
+				if (this.searchPaths.isEmpty()) {
+					addPropertySourcesForApps(apps,
 						app -> addNegatedProfilePropertySource(environment, app, profiles, label));
+				}
 			}
 		}
 		else {
@@ -196,8 +186,10 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 				// Handle documents with negated profile expressions (e.g. on-profile:
 				// "!my-profile")
 				// once per label rather than once per profile to avoid duplicates
-				addPropertySourcesForApps(apps,
+				if (this.searchPaths.isEmpty()) {
+					addPropertySourcesForApps(apps,
 						app -> addNegatedProfilePropertySource(environment, app, profiles, label));
+				}
 			}
 		}
 	}
@@ -297,16 +289,25 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		List<S3ConfigFile> result = new ArrayList<>();
 		Set<String> seenKeys = new LinkedHashSet<>();
 
-		for (String template : this.searchPaths) {
+		for (String template : this.searchPaths) {String resolvedLabel = (label == null ? "" : label);
+			String resolvedProfile = (profile == null ? "" : profile);
+
 			String pattern = template
 				.replace("{application}", application)
-				.replace("{profile}", profile == null ? "" : profile)
-				.replace("{label}", label == null ? "" : label);
+				.replace("{profile}", resolvedProfile)
+				.replace("{label}", resolvedLabel);
+
+			pattern = StringUtils.trimLeadingCharacter(pattern.replaceAll("/{2,}", "/"), '/');
 
 			if (!pathMatcher.isPattern(pattern)) {
 				boolean fileFound = false;
-				for (String ext : List.of(".properties", ".json", ".yml", ".yaml")) {
-					String key = pattern.endsWith(ext) ? pattern : pattern + ext;
+				List<String> extensionsToProbe = (pattern.endsWith(".properties") || pattern.endsWith(".json")
+					|| pattern.endsWith(".yml") || pattern.endsWith(".yaml"))
+					? List.of("")
+					: List.of(".properties", ".json", ".yml", ".yaml");
+
+				for (String ext : extensionsToProbe) {
+					String key = pattern + ext;
 					if (!seenKeys.add(key)) {
 						continue;
 					}
