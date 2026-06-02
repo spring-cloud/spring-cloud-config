@@ -1039,10 +1039,13 @@ public class AwsS3EnvironmentRepositoryTests {
 	// 17) Empty label uses defaultLabel
 	@Test
 	public void searchPaths_withEmptyLabel_shouldUseDefaultLabel() {
-		server.setDefaultLabel("main");
+		ConfigServerProperties serverWithDefaultLabel = new ConfigServerProperties();
+		serverWithDefaultLabel.setDefaultLabel("main");
+
 		List<String> paths = List.of("{label}/foo-bar.yml");
 		AwsS3EnvironmentRepository repo =
-			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+			new AwsS3EnvironmentRepository(s3Client, "bucket1", false, serverWithDefaultLabel, paths);
+
 		putFiles("main/foo-bar.yml", yamlContent);
 
 		Environment env = repo.findOne("foo", "", "");
