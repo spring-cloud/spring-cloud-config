@@ -289,7 +289,8 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		List<S3ConfigFile> result = new ArrayList<>();
 		Set<String> seenKeys = new LinkedHashSet<>();
 
-		for (String template : this.searchPaths) {String resolvedLabel = (label == null ? "" : label);
+		for (String template : this.searchPaths) {
+			String resolvedLabel = (label == null ? "" : label);
 			String resolvedProfile = (profile == null ? "" : profile);
 
 			String pattern = template
