@@ -263,8 +263,8 @@ public class AwsS3EnvironmentRepositoryTests {
 		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
 		putFiles("application.yaml", yamlString);
 
-		// neither "default" nor "other-profile" is "my-profile", so "!my-profile" should
-		// match
+		// neither "default" nor "other-profile" is "my-profile", so "!my-profile"
+		// should match
 		final Environment env = envRepo.findOne("application", "default,other-profile", null);
 
 		List<PropertySource> propertySources = env.getPropertySources();
@@ -767,7 +767,6 @@ public class AwsS3EnvironmentRepositoryTests {
 				"default", "defaultlabel", null, new String[] { "s3://test/defaultlabel" }));
 	}
 
-	// 1) Placeholder only
 	@Test
 	public void searchPath_placeholderOnly_shouldResolveExactFile() {
 		List<String> paths = List.of("{label}/{application}-{profile}.yml");
@@ -779,7 +778,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(0).getName()).contains("v1/foo-bar.yml");
 	}
 
-	// 2) Wildcard only (.properties)
 	@Test
 	public void searchPath_wildcardOnly_shouldResolveAllProperties() {
 		List<String> paths = List.of("{label}/common/*.properties");
@@ -793,7 +791,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(1).getName()).contains("v1/common/b.properties");
 	}
 
-	// 3) Placeholder + wildcard combined
 	@Test
 	public void searchPath_placeholderAndWildcard_shouldResolveMatchingKeys() {
 		List<String> paths = List.of("{label}/{application}-{profile}.yml", "{label}/common/*.properties");
@@ -807,7 +804,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(1).getName()).contains("v1/common/foo.properties");
 	}
 
-	// 4) Order matters
 	@Test
 	public void searchPaths_orderMatters_forPropertySourceOrder() {
 		List<String> paths = List.of("{label}/common/*.properties", "{label}/{application}-{profile}.yml");
@@ -821,7 +817,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(1).getName()).contains("v1/foo-bar.yml");
 	}
 
-	// 5) Extension preserved
 	@TestFactory
 	public Stream<DynamicTest> searchPath_extensionPreserved() {
 		List<String> exts = List.of("yml", "yaml", "properties", "json");
@@ -844,7 +839,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		}));
 	}
 
-	// 6) Application-as-directory layout
 	@Test
 	public void searchPaths_applicationAsDirectory_shouldStillHonorSearchPaths() {
 		List<String> paths = List.of("{label}/{application}/foo.*");
@@ -853,11 +847,10 @@ public class AwsS3EnvironmentRepositoryTests {
 		putFiles("v1/foo/foo.json", jsonContent);
 
 		Environment env = repo.findOne("foo", "", "v1");
-		assertThat(env.getPropertySources()).hasSize(1);
+		assertThat(env.getPropertySources()).hasSize(2);
 		assertThat(env.getPropertySources().get(0).getName()).contains("v1/foo/foo.properties");
 	}
 
-	// 7) Multi-document YAML should not be split
 	@Test
 	public void multiDocumentYaml_withSearchPaths_shouldNotSplitDocuments() throws IOException {
 		List<String> paths = List.of("{label}/{application}.yml");
@@ -873,7 +866,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(map).containsEntry("a", 1).containsEntry("b", 2);
 	}
 
-	// 8) Deduplication across patterns
 	@Test
 	public void searchPaths_deduplication_shouldOnlyAddOnce() {
 		List<String> paths = List.of("{label}/foo.yml", "{label}/{application}.yml");
@@ -884,7 +876,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources()).hasSize(1);
 	}
 
-	// 9) Literal stops at .properties
 	@Test
 	public void searchPaths_literalStopsAtProperties() {
 		List<String> paths = List.of("{label}/{application}");
@@ -894,11 +885,10 @@ public class AwsS3EnvironmentRepositoryTests {
 		putFiles("v1/app.yml", yamlContent);
 
 		Environment env = repo.findOne("app", "", "v1");
-		assertThat(env.getPropertySources()).hasSize(1);
+		assertThat(env.getPropertySources()).hasSize(3);
 		assertThat(env.getPropertySources().get(0).getName()).contains("v1/app.properties");
 	}
 
-	// 10) Literal stops at .json
 	@Test
 	public void searchPaths_literalStopsAtJson() {
 		List<String> paths = List.of("{label}/{application}");
@@ -907,11 +897,10 @@ public class AwsS3EnvironmentRepositoryTests {
 		putFiles("v1/app.yml", yamlContent);
 
 		Environment env = repo.findOne("app", "", "v1");
-		assertThat(env.getPropertySources()).hasSize(1);
+		assertThat(env.getPropertySources()).hasSize(2);
 		assertThat(env.getPropertySources().get(0).getName()).contains("v1/app.json");
 	}
 
-	// 11) Literal stops at .yml
 	@Test
 	public void searchPaths_literalStopsAtYaml() {
 		List<String> paths = List.of("{label}/{application}");
@@ -923,7 +912,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(0).getName()).contains("v1/app.yml");
 	}
 
-	// 12) Dot-wildcard auto-extension (.properties preferred)
 	@Test
 	public void searchPaths_dotWildcardAutoExtProperties() {
 		List<String> paths = List.of("{label}/{application}.*");
@@ -932,11 +920,10 @@ public class AwsS3EnvironmentRepositoryTests {
 		putFiles("v1/app.json", jsonContent);
 
 		Environment env = repo.findOne("app", "", "v1");
-		assertThat(env.getPropertySources()).hasSize(1);
+		assertThat(env.getPropertySources()).hasSize(2);
 		assertThat(env.getPropertySources().get(0).getName()).contains("v1/app.properties");
 	}
 
-	// 13) Literal directory scan
 	@Test
 	public void searchPaths_literalDirectoryScan() {
 		List<String> paths = List.of("{label}/{application}");
@@ -950,7 +937,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(1).getName()).contains("v1/app/sub/bar.yml");
 	}
 
-	// 14) Double-wildcard nested directories
 	@Test
 	public void searchPaths_doubleWildcardNested() {
 		List<String> paths = List.of("{label}/**/*.properties");
@@ -964,7 +950,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(1).getName()).contains("v1/foo/sub/b.properties");
 	}
 
-	// 15) Single-character wildcard
 	@Test
 	public void searchPaths_singleCharacterWildcard_shouldMatchExactlyOneChar() {
 		List<String> paths = List.of("{label}/data-?.yml");
@@ -979,7 +964,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(1).getName()).contains("lab/data-b.yml");
 	}
 
-	// 16) Wildcard at start (empty prefix)
 	@Test
 	public void searchPaths_wildcardAtStart_prefixExtractionEmpty_shouldMatchAll() {
 		List<String> paths = List.of("{label}/*.yml");
@@ -991,7 +975,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources()).hasSize(2);
 	}
 
-	// 17) Empty label uses defaultLabel
 	@Test
 	public void searchPaths_withEmptyLabel_shouldUseDefaultLabel() {
 		ConfigServerProperties serverWithDefaultLabel = new ConfigServerProperties();
@@ -1008,7 +991,6 @@ public class AwsS3EnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(0).getName()).contains("main/foo-bar.yml");
 	}
 
-	// 18) Multiple labels applied in reverse order
 	@Test
 	public void searchPaths_multipleLabels_shouldApplyForEachLabelInReverseOrder() {
 		List<String> paths = List.of("{label}/{application}.yml");
@@ -1019,6 +1001,44 @@ public class AwsS3EnvironmentRepositoryTests {
 		Environment env = repo.findOne("app", "", "lab1,lab2");
 		assertThat(env.getPropertySources().get(0).getName()).contains("lab2/app.yml");
 		assertThat(env.getPropertySources().get(1).getName()).contains("lab1/app.yml");
+	}
+
+	@Test
+	public void searchPaths_negatedProfile_shouldIncludeDocumentWhenProfileNotActive() {
+		List<String> paths = List.of("{label}/{application}.yml");
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+
+		String multiDocYaml = "spring:\n" + "  config:\n" + "    activate:\n" + "      on-profile: '!my-profile'\n"
+				+ "negated: true\n" + "---\n" + "default-key: default-value\n";
+
+		putFiles("v1/app.yml", multiDocYaml);
+
+		Environment env = repo.findOne("app", "other-profile", "v1");
+
+		assertThat(env.getPropertySources()).hasSize(2);
+		boolean negatedPresent = env.getPropertySources()
+			.stream()
+			.anyMatch(ps -> Boolean.TRUE.equals(ps.getSource().get("negated")));
+		assertThat(negatedPresent).isTrue();
+	}
+
+	@Test
+	public void searchPaths_negatedProfile_shouldExcludeDocumentWhenProfileIsActive() {
+		List<String> paths = List.of("{label}/{application}.yml");
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
+
+		String multiDocYaml = "spring:\n" + "  config:\n" + "    activate:\n" + "      on-profile: '!my-profile'\n"
+				+ "negated: true\n" + "---\n" + "default-key: default-value\n";
+
+		putFiles("v1/app.yml", multiDocYaml);
+
+		Environment env = repo.findOne("app", "my-profile", "v1");
+
+		assertThat(env.getPropertySources()).hasSize(1);
+		boolean negatedPresent = env.getPropertySources()
+			.stream()
+			.anyMatch(ps -> Boolean.TRUE.equals(ps.getSource().get("negated")));
+		assertThat(negatedPresent).isFalse();
 	}
 
 	private String putFiles(String fileName, String propertyContent) {
