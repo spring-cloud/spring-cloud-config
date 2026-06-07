@@ -214,26 +214,44 @@ spring:
 
 The `spring.cloud.config.password` and `spring.cloud.config.username` values override anything that is provided in the URI.
 
-If you use OAuth2 security on the server, clients need to know the client ID and client secret.
-You can specify the client ID and client secret via separate properties, as shown in the following example:
+If your Config Server is secured with OAuth2, the Config Client can attach a bearer token
+to every request. Configure the OAuth2 client registration using the standard Spring
+Security properties and point the Config Client at it by id:
 
 [source,yaml]
 ----
-
 spring:
   cloud:
     config:
-     uri: https://myconfig.mycompany.com
-     oauth2:
-	    enabled: true
-		provider:
-		   token-uri: https://auth.acme.com/oauth/token
-		registration:
-			client-id: client-id
-			client-secret: client-secret
-			authorization-grant-type: client_credentials
-
+      uri: https://myconfig.mycompany.com
+      oauth2:
+        enabled: true
+        client-registration-id: config-client
+  security:
+    oauth2:
+      client:
+        registration:
+          config-client:
+            client-id: client-id
+            client-secret: client-secret
+            authorization-grant-type: client_credentials
+        provider:
+          config-client:
+            token-uri: https://auth.acme.com/oauth/token
 ----
+
+`spring-boot-starter-security-oauth2-client` is an optional dependency. The Config Client
+attaches the OAuth2 bearer-token interceptor only when that starter is on the classpath
+and `spring.cloud.config.oauth2.enabled=true`; otherwise the interceptor is skipped. This
+works for both the Config Data import flow (`spring.config.import=configserver:`) and the
+legacy bootstrap flow. By default the Config Client builds an
+`InMemoryClientRegistrationRepository` from the properties above and an
+`OAuth2AuthorizedClientManager` that supports the `client_credentials` and `refresh_token`
+grant types. Each layer is overridable: register your own `ClientRegistrationRepository`,
+`OAuth2AuthorizedClientManager`, `ClientRegistrationIdResolver`, or the
+`ClientHttpRequestInterceptor` itself (in the bootstrap registry via a
+`BootstrapRegistryInitializer` for the Config Data flow, or as a bean for the legacy
+bootstrap flow) and the default will step aside.
 
 If you deploy your apps on Cloud Foundry, the best way to provide the password is through service credentials (such as in the URI, since it does not need to be in a config file).
 The following example works locally and for a user-provided service on Cloud Foundry named `configserver`:
