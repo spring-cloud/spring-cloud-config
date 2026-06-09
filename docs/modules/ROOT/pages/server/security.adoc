@@ -4,6 +4,143 @@
 
 You can secure your Config Server in any way that makes sense to you (from physical network security to OAuth2 bearer tokens), because Spring Security and Spring Boot offer support for many security arrangements.
 
-To use the default Spring Boot-configured HTTP Basic security, include Spring Security on the classpath (for example, through `spring-boot-starter-security`).
-The default is a username of `user` and a randomly generated password. A random password is not useful in practice, so we recommend you configure the password (by setting `spring.security.user.password`) and encrypt it (see below for instructions on how to do that).
+[[security-http-basic]]
+== HTTP Basic Authentication
 
+To use the default Spring Boot-configured HTTP Basic security, include Spring Security on the classpath (for example, through `spring-boot-starter-security`).
+The default is a username of `user` and a randomly generated password.
+A random password is not useful in practice, so we recommend you configure the password (by setting `spring.security.user.password`) and encrypt it (see below for instructions on how to do that).
+
+.application.yml
+[source,yaml]
+----
+spring:
+  security:
+    user:
+      name: configserver
+      password: "{cipher}ENCRYPTED_PASSWORD_HERE"
+----
+
+On the client side, configure the credentials in `bootstrap.yml` (or `application.yml` with `spring.config.import`):
+
+.bootstrap.yml (client)
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      uri: https://config.example.com
+      username: configserver
+      password: "${CONFIG_SERVER_PASSWORD}"
+----
+
+[[security-oauth2]]
+== OAuth2 / JWT Bearer Token Authentication
+
+For production deployments where many clients must authenticate independently, OAuth2 with JWT Bearer tokens is a common choice.
+Spring Security's Resource Server support can protect Config Server endpoints so that only requests carrying a valid JWT are accepted.
+
+Add the resource server dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+</dependency>
+----
+
+Configure the JWKS URI (or issuer URI) in the Config Server's `application.yml`:
+
+.application.yml (Config Server)
+[source,yaml]
+----
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://idp.example.com/issuer
+----
+
+Spring Security auto-configures JWT Bearer token validation when the above property is set.
+Clients must obtain a token from the authorization server and pass it as a `Bearer` header.
+
+On the Config Client side, set the `Authorization` header by configuring a custom `RestTemplate` or by providing the token via environment/bootstrap properties.
+
+NOTE: Spring Cloud Config does not obtain OAuth2 tokens automatically on the client side.
+You must configure your client to obtain a token (for example using `spring-security-oauth2-client` with the `client_credentials` grant) and attach it to Config Server requests.
+
+[[security-per-app-access-control]]
+== Per-Application Access Control
+
+By default, any authenticated user can request configuration for any `\{application}`.
+If you need to restrict each client to its own configuration (for example, to prevent one microservice from reading another service's secrets), you can implement an authorization policy in a custom `SecurityFilterChain` or `RequestMatcher`.
+
+A common approach is to validate that the path segment `\{application}` in the request URL matches the authenticated principal's identifier (for example, a claim in the JWT or the HTTP Basic username).
+The following example shows a Spring Security configuration that restricts each client to paths starting with its own principal name:
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+public class ConfigServerSecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(auth -> auth
+                // Actuator health endpoint is public
+                .requestMatchers("/actuator/health").permitAll()
+                // Clients may only request their own application's config
+                .requestMatchers("/{application}/**").access((authentication, context) -> {
+                    String requestedApp = context.getVariables().get("application");
+                    String principal = authentication.get().getName();
+                    return new AuthorizationDecision(principal.equals(requestedApp));
+                })
+                .anyRequest().authenticated()
+            )
+            .httpBasic(Customizer.withDefaults());
+        return http.build();
+    }
+}
+----
+
+[WARNING]
+====
+Without per-application access control, an authenticated client that knows another application's name can request that application's configuration simply by using the other application's name as the `\{application}` path segment.
+Implement an authorization policy as shown above when you store secrets that must be isolated per service.
+====
+
+[[security-tls]]
+== TLS / HTTPS
+
+For production deployments, always configure TLS on the Config Server so that credentials and configuration values are not transmitted in plaintext.
+Follow standard Spring Boot TLS configuration (`server.ssl.*` properties) or deploy behind a reverse proxy that terminates TLS.
+
+[[security-client-side]]
+== Client-Side Configuration
+
+Config Clients send credentials to the Config Server.
+Avoid committing credentials to source control by using environment-specific overrides or Spring Cloud Vault to supply the credentials at runtime.
+
+.bootstrap.yml (client — HTTP Basic)
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      uri: https://config.example.com
+      username: "${CONFIG_SERVER_USER}"
+      password: "${CONFIG_SERVER_PASSWORD}"
+----
+
+.application.yml (client — spring.config.import with credentials)
+[source,yaml]
+----
+spring:
+  config:
+    import: "configserver:https://${CONFIG_SERVER_USER}:${CONFIG_SERVER_PASSWORD}@config.example.com"
+----
+
+See also: xref:server/actuator-and-security.adoc[Actuator and Security] for important notes about securing actuator endpoints alongside the Config Server API.
