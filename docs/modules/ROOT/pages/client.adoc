@@ -133,6 +133,39 @@ Label can also be provided as a comma-separated list.
 This behavior can be useful when working on a feature branch.
 For instance, you might want to align the config label with your branch but make it optional (in that case, use `spring.cloud.config.label=myfeature,develop`).
 
+[[sharing-configuration-across-applications]]
+== Sharing Configuration Across Applications
+
+Spring Config Server always serves a property source named `application` (from
+`application.properties` or `application.yml`) as a base that all applications inherit.
+This covers configuration that must be shared across _every_ application. For finer
+control — sharing configuration among only a _subset_ of applications — you can use a
+comma-separated list for `spring.cloud.config.name`:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      name: ${spring.application.name},cassandra  # <1>
+----
+<1> With `spring.application.name=servicea` and profile `prod`, the Config Server
+    returns the following property sources (in order, later sources take precedence):
+    `application.properties`, `application-prod.properties`, `servicea.properties`,
+    `servicea-prod.properties`, `cassandra.properties`, `cassandra-prod.properties`.
+
+This lets you maintain shared configuration files (such as `cassandra.properties`,
+`jpa.properties`, or `redis.properties`) in the same repository and opt individual
+services into them by adding the relevant names to `spring.cloud.config.name`.
+
+[IMPORTANT]
+====
+The order of names in the comma-separated list matters. A property defined in a later
+name overrides the same property defined in an earlier name. In the example above,
+`cassandra.properties` would override a matching property in `servicea.properties` if
+both define it.
+====
+
 [[requesting-multiple-labels]]
 == Requesting Multiple Labels
 
