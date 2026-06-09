@@ -1,5 +1,5 @@
 [[observability]]
-== Observability metadata
+= Observability
 
 include::partial$_metrics.adoc[]
 
