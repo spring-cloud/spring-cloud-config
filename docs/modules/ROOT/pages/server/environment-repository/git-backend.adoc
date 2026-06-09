@@ -475,6 +475,46 @@ value of this property is specified in seconds.  By default the value is 0, mean
 the config server will fetch updated configuration from the Git repo every time it
 is requested. If the value is a negative number the refresh will not occur.
 
+[[git-backend-unavailability]]
+== Behavior When the Git Backend Is Unavailable
+
+Spring Cloud Config Server clones the remote Git repository to a local working directory (the _basedir_ cache) when configuration is first requested (or at startup when `cloneOnStart: true`).
+This local clone is used as a read-only cache so that the Config Server can continue serving configuration even if the remote Git backend becomes temporarily unreachable.
+
+The following table summarises the behaviour under various failure scenarios:
+
+[cols="3,4", options="header"]
+|===
+| Scenario | Behaviour
+
+| Config Server starts without a prior local clone, and Git is unreachable
+| The initial clone fails.
+  The Config Server logs an error and returns an HTTP `500` to the requesting client.
+  No stale data is available.
+
+| Git becomes unreachable after at least one successful clone or fetch
+| The `fetch` step fails silently (a `WARN`-level log entry is emitted).
+  The Config Server falls back to the last successfully fetched local working copy and serves the stale (but valid) configuration.
+  Clients receive an HTTP `200` with potentially outdated values.
+
+| `force-pull: true` and Git is unreachable
+| `force-pull` instructs the server to reset the local working copy before merging from the remote.
+  When the subsequent fetch fails, the reset has already been applied.
+  No stale data is available and the Config Server returns an HTTP `500`.
+
+| `cloneOnStart: true` and Git is unreachable at startup
+| The Config Server fails to start.
+  This surfaces misconfiguration early rather than at the first client request.
+
+|===
+
+[NOTE]
+====
+Because the fallback to stale configuration is silent (only a log warning), clients may receive outdated values without any indication that the backend is unavailable.
+Monitor the Config Server's `WARN` log output and, in production, enable the
+xref:server/health-indicator.adoc[Health Indicator] (or configure a dedicated alerting rule on it) so that backend connectivity problems are surfaced promptly.
+====
+
 [[default-label]]
 == Default Label
 
