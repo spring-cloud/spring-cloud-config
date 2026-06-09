@@ -363,6 +363,44 @@ String name = "World";
 
 The preceding code would sets the value of the `name` variable to `appAsecret`.
 
+[[refresh-scope-known-limitations]]
+== Refresh Scope Known Limitations
+
+=== @RefreshScope and @ControllerAdvice
+
+Applying `@RefreshScope` directly to a `@ControllerAdvice` bean that is discovered via component scanning (for example, annotated with `@ControllerAdvice` in a `@SpringBootApplication` package) causes Spring MVC to register the bean twice: once for the CGLIB proxy created by the refresh scope and once for the underlying target class. This results in `@ModelAttribute` methods (and other advice methods) being invoked twice per request.
+
+This is a known interaction between Spring Cloud's refresh scope proxying and Spring MVC's component scan for `ControllerAdvice` beans.
+
+*Workaround:* Extract the refreshable configuration values into a separate `@ConfigurationProperties` or `@Component` bean annotated with `@RefreshScope`, and inject that bean into the `@ControllerAdvice`. The `@ControllerAdvice` itself should *not* carry `@RefreshScope`:
+
+[source,java]
+----
+@ConfigurationProperties(prefix = "myapp")
+@RefreshScope                                  // <1>
+public class MyAppConfig {
+    private String secret;
+    // getter/setter
+}
+
+@ControllerAdvice                              // <2>
+public class MyControllerAdvice {
+
+    private final MyAppConfig config;
+
+    public MyControllerAdvice(MyAppConfig config) {
+        this.config = config;
+    }
+
+    @ModelAttribute
+    public void adviceMethod(HttpServletRequest request) {
+        // uses config.getSecret() — refreshed automatically
+    }
+}
+----
+<1> Only the configuration holder is refreshed.
+<2> The `@ControllerAdvice` is *not* annotated with `@RefreshScope`, so it is registered once and remains stable across refreshes.
+
 [[aot-and-native-image-support]]
 ==  AOT and Native Image Support
 
