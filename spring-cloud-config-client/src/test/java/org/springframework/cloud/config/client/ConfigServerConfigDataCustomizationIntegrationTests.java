@@ -18,6 +18,7 @@ package org.springframework.cloud.config.client;
 
 import java.util.Optional;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -83,6 +84,32 @@ public class ConfigServerConfigDataCustomizationIntegrationTests {
 			assertThat(interceptor.hasBinder).isTrue();
 
 			assertThat(bindHandlerBootstrapper.onSuccessCount).isGreaterThan(1);
+		}
+		finally {
+			if (context != null) {
+				context.close();
+			}
+		}
+	}
+
+	@Test
+	void restTemplateIsInstrumentedWithObservation() {
+		ConfigurableApplicationContext context = null;
+		try {
+			context = new SpringApplicationBuilder(TestConfig.class)
+				.addBootstrapRegistryInitializer(reg -> reg.addCloseListener(event -> {
+					BootstrapContext bootstrapContext = event.getBootstrapContext();
+					ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
+
+					RestTemplate restTemplate = bootstrapContext.get(RestTemplate.class);
+					beanFactory.registerSingleton("holder", new RestTemplateHolder(restTemplate));
+				}))
+				.run("--spring.config.import=optional:configserver:");
+
+			RestTemplateHolder holder = context.getBean(RestTemplateHolder.class);
+			assertThat(holder).isNotNull();
+			assertThat(holder.restTemplate.getObservationRegistry()).isNotNull();
+			assertThat(holder.restTemplate.getObservationRegistry()).isNotSameAs(ObservationRegistry.NOOP);
 		}
 		finally {
 			if (context != null) {
