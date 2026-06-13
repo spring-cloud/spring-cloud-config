@@ -16,11 +16,15 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.support.EnvironmentRepositoryProperties;
 
 /**
  * @author Clay McCoy
+ * @author Geonwook Ham
  */
 @ConfigurationProperties("spring.cloud.config.server.awss3")
 public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperties {
@@ -41,12 +45,26 @@ public class AwsS3EnvironmentProperties implements EnvironmentRepositoryProperti
 	private String bucket;
 
 	/**
-	 * Use application name as intermediate directory. Analogous to `searchPaths:
-	 * {application}` from Git backend.
+	 * Use application name as intermediate directory. Analogous to {@link #searchPaths}
+	 * from Git backend.
 	 */
 	private boolean useDirectoryLayout;
 
 	private int order = DEFAULT_ORDER;
+
+	/**
+	 * List of directory paths to search for profiles in the bucket. Analogous to
+	 * {@link #searchPaths} in Git backend.
+	 */
+	private List<String> searchPaths = Collections.emptyList();
+
+	public List<String> getSearchPaths() {
+		return searchPaths;
+	}
+
+	public void setSearchPaths(List<String> searchPaths) {
+		this.searchPaths = searchPaths;
+	}
 
 	public String getRegion() {
 		return region;

@@ -67,3 +67,31 @@ The preceding listing matches objects stored in your bucket in `/\{application}`
 │   ├── application-test.yml
 │   └── application.yml
 ```
+
+[[search-paths]]
+== Search paths
+
+Spring Cloud Config Server also supports `search-paths` for the AWS S3 backend, analogous to xref:./git-backend.adoc#placeholders-in-git-search-paths[`search-paths`] in the Git backend. You can specify a list of paths in the bucket to search for configuration files. The search paths can contain placeholders like `{application}`, `{profile}`, and `{label}`.
+
+The search paths support:
+- *Literal paths*: Probing exact paths with supported file extensions (e.g. `properties`, `json`, `yml`, `yaml`).
+- *Directory paths*: Scanning files under a specific directory.
+- *Wildcards*: Patterns with `*` or `?` placeholders (e.g. `config/*`).
+
+The following configuration specifies search paths in the S3 bucket:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        awss3:
+          region: us-east-1
+          bucket: bucket1
+          search-paths:
+            - '{application}'
+            - 'config/{application}'
+            - 'settings/*'
+----
+
