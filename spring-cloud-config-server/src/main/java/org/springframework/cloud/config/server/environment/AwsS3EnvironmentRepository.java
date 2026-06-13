@@ -117,6 +117,10 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		return this.order;
 	}
 
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
 	@Override
 	public Environment findOne(String specifiedApplication, String specifiedProfiles, String specifiedLabel) {
 		final String application = ObjectUtils.isEmpty(specifiedApplication)
@@ -463,30 +467,30 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private String extractPrefix(String pattern) {
-		int idx = pattern.indexOf('*');
-		int q = pattern.indexOf('?');
-		if (q != -1 && (idx == -1 || q < idx)) {
-			idx = q;
+		int firstWildcardIdx = -1;
+		int starIdx = pattern.indexOf('*');
+		int questionIdx = pattern.indexOf('?');
+		if (starIdx != -1 && questionIdx != -1) {
+			firstWildcardIdx = Math.min(starIdx, questionIdx);
 		}
-		else if (idx <= 0) {
+		else if (starIdx != -1) {
+			firstWildcardIdx = starIdx;
+		}
+		else {
+			firstWildcardIdx = questionIdx;
+		}
+
+		if (firstWildcardIdx <= 0) {
 			return "";
 		}
-		int slash = pattern.lastIndexOf('/', idx);
+		int slash = pattern.lastIndexOf('/', firstWildcardIdx);
 		return (slash == -1 ? "" : pattern.substring(0, slash + 1));
 	}
 
 	private Optional<S3ConfigFile> createConfigFileFromKey(String key, String application, String profile,
 			String label) {
 		String ext = key.substring(key.lastIndexOf('.') + 1);
-		if ("properties".equalsIgnoreCase(ext)) {
-			return Optional.of(new S3ConfigFileFromKey(key, application, profile, label, bucketName,
-					useApplicationAsDirectory, s3Client));
-		}
-		else if ("json".equalsIgnoreCase(ext)) {
-			return Optional.of(new S3ConfigFileFromKey(key, application, profile, label, bucketName,
-					useApplicationAsDirectory, s3Client));
-		}
-		else if ("yml".equalsIgnoreCase(ext) || "yaml".equalsIgnoreCase(ext)) {
+		if (SUPPORTED_EXTENSIONS.contains("." + ext.toLowerCase(Locale.ROOT))) {
 			return Optional.of(new S3ConfigFileFromKey(key, application, profile, label, bucketName,
 					useApplicationAsDirectory, s3Client));
 		}

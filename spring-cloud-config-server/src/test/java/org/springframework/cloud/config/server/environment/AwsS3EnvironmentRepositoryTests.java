@@ -849,6 +849,7 @@ public class AwsS3EnvironmentRepositoryTests {
 		Environment env = repo.findOne("foo", "", "v1");
 		assertThat(env.getPropertySources()).hasSize(2);
 		assertThat(env.getPropertySources().get(0).getName()).contains("v1/foo/foo.properties");
+		assertThat(env.getPropertySources().get(1).getName()).contains("v1/foo/foo.json");
 	}
 
 	@Test
