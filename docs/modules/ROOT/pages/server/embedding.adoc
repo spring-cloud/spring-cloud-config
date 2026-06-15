@@ -37,3 +37,52 @@ If you want to read the configuration for an application directly from the backe
 basically want an embedded config server with no endpoints.
 You can switch off the endpoints entirely by not using the `@EnableConfigServer` annotation (set `spring.cloud.config.server.bootstrap=true`).
 
+[[embedded-vs-standalone]]
+== Embedded vs. Standalone: Choosing the Right Deployment Model
+
+The choice between embedding the Config Server and running it as a standalone service depends on the scale and security requirements of your architecture. The following table summarizes the key trade-offs:
+
+[cols="1,2,2", options="header"]
+|===
+|Concern
+|Embedded Config Server
+|Standalone Config Server
+
+|*Operational overhead*
+|None — no additional service to deploy or monitor
+|Requires deploying, operating, and monitoring a dedicated service
+
+|*Git credentials*
+|Every application that embeds the server must hold its own Git credentials (SSH keys or username/password)
+|Credentials are held in one place; client applications need only the Config Server URL
+
+|*Encryption keys*
+|Every application holds its own encryption/decryption keys
+|Keys are managed centrally on the Config Server
+
+|*Configuration drift*
+|Each embedding application may run a slightly different version or configuration of the server
+|Centralized control ensures all clients see the same configuration
+
+|*High availability*
+|HA falls on each application; no shared point of failure
+|The Config Server itself becomes a shared point of failure (mitigated by clustering or multiple instances)
+
+|*Network round-trips*
+|Zero — configuration is resolved in-process
+|Adds a network call per startup (and per refresh)
+
+|*Security isolation*
+|Each application has access to all configurations held in its repository; no per-application access control at the server layer
+|The standalone server can enforce per-application access control (see xref:server/security.adoc[Security])
+
+|*Suitable for*
+|Single-application or monolith deployments, local development, or cases where reducing operational overhead outweighs centralization benefits
+|Microservice environments with many applications that share configuration, strict security requirements, or centralized secrets management
+|===
+
+[IMPORTANT]
+====
+When embedding the Config Server in a multi-application environment (for example, if each microservice embeds its own Config Server), each application independently connects to the Git repository. This means each application must possess valid Git credentials and encryption keys, which can complicate secret rotation and auditing.
+====
+
