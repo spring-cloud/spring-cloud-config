@@ -1,6 +1,6 @@
 [[observability]]
 = Observability
 
-include::partial$_metrics.adoc[]
+include::partial$_metrics.adoc[leveloffset=-1]
 
-include::partial$_spans.adoc[]
+include::partial$_spans.adoc[leveloffset=-1]
