@@ -475,6 +475,89 @@ value of this property is specified in seconds.  By default the value is 0, mean
 the config server will fetch updated configuration from the Git repo every time it
 is requested. If the value is a negative number the refresh will not occur.
 
+[[git-backend-unavailability]]
+== Behavior When the Git Backend is Unavailable
+
+Understanding how Config Server behaves when its Git backend is inaccessible is important
+for planning resilient deployments.
+
+[[git-backend-unavailability-startup]]
+=== At Startup
+
+By default, Config Server clones the Git repository on the first request (lazy cloning)
+rather than on startup.
+This means that a misconfigured or unreachable Git URI does _not_ prevent the server
+from starting — the error is surfaced only when the first configuration request arrives.
+
+To detect repository problems early, set `spring.cloud.config.server.git.cloneOnStart=true`.
+The server will then attempt to clone the repository during startup and fail fast if the
+repository is unreachable or misconfigured:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/my-org/config-repo.git
+          clone-on-start: true
+----
+
+The health indicator (see xref:server/health-indicator.adoc[Health Indicator]) can also
+be used to detect backend problems after startup via the `/actuator/health` endpoint.
+
+[[git-backend-unavailability-runtime]]
+=== After a Successful Startup
+
+Once the Config Server has started and cloned the repository, it keeps a local working
+copy on disk.
+If the remote Git backend becomes unavailable after a successful startup, the Config
+Server continues serving configuration from its local working copy.
+Clients still receive valid responses as long as the local copy contains the requested
+branch and files.
+
+If `spring.cloud.config.server.git.refreshRate` is set to a positive value (in seconds),
+the server periodically attempts to fetch updates from the remote.
+While the remote is down, those fetch attempts fail silently and the local copy remains
+at whatever revision was last fetched.
+Once the remote becomes available again, the next scheduled or request-triggered fetch
+succeeds and brings the local copy up to date.
+
+[[git-backend-unavailability-force-pull]]
+=== Local Copy Drift and Force Pull
+
+If the local working copy has diverged from the remote (for example, due to a manual
+edit or a failed merge), subsequent fetch operations may not overwrite conflicting local
+changes.
+To ensure the local copy always reflects the remote, enable `force-pull`:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/my-org/config-repo.git
+          force-pull: true
+----
+
+With `force-pull` enabled, the Config Server discards any local modifications and
+resets the working copy to match the remote on every fetch.
+See xref:server/environment-repository/git-backend.adoc#force-pull-in-git-repositories[Force pull in Git Repositories] for details.
+
+[[git-backend-unavailability-refresh]]
+=== Effect on Client Refresh
+
+When a client application triggers a configuration refresh (for example, via
+`/actuator/refresh` with Spring Cloud Bus) and the Config Server cannot reach the Git
+backend, the Config Server returns configuration from its local working copy (if one
+exists).
+If no local copy exists (for example, the server was restarted after the Git backend
+went down and lazy cloning is enabled), the Config Server returns an error to the
+client and the client retains its current configuration.
+
 [[default-label]]
 == Default Label
 
