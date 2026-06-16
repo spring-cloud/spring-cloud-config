@@ -23,6 +23,9 @@ import org.springframework.cloud.config.server.config.ConfigServerProperties;
 
 import static org.springframework.cloud.config.server.environment.AwsClientBuilderConfigurer.configureClientBuilder;
 
+/**
+ * @author Geonwook Ham
+ */
 public class AwsS3EnvironmentRepositoryFactory
 		implements EnvironmentRepositoryFactory<AwsS3EnvironmentRepository, AwsS3EnvironmentProperties> {
 
@@ -38,10 +41,7 @@ public class AwsS3EnvironmentRepositoryFactory
 		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 		final S3Client client = clientBuilder.build();
 
-		AwsS3EnvironmentRepository repository = new AwsS3EnvironmentRepository(client,
-				environmentProperties.getBucket(), environmentProperties.isUseDirectoryLayout(), server);
-		repository.setOrder(environmentProperties.getOrder());
-		return repository;
+		return new AwsS3EnvironmentRepository(client, environmentProperties, server);
 	}
 
 }
