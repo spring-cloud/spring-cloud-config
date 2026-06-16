@@ -16,18 +16,24 @@
 
 package org.springframework.cloud.config.client;
 
+import java.util.List;
+
 import org.aspectj.lang.annotation.Aspect;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.config.client.oauth2.ConfigClientOAuth2BootstrapConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
@@ -57,8 +63,11 @@ public class ConfigServiceBootstrapConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(ConfigServicePropertySourceLocator.class)
 	@ConditionalOnProperty(name = ConfigClientProperties.PREFIX + ".enabled", matchIfMissing = true)
-	public ConfigServicePropertySourceLocator configServicePropertySource(ConfigClientProperties properties) {
-		return new ConfigServicePropertySourceLocator(properties);
+	public ConfigServicePropertySourceLocator configServicePropertySource(ConfigClientProperties properties,
+			@Qualifier(ConfigClientOAuth2BootstrapConfiguration.OAUTH2_INTERCEPTOR_BEAN_NAME) ObjectProvider<ClientHttpRequestInterceptor> oauth2Interceptor) {
+		ConfigServicePropertySourceLocator locator = new ConfigServicePropertySourceLocator(properties);
+		oauth2Interceptor.ifAvailable(interceptor -> locator.setAdditionalInterceptors(List.of(interceptor)));
+		return locator;
 	}
 
 	@ConditionalOnProperty(ConfigClientProperties.PREFIX + ".fail-fast")
