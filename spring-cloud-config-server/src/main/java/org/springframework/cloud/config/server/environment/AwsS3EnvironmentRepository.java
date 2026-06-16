@@ -247,9 +247,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		List<S3ConfigFile> s3ConfigFiles = searchPaths.isEmpty() ? getS3ConfigFile(app, profile, label,
 				this::getNonProfileSpecificPropertiesOrJsonConfigFile, this::getNonProfileSpecificS3ConfigFileYaml)
 				: Collections.emptyList();
-		if (s3ConfigFiles != null) {
-			addPropertySource(environment, s3ConfigFiles);
-		}
+		addPropertySource(environment, s3ConfigFiles);
 	}
 
 	private void addPropertySource(Environment environment, List<S3ConfigFile> s3ConfigFiles) {
