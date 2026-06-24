@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +28,7 @@ import io.micrometer.observation.ObservationRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import org.springframework.cloud.config.server.environment.AbstractScmEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
@@ -53,6 +56,9 @@ public class FileMonitorConfigurationTest {
 	private FileMonitorConfiguration fileMonitorConfiguration = new FileMonitorConfiguration();
 
 	private List<AbstractScmEnvironmentRepository> repositories = new ArrayList<>();
+
+	@TempDir
+	private Path tempDir;
 
 	@BeforeEach
 	public void setup() {
@@ -87,6 +93,22 @@ public class FileMonitorConfigurationTest {
 
 		// then
 		assertOnDirectory(1);
+	}
+
+	@Test
+	public void testStart_withNativeEnvironmentRepositoryAndRelativeFileUri() throws Exception {
+		// given
+		Path relativeLocation = Paths.get("target", "file-monitor", tempDir.getFileName().toString(), "config.d");
+		Files.createDirectories(relativeLocation);
+		NativeEnvironmentRepository repository = createNativeEnvironmentRepository("file:" + relativeLocation);
+		ReflectionTestUtils.setField(fileMonitorConfiguration, "nativeEnvironmentRepository", repository);
+
+		// when
+		fileMonitorConfiguration.start();
+
+		// then
+		Set<Path> directory = getDirectory();
+		assertThat(directory).containsExactly(relativeLocation.toAbsolutePath());
 	}
 
 	@Test
@@ -203,9 +225,13 @@ public class FileMonitorConfigurationTest {
 	}
 
 	private NativeEnvironmentRepository createNativeEnvironmentRepository() {
+		return createNativeEnvironmentRepository("classpath:pathsamples");
+	}
+
+	private NativeEnvironmentRepository createNativeEnvironmentRepository(String... searchLocations) {
 		ConfigurableEnvironment environment = createConfigurableEnvironment();
 		NativeEnvironmentProperties properties = new NativeEnvironmentProperties();
-		properties.setSearchLocations(new String[] { "classpath:pathsamples" });
+		properties.setSearchLocations(searchLocations);
 		return new NativeEnvironmentRepository(environment, properties, ObservationRegistry.NOOP);
 	}
 

@@ -202,7 +202,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 					}
 					Resource resource = this.resourceLoader.getResource(repositoryUri);
 					if (resource instanceof FileSystemResource || resource instanceof FileUrlResource) {
-						paths.add(Paths.get(resource.getURI()));
+						paths.add(resolvePath(resource));
 					}
 				}
 				return paths;
@@ -217,7 +217,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				Resource resource = this.resourceLoader.getResource(path);
 				if (resource.exists()) {
 					try {
-						paths.add(Paths.get(resource.getURI()));
+						paths.add(resolvePath(resource));
 					}
 					catch (Exception e) {
 						log.error("Cannot resolve URI for path: " + path);
@@ -227,6 +227,13 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 			return paths;
 		}
 		return null;
+	}
+
+	private Path resolvePath(Resource resource) throws IOException {
+		if (resource instanceof FileSystemResource || resource instanceof FileUrlResource) {
+			return resource.getFile().toPath().toAbsolutePath().normalize();
+		}
+		return Paths.get(resource.getURI());
 	}
 
 	private Set<File> filesFromEvents() {
