@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * @author Alexey Zhokhov
+ * @author Pavel Andrusov
  */
 public class VaultEnvironmentEncryptorTests {
 
@@ -206,6 +207,199 @@ public class VaultEnvironmentEncryptorTests {
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get(environment.getName())).isNull();
 		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
 			.isEqualTo("<n/a>");
+	}
+
+	@Test
+	public void shouldResolvePropertyWithEnvironmentVariableInVaultKey() {
+		// given
+		String secret = "mysecret";
+		String vaultKeyWithEnvVar = "accounts/${PATH}/mypay";
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+
+		// Use PATH environment variable which should exist on most systems
+		String pathValue = System.getenv("PATH");
+		when(keyValueTemplate.get("accounts/" + pathValue + "/mypay"))
+			.thenReturn(withVaultResponse("access_key", secret));
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				"{vault}:" + vaultKeyWithEnvVar + "#access_key")));
+
+		// then
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+			.isEqualTo(secret);
+	}
+
+	@Test
+	public void shouldResolvePropertyWithEnvironmentVariableInVaultParamName() {
+		// given
+		String secret = "mysecret";
+		String vaultParamWithEnvVar = "${USER}_key";
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+
+		// Use USER environment variable which should exist on most systems
+		String userValue = System.getenv("USER");
+		when(keyValueTemplate.get("accounts/mypay")).thenReturn(withVaultResponse(userValue + "_key", secret));
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				"{vault}:accounts/mypay#" + vaultParamWithEnvVar)));
+
+		// then
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+			.isEqualTo(secret);
+	}
+
+	@Test
+	public void shouldResolvePropertyWithMultipleEnvironmentVariables() {
+		// given
+		String secret = "mysecret";
+		String vaultKeyWithMultipleEnvVars = "${USER}/accounts/${PATH}/mypay";
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+
+		// Use USER and PATH environment variables which should exist on most systems
+		String userValue = System.getenv("USER");
+		String pathValue = System.getenv("PATH");
+		when(keyValueTemplate.get(userValue + "/accounts/" + pathValue + "/mypay"))
+			.thenReturn(withVaultResponse("access_key", secret));
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				"{vault}:" + vaultKeyWithMultipleEnvVars + "#access_key")));
+
+		// then
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+			.isEqualTo(secret);
+	}
+
+	@Test
+	public void shouldKeepOriginalPlaceholderWhenEnvironmentVariableNotFound() {
+		// given
+		String secret = "mysecret";
+		String vaultKeyWithNonExistentEnvVar = "accounts/${NON_EXISTENT_VAR}/mypay";
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+		when(keyValueTemplate.get("accounts/${NON_EXISTENT_VAR}/mypay"))
+			.thenReturn(withVaultResponse("access_key", secret));
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				"{vault}:" + vaultKeyWithNonExistentEnvVar + "#access_key")));
+
+		// then
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+			.isEqualTo(secret);
+	}
+
+	@Test
+	public void shouldHandleMixedExistingAndNonExistingEnvironmentVariables() {
+		// given
+		String secret = "mysecret";
+		String vaultKeyWithMixedEnvVars = "${USER}/accounts/${NON_EXISTENT_VAR}/mypay";
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+
+		// Use USER environment variable which should exist on most systems
+		String userValue = System.getenv("USER");
+		when(keyValueTemplate.get(userValue + "/accounts/${NON_EXISTENT_VAR}/mypay"))
+			.thenReturn(withVaultResponse("access_key", secret));
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a", Collections.<Object, Object>singletonMap(environment.getName(),
+				"{vault}:" + vaultKeyWithMixedEnvVars + "#access_key")));
+
+		// then
+		assertThat(encryptor.decrypt(environment).getPropertySources().get(0).getSource().get(environment.getName()))
+			.isEqualTo(secret);
+	}
+
+	@Test
+	public void shouldHandleNullInputGracefully() {
+		// given
+		String secret = "mysecret";
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+		when(keyValueTemplate.get(null)).thenReturn(withVaultResponse("access_key", secret));
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a",
+				Collections.<Object, Object>singletonMap(environment.getName(), "{vault}:#access_key")));
+
+		// then
+		Environment processedEnvironment = encryptor.decrypt(environment);
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
+			.isEqualTo("<n/a>");
+	}
+
+	@Test
+	public void shouldHandleEmptyStringInput() {
+		// given
+		String secret = "mysecret";
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+		when(keyValueTemplate.get("")).thenReturn(withVaultResponse("access_key", secret));
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		environment.add(new PropertySource("a",
+				Collections.<Object, Object>singletonMap(environment.getName(), "{vault}:#access_key")));
+
+		// then
+		Environment processedEnvironment = encryptor.decrypt(environment);
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("invalid." + environment.getName()))
+			.isEqualTo("<n/a>");
+	}
+
+	@Test
+	public void shouldHandleMultiplePropertiesWithEnvironmentVariables() {
+		// given
+		String secret1 = "secret1";
+		String secret2 = "secret2";
+
+		VaultKeyValueOperations keyValueTemplate = mock(VaultKeyValueOperations.class);
+		String userValue = System.getenv("USER");
+		String pathValue = System.getenv("PATH");
+		when(keyValueTemplate.get("accounts/" + userValue + "/mypay"))
+			.thenReturn(withVaultResponse("access_key", secret1));
+		when(keyValueTemplate.get("accounts/" + pathValue + "/mypay"))
+			.thenReturn(withVaultResponse("access_key", secret2));
+
+		VaultEnvironmentEncryptor encryptor = new VaultEnvironmentEncryptor(keyValueTemplate);
+
+		// when
+		Environment environment = new Environment("name", "profile", "label");
+		Map<Object, Object> properties = new HashMap<>();
+		properties.put("property1", "{vault}:accounts/${USER}/mypay#access_key");
+		properties.put("property2", "{vault}:accounts/${PATH}/mypay#access_key");
+		environment.add(new PropertySource("a", properties));
+
+		// then
+		Environment processedEnvironment = encryptor.decrypt(environment);
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("property1")).isEqualTo(secret1);
+		assertThat(processedEnvironment.getPropertySources().get(0).getSource().get("property2")).isEqualTo(secret2);
 	}
 
 	private VaultResponse withVaultResponse(String key, Object value) {
