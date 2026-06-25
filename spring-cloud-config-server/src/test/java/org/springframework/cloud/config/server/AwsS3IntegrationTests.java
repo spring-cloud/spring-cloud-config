@@ -48,9 +48,11 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.util.TestSocketUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Ryan Baxter
@@ -152,6 +154,38 @@ public class AwsS3IntegrationTests {
 		assertThat(env.getPropertySources().get(0).getName()).isEqualTo("s3:data-dev");
 		assertThat(env.getPropertySources().get(1).getName()).isEqualTo("s3:data");
 		assertThat(env.getPropertySources().get(2).getName()).isEqualTo("s3:application");
+	}
+
+	@Test
+	public void wildcardInApplicationNameReturns400() {
+		RestTemplate rest = new RestTemplateBuilder().build();
+		String configServerUrl = "http://localhost:" + configServerPort;
+		assertThatThrownBy(() -> rest.getForObject(configServerUrl + "/**/default", Environment.class))
+			.isInstanceOf(HttpClientErrorException.BadRequest.class);
+	}
+
+	@Test
+	public void wildcardInLabelReturns400() {
+		RestTemplate rest = new RestTemplateBuilder().build();
+		String configServerUrl = "http://localhost:" + configServerPort;
+		assertThatThrownBy(() -> rest.getForObject(configServerUrl + "/application/default/*", Environment.class))
+			.isInstanceOf(HttpClientErrorException.BadRequest.class);
+	}
+
+	@Test
+	public void questionMarkInApplicationNameReturns400() {
+		RestTemplate rest = new RestTemplateBuilder().build();
+		String configServerUrl = "http://localhost:" + configServerPort;
+		assertThatThrownBy(() -> rest.getForObject(configServerUrl + "/app%3F/default", Environment.class))
+			.isInstanceOf(HttpClientErrorException.BadRequest.class);
+	}
+
+	@Test
+	public void questionMarkInLabelReturns400() {
+		RestTemplate rest = new RestTemplateBuilder().build();
+		String configServerUrl = "http://localhost:" + configServerPort;
+		assertThatThrownBy(() -> rest.getForObject(configServerUrl + "/application/default/main%3F", Environment.class))
+			.isInstanceOf(HttpClientErrorException.BadRequest.class);
 	}
 
 	@Import(S3ProtocolResolver.class)

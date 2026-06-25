@@ -593,6 +593,50 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void nameWithWildcard() {
+		assertThatThrownBy(() -> this.controller.labelled("foo*", "bar", "mylabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo**", "bar", "mylabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo?", "bar", "mylabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void nameWithEncodedWildcard() {
+		assertThatThrownBy(() -> this.controller.labelled("foo%2A", "bar", "mylabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo%2a", "bar", "mylabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo%3F", "bar", "mylabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo%3f", "bar", "mylabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void labelWithWildcard() {
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "my*label"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "my**label"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "my?label"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void labelWithEncodedWildcard() {
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "my%2Alabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "my%2alabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "my%3Flabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.labelled("foo", "bar", "my%3flabel"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
 	public void invalidProfileTests() {
 		assertThatThrownBy(() -> this.controller.labelled("application", "bar,..,foo", "label"))
 			.isInstanceOf(InvalidEnvironmentRequestException.class);

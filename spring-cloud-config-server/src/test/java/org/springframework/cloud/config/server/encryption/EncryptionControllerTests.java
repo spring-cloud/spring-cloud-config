@@ -208,4 +208,65 @@ public class EncryptionControllerTests {
 			.hasMessageContaining("Invalid request");
 	}
 
+	@Test
+	public void nameWithWildcard() {
+		this.controller = new EncryptionController(new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
+		assertThatThrownBy(() -> this.controller.getPublicKey("app*", "default"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.getPublicKey("app**", "default"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.getPublicKey("app?", "default"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.encrypt("app*", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.encrypt("app**", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.encrypt("app?", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.decrypt("app*", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.decrypt("app**", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.decrypt("app?", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+	}
+
+	@Test
+	public void nameWithEncodedWildcard() {
+		this.controller = new EncryptionController(new SingleTextEncryptorLocator(new RsaSecretEncryptor()));
+		assertThatThrownBy(() -> this.controller.getPublicKey("app%2A", "default"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.getPublicKey("app%2a", "default"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.getPublicKey("app%3F", "default"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.getPublicKey("app%3f", "default"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.encrypt("app%2A", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.encrypt("app%3F", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.decrypt("app%2A", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+		assertThatThrownBy(() -> this.controller.decrypt("app%3F", "default", "hello", MediaType.TEXT_PLAIN))
+			.isInstanceOf(InvalidEnvironmentRequestException.class)
+			.hasMessageContaining("Invalid request");
+	}
+
 }

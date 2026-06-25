@@ -84,4 +84,32 @@ public class NativeConfigServerIntegrationTests {
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
+	@Test
+	public void wildcardInApplicationNameReturns400() {
+		ResponseEntity<String> response = new TestRestTemplate()
+			.getForEntity("http://localhost:" + this.port + "/**/default", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	public void wildcardInLabelReturns400() {
+		ResponseEntity<String> response = new TestRestTemplate()
+			.getForEntity("http://localhost:" + this.port + "/application/default/*", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	public void questionMarkInApplicationNameReturns400() {
+		ResponseEntity<String> response = new TestRestTemplate()
+			.getForEntity("http://localhost:" + this.port + "/app%3F/default", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	public void questionMarkInLabelReturns400() {
+		ResponseEntity<String> response = new TestRestTemplate()
+			.getForEntity("http://localhost:" + this.port + "/application/default/main%3F", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+	}
+
 }

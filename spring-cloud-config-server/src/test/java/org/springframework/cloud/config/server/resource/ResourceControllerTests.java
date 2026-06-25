@@ -462,4 +462,76 @@ public class ResourceControllerTests {
 			.isInstanceOf(InvalidEnvironmentRequestException.class);
 	}
 
+	@Test
+	public void nameWithWildcard() {
+		assertThatThrownBy(() -> this.controller.retrieve("foo*", "bar", "label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo**", "bar", "label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo?", "bar", "label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo*", "bar", "label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo**", "bar", "label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo?", "bar", "label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void nameWithEncodedWildcard() {
+		assertThatThrownBy(() -> this.controller.retrieve("foo%2A", "bar", "label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo%2a", "bar", "label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo%3F", "bar", "label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo%3f", "bar", "label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo%2A", "bar", "label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo%2a", "bar", "label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo%3F", "bar", "label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo%3f", "bar", "label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void labelWithWildcard() {
+		assertThatThrownBy(() -> this.controller.retrieve("foo", "bar", "my*label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo", "bar", "my**label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo", "bar", "my?label", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo", "bar", "my*label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo", "bar", "my**label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo", "bar", "my?label", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
+	@Test
+	public void labelWithEncodedWildcard() {
+		assertThatThrownBy(() -> this.controller.retrieve("foo", "bar", "my%2Alabel", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo", "bar", "my%2alabel", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo", "bar", "my%3Flabel", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.retrieve("foo", "bar", "my%3flabel", "template.json", true, "UTF-8"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo", "bar", "my%2Alabel", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo", "bar", "my%2alabel", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo", "bar", "my%3Flabel", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+		assertThatThrownBy(() -> this.controller.binary("foo", "bar", "my%3flabel", "template.json"))
+			.isInstanceOf(InvalidEnvironmentRequestException.class);
+	}
+
 }

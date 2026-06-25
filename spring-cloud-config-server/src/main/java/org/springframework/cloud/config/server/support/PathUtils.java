@@ -119,26 +119,24 @@ public abstract class PathUtils {
 	}
 
 	private static boolean isInvalidLocation(String location) {
-		boolean isInvalid = location.contains("..");
-
-		if (isInvalid && logger.isWarnEnabled()) {
+		if (location.contains("..")) {
 			logger.warn("Location contains \"..\"");
+			return true;
 		}
-		if (!isInvalid) {
-			isInvalid = location.contains("#");
-			if (isInvalid && logger.isWarnEnabled()) {
-				logger.warn("Location contains \"#\"");
-			}
+		if (location.contains("#")) {
+			logger.warn("Location contains \"#\"");
+			return true;
 		}
-		if (!isInvalid) {
-			// locations can't start with slash
-			isInvalid = location.startsWith(Environment.SLASH_PLACEHOLDER);
-			if (isInvalid && logger.isWarnEnabled()) {
-				logger.warn("Location starts with \"/\"");
-			}
+		// locations can't start with slash
+		if (location.startsWith(Environment.SLASH_PLACEHOLDER)) {
+			logger.warn("Location starts with \"/\"");
+			return true;
 		}
-
-		return isInvalid;
+		if (location.contains("*") || location.contains("?")) {
+			logger.warn("Location contains wildcard character");
+			return true;
+		}
+		return false;
 	}
 
 	/**
