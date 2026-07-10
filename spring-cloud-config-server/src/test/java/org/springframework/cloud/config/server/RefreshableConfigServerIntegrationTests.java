@@ -55,7 +55,8 @@ import static org.springframework.cloud.config.server.test.ConfigServerTestUtils
 
 @SpringBootTest(classes = TestConfiguration.class,
 		properties = { "spring.cloud.config.enabled=true", "spring.cloud.bootstrap.enabled=true",
-				"management.endpoint.env.post.enabled=true", "management.endpoints.web.exposure.include=env, refresh" },
+				"management.endpoint.env.post.enabled=true", "management.endpoints.web.exposure.include=env, refresh",
+				"management.endpoint.env.post.valid-keys-regex=.*" },
 		webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DirtiesContext
