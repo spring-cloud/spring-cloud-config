@@ -22,7 +22,7 @@ public class GithubWebhookRequestValidator extends Sha256WebhookRequestValidator
 	@Override
 	protected String getSignature(ServletServerHttpRequest request) {
 		HttpHeaders headers = request.getHeaders();
-		if (headers.containsKey(X_HUB_SIGNATURE)) {
+		if (headers.containsHeader(X_HUB_SIGNATURE)) {
 			String header = headers.getFirst(X_HUB_SIGNATURE);
 			// Signature header starts with sha256=
 			if (StringUtils.hasText(header) && header.startsWith(SIGNATURE_PREFIX)) {

@@ -33,7 +33,7 @@ import org.springframework.util.StringUtils;
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
 public class BitbucketPropertyPathNotificationExtractor implements PropertyPathNotificationExtractor {
 
-	public static boolean isBitbucketRequest(MultiValueMap<String, String> headers) {
+	public static boolean isBitbucketRequest(HttpHeaders headers) {
 		String eventKey = headers.getFirst("X-Event-Key");
 		if (eventKey == null) {
 			return false;

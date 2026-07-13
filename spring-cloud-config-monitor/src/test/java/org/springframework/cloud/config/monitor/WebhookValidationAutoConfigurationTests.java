@@ -11,10 +11,10 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterProperties;
+import org.springframework.boot.tomcat.autoconfigure.servlet.TomcatServletWebServerAutoConfiguration;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.bus.BusProperties;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -48,7 +48,7 @@ class WebhookValidationAutoConfigurationTests {
 		try (ConfigurableApplicationContext context = context()) {
 			FilterRegistrationBean<?> registration = (FilterRegistrationBean<?>) context
 				.getBean("webhookValidatorFilter");
-			assertThat(registration.getOrder()).isEqualTo(SecurityProperties.DEFAULT_FILTER_ORDER - 1);
+			assertThat(registration.getOrder()).isEqualTo(SecurityFilterProperties.DEFAULT_FILTER_ORDER - 1);
 		}
 	}
 
@@ -267,7 +267,7 @@ class WebhookValidationAutoConfigurationTests {
 		System.arraycopy(fixed, 0, all, 0, fixed.length);
 		System.arraycopy(properties, 0, all, fixed.length, properties.length);
 		return new SpringApplicationBuilder(BusConfig.class, EnvironmentMonitorAutoConfiguration.class,
-				ServletWebServerFactoryAutoConfiguration.class, ServerProperties.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
 			.properties(all)
 			.run();
