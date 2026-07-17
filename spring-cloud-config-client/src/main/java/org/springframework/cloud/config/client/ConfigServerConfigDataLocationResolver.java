@@ -42,6 +42,8 @@ import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
 import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
 import org.springframework.retry.support.RetryTemplate;
@@ -240,9 +242,19 @@ public class ConfigServerConfigDataLocationResolver
 			.registerSingleton("configDataConfigClientProperties",
 					event.getBootstrapContext().get(ConfigClientProperties.class)));
 
-		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class,
-				context -> new ConfigClientRequestTemplateFactory(log, context.get(ConfigClientProperties.class)));
-
+		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class, context -> {
+			ConfigClientProperties props = context.get(ConfigClientProperties.class);
+			return new ConfigClientRequestTemplateFactory(log, props);
+		});
+		bootstrapContext.addCloseListener(event -> {
+			ConfigurableApplicationContext applicationContext = event.getApplicationContext();
+			RestTemplate restTemplate = event.getBootstrapContext().get(RestTemplate.class);
+			applicationContext.addApplicationListener(appEvent -> {
+				if (appEvent instanceof ContextRefreshedEvent) {
+					new ObservationRestTemplateConfigurer().instrument(applicationContext, restTemplate);
+				}
+			});
+		});
 		bootstrapContext.registerIfAbsent(RestTemplate.class, context -> {
 			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);
 			return factory.create();
