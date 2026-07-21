@@ -20,9 +20,8 @@ public class MonitorConfigurationProperties {
 
 	/**
 	 * Upper bound on the number of dash-separated segments processed when guessing a
-	 * service name from a notification path. Prevents a long, heavily dashed
-	 * path from producing an unbounded number of candidate service names (and refresh
-	 * events).
+	 * service name from a notification path. Prevents a long, heavily dashed path from
+	 * producing an unbounded number of candidate service names (and refresh events).
 	 */
 	private int maxDashes = DEFAULT_MAX_DASHES;
 

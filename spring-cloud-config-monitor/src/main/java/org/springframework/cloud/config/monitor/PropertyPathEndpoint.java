@@ -60,8 +60,8 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 
 	/**
 	 * Upper bound on the number of dash-separated segments processed when guessing a
-	 * service name. Prevents a long, heavily dashed path from producing an
-	 * unbounded number of candidate service names (and refresh events). Configurable via
+	 * service name. Prevents a long, heavily dashed path from producing an unbounded
+	 * number of candidate service names (and refresh events). Configurable via
 	 * {@code spring.cloud.config.server.monitor.max-dashes}.
 	 */
 	private final int maxDashes;
