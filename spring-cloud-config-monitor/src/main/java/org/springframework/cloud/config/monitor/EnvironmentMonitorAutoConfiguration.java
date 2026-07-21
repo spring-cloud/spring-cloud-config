@@ -72,17 +72,20 @@ public class EnvironmentMonitorAutoConfiguration {
 
 		@Bean
 		@ConditionalOnBean(BusProperties.class)
-		public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties) {
+		public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties,
+				MonitorConfigurationProperties monitorProperties) {
 			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors),
-					busProperties.getId());
+					busProperties.getId(), monitorProperties.getMaxDashes());
 		}
 
 		// TODO: With the current implementation bus can't be disabled
 		@Bean
 		@ConditionalOnMissingBean(BusProperties.class)
 		public PropertyPathEndpoint noBusBeanPropertyPathEndpoint(
-				@Value("${spring.cloud.bus.id:application}") String id) {
-			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), id);
+				@Value("${spring.cloud.bus.id:application}") String id,
+				MonitorConfigurationProperties monitorProperties) {
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), id,
+					monitorProperties.getMaxDashes());
 		}
 
 	}
@@ -93,8 +96,10 @@ public class EnvironmentMonitorAutoConfiguration {
 
 		@Bean
 		public PropertyPathEndpoint noBusPropertyPathEndpoint(@Value("${spring.cloud.bus.id:application}") String id,
-				@Autowired(required = false) List<PropertyPathNotificationExtractor> extractors) {
-			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(extractors), id);
+				@Autowired(required = false) List<PropertyPathNotificationExtractor> extractors,
+				MonitorConfigurationProperties monitorProperties) {
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(extractors), id,
+					monitorProperties.getMaxDashes());
 		}
 
 	}

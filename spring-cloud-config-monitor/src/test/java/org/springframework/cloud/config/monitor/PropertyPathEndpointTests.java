@@ -103,4 +103,20 @@ public class PropertyPathEndpointTests {
 			.toString()).isEqualTo("[foo-local-dev, foo-local, foo]");
 	}
 
+	@Test
+	public void testNotifyLimitsDashes() {
+		PropertyPathEndpoint limitedEndpoint = new PropertyPathEndpoint(
+				new CompositePropertyPathNotificationExtractor(Collections.emptyList()), "abc1", 2);
+		StaticApplicationContext publisher = new StaticApplicationContext();
+		limitedEndpoint.setApplicationEventPublisher(publisher);
+		publisher.refresh();
+		StringBuilder path = new StringBuilder();
+		for (int i = 0; i < 1000; i++) {
+			path.append("a-");
+		}
+		path.append("a.yml");
+		assertThat(limitedEndpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", path.toString())))
+			.hasSize(2);
+	}
+
 }

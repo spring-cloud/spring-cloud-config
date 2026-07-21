@@ -58,9 +58,22 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 
 	private String busId;
 
+	/**
+	 * Upper bound on the number of dash-separated segments processed when guessing a
+	 * service name. Prevents a long, heavily dashed path from producing an
+	 * unbounded number of candidate service names (and refresh events). Configurable via
+	 * {@code spring.cloud.config.server.monitor.max-dashes}.
+	 */
+	private final int maxDashes;
+
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId) {
+		this(extractor, busId, MonitorConfigurationProperties.DEFAULT_MAX_DASHES);
+	}
+
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId, int maxDashes) {
 		this.extractor = extractor;
 		this.busId = busId;
+		this.maxDashes = maxDashes;
 	}
 
 	/* for testing */ String getBusId() {
@@ -110,8 +123,10 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 			// TODO: correlate with service registry
 			String name = stem + "-";
 			int index;
-			// support application name with dashes
-			while ((index = name.lastIndexOf("-")) >= 0) {
+			// support application name with dashes, but bound the number of segments
+			// processed so a long, heavily dashed path can't produce an
+			// unbounded number of candidate service names
+			for (int count = 0; count < this.maxDashes && (index = name.lastIndexOf("-")) >= 0; count++) {
 				name = name.substring(0, index);
 				if ("application".equals(name)) {
 					services.add("*");
@@ -119,6 +134,11 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 				else {
 					services.add(name);
 				}
+			}
+			// if dashes remain we stopped early because the limit was reached
+			if (name.lastIndexOf("-") >= 0) {
+				log.warn("Number of dashes in path '" + path + "' exceeds the configured maximum of " + this.maxDashes
+						+ " (spring.cloud.config.server.monitor.max-dashes); stopping service name resolution early");
 			}
 		}
 		return services;

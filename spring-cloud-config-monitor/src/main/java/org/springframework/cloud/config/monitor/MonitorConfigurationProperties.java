@@ -10,7 +10,21 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.cloud.config.server.monitor")
 public class MonitorConfigurationProperties {
 
+	/**
+	 * Default maximum number of dash-separated segments considered when guessing a
+	 * service name from a notification path.
+	 */
+	public static final int DEFAULT_MAX_DASHES = 20;
+
 	private Endpoint endpoint = new Endpoint();
+
+	/**
+	 * Upper bound on the number of dash-separated segments processed when guessing a
+	 * service name from a notification path. Prevents a long, heavily dashed
+	 * path from producing an unbounded number of candidate service names (and refresh
+	 * events).
+	 */
+	private int maxDashes = DEFAULT_MAX_DASHES;
 
 	private GitHub github = new GitHub();
 
@@ -78,6 +92,14 @@ public class MonitorConfigurationProperties {
 
 	public void setEndpoint(Endpoint endpoint) {
 		this.endpoint = endpoint;
+	}
+
+	public int getMaxDashes() {
+		return maxDashes;
+	}
+
+	public void setMaxDashes(int maxDashes) {
+		this.maxDashes = maxDashes;
 	}
 
 	public static class Endpoint {
