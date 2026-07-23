@@ -18,9 +18,11 @@ package org.springframework.cloud.config.client;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -54,9 +56,30 @@ public class ConfigClientRequestTemplateFactory {
 
 	private final ConfigClientProperties properties;
 
+	private final List<ClientHttpRequestInterceptor> additionalInterceptors = new ArrayList<>();
+
 	public ConfigClientRequestTemplateFactory(Log log, ConfigClientProperties properties) {
+		this(log, properties, Collections.emptyList());
+	}
+
+	public ConfigClientRequestTemplateFactory(Log log, ConfigClientProperties properties,
+			List<ClientHttpRequestInterceptor> additionalInterceptors) {
 		this.log = log;
 		this.properties = properties;
+		if (additionalInterceptors != null) {
+			this.additionalInterceptors.addAll(additionalInterceptors);
+		}
+	}
+
+	/**
+	 * Add an interceptor to be applied to the {@link RestTemplate} returned by
+	 * {@link #create()}. Used to attach authentication interceptors (for example the
+	 * OAuth2 bearer-token interceptor) without coupling this factory to a specific
+	 * security implementation.
+	 * @param interceptor the interceptor to add
+	 */
+	public void addInterceptor(ClientHttpRequestInterceptor interceptor) {
+		this.additionalInterceptors.add(interceptor);
 	}
 
 	public Log getLog() {
@@ -77,11 +100,15 @@ public class ConfigClientRequestTemplateFactory {
 
 		ClientHttpRequestFactory requestFactory = createHttpRequestFactory(properties);
 		RestTemplate template = new RestTemplate(requestFactory);
+
+		final List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
 		Map<String, String> headers = new HashMap<>(properties.getHeaders());
 		headers.remove(AUTHORIZATION); // To avoid redundant addition of header
 		if (!headers.isEmpty()) {
-			template.setInterceptors(Arrays.asList(new GenericRequestHeaderInterceptor(headers)));
+			interceptors.add(new GenericRequestHeaderInterceptor(headers));
 		}
+		interceptors.addAll(this.additionalInterceptors);
+		template.setInterceptors(interceptors);
 
 		return template;
 	}

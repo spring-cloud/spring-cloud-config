@@ -107,6 +107,7 @@
 		<module>spring-cloud-config-sample</module>
 		<module>spring-cloud-starter-config</module>
 		<module>spring-cloud-config-client-tls-tests</module>
+		<module>spring-cloud-config-client-oauth2-tests</module>
 		<module>docs</module>
 	</modules>
 	<dependencyManagement>
@@ -178,6 +179,7 @@
 						<configuration>
 							<excludeArtifacts>
 								<artifact>spring-cloud-config-client-tls-tests</artifact>
+								<artifact>spring-cloud-config-client-oauth2-tests</artifact>
 								<artifact>spring-cloud-config-sample</artifact>
 							</excludeArtifacts>
 						</configuration>
