@@ -131,6 +131,16 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 	private boolean strictHostKeyChecking = true;
 
 	/**
+	 * Client ID of the Azure managed identity used for Azure DevOps authentication.
+	 */
+	private String clientId;
+
+	/**
+	 * Whether managed identity authentication is enabled for Azure DevOps repositories.
+	 */
+	private boolean managedIdentityEnabled;
+
+	/**
 	 * HTTP proxy configuration.
 	 */
 	private Map<ProxyHostProperties.ProxyForScheme, ProxyHostProperties> proxy = new HashMap<>();
@@ -271,6 +281,22 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 
 	public void setTryMasterBranch(boolean tryMasterBranch) {
 		this.tryMasterBranch = tryMasterBranch;
+	}
+
+	public String getClientId() {
+		return this.clientId;
+	}
+
+	public void setClientId(String clientId) {
+		this.clientId = clientId;
+	}
+
+	public boolean isManagedIdentityEnabled() {
+		return this.managedIdentityEnabled;
+	}
+
+	public void setManagedIdentityEnabled(boolean managedIdentityEnabled) {
+		this.managedIdentityEnabled = managedIdentityEnabled;
 	}
 
 }

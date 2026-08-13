@@ -27,6 +27,7 @@ import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvi
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.support.AzureDevOpsWorkloadIdentitySupport;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -135,6 +136,17 @@ public class EnvironmentRepositoryConfigurationTests {
 			.run((context) -> {
 				ConfigServerHealthIndicator healthIndicator = context.getBean(ConfigServerHealthIndicator.class);
 				assertThat(ReflectionTestUtils.getField(healthIndicator, "acceptEmpty")).isEqualTo(true);
+			});
+	}
+
+	@Test
+	public void azureDevOpsWorkloadIdentitySupportBeanExists() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
+			.withPropertyValues("spring.profiles.active=git",
+					"spring.cloud.config.server.git.uri=https://dev.azure.com/tenant/repo")
+			.run((context) -> {
+				assertThat(context).hasSingleBean(AzureDevOpsWorkloadIdentitySupport.class);
 			});
 	}
 
