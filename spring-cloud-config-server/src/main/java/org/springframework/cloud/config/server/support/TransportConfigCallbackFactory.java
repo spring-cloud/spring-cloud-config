@@ -32,11 +32,15 @@ public class TransportConfigCallbackFactory {
 	@Nullable
 	private final GoogleCloudSourceSupport googleCloudSourceSupport;
 
-	public TransportConfigCallbackFactory(TransportConfigCallback customTransportConfigCallback,
-			GoogleCloudSourceSupport googleCloudSourceSupport) {
+	@Nullable
+	private final AzureDevOpsWorkloadIdentitySupport azureDevOpsWorkloadIdentitySupport;
 
+	public TransportConfigCallbackFactory(TransportConfigCallback customTransportConfigCallback,
+			GoogleCloudSourceSupport googleCloudSourceSupport,
+			AzureDevOpsWorkloadIdentitySupport azureDevOpsWorkloadIdentitySupport) {
 		this.customTransportConfigCallback = customTransportConfigCallback;
 		this.googleCloudSourceSupport = googleCloudSourceSupport;
+		this.azureDevOpsWorkloadIdentitySupport = azureDevOpsWorkloadIdentitySupport;
 	}
 
 	public TransportConfigCallback build(MultipleJGitEnvironmentProperties environmentProperties) {
@@ -55,6 +59,15 @@ public class TransportConfigCallbackFactory {
 			if (googleCloudSourceSupport.canHandle(uri)) {
 				return googleCloudSourceSupport.createTransportConfigCallback();
 			}
+		}
+
+		// If managed identity authentication is enabled for an Azure DevOps repository,
+		// use AzureDevOpsWorkloadIdentitySupport.
+		if (azureDevOpsWorkloadIdentitySupport != null
+				&& azureDevOpsWorkloadIdentitySupport.canHandle(environmentProperties.getUri())
+				&& environmentProperties.isManagedIdentityEnabled()) {
+			return azureDevOpsWorkloadIdentitySupport
+				.createTransportConfigCallback(environmentProperties.getClientId());
 		}
 
 		// Otherwise - legacy behaviour - use SshTransportConfigCallback for all

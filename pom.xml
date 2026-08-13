@@ -88,6 +88,7 @@
 		<bintray.package>config</bintray.package>
 		<spring-cloud-commons.version>5.0.3-SNAPSHOT</spring-cloud-commons.version>
 		<aws-java-sdk.version>2.39.6</aws-java-sdk.version>
+		<azure-identity.version>1.18.4</azure-identity.version>
 		<google-libraries-bom.version>26.71.0</google-libraries-bom.version>
 		<google-api-services-iam.version>v2-rev20250502-2.0.0</google-api-services-iam.version>
 		<google-cloud-iamcredentials.version>2.60.0</google-cloud-iamcredentials.version>
