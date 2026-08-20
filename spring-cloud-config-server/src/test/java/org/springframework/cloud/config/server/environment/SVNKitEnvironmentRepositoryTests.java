@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.EnableConfigServer;
 import org.springframework.cloud.config.server.test.ConfigServerTestUtils;
 import org.springframework.context.annotation.Configuration;
@@ -265,6 +266,34 @@ public class SVNKitEnvironmentRepositoryTests {
 		ConfigServerTestUtils.deleteLocalRepo(REPOSITORY_NAME);
 		assertThat(new File(this.basedir, REPOSITORY_NAME)).doesNotExist();
 		this.vanilla();
+	}
+
+	@Test
+	public void credentialsInUriAreMaskedInPropertySourceNames() {
+		// check out the local repo for real so the working copy is populated
+		this.repository.setBasedir(this.basedir);
+		this.findOne();
+
+		// then serve that working copy as if it had come from an authenticated remote,
+		// stubbing out only the svn checkout/update
+		SvnKitEnvironmentRepository authenticated = new SvnKitEnvironmentRepository(this.environment,
+				new SvnKitEnvironmentProperties(), ObservationRegistry.NOOP) {
+			@Override
+			public SearchPathLocator.Locations getLocations(String application, String profile, String label) {
+				return new SearchPathLocator.Locations(application, profile, label, "5",
+						getSearchLocations(new File(getWorkingDirectory(), label), application, profile, label));
+			}
+		};
+		authenticated.setUri("https://ryan:secret@example.com/svn/" + REPOSITORY_NAME);
+		authenticated.setBasedir(this.basedir);
+
+		Environment environment = authenticated.findOne("bar", "staging", "trunk");
+
+		assertThat(environment.getPropertySources()).hasSize(2);
+		assertThat(environment.getPropertySources()).extracting(PropertySource::getName)
+			.allSatisfy(name -> assertThat(name).doesNotContain("ryan").doesNotContain("secret"));
+		assertThat(environment.getPropertySources().get(0).getName())
+			.isEqualTo("https://***:***@example.com/svn/" + REPOSITORY_NAME + "/trunk/bar.properties");
 	}
 
 	private Environment findOne() {

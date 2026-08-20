@@ -77,6 +77,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.support.AwsCodeCommitCredentialProvider;
 import org.springframework.cloud.config.server.support.GitSkipSslValidationCredentialsProvider;
 import org.springframework.cloud.config.server.support.PassphraseCredentialsProvider;
@@ -137,6 +138,30 @@ public class JGitEnvironmentRepositoryTests {
 		assertThat(environment.getPropertySources().get(0).getName())
 			.isEqualTo(this.repository.getUri() + "/bar.properties");
 		assertVersion(environment);
+	}
+
+	@Test
+	public void credentialsInUriAreMaskedInPropertySourceNames() {
+		// the clone/fetch is stubbed out, so this exercises everything that happens
+		// after an authenticated repository has been checked out locally
+		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties(), ObservationRegistry.NOOP) {
+			@Override
+			public String refresh(String label) {
+				return "abcdef";
+			}
+		};
+		repository.setUri("https://ryan:secret@example.com/config-repo.git");
+		repository.setBasedir(new File(ConfigServerTestUtils.REPO_PREFIX + "config-repo"));
+
+		Environment environment = repository.findOne("bar", "staging", "master");
+
+		assertThat(environment.getPropertySources()).hasSize(2);
+		assertThat(environment.getPropertySources()).extracting(PropertySource::getName)
+			.allSatisfy(name -> assertThat(name).doesNotContain("ryan").doesNotContain("secret"));
+		assertThat(environment.getPropertySources().get(0).getName())
+			.isEqualTo("https://***:***@example.com/config-repo.git/bar.properties");
+		assertThat(environment.getVersion()).isEqualTo("abcdef");
 	}
 
 	@Test
@@ -1001,6 +1026,28 @@ public class JGitEnvironmentRepositoryTests {
 		}
 
 		assertThat(this.basedir.listFiles().length > 0).as("baseDir should be deleted when clone fails").isFalse();
+	}
+
+	@Test
+	public void credentialsInUriAreMaskedInCloneFailureMessage() throws Exception {
+		// the message of this exception ends up in the /actuator/health details, so it
+		// must not carry the credentials the uri was configured with
+		Git mockGit = mock(Git.class);
+		CloneCommand mockCloneCommand = mock(CloneCommand.class);
+
+		when(mockCloneCommand.setURI(anyString())).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.setDirectory(any(File.class))).thenReturn(mockCloneCommand);
+		when(mockCloneCommand.call()).thenThrow(new TransportException("failed to clone"));
+
+		JGitEnvironmentRepository envRepository = new JGitEnvironmentRepository(this.environment,
+				new JGitEnvironmentProperties(), ObservationRegistry.NOOP);
+		envRepository.setGitFactory(new MockGitFactory(mockGit, mockCloneCommand));
+		envRepository.setUri("https://ryan:secret@somegitserver/somegitrepo");
+		envRepository.setBasedir(this.basedir);
+
+		assertThatThrownBy(() -> envRepository.findOne("bar", "staging", "master"))
+			.isInstanceOf(NoSuchRepositoryException.class)
+			.hasMessage("Cannot clone or checkout repository: https://***:***@somegitserver/somegitrepo");
 	}
 
 	@Test

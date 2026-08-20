@@ -127,7 +127,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 	}
 
 	private String checkout(SvnOperationFactory svnOperationFactory) throws SVNException {
-		logger.debug("Checking out " + getUri() + " to: " + getWorkingDirectory().getAbsolutePath());
+		logger.debug("Checking out " + getMaskedUri() + " to: " + getWorkingDirectory().getAbsolutePath());
 		Path workdir;
 		try {
 			workdir = recreateSecureDirectory(getWorkingDirectory());
@@ -176,7 +176,7 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 		}
 		catch (Exception e) {
 			String message = "Could not update remote for " + label + " (current local=" + workdir + ", remote: "
-					+ this.getUri() + ")";
+					+ getMaskedUri() + ")";
 			if (logger.isDebugEnabled()) {
 				logger.debug(message, e);
 			}

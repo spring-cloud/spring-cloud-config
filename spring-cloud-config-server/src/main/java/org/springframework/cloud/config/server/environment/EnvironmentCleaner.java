@@ -22,6 +22,8 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.environment.PropertyValueDescriptor;
 
+import static org.springframework.cloud.config.server.support.ScmUriUtils.maskUserInfo;
+
 /**
  * @author Dave Syer
  * @author Michael Prankl
@@ -30,11 +32,12 @@ public class EnvironmentCleaner {
 
 	public Environment clean(Environment value, String workingDir, String uri) {
 		Environment result = new Environment(value);
+		String maskedUri = maskUserInfo(uri);
 		for (PropertySource source : value.getPropertySources()) {
 			String name = source.getName().replace(workingDir, "");
 			name = name.replace("applicationConfig: [", "");
-			name = uri + "/" + name.replace("]", "");
-			result.add(new PropertySource(name, clean(source.getSource(), uri)));
+			name = maskedUri + "/" + name.replace("]", "");
+			result.add(new PropertySource(name, clean(source.getSource(), maskedUri)));
 		}
 		return result;
 	}

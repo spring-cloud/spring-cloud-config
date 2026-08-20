@@ -39,6 +39,7 @@ import org.springframework.cloud.config.server.support.HttpClient4Support;
 import org.springframework.util.ObjectUtils;
 
 import static java.util.stream.Collectors.toMap;
+import static org.springframework.cloud.config.server.support.ScmUriUtils.maskUserInfo;
 
 /**
  * @author Dylan Roberts
@@ -107,7 +108,7 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 		}).collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 		if (builderMap.isEmpty()) {
-			this.log.warn(String.format("No custom http config found for URL: %s", url));
+			this.log.warn(String.format("No custom http config found for URL: %s", maskUserInfo(url.toString())));
 			return null;
 		}
 		if (builderMap.size() > 1) {
@@ -128,7 +129,8 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 			this.log.error(String.format(
 					"More than one git repo URL template matched URL:"
 							+ " %s, proxy and skipSslValidation config won't be applied. Matched templates: %s",
-					url, builderMap.keySet().stream().collect(Collectors.joining(", "))));
+					maskUserInfo(url.toString()),
+					builderMap.keySet().stream().map(key -> maskUserInfo(key)).collect(Collectors.joining(", "))));
 			return null;
 		}
 		return new ArrayList<>(builderMap.values()).get(0);

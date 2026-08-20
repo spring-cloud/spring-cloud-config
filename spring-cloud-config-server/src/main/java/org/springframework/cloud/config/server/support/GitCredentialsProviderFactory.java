@@ -23,6 +23,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import org.springframework.util.ClassUtils;
 
+import static org.springframework.cloud.config.server.support.ScmUriUtils.maskUserInfo;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -65,28 +66,28 @@ public class GitCredentialsProviderFactory {
 			boolean skipSslValidation) {
 		CredentialsProvider provider = null;
 		if (awsAvailable() && AwsCodeCommitCredentialProvider.canHandle(uri)) {
-			this.logger.debug("Constructing AwsCodeCommitCredentialProvider for URI " + uri);
+			this.logger.debug("Constructing AwsCodeCommitCredentialProvider for URI " + maskUserInfo(uri));
 			AwsCodeCommitCredentialProvider aws = new AwsCodeCommitCredentialProvider();
 			aws.setUsername(username);
 			aws.setPassword(password);
 			provider = aws;
 		}
 		else if (hasText(username) && password != null) {
-			this.logger.debug("Constructing UsernamePasswordCredentialsProvider for URI " + uri);
+			this.logger.debug("Constructing UsernamePasswordCredentialsProvider for URI " + maskUserInfo(uri));
 			provider = new UsernamePasswordCredentialsProvider(username, password.toCharArray());
 		}
 		else if (hasText(passphrase)) {
-			this.logger.debug("Constructing PassphraseCredentialsProvider for URI " + uri);
+			this.logger.debug("Constructing PassphraseCredentialsProvider for URI " + maskUserInfo(uri));
 			provider = new PassphraseCredentialsProvider(passphrase);
 		}
 
 		if (skipSslValidation && GitSkipSslValidationCredentialsProvider.canHandle(uri)) {
-			this.logger.debug("Constructing GitSkipSslValidationCredentialsProvider for URI " + uri);
+			this.logger.debug("Constructing GitSkipSslValidationCredentialsProvider for URI " + maskUserInfo(uri));
 			provider = new GitSkipSslValidationCredentialsProvider(provider);
 		}
 
 		if (provider == null) {
-			this.logger.debug("No credentials provider required for URI " + uri);
+			this.logger.debug("No credentials provider required for URI " + maskUserInfo(uri));
 		}
 
 		return provider;

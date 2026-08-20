@@ -42,6 +42,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import static org.springframework.cloud.config.server.support.ScmFileUtils.deleteDirectoryContents;
+import static org.springframework.cloud.config.server.support.ScmUriUtils.maskUserInfo;
 
 /**
  * Base class for components that want to access a source control management system.
@@ -149,8 +150,19 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 		this.environment = environment;
 	}
 
+	/**
+	 * @return the configured uri. May contain credentials, so never log it or put it in
+	 * an exception message; use {@link #getMaskedUri()} for anything user visible.
+	 */
 	public String getUri() {
 		return this.uri;
+	}
+
+	/**
+	 * @return the configured uri with any credentials it contains masked, safe to log.
+	 */
+	public String getMaskedUri() {
+		return maskUserInfo(this.uri);
 	}
 
 	public void setUri(String uri) {
@@ -172,7 +184,8 @@ public abstract class AbstractScmAccessor implements ResourceLoaderAware {
 		components.getPort();
 		String host = components.getHost();
 		if (host != null && (host.contains("{") || host.contains("}"))) {
-			throw new IllegalArgumentException("Template placeholders not allowed in host: " + urlTemplate);
+			throw new IllegalArgumentException(
+					"Template placeholders not allowed in host: " + maskUserInfo(urlTemplate));
 		}
 
 	}
