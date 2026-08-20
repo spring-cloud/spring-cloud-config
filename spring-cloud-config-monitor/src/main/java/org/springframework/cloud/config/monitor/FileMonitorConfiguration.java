@@ -52,6 +52,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.PatternMatchUtils;
 
+import static org.springframework.cloud.config.server.support.ScmUriUtils.maskUserInfo;
+
 /**
  * Configuration for a file watcher that detects changes in local files related to the
  * environment repository. If any files change the {@link PropertyPathEndpoint} is pinged
@@ -196,7 +198,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 					// Skip URIs with placeholders - they cannot be resolved at startup
 					if (repositoryUri != null && repositoryUri.contains("{")) {
 						if (log.isWarnEnabled()) {
-							log.warn("Skipping file monitoring for placeholder URI: " + repositoryUri);
+							log.warn("Skipping file monitoring for placeholder URI: " + maskUserInfo(repositoryUri));
 						}
 						continue;
 					}
@@ -208,7 +210,7 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 				return paths;
 			}
 			catch (IOException e) {
-				log.error("Cannot resolve URI for path: " + repositoryUri);
+				log.error("Cannot resolve URI for path: " + maskUserInfo(repositoryUri));
 			}
 		}
 		if (this.nativeEnvironmentRepository != null) {
