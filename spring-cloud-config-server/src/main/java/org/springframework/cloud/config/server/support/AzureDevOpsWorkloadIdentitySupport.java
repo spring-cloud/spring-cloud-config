@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.support;
 
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;
@@ -26,6 +27,8 @@ import com.azure.identity.ManagedIdentityCredentialBuilder;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.URIish;
+
+import org.springframework.util.StringUtils;
 
 public class AzureDevOpsWorkloadIdentitySupport {
 
@@ -45,18 +48,25 @@ public class AzureDevOpsWorkloadIdentitySupport {
 	}
 
 	public TransportConfigCallback createTransportConfigCallback(String clientId) {
-		return createTransportConfigCallback(new ManagedIdentityCredentialBuilder().clientId(clientId).build());
+		ManagedIdentityCredentialBuilder builder = new ManagedIdentityCredentialBuilder();
+		if (StringUtils.hasText(clientId)) {
+			builder.clientId(clientId);
+		}
+		TokenCredential credential = builder.build();
+		return createTransportConfigCallback(() -> {
+			AccessToken accessToken = credential.getToken(new TokenRequestContext().addScopes(AZURE_DEVOPS_SCOPE))
+				.block();
+			return accessToken != null ? accessToken.getToken() : null;
+		});
 	}
 
-	TransportConfigCallback createTransportConfigCallback(TokenCredential credential) {
+	TransportConfigCallback createTransportConfigCallback(Supplier<String> tokenSupplier) {
 		return transport -> {
 			if (transport instanceof TransportHttp && canHandle(transport.getURI().toString())) {
-				AccessToken accessToken = credential.getToken(new TokenRequestContext().addScopes(AZURE_DEVOPS_SCOPE))
-					.block();
+				String accessToken = tokenSupplier.get();
 
 				if (accessToken != null) {
-					((TransportHttp) transport)
-						.setAdditionalHeaders(Map.of("Authorization", "Bearer " + accessToken.getToken()));
+					((TransportHttp) transport).setAdditionalHeaders(Map.of("Authorization", "Bearer " + accessToken));
 				}
 			}
 		};

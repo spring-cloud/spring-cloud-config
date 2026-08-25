@@ -63,6 +63,7 @@ public class TransportConfigCallbackFactoryTests {
 
 		when(properties.getUri()).thenReturn(AZURE_DEVOPS_REPO);
 		when(properties.isManagedIdentityEnabled()).thenReturn(false);
+		when(properties.getClientId()).thenReturn("test-client-id");
 		when(azureSupport.canHandle(AZURE_DEVOPS_REPO)).thenReturn(true);
 
 		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(customCallback,
@@ -83,6 +84,7 @@ public class TransportConfigCallbackFactoryTests {
 
 		when(properties.getUri()).thenReturn(OTHER_REPO);
 		when(properties.isManagedIdentityEnabled()).thenReturn(true);
+		when(properties.getClientId()).thenReturn("test-client-id");
 		when(azureSupport.canHandle(OTHER_REPO)).thenReturn(false);
 
 		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(customCallback,
