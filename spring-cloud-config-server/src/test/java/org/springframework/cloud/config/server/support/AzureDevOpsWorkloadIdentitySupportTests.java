@@ -17,23 +17,18 @@
 package org.springframework.cloud.config.server.support;
 
 import java.net.URISyntaxException;
-import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
-import com.azure.core.credential.AccessToken;
-import com.azure.core.credential.TokenCredential;
-import com.azure.core.credential.TokenRequestContext;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.URIish;
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doAnswer;
@@ -74,12 +69,10 @@ public class AzureDevOpsWorkloadIdentitySupportTests {
 
 	@Test
 	public void verifySetsAuthHeaderForAzureDevOpsRepo() throws URISyntaxException {
-		TokenCredential credential = mock(TokenCredential.class);
-		when(credential.getToken(any(TokenRequestContext.class)))
-			.thenReturn(Mono.just(new AccessToken("test-access-token", OffsetDateTime.now().plusHours(1))));
+		Supplier<String> tokenSupplier = () -> "test-access-token";
 
 		TransportConfigCallback callback = new AzureDevOpsWorkloadIdentitySupport()
-			.createTransportConfigCallback(credential);
+			.createTransportConfigCallback(tokenSupplier);
 
 		TransportHttp transport = mockTransportHttp(HTTPS_AZURE_DEVOPS_REPO);
 		Map<String, String> actualHeaders = recordSetHeaders(transport);
@@ -91,41 +84,42 @@ public class AzureDevOpsWorkloadIdentitySupportTests {
 
 	@Test
 	public void verifyDoesNothingForOtherRepo() throws URISyntaxException {
-		TokenCredential credential = mock(TokenCredential.class);
+		@SuppressWarnings("unchecked")
+		Supplier<String> tokenSupplier = mock(Supplier.class);
 
 		TransportConfigCallback callback = new AzureDevOpsWorkloadIdentitySupport()
-			.createTransportConfigCallback(credential);
+			.createTransportConfigCallback(tokenSupplier);
 
 		TransportHttp transport = mockTransportHttp(HTTPS_OTHER_REPO);
 
 		callback.configure(transport);
 
-		verifyNoMoreInteractions(credential);
+		verifyNoMoreInteractions(tokenSupplier);
 		verifyOnlyValidInteraction(transport);
 	}
 
 	@Test
 	public void verifyDoesNothingForNonHttpTransport() throws URISyntaxException {
-		TokenCredential credential = mock(TokenCredential.class);
+		@SuppressWarnings("unchecked")
+		Supplier<String> tokenSupplier = mock(Supplier.class);
 
 		TransportConfigCallback callback = new AzureDevOpsWorkloadIdentitySupport()
-			.createTransportConfigCallback(credential);
+			.createTransportConfigCallback(tokenSupplier);
 
 		Transport transport = mockSshTransport(SSH_AZURE_DEVOPS_REPO);
 
 		callback.configure(transport);
 
-		verifyNoMoreInteractions(credential);
+		verifyNoMoreInteractions(tokenSupplier);
 		verifyOnlyValidInteraction(transport);
 	}
 
 	@Test
 	public void verifyDoesNothingWhenCredentialReturnsNoToken() throws URISyntaxException {
-		TokenCredential credential = mock(TokenCredential.class);
-		when(credential.getToken(any(TokenRequestContext.class))).thenReturn(Mono.empty());
+		Supplier<String> tokenSupplier = () -> null;
 
 		TransportConfigCallback callback = new AzureDevOpsWorkloadIdentitySupport()
-			.createTransportConfigCallback(credential);
+			.createTransportConfigCallback(tokenSupplier);
 
 		TransportHttp transport = mockTransportHttp(HTTPS_AZURE_DEVOPS_REPO);
 		Map<String, String> actualHeaders = recordSetHeaders(transport);
@@ -133,6 +127,27 @@ public class AzureDevOpsWorkloadIdentitySupportTests {
 		callback.configure(transport);
 
 		assertThat(actualHeaders).isEmpty();
+	}
+
+	@Test
+	public void createTransportConfigCallbackWithClientId() {
+		TransportConfigCallback callback = new AzureDevOpsWorkloadIdentitySupport()
+			.createTransportConfigCallback("test-client-id");
+		assertThat(callback).isNotNull();
+	}
+
+	@Test
+	public void createTransportConfigCallbackWithoutClientId() {
+		TransportConfigCallback callback = new AzureDevOpsWorkloadIdentitySupport()
+			.createTransportConfigCallback((String) null);
+		assertThat(callback).isNotNull();
+	}
+
+	@Test
+	public void createTransportConfigCallbackWithBlankClientId() {
+		TransportConfigCallback callback = new AzureDevOpsWorkloadIdentitySupport()
+			.createTransportConfigCallback("   ");
+		assertThat(callback).isNotNull();
 	}
 
 	private Map<String, String> recordSetHeaders(TransportHttp transport) {
@@ -157,7 +172,7 @@ public class AzureDevOpsWorkloadIdentitySupportTests {
 	}
 
 	private void verifyOnlyValidInteraction(Transport transport) {
-		verify(transport, atMost(10000)).getURI();
+		verify(transport, atMost(1)).getURI();
 		verifyNoMoreInteractions(transport);
 	}
 
