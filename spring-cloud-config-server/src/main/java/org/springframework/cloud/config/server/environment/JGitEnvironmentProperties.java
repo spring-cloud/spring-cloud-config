@@ -28,6 +28,7 @@ import org.springframework.cloud.config.server.support.HttpEnvironmentRepository
 /**
  * @author Dylan Roberts
  * @author Gareth Clay
+ * @author Chin Huang
  */
 public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 		implements HttpEnvironmentRepositoryProperties {
@@ -60,6 +61,13 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 	 * Flag to indicate that the submodules in the repository should be cloned.
 	 */
 	private boolean cloneSubmodules = false;
+
+	/**
+	 * If greater than zero, then truncate the history to the specified number of commits.
+	 * Generally leads to faster queries because the entire history is not downloaded from
+	 * the remote.
+	 */
+	private int depth = 0;
 
 	/**
 	 * Flag to indicate that the repository should force pull. If true discard any local
@@ -154,6 +162,14 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 
 	public void setCloneSubmodules(boolean cloneSubmodules) {
 		this.cloneSubmodules = cloneSubmodules;
+	}
+
+	public int getDepth() {
+		return this.depth;
+	}
+
+	public void setDepth(int depth) {
+		this.depth = depth;
 	}
 
 	public boolean isForcePull() {
