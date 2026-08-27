@@ -4,3 +4,4 @@ org.springframework.cloud.config.server.config.RsaEncryptionAutoConfiguration
 org.springframework.cloud.config.server.config.DefaultTextEncryptionAutoConfiguration
 org.springframework.cloud.config.server.config.EncryptionAutoConfiguration
 org.springframework.cloud.config.server.config.VaultEncryptionAutoConfiguration
+org.springframework.cloud.config.server.config.FileResolvingEnvironmentRepositoryConfiguration
