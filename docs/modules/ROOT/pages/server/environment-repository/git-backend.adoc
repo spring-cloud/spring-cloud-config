@@ -58,7 +58,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/myorg/\{application}
+          uri: https://github.com/myorg/{application}
 ----
 
 You can also support a "`one repository per profile`" policy by using a similar pattern but with
@@ -74,7 +74,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/\{application}
+          uri: https://github.com/{application}
 ----
 
 where `\{application}` is provided at request time in the following format: `organization(\{special-string})application`.
@@ -358,7 +358,7 @@ spring:
       server:
         git:
           uri: https://github.com/spring-cloud-samples/config-repo
-          search-paths: '\{application}'
+          search-paths: '{application}'
 ----
 
 The preceding listing causes a search of the repository for files in the same name as the directory (as well as the top level).
