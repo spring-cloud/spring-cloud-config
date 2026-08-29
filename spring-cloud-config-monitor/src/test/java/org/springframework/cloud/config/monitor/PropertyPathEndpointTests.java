@@ -18,12 +18,12 @@ package org.springframework.cloud.config.monitor;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.http.HttpHeaders;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,19 +35,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PropertyPathEndpointTests {
 
 	private PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
-			new CompositePropertyPathNotificationExtractor(Collections.emptyList()), "abc1");
-
-	@BeforeEach
-	public void init() {
-		StaticApplicationContext publisher = new StaticApplicationContext();
-		this.endpoint.setApplicationEventPublisher(publisher);
-		publisher.refresh();
-	}
-
-	@Test
-	public void testBusId() {
-		assertThat(this.endpoint.getBusId()).isEqualTo("abc1");
-	}
+			new CompositePropertyPathNotificationExtractor(Collections.emptyList()), services -> {
+			});
 
 	@Test
 	public void testNotifyByForm() {
@@ -60,6 +49,18 @@ public class PropertyPathEndpointTests {
 		request.add("/foo/bar.properties");
 		request.add("/application.properties");
 		assertThat(this.endpoint.notifyByForm(new HttpHeaders(), request).toString()).isEqualTo("[bar, *]");
+	}
+
+	@Test
+	public void testNotifiesAffectedServices() {
+		Set<String> notifiedServices = new LinkedHashSet<>();
+		PropertyPathNotifier notifier = services -> notifiedServices.addAll(services);
+		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
+				new CompositePropertyPathNotificationExtractor(Collections.emptyList()), notifier);
+
+		endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo.yml"));
+
+		assertThat(notifiedServices).containsExactly("foo");
 	}
 
 	@Test
@@ -106,10 +107,8 @@ public class PropertyPathEndpointTests {
 	@Test
 	public void testNotifyLimitsDashes() {
 		PropertyPathEndpoint limitedEndpoint = new PropertyPathEndpoint(
-				new CompositePropertyPathNotificationExtractor(Collections.emptyList()), "abc1", 2);
-		StaticApplicationContext publisher = new StaticApplicationContext();
-		limitedEndpoint.setApplicationEventPublisher(publisher);
-		publisher.refresh();
+				new CompositePropertyPathNotificationExtractor(Collections.emptyList()), services -> {
+				}, 2);
 		StringBuilder path = new StringBuilder();
 		for (int i = 0; i < 1000; i++) {
 			path.append("a-");

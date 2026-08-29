@@ -26,9 +26,6 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.bus.event.RefreshRemoteApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
@@ -48,15 +45,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(
 		path = "${spring.cloud.config.server.monitor.endpoint.path:${spring.cloud.config.monitor.endpoint.path:}}/monitor")
-public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
+public class PropertyPathEndpoint {
 
 	private static Log log = LogFactory.getLog(PropertyPathEndpoint.class);
 
 	private final PropertyPathNotificationExtractor extractor;
 
-	private ApplicationEventPublisher applicationEventPublisher;
-
-	private String busId;
+	private final List<PropertyPathNotifier> notifiers;
 
 	/**
 	 * Upper bound on the number of dash-separated segments processed when guessing a
@@ -66,23 +61,20 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 	 */
 	private final int maxDashes;
 
-	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId) {
-		this(extractor, busId, MonitorConfigurationProperties.DEFAULT_MAX_DASHES);
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, PropertyPathNotifier notifier) {
+		this(extractor, List.of(notifier), MonitorConfigurationProperties.DEFAULT_MAX_DASHES);
 	}
 
-	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId, int maxDashes) {
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, PropertyPathNotifier notifier,
+			int maxDashes) {
+		this(extractor, List.of(notifier), maxDashes);
+	}
+
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, List<PropertyPathNotifier> notifiers,
+			int maxDashes) {
 		this.extractor = extractor;
-		this.busId = busId;
+		this.notifiers = notifiers;
 		this.maxDashes = maxDashes;
-	}
-
-	/* for testing */ String getBusId() {
-		return this.busId;
-	}
-
-	@Override
-	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
-		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
 	@PostMapping
@@ -95,11 +87,12 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 			for (String path : notification.getPaths()) {
 				services.addAll(guessServiceName(path));
 			}
-			if (this.applicationEventPublisher != null) {
+			if (!services.isEmpty()) {
 				for (String service : services) {
 					log.info("Refresh for: " + service);
-					this.applicationEventPublisher
-						.publishEvent(new RefreshRemoteApplicationEvent(this, this.busId, service));
+				}
+				for (PropertyPathNotifier notifier : this.notifiers) {
+					notifier.notifyApplications(services);
 				}
 				return services;
 			}

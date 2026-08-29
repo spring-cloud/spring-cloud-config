@@ -30,10 +30,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.bus.BusProperties;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
 
 /**
  * @author Dave Syer
@@ -72,34 +75,36 @@ public class EnvironmentMonitorAutoConfiguration {
 
 		@Bean
 		@ConditionalOnBean(BusProperties.class)
-		public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties,
+		@ConditionalOnMissingBean(PropertyPathNotifier.class)
+		public PropertyPathNotifier busPropertyPathNotifier(ApplicationEventPublisher applicationEventPublisher,
+				BusProperties busProperties) {
+			return new BusPropertyPathNotifier(applicationEventPublisher, busProperties.getId());
+		}
+
+		@Bean
+		@ConditionalOnProperty(prefix = "spring.cloud.config.server.monitor.http", name = "enabled",
+				havingValue = "true")
+		public PropertyPathNotifier httpPropertyPathNotifier(DiscoveryClient discoveryClient,
+				RestClient.Builder restClientBuilder) {
+			return new HttpPropertyPathNotifier(discoveryClient, restClientBuilder.build());
+		}
+
+		@Bean
+		@ConditionalOnBean(BusProperties.class)
+		public PropertyPathEndpoint propertyPathEndpoint(List<PropertyPathNotifier> notifiers,
 				MonitorConfigurationProperties monitorProperties) {
-			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors),
-					busProperties.getId(), monitorProperties.getMaxDashes());
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), notifiers,
+					monitorProperties.getMaxDashes());
 		}
 
 		// TODO: With the current implementation bus can't be disabled
 		@Bean
 		@ConditionalOnMissingBean(BusProperties.class)
-		public PropertyPathEndpoint noBusBeanPropertyPathEndpoint(
-				@Value("${spring.cloud.bus.id:application}") String id,
-				MonitorConfigurationProperties monitorProperties) {
-			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), id,
-					monitorProperties.getMaxDashes());
-		}
+		public PropertyPathEndpoint noBusBeanPropertyPathEndpoint(MonitorConfigurationProperties monitorProperties) {
+			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors),
+					List.of(services -> {
+					}), monitorProperties.getMaxDashes());
 
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnMissingClass("org.springframework.cloud.bus.BusProperties")
-	protected static class NoBusPropertyPathConfiguration {
-
-		@Bean
-		public PropertyPathEndpoint noBusPropertyPathEndpoint(@Value("${spring.cloud.bus.id:application}") String id,
-				@Autowired(required = false) List<PropertyPathNotificationExtractor> extractors,
-				MonitorConfigurationProperties monitorProperties) {
-			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(extractors), id,
-					monitorProperties.getMaxDashes());
 		}
 
 	}
