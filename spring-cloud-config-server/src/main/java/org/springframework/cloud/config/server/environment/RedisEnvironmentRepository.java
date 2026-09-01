@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,8 @@ import org.springframework.util.StringUtils;
  * @author KNV Srinivas
  */
 public class RedisEnvironmentRepository implements EnvironmentRepository, Ordered {
+
+	private static final String DEFAULT_APPLICATION = "application";
 
 	private final StringRedisTemplate redis;
 
@@ -59,10 +62,13 @@ public class RedisEnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private List<String> addKeys(String application, List<String> profiles) {
-		List<String> keys = new ArrayList<>();
-		keys.add(application);
+		List<String> applications = new ArrayList<>(
+				new LinkedHashSet<>(Arrays.asList(DEFAULT_APPLICATION, application)));
+		List<String> keys = new ArrayList<>(applications);
 		for (String profile : profiles) {
-			keys.add(application + "-" + profile);
+			for (String app : applications) {
+				keys.add(app + "-" + profile);
+			}
 		}
 		Collections.reverse(keys);
 		return keys;
