@@ -32,8 +32,10 @@ class HttpPropertyPathNotifierTests {
 	void shouldDiscoverInstancesForAffectedService() {
 		DiscoveryClient discoveryClient = mock(DiscoveryClient.class);
 		RestClient restClient = mock(RestClient.class);
+		MonitorConfigurationProperties monitorProperties = new MonitorConfigurationProperties();
 
-		HttpPropertyPathNotifier notifier = new HttpPropertyPathNotifier(discoveryClient, restClient);
+		HttpPropertyPathNotifier notifier = new HttpPropertyPathNotifier(discoveryClient, restClient,
+				monitorProperties);
 
 		notifier.notifyApplications(Set.of("foo"));
 

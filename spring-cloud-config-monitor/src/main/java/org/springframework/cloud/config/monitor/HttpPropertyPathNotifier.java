@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.cloud.client.ServiceInstance;
@@ -33,18 +34,40 @@ public class HttpPropertyPathNotifier implements PropertyPathNotifier {
 
 	private final RestClient restClient;
 
-	public HttpPropertyPathNotifier(DiscoveryClient discoveryClient, RestClient restClient) {
+	private final MonitorConfigurationProperties monitorProperties;
+
+	public HttpPropertyPathNotifier(DiscoveryClient discoveryClient, RestClient restClient,
+			MonitorConfigurationProperties monitorProperties) {
 		this.discoveryClient = discoveryClient;
 		this.restClient = restClient;
+		this.monitorProperties = monitorProperties;
 	}
 
 	@Override
 	public void notifyApplications(Set<String> services) {
 		for (String service : services) {
 			for (ServiceInstance instance : this.discoveryClient.getInstances(service)) {
-				this.restClient.post().uri(instance.getUri() + "/actuator/refresh").retrieve().toBodilessEntity();
+				this.restClient.post()
+					.uri(instance.getUri() + getEndpoint(service, instance))
+					.retrieve()
+					.toBodilessEntity();
 			}
 		}
+	}
+
+	private String getEndpoint(String service, ServiceInstance instance) {
+		Map<String, String> endpoints = this.monitorProperties.getHttp().getEndpoints();
+
+		if (endpoints.containsKey(service)) {
+			return endpoints.get(service);
+		}
+
+		String endpoint = instance.getMetadata().get("refresh-endpoint");
+		if (endpoint != null) {
+			return endpoint;
+		}
+
+		return "/actuator/refresh";
 	}
 
 }

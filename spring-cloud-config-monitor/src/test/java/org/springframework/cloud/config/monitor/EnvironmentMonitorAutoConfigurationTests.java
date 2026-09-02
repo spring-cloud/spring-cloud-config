@@ -73,16 +73,30 @@ public class EnvironmentMonitorAutoConfigurationTests {
 	}
 
 	@Test
-	public void testHttpPropertyPathNotifier() {
+	public void testBusPropertyPathNotifierWhenBusEnabled() {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
 				DiscoveryClientConfig.class, EnvironmentMonitorAutoConfiguration.class,
 				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
 				PropertyPlaceholderAutoConfiguration.class)
-			.properties("server.port=-1", "spring.cloud.config.server.monitor.http.enabled=true")
+			.properties("server.port=-1", "spring.cloud.bus.enabled=true")
 			.run();
 
-		assertThat(context.getBeansOfType(HttpPropertyPathNotifier.class)).hasSize(1);
+		assertThat(context.getBeansOfType(BusPropertyPathNotifier.class)).hasSize(1);
+		assertThat(context.getBeansOfType(HttpPropertyPathNotifier.class)).isEmpty();
+		context.close();
+	}
 
+	@Test
+	public void testHttpPropertyPathNotifierWhenBusDisabled() {
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
+				DiscoveryClientConfig.class, EnvironmentMonitorAutoConfiguration.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
+				PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=-1", "spring.cloud.bus.enabled=false")
+			.run();
+
+		assertThat(context.getBeansOfType(BusPropertyPathNotifier.class)).isEmpty();
+		assertThat(context.getBeansOfType(HttpPropertyPathNotifier.class)).hasSize(1);
 		context.close();
 	}
 

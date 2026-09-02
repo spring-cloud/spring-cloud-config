@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -68,45 +67,54 @@ public class EnvironmentMonitorAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(BusProperties.class)
+	@ConditionalOnProperty(prefix = "spring.cloud.bus", name = "enabled", havingValue = "true", matchIfMissing = true)
 	protected static class BusPropertyPathConfiguration {
+
+		@Bean
+		@ConditionalOnBean(BusProperties.class)
+		public PropertyPathNotifier busPropertyPathNotifier(ApplicationEventPublisher applicationEventPublisher,
+				BusProperties busProperties) {
+			return new BusPropertyPathNotifier(applicationEventPublisher, busProperties.getId());
+		}
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnMissingClass("org.springframework.cloud.bus.BusProperties")
+	@ConditionalOnBean({ DiscoveryClient.class, RestClient.Builder.class })
+	protected static class NoBusHttpPropertyPathConfiguration {
+
+		@Bean
+		public PropertyPathNotifier httpPropertyPathNotifier(DiscoveryClient discoveryClient,
+				RestClient.Builder restClientBuilder, MonitorConfigurationProperties monitorProperties) {
+			return new HttpPropertyPathNotifier(discoveryClient, restClientBuilder.build(), monitorProperties);
+		}
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(BusProperties.class)
+	@ConditionalOnBean({ DiscoveryClient.class, RestClient.Builder.class })
+	@ConditionalOnProperty(prefix = "spring.cloud.bus", name = "enabled", havingValue = "false")
+	protected static class BusDisabledHttpPropertyPathConfiguration {
+
+		@Bean
+		public PropertyPathNotifier httpPropertyPathNotifier(DiscoveryClient discoveryClient,
+				RestClient.Builder restClientBuilder, MonitorConfigurationProperties monitorProperties) {
+			return new HttpPropertyPathNotifier(discoveryClient, restClientBuilder.build(), monitorProperties);
+		}
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	protected static class PropertyPathEndpointConfiguration {
 
 		@Autowired(required = false)
 		private List<PropertyPathNotificationExtractor> extractors;
 
 		@Bean
-		@ConditionalOnBean(BusProperties.class)
-		@ConditionalOnMissingBean(PropertyPathNotifier.class)
-		public PropertyPathNotifier busPropertyPathNotifier(ApplicationEventPublisher applicationEventPublisher,
-				BusProperties busProperties) {
-			return new BusPropertyPathNotifier(applicationEventPublisher, busProperties.getId());
-		}
-
-		@Bean
-		@ConditionalOnProperty(prefix = "spring.cloud.config.server.monitor.http", name = "enabled",
-				havingValue = "true")
-		public PropertyPathNotifier httpPropertyPathNotifier(DiscoveryClient discoveryClient,
-				RestClient.Builder restClientBuilder) {
-			return new HttpPropertyPathNotifier(discoveryClient, restClientBuilder.build());
-		}
-
-		@Bean
-		@ConditionalOnBean(BusProperties.class)
 		public PropertyPathEndpoint propertyPathEndpoint(List<PropertyPathNotifier> notifiers,
 				MonitorConfigurationProperties monitorProperties) {
 			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), notifiers,
 					monitorProperties.getMaxDashes());
 		}
-
-		// TODO: With the current implementation bus can't be disabled
-		@Bean
-		@ConditionalOnMissingBean(BusProperties.class)
-		public PropertyPathEndpoint noBusBeanPropertyPathEndpoint(MonitorConfigurationProperties monitorProperties) {
-			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors),
-					List.of(services -> {
-					}), monitorProperties.getMaxDashes());
-
-		}
-
 	}
 
 	@Configuration(proxyBeanMethods = false)

@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("spring.cloud.config.server.monitor")
@@ -35,6 +38,8 @@ public class MonitorConfigurationProperties {
 	 * producing an unbounded number of candidate service names (and refresh events).
 	 */
 	private int maxDashes = DEFAULT_MAX_DASHES;
+
+	private Http http = new Http();
 
 	private GitHub github = new GitHub();
 
@@ -110,6 +115,28 @@ public class MonitorConfigurationProperties {
 
 	public void setMaxDashes(int maxDashes) {
 		this.maxDashes = maxDashes;
+	}
+
+	public Http getHttp() {
+		return http;
+	}
+
+	public void setHttp(Http http) {
+		this.http = http;
+	}
+
+	public static class Http {
+
+		private Map<String, String> endpoints = new HashMap<>();
+
+		public Map<String, String> getEndpoints() {
+			return endpoints;
+		}
+
+		public void setEndpoints(Map<String, String> endpoints) {
+			this.endpoints = endpoints;
+		}
+
 	}
 
 	public static class Endpoint {
