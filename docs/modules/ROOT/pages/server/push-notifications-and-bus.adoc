@@ -20,6 +20,45 @@ NOTE: The `RefreshRemoteApplicationEvent` is transmitted only if the `spring-clo
 
 NOTE: The default configuration also detects filesystem changes in local git repositories. In that case, the webhook is not used. However, as soon as you edit a config file, a refresh is broadcast.
 
+[[http-property-path-notifier]]
+== HTTP Property Path Notifications
+
+The Config Server can notify applications directly over HTTP instead of using Spring Cloud Bus.
+When Spring Cloud Bus is not available, the HTTP notifier is used automatically.
+
+When Spring Cloud Bus is available and enabled, the Bus notifier takes precedence.
+
+The HTTP notifier discovers application instances through a `DiscoveryClient` and sends a `POST` request to the refresh endpoint of each affected instance.
+A `DiscoveryClient` implementation must be available on the classpath for HTTP notifications to be enabled.
+
+By default, the refresh endpoint is:
+
+[source,text]
+----
+/actuator/refresh
+----
+
+The refresh endpoint can be customized for individual services with the following property:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        monitor:
+          http:
+            endpoints:
+              orders: /management/refresh
+              inventory: /actuator/custom-refresh
+----
+
+You can also provide the refresh endpoint as `refresh-endpoint` metadata on a `ServiceInstance`. The service-specific configuration takes precedence over instance metadata.
+
+When neither a configured endpoint nor instance metadata is available, `/actuator/refresh` is used.
+
+NOTE: The target applications must expose the configured refresh endpoint for HTTP notifications to succeed.
+
 [[webhook-secret-validation]]
 == Webhook Secret Validation
 

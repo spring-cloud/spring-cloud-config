@@ -17,6 +17,8 @@
 package org.springframework.cloud.config.monitor;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -25,12 +27,16 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.tomcat.autoconfigure.servlet.TomcatServletWebServerAutoConfiguration;
 import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.cloud.bus.BusProperties;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Dave Syer
@@ -67,6 +73,43 @@ public class EnvironmentMonitorAutoConfigurationTests {
 		context.close();
 	}
 
+	@Test
+	public void testBusPropertyPathNotifierWhenBusEnabled() {
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
+				DiscoveryClientConfig.class, EnvironmentMonitorAutoConfiguration.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
+				PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=-1", "spring.cloud.bus.enabled=true")
+			.run();
+
+		assertThat(context.getBeansOfType(BusPropertyPathNotifier.class)).hasSize(1);
+		assertThat(context.getBeansOfType(HttpPropertyPathNotifier.class)).isEmpty();
+		context.close();
+	}
+
+	@Test
+	public void testHttpPropertyPathNotifierWhenBusDisabled() {
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
+				DiscoveryClientConfig.class, EnvironmentMonitorAutoConfiguration.class,
+				TomcatServletWebServerAutoConfiguration.class, ServerProperties.class,
+				PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=-1", "spring.cloud.bus.enabled=false")
+			.run();
+
+		assertThat(context.getBeansOfType(BusPropertyPathNotifier.class)).isEmpty();
+		assertThat(context.getBeansOfType(HttpPropertyPathNotifier.class)).hasSize(1);
+		context.close();
+	}
+
+	@Test
+	public void testFailsWhenBusDisabledAndNoDiscoveryClientAvailable() {
+		assertThatThrownBy(() -> new SpringApplicationBuilder(BusConfig.class,
+				EnvironmentMonitorAutoConfiguration.class, TomcatServletWebServerAutoConfiguration.class,
+				ServerProperties.class, PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=-1", "spring.cloud.bus.enabled=false")
+			.run()).hasRootCauseMessage("At least one PropertyPathNotifier must be available");
+	}
+
 	@Configuration(proxyBeanMethods = false)
 	static class BusConfig {
 
@@ -85,6 +128,39 @@ public class EnvironmentMonitorAutoConfigurationTests {
 			return (headers, payload) -> {
 				throw new UnsupportedOperationException("doesn't do anything");
 			};
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class DiscoveryClientConfig {
+
+		@Bean
+		public DiscoveryClient discoveryClient() {
+			return new DiscoveryClient() {
+
+				@Override
+				public String description() {
+					return "test";
+				}
+
+				@Override
+				public List<ServiceInstance> getInstances(String serviceId) {
+					return Collections.emptyList();
+				}
+
+				@Override
+				public List<String> getServices() {
+					return Collections.emptyList();
+				}
+
+			};
+
+		}
+
+		@Bean
+		public RestClient.Builder restClientBuilder() {
+			return RestClient.builder();
 		}
 
 	}
