@@ -2,7 +2,7 @@ name: Spring Cloud Config CI Job
 on:
   push:
     branches:
-      - 5.0.x
+      - main
       - 4.3.x
       - 4.2.x
   # Scheduled builds run daily at midnight UTC
@@ -14,7 +14,7 @@ on:
       branches:
         description: "Which branch should be built (can be a comma-separated list of branches)"
         required: true
-        default: '5.0.x'
+        default: 'main'
         type: string
 jobs:
   deploy:
