@@ -25,6 +25,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.config.environment.Environment;
+import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.test.TestConfigServerApplication;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -67,6 +68,50 @@ public class RedisEnvironmentRepositoryIntegrationTests {
 		assertThat(env.getName()).isEqualTo("foo");
 		assertThat(env.getPropertySources()).isNotEmpty();
 		assertThat(env.getPropertySources().get(0).getSource().get("tag")).isEqualTo("myapp");
+	}
+
+	@Test
+	public void defaultApplicationIsIncluded() {
+		BoundHashOperations application = redis.boundHashOps("application");
+		application.put("name", "from-application");
+		application.put("shared", "from-application");
+		BoundHashOperations applicationProfile = redis.boundHashOps("application-prod");
+		applicationProfile.put("name", "from-application-prod");
+		BoundHashOperations app = redis.boundHashOps("myapp-prod");
+		app.put("name", "from-myapp-prod");
+
+		Environment env = new RedisEnvironmentRepository(redis, new RedisEnvironmentProperties()).findOne("myapp",
+				"prod", "");
+
+		assertThat(env.getPropertySources().stream().map(PropertySource::getName)).containsExactly("redis:myapp-prod",
+				"redis:application-prod", "redis:myapp", "redis:application");
+		assertThat(env.getPropertySources().get(0).getSource().get("name")).isEqualTo("from-myapp-prod");
+		assertThat(env.getPropertySources().get(3).getSource().get("shared")).isEqualTo("from-application");
+	}
+
+	@Test
+	public void nullApplicationFallsBackToTheDefaultApplication() {
+		redis.boundHashOps("application").put("name", "from-application");
+
+		Environment env = new RedisEnvironmentRepository(redis, new RedisEnvironmentProperties()).findOne(null, "prod",
+				"");
+
+		assertThat(env.getPropertySources().stream().map(PropertySource::getName))
+			.containsExactly("redis:application-prod", "redis:application");
+		assertThat(env.getPropertySources().get(1).getSource().get("name")).isEqualTo("from-application");
+	}
+
+	@Test
+	public void commaDelimitedApplicationsAreAllIncludedLastOneFirst() {
+		redis.boundHashOps("app1").put("name", "from-app1");
+		redis.boundHashOps("app2").put("name", "from-app2");
+
+		Environment env = new RedisEnvironmentRepository(redis, new RedisEnvironmentProperties())
+			.findOne("app1, app2,app1", "prod", "");
+
+		assertThat(env.getPropertySources().stream().map(PropertySource::getName)).containsExactly("redis:app2-prod",
+				"redis:app1-prod", "redis:application-prod", "redis:app2", "redis:app1", "redis:application");
+		assertThat(env.getPropertySources().get(3).getSource().get("name")).isEqualTo("from-app2");
 	}
 
 }

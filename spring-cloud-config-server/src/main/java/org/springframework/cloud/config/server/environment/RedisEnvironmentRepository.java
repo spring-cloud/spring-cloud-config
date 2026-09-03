@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -33,6 +35,8 @@ import org.springframework.util.StringUtils;
  * @author KNV Srinivas
  */
 public class RedisEnvironmentRepository implements EnvironmentRepository, Ordered {
+
+	private static final String DEFAULT_APPLICATION = "application";
 
 	private final StringRedisTemplate redis;
 
@@ -59,10 +63,21 @@ public class RedisEnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private List<String> addKeys(String application, List<String> profiles) {
-		List<String> keys = new ArrayList<>();
-		keys.add(application);
+		// Same normalisation as CredhubEnvironmentRepository: `application` may be null
+		// or comma-delimited, and the shared hash goes first so that every requested
+		// application ends up ahead of it once the keys are reversed below.
+		List<String> applications = Stream
+			.concat(Stream.of(DEFAULT_APPLICATION),
+					Arrays.stream(StringUtils.commaDelimitedListToStringArray(application)))
+			.map(String::trim)
+			.filter(StringUtils::hasText)
+			.distinct()
+			.collect(Collectors.toList());
+		List<String> keys = new ArrayList<>(applications);
 		for (String profile : profiles) {
-			keys.add(application + "-" + profile);
+			for (String app : applications) {
+				keys.add(app + "-" + profile);
+			}
 		}
 		Collections.reverse(keys);
 		return keys;

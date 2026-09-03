@@ -43,5 +43,11 @@ HGETALL sample-app
 }
 ----
 
+Properties that are shared by every application can be stored in a hash named `application`,
+optionally with a profile suffix such as `application-dev`, in the same way as `application.yml`
+is used with the Git backend. Values found in the hash of the requested application take
+precedence over the shared ones. A comma-delimited application name such as `app1,app2` reads
+every listed hash, with later names taking precedence over earlier ones.
+
 NOTE: When no profile is specified `default` will be used.
 
