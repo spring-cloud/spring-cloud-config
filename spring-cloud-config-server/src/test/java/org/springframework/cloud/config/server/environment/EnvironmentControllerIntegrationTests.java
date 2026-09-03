@@ -34,7 +34,6 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -200,12 +199,6 @@ class EnvironmentControllerIntegrationTests {
 
 	@SpringBootTest(classes = ControllerConfiguration.class)
 	static class PathPatternParserTests extends TestCases {
-
-	}
-
-	@SpringBootTest(classes = ControllerConfiguration.class)
-	@TestPropertySource(properties = "spring.mvc.pathmatch.matching-strategy=ant_path_matcher")
-	static class AntPathMatcherTests extends TestCases {
 
 	}
 

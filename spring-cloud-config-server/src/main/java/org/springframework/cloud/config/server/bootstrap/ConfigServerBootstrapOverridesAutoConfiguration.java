@@ -17,7 +17,7 @@
 package org.springframework.cloud.config.server.bootstrap;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.web.server.context.WebServerGracefulShutdownLifecycle;
+import org.springframework.boot.web.server.context.WebServerApplicationContext;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.environment.EnvironmentController;
 import org.springframework.cloud.context.properties.ConfigurationPropertiesRebinder;
@@ -71,8 +71,8 @@ public class ConfigServerBootstrapOverridesAutoConfiguration {
 
 		@Override
 		public int getPhase() {
-			// Run before WebServerStartStopLifecycle
-			return WebServerGracefulShutdownLifecycle.SMART_LIFECYCLE_PHASE - 3072;
+			// Run before WebServerApplicationContext
+			return WebServerApplicationContext.GRACEFUL_SHUTDOWN_PHASE - 3072;
 		}
 
 	}
