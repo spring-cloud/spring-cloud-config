@@ -19,9 +19,10 @@ package org.springframework.cloud.config.server.environment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -62,8 +63,16 @@ public class RedisEnvironmentRepository implements EnvironmentRepository, Ordere
 	}
 
 	private List<String> addKeys(String application, List<String> profiles) {
-		List<String> applications = new ArrayList<>(
-				new LinkedHashSet<>(Arrays.asList(DEFAULT_APPLICATION, application)));
+		// Same normalisation as CredhubEnvironmentRepository: `application` may be null
+		// or comma-delimited, and the shared hash goes first so that every requested
+		// application ends up ahead of it once the keys are reversed below.
+		List<String> applications = Stream
+			.concat(Stream.of(DEFAULT_APPLICATION),
+					Arrays.stream(StringUtils.commaDelimitedListToStringArray(application)))
+			.map(String::trim)
+			.filter(StringUtils::hasText)
+			.distinct()
+			.collect(Collectors.toList());
 		List<String> keys = new ArrayList<>(applications);
 		for (String profile : profiles) {
 			for (String app : applications) {
