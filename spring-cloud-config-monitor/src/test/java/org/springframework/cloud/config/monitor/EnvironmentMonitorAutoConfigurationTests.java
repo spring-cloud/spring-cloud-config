@@ -36,6 +36,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Dave Syer
@@ -98,6 +99,15 @@ public class EnvironmentMonitorAutoConfigurationTests {
 		assertThat(context.getBeansOfType(BusPropertyPathNotifier.class)).isEmpty();
 		assertThat(context.getBeansOfType(HttpPropertyPathNotifier.class)).hasSize(1);
 		context.close();
+	}
+
+	@Test
+	public void testFailsWhenBusDisabledAndNoDiscoveryClientAvailable() {
+		assertThatThrownBy(() -> new SpringApplicationBuilder(BusConfig.class,
+				EnvironmentMonitorAutoConfiguration.class, TomcatServletWebServerAutoConfiguration.class,
+				ServerProperties.class, PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=-1", "spring.cloud.bus.enabled=false")
+			.run()).hasRootCauseMessage("At least one PropertyPathNotifier must be available");
 	}
 
 	@Configuration(proxyBeanMethods = false)

@@ -19,9 +19,13 @@ package org.springframework.cloud.config.monitor;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Notifies applications affected by a configuration change using HTTP.
@@ -29,6 +33,8 @@ import org.springframework.web.client.RestClient;
  * @author Yash Chauhan
  */
 public class HttpPropertyPathNotifier implements PropertyPathNotifier {
+
+	private static final Log log = LogFactory.getLog(HttpPropertyPathNotifier.class);
 
 	private final DiscoveryClient discoveryClient;
 
@@ -47,10 +53,18 @@ public class HttpPropertyPathNotifier implements PropertyPathNotifier {
 	public void notifyApplications(Set<String> services) {
 		for (String service : services) {
 			for (ServiceInstance instance : this.discoveryClient.getInstances(service)) {
-				this.restClient.post()
-					.uri(instance.getUri() + getEndpoint(service, instance))
-					.retrieve()
-					.toBodilessEntity();
+				try {
+					this.restClient.post()
+						.uri(UriComponentsBuilder.fromUri(instance.getUri())
+							.path(getEndpoint(service, instance))
+							.build()
+							.toUri())
+						.retrieve()
+						.toBodilessEntity();
+				}
+				catch (Exception ex) {
+					log.warn("Failed to notify instance " + instance.getUri(), ex);
+				}
 			}
 		}
 	}

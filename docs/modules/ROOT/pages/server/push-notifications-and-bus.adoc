@@ -29,6 +29,7 @@ When Spring Cloud Bus is not available, the HTTP notifier is used automatically.
 When Spring Cloud Bus is available and enabled, the Bus notifier takes precedence.
 
 The HTTP notifier discovers application instances through a `DiscoveryClient` and sends a `POST` request to the refresh endpoint of each affected instance.
+A `DiscoveryClient` implementation must be available on the classpath for HTTP notifications to be enabled.
 
 By default, the refresh endpoint is:
 

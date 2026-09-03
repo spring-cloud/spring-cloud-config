@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
@@ -76,6 +77,7 @@ public class EnvironmentMonitorAutoConfiguration {
 				BusProperties busProperties) {
 			return new BusPropertyPathNotifier(applicationEventPublisher, busProperties.getId());
 		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -88,6 +90,7 @@ public class EnvironmentMonitorAutoConfiguration {
 				RestClient.Builder restClientBuilder, MonitorConfigurationProperties monitorProperties) {
 			return new HttpPropertyPathNotifier(discoveryClient, restClientBuilder.build(), monitorProperties);
 		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -101,6 +104,7 @@ public class EnvironmentMonitorAutoConfiguration {
 				RestClient.Builder restClientBuilder, MonitorConfigurationProperties monitorProperties) {
 			return new HttpPropertyPathNotifier(discoveryClient, restClientBuilder.build(), monitorProperties);
 		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -112,9 +116,11 @@ public class EnvironmentMonitorAutoConfiguration {
 		@Bean
 		public PropertyPathEndpoint propertyPathEndpoint(List<PropertyPathNotifier> notifiers,
 				MonitorConfigurationProperties monitorProperties) {
+			Assert.state(!notifiers.isEmpty(), "At least one PropertyPathNotifier must be available");
 			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), notifiers,
 					monitorProperties.getMaxDashes());
 		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
