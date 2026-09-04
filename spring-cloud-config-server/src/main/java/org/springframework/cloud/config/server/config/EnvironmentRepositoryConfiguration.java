@@ -295,8 +295,9 @@ public class EnvironmentRepositoryConfiguration {
 	static class GoogleParameterManagerFactoryConfig {
 
 		@Bean
-		public GoogleParameterManagerEnvironmentRepositoryFactory googleParameterManagerEnvironmentRepositoryFactory() {
-			return new GoogleParameterManagerEnvironmentRepositoryFactory();
+		public GoogleParameterManagerEnvironmentRepositoryFactory googleParameterManagerEnvironmentRepositoryFactory(
+				ConfigServerProperties server) {
+			return new GoogleParameterManagerEnvironmentRepositoryFactory(server);
 		}
 
 	}

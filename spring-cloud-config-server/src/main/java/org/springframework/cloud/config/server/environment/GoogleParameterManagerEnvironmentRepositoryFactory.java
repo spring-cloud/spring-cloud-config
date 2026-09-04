@@ -18,16 +18,25 @@ package org.springframework.cloud.config.server.environment;
 
 import com.google.cloud.parametermanager.v1.ParameterManagerClient;
 
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
+
 /**
  * @author Yash Chauhan
  */
 public class GoogleParameterManagerEnvironmentRepositoryFactory implements
 		EnvironmentRepositoryFactory<GoogleParameterManagerEnvironmentRepository, GoogleParameterManagerEnvironmentProperties> {
 
+	private final ConfigServerProperties configServerProperties;
+
+	public GoogleParameterManagerEnvironmentRepositoryFactory(ConfigServerProperties configServerProperties) {
+		this.configServerProperties = configServerProperties;
+	}
+
 	@Override
 	public GoogleParameterManagerEnvironmentRepository build(
 			GoogleParameterManagerEnvironmentProperties environmentProperties) throws Exception {
-		return new GoogleParameterManagerEnvironmentRepository(ParameterManagerClient.create(), environmentProperties);
+		return new GoogleParameterManagerEnvironmentRepository(ParameterManagerClient.create(), environmentProperties,
+				this.configServerProperties);
 	}
 
 }

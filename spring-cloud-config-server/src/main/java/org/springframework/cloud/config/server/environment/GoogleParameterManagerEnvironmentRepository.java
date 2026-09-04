@@ -26,13 +26,16 @@ import com.google.cloud.parametermanager.v1.RenderParameterVersionResponse;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Yash Chauhan
  */
-public class GoogleParameterManagerEnvironmentRepository implements EnvironmentRepository, Ordered {
+public class GoogleParameterManagerEnvironmentRepository implements EnvironmentRepository, Ordered, AutoCloseable {
+
+	private final ConfigServerProperties configServerProperties;
 
 	private final ParameterManagerClient parameterManagerClient;
 
@@ -41,36 +44,60 @@ public class GoogleParameterManagerEnvironmentRepository implements EnvironmentR
 	private final int order;
 
 	public GoogleParameterManagerEnvironmentRepository(ParameterManagerClient parameterManagerClient,
-			GoogleParameterManagerEnvironmentProperties properties) {
+			GoogleParameterManagerEnvironmentProperties properties, ConfigServerProperties configServerProperties) {
 
 		this.parameterManagerClient = parameterManagerClient;
 		this.properties = properties;
+		this.configServerProperties = configServerProperties;
 		this.order = properties.getOrder();
 	}
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
 		if (!StringUtils.hasText(label)) {
-			label = "master";
+			label = this.properties.getDefaultLabel();
 		}
+
+		String defaultProfile = this.configServerProperties.getDefaultProfile();
 
 		if (!StringUtils.hasText(profile)) {
-			profile = "default";
+			profile = defaultProfile;
 		}
 
-		if (!profile.startsWith("default")) {
-			profile = "default," + profile;
+		if (!profile.startsWith(defaultProfile)) {
+			profile = defaultProfile + "," + profile;
 		}
 
 		String[] profiles = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(profile));
 
-		Environment result = new Environment(application, profile, label, null, null);
+		String applications = application;
+		if (!"application".equals(application)) {
+			applications = "application," + application;
+		}
+
+		String[] applicationNames = StringUtils
+			.trimArrayElements(StringUtils.commaDelimitedListToStringArray(applications));
+
+		Environment result = new Environment(application, profiles, label, null, null);
 
 		try {
-			for (String profileUnit : profiles) {
-				Map<String, String> parameters = getParameters(this.parameterManagerClient, application, profileUnit);
-				if (!parameters.isEmpty()) {
-					result.add(new PropertySource("gpm:" + application + "-" + profileUnit, parameters));
+			String projectId = this.properties.getProjectId();
+			if (!StringUtils.hasText(projectId)) {
+				throw new IllegalStateException("Google Cloud project ID must be configured");
+			}
+
+			LocationName locationName = LocationName.of(projectId, this.properties.getLocation());
+
+			Iterable<Parameter> parameterList = this.parameterManagerClient.listParameters(locationName).iterateAll();
+
+			for (String applicationName : applicationNames) {
+				for (String profileUnit : profiles) {
+					Map<String, String> parameters = getParameters(parameterList, applicationName, profileUnit,
+							projectId);
+
+					if (!parameters.isEmpty()) {
+						result.add(new PropertySource("gpm:" + applicationName + "-" + profileUnit, parameters));
+					}
 				}
 			}
 		}
@@ -81,27 +108,23 @@ public class GoogleParameterManagerEnvironmentRepository implements EnvironmentR
 		return result;
 	}
 
-	private Map<String, String> getParameters(ParameterManagerClient client, String application, String profile) {
+	private Map<String, String> getParameters(Iterable<Parameter> parameterList, String application, String profile,
+			String projectId) {
+
 		Map<String, String> result = new HashMap<>();
 
-		String projectId = properties.getProjectId();
-		if (!StringUtils.hasText(projectId)) {
-			throw new IllegalStateException("Google Cloud project ID must be configured");
-		}
-
-		LocationName locationName = LocationName.of(projectId, properties.getLocation());
-
-		for (Parameter parameter : client.listParameters(locationName).iterateAll()) {
-			if (parameter.getLabelsOrDefault(properties.getApplicationLabel(), "application")
+		for (Parameter parameter : parameterList) {
+			if (parameter.getLabelsOrDefault(this.properties.getApplicationLabel(), "application")
 				.equalsIgnoreCase(application)
-					&& parameter.getLabelsOrDefault(properties.getProfileLabel(), "profile")
+					&& parameter.getLabelsOrDefault(this.properties.getProfileLabel(), "profile")
 						.equalsIgnoreCase(profile)) {
 
-				RenderParameterVersionResponse response = client
+				RenderParameterVersionResponse response = this.parameterManagerClient
 					.renderParameterVersion(parameter.getName() + "/versions/latest");
 
 				String parameterName = parameter.getName();
-				String prefix = "projects/" + projectId + "/locations/" + properties.getLocation() + "/parameters/";
+				String prefix = "projects/" + projectId + "/locations/" + this.properties.getLocation()
+						+ "/parameters/";
 
 				if (parameterName.startsWith(prefix)) {
 					parameterName = parameterName.substring(prefix.length());
@@ -116,7 +139,12 @@ public class GoogleParameterManagerEnvironmentRepository implements EnvironmentR
 
 	@Override
 	public int getOrder() {
-		return order;
+		return this.order;
+	}
+
+	@Override
+	public void close() {
+		this.parameterManagerClient.close();
 	}
 
 }

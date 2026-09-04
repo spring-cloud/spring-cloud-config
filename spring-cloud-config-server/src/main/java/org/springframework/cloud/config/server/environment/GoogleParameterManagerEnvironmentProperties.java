@@ -33,6 +33,8 @@ public class GoogleParameterManagerEnvironmentProperties implements EnvironmentR
 
 	private String location = "global";
 
+	private String defaultLabel = "main";
+
 	private String projectId;
 
 	public void setOrder(int order) {
@@ -65,6 +67,14 @@ public class GoogleParameterManagerEnvironmentProperties implements EnvironmentR
 
 	public void setLocation(String location) {
 		this.location = location;
+	}
+
+	public String getDefaultLabel() {
+		return this.defaultLabel;
+	}
+
+	public void setDefaultLabel(String defaultLabel) {
+		this.defaultLabel = defaultLabel;
 	}
 
 	public String getProjectId() {
