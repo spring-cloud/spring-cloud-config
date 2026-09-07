@@ -18,9 +18,18 @@
 		<jgit.version>7.4.0.202509020913-r</jgit.version>
 		<spring-vault.version>4.0.3</spring-vault.version>
 		<spring-credhub.version>3.5.1</spring-credhub.version>
+
+		<azure-sdk-bom.version>1.3.8</azure-sdk-bom.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>com.azure</groupId>
+				<artifactId>azure-sdk-bom</artifactId>
+				<version>${azure-sdk-bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-config</artifactId>
