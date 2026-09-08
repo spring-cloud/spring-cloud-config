@@ -16,13 +16,18 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.cloud.parametermanager.v1.LocationName;
 import com.google.cloud.parametermanager.v1.Parameter;
 import com.google.cloud.parametermanager.v1.ParameterManagerClient;
 import com.google.cloud.parametermanager.v1.RenderParameterVersionResponse;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
@@ -34,6 +39,8 @@ import org.springframework.util.StringUtils;
  * @author Yash Chauhan
  */
 public class GoogleParameterManagerEnvironmentRepository implements EnvironmentRepository, Ordered, AutoCloseable {
+
+	private static final Log log = LogFactory.getLog(GoogleParameterManagerEnvironmentRepository.class);
 
 	private final ConfigServerProperties configServerProperties;
 
@@ -64,11 +71,12 @@ public class GoogleParameterManagerEnvironmentRepository implements EnvironmentR
 			profile = defaultProfile;
 		}
 
-		if (!profile.startsWith(defaultProfile)) {
-			profile = defaultProfile + "," + profile;
-		}
-
 		String[] profiles = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(profile));
+
+		if (!Arrays.asList(profiles).contains(defaultProfile)) {
+			profile = defaultProfile + "," + profile;
+			profiles = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(profile));
+		}
 
 		String applications = application;
 		if (!"application".equals(application)) {
@@ -88,15 +96,22 @@ public class GoogleParameterManagerEnvironmentRepository implements EnvironmentR
 
 			LocationName locationName = LocationName.of(projectId, this.properties.getLocation());
 
-			Iterable<Parameter> parameterList = this.parameterManagerClient.listParameters(locationName).iterateAll();
+			List<Parameter> parameterList = new ArrayList<>();
+			this.parameterManagerClient.listParameters(locationName).iterateAll().forEach(parameterList::add);
 
 			for (String applicationName : applicationNames) {
 				for (String profileUnit : profiles) {
-					Map<String, String> parameters = getParameters(parameterList, applicationName, profileUnit,
-							projectId);
+					try {
+						Map<String, String> parameters = getParameters(parameterList, applicationName, profileUnit,
+								projectId);
 
-					if (!parameters.isEmpty()) {
-						result.add(new PropertySource("gpm:" + applicationName + "-" + profileUnit, parameters));
+						if (!parameters.isEmpty()) {
+							result.add(new PropertySource("gpm:" + applicationName + "-" + profileUnit, parameters));
+						}
+					}
+					catch (Exception ex) {
+						log.warn("Could not retrieve parameters for application " + applicationName + " and profile "
+								+ profileUnit + ", continuing with the remaining combinations", ex);
 					}
 				}
 			}
@@ -104,7 +119,6 @@ public class GoogleParameterManagerEnvironmentRepository implements EnvironmentR
 		catch (Exception ex) {
 			throw new IllegalStateException("Could not access Google Cloud Parameter Manager", ex);
 		}
-
 		return result;
 	}
 

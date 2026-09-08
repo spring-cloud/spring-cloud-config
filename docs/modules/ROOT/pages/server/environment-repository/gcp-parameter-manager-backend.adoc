@@ -9,7 +9,7 @@ Parameters are exposed as `PropertySource` entries whose values are obtained fro
 The repository is registered when all of the following hold:
 
 * The Spring profile `parameter-manager` is active.
-* `com.google.cloud.parametermanager.v1.ParameterManagerClient` is on the classpath.
+* The `com.google.cloud:google-cloud-parameter-manager` dependency is on the classpath.
 
 [source,yaml]
 ----
