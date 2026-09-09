@@ -117,9 +117,9 @@ public class EnvironmentMonitorAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.github.enabled", havingValue = "true",
 				matchIfMissing = true)
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.github.validationEnabled",
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.github.validation-enabled",
 				havingValue = "true", matchIfMissing = true)
-		@ConditionalOnProperty("spring.cloud.config.server.monitor.github.webhookSecret")
+		@ConditionalOnProperty("spring.cloud.config.server.monitor.github.webhook-secret")
 		public GithubWebhookRequestValidator githubWebhookRequestValidator(MonitorConfigurationProperties properties) {
 			return new GithubWebhookRequestValidator(properties.getGithub().getWebhookSecret());
 		}
@@ -127,9 +127,9 @@ public class EnvironmentMonitorAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gogs.enabled", havingValue = "true",
 				matchIfMissing = true)
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gogs.validationEnabled",
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gogs.validation-enabled",
 				havingValue = "true", matchIfMissing = true)
-		@ConditionalOnProperty("spring.cloud.config.server.monitor.gogs.webhookSecret")
+		@ConditionalOnProperty("spring.cloud.config.server.monitor.gogs.webhook-secret")
 		public GogsWebhookRequestValidator gogsWebhookRequestValidator(MonitorConfigurationProperties properties) {
 			return new GogsWebhookRequestValidator(properties.getGogs().getWebhookSecret());
 		}
@@ -144,9 +144,9 @@ public class EnvironmentMonitorAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitlab.enabled", havingValue = "true",
 				matchIfMissing = true)
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitlab.validationEnabled",
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitlab.validation-enabled",
 				havingValue = "true", matchIfMissing = true)
-		@ConditionalOnProperty("spring.cloud.config.server.monitor.gitlab.webhookSecret")
+		@ConditionalOnProperty("spring.cloud.config.server.monitor.gitlab.webhook-secret")
 		public GitlabWebhookRequestValidator gitlabWebhookRequestValidator(MonitorConfigurationProperties properties) {
 			return new GitlabWebhookRequestValidator(properties.getGitlab().getWebhookSecret());
 		}
@@ -168,9 +168,9 @@ public class EnvironmentMonitorAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitea.enabled", havingValue = "true",
 				matchIfMissing = true)
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitea.validationEnabled",
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitea.validation-enabled",
 				havingValue = "true", matchIfMissing = true)
-		@ConditionalOnProperty("spring.cloud.config.server.monitor.gitea.webhookSecret")
+		@ConditionalOnProperty("spring.cloud.config.server.monitor.gitea.webhook-secret")
 		public GiteaWebhookRequestValidator giteaWebhookRequestValidator(MonitorConfigurationProperties properties) {
 			return new GiteaWebhookRequestValidator(properties.getGitea().getWebhookSecret());
 		}
@@ -185,9 +185,9 @@ public class EnvironmentMonitorAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitee.enabled", havingValue = "true",
 				matchIfMissing = true)
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitee.validationEnabled",
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.gitee.validation-enabled",
 				havingValue = "true", matchIfMissing = true)
-		@ConditionalOnProperty("spring.cloud.config.server.monitor.gitee.webhookSecret")
+		@ConditionalOnProperty("spring.cloud.config.server.monitor.gitee.webhook-secret")
 		public GiteeWebhookRequestValidator giteeWebhookRequestValidator(MonitorConfigurationProperties properties) {
 			return new GiteeWebhookRequestValidator(properties.getGitee().getWebhookSecret());
 		}
@@ -202,9 +202,9 @@ public class EnvironmentMonitorAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.bitbucket.enabled", havingValue = "true",
 				matchIfMissing = true)
-		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.bitbucket.validationEnabled",
+		@ConditionalOnProperty(value = "spring.cloud.config.server.monitor.bitbucket.validation-enabled",
 				havingValue = "true", matchIfMissing = true)
-		@ConditionalOnProperty("spring.cloud.config.server.monitor.bitbucket.webhookSecret")
+		@ConditionalOnProperty("spring.cloud.config.server.monitor.bitbucket.webhook-secret")
 		public BitbucketWebhookRequestValidator bitbucketWebhookRequestValidator(
 				MonitorConfigurationProperties properties) {
 			return new BitbucketWebhookRequestValidator(properties.getBitbucket().getWebhookSecret());

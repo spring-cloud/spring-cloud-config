@@ -124,7 +124,7 @@ class WebhookValidationAutoConfigurationTests {
 	void gogsValidatorNotRegisteredWhenValidationDisabled() {
 		try (ConfigurableApplicationContext context = context(
 				"spring.cloud.config.server.monitor.gogs.webhookSecret=secret",
-				"spring.cloud.config.server.monitor.gogs.validationEnabled=false")) {
+				"spring.cloud.config.server.monitor.gogs.validation-enabled=false")) {
 			assertThat(context.getBeansOfType(GogsWebhookRequestValidator.class)).isEmpty();
 		}
 	}
@@ -141,7 +141,7 @@ class WebhookValidationAutoConfigurationTests {
 	@Test
 	void gitlabValidatorRegisteredWhenSecretConfigured() {
 		try (ConfigurableApplicationContext context = context(
-				"spring.cloud.config.server.monitor.gitlab.webhookSecret=secret")) {
+				"spring.cloud.config.server.monitor.gitlab.webhook-secret=secret")) {
 			assertThat(context.getBeansOfType(GitlabWebhookRequestValidator.class)).hasSize(1);
 		}
 	}
@@ -150,7 +150,7 @@ class WebhookValidationAutoConfigurationTests {
 	void gitlabValidatorNotRegisteredWhenValidationDisabled() {
 		try (ConfigurableApplicationContext context = context(
 				"spring.cloud.config.server.monitor.gitlab.webhookSecret=secret",
-				"spring.cloud.config.server.monitor.gitlab.validationEnabled=false")) {
+				"spring.cloud.config.server.monitor.gitlab.validation-enabled=false")) {
 			assertThat(context.getBeansOfType(GitlabWebhookRequestValidator.class)).isEmpty();
 		}
 	}
