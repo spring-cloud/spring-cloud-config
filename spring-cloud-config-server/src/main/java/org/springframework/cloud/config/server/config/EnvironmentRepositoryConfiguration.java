@@ -19,7 +19,6 @@ package org.springframework.cloud.config.server.config;
 import java.util.List;
 import java.util.Optional;
 
-import com.azure.security.keyvault.secrets.SecretClient;
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import io.micrometer.observation.ObservationRegistry;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,9 +49,6 @@ import org.springframework.cloud.config.server.environment.AwsS3EnvironmentRepos
 import org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.AwsSecretsManagerEnvironmentRepositoryFactory;
-import org.springframework.cloud.config.server.environment.AzureKeyVaultEnvironmentProperties;
-import org.springframework.cloud.config.server.environment.AzureKeyVaultEnvironmentRepository;
-import org.springframework.cloud.config.server.environment.AzureKeyVaultEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.ConfigurableHttpConnectionFactory;
@@ -126,15 +122,13 @@ import org.springframework.vault.core.VaultTemplate;
 		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
 		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
 		AwsSecretsManagerEnvironmentProperties.class, AwsParameterStoreEnvironmentProperties.class,
-		AzureKeyVaultEnvironmentProperties.class, GoogleSecretManagerEnvironmentProperties.class,
-		MongoDbEnvironmentProperties.class })
+		GoogleSecretManagerEnvironmentProperties.class, MongoDbEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultConfiguration.class,
 		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class, CredhubRepositoryConfiguration.class,
 		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
 		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class, AwsS3RepositoryConfiguration.class,
 		AwsSecretsManagerRepositoryConfiguration.class, AwsParameterStoreRepositoryConfiguration.class,
-		AzureKeyVaultRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class,
-		MongoRepositoryConfiguration.class,
+		GoogleSecretManagerRepositoryConfiguration.class, MongoRepositoryConfiguration.class,
 		// DefaultRepositoryConfiguration must be last
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
@@ -242,18 +236,6 @@ public class EnvironmentRepositoryConfiguration {
 		public AwsSecretsManagerEnvironmentRepositoryFactory awsSecretsManagerEnvironmentRepositoryFactory(
 				ConfigServerProperties configServerProperties) {
 			return new AwsSecretsManagerEnvironmentRepositoryFactory(configServerProperties);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(SecretClient.class)
-	static class AzureKeyVaultFactoryConfig {
-
-		@Bean
-		public AzureKeyVaultEnvironmentRepositoryFactory azureKeyVaultEnvironmentRepositoryFactory(
-				ConfigServerProperties configServerProperties) {
-			return new AzureKeyVaultEnvironmentRepositoryFactory(configServerProperties);
 		}
 
 	}
@@ -461,20 +443,6 @@ class AwsSecretsManagerRepositoryConfiguration {
 	public AwsSecretsManagerEnvironmentRepository awsSecretsManagerEnvironmentRepository(
 			AwsSecretsManagerEnvironmentRepositoryFactory factory,
 			AwsSecretsManagerEnvironmentProperties environmentProperties) {
-		return factory.build(environmentProperties);
-	}
-
-}
-
-@Configuration(proxyBeanMethods = false)
-@Profile("azurekeyvault")
-class AzureKeyVaultRepositoryConfiguration {
-
-	@Bean
-	@ConditionalOnMissingBean(AzureKeyVaultEnvironmentRepository.class)
-	public AzureKeyVaultEnvironmentRepository azureKeyVaultEnvironmentRepository(
-			AzureKeyVaultEnvironmentRepositoryFactory factory,
-			AzureKeyVaultEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 

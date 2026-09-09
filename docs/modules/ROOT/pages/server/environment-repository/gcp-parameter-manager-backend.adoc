@@ -1,0 +1,97 @@
+[[gcp-parameter-manager-backend]]
+= Google Cloud Parameter Manager Backend
+
+Spring Cloud Config Server can use link:https://cloud.google.com/parameter-manager[Google Cloud Parameter Manager] as an `EnvironmentRepository`.
+Parameters are exposed as `PropertySource` entries whose values are obtained from the latest parameter versions.
+
+== Enabling the backend
+
+The repository is registered when all of the following hold:
+
+* The Spring profile `parameter-manager` is active.
+* The `com.google.cloud:google-cloud-parameter-manager` dependency is on the classpath.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: parameter-manager
+  cloud:
+    config:
+      server:
+        gcp-parameter-manager:
+          project-id: my-project
+          location: global
+          order: 0
+          application-label: application
+          profile-label: profile
+          default-label: main
+----
+
+Configuration properties are bound under `spring.cloud.config.server.gcp-parameter-manager`:
+
+|===
+| Property | Default | Description
+
+| `order`
+| Same as other environment repositories
+| Order in a composite repository (`org.springframework.core.Ordered`).
+
+| `application-label`
+| `application`
+| Parameter label key used to match the Config Server `\{application}` name (see <<gcp-parameter-manager-mapping>>).
+
+| `profile-label`
+| `profile`
+| Parameter label key used to match the Config Server profile (see <<gcp-parameter-manager-mapping>>).
+
+| `location`
+| `global`
+| Google Cloud Parameter Manager location.
+
+| `default-label`
+| `main`
+| Label returned by the Config Server when the client does not provide a label.
+
+| `project-id`
+| _empty_
+| Google Cloud project ID containing the parameters. This property must be configured.
+
+|===
+
+[[gcp-parameter-manager-mapping]]
+== Mapping applications and profiles
+
+The repository lists the parameters in the configured Google Cloud project and location once for each Config Client request and filters the result according to the requested application and profiles.
+
+Parameters are matched using their labels:
+
+* The label configured by `application-label` must match the requested `\{application}` name.
+* The label configured by `profile-label` must match the requested profile.
+* Matching is case-insensitive.
+* If an application label is missing, it defaults to `application`.
+* If a profile label is missing, it defaults to `profile`.
+
+When a Config Client requests an application other than `application`, the `application` application is also included first. This allows shared configuration to be provided for all applications.
+
+The configured Config Server default profile is also included before additional requested profiles when necessary.
+
+For every matching parameter, the repository reads the latest version and adds its rendered payload as a property value. The property name is derived from the parameter name.
+
+For example, a parameter with the name:
+
+----
+projects/my-project/locations/global/parameters/my-property
+----
+
+is exposed as:
+
+----
+my-property
+----
+
+== Authentication
+
+The Parameter Manager client is created using the Google Cloud client library's default authentication mechanism. Configure Google Cloud credentials using link:https://cloud.google.com/docs/authentication/application-default-credentials[Application Default Credentials].
+
+This can include credentials provided through environment configuration, local development credentials, or Google Cloud runtime service accounts.
