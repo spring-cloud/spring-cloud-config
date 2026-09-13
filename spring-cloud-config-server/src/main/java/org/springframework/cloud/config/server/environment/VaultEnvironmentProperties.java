@@ -107,7 +107,7 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 	 * Flag to indicate that the repository should use 'label' as well as
 	 * 'application-name' and 'profile', for vault secrets. By default, the vault secrets
 	 * are expected to be in 'application-name,profile' path. When this flag enabled, they
-	 * are expected to be in `application-name,profile,label' path. To maintain
+	 * are expected to be in 'application-name,profile,label' path. To maintain
 	 * compatibility this flag is not enabled by default.
 	 */
 	private boolean enableLabel = false;
