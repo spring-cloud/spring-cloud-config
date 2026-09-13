@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -340,6 +342,28 @@ public class EnvironmentController {
 
 	private void postProcessProperties(Map<String, Object> propertiesMap) {
 		propertiesMap.keySet().removeIf(key -> key.equals("spring.profiles"));
+		restoreEmptyCollections(propertiesMap);
+	}
+
+	/**
+	 * Flattened YAML properties represent empty collections as an empty string (see
+	 * {@code YamlProcessor#buildFlattenedMap}). When rebuilding nested YAML/JSON, restore
+	 * those markers to empty lists unless indexed entries exist for the same prefix.
+	 */
+	private void restoreEmptyCollections(Map<String, Object> propertiesMap) {
+		Set<String> arrayPrefixes = new HashSet<>();
+		for (String key : propertiesMap.keySet()) {
+			int indexOfBracket = key.indexOf('[');
+			if (indexOfBracket > 0) {
+				arrayPrefixes.add(key.substring(0, indexOfBracket));
+			}
+		}
+		for (Entry<String, Object> entry : propertiesMap.entrySet()) {
+			String key = entry.getKey();
+			if (!key.contains("[") && "".equals(entry.getValue()) && !arrayPrefixes.contains(key)) {
+				entry.setValue(Collections.emptyList());
+			}
+		}
 	}
 
 	/**
