@@ -556,7 +556,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		catch (Exception propertyException) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Did not find properties file using application <" + application + "> profile <" + profile
-						+ "> label <" + label + ">.  Trying json extension", propertyException);
+						+ "> label <" + label + ">. Trying json extension", propertyException);
 			}
 			try {
 				return new JsonS3ConfigFile(application, profile, label, bucketName, useApplicationAsDirectory,
@@ -565,7 +565,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			catch (Exception jsonException) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Did not find json file using application <" + application + "> profile <" + profile
-							+ "> label <" + label + ">.  Trying yaml extension", jsonException);
+							+ "> label <" + label + ">. Trying yaml extension", jsonException);
 				}
 				return null;
 			}
@@ -699,7 +699,7 @@ abstract class S3ConfigFile {
 			catch (Exception e) {
 				if (i < extensions.size() - 1) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Did not find " + key + ".  Trying next extension", e);
+						LOG.debug("Did not find " + key + ". Trying next extension", e);
 					}
 				}
 				else {

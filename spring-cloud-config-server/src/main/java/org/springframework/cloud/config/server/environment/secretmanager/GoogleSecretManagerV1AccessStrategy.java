@@ -278,7 +278,7 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 			}
 		}
 		logger.warn(
-				"Unable to resolve project id.  This could be because you are not passing GcpProjectResolutionSupport to GoogleSecretManagerV1AccessStrategy,the X-Project-ID header was not set in the request or the project ID from the header is not configured in the project allow list, the project ID could not be retrieved via http://metadata.google.internal/computeMetadata/v1/project/project-id, or no default project ID was set in the configuration.");
+				"Unable to resolve project id. This could be because you are not passing GcpProjectResolutionSupport to GoogleSecretManagerV1AccessStrategy,the X-Project-ID header was not set in the request or the project ID from the header is not configured in the project allow list, the project ID could not be retrieved via http://metadata.google.internal/computeMetadata/v1/project/project-id, or no default project ID was set in the configuration.");
 		return null;
 	}
 
