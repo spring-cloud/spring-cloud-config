@@ -28,6 +28,7 @@ import org.eclipse.jgit.transport.URIish;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport.CredentialsProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,13 +99,27 @@ public class GoogleCloudSourceSupportTests {
 	}
 
 	@Test
-	public void verifyDoesNothingForNonHttpTransports() throws URISyntaxException {
-		TransportConfigCallback callback = transportConfigCallbackWith(createAuthHeaders());
-		Transport transport = mockSshTransport(SSH_GOOGLE_CLOUD_SOURCE_REPO);
+	public void canHandleWithMultipleJGitEnvironmentProperties() {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(HTTPS_GOOGLE_CLOUD_SOURCE_REPO);
 
-		callback.configure(transport);
+		assertThat(new GoogleCloudSourceSupport().canHandle(properties)).isTrue();
+	}
 
-		verifyOnlyValidInteraction(transport);
+	@Test
+	public void doesNotHandleWithMultipleJGitEnvironmentPropertiesForOtherRepo() {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(HTTPS_OTHER_REPO);
+
+		assertThat(new GoogleCloudSourceSupport().canHandle(properties)).isFalse();
+	}
+
+	@Test
+	public void doesNotHandleNullOrEmptyUri() {
+		assertThat(new GoogleCloudSourceSupport().canHandle((String) null)).isFalse();
+		assertThat(new GoogleCloudSourceSupport().canHandle("")).isFalse();
+		assertThat(new GoogleCloudSourceSupport().canHandle("   ")).isFalse();
+		assertThat(new GoogleCloudSourceSupport().canHandle((MultipleJGitEnvironmentProperties) null)).isFalse();
 	}
 
 	private void verifyOnlyValidInteraction(Transport transport) {

@@ -28,6 +28,8 @@ import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.URIish;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.atMost;
@@ -65,6 +67,41 @@ public class AzureDevOpsWorkloadIdentitySupportTests {
 	@Test
 	public void doesNotHandleOtherRepo() {
 		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle(HTTPS_OTHER_REPO)).isFalse();
+	}
+
+	@Test
+	public void doesNotHandleNullOrEmptyUri() {
+		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle((String) null)).isFalse();
+		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle("")).isFalse();
+		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle("   ")).isFalse();
+	}
+
+	@Test
+	public void canHandleWithMultipleJGitEnvironmentProperties() {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(HTTPS_AZURE_DEVOPS_REPO);
+		properties.getAzure().setManagedIdentityEnabled(true);
+		properties.getAzure().setClientId("test-client-id");
+
+		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle(properties)).isTrue();
+	}
+
+	@Test
+	public void doesNotHandleWithMultipleJGitEnvironmentPropertiesWhenDisabled() {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(HTTPS_AZURE_DEVOPS_REPO);
+		properties.getAzure().setManagedIdentityEnabled(false);
+
+		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle(properties)).isFalse();
+	}
+
+	@Test
+	public void doesNotHandleWithMultipleJGitEnvironmentPropertiesWhenAzureNull() {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(HTTPS_AZURE_DEVOPS_REPO);
+		properties.setAzure(null);
+
+		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle(properties)).isFalse();
 	}
 
 	@Test

@@ -32,23 +32,17 @@ public class TransportConfigCallbackFactory {
 	@Nullable
 	private final TransportConfigCallback customTransportConfigCallback;
 
-	@Nullable
-	private final GoogleCloudSourceSupport googleCloudSourceSupport;
-
 	/** Ordered list of cloud-provider transport callback providers. */
 	private final List<GitTransportConfigCallbackProvider> providers;
 
 	/**
 	 * Creates a new factory.
 	 * @param customTransportConfigCallback optional custom callback (highest priority)
-	 * @param googleCloudSourceSupport optional Google Cloud Source support
-	 * @param callbackProviders ordered list of additional callback providers
+	 * @param callbackProviders ordered list of callback providers
 	 */
 	public TransportConfigCallbackFactory(@Nullable final TransportConfigCallback customTransportConfigCallback,
-			@Nullable final GoogleCloudSourceSupport googleCloudSourceSupport,
 			final List<GitTransportConfigCallbackProvider> callbackProviders) {
 		this.customTransportConfigCallback = customTransportConfigCallback;
-		this.googleCloudSourceSupport = googleCloudSourceSupport;
 		this.providers = callbackProviders != null ? callbackProviders : List.of();
 	}
 
@@ -64,15 +58,6 @@ public class TransportConfigCallbackFactory {
 		// all repositories.
 		if (this.customTransportConfigCallback != null) {
 			return this.customTransportConfigCallback;
-		}
-
-		// If the currently configured repository is a Google Cloud Source repository
-		// we use GoogleCloudSourceSupport.
-		if (this.googleCloudSourceSupport != null) {
-			final String uri = environmentProperties.getUri();
-			if (this.googleCloudSourceSupport.canHandle(uri)) {
-				return this.googleCloudSourceSupport.createTransportConfigCallback();
-			}
 		}
 
 		// Delegate to the first provider that can handle this repository.

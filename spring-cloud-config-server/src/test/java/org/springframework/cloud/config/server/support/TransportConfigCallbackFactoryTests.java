@@ -42,12 +42,10 @@ public class TransportConfigCallbackFactoryTests {
 		MultipleJGitEnvironmentProperties properties = mock(MultipleJGitEnvironmentProperties.class);
 
 		when(properties.getUri()).thenReturn(AZURE_DEVOPS_REPO);
-		when(properties.isManagedIdentityEnabled()).thenReturn(true);
-		when(properties.getClientId()).thenReturn("test-client-id");
 		when(azureSupport.canHandle(properties)).thenReturn(true);
 		when(azureSupport.createTransportConfigCallback(properties)).thenReturn(azureCallback);
 
-		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, null, List.of(azureSupport));
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, List.of(azureSupport));
 
 		assertThat(factory.build(properties)).isSameAs(azureCallback);
 		verify(azureSupport).createTransportConfigCallback(properties);
@@ -59,11 +57,9 @@ public class TransportConfigCallbackFactoryTests {
 		MultipleJGitEnvironmentProperties properties = mock(MultipleJGitEnvironmentProperties.class);
 
 		when(properties.getUri()).thenReturn(AZURE_DEVOPS_REPO);
-		when(properties.isManagedIdentityEnabled()).thenReturn(false);
-		when(properties.getClientId()).thenReturn("test-client-id");
 		when(azureSupport.canHandle(properties)).thenReturn(false);
 
-		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, null, List.of(azureSupport));
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, List.of(azureSupport));
 
 		TransportConfigCallback result = factory.build(properties);
 
@@ -77,11 +73,9 @@ public class TransportConfigCallbackFactoryTests {
 		MultipleJGitEnvironmentProperties properties = mock(MultipleJGitEnvironmentProperties.class);
 
 		when(properties.getUri()).thenReturn(OTHER_REPO);
-		when(properties.isManagedIdentityEnabled()).thenReturn(true);
-		when(properties.getClientId()).thenReturn("test-client-id");
 		when(azureSupport.canHandle(properties)).thenReturn(false);
 
-		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, null, List.of(azureSupport));
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, List.of(azureSupport));
 
 		TransportConfigCallback result = factory.build(properties);
 
@@ -95,8 +89,7 @@ public class TransportConfigCallbackFactoryTests {
 		GitTransportConfigCallbackProvider provider = mock(GitTransportConfigCallbackProvider.class);
 		MultipleJGitEnvironmentProperties properties = mock(MultipleJGitEnvironmentProperties.class);
 
-		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(customCallback, null,
-				List.of(provider));
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(customCallback, List.of(provider));
 
 		assertThat(factory.build(properties)).isSameAs(customCallback);
 		verify(provider, never()).canHandle(properties);
@@ -108,7 +101,7 @@ public class TransportConfigCallbackFactoryTests {
 		when(properties.isIgnoreLocalSshSettings()).thenReturn(false);
 		when(properties.getUri()).thenReturn(OTHER_REPO);
 
-		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, null, List.of());
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, List.of());
 
 		assertThat(factory.build(properties)).isNotNull();
 	}

@@ -131,14 +131,9 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 	private boolean strictHostKeyChecking = true;
 
 	/**
-	 * Client ID of the Azure managed identity used for Azure DevOps authentication.
+	 * Azure DevOps properties.
 	 */
-	private String clientId;
-
-	/**
-	 * Whether managed identity authentication is enabled for Azure DevOps repositories.
-	 */
-	private boolean managedIdentityEnabled;
+	private AzureProperties azure = new AzureProperties();
 
 	/**
 	 * HTTP proxy configuration.
@@ -283,20 +278,43 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 		this.tryMasterBranch = tryMasterBranch;
 	}
 
-	public String getClientId() {
-		return this.clientId;
+	public AzureProperties getAzure() {
+		return this.azure;
 	}
 
-	public void setClientId(String clientId) {
-		this.clientId = clientId;
+	public void setAzure(AzureProperties azure) {
+		this.azure = azure;
 	}
 
-	public boolean isManagedIdentityEnabled() {
-		return this.managedIdentityEnabled;
-	}
+	public static class AzureProperties {
 
-	public void setManagedIdentityEnabled(boolean managedIdentityEnabled) {
-		this.managedIdentityEnabled = managedIdentityEnabled;
+		/**
+		 * Client ID of the Azure managed identity used for Azure DevOps authentication.
+		 */
+		private String clientId;
+
+		/**
+		 * Whether managed identity authentication is enabled for Azure DevOps
+		 * repositories.
+		 */
+		private boolean managedIdentityEnabled;
+
+		public String getClientId() {
+			return this.clientId;
+		}
+
+		public void setClientId(String clientId) {
+			this.clientId = clientId;
+		}
+
+		public boolean isManagedIdentityEnabled() {
+			return this.managedIdentityEnabled;
+		}
+
+		public void setManagedIdentityEnabled(boolean managedIdentityEnabled) {
+			this.managedIdentityEnabled = managedIdentityEnabled;
+		}
+
 	}
 
 }
