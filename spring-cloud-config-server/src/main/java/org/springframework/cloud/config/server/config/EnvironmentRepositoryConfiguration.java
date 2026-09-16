@@ -89,8 +89,8 @@ import org.springframework.cloud.config.server.environment.vault.SpringVaultClie
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultTemplateBuilder;
-import org.springframework.cloud.config.server.support.AzureDevOpsWorkloadIdentitySupport;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
+import org.springframework.cloud.config.server.support.GitTransportConfigCallbackProvider;
 import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport;
 import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
 import org.springframework.context.ApplicationContext;
@@ -192,12 +192,12 @@ public class EnvironmentRepositoryConfiguration {
 				Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
 				Optional<TransportConfigCallback> customTransportConfigCallback,
 				Optional<GoogleCloudSourceSupport> googleCloudSourceSupport,
-				Optional<AzureDevOpsWorkloadIdentitySupport> azureDevOpsWorkloadIdentitySupport,
+				ObjectProvider<GitTransportConfigCallbackProvider> callbackProviders,
 				GitCredentialsProviderFactory gitCredentialsProviderFactory,
 				List<HttpClient4BuilderCustomizer> customizers) {
 			final TransportConfigCallbackFactory transportConfigCallbackFactory = new TransportConfigCallbackFactory(
 					customTransportConfigCallback.orElse(null), googleCloudSourceSupport.orElse(null),
-					azureDevOpsWorkloadIdentitySupport.orElse(null));
+					callbackProviders.orderedStream().toList());
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, jgitHttpConnectionFactory,
 					transportConfigCallbackFactory, gitCredentialsProviderFactory, customizers);
 		}

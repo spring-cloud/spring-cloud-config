@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.support;
 
+import java.util.List;
+
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.junit.jupiter.api.Test;
 
@@ -35,8 +37,6 @@ public class TransportConfigCallbackFactoryTests {
 
 	@Test
 	public void usesAzureDevOpsWorkloadIdentityForAzureDevOpsRepository() {
-		TransportConfigCallback customCallback = null;
-		GoogleCloudSourceSupport googleCloudSourceSupport = null;
 		AzureDevOpsWorkloadIdentitySupport azureSupport = mock(AzureDevOpsWorkloadIdentitySupport.class);
 		TransportConfigCallback azureCallback = mock(TransportConfigCallback.class);
 		MultipleJGitEnvironmentProperties properties = mock(MultipleJGitEnvironmentProperties.class);
@@ -44,56 +44,73 @@ public class TransportConfigCallbackFactoryTests {
 		when(properties.getUri()).thenReturn(AZURE_DEVOPS_REPO);
 		when(properties.isManagedIdentityEnabled()).thenReturn(true);
 		when(properties.getClientId()).thenReturn("test-client-id");
-		when(azureSupport.canHandle(AZURE_DEVOPS_REPO)).thenReturn(true);
-		when(azureSupport.createTransportConfigCallback("test-client-id")).thenReturn(azureCallback);
+		when(azureSupport.canHandle(properties)).thenReturn(true);
+		when(azureSupport.createTransportConfigCallback(properties)).thenReturn(azureCallback);
 
-		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(customCallback,
-				googleCloudSourceSupport, azureSupport);
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, null, List.of(azureSupport));
 
 		assertThat(factory.build(properties)).isSameAs(azureCallback);
-		verify(azureSupport).createTransportConfigCallback("test-client-id");
+		verify(azureSupport).createTransportConfigCallback(properties);
 	}
 
 	@Test
 	public void doesNotUseAzureDevOpsWorkloadIdentityWhenDisabled() {
-		TransportConfigCallback customCallback = null;
-		GoogleCloudSourceSupport googleCloudSourceSupport = null;
 		AzureDevOpsWorkloadIdentitySupport azureSupport = mock(AzureDevOpsWorkloadIdentitySupport.class);
 		MultipleJGitEnvironmentProperties properties = mock(MultipleJGitEnvironmentProperties.class);
 
 		when(properties.getUri()).thenReturn(AZURE_DEVOPS_REPO);
 		when(properties.isManagedIdentityEnabled()).thenReturn(false);
 		when(properties.getClientId()).thenReturn("test-client-id");
-		when(azureSupport.canHandle(AZURE_DEVOPS_REPO)).thenReturn(true);
+		when(azureSupport.canHandle(properties)).thenReturn(false);
 
-		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(customCallback,
-				googleCloudSourceSupport, azureSupport);
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, null, List.of(azureSupport));
 
 		TransportConfigCallback result = factory.build(properties);
 
 		assertThat(result).isNotNull();
-		verify(azureSupport, never()).createTransportConfigCallback("test-client-id");
+		verify(azureSupport, never()).createTransportConfigCallback(properties);
 	}
 
 	@Test
 	public void doesNotUseAzureDevOpsWorkloadIdentityForOtherRepository() {
-		TransportConfigCallback customCallback = null;
-		GoogleCloudSourceSupport googleCloudSourceSupport = null;
 		AzureDevOpsWorkloadIdentitySupport azureSupport = mock(AzureDevOpsWorkloadIdentitySupport.class);
 		MultipleJGitEnvironmentProperties properties = mock(MultipleJGitEnvironmentProperties.class);
 
 		when(properties.getUri()).thenReturn(OTHER_REPO);
 		when(properties.isManagedIdentityEnabled()).thenReturn(true);
 		when(properties.getClientId()).thenReturn("test-client-id");
-		when(azureSupport.canHandle(OTHER_REPO)).thenReturn(false);
+		when(azureSupport.canHandle(properties)).thenReturn(false);
 
-		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(customCallback,
-				googleCloudSourceSupport, azureSupport);
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, null, List.of(azureSupport));
 
 		TransportConfigCallback result = factory.build(properties);
 
 		assertThat(result).isNotNull();
-		verify(azureSupport, never()).createTransportConfigCallback("test-client-id");
+		verify(azureSupport, never()).createTransportConfigCallback(properties);
+	}
+
+	@Test
+	public void customCallbackTakesPriorityOverProviders() {
+		TransportConfigCallback customCallback = mock(TransportConfigCallback.class);
+		GitTransportConfigCallbackProvider provider = mock(GitTransportConfigCallbackProvider.class);
+		MultipleJGitEnvironmentProperties properties = mock(MultipleJGitEnvironmentProperties.class);
+
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(customCallback, null,
+				List.of(provider));
+
+		assertThat(factory.build(properties)).isSameAs(customCallback);
+		verify(provider, never()).canHandle(properties);
+	}
+
+	@Test
+	public void emptyProvidersListFallsBackToSsh() {
+		MultipleJGitEnvironmentProperties properties = mock(MultipleJGitEnvironmentProperties.class);
+		when(properties.isIgnoreLocalSshSettings()).thenReturn(false);
+		when(properties.getUri()).thenReturn(OTHER_REPO);
+
+		TransportConfigCallbackFactory factory = new TransportConfigCallbackFactory(null, null, List.of());
+
+		assertThat(factory.build(properties)).isNotNull();
 	}
 
 }

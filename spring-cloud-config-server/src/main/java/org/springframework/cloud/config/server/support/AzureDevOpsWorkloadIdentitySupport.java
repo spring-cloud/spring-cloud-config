@@ -28,13 +28,24 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.URIish;
 
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.util.StringUtils;
 
-public class AzureDevOpsWorkloadIdentitySupport {
+public class AzureDevOpsWorkloadIdentitySupport implements GitTransportConfigCallbackProvider {
 
 	private static final String AZURE_DEVOPS_HOST = "dev.azure.com";
 
 	private static final String AZURE_DEVOPS_SCOPE = "499b84ac-1321-427f-aa17-267ca6975798/.default";
+
+	@Override
+	public boolean canHandle(MultipleJGitEnvironmentProperties properties) {
+		return properties.isManagedIdentityEnabled() && canHandle(properties.getUri());
+	}
+
+	@Override
+	public TransportConfigCallback createTransportConfigCallback(MultipleJGitEnvironmentProperties properties) {
+		return createTransportConfigCallback(properties.getClientId());
+	}
 
 	public boolean canHandle(String uri) {
 		try {

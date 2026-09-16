@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.support;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
@@ -24,6 +26,7 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import org.springframework.cloud.config.server.ssh.FileBasedSshTransportConfigCallback;
 import org.springframework.cloud.config.server.ssh.PropertiesBasedSshTransportConfigCallback;
 
+/** Factory for creating a JGit {@link TransportConfigCallback}. */
 public class TransportConfigCallbackFactory {
 
 	@Nullable
@@ -32,42 +35,51 @@ public class TransportConfigCallbackFactory {
 	@Nullable
 	private final GoogleCloudSourceSupport googleCloudSourceSupport;
 
-	@Nullable
-	private final AzureDevOpsWorkloadIdentitySupport azureDevOpsWorkloadIdentitySupport;
+	/** Ordered list of cloud-provider transport callback providers. */
+	private final List<GitTransportConfigCallbackProvider> providers;
 
-	public TransportConfigCallbackFactory(TransportConfigCallback customTransportConfigCallback,
-			GoogleCloudSourceSupport googleCloudSourceSupport,
-			AzureDevOpsWorkloadIdentitySupport azureDevOpsWorkloadIdentitySupport) {
+	/**
+	 * Creates a new factory.
+	 * @param customTransportConfigCallback optional custom callback (highest priority)
+	 * @param googleCloudSourceSupport optional Google Cloud Source support
+	 * @param callbackProviders ordered list of additional callback providers
+	 */
+	public TransportConfigCallbackFactory(@Nullable final TransportConfigCallback customTransportConfigCallback,
+			@Nullable final GoogleCloudSourceSupport googleCloudSourceSupport,
+			final List<GitTransportConfigCallbackProvider> callbackProviders) {
 		this.customTransportConfigCallback = customTransportConfigCallback;
 		this.googleCloudSourceSupport = googleCloudSourceSupport;
-		this.azureDevOpsWorkloadIdentitySupport = azureDevOpsWorkloadIdentitySupport;
+		this.providers = callbackProviders != null ? callbackProviders : List.of();
 	}
 
-	public TransportConfigCallback build(MultipleJGitEnvironmentProperties environmentProperties) {
+	/**
+	 * Builds a {@link TransportConfigCallback} for the given repository properties.
+	 * @param environmentProperties the JGit environment properties
+	 * @return the appropriate {@link TransportConfigCallback}
+	 */
+	public final TransportConfigCallback build(final MultipleJGitEnvironmentProperties environmentProperties) {
 
 		// customTransportConfigCallback has the highest priority. If someone put
 		// a TransportConfigCallback bean in to the Spring context, we use it for
 		// all repositories.
-		if (customTransportConfigCallback != null) {
-			return customTransportConfigCallback;
+		if (this.customTransportConfigCallback != null) {
+			return this.customTransportConfigCallback;
 		}
 
 		// If the currently configured repository is a Google Cloud Source repository
 		// we use GoogleCloudSourceSupport.
-		if (googleCloudSourceSupport != null) {
+		if (this.googleCloudSourceSupport != null) {
 			final String uri = environmentProperties.getUri();
-			if (googleCloudSourceSupport.canHandle(uri)) {
-				return googleCloudSourceSupport.createTransportConfigCallback();
+			if (this.googleCloudSourceSupport.canHandle(uri)) {
+				return this.googleCloudSourceSupport.createTransportConfigCallback();
 			}
 		}
 
-		// If managed identity authentication is enabled for an Azure DevOps repository,
-		// use AzureDevOpsWorkloadIdentitySupport.
-		if (azureDevOpsWorkloadIdentitySupport != null
-				&& azureDevOpsWorkloadIdentitySupport.canHandle(environmentProperties.getUri())
-				&& environmentProperties.isManagedIdentityEnabled()) {
-			return azureDevOpsWorkloadIdentitySupport
-				.createTransportConfigCallback(environmentProperties.getClientId());
+		// Delegate to the first provider that can handle this repository.
+		for (final GitTransportConfigCallbackProvider provider : this.providers) {
+			if (provider.canHandle(environmentProperties)) {
+				return provider.createTransportConfigCallback(environmentProperties);
+			}
 		}
 
 		// Otherwise - legacy behaviour - use SshTransportConfigCallback for all
@@ -76,7 +88,7 @@ public class TransportConfigCallbackFactory {
 	}
 
 	private TransportConfigCallback buildSshTransportConfigCallback(
-			MultipleJGitEnvironmentProperties gitEnvironmentProperties) {
+			final MultipleJGitEnvironmentProperties gitEnvironmentProperties) {
 
 		if (gitEnvironmentProperties.isIgnoreLocalSshSettings()) {
 			return new PropertiesBasedSshTransportConfigCallback(gitEnvironmentProperties);
