@@ -99,6 +99,16 @@ public class GoogleCloudSourceSupportTests {
 	}
 
 	@Test
+	public void verifyDoesNothingForNonHttpTransports() throws URISyntaxException {
+		TransportConfigCallback callback = transportConfigCallbackWith(createAuthHeaders());
+		Transport transport = mockSshTransport(SSH_GOOGLE_CLOUD_SOURCE_REPO);
+
+		callback.configure(transport);
+
+		verifyOnlyValidInteraction(transport);
+	}
+
+	@Test
 	public void canHandleWithMultipleJGitEnvironmentProperties() {
 		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
 		properties.setUri(HTTPS_GOOGLE_CLOUD_SOURCE_REPO);

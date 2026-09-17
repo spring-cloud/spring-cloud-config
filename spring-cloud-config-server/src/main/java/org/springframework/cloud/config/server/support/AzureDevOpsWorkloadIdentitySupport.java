@@ -39,13 +39,14 @@ public class AzureDevOpsWorkloadIdentitySupport implements GitTransportConfigCal
 
 	@Override
 	public boolean canHandle(MultipleJGitEnvironmentProperties properties) {
-		return properties.getAzure() != null && properties.getAzure().isManagedIdentityEnabled()
-				&& canHandle(properties.getUri());
+		return properties.getAzure() != null && properties.getAzure().getIdentity() != null
+				&& properties.getAzure().getIdentity().isManagedIdentityEnabled() && canHandle(properties.getUri());
 	}
 
 	@Override
 	public TransportConfigCallback createTransportConfigCallback(MultipleJGitEnvironmentProperties properties) {
-		String clientId = properties.getAzure() != null ? properties.getAzure().getClientId() : null;
+		String clientId = properties.getAzure() != null && properties.getAzure().getIdentity() != null
+				? properties.getAzure().getIdentity().getClientId() : null;
 		return createTransportConfigCallback(clientId);
 	}
 

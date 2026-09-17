@@ -80,8 +80,8 @@ public class AzureDevOpsWorkloadIdentitySupportTests {
 	public void canHandleWithMultipleJGitEnvironmentProperties() {
 		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
 		properties.setUri(HTTPS_AZURE_DEVOPS_REPO);
-		properties.getAzure().setManagedIdentityEnabled(true);
-		properties.getAzure().setClientId("test-client-id");
+		properties.getAzure().getIdentity().setManagedIdentityEnabled(true);
+		properties.getAzure().getIdentity().setClientId("test-client-id");
 
 		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle(properties)).isTrue();
 	}
@@ -90,7 +90,7 @@ public class AzureDevOpsWorkloadIdentitySupportTests {
 	public void doesNotHandleWithMultipleJGitEnvironmentPropertiesWhenDisabled() {
 		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
 		properties.setUri(HTTPS_AZURE_DEVOPS_REPO);
-		properties.getAzure().setManagedIdentityEnabled(false);
+		properties.getAzure().getIdentity().setManagedIdentityEnabled(false);
 
 		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle(properties)).isFalse();
 	}
@@ -100,6 +100,15 @@ public class AzureDevOpsWorkloadIdentitySupportTests {
 		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
 		properties.setUri(HTTPS_AZURE_DEVOPS_REPO);
 		properties.setAzure(null);
+
+		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle(properties)).isFalse();
+	}
+
+	@Test
+	public void doesNotHandleWithMultipleJGitEnvironmentPropertiesWhenIdentityNull() {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(HTTPS_AZURE_DEVOPS_REPO);
+		properties.getAzure().setIdentity(null);
 
 		assertThat(new AzureDevOpsWorkloadIdentitySupport().canHandle(properties)).isFalse();
 	}

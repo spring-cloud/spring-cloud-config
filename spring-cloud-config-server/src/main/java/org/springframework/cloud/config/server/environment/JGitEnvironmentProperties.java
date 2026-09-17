@@ -288,31 +288,46 @@ public class JGitEnvironmentProperties extends AbstractScmAccessorProperties
 
 	public static class AzureProperties {
 
-		/**
-		 * Client ID of the Azure managed identity used for Azure DevOps authentication.
-		 */
-		private String clientId;
+		private Identity identity = new Identity();
 
-		/**
-		 * Whether managed identity authentication is enabled for Azure DevOps
-		 * repositories.
-		 */
-		private boolean managedIdentityEnabled;
-
-		public String getClientId() {
-			return this.clientId;
+		public Identity getIdentity() {
+			return this.identity;
 		}
 
-		public void setClientId(String clientId) {
-			this.clientId = clientId;
+		public void setIdentity(Identity identity) {
+			this.identity = identity;
 		}
 
-		public boolean isManagedIdentityEnabled() {
-			return this.managedIdentityEnabled;
-		}
+		public static class Identity {
 
-		public void setManagedIdentityEnabled(boolean managedIdentityEnabled) {
-			this.managedIdentityEnabled = managedIdentityEnabled;
+			/**
+			 * Client ID of the Azure managed identity used for Azure DevOps
+			 * authentication.
+			 */
+			private String clientId;
+
+			/**
+			 * Whether managed identity authentication is enabled for Azure DevOps
+			 * repositories.
+			 */
+			private boolean managedIdentityEnabled;
+
+			public String getClientId() {
+				return this.clientId;
+			}
+
+			public void setClientId(String clientId) {
+				this.clientId = clientId;
+			}
+
+			public boolean isManagedIdentityEnabled() {
+				return this.managedIdentityEnabled;
+			}
+
+			public void setManagedIdentityEnabled(boolean managedIdentityEnabled) {
+				this.managedIdentityEnabled = managedIdentityEnabled;
+			}
+
 		}
 
 	}
