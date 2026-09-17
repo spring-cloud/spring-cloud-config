@@ -270,6 +270,51 @@ The Google Cloud Source credentials provider will use Google Cloud Platform appl
 NOTE: `com.google.auth:google-auth-library-oauth2-http` is an optional dependency.
 If the `google-auth-library-oauth2-http` jar is not on your classpath, the Google Cloud Source credential provider is not created, regardless of the git server URI.
 
+[[authentication-with-azure-devops]]
+== Authentication with Azure DevOps
+
+Spring Cloud Config Server also supports authenticating against https://dev.azure.com[Azure DevOps] Git repositories using Azure Managed Identity.
+
+When your Git URI uses `http` or `https` and targets Azure DevOps (host `dev.azure.com`), you can enable managed identity authentication by setting `spring.cloud.config.server.git.azure.identity.managed-identity-enabled` to `true`. Spring Cloud Config Server will automatically acquire an Azure AD access token for Azure DevOps and configure HTTP Bearer token authentication on the JGit transport.
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://dev.azure.com/{organization}/{project}/_git/{repo}
+          azure:
+            identity:
+              managed-identity-enabled: true
+              client-id: 00000000-0000-0000-0000-000000000000 # optional, for user-assigned managed identity
+----
+
+If using a user-assigned managed identity, specify the client ID using `spring.cloud.config.server.git.azure.identity.client-id`. For system-assigned managed identity, `client-id` can be omitted.
+
+The property can also be configured per-repository when using multiple repositories:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          repos:
+            my-azure-repo:
+              pattern: azure-app*
+              uri: https://dev.azure.com/{organization}/{project}/_git/{repo}
+              azure:
+                identity:
+                  managed-identity-enabled: true
+                  client-id: 00000000-0000-0000-0000-000000000000
+----
+
+NOTE: `com.azure:azure-identity` is an optional dependency.
+If the `azure-identity` jar is not on your classpath, the Azure DevOps managed identity credentials provider will not be created, regardless of the Git server URI.
+
 [[git-ssh-configuration-using-properties]]
 == Git SSH configuration using properties
 
