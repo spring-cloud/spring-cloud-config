@@ -23,7 +23,6 @@ import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 
 /**
  * Configure JGit transport command to use a default SSH session factory based on local
@@ -33,11 +32,11 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
  */
 public class FileBasedSshTransportConfigCallback implements TransportConfigCallback {
 
-	private final MultipleJGitEnvironmentProperties sshUriProperties;
+	private final JGitEnvironmentProperties sshUriProperties;
 
 	private final FileBasedSshSessionFactory sshdSessionFactory;
 
-	public FileBasedSshTransportConfigCallback(MultipleJGitEnvironmentProperties sshUriProperties) {
+	public FileBasedSshTransportConfigCallback(JGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
 		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new SshUriPropertyProcessor(this.sshUriProperties)
 			.getSshKeysByHostname();
@@ -50,7 +49,7 @@ public class FileBasedSshTransportConfigCallback implements TransportConfigCallb
 
 	}
 
-	public MultipleJGitEnvironmentProperties getSshUriProperties() {
+	public JGitEnvironmentProperties getSshUriProperties() {
 		return this.sshUriProperties;
 	}
 

@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
 
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.cloud.config.server.ssh.FileBasedSshTransportConfigCallback;
 import org.springframework.cloud.config.server.ssh.PropertiesBasedSshTransportConfigCallback;
 
@@ -34,13 +34,11 @@ public class TransportConfigCallbackFactory {
 
 	public TransportConfigCallbackFactory(TransportConfigCallback customTransportConfigCallback,
 			GoogleCloudSourceSupport googleCloudSourceSupport) {
-
 		this.customTransportConfigCallback = customTransportConfigCallback;
 		this.googleCloudSourceSupport = googleCloudSourceSupport;
 	}
 
-	public TransportConfigCallback build(MultipleJGitEnvironmentProperties environmentProperties) {
-
+	public TransportConfigCallback build(JGitEnvironmentProperties environmentProperties) {
 		// customTransportConfigCallback has the highest priority. If someone put
 		// a TransportConfigCallback bean in to the Spring context, we use it for
 		// all repositories.
@@ -63,7 +61,7 @@ public class TransportConfigCallbackFactory {
 	}
 
 	private TransportConfigCallback buildSshTransportConfigCallback(
-			MultipleJGitEnvironmentProperties gitEnvironmentProperties) {
+			JGitEnvironmentProperties gitEnvironmentProperties) {
 
 		if (gitEnvironmentProperties.isIgnoreLocalSshSettings()) {
 			return new PropertiesBasedSshTransportConfigCallback(gitEnvironmentProperties);

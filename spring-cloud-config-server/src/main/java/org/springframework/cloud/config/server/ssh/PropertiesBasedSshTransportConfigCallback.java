@@ -27,20 +27,22 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 
 /**
  * Configure JGit transport command to use a SSH session factory that is configured using
- * properties defined in {@link MultipleJGitEnvironmentProperties}.
+ * properties defined in {@link JGitEnvironmentProperties}.
  *
  * @author Dylan Roberts
  */
 public class PropertiesBasedSshTransportConfigCallback implements TransportConfigCallback {
 
-	private final MultipleJGitEnvironmentProperties sshUriProperties;
+	private final JGitEnvironmentProperties sshUriProperties;
 
 	private final PropertyBasedSshSessionFactory sshdSessionFactory;
 
-	public PropertiesBasedSshTransportConfigCallback(MultipleJGitEnvironmentProperties sshUriProperties) {
+	public PropertiesBasedSshTransportConfigCallback(JGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
+
 		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new SshUriPropertyProcessor(this.sshUriProperties)
 			.getSshKeysByHostname();
+
 		if (sshKeysByHostname.isEmpty()) {
 			this.sshdSessionFactory = null;
 		}
@@ -50,7 +52,10 @@ public class PropertiesBasedSshTransportConfigCallback implements TransportConfi
 	}
 
 	public MultipleJGitEnvironmentProperties getSshUriProperties() {
-		return this.sshUriProperties;
+		if (this.sshUriProperties instanceof MultipleJGitEnvironmentProperties multipleProperties) {
+			return multipleProperties;
+		}
+		throw new IllegalStateException("SSH URI properties are not multiple repository properties");
 	}
 
 	@Override
