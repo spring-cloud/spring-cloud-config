@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.support;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
@@ -24,34 +26,44 @@ import org.springframework.cloud.config.server.environment.JGitEnvironmentProper
 import org.springframework.cloud.config.server.ssh.FileBasedSshTransportConfigCallback;
 import org.springframework.cloud.config.server.ssh.PropertiesBasedSshTransportConfigCallback;
 
+/** Factory for creating a JGit {@link TransportConfigCallback}. */
 public class TransportConfigCallbackFactory {
 
 	@Nullable
 	private final TransportConfigCallback customTransportConfigCallback;
 
-	@Nullable
-	private final GoogleCloudSourceSupport googleCloudSourceSupport;
+	/** Ordered list of cloud-provider transport callback providers. */
+	private final List<GitTransportConfigCallbackProvider> providers;
 
-	public TransportConfigCallbackFactory(TransportConfigCallback customTransportConfigCallback,
-			GoogleCloudSourceSupport googleCloudSourceSupport) {
+	/**
+	 * Creates a new factory.
+	 * @param customTransportConfigCallback optional custom callback (highest priority)
+	 * @param callbackProviders ordered list of callback providers
+	 */
+	public TransportConfigCallbackFactory(@Nullable final TransportConfigCallback customTransportConfigCallback,
+			final List<GitTransportConfigCallbackProvider> callbackProviders) {
 		this.customTransportConfigCallback = customTransportConfigCallback;
-		this.googleCloudSourceSupport = googleCloudSourceSupport;
+		this.providers = callbackProviders != null ? callbackProviders : List.of();
 	}
 
-	public TransportConfigCallback build(JGitEnvironmentProperties environmentProperties) {
+	/**
+	 * Builds a {@link TransportConfigCallback} for the given repository properties.
+	 * @param environmentProperties the JGit environment properties
+	 * @return the appropriate {@link TransportConfigCallback}
+	 */
+	public final TransportConfigCallback build(final JGitEnvironmentProperties environmentProperties) {
+
 		// customTransportConfigCallback has the highest priority. If someone put
 		// a TransportConfigCallback bean in to the Spring context, we use it for
 		// all repositories.
-		if (customTransportConfigCallback != null) {
-			return customTransportConfigCallback;
+		if (this.customTransportConfigCallback != null) {
+			return this.customTransportConfigCallback;
 		}
 
-		// If the currently configured repository is a Google Cloud Source repository
-		// we use GoogleCloudSourceSupport.
-		if (googleCloudSourceSupport != null) {
-			final String uri = environmentProperties.getUri();
-			if (googleCloudSourceSupport.canHandle(uri)) {
-				return googleCloudSourceSupport.createTransportConfigCallback();
+		// Delegate to the first provider that can handle this repository.
+		for (final GitTransportConfigCallbackProvider provider : this.providers) {
+			if (provider.canHandle(environmentProperties)) {
+				return provider.createTransportConfigCallback(environmentProperties);
 			}
 		}
 
@@ -61,7 +73,7 @@ public class TransportConfigCallbackFactory {
 	}
 
 	private TransportConfigCallback buildSshTransportConfigCallback(
-			JGitEnvironmentProperties gitEnvironmentProperties) {
+			final JGitEnvironmentProperties gitEnvironmentProperties) {
 
 		if (gitEnvironmentProperties.isIgnoreLocalSshSettings()) {
 			return new PropertiesBasedSshTransportConfigCallback(gitEnvironmentProperties);

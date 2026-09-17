@@ -8,9 +8,9 @@ To scale the Config Server up and make it highly available, you need to have all
 Even in that case, it is better to use the `ssh:` protocol for a shared filesystem repository, so that the server can clone it and use a local working copy as a cache.
 
 This repository implementation maps the `\{label}` parameter of the HTTP resource to a git label (commit id, branch name, or tag).
-If the git branch or tag name contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `(\{special-string})` (to avoid ambiguity with other URL paths).
-For example, if the label is `foo/bar`, replacing the slash would result in the following label: `foo(\{special-string})bar`.
-The inclusion of the special string `(\{special-string})` can also be applied to the `\{application}` parameter.
+If the git branch or tag name contains a slash (`/`), then the label in the HTTP URL should instead be specified with the special string `({special-string})` (to avoid ambiguity with other URL paths).
+For example, if the label is `foo/bar`, replacing the slash would result in the following label: `foo({special-string})bar`.
+The inclusion of the special string `({special-string})` can also be applied to the `\{application}` parameter.
 If you use a command-line client such as curl, be careful with the brackets in the URL -- you should escape them from the shell with single quotes ('').
 
 [[skipping-ssl-certificate-validation]]
@@ -64,7 +64,7 @@ spring:
 You can also support a "`one repository per profile`" policy by using a similar pattern but with
 `\{profile}`.
 
-Additionally, using the special string `(\{special-string})` within your `\{application}` parameters can enable support for multiple
+Additionally, using the special string `({special-string})` within your `\{application}` parameters can enable support for multiple
 organizations, as shown in the following example:
 
 [source,yaml]
@@ -77,7 +77,7 @@ spring:
           uri: https://github.com/\{application}
 ----
 
-where `\{application}` is provided at request time in the following format: `organization(\{special-string})application`.
+where `\{application}` is provided at request time in the following format: `organization({special-string})application`.
 
 [[pattern-matching-and-multiple-repositories]]
 == Pattern Matching and Multiple Repositories
@@ -107,7 +107,7 @@ spring:
 If `\{application}/\{profile}` does not match any of the patterns, it uses the default URI defined under `spring.cloud.config.server.git.uri`.
 In the above example, for the "`simple`" repository, the pattern is `simple/\*` (it only matches one application named `simple` in all profiles). The "`local`" repository matches all application names beginning with `local` in all profiles (the `/*` suffix is added automatically to any pattern that does not have a profile matcher).
 
-NOTE: The "`one-liner`" short cut used in the "`simple`" example can be used only if the only property to be set is the URI.
+NOTE: The "`one-liner`" shortcut used in the "`simple`" example can be used only if the only property to be set is the URI.
 If you need to set anything else (credentials, pattern, and so on) you need to use the full form.
 
 The `pattern` property in the repo is actually an array, so you can use a YAML array (or `[0]`, `[1]`, etc. suffixes in properties files) to bind to multiple patterns.
@@ -217,18 +217,21 @@ system properties (`-Dhttps.proxyHost` and `-Dhttps.proxyPort`).
 
 TIP: If you do not know where your `~/.git` directory is, use `git config --global` to manipulate the settings (for example, `git config --global http.sslVerify false`).
 
-JGit requires RSA keys in PEM format. Below is an example ssh-keygen (from openssh) command that will generate a key in the corect format:
+JGit requires RSA keys in PEM format. Below is an example ssh-keygen (from openssh) command that will generate a key in the correct format:
 
-```bash
+[source,bash]
+----
 ssh-keygen -m PEM -t rsa -b 4096 -f ~/config_server_deploy_key.rsa
-```
+----
 
 [WARNING]
 =====
-When working with SSH keys, the expected ssh private-key must begin with ```-----BEGIN RSA PRIVATE KEY-----```. If the key starts with ```-----BEGIN OPENSSH PRIVATE KEY-----``` then the RSA key will not load when spring-cloud-config server is started. The error looks like:
-```
+When working with SSH keys, the expected ssh private-key must begin with `-----BEGIN RSA PRIVATE KEY-----`. If the key starts with `-----BEGIN OPENSSH PRIVATE KEY-----` then the RSA key will not load when spring-cloud-config server is started. The error looks like:
+
+[source,bash]
+----
 - Error in object 'spring.cloud.config.server.git': codes [PrivateKeyIsValid.spring.cloud.config.server.git,PrivateKeyIsValid]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [spring.cloud.config.server.git.,]; arguments []; default message []]; default message [Property 'spring.cloud.config.server.git.privateKey' is not a valid private key]
-```
+----
 =====
 
 To correct the above error the RSA key must be converted to PEM format. An example using openssh is provided above for generating a new key in the appropriate format.
@@ -241,11 +244,12 @@ AWS CodeCommit uses an authentication helper when using Git from the command lin
 This helper is not used with the JGit library, so a JGit CredentialProvider for AWS CodeCommit is created if the Git URI matches the AWS CodeCommit pattern.
 AWS CodeCommit URIs follow this pattern:
 
-```bash
+[source,bash]
+----
 https://git-codecommit.${AWS_REGION}.amazonaws.com/v1/repos/${repo}
-```
+----
 
-If you provide a username and password with an AWS CodeCommit URI, they must be the https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html[AWS accessKeyId and secretAccessKey] that provide access to the repository.
+If you provide a username and password with an AWS CodeCommit URI, they must be the https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html[AWS accessKeyId and secretAccessKey] that provide access to the repository.
 If you do not specify a username and password, the accessKeyId and secretAccessKey are retrieved by using the https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html[Default Credential Provider Chain].
 
 If your Git URI matches the CodeCommit URI pattern (shown earlier), you must provide valid AWS credentials in the username and password or in one of the locations supported by the default credential provider chain.
@@ -259,12 +263,57 @@ If the `software.amazon.awssdk:auth` jar is not on your classpath, the AWS Code 
 
 Spring Cloud Config Server also supports authenticating against https://cloud.google.com/source-repositories/[Google Cloud Source] repositories.
 
-If your Git URI uses the `http` or `https` protocol and the domain name is `source.developers.google.com`, the Google Cloud Source credentials provider will be used. A Google Cloud Source repository URI has the format `https://source.developers.google.com/p/$\{GCP_PROJECT}/r/$\{REPO}`. To obtain the URI for your repository, click on "Clone" in the Google Cloud Source UI, and select "Manually generated credentials". Do not generate any credentials, simply copy the displayed URI.
+If your Git URI uses the `http` or `https` protocol and the domain name is `source.developers.google.com`, the Google Cloud Source credentials provider will be used. A Google Cloud Source repository URI has the format `\https://source.developers.google.com/p/$\{GCP_PROJECT}/r/$\{REPO}`. To obtain the URI for your repository, click on "Clone" in the Google Cloud Source UI, and select "Manually generated credentials". Do not generate any credentials, simply copy the displayed URI.
 
 The Google Cloud Source credentials provider will use Google Cloud Platform application default credentials. See https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login[Google Cloud SDK documentation] on how to create application default credentials for a system. This approach will work for user accounts in dev environments and for service accounts in production environments.
 
 NOTE: `com.google.auth:google-auth-library-oauth2-http` is an optional dependency.
 If the `google-auth-library-oauth2-http` jar is not on your classpath, the Google Cloud Source credential provider is not created, regardless of the git server URI.
+
+[[authentication-with-azure-devops]]
+== Authentication with Azure DevOps
+
+Spring Cloud Config Server also supports authenticating against https://dev.azure.com[Azure DevOps] Git repositories using Azure Managed Identity.
+
+When your Git URI uses `http` or `https` and targets Azure DevOps (host `dev.azure.com`), you can enable managed identity authentication by setting `spring.cloud.config.server.git.azure.identity.managed-identity-enabled` to `true`. Spring Cloud Config Server will automatically acquire an Azure AD access token for Azure DevOps and configure HTTP Bearer token authentication on the JGit transport.
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://dev.azure.com/{organization}/{project}/_git/{repo}
+          azure:
+            identity:
+              managed-identity-enabled: true
+              client-id: 00000000-0000-0000-0000-000000000000 # optional, for user-assigned managed identity
+----
+
+If using a user-assigned managed identity, specify the client ID using `spring.cloud.config.server.git.azure.identity.client-id`. For system-assigned managed identity, `client-id` can be omitted.
+
+The property can also be configured per-repository when using multiple repositories:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          repos:
+            my-azure-repo:
+              pattern: azure-app*
+              uri: https://dev.azure.com/{organization}/{project}/_git/{repo}
+              azure:
+                identity:
+                  managed-identity-enabled: true
+                  client-id: 00000000-0000-0000-0000-000000000000
+----
+
+NOTE: `com.azure:azure-identity` is an optional dependency.
+If the `azure-identity` jar is not on your classpath, the Azure DevOps managed identity credentials provider will not be created, regardless of the Git server URI.
 
 [[git-ssh-configuration-using-properties]]
 == Git SSH configuration using properties
@@ -544,10 +593,11 @@ you would like to disable to the fallback branch behavior you can set
 
 If you are getting a `java.io.IOException` when running the Config Server in a container that is similar to:
 
-```
+[source,bash]
+----
 2022-01-03 20:04:02,892 [tributeWriter-2] ERROR org.eclipse.jgit.util.FS$FileStoreAttributes.saveToConfig - Cannot save config file 'FileBasedConfig[/.config/jgit/config]'
 java.io.IOException: Creating directories for /.config/jgit failed
-```
+----
 
 You must either:
 
