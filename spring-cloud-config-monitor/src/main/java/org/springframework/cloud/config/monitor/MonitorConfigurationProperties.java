@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -38,6 +40,8 @@ public class MonitorConfigurationProperties {
 	 * producing an unbounded number of candidate service names (and refresh events).
 	 */
 	private int maxDashes = DEFAULT_MAX_DASHES;
+
+	private List<String> ignoredPaths = new ArrayList<>();
 
 	private Http http = new Http();
 
@@ -115,6 +119,14 @@ public class MonitorConfigurationProperties {
 
 	public void setMaxDashes(int maxDashes) {
 		this.maxDashes = maxDashes;
+	}
+
+	public List<String> getIgnoredPaths() {
+		return ignoredPaths;
+	}
+
+	public void setIgnoredPaths(List<String> ignoredPaths) {
+		this.ignoredPaths = ignoredPaths;
 	}
 
 	public Http getHttp() {

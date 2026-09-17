@@ -32,6 +32,7 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClient;
 
@@ -55,6 +56,26 @@ public class EnvironmentMonitorAutoConfigurationTests {
 		assertThat(((Collection<?>) ReflectionTestUtils.getField(ReflectionTestUtils.getField(endpoint, "extractor"),
 				"extractors")))
 			.hasSize(7);
+		context.close();
+	}
+
+	@Test
+	public void testIgnoredPathsConfiguration() {
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
+				EnvironmentMonitorAutoConfiguration.class, TomcatServletWebServerAutoConfiguration.class,
+				ServerProperties.class, PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=-1", "spring.cloud.config.server.monitor.ignored-paths[0]=docker-compose/.*")
+			.run();
+
+		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
+
+		assertThat(endpoint.notifyByPath(new HttpHeaders(),
+				Collections.singletonMap("path", "docker-compose/docker-compose.yml")))
+			.isEmpty();
+
+		assertThat(endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo.yml")))
+			.containsExactly("foo");
+
 		context.close();
 	}
 

@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,20 +62,33 @@ public class PropertyPathEndpoint {
 	 */
 	private final int maxDashes;
 
+	private final List<Pattern> ignoredPaths;
+
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, PropertyPathNotifier notifier) {
-		this(extractor, List.of(notifier), MonitorConfigurationProperties.DEFAULT_MAX_DASHES);
+		this(extractor, List.of(notifier), MonitorConfigurationProperties.DEFAULT_MAX_DASHES, Collections.emptyList());
 	}
 
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, PropertyPathNotifier notifier,
 			int maxDashes) {
-		this(extractor, List.of(notifier), maxDashes);
+		this(extractor, List.of(notifier), maxDashes, Collections.emptyList());
 	}
 
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, List<PropertyPathNotifier> notifiers,
 			int maxDashes) {
+		this(extractor, notifiers, maxDashes, Collections.emptyList());
+	}
+
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, PropertyPathNotifier notifier,
+			int maxDashes, List<String> ignoredPaths) {
+		this(extractor, List.of(notifier), maxDashes, ignoredPaths);
+	}
+
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, List<PropertyPathNotifier> notifiers,
+			int maxDashes, List<String> ignoredPaths) {
 		this.extractor = extractor;
 		this.notifiers = notifiers;
 		this.maxDashes = maxDashes;
+		this.ignoredPaths = ignoredPaths.stream().map(Pattern::compile).toList();
 	}
 
 	@PostMapping
@@ -85,7 +99,9 @@ public class PropertyPathEndpoint {
 			Set<String> services = new LinkedHashSet<>();
 
 			for (String path : notification.getPaths()) {
-				services.addAll(guessServiceName(path));
+				if (!isIgnored(path)) {
+					services.addAll(guessServiceName(path));
+				}
 			}
 			if (!services.isEmpty()) {
 				for (String service : services) {
@@ -107,6 +123,10 @@ public class PropertyPathEndpoint {
 		String key = "path";
 		map.put(key, request);
 		return notifyByPath(headers, map);
+	}
+
+	private boolean isIgnored(String path) {
+		return path != null && this.ignoredPaths.stream().anyMatch(pattern -> pattern.matcher(path).matches());
 	}
 
 	private Set<String> guessServiceName(String path) {

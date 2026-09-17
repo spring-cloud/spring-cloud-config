@@ -16,6 +16,29 @@ The default configuration works out of the box with Github, Gitlab, Gitea, Gitee
 In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to `/monitor` with form-encoded body parameters in the pattern of `path=\{application}`.
 Doing so broadcasts to applications matching the `\{application}` pattern (which can contain wildcards).
 
+[[ignored-monitor-paths]]
+== Ignoring Paths
+
+You can configure the Config Server to ignore specific paths when processing webhook notifications by setting `spring.cloud.config.server.monitor.ignored-paths` to a list of regular expressions.
+
+Ignored paths are excluded before the Config Server determines which applications should be refreshed. This can be useful when a repository contains files that should not trigger configuration refreshes.
+
+For example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        monitor:
+          ignored-paths:
+            - "docker-compose/.*"
+            - "docs/.*"
+----
+
+Each regular expression is matched against the complete webhook path. A path is ignored when it matches any configured expression.
+
 NOTE: The `RefreshRemoteApplicationEvent` is transmitted only if the `spring-cloud-bus` is activated in both the Config Server and in the client application.
 
 NOTE: The default configuration also detects filesystem changes in local git repositories. In that case, the webhook is not used. However, as soon as you edit a config file, a refresh is broadcast.
