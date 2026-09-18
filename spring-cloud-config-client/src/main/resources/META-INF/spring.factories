@@ -1,6 +1,7 @@
 # Bootstrap components
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
 org.springframework.cloud.config.client.ConfigServiceBootstrapConfiguration,\
+org.springframework.cloud.config.client.oauth2.ConfigClientOAuth2BootstrapConfiguration,\
 org.springframework.cloud.config.client.DiscoveryClientConfigServiceBootstrapConfiguration
 
 # Environment PostProcessor

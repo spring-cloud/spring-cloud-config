@@ -50,6 +50,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -76,8 +77,23 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private ConfigClientProperties defaultProperties;
 
+	private List<ClientHttpRequestInterceptor> additionalInterceptors = Collections.emptyList();
+
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
 		this.defaultProperties = defaultProperties;
+	}
+
+	/**
+	 * Additional {@link ClientHttpRequestInterceptor}s applied to the
+	 * {@link RestTemplate} built per
+	 * {@link #locate(org.springframework.core.env.Environment)} call. Used by
+	 * {@link ConfigServiceBootstrapConfiguration} to attach the OAuth2 bearer-token
+	 * interceptor when {@code spring-security-oauth2-client} is on the classpath.
+	 * @param additionalInterceptors the interceptors to apply
+	 */
+	public void setAdditionalInterceptors(List<ClientHttpRequestInterceptor> additionalInterceptors) {
+		this.additionalInterceptors = (additionalInterceptors != null) ? additionalInterceptors
+				: Collections.emptyList();
 	}
 
 	/**
@@ -124,7 +140,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 		CompositePropertySource composite = new OriginTrackedCompositePropertySource("configService");
 		ConfigClientRequestTemplateFactory requestTemplateFactory = new ConfigClientRequestTemplateFactory(logger,
-				properties);
+				properties, this.additionalInterceptors);
 
 		Exception error = null;
 		String errorBody = null;
