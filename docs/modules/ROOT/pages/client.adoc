@@ -210,6 +210,7 @@ If you want to configure timeout thresholds:
 == Configuring Charset
 
 If you want to configure a specific charset the resources should be delivered by the server, you need to apply it via charset.
+[source,yaml]
 ----
 spring:
   cloud:
@@ -345,7 +346,7 @@ public class CustomConfigServiceBootstrapConfiguration {
     @Bean
     public ConfigServicePropertySourceLocator configServicePropertySourceLocator() {
         ConfigClientProperties clientProperties = configClientProperties();
-       ConfigServicePropertySourceLocator configServicePropertySourceLocator =  new ConfigServicePropertySourceLocator(clientProperties);
+       ConfigServicePropertySourceLocator configServicePropertySourceLocator = new ConfigServicePropertySourceLocator(clientProperties);
         configServicePropertySourceLocator.setRestTemplate(customRestTemplate(clientProperties));
         return configServicePropertySourceLocator;
     }
@@ -383,7 +384,10 @@ spring:
 
 Vault supports the ability to nest keys in a value stored in Vault, as shown in the following example:
 
-`echo -n '{"appA": {"secret": "appAsecret"}, "bar": "baz"}' | vault write secret/myapp -`
+[source,bash]
+----
+echo -n '{"appA": {"secret": "appAsecret"}, "bar": "baz"}' | vault write secret/myapp -
+----
 
 This command writes a JSON object to your Vault.
 To access these values in Spring, you would use the traditional dot(`.`) annotation, as shown in the following example
@@ -394,7 +398,7 @@ To access these values in Spring, you would use the traditional dot(`.`) annotat
 String name = "World";
 ----
 
-The preceding code would sets the value of the `name` variable to `appAsecret`.
+The preceding code would set the value of the `name` variable to `appAsecret`.
 
 [[aot-and-native-image-support]]
 ==  AOT and Native Image Support
@@ -410,9 +414,3 @@ WARNING: While building a project that contains Spring Cloud Config Client, you 
 WARNING: Since in AOT and native mode, configuration is being processed and the context is being optimised at build time, any properties that would influence bean creation (such as the ones used within bootstrap context) should be set to the same values at build time and runtime to avoid unexpected behaviour.
 
 WARNING: Since Config Client connects to a running data source (such as Config Server) while starting up from native image, the quick startup time will be slowed down by the time required for this network communication to take place.
-
-ifndef::releaseTrain[]
-[[appendix]]
-== Appendices
-
-endif::[]

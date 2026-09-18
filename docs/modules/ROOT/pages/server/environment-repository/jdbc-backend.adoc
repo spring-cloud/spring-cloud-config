@@ -4,8 +4,7 @@
 
 Spring Cloud Config Server supports JDBC (relational database) as a backend for configuration properties.
 You can enable this feature by adding `spring-boot-starter-data-jdbc` to the classpath and using the `jdbc` profile or by adding a bean of type `JdbcEnvironmentRepository`.
-If you include the right dependencies on the classpath (see the user guide for more details on that), Spring Boot configures a data source.
-// TODO Which user guide? When we know that, we should add a link to it.
+If you include the right dependencies on the classpath (see https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.jdbc[the user guide] for more details on that), Spring Boot configures a data source.
 
 You can disable autoconfiguration for `JdbcEnvironmentRepository` by setting the `spring.cloud.config.server.jdbc.enabled` property to `false`.
 
