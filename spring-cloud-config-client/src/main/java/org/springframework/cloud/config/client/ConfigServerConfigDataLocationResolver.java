@@ -41,6 +41,7 @@ import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
 import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
 import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
 import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
@@ -192,7 +193,9 @@ public class ConfigServerConfigDataLocationResolver
 			}
 			configClientProperties.setUri(uri);
 		}
-
+		if (StringUtils.startsWithIgnoreCase(configClientProperties.getName(), "application-")) {
+			throw new InvalidApplicationNameException(configClientProperties.getName());
+		}
 		return holder;
 	}
 
