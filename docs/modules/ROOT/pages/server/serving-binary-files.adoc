@@ -64,10 +64,10 @@ server {
 
 To enable serving plain text for AWS s3, the Config Server application needs to include a dependency on `io.awspring.cloud:spring-cloud-aws-s3`.
 For details on how to set up that dependency, see the
-https://docs.awspring.io/spring-cloud-aws/docs/{spring-cloud-aws-version}/reference/html/index.html#starter-dependencies[Spring Cloud AWS Reference Guide].
-In addition, when using Spring Cloud AWS with Spring Boot it is useful to include the https://docs.awspring.io/spring-cloud-aws/docs/{spring-cloud-aws-version}/reference/html/index.html#spring-cloud-aws-core[auto-configuration dependency].
+https://docs.awspring.io/spring-cloud-aws/docs/4.0.0/reference/html/index.html#starter-dependencies[Spring Cloud AWS Reference Guide].
+In addition, when using Spring Cloud AWS with Spring Boot it is useful to include the https://docs.awspring.io/spring-cloud-aws/docs/4.0.0/reference/html/index.html#spring-cloud-aws-core[auto-configuration dependency].
 Then you need to configure Spring Cloud AWS, as described in the
-https://docs.awspring.io/spring-cloud-aws/docs/{spring-cloud-aws-version}/reference/html/index.html#credentials[Spring Cloud AWS Reference Guide].
+https://docs.awspring.io/spring-cloud-aws/docs/4.0.0/reference/html/index.html#credentials[Spring Cloud AWS Reference Guide].
 
 [[decrypting-plain-text]]
 == Decrypting Plain Text
