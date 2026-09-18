@@ -34,11 +34,13 @@ import org.springframework.boot.logging.DeferredLog;
 import org.springframework.cloud.bootstrap.TextEncryptorBindHandler;
 import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
 import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
+import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -136,6 +138,48 @@ public class ConfigServerConfigDataLocationResolverTests {
 		this.environment.setProperty(ConfigClientProperties.PREFIX + ".name", "myconfigname");
 		ConfigServerConfigDataResource resource = testResolveProfileSpecific();
 		assertThat(resource.getProperties().getName()).isEqualTo("myconfigname");
+	}
+
+	@Test
+	void invalidApplicationNameThrowsException() {
+		this.environment.setProperty("spring.application.name", "application-service");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".fail-fast", "true");
+
+		assertThatThrownBy(this::testResolveProfileSpecific).isInstanceOf(InvalidApplicationNameException.class)
+			.extracting("value")
+			.isEqualTo("application-service");
+	}
+
+	@Test
+	void invalidApplicationNameWithFailFastDisabledDoesNotThrowException() {
+		this.environment.setProperty("spring.application.name", "application-service");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".fail-fast", "false");
+
+		when(context.getBootstrapContext()).thenReturn(mock(ConfigurableBootstrapContext.class));
+
+		assertThat(this.resolver.resolveProfileSpecific(this.context, ConfigDataLocation.of("configserver:"),
+				mock(Profiles.class)))
+			.isEmpty();
+	}
+
+	@Test
+	void invalidConfigNameThrowsException() {
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".name", "application-service");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".fail-fast", "true");
+
+		assertThatThrownBy(this::testResolveProfileSpecific).isInstanceOf(InvalidApplicationNameException.class)
+			.extracting("value")
+			.isEqualTo("application-service");
+	}
+
+	@Test
+	void invalidApplicationNameIsCaseInsensitive() {
+		this.environment.setProperty("spring.application.name", "Application-service");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".fail-fast", "true");
+
+		assertThatThrownBy(this::testResolveProfileSpecific).isInstanceOf(InvalidApplicationNameException.class)
+			.extracting("value")
+			.isEqualTo("Application-service");
 	}
 
 	@Test

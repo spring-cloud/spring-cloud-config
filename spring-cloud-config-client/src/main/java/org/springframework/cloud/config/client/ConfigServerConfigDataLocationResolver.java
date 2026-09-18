@@ -41,6 +41,7 @@ import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
 import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
 import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
 import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.config.client.validation.ApplicationNameValidator;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
@@ -192,7 +193,6 @@ public class ConfigServerConfigDataLocationResolver
 			}
 			configClientProperties.setUri(uri);
 		}
-
 		return holder;
 	}
 
@@ -232,6 +232,9 @@ public class ConfigServerConfigDataLocationResolver
 		PropertyHolder propertyHolder = loadProperties(resolverContext, uris);
 		ConfigClientProperties properties = propertyHolder.properties;
 
+		if (!ApplicationNameValidator.validate(properties, log)) {
+			return new ArrayList<>();
+		}
 		ConfigurableBootstrapContext bootstrapContext = resolverContext.getBootstrapContext();
 		bootstrapContext.register(ConfigClientProperties.class,
 				InstanceSupplier.of(properties).withScope(BootstrapRegistry.Scope.PROTOTYPE));
