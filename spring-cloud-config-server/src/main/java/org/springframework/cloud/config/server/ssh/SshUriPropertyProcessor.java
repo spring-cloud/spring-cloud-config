@@ -36,16 +36,16 @@ import static org.springframework.cloud.config.server.ssh.SshPropertyValidator.i
  */
 public class SshUriPropertyProcessor {
 
-	private final MultipleJGitEnvironmentProperties sshUriProperties;
+	private final JGitEnvironmentProperties sshUriProperties;
 
-	public SshUriPropertyProcessor(MultipleJGitEnvironmentProperties sshUriProperties) {
+	public SshUriPropertyProcessor(JGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
 	}
 
 	protected static String getHostname(String uri) {
 		try {
-			URIish urIish = new URIish(uri);
-			return urIish.getHost();
+			URIish uriish = new URIish(uri);
+			return uriish.getHost();
 		}
 		catch (URISyntaxException e) {
 			return null;
@@ -56,24 +56,29 @@ public class SshUriPropertyProcessor {
 		return extractNestedProperties(this.sshUriProperties);
 	}
 
-	private Map<String, JGitEnvironmentProperties> extractNestedProperties(
-			MultipleJGitEnvironmentProperties uriProperties) {
+	private Map<String, JGitEnvironmentProperties> extractNestedProperties(JGitEnvironmentProperties uriProperties) {
 		Map<String, JGitEnvironmentProperties> sshUriPropertyMap = new HashMap<>();
+
 		String parentUri = uriProperties.getUri();
 		if (isSshUri(parentUri) && getHostname(parentUri) != null) {
 			sshUriPropertyMap.put(getHostname(parentUri), uriProperties);
 		}
-		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = uriProperties
-			.getRepos();
-		if (repos != null) {
-			for (MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties repoProperties : repos
-				.values()) {
-				String repoUri = repoProperties.getUri();
-				if (isSshUri(repoUri) && getHostname(repoUri) != null) {
-					sshUriPropertyMap.put(getHostname(repoUri), repoProperties);
+
+		if (uriProperties instanceof MultipleJGitEnvironmentProperties multipleProperties) {
+			Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = multipleProperties
+				.getRepos();
+
+			if (repos != null) {
+				for (MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties repoProperties : repos
+					.values()) {
+					String repoUri = repoProperties.getUri();
+					if (isSshUri(repoUri) && getHostname(repoUri) != null) {
+						sshUriPropertyMap.put(getHostname(repoUri), repoProperties);
+					}
 				}
 			}
 		}
+
 		return sshUriPropertyMap;
 	}
 

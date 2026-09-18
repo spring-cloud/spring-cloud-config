@@ -29,7 +29,7 @@ import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.URIish;
 
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.util.StringUtils;
 
 import static java.util.stream.Collectors.toMap;
@@ -48,12 +48,12 @@ import static java.util.stream.Collectors.toMap;
 public final class GoogleCloudSourceSupport implements GitTransportConfigCallbackProvider {
 
 	@Override
-	public boolean canHandle(MultipleJGitEnvironmentProperties properties) {
+	public boolean canHandle(JGitEnvironmentProperties properties) {
 		return properties != null && canHandle(properties.getUri());
 	}
 
 	@Override
-	public TransportConfigCallback createTransportConfigCallback(MultipleJGitEnvironmentProperties properties) {
+	public TransportConfigCallback createTransportConfigCallback(JGitEnvironmentProperties properties) {
 		return createTransportConfigCallback();
 	}
 

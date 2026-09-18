@@ -18,7 +18,7 @@ package org.springframework.cloud.config.server.support;
 
 import org.eclipse.jgit.api.TransportConfigCallback;
 
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 
 /**
  * Strategy interface for providing a JGit {@link TransportConfigCallback} for a specific
@@ -36,13 +36,13 @@ public interface GitTransportConfigCallbackProvider {
 	 * @param properties the JGit environment properties for the repository
 	 * @return {@code true} if this provider should be used
 	 */
-	boolean canHandle(MultipleJGitEnvironmentProperties properties);
+	boolean canHandle(JGitEnvironmentProperties properties);
 
 	/**
 	 * Creates a {@link TransportConfigCallback} for the given properties.
 	 * @param properties the JGit environment properties for the repository
 	 * @return a configured {@link TransportConfigCallback}
 	 */
-	TransportConfigCallback createTransportConfigCallback(MultipleJGitEnvironmentProperties properties);
+	TransportConfigCallback createTransportConfigCallback(JGitEnvironmentProperties properties);
 
 }

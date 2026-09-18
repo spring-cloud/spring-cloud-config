@@ -28,7 +28,7 @@ import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.URIish;
 
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.util.StringUtils;
 
 public class AzureDevOpsWorkloadIdentitySupport implements GitTransportConfigCallbackProvider {
@@ -38,13 +38,13 @@ public class AzureDevOpsWorkloadIdentitySupport implements GitTransportConfigCal
 	private static final String AZURE_DEVOPS_SCOPE = "499b84ac-1321-427f-aa17-267ca6975798/.default";
 
 	@Override
-	public boolean canHandle(MultipleJGitEnvironmentProperties properties) {
+	public boolean canHandle(JGitEnvironmentProperties properties) {
 		return properties.getAzure() != null && properties.getAzure().getIdentity() != null
 				&& properties.getAzure().getIdentity().isManagedIdentityEnabled() && canHandle(properties.getUri());
 	}
 
 	@Override
-	public TransportConfigCallback createTransportConfigCallback(MultipleJGitEnvironmentProperties properties) {
+	public TransportConfigCallback createTransportConfigCallback(JGitEnvironmentProperties properties) {
 		String clientId = properties.getAzure() != null && properties.getAzure().getIdentity() != null
 				? properties.getAzure().getIdentity().getClientId() : null;
 		return createTransportConfigCallback(clientId);
