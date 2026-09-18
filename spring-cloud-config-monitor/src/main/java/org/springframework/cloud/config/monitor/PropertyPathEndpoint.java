@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -66,14 +67,32 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 	 */
 	private final int maxDashes;
 
+	/**
+	 * Upper bound on the number of paths processed from a notification. Prevents an
+	 * externally supplied notification from causing an unbounded amount of path
+	 * processing. Configurable via {@code spring.cloud.config.server.monitor.max-paths}.
+	 */
+	private final int maxPaths;
+
+	private final List<Pattern> ignoredPaths;
+
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId) {
-		this(extractor, busId, MonitorConfigurationProperties.DEFAULT_MAX_DASHES);
+		this(extractor, busId, MonitorConfigurationProperties.DEFAULT_MAX_DASHES,
+				MonitorConfigurationProperties.DEFAULT_MAX_PATHS, Collections.emptyList());
 	}
 
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId, int maxDashes) {
+		this(extractor, busId, maxDashes, MonitorConfigurationProperties.DEFAULT_MAX_PATHS, Collections.emptyList());
+	}
+
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, String busId, int maxDashes, int maxPaths,
+			List<String> ignoredPaths) {
 		this.extractor = extractor;
 		this.busId = busId;
 		this.maxDashes = maxDashes;
+		this.maxPaths = maxPaths;
+		this.ignoredPaths = ignoredPaths == null ? Collections.emptyList()
+				: ignoredPaths.stream().map(Pattern::compile).toList();
 	}
 
 	/* for testing */ String getBusId() {
@@ -92,8 +111,19 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 
 			Set<String> services = new LinkedHashSet<>();
 
-			for (String path : notification.getPaths()) {
-				services.addAll(guessServiceName(path));
+			String[] paths = notification.getPaths();
+			if (paths != null) {
+				int pathCount = Math.min(paths.length, this.maxPaths);
+				for (int i = 0; i < pathCount; i++) {
+					String path = paths[i];
+					if (!isIgnored(path)) {
+						services.addAll(guessServiceName(path));
+					}
+				}
+				if (paths.length > this.maxPaths) {
+					log.warn("Number of paths in notification exceeds the configured maximum of " + this.maxPaths
+							+ " (spring.cloud.config.server.monitor.max-paths); stopping path processing early");
+				}
 			}
 			if (this.applicationEventPublisher != null) {
 				for (String service : services) {
@@ -142,6 +172,10 @@ public class PropertyPathEndpoint implements ApplicationEventPublisherAware {
 			}
 		}
 		return services;
+	}
+
+	private boolean isIgnored(String path) {
+		return path != null && this.ignoredPaths.stream().anyMatch(pattern -> pattern.matcher(path).matches());
 	}
 
 }
