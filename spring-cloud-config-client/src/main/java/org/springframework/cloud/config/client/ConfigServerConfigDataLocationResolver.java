@@ -41,7 +41,7 @@ import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
 import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
 import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
 import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
+import org.springframework.cloud.config.client.validation.ApplicationNameValidator;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
@@ -232,16 +232,8 @@ public class ConfigServerConfigDataLocationResolver
 		PropertyHolder propertyHolder = loadProperties(resolverContext, uris);
 		ConfigClientProperties properties = propertyHolder.properties;
 
-		if (ConfigClientProperties.isInvalidApplicationName(properties.getName())) {
-			InvalidApplicationNameException exception = new InvalidApplicationNameException(properties.getName());
-			if (properties.isFailFast()) {
-				throw exception;
-			}
-			else {
-				log.warn(ConfigClientProperties.NAME_PLACEHOLDER + " resolved to " + properties.getName()
-						+ ", not going to load remote properties. Ensure application name doesn't start with 'application-'");
-				return new ArrayList<>();
-			}
+		if (!ApplicationNameValidator.validate(properties, log)) {
+			return new ArrayList<>();
 		}
 		ConfigurableBootstrapContext bootstrapContext = resolverContext.getBootstrapContext();
 		bootstrapContext.register(ConfigClientProperties.class,

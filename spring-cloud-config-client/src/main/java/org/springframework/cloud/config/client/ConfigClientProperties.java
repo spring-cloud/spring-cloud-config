@@ -228,10 +228,6 @@ public class ConfigClientProperties {
 		this.name = name;
 	}
 
-	public static boolean isInvalidApplicationName(String name) {
-		return StringUtils.startsWithIgnoreCase(name, "application-");
-	}
-
 	public String getProfile() {
 		return this.profile;
 	}
