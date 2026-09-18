@@ -67,6 +67,23 @@ public class EnvironmentMonitorAutoConfigurationTests {
 		context.close();
 	}
 
+	@Test
+	public void testMonitorPathProperties() {
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(BusConfig.class,
+				EnvironmentMonitorAutoConfiguration.class, TomcatServletWebServerAutoConfiguration.class,
+				ServerProperties.class, PropertyPlaceholderAutoConfiguration.class)
+			.properties("server.port=-1", "spring.cloud.config.server.monitor.max-paths=1",
+					"spring.cloud.config.server.monitor.ignored-paths=docker-compose/.*")
+			.run();
+
+		PropertyPathEndpoint endpoint = context.getBean(PropertyPathEndpoint.class);
+
+		assertThat(ReflectionTestUtils.getField(endpoint, "maxPaths")).isEqualTo(1);
+		assertThat((Collection<?>) ReflectionTestUtils.getField(endpoint, "ignoredPaths")).hasSize(1);
+
+		context.close();
+	}
+
 	@Configuration(proxyBeanMethods = false)
 	static class BusConfig {
 
