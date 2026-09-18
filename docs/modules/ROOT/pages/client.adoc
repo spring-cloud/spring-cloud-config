@@ -367,9 +367,8 @@ org.springframework.cloud.bootstrap.BootstrapConfiguration = com.my.config.clien
 [[vault]]
 === Vault
 
-When using Vault as a backend to your config server, the client needs to supply a token for the server to retrieve values from Vault.
-This token can be provided within the client by setting `spring.cloud.config.token`
-in `bootstrap.yml`, as shown in the following example:
+When the Config Server uses Vault as a backend and does not configure server-side Vault authentication, the client must supply a Vault token so the server can read secrets.
+Set `spring.cloud.config.token` (sent as the `X-Config-Token` header) in `bootstrap.yml`, as shown in the following example:
 
 [source,yaml]
 ----
@@ -378,6 +377,9 @@ spring:
     config:
       token: YourVaultToken
 ----
+
+If the server authenticates to Vault itself (`spring.cloud.config.server.vault.authentication` or `spring.cloud.config.server.vault.token`), omit `spring.cloud.config.token`.
+See xref:server/environment-repository/vault-backend.adoc#vault-authentication[Client and Server Authentication].
 
 [[nested-keys-in-vault]]
 == Nested Keys In Vault
