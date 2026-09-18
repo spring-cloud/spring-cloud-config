@@ -148,7 +148,7 @@ You should see a response similar to the following:
 [[vault-authentication]]
 == Client and Server Authentication
 
-There are two separate questions: how Config Server authenticates to Vault, and whether a Config Client must send a Vault token.
+There are two ways to authenticate.
 
 * *Per-request client token (default).* If you do not set `spring.cloud.config.server.vault.authentication` or `spring.cloud.config.server.vault.token`, every request to Config Server must include `X-Config-Token`. Config clients set that with `spring.cloud.config.token`. That token is used only for that request and is not stored or renewed on the server.
 * *Server-side authentication.* Set `spring.cloud.config.server.vault.authentication` to a supported method (`TOKEN`, `APPROLE`, `KUBERNETES`, and the other values of `VaultEnvironmentProperties.AuthenticationMethod`) and the method-specific properties. You can then omit `X-Config-Token`. Property names match Spring Cloud Vault, but they bind under `spring.cloud.config.server.vault`, not `spring.cloud.vault`. See the https://docs.spring.io/spring-cloud-vault/reference/{spring-cloud-version}/authentication.html[Spring Cloud Vault Reference Guide] for the method-specific keys.
