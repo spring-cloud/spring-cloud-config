@@ -1,7 +1,7 @@
 [[aws-parameter-store-backend]]
 = AWS Parameter Store Backend
 
-Spring Cloud Config Server supports AWS Parameter Store as a backend for configuration properties. You can enable this feature by adding a dependency to the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/examples-ssm.html[AWS Java SDK for SSM].
+Spring Cloud Config Server supports AWS Parameter Store as a backend for configuration properties. You can enable this feature by adding a dependency to the https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/java_ssm_code_examples.html[AWS Java SDK for SSM].
 
 [source,xml,indent=0]
 .pom.xml
@@ -81,7 +81,7 @@ The following table describes the AWS Parameter Store configuration properties.
 
 |===
 
-AWS Parameter Store API credentials are determined using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html#credentials-default[Default Credential Provider Chain].
+AWS Parameter Store API credentials are determined using the https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html#credentials-default[Default Credential Provider Chain].
 Versioned parameters are already supported with the default behaviour of returning the latest version.
 
 [NOTE]
