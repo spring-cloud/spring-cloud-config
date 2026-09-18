@@ -23,7 +23,6 @@ import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 
 /**
  * Configure JGit transport command to use a SSH session factory that is configured using
@@ -51,11 +50,8 @@ public class PropertiesBasedSshTransportConfigCallback implements TransportConfi
 		}
 	}
 
-	public MultipleJGitEnvironmentProperties getSshUriProperties() {
-		if (this.sshUriProperties instanceof MultipleJGitEnvironmentProperties multipleProperties) {
-			return multipleProperties;
-		}
-		throw new IllegalStateException("SSH URI properties are not multiple repository properties");
+	public JGitEnvironmentProperties getSshUriProperties() {
+		return this.sshUriProperties;
 	}
 
 	@Override
