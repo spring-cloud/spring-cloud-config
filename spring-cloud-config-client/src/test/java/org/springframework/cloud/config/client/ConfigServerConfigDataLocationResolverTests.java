@@ -143,6 +143,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 	@Test
 	void invalidApplicationNameThrowsException() {
 		this.environment.setProperty("spring.application.name", "application-service");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".fail-fast", "true");
 
 		assertThatThrownBy(this::testResolveProfileSpecific).isInstanceOf(InvalidApplicationNameException.class)
 			.extracting("value")
@@ -150,8 +151,21 @@ public class ConfigServerConfigDataLocationResolverTests {
 	}
 
 	@Test
+	void invalidApplicationNameWithFailFastDisabledDoesNotThrowException() {
+		this.environment.setProperty("spring.application.name", "application-service");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".fail-fast", "false");
+
+		when(context.getBootstrapContext()).thenReturn(mock(ConfigurableBootstrapContext.class));
+
+		assertThat(this.resolver.resolveProfileSpecific(this.context, ConfigDataLocation.of("configserver:"),
+				mock(Profiles.class)))
+			.isEmpty();
+	}
+
+	@Test
 	void invalidConfigNameThrowsException() {
 		this.environment.setProperty(ConfigClientProperties.PREFIX + ".name", "application-service");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".fail-fast", "true");
 
 		assertThatThrownBy(this::testResolveProfileSpecific).isInstanceOf(InvalidApplicationNameException.class)
 			.extracting("value")
@@ -161,6 +175,7 @@ public class ConfigServerConfigDataLocationResolverTests {
 	@Test
 	void invalidApplicationNameIsCaseInsensitive() {
 		this.environment.setProperty("spring.application.name", "Application-service");
+		this.environment.setProperty(ConfigClientProperties.PREFIX + ".fail-fast", "true");
 
 		assertThatThrownBy(this::testResolveProfileSpecific).isInstanceOf(InvalidApplicationNameException.class)
 			.extracting("value")

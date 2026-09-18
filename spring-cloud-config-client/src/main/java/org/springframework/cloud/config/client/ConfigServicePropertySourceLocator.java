@@ -110,7 +110,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 			properties.setProfile(String.join(",", combineProfiles(properties, environment)));
 		}
 
-		if (StringUtils.startsWithIgnoreCase(properties.getName(), "application-")) {
+		if (ConfigClientProperties.isInvalidApplicationName(properties.getName())) {
 			InvalidApplicationNameException exception = new InvalidApplicationNameException(properties.getName());
 			if (properties.isFailFast()) {
 				throw exception;

@@ -193,9 +193,6 @@ public class ConfigServerConfigDataLocationResolver
 			}
 			configClientProperties.setUri(uri);
 		}
-		if (StringUtils.startsWithIgnoreCase(configClientProperties.getName(), "application-")) {
-			throw new InvalidApplicationNameException(configClientProperties.getName());
-		}
 		return holder;
 	}
 
@@ -235,6 +232,17 @@ public class ConfigServerConfigDataLocationResolver
 		PropertyHolder propertyHolder = loadProperties(resolverContext, uris);
 		ConfigClientProperties properties = propertyHolder.properties;
 
+		if (ConfigClientProperties.isInvalidApplicationName(properties.getName())) {
+			InvalidApplicationNameException exception = new InvalidApplicationNameException(properties.getName());
+			if (properties.isFailFast()) {
+				throw exception;
+			}
+			else {
+				log.warn(ConfigClientProperties.NAME_PLACEHOLDER + " resolved to " + properties.getName()
+						+ ", not going to load remote properties. Ensure application name doesn't start with 'application-'");
+				return new ArrayList<>();
+			}
+		}
 		ConfigurableBootstrapContext bootstrapContext = resolverContext.getBootstrapContext();
 		bootstrapContext.register(ConfigClientProperties.class,
 				InstanceSupplier.of(properties).withScope(BootstrapRegistry.Scope.PROTOTYPE));
