@@ -80,6 +80,12 @@ The following table describes configurable Vault properties:
 |timeout
 |5
 
+|token
+|
+
+|authentication
+|
+
 |namespace
 |null
 
@@ -139,14 +145,22 @@ You should see a response similar to the following:
 }
 ----
 
-The default way for a client to provide the necessary authentication to let Config Server talk to Vault is to set the X-Config-Token header.
-However, you can instead omit the header and configure the authentication in the server, by setting the same configuration properties as Spring Cloud Vault.
-The property to set is `spring.cloud.config.server.vault.authentication`.
-It should be set to one of the supported authentication methods.
-You may also need to set other properties specific to the authentication method you use, by using the same property names as documented for `spring.cloud.vault` but instead using the `spring.cloud.config.server.vault` prefix.
-See the https://docs.spring.io/spring-cloud-vault/reference/{spring-cloud-version}/authentication.html[Spring Cloud Vault Reference Guide] for more detail.
+[[vault-authentication]]
+== Client and Server Authentication
 
-IMPORTANT: If you omit the X-Config-Token header and use a server property to set the authentication, the Config Server application needs an additional dependency on Spring Vault to enable the additional authentication options.
+There are two separate questions: how Config Server authenticates to Vault, and whether a Config Client must send a Vault token.
+
+* *Per-request client token (default).* If you do not set `spring.cloud.config.server.vault.authentication` or `spring.cloud.config.server.vault.token`, every request to Config Server must include `X-Config-Token`. Config clients set that with `spring.cloud.config.token`. That token is used only for that request and is not stored or renewed on the server.
+* *Server-side authentication.* Set `spring.cloud.config.server.vault.authentication` to a supported method (`TOKEN`, `APPROLE`, `KUBERNETES`, and the other values of `VaultEnvironmentProperties.AuthenticationMethod`) and the method-specific properties. You can then omit `X-Config-Token`. Property names match Spring Cloud Vault, but they bind under `spring.cloud.config.server.vault`, not `spring.cloud.vault`. See the https://docs.spring.io/spring-cloud-vault/reference/{spring-cloud-version}/authentication.html[Spring Cloud Vault Reference Guide] for the method-specific keys.
+
+This uses optional `spring-vault-core` (Spring Vault), not Spring Cloud Vault.
+When that library is on the classpath, Config Server auto-configures the Vault client from `spring.cloud.config.server.vault.*`.
+You do not need to declare Spring Vault `@Bean` definitions or copy authentication setup from the Spring Vault reference.
+
+When authentication is configured on the server (including a static `spring.cloud.config.server.vault.token`), Spring Vault keeps a session and renews the token if Vault marks it renewable.
+
+IMPORTANT: Non-token authentication methods need `spring-vault-core` on the Config Server classpath, as shown earlier in this page.
+Without it, Config Server falls back to requiring `X-Config-Token`.
 See the https://docs.spring.io/spring-vault/reference/introduction/dependencies.html[Spring Vault Reference Guide] for how to add that dependency.
 
 [[multiple-properties-sources]]
