@@ -32,6 +32,7 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.vault.VaultException;
 import org.springframework.vault.authentication.ClientAuthentication;
+import org.springframework.vault.authentication.LifecycleAwareSessionManager;
 import org.springframework.vault.authentication.SessionManager;
 import org.springframework.vault.client.RestTemplateBuilder;
 import org.springframework.vault.client.VaultClients;
@@ -120,7 +121,11 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 		if (vaultProperties.getAuthentication() == null && !StringUtils.hasText(vaultProperties.getToken())) {
 			return new StatelessSessionManager(clientAuthentication());
 		}
-		return super.sessionManager();
+		// We don't call super.sessionManager() here because it resolves the VaultClient
+		// from the BeanFactory. This configuration is also instantiated programmatically
+		// by SpringVaultTemplateBuilder, where no VaultClient bean is registered.
+		return new LifecycleAwareSessionManager(clientAuthentication(), getVaultThreadPoolTaskScheduler(),
+				vaultClient());
 	}
 
 	@Override
