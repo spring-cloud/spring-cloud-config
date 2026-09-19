@@ -132,14 +132,17 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					log(result);
 
 					// result.getPropertySources() can be null if using xml
+					Map<PropertySource<?>, String> propertySourceProfiles = new HashMap<>();
 					if (result.getPropertySources() != null) {
 						for (org.springframework.cloud.config.environment.PropertySource source : result
 							.getPropertySources()) {
 							@SuppressWarnings("unchecked")
 							Map<String, Object> map = translateOrigins(source.getName(),
 									(Map<String, Object>) source.getSource());
-							propertySources.add(0,
-									new OriginTrackedMapPropertySource("configserver:" + source.getName(), map, true));
+							OriginTrackedMapPropertySource propertySource = new OriginTrackedMapPropertySource(
+									"configserver:" + source.getName(), map, true);
+							propertySources.add(0, propertySource);
+							propertySourceProfiles.put(propertySource, source.getProfile());
 						}
 					}
 
@@ -165,31 +168,37 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 						// boot 2.4.5+
 						return new ConfigData(propertySources, propertySource -> {
 							String propertySourceName = propertySource.getName();
+							String profile = propertySourceProfiles.get(propertySource);
 							List<Option> options = new ArrayList<>();
 							options.add(Option.IGNORE_IMPORTS);
-							// TODO: the profile is now available on the backend
-							// in a future minor, add the profile associated with a
-							// PropertySource see
-							// https://github.com/spring-cloud/spring-cloud-config/issues/1874
-							for (String profile : resource.getAcceptedProfiles()) {
-								// TODO: switch to match
-								// , is used as a profile-separator for property sources
-								// from vault
-								// - is the default profile-separator for property sources
-								// TODO This is error prone logic see
-								// https://github.com/spring-cloud/spring-cloud-config/issues/2291
-								// When we see the overrides property source name we
-								// should always prioritize those
-								// properties over everything else, even profile specific
-								// property sources so also
-								// label this property source profile specific.
-								if (OVERRIDES_NAME.equals(propertySourceName) || (!DEFAULT_PROFILE.equals(profile)
-										&& propertySourceName.matches(".*[-,]" + profile + "\\b.*"))) {
-									// // TODO: switch to Options.with() when implemented
-									options.add(Option.PROFILE_SPECIFIC);
-									options.add(Option.IGNORE_PROFILES);
+
+							if (OVERRIDES_NAME.equals(propertySourceName)) {
+								options.add(Option.PROFILE_SPECIFIC);
+								options.add(Option.IGNORE_PROFILES);
+							}
+							else if (profile != null) {
+								for (String acceptedProfile : resource.getAcceptedProfiles()) {
+									if (!DEFAULT_PROFILE.equals(profile) && profile.equals(acceptedProfile)) {
+										options.add(Option.PROFILE_SPECIFIC);
+										options.add(Option.IGNORE_PROFILES);
+										break;
+									}
 								}
 							}
+							else {
+								// Backward compatibility with Config Server versions that
+								// do not
+								// provide profile metadata.
+								for (String acceptedProfile : resource.getAcceptedProfiles()) {
+									if (!DEFAULT_PROFILE.equals(acceptedProfile)
+											&& propertySourceName.matches(".*[-,]" + acceptedProfile + "\\b.*")) {
+										options.add(Option.PROFILE_SPECIFIC);
+										options.add(Option.IGNORE_PROFILES);
+										break;
+									}
+								}
+							}
+
 							return ConfigData.Options.of(options.toArray(new Option[0]));
 						});
 					}
