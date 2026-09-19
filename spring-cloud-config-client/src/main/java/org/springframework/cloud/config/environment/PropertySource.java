@@ -35,19 +35,34 @@ public class PropertySource {
 
 	private Map<?, ?> source;
 
+	private String profile;
+
 	private org.springframework.core.env.PropertySource<?> originalPropertySource;
 
 	@JsonCreator
-	public PropertySource(@JsonProperty("name") String name, @JsonProperty("source") Map<?, ?> source) {
+	public PropertySource(@JsonProperty("name") String name, @JsonProperty("source") Map<?, ?> source,
+			@JsonProperty("profile") String profile) {
 		this.name = name;
 		this.source = source;
+		this.profile = profile;
+	}
+
+	public PropertySource(String name, Map<?, ?> source) {
+		this(name, source, (String) null);
 	}
 
 	@JsonIgnore
 	public PropertySource(String name, Map<?, ?> source,
 			org.springframework.core.env.PropertySource<?> originalPropertySource) {
+		this(name, source, null, originalPropertySource);
+	}
+
+	@JsonIgnore
+	public PropertySource(String name, Map<?, ?> source, String profile,
+			org.springframework.core.env.PropertySource<?> originalPropertySource) {
 		this.name = name;
 		this.source = source;
+		this.profile = profile;
 		this.originalPropertySource = originalPropertySource;
 	}
 
@@ -57,6 +72,10 @@ public class PropertySource {
 
 	public Map<?, ?> getSource() {
 		return this.source;
+	}
+
+	public String getProfile() {
+		return this.profile;
 	}
 
 	@JsonIgnore

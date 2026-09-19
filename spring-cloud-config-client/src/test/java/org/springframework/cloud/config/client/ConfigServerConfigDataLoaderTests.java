@@ -619,6 +619,37 @@ public class ConfigServerConfigDataLoaderTests {
 	}
 
 	@Test
+	void testProfileSpecificPropertySourceWithExplicitProfile() {
+		PropertySource profileSpecific = new PropertySource("some-unrelated-name",
+				Collections.singletonMap("foo", "bar"), "dev");
+		PropertySource nonProfileSpecific = new PropertySource("application.properties",
+				Collections.singletonMap("foo", "bar"));
+
+		ConfigData configData = setupConfigServerConfigDataLoader(Arrays.asList(profileSpecific, nonProfileSpecific),
+				"application", "dev");
+
+		assertThat(configData.getPropertySources()).hasSize(3);
+
+		ConfigData.Options profileSpecificOptions = configData.getOptions(configData.getPropertySources()
+			.stream()
+			.filter(propertySource -> propertySource.getName().equals("configserver:some-unrelated-name"))
+			.findFirst()
+			.orElseThrow());
+
+		assertThat(profileSpecificOptions.contains(ConfigData.Option.PROFILE_SPECIFIC)).isTrue();
+		assertThat(profileSpecificOptions.contains(ConfigData.Option.IGNORE_PROFILES)).isTrue();
+
+		ConfigData.Options nonProfileSpecificOptions = configData.getOptions(configData.getPropertySources()
+			.stream()
+			.filter(propertySource -> propertySource.getName().equals("configserver:application.properties"))
+			.findFirst()
+			.orElseThrow());
+
+		assertThat(nonProfileSpecificOptions.contains(ConfigData.Option.PROFILE_SPECIFIC)).isFalse();
+		assertThat(nonProfileSpecificOptions.contains(ConfigData.Option.IGNORE_PROFILES)).isFalse();
+	}
+
+	@Test
 	void testProfileSpecificPropertySourcesWithDefaultProfile() {
 		PropertySource p1 = new PropertySource("overrides", Collections.singletonMap("foo", "bar"));
 		PropertySource p2 = new PropertySource("classpath:/test-default/config-client/application.yaml",

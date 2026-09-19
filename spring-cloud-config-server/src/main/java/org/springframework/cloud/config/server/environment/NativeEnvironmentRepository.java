@@ -285,6 +285,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				continue;
 			}
 			String[] locations = null;
+			String profile = null;
 
 			PropertySourceConfigData configData = propertySourceToConfigData.get(source.getOriginalPropertySource());
 			// try and get information directly from ConfigData
@@ -292,6 +293,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 				StandardConfigDataResource configDataResource = (StandardConfigDataResource) configData.resource;
 				// use StandardConfigDataResource as that format is expected still
 				name = configDataResource.toString();
+				profile = configDataResource.getProfile();
 				locations = configDataLocations(configData.location.split());
 			}
 			else {
@@ -302,9 +304,10 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 					locations = new String[] { matcher.group(2) };
 				}
 			}
+
 			name = name.replace("\\", "/"); // change windows path '\' into '/'
 			name = name.replaceAll("\\[(?=\\w:)", "[/"); // change [D:/path] into
-															// [/D:/path]
+			// [/D:/path]
 			name = name.replace("applicationConfig: [", "");
 			name = name.replace("file [", "file:");
 			name = name.replace("class path resource [", "classpath:/");
@@ -325,11 +328,12 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			logger.info("Adding property source: " + originalName);
 			if (originalName.contains("document #")) {
 				// this is a multi-document file, use originalName for uniqueness.
-				result.add(new PropertySource(originalName, source.getSource()));
+				result.add(new PropertySource(originalName, source.getSource(), profile,
+						source.getOriginalPropertySource()));
 			}
 			else {
 				// many other file tests rely on the mangled name
-				result.add(new PropertySource(name, source.getSource()));
+				result.add(new PropertySource(name, source.getSource(), profile, source.getOriginalPropertySource()));
 			}
 		}
 		return result;
