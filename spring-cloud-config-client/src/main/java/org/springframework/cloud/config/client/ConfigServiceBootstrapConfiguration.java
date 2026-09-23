@@ -16,24 +16,28 @@
 
 package org.springframework.cloud.config.client;
 
-import org.aspectj.lang.annotation.Aspect;
+import java.lang.reflect.Method;
+import java.lang.reflect.UndeclaredThrowableException;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.apache.commons.logging.LogFactory;
+
+import org.springframework.aop.Advisor;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Role;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.retry.annotation.EnableRetry;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.backoff.ExponentialRandomBackOffPolicy;
-import org.springframework.retry.interceptor.RetryInterceptorBuilder;
-import org.springframework.retry.interceptor.RetryOperationsInterceptor;
+import org.springframework.core.retry.RetryTemplate;
 
 /**
  * @author Dave Syer
@@ -62,25 +66,54 @@ public class ConfigServiceBootstrapConfiguration {
 	}
 
 	@ConditionalOnProperty(ConfigClientProperties.PREFIX + ".fail-fast")
-	@ConditionalOnClass({ Retryable.class, Aspect.class, AopAutoConfiguration.class })
+	@ConditionalOnProperty(name = RetryProperties.PREFIX + ".enabled", matchIfMissing = true)
 	@Configuration(proxyBeanMethods = false)
-	@EnableRetry(proxyTargetClass = true)
 	@Import(AopAutoConfiguration.class)
 	@EnableConfigurationProperties(RetryProperties.class)
 	protected static class RetryConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(name = "configServerRetryInterceptor")
-		public RetryOperationsInterceptor configServerRetryInterceptor(RetryProperties properties) {
-			ExponentialBackOffPolicy policy = properties.isUseRandomPolicy() ? new ExponentialRandomBackOffPolicy()
-					: new ExponentialBackOffPolicy();
-			policy.setInitialInterval(properties.getInitialInterval());
-			policy.setMultiplier(properties.getMultiplier());
-			policy.setMaxInterval(properties.getMaxInterval());
-			return RetryInterceptorBuilder.stateless()
-				.backOffPolicy(policy)
-				.maxAttempts(properties.getMaxAttempts())
-				.build();
+		public MethodInterceptor configServerRetryInterceptor(RetryProperties properties) {
+			RetryTemplate retryTemplate = RetryTemplateFactory.create(properties,
+					LogFactory.getLog(ConfigServiceBootstrapConfiguration.class));
+			return invocation -> retryTemplate.invoke(() -> {
+				try {
+					return invocation.proceed();
+				}
+				catch (RuntimeException | Error ex) {
+					throw ex;
+				}
+				catch (Throwable ex) {
+					throw new UndeclaredThrowableException(ex);
+				}
+			});
+		}
+
+		@Bean
+		@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+		public Advisor configServerRetryAdvisor(
+				@Qualifier("configServerRetryInterceptor") MethodInterceptor configServerRetryInterceptor) {
+			return new DefaultPointcutAdvisor(new ConfigServerRetryPointcut(), configServerRetryInterceptor);
+		}
+
+	}
+
+	/**
+	 * Matches the operations that used to carry Spring Retry's
+	 * {@code @Retryable(interceptor = "configServerRetryInterceptor")}.
+	 */
+	static class ConfigServerRetryPointcut extends StaticMethodMatcherPointcut {
+
+		@Override
+		public boolean matches(Method method, Class<?> targetClass) {
+			if (ConfigServicePropertySourceLocator.class.isAssignableFrom(targetClass)) {
+				return "locate".equals(method.getName()) || "locateCollection".equals(method.getName());
+			}
+			if (ConfigServerInstanceProvider.class.isAssignableFrom(targetClass)) {
+				return "getConfigServerInstances".equals(method.getName());
+			}
+			return false;
 		}
 
 	}

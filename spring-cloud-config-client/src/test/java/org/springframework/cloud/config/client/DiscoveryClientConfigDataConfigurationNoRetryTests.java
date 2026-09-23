@@ -36,7 +36,6 @@ import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
-import org.springframework.cloud.test.ClassPathExclusions;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +53,6 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.Dis
 /**
  * @author Dave Syer
  */
-@ClassPathExclusions({ "spring-retry-*.jar", "spring-boot-starter-aop-*.jar" })
 public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 
 	protected ConfigurableApplicationContext context;
@@ -147,6 +145,7 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 			set.addAll(Arrays.asList(env));
 		}
 		set.add("spring.cloud.config.discovery.enabled=true");
+		set.add("spring.cloud.config.retry.enabled=false");
 		set.add("spring.config.import=optional:configserver:");
 		return set.toArray(new String[0]);
 	}

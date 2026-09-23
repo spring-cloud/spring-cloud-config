@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.client;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
 
 /**
  * @author Dave Syer
@@ -29,6 +30,12 @@ public class RetryProperties {
 	 * ConfigurationProperties prefix.
 	 */
 	public static final String PREFIX = "spring.cloud.config.retry";
+
+	/**
+	 * Whether to retry failed requests to the Config Server. Only has an effect when
+	 * spring.cloud.config.fail-fast is enabled.
+	 */
+	boolean enabled = true;
 
 	/**
 	 * Initial retry interval in milliseconds.
@@ -53,7 +60,16 @@ public class RetryProperties {
 	/**
 	 * Use a random exponential backoff policy.
 	 */
+	@Deprecated(since = "5.1.0", forRemoval = true)
 	boolean useRandomPolicy = false;
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 
 	public long getInitialInterval() {
 		return this.initialInterval;
@@ -87,10 +103,22 @@ public class RetryProperties {
 		this.maxAttempts = maxAttempts;
 	}
 
+	/**
+	 * @return whether a random exponential backoff policy is used.
+	 * @deprecated since 5.1.0 in favor of the deterministic exponential backoff.
+	 */
+	@Deprecated(since = "5.1.0", forRemoval = true)
+	@DeprecatedConfigurationProperty(since = "5.1.0",
+			reason = "Randomized backoff will be removed in favor of the deterministic exponential backoff.")
 	public boolean isUseRandomPolicy() {
 		return this.useRandomPolicy;
 	}
 
+	/**
+	 * @param useRandomPolicy whether to use a random exponential backoff policy.
+	 * @deprecated since 5.1.0 in favor of the deterministic exponential backoff.
+	 */
+	@Deprecated(since = "5.1.0", forRemoval = true)
 	public void setUseRandomPolicy(boolean useRandomPolicy) {
 		this.useRandomPolicy = useRandomPolicy;
 	}

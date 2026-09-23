@@ -186,6 +186,8 @@ public class ConfigServerConfigDataLocationResolverTests {
 	void retryPropertiesShouldBeDefaultByDefault() {
 		ConfigServerConfigDataResource resource = testResolveProfileSpecific();
 		RetryProperties defaultRetry = new RetryProperties();
+		assertThat(defaultRetry.isEnabled()).isTrue();
+		assertThat(resource.getRetryProperties().isEnabled()).isEqualTo(defaultRetry.isEnabled());
 		assertThat(resource.getRetryProperties().getMaxAttempts()).isEqualTo(defaultRetry.getMaxAttempts());
 		assertThat(resource.getRetryProperties().getMaxInterval()).isEqualTo(defaultRetry.getMaxInterval());
 		assertThat(resource.getRetryProperties().getInitialInterval()).isEqualTo(defaultRetry.getInitialInterval());

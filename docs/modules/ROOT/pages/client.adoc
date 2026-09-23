@@ -90,17 +90,19 @@ NOTE: To get similar functionality using `spring.config.import`, simply omit the
 
 If you expect that the config server may occasionally be unavailable when your application starts, you can make it keep trying after a failure.
 First, you need to set `spring.cloud.config.fail-fast=true`.
-Then you need to add `spring-retry` and `spring-boot-starter-aop` to your classpath.
+Retry is built on the retry support of Spring Framework, so no extra dependency is required.
 The default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs.
+`max-attempts` counts the initial invocation, so the default of `6` means one invocation followed by at most five retries.
 You can configure these properties (and others) by setting the `spring.cloud.config.retry.*` configuration properties.
-To use a random exponential backoff policy set `spring.cloud.config.retry.useRandomPolicy` to `true`.
+To turn retry off while keeping `fail-fast` enabled, set `spring.cloud.config.retry.enabled=false`; the client then contacts the config server exactly once.
 
-NOTE:  When `spring.cloud.config.retry.useRandomPolicy` is `true` the `max-attempts`, `initial-interval`, `max-interval`, and `multiplier` properties will
-still have an effect even when using a random exponential backoff policy.  The details on how they are used can be found in the
-`ExponentialRandomBackOffPolicy` and `ExponentialBackOffPolicy` in https://github.com/spring-projects/spring-retry[Spring Retry].
+NOTE: `spring.cloud.config.retry.useRandomPolicy` is deprecated and will be removed in a future release.
+While it is `true`, the backoff interval is randomized upwards, into the range from the interval the deterministic
+exponential backoff would have used up to that interval multiplied by `multiplier`, capped at `max-interval`.
+The `max-attempts`, `initial-interval`, `max-interval`, and `multiplier` properties still have an effect.
 
-TIP: To take full control of the retry behavior and are using legacy bootstrap, add a `@Bean` of type `RetryOperationsInterceptor` with an ID of `configServerRetryInterceptor`.
-Spring Retry has a `RetryInterceptorBuilder` that supports creating one.
+TIP: To take full control of the retry behavior and are using legacy bootstrap, add a `@Bean` of type `MethodInterceptor` with an ID of `configServerRetryInterceptor`.
+Prior to Spring Cloud Config 5.1 that bean had to be a Spring Retry `RetryOperationsInterceptor`; the bean name is unchanged.
 
 [[config-client-retry-with-spring-config-import]]
 == Config Client Retry with spring.config.import

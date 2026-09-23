@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.retry.annotation.Retryable;
 
 /**
  * Fetches config server instances.
@@ -55,7 +54,6 @@ public class ConfigServerInstanceProvider {
 		this.log = log;
 	}
 
-	@Retryable(interceptor = "configServerRetryInterceptor")
 	public List<ServiceInstance> getConfigServerInstances(String serviceId) {
 		if (log.isDebugEnabled()) {
 			log.debug("Locating configserver (" + serviceId + ") via discovery");
