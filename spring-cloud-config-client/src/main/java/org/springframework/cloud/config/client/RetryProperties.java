@@ -51,8 +51,17 @@ public class RetryProperties {
 	int maxAttempts = 6;
 
 	/**
-	 * Use a random exponential backoff policy.
+	 * Whether retry is enabled. Retry only applies when fail-fast is also enabled.
 	 */
+	boolean enabled = true;
+
+	/**
+	 * Use a random exponential backoff policy.
+	 * @deprecated since the move to Spring Framework's retry support, which applies
+	 * jitter symmetrically around the interval rather than randomising upwards from it.
+	 * The interval spread is approximated, but the distribution is not identical.
+	 */
+	@Deprecated(since = "5.0.6", forRemoval = true)
 	boolean useRandomPolicy = false;
 
 	public long getInitialInterval() {
@@ -87,10 +96,20 @@ public class RetryProperties {
 		this.maxAttempts = maxAttempts;
 	}
 
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	@Deprecated(since = "5.0.6", forRemoval = true)
 	public boolean isUseRandomPolicy() {
 		return this.useRandomPolicy;
 	}
 
+	@Deprecated(since = "5.0.6", forRemoval = true)
 	public void setUseRandomPolicy(boolean useRandomPolicy) {
 		this.useRandomPolicy = useRandomPolicy;
 	}

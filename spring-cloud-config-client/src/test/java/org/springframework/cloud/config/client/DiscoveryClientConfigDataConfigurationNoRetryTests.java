@@ -77,7 +77,7 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 		when(function.apply(anyString(), any(Binder.class), any(BindHandler.class), any(Log.class)))
 			.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
 		assertThatThrownBy(() -> context = setup(true, function, "spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.fail-fast=true")
+				"spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=false")
 			.run()).isInstanceOf(IllegalStateException.class)
 			.hasMessageContaining("No instances found of configserver");
 		verify(function).apply(eq(DEFAULT_CONFIG_SERVER), any(Binder.class), any(BindHandler.class), any(Log.class));
@@ -108,7 +108,7 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 		when(function.apply(eq(DEFAULT_CONFIG_SERVER), any(Binder.class), any(BindHandler.class), any(Log.class)))
 			.thenAnswer(invocation -> client.getInstances(invocation.getArgument(0)));
 		context = setup(true, function, "spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.fail-fast=true")
+				"spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=false")
 			.run();
 
 		// expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();

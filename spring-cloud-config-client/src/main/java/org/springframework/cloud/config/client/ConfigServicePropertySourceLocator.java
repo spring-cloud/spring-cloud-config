@@ -50,7 +50,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
@@ -102,7 +101,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 	@Override
-	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		if (!StringUtils.hasText(properties.getProfile())) {
@@ -175,7 +173,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 	@Override
-	@Retryable(interceptor = "configServerRetryInterceptor")
 	public Collection<org.springframework.core.env.PropertySource<?>> locateCollection(
 			org.springframework.core.env.Environment environment) {
 		return PropertySourceLocator.locateCollection(this, environment);

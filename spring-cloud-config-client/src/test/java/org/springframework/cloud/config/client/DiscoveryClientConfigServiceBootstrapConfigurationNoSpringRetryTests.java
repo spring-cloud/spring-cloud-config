@@ -30,7 +30,8 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTest
 	public void shouldFailWithExceptionGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		org.assertj.core.api.Assertions.assertThatThrownBy(() -> {
 			givenDiscoveryClientReturnsNoInfo();
-			setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true");
+			setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true",
+					"spring.cloud.config.retry.enabled=false");
 		})
 			.isInstanceOf(IllegalStateException.class)
 			.hasMessageContaining("No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
@@ -51,7 +52,8 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTest
 	public void shouldSucceedGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsInfo();
 
-		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true");
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true",
+				"spring.cloud.config.retry.enabled=false");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasConfigurationFromEureka();

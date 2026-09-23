@@ -16,11 +16,14 @@
 
 package org.springframework.cloud.config.client;
 
-import org.aspectj.lang.annotation.Aspect;
+import java.lang.reflect.Method;
+import java.time.Duration;
 
+import org.springframework.aop.Advisor;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -28,12 +31,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.retry.annotation.EnableRetry;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.backoff.ExponentialRandomBackOffPolicy;
-import org.springframework.retry.interceptor.RetryInterceptorBuilder;
-import org.springframework.retry.interceptor.RetryOperationsInterceptor;
+import org.springframework.resilience.retry.MethodRetrySpec;
+import org.springframework.resilience.retry.SimpleRetryInterceptor;
 
 /**
  * @author Dave Syer
@@ -62,25 +61,41 @@ public class ConfigServiceBootstrapConfiguration {
 	}
 
 	@ConditionalOnProperty(ConfigClientProperties.PREFIX + ".fail-fast")
-	@ConditionalOnClass({ Retryable.class, Aspect.class, AopAutoConfiguration.class })
+	@ConditionalOnProperty(value = RetryProperties.PREFIX + ".enabled", matchIfMissing = true)
 	@Configuration(proxyBeanMethods = false)
-	@EnableRetry(proxyTargetClass = true)
 	@Import(AopAutoConfiguration.class)
 	@EnableConfigurationProperties(RetryProperties.class)
 	protected static class RetryConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(name = "configServerRetryInterceptor")
-		public RetryOperationsInterceptor configServerRetryInterceptor(RetryProperties properties) {
-			ExponentialBackOffPolicy policy = properties.isUseRandomPolicy() ? new ExponentialRandomBackOffPolicy()
-					: new ExponentialBackOffPolicy();
-			policy.setInitialInterval(properties.getInitialInterval());
-			policy.setMultiplier(properties.getMultiplier());
-			policy.setMaxInterval(properties.getMaxInterval());
-			return RetryInterceptorBuilder.stateless()
-				.backOffPolicy(policy)
-				.maxAttempts(properties.getMaxAttempts())
-				.build();
+		public SimpleRetryInterceptor configServerRetryInterceptor(RetryProperties properties) {
+			MethodRetrySpec spec = new MethodRetrySpec((method, throwable) -> true,
+					// 'maxAttempts' counts the initial call, 'maxRetries' does not
+					properties.getMaxAttempts() - 1, Duration.ofMillis(properties.getInitialInterval()),
+					RetryTemplateFactory.jitter(properties), properties.getMultiplier(),
+					Duration.ofMillis(properties.getMaxInterval()));
+			return new SimpleRetryInterceptor(spec);
+		}
+
+		/**
+		 * Applies the retry interceptor to the methods that used to carry
+		 * {@code @Retryable(interceptor = "configServerRetryInterceptor")}.
+		 */
+		@Bean
+		@ConditionalOnMissingBean(name = "configServerRetryAdvisor")
+		public Advisor configServerRetryAdvisor(SimpleRetryInterceptor configServerRetryInterceptor) {
+			StaticMethodMatcherPointcut pointcut = new StaticMethodMatcherPointcut() {
+				@Override
+				public boolean matches(Method method, Class<?> targetClass) {
+					if (ConfigServicePropertySourceLocator.class.isAssignableFrom(targetClass)) {
+						return method.getName().startsWith("locate");
+					}
+					return ConfigServerInstanceProvider.class.isAssignableFrom(targetClass)
+							&& "getConfigServerInstances".equals(method.getName());
+				}
+			};
+			return new DefaultPointcutAdvisor(pointcut, configServerRetryInterceptor);
 		}
 
 	}

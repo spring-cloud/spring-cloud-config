@@ -45,7 +45,7 @@ import org.springframework.cloud.config.client.validation.ApplicationNameValidat
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.core.retry.RetryTemplate;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -277,14 +277,14 @@ public class ConfigServerConfigDataLocationResolver
 					.get(ConfigServerInstanceProvider.Function.class);
 
 				ConfigServerInstanceProvider instanceProvider;
-				if (ConfigClientRetryBootstrapper.RETRY_IS_PRESENT && retryEnabled) {
+				if (retryEnabled && propertyHolder.retryProperties.isEnabled()) {
 					log.debug(LogMessage.format("discovery plus retry enabled"));
 					RetryTemplate retryTemplate = RetryTemplateFactory.create(propertyHolder.retryProperties, log);
 					instanceProvider = new ConfigServerInstanceProvider(function, resolverContext.getBinder(),
 							getBindHandler(resolverContext)) {
 						@Override
 						public List<ServiceInstance> getConfigServerInstances(String serviceId) {
-							return retryTemplate.execute(retryContext -> super.getConfigServerInstances(serviceId));
+							return retryTemplate.invoke(() -> super.getConfigServerInstances(serviceId));
 						}
 					};
 				}
