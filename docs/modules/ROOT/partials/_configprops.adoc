@@ -19,6 +19,7 @@
 |spring.cloud.config.profile | `+++default+++` | The default profile to use when fetching remote configuration (comma-separated). Default is "default".
 |spring.cloud.config.request-connect-timeout |  | timeout on waiting to connect to the Config Server.
 |spring.cloud.config.request-read-timeout |  | timeout on waiting to read data from the Config Server.
+|spring.cloud.config.retry.enabled | `+++true+++` | Whether to retry failed requests to the Config Server. Only has an effect when spring.cloud.config.fail-fast is enabled.
 |spring.cloud.config.retry.initial-interval | `+++1000+++` | Initial retry interval in milliseconds.
 |spring.cloud.config.retry.max-attempts | `+++6+++` | Maximum number of attempts.
 |spring.cloud.config.retry.max-interval | `+++2000+++` | Maximum interval for backoff.

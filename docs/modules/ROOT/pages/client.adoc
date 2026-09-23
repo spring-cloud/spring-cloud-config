@@ -116,6 +116,12 @@ spring.config.import=configserver:http://configserver.example.com?fail-fast=true
 ----
 
 This sets `spring.cloud.config.fail-fast=true` (notice the missing prefix above) and all the available `spring.cloud.config.retry.*` configuration properties.
+To turn retry off for such an import while keeping `fail-fast` enabled, add `enabled=false`, which sets `spring.cloud.config.retry.enabled=false`:
+
+[source,properties]
+----
+spring.config.import=configserver:http://configserver.example.com?fail-fast=true&enabled=false
+----
 
 [[locating-remote-configuration-resources]]
 == Locating Remote Configuration Resources

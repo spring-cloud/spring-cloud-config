@@ -18,6 +18,7 @@ package org.springframework.cloud.config.client;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,8 @@ import org.mockito.ArgumentCaptor;
 
 import org.springframework.boot.bootstrap.BootstrapRegistry;
 import org.springframework.boot.bootstrap.ConfigurableBootstrapContext;
+import org.springframework.boot.bootstrap.DefaultBootstrapContext;
+import org.springframework.boot.context.config.ConfigDataLoaderContext;
 import org.springframework.boot.context.config.ConfigDataLocation;
 import org.springframework.boot.context.config.ConfigDataLocationResolverContext;
 import org.springframework.boot.context.config.Profiles;
@@ -34,6 +37,8 @@ import org.springframework.boot.logging.DeferredLog;
 import org.springframework.cloud.bootstrap.TextEncryptorBindHandler;
 import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
 import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
+import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoadContext;
+import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoaderInterceptor;
 import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.mock.env.MockEnvironment;
@@ -214,6 +219,28 @@ public class ConfigServerConfigDataLocationResolverTests {
 		assertThat(resource.getRetryProperties().getInitialInterval()).isEqualTo(1100);
 		assertThat(resource.getRetryProperties().getMultiplier()).isEqualTo(1.2);
 		assertThat(resource.getRetryProperties().isUseRandomPolicy()).isEqualTo(false);
+	}
+
+	@Test
+	void uriWithEnabledParamDisablesRetry() {
+		String locationUri = "http://actualuri";
+		ConfigServerConfigDataResource resource = testUri("http://shouldbeoverridden",
+				locationUri + "?fail-fast=true&enabled=false&max-attempts=3&initial-interval=10");
+		assertThat(resource.getProperties().isFailFast()).isTrue();
+		assertThat(resource.getRetryProperties().isEnabled()).isFalse();
+
+		DefaultBootstrapContext bootstrapContext = new DefaultBootstrapContext();
+		new ConfigClientRetryBootstrapper().initialize(bootstrapContext);
+		LoaderInterceptor interceptor = bootstrapContext.get(LoaderInterceptor.class);
+		AtomicInteger invocations = new AtomicInteger();
+
+		assertThatThrownBy(() -> interceptor.apply(new LoadContext(mock(ConfigDataLoaderContext.class), resource,
+				this.environmentBinder, (loaderContext, loaderResource) -> {
+					invocations.incrementAndGet();
+					throw new ConfigClientFailFastException("fail fast", null);
+				})))
+			.isInstanceOf(ConfigClientFailFastException.class);
+		assertThat(invocations).hasValue(1);
 	}
 
 	@Test

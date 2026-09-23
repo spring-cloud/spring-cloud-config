@@ -35,6 +35,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ProxyType;
+import org.springframework.context.annotation.Proxyable;
 import org.springframework.context.annotation.Role;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.retry.RetryTemplate;
@@ -61,6 +63,7 @@ public class ConfigServiceBootstrapConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(ConfigServicePropertySourceLocator.class)
 	@ConditionalOnProperty(name = ConfigClientProperties.PREFIX + ".enabled", matchIfMissing = true)
+	@Proxyable(ProxyType.TARGET_CLASS)
 	public ConfigServicePropertySourceLocator configServicePropertySource(ConfigClientProperties properties) {
 		return new ConfigServicePropertySourceLocator(properties);
 	}
