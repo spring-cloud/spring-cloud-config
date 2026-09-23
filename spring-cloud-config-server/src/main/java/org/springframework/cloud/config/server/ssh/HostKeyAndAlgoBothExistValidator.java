@@ -61,7 +61,7 @@ public class HostKeyAndAlgoBothExistValidator
 			.extractRepoProperties(sshUriProperties);
 
 		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
-			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
+			if (extractedProperty.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
 				validationResults.add(isAlgorithmSpecifiedWhenHostKeySet(extractedProperty, context)
 						&& isHostKeySpecifiedWhenAlgorithmSet(extractedProperty, context));
 			}

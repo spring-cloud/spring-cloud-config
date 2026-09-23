@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.config.server.ssh;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import jakarta.validation.ConstraintViolation;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -76,8 +79,9 @@ public class SshPropertyValidatorTest {
 
 	@BeforeAll
 	public static void setUpValidator() {
-		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-		validator = factory.getValidator();
+		try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+			validator = factory.getValidator();
+		}
 	}
 
 	@Test
@@ -203,6 +207,65 @@ public class SshPropertyValidatorTest {
 
 		sshUriProperties.setPreferredAuthentications(",,");
 		assertThat(validator.validate(sshUriProperties)).hasSize(1);
+	}
+
+	@Test
+	public void subRepoWithAlgoButMissingHostKeyFailsEvenWhenParentIgnoreLocalSshSettingsIsFalse() {
+		// Parent keeps the default file-based SSH settings
+		MultipleJGitEnvironmentProperties parent = new MultipleJGitEnvironmentProperties();
+		parent.setUri("https://default-repo.example.com/default.git");
+		parent.setIgnoreLocalSshSettings(false);
+
+		// the "team-x" sub-repo opts into property-based SSH and sets a
+		// hostKeyAlgorithm without a matching hostKey.
+		PatternMatchingJGitEnvironmentProperties teamX = new PatternMatchingJGitEnvironmentProperties();
+		teamX.setUri(SSH_URI);
+		teamX.setIgnoreLocalSshSettings(true);
+		teamX.setPrivateKey(VALID_PRIVATE_KEY);
+		teamX.setHostKeyAlgorithm("ssh-ed25519");
+
+		Map<String, PatternMatchingJGitEnvironmentProperties> repos = new LinkedHashMap<>();
+		repos.put("team-x", teamX);
+		parent.setRepos(repos);
+
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(parent);
+
+		// This should fail validation: team-x has hostKeyAlgorithm set but no hostKey,
+		// which means STRICT_HOST_KEY_CHECKING will be forced to "no" at fetch time
+		assertThat(constraintViolations)
+			.as("sub-repo 'team-x' has ignoreLocalSshSettings=true and hostKeyAlgorithm set without a hostKey, "
+					+ "which should be rejected at startup regardless of the parent's ignoreLocalSshSettings value")
+			.hasSize(1);
+	}
+
+	@Test
+	public void subRepoWithUnsupportedAlgoFailsEvenWhenParentIgnoreLocalSshSettingsIsFalse() {
+		// Parent keeps the default file-based SSH settings
+		MultipleJGitEnvironmentProperties parent = new MultipleJGitEnvironmentProperties();
+		parent.setUri("https://default-repo.example.com/default.git");
+		parent.setIgnoreLocalSshSettings(false);
+
+		// but the "team-x" sub-repo opts into property-based SSH and sets an
+		// unsupported hostKeyAlgorithm.
+		PatternMatchingJGitEnvironmentProperties teamX = new PatternMatchingJGitEnvironmentProperties();
+		teamX.setUri(SSH_URI);
+		teamX.setIgnoreLocalSshSettings(true);
+		teamX.setPrivateKey(VALID_PRIVATE_KEY);
+		teamX.setHostKey("some_host_key");
+		teamX.setHostKeyAlgorithm("unsupported");
+
+		Map<String, PatternMatchingJGitEnvironmentProperties> repos = new LinkedHashMap<>();
+		repos.put("team-x", teamX);
+		parent.setRepos(repos);
+
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(parent);
+
+		// HostKeyAlgoSupportedValidator must reject team-x's unsupported algorithm
+		// regardless of the parent's ignoreLocalSshSettings value.
+		assertThat(constraintViolations)
+			.as("sub-repo 'team-x' has an unsupported hostKeyAlgorithm, which should be rejected at startup "
+					+ "regardless of the parent's ignoreLocalSshSettings value")
+			.hasSize(1);
 	}
 
 	@Test
