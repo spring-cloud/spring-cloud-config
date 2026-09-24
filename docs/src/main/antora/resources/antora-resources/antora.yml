@@ -19,3 +19,4 @@ asciidoc:
     project-version: @project.version@
     project-name: @docs.main@
     special-string: _
+    spring-cloud-aws-version: @spring-cloud-aws.version@
