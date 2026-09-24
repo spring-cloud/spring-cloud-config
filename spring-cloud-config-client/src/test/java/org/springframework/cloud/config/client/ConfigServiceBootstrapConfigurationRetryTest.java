@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -23,6 +24,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.aop.Advisor;
+import org.springframework.aop.support.StaticMethodMatcherPointcutAdvisor;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -112,6 +115,40 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 		assertThat(this.invocations).hasValue(1);
 	}
 
+	@Test
+	public void acceptsInitialIntervalGreaterThanMaxInterval() {
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3",
+				"spring.cloud.config.retry.maxInterval=5");
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(3);
+	}
+
+	@Test
+	public void acceptsMultiplierOfOne() {
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3",
+				"spring.cloud.config.retry.multiplier=1.0");
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(3);
+	}
+
+	@Test
+	public void customRetryAdvisorBeanReplacesTheDefault() {
+		this.context.register(CustomRetryAdvisorConfig.class);
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3");
+
+		assertThat(this.context.getBeansOfType(Advisor.class)).containsOnlyKeys("configServerRetryAdvisor");
+		assertThat(this.context.getBean("configServerRetryAdvisor"))
+			.isInstanceOf(StaticMethodMatcherPointcutAdvisor.class);
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(1);
+	}
+
 	private void locate() {
 		this.context.getBean(CountingPropertySourceLocator.class).locate(this.context.getEnvironment());
 	}
@@ -132,6 +169,21 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 		CountingPropertySourceLocator countingPropertySourceLocator(ConfigClientProperties properties,
 				AtomicInteger invocations) {
 			return new CountingPropertySourceLocator(properties, invocations);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class CustomRetryAdvisorConfig {
+
+		@Bean
+		Advisor configServerRetryAdvisor() {
+			return new StaticMethodMatcherPointcutAdvisor() {
+				@Override
+				public boolean matches(Method method, Class<?> targetClass) {
+					return false;
+				}
+			};
 		}
 
 	}

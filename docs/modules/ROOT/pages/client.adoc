@@ -96,6 +96,10 @@ The default behavior is to retry six times with an initial backoff interval of 1
 You can configure these properties (and others) by setting the `spring.cloud.config.retry.*` configuration properties.
 To turn retry off while keeping `fail-fast` enabled, set `spring.cloud.config.retry.enabled=false`; the client then contacts the config server exactly once.
 
+NOTE: Prior to Spring Cloud Config 5.1, retry required Spring Retry, so an application that set `spring.cloud.config.fail-fast=true` without Spring Retry on its classpath contacted the config server only once.
+Retry is now provided by Spring Framework, so the default retry configuration applies to such applications as well.
+To keep the previous single-attempt behavior, set `spring.cloud.config.retry.enabled=false`.
+
 NOTE: `spring.cloud.config.retry.useRandomPolicy` is deprecated and will be removed in a future release.
 While it is `true`, the backoff interval is randomized upwards, into the range from the interval the deterministic
 exponential backoff would have used up to that interval multiplied by `multiplier`, capped at `max-interval`.

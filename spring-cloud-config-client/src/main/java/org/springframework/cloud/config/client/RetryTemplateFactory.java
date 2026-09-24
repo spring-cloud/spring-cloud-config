@@ -34,11 +34,32 @@ public final class RetryTemplateFactory {
 	}
 
 	public static RetryTemplate create(RetryProperties properties, Log log) {
+		validateMaxAttempts(properties);
+		Assert.isTrue(properties.getInitialInterval() >= 1, "Initial interval should be >= 1");
+		Assert.isTrue(properties.getMultiplier() > 1, "Multiplier should be > 1");
+		Assert.isTrue(properties.getMaxInterval() > properties.getInitialInterval(),
+				"Max interval should be > than initial interval");
+		return create(createBackOff(properties, properties.getInitialInterval(), properties.getMultiplier(),
+				properties.getMaxInterval()), log);
+	}
+
+	/**
+	 * Clamps the back off values like Spring Retry's {@code ExponentialBackOffPolicy},
+	 * which legacy bootstrap used, instead of rejecting them.
+	 */
+	static RetryTemplate createForLegacyBootstrap(RetryProperties properties, Log log) {
+		validateMaxAttempts(properties);
+		return create(createBackOff(properties, Math.max(properties.getInitialInterval(), 1),
+				Math.max(properties.getMultiplier(), 1.0), Math.max(properties.getMaxInterval(), 1)), log);
+	}
+
+	private static void validateMaxAttempts(RetryProperties properties) {
+		Assert.isTrue(properties.getMaxAttempts() > 0, "Number of attempts should be positive");
+	}
+
+	private static RetryTemplate create(BackOff backOff, Log log) {
 		// Spring Retry's default classifier retried Exception but not Error
-		RetryPolicy retryPolicy = RetryPolicy.builder()
-			.includes(Exception.class)
-			.backOff(createBackOff(properties))
-			.build();
+		RetryPolicy retryPolicy = RetryPolicy.builder().includes(Exception.class).backOff(backOff).build();
 		RetryTemplate retryTemplate = new RetryTemplate(retryPolicy);
 		retryTemplate.setRetryListener(new RetryListener() {
 			@Override
@@ -52,18 +73,14 @@ public final class RetryTemplateFactory {
 	}
 
 	@SuppressWarnings("removal")
-	private static BackOff createBackOff(RetryProperties properties) {
-		Assert.isTrue(properties.getMaxAttempts() > 0, "Number of attempts should be positive");
-		Assert.isTrue(properties.getInitialInterval() >= 1, "Initial interval should be >= 1");
-		Assert.isTrue(properties.getMultiplier() > 1, "Multiplier should be > 1");
-		Assert.isTrue(properties.getMaxInterval() > properties.getInitialInterval(),
-				"Max interval should be > than initial interval");
+	private static BackOff createBackOff(RetryProperties properties, long initialInterval, double multiplier,
+			long maxInterval) {
 		ExponentialBackOff backOff = new ExponentialBackOff();
 		// max-attempts counts the initial invocation, the back off only counts retries
 		backOff.setMaxAttempts(properties.getMaxAttempts() - 1L);
-		backOff.setInitialInterval(properties.getInitialInterval());
-		backOff.setMultiplier(properties.getMultiplier());
-		backOff.setMaxInterval(properties.getMaxInterval());
+		backOff.setInitialInterval(initialInterval);
+		backOff.setMultiplier(multiplier);
+		backOff.setMaxInterval(maxInterval);
 		return properties.isUseRandomPolicy() ? new ExponentialRandomBackOff(backOff) : backOff;
 	}
 

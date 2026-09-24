@@ -147,6 +147,15 @@ public class RetryTemplateFactoryTests {
 	}
 
 	@Test
+	public void maxAttemptsIsValidatedBeforeBackOff() {
+		RetryProperties properties = fastRetry(0);
+		properties.setInitialInterval(0);
+
+		assertThatThrownBy(() -> create(properties)).isInstanceOf(IllegalArgumentException.class)
+			.hasMessage("Number of attempts should be positive");
+	}
+
+	@Test
 	public void invalidBackOffConfigurationIsRejected() {
 		RetryProperties initialIntervalTooSmall = fastRetry(3);
 		initialIntervalTooSmall.setInitialInterval(0);
@@ -162,6 +171,48 @@ public class RetryTemplateFactoryTests {
 		maxIntervalTooSmall.setMaxInterval(maxIntervalTooSmall.getInitialInterval());
 		assertThatThrownBy(() -> create(maxIntervalTooSmall)).isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("Max interval should be > than initial interval");
+	}
+
+	@Test
+	public void legacyBootstrapCapsInitialIntervalGreaterThanMaxInterval() {
+		RetryProperties properties = new RetryProperties();
+		properties.setMaxAttempts(4);
+		properties.setInitialInterval(3000);
+		properties.setMaxInterval(2000);
+
+		assertThat(intervals(legacyBackOff(properties), 4)).containsExactly(2000L, 2000L, 2000L, BackOffExecution.STOP);
+	}
+
+	@Test
+	public void legacyBootstrapAcceptsMultiplierOfOne() {
+		RetryProperties properties = new RetryProperties();
+		properties.setMaxAttempts(4);
+		properties.setMultiplier(1);
+
+		assertThat(intervals(legacyBackOff(properties), 4)).containsExactly(1000L, 1000L, 1000L, BackOffExecution.STOP);
+	}
+
+	@Test
+	public void legacyBootstrapClampsBackOffLikeSpringRetry() {
+		RetryProperties properties = new RetryProperties();
+		properties.setMaxAttempts(3);
+		properties.setInitialInterval(0);
+		properties.setMultiplier(0.5);
+		properties.setMaxInterval(0);
+
+		assertThat(intervals(legacyBackOff(properties), 3)).containsExactly(1L, 1L, BackOffExecution.STOP);
+	}
+
+	@Test
+	public void legacyBootstrapDoesNotRetryErrors() {
+		AtomicInteger executions = new AtomicInteger();
+
+		assertThatThrownBy(() -> RetryTemplateFactory.createForLegacyBootstrap(fastRetry(6), this.log).invoke(() -> {
+			executions.incrementAndGet();
+			throw new AssertionError("boom");
+		})).isInstanceOf(AssertionError.class).hasMessage("boom");
+
+		assertThat(executions).hasValue(1);
 	}
 
 	@Test
@@ -183,6 +234,10 @@ public class RetryTemplateFactoryTests {
 
 	private BackOff backOff(RetryProperties properties) {
 		return create(properties).getRetryPolicy().getBackOff();
+	}
+
+	private BackOff legacyBackOff(RetryProperties properties) {
+		return RetryTemplateFactory.createForLegacyBootstrap(properties, this.log).getRetryPolicy().getBackOff();
 	}
 
 	private List<Long> intervals(BackOff backOff, int count) {

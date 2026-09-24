@@ -78,7 +78,7 @@ public class ConfigServiceBootstrapConfiguration {
 		@Bean
 		@ConditionalOnMissingBean(name = "configServerRetryInterceptor")
 		public MethodInterceptor configServerRetryInterceptor(RetryProperties properties) {
-			RetryTemplate retryTemplate = RetryTemplateFactory.create(properties,
+			RetryTemplate retryTemplate = RetryTemplateFactory.createForLegacyBootstrap(properties,
 					LogFactory.getLog(ConfigServiceBootstrapConfiguration.class));
 			return invocation -> retryTemplate.invoke(() -> {
 				try {
@@ -94,6 +94,7 @@ public class ConfigServiceBootstrapConfiguration {
 		}
 
 		@Bean
+		@ConditionalOnMissingBean(name = "configServerRetryAdvisor")
 		@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 		public Advisor configServerRetryAdvisor(
 				@Qualifier("configServerRetryInterceptor") MethodInterceptor configServerRetryInterceptor) {
