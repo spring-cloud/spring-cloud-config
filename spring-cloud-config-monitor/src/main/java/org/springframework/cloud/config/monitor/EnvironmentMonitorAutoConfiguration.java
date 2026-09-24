@@ -75,7 +75,8 @@ public class EnvironmentMonitorAutoConfiguration {
 		public PropertyPathEndpoint propertyPathEndpoint(BusProperties busProperties,
 				MonitorConfigurationProperties monitorProperties) {
 			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors),
-					busProperties.getId(), monitorProperties.getMaxDashes());
+					busProperties.getId(), monitorProperties.getMaxDashes(), monitorProperties.getMaxPaths(),
+					monitorProperties.getIgnoredPaths());
 		}
 
 		// TODO: With the current implementation bus can't be disabled
@@ -85,7 +86,8 @@ public class EnvironmentMonitorAutoConfiguration {
 				@Value("${spring.cloud.bus.id:application}") String id,
 				MonitorConfigurationProperties monitorProperties) {
 			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), id,
-					monitorProperties.getMaxDashes());
+					monitorProperties.getMaxDashes(), monitorProperties.getMaxPaths(),
+					monitorProperties.getIgnoredPaths());
 		}
 
 	}
@@ -99,7 +101,8 @@ public class EnvironmentMonitorAutoConfiguration {
 				@Autowired(required = false) List<PropertyPathNotificationExtractor> extractors,
 				MonitorConfigurationProperties monitorProperties) {
 			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(extractors), id,
-					monitorProperties.getMaxDashes());
+					monitorProperties.getMaxDashes(), monitorProperties.getMaxPaths(),
+					monitorProperties.getIgnoredPaths());
 		}
 
 	}
