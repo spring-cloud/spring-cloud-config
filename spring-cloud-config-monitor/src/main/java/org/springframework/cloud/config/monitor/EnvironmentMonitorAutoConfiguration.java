@@ -118,7 +118,8 @@ public class EnvironmentMonitorAutoConfiguration {
 				MonitorConfigurationProperties monitorProperties) {
 			Assert.state(!notifiers.isEmpty(), "At least one PropertyPathNotifier must be available");
 			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), notifiers,
-					monitorProperties.getMaxDashes());
+					monitorProperties.getMaxDashes(), monitorProperties.getMaxPaths(),
+					monitorProperties.getIgnoredPaths());
 		}
 
 	}

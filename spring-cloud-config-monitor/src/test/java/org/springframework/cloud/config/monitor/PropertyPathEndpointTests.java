@@ -118,4 +118,31 @@ public class PropertyPathEndpointTests {
 			.hasSize(2);
 	}
 
+	@Test
+	public void testNotifyIgnoresConfiguredPaths() {
+		PropertyPathEndpoint ignoredEndpoint = new PropertyPathEndpoint(
+				new CompositePropertyPathNotificationExtractor(Collections.emptyList()), List.of(services -> {
+				}), 20, 20, Collections.singletonList("docker-compose/.*"));
+
+		List<String> request = new ArrayList<>();
+		request.add("docker-compose/docker-compose.yml");
+		request.add("foo.yml");
+
+		assertThat(ignoredEndpoint.notifyByForm(new HttpHeaders(), request).toString()).isEqualTo("[foo]");
+	}
+
+	@Test
+	public void testNotifyLimitsPaths() {
+		PropertyPathEndpoint limitedEndpoint = new PropertyPathEndpoint(
+				new CompositePropertyPathNotificationExtractor(Collections.emptyList()), List.of(services -> {
+				}), 20, 2, Collections.emptyList());
+
+		List<String> request = new ArrayList<>();
+		request.add("foo.yml");
+		request.add("bar.yml");
+		request.add("baz.yml");
+
+		assertThat(limitedEndpoint.notifyByForm(new HttpHeaders(), request).toString()).isEqualTo("[foo, bar]");
+	}
+
 }
