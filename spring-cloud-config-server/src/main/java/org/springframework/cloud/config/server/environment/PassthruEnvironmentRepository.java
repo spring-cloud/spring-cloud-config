@@ -85,8 +85,7 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 	private Map<?, ?> getMap(org.springframework.core.env.PropertySource<?> source, boolean includeOrigin) {
 		Map<Object, Object> map = new LinkedHashMap<>();
 		Map<?, ?> input = (Map<?, ?>) source.getSource();
-		if (includeOrigin && source instanceof OriginLookup) {
-			OriginLookup<String> originLookup = (OriginLookup<String>) source;
+		if (includeOrigin && source instanceof OriginLookup originLookup) {
 			for (Object key : input.keySet()) {
 				Origin origin = originLookup.getOrigin(key.toString());
 				if (origin == null) {
@@ -94,8 +93,7 @@ public class PassthruEnvironmentRepository implements EnvironmentRepository {
 					continue;
 				}
 				String originDesc;
-				if (origin instanceof TextResourceOrigin) {
-					TextResourceOrigin tro = (TextResourceOrigin) origin;
+				if (origin instanceof TextResourceOrigin tro) {
 					originDesc = tro.getLocation().toString();
 				}
 				else {

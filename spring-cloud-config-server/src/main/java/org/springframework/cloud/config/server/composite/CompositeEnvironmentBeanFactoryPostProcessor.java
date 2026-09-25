@@ -81,8 +81,8 @@ public class CompositeEnvironmentBeanFactoryPostProcessor implements BeanFactory
 		Binder binder = Binder.get(environment);
 		String environmentConfigurationPropertyName = String.format("spring.cloud.config.server.composite[%d]", index);
 		P properties = binder.bindOrCreate(environmentConfigurationPropertyName, propertiesClass);
-		if (properties instanceof Ordered
-				&& ((Ordered) properties).getOrder() == EnvironmentRepositoryProperties.DEFAULT_ORDER) {
+		if (properties instanceof Ordered ordered
+				&& ordered.getOrder() == EnvironmentRepositoryProperties.DEFAULT_ORDER) {
 			// The order is not set, it is the default so set it to the order in the list
 			properties.setOrder(index + 1);
 		}

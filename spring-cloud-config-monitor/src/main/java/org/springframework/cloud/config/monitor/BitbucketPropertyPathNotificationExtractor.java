@@ -54,7 +54,7 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 				&& StringUtils.hasText(headers.getFirst("X-Hook-UUID"))) {
 			// Bitbucket cloud
 			Object push = request.get("push");
-			if (push instanceof Map && ((Map<?, ?>) push).get("changes") instanceof Collection) {
+			if (push instanceof Map<?, ?> map && map.get("changes") instanceof Collection) {
 				// Bitbucket doesn't tell us the files that changed so this is a
 				// broadcast to all apps
 				return new PropertyPathNotification("application.yml");

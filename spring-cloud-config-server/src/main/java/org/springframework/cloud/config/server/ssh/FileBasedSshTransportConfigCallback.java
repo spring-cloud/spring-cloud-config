@@ -55,8 +55,8 @@ public class FileBasedSshTransportConfigCallback implements TransportConfigCallb
 
 	@Override
 	public void configure(Transport transport) {
-		if (this.sshdSessionFactory != null && transport instanceof SshTransport) {
-			((SshTransport) transport).setSshSessionFactory(this.sshdSessionFactory);
+		if (this.sshdSessionFactory != null && transport instanceof SshTransport sshTransport) {
+			sshTransport.setSshSessionFactory(this.sshdSessionFactory);
 		}
 	}
 

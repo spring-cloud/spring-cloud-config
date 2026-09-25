@@ -36,7 +36,7 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 	private final char[] passphrase;
 
 	/**
-	 * Initialize the provider with a the ssh passphrase.
+	 * Initialize the provider with the ssh passphrase.
 	 * @param passphrase passphrase to populate the credential items with
 	 */
 	public PassphraseCredentialsProvider(String passphrase) {
@@ -84,8 +84,8 @@ public class PassphraseCredentialsProvider extends CredentialsProvider {
 			if (item instanceof CredentialItem.InformationalMessage) {
 				continue;
 			}
-			if (item instanceof CredentialItem.Password && item.getPromptText().equals(PROMPT)) {
-				((CredentialItem.Password) item).setValue(this.passphrase);
+			if (item instanceof CredentialItem.Password password && item.getPromptText().equals(PROMPT)) {
+				password.setValue(this.passphrase);
 				continue;
 			}
 			throw new UnsupportedCredentialItem(uri, item.getClass().getName() + ":" + item.getPromptText());
