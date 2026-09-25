@@ -295,8 +295,7 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 			StringBuilder awsKey = new StringBuilder();
 			awsKey.append(awsCredentials.accessKeyId());
 			awsSecretKey = awsCredentials.secretAccessKey();
-			if (awsCredentials instanceof AwsSessionCredentials) {
-				AwsSessionCredentials sessionCreds = (AwsSessionCredentials) awsCredentials;
+			if (awsCredentials instanceof AwsSessionCredentials sessionCreds) {
 				if (sessionCreds.sessionToken() != null) {
 					awsKey.append('%').append(sessionCreds.sessionToken());
 				}
@@ -316,18 +315,18 @@ public class AwsCodeCommitCredentialProvider extends CredentialsProvider {
 		}
 
 		for (CredentialItem i : items) {
-			if (i instanceof CredentialItem.Username) {
-				((CredentialItem.Username) i).setValue(awsAccessKey);
+			if (i instanceof CredentialItem.Username username) {
+				username.setValue(awsAccessKey);
 				this.logger.trace("Setting AWS Access Key in CredentialItem");
 				continue;
 			}
-			if (i instanceof CredentialItem.Password) {
-				((CredentialItem.Password) i).setValue(codeCommitPassword.toCharArray());
+			if (i instanceof CredentialItem.Password password) {
+				password.setValue(codeCommitPassword.toCharArray());
 				this.logger.trace("Setting password in CredentialItem");
 				continue;
 			}
-			if (i instanceof CredentialItem.StringType && i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
-				((CredentialItem.StringType) i).setValue(codeCommitPassword);
+			if (i instanceof CredentialItem.StringType stringType && i.getPromptText().equals("Password: ")) { //$NON-NLS-1$
+				stringType.setValue(codeCommitPassword);
 				this.logger.trace("Setting password in CredentialItem");
 				continue;
 			}
