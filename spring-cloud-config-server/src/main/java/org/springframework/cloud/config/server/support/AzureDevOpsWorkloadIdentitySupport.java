@@ -79,11 +79,11 @@ public class AzureDevOpsWorkloadIdentitySupport implements GitTransportConfigCal
 
 	TransportConfigCallback createTransportConfigCallback(Supplier<String> tokenSupplier) {
 		return transport -> {
-			if (transport instanceof TransportHttp && canHandle(transport.getURI().toString())) {
+			if (transport instanceof TransportHttp transportHttp && canHandle(transport.getURI().toString())) {
 				String accessToken = tokenSupplier.get();
 
 				if (accessToken != null) {
-					((TransportHttp) transport).setAdditionalHeaders(Map.of("Authorization", "Bearer " + accessToken));
+					transportHttp.setAdditionalHeaders(Map.of("Authorization", "Bearer " + accessToken));
 				}
 			}
 		};
