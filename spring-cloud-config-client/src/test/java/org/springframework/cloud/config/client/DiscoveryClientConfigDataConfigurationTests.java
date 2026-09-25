@@ -195,7 +195,7 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
 		context = setup("spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10",
-				"spring.cloud.config.fail-fast=true")
+				"spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true")
 			.run();
 
 		verifyDiscoveryClientCalledThreeTimes();
@@ -221,7 +221,8 @@ public class DiscoveryClientConfigDataConfigurationTests {
 		givenDiscoveryClientReturnsNoInfo();
 
 		assertThatThrownBy(() -> context = setup("spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true")
+				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true",
+				"spring.cloud.config.retry.enabled=true")
 			.run()).isInstanceOf(IllegalStateException.class)
 			.hasMessageContaining("No instances found of configserver");
 	}

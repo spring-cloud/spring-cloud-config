@@ -16,27 +16,33 @@
 
 package org.springframework.cloud.config.client;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.aopalliance.intercept.MethodInterceptor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.aop.Advisor;
+import org.springframework.aop.support.StaticMethodMatcherPointcutAdvisor;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.retry.backoff.BackOffPolicy;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.backoff.ExponentialRandomBackOffPolicy;
-import org.springframework.retry.interceptor.RetryOperationsInterceptor;
-import org.springframework.retry.support.RetryTemplate;
-import org.springframework.util.ReflectionUtils;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.PropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Ryan Baxter
+ * @author Mahammad Eminov
  */
 public class ConfigServiceBootstrapConfigurationRetryTest {
+
+	private final AtomicInteger invocations = new AtomicInteger();
 
 	private AnnotationConfigApplicationContext context;
 
@@ -53,47 +59,164 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 	}
 
 	@Test
-	public void exponentialBackoffPolicy() {
-		TestPropertyValues.of("spring.cloud.config.enabled=true", "spring.cloud.config.fail-fast=true")
-			.applyTo(this.context);
-		this.context.register(ConfigServiceBootstrapConfiguration.class);
-		this.context.refresh();
+	public void retriesLocateUntilMaxAttemptsIsReached() {
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3");
 
-		RetryOperationsInterceptor retryOperationsInterceptor = this.context.getBean(RetryOperationsInterceptor.class);
-		Field retryOperationsField = ReflectionUtils.findField(RetryOperationsInterceptor.class, "retryOperations");
-		retryOperationsField.setAccessible(true);
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
 
-		RetryTemplate retryTemplate = (RetryTemplate) ReflectionUtils.getField(retryOperationsField,
-				retryOperationsInterceptor);
-		Field backOffPolicyField = ReflectionUtils.findField(RetryTemplate.class, "backOffPolicy");
-		backOffPolicyField.setAccessible(true);
-
-		BackOffPolicy backOffPolicy = (BackOffPolicy) ReflectionUtils.getField(backOffPolicyField, retryTemplate);
-		assertThat(backOffPolicy).isNotNull();
-		assertThat(backOffPolicy).isInstanceOf(ExponentialBackOffPolicy.class);
+		assertThat(this.invocations).hasValue(3);
 	}
 
 	@Test
-	public void exponentialRandomBackoffPolicy() {
-		TestPropertyValues
-			.of("spring.cloud.config.enabled=true", "spring.cloud.config.fail-fast=true",
-					"spring.cloud.config.retry.useRandomPolicy=true")
+	public void doesNotRetryWhenFailFastIsNotSet() {
+		setup("spring.cloud.config.retry.maxAttempts=3");
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(1);
+		assertThat(this.context.getBeanNamesForType(MethodInterceptor.class)).isEmpty();
+	}
+
+	@Test
+	public void doesNotRetryByDefault() {
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3");
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(1);
+		assertThat(this.context.getBeanNamesForType(MethodInterceptor.class)).isEmpty();
+	}
+
+	@Test
+	public void doesNotRetryWhenRetryIsDisabled() {
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=false",
+				"spring.cloud.config.retry.maxAttempts=3");
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(1);
+		assertThat(this.context.getBeanNamesForType(MethodInterceptor.class)).isEmpty();
+	}
+
+	@Test
+	public void retriesLocateCollectionUntilMaxAttemptsIsReached() {
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3");
+
+		assertThatThrownBy(() -> this.context.getBean(CountingPropertySourceLocator.class)
+			.locateCollection(this.context.getEnvironment())).isInstanceOf(IllegalStateException.class)
+			.hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(3);
+	}
+
+	@Test
+	public void customRetryInterceptorBeanIsUsed() {
+		AtomicInteger interceptions = new AtomicInteger();
+		this.context.getDefaultListableBeanFactory()
+			.registerSingleton("configServerRetryInterceptor", (MethodInterceptor) invocation -> {
+				interceptions.incrementAndGet();
+				return invocation.proceed();
+			});
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3");
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(interceptions).hasValue(1);
+		assertThat(this.invocations).hasValue(1);
+	}
+
+	@Test
+	public void acceptsInitialIntervalGreaterThanMaxInterval() {
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.maxInterval=5");
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(3);
+	}
+
+	@Test
+	public void acceptsMultiplierOfOne() {
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.multiplier=1.0");
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(3);
+	}
+
+	@Test
+	public void customRetryAdvisorBeanReplacesTheDefault() {
+		this.context.register(CustomRetryAdvisorConfig.class);
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3");
+
+		assertThat(this.context.getBeansOfType(Advisor.class)).containsOnlyKeys("configServerRetryAdvisor");
+		assertThat(this.context.getBean("configServerRetryAdvisor"))
+			.isInstanceOf(StaticMethodMatcherPointcutAdvisor.class);
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(1);
+	}
+
+	private void locate() {
+		this.context.getBean(CountingPropertySourceLocator.class).locate(this.context.getEnvironment());
+	}
+
+	private void setup(String... env) {
+		TestPropertyValues.of("spring.cloud.config.enabled=true", "spring.cloud.config.retry.initialInterval=10")
+			.and(env)
 			.applyTo(this.context);
-		this.context.register(ConfigServiceBootstrapConfiguration.class);
+		this.context.getDefaultListableBeanFactory().registerSingleton("locateInvocations", this.invocations);
+		this.context.register(TestConfig.class, ConfigServiceBootstrapConfiguration.class);
 		this.context.refresh();
+	}
 
-		RetryOperationsInterceptor retryOperationsInterceptor = this.context.getBean(RetryOperationsInterceptor.class);
-		Field retryOperationsField = ReflectionUtils.findField(RetryOperationsInterceptor.class, "retryOperations");
-		retryOperationsField.setAccessible(true);
+	@Configuration(proxyBeanMethods = false)
+	static class TestConfig {
 
-		RetryTemplate retryTemplate = (RetryTemplate) ReflectionUtils.getField(retryOperationsField,
-				retryOperationsInterceptor);
-		Field backOffPolicyField = ReflectionUtils.findField(RetryTemplate.class, "backOffPolicy");
-		backOffPolicyField.setAccessible(true);
+		@Bean
+		CountingPropertySourceLocator countingPropertySourceLocator(ConfigClientProperties properties,
+				AtomicInteger invocations) {
+			return new CountingPropertySourceLocator(properties, invocations);
+		}
 
-		BackOffPolicy backOffPolicy = (BackOffPolicy) ReflectionUtils.getField(backOffPolicyField, retryTemplate);
-		assertThat(backOffPolicy).isNotNull();
-		assertThat(backOffPolicy).isInstanceOf(ExponentialRandomBackOffPolicy.class);
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class CustomRetryAdvisorConfig {
+
+		@Bean
+		Advisor configServerRetryAdvisor() {
+			return new StaticMethodMatcherPointcutAdvisor() {
+				@Override
+				public boolean matches(Method method, Class<?> targetClass) {
+					return false;
+				}
+			};
+		}
+
+	}
+
+	static class CountingPropertySourceLocator extends ConfigServicePropertySourceLocator {
+
+		private final AtomicInteger invocations;
+
+		CountingPropertySourceLocator(ConfigClientProperties properties, AtomicInteger invocations) {
+			super(properties);
+			this.invocations = invocations;
+		}
+
+		@Override
+		public PropertySource<?> locate(Environment environment) {
+			this.invocations.incrementAndGet();
+			throw new IllegalStateException("boom");
+		}
+
 	}
 
 }
