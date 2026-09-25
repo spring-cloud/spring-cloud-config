@@ -84,8 +84,8 @@ public final class GoogleCloudSourceSupport {
 
 		@Override
 		public void configure(Transport transport) {
-			if (transport instanceof TransportHttp && canHandle(transport.getURI())) {
-				addHeaders((TransportHttp) transport, credentialsProvider.getAuthorizationHeaders());
+			if (transport instanceof TransportHttp transportHttp && canHandle(transport.getURI())) {
+				addHeaders(transportHttp, credentialsProvider.getAuthorizationHeaders());
 			}
 		}
 
