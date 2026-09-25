@@ -57,7 +57,8 @@ public class ConfigServiceBootstrapConfigurationRetryNoAspectJTests {
 		this.context = new AnnotationConfigApplicationContext();
 		TestPropertyValues
 			.of("spring.cloud.config.enabled=true", "spring.cloud.config.fail-fast=true",
-					"spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10")
+					"spring.cloud.config.retry.enabled=true", "spring.cloud.config.retry.maxAttempts=3",
+					"spring.cloud.config.retry.initialInterval=10")
 			.applyTo(this.context);
 		this.context.getDefaultListableBeanFactory().registerSingleton("locateInvocations", this.invocations);
 		this.context.register(TestConfig.class, ConfigServiceBootstrapConfiguration.class);

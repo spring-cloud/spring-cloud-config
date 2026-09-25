@@ -69,7 +69,7 @@ public class ConfigServiceBootstrapConfiguration {
 	}
 
 	@ConditionalOnProperty(ConfigClientProperties.PREFIX + ".fail-fast")
-	@ConditionalOnProperty(name = RetryProperties.PREFIX + ".enabled", matchIfMissing = true)
+	@ConditionalOnProperty(RetryProperties.PREFIX + ".enabled")
 	@Configuration(proxyBeanMethods = false)
 	@Import(AopAutoConfiguration.class)
 	@EnableConfigurationProperties(RetryProperties.class)

@@ -41,8 +41,8 @@ public class ConfigServiceBootstrapConfigurationRetryProxyTargetClassTests
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
 		setup("spring.aop.proxy-target-class=false", "spring.cloud.config.discovery.enabled=true",
-				"spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.initialInterval=10");
+				"spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.initialInterval=10");
 
 		assertThat(this.context.getBean(ConfigServerInstanceProvider.class)).isNotNull();
 		verifyDiscoveryClientCalledThreeTimes();

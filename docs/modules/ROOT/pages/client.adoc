@@ -90,15 +90,14 @@ NOTE: To get similar functionality using `spring.config.import`, simply omit the
 
 If you expect that the config server may occasionally be unavailable when your application starts, you can make it keep trying after a failure.
 First, you need to set `spring.cloud.config.fail-fast=true`.
-Retry is built on the retry support of Spring Framework, so no extra dependency is required.
-The default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs.
+Then you need to enable retry by setting `spring.cloud.config.retry.enabled=true`.
+Retry is built on the https://docs.spring.io/spring-framework/reference/core/resilience.html[retry support of Spring Framework], so no extra dependency is required.
+Once enabled, the default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs.
 `max-attempts` counts the initial invocation, so the default of `6` means one invocation followed by at most five retries.
 You can configure these properties (and others) by setting the `spring.cloud.config.retry.*` configuration properties.
-To turn retry off while keeping `fail-fast` enabled, set `spring.cloud.config.retry.enabled=false`; the client then contacts the config server exactly once.
 
-NOTE: Prior to Spring Cloud Config 5.1, retry required Spring Retry, so an application that set `spring.cloud.config.fail-fast=true` without Spring Retry on its classpath contacted the config server only once.
-Retry is now provided by Spring Framework, so the default retry configuration applies to such applications as well.
-To keep the previous single-attempt behavior, set `spring.cloud.config.retry.enabled=false`.
+NOTE: Prior to Spring Cloud Config 5.1, retry was enabled by adding Spring Retry to the classpath.
+Spring Retry is no longer used, so set `spring.cloud.config.retry.enabled=true` to keep retrying after upgrading.
 
 NOTE: `spring.cloud.config.retry.useRandomPolicy` is deprecated and will be removed in a future release.
 While it is `true`, the backoff interval is randomized upwards, into the range from the interval the deterministic
@@ -119,13 +118,7 @@ Retry works with the Spring Boot `spring.config.import` statement and the normal
 spring.config.import=configserver:http://configserver.example.com?fail-fast=true&max-attempts=10&max-interval=1500&multiplier=1.2&initial-interval=1100"
 ----
 
-This sets `spring.cloud.config.fail-fast=true` (notice the missing prefix above) and all the available `spring.cloud.config.retry.*` configuration properties.
-To turn retry off for such an import while keeping `fail-fast` enabled, add `enabled=false`, which sets `spring.cloud.config.retry.enabled=false`:
-
-[source,properties]
-----
-spring.config.import=configserver:http://configserver.example.com?fail-fast=true&enabled=false
-----
+This sets `spring.cloud.config.fail-fast=true` (notice the missing prefix above) and the supported retry properties shown in the URL above.
 
 [[locating-remote-configuration-resources]]
 == Locating Remote Configuration Resources

@@ -145,7 +145,6 @@ public class DiscoveryClientConfigDataConfigurationNoRetryTests {
 			set.addAll(Arrays.asList(env));
 		}
 		set.add("spring.cloud.config.discovery.enabled=true");
-		set.add("spring.cloud.config.retry.enabled=false");
 		set.add("spring.config.import=optional:configserver:");
 		return set.toArray(new String[0]);
 	}

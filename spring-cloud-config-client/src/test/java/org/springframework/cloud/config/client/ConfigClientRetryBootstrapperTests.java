@@ -58,6 +58,15 @@ public class ConfigClientRetryBootstrapperTests {
 	}
 
 	@Test
+	public void doesNotRetryByDefault() {
+		assertThatThrownBy(() -> load(true, new RetryProperties().isEnabled(), 3))
+			.isInstanceOf(ConfigClientFailFastException.class)
+			.hasMessage("fail fast");
+
+		assertThat(this.invocations).hasValue(1);
+	}
+
+	@Test
 	public void doesNotRetryWhenRetryIsDisabled() {
 		assertThatThrownBy(() -> load(true, false, 3)).isInstanceOf(ConfigClientFailFastException.class)
 			.hasMessage("fail fast");

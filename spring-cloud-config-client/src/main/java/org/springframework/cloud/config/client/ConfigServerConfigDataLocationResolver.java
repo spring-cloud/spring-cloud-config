@@ -177,9 +177,6 @@ public class ConfigServerConfigDataLocationResolver
 					map.from(() -> properties.getProperty("fail-fast"))
 						.as(Boolean::valueOf)
 						.to(configClientProperties::setFailFast);
-					map.from(() -> properties.getProperty("enabled"))
-						.as(Boolean::valueOf)
-						.to(holder.retryProperties::setEnabled);
 					map.from(() -> properties.getProperty("max-attempts"))
 						.as(Integer::valueOf)
 						.to(holder.retryProperties::setMaxAttempts);

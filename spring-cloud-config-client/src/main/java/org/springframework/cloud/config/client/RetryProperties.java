@@ -35,7 +35,7 @@ public class RetryProperties {
 	 * Whether to retry failed requests to the Config Server. Only has an effect when
 	 * spring.cloud.config.fail-fast is enabled.
 	 */
-	boolean enabled = true;
+	boolean enabled = false;
 
 	/**
 	 * Initial retry interval in milliseconds.

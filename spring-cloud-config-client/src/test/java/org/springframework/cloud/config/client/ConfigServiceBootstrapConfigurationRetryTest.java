@@ -60,7 +60,8 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 
 	@Test
 	public void retriesLocateUntilMaxAttemptsIsReached() {
-		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3");
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3");
 
 		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
 
@@ -70,6 +71,16 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 	@Test
 	public void doesNotRetryWhenFailFastIsNotSet() {
 		setup("spring.cloud.config.retry.maxAttempts=3");
+
+		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
+
+		assertThat(this.invocations).hasValue(1);
+		assertThat(this.context.getBeanNamesForType(MethodInterceptor.class)).isEmpty();
+	}
+
+	@Test
+	public void doesNotRetryByDefault() {
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3");
 
 		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
 
@@ -90,7 +101,8 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 
 	@Test
 	public void retriesLocateCollectionUntilMaxAttemptsIsReached() {
-		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3");
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3");
 
 		assertThatThrownBy(() -> this.context.getBean(CountingPropertySourceLocator.class)
 			.locateCollection(this.context.getEnvironment())).isInstanceOf(IllegalStateException.class)
@@ -107,7 +119,8 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 				interceptions.incrementAndGet();
 				return invocation.proceed();
 			});
-		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3");
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3");
 
 		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
 
@@ -117,8 +130,8 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 
 	@Test
 	public void acceptsInitialIntervalGreaterThanMaxInterval() {
-		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.maxInterval=5");
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.maxInterval=5");
 
 		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
 
@@ -127,8 +140,8 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 
 	@Test
 	public void acceptsMultiplierOfOne() {
-		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.multiplier=1.0");
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3", "spring.cloud.config.retry.multiplier=1.0");
 
 		assertThatThrownBy(this::locate).isInstanceOf(IllegalStateException.class).hasMessage("boom");
 
@@ -138,7 +151,8 @@ public class ConfigServiceBootstrapConfigurationRetryTest {
 	@Test
 	public void customRetryAdvisorBeanReplacesTheDefault() {
 		this.context.register(CustomRetryAdvisorConfig.class);
-		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.maxAttempts=3");
+		setup("spring.cloud.config.fail-fast=true", "spring.cloud.config.retry.enabled=true",
+				"spring.cloud.config.retry.maxAttempts=3");
 
 		assertThat(this.context.getBeansOfType(Advisor.class)).containsOnlyKeys("configServerRetryAdvisor");
 		assertThat(this.context.getBean("configServerRetryAdvisor"))
