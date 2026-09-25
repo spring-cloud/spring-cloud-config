@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Base64;
@@ -104,11 +105,24 @@ public class PropertyBasedSshSessionFactoryTest {
 		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
 		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
 		sshKey.setPrivateKey(PRIVATE_KEY);
+		sshKey.setStrictHostKeyChecking(false);
 		setupSessionFactory(sshKey);
 
 		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
 
 		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isEqualTo("no");
+	}
+
+	@Test
+	public void strictHostKeyCheckingDefaultsToYes() {
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("ssh://gitlab.example.local:3322/somerepo.git");
+		sshKey.setPrivateKey(PRIVATE_KEY);
+		setupSessionFactory(sshKey);
+
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
+
+		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isEqualTo("yes");
 	}
 
 	@Test
@@ -237,7 +251,7 @@ public class PropertyBasedSshSessionFactoryTest {
 		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
 
 		assertThat(sshConfig.getValue("PreferredAuthentications")).isEqualTo("password,keyboard-interactive");
-		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isEqualTo("no");
+		assertThat(sshConfig.getValue("StrictHostKeyChecking")).isEqualTo("yes");
 	}
 
 	@Test
@@ -254,6 +268,42 @@ public class PropertyBasedSshSessionFactoryTest {
 		assertThat(knownHostKey).isNotNull();
 		assertThat(knownHostKey).isEqualTo(configuredKey);
 		assertThat(isKnownKeyForHost(configuredKey, "gitlab.example.local")).isTrue();
+	}
+
+	@Test
+	public void strictHostKeyCheckingIsEnforcedWhenOnlyKnownHostsFileIsConfigured() throws Exception {
+		// Pin the repository's SSH host key via a known_hosts file
+		// and leave strictHostKeyChecking at its secure default (true), without also
+		// duplicating the key inline via the hostKey property.
+		JGitEnvironmentProperties sshKey = new JGitEnvironmentProperties();
+		sshKey.setUri("git@gitlab.example.local:someorg/somerepo.git");
+		sshKey.setPrivateKey(PRIVATE_KEY);
+		sshKey.setKnownHostsFile(new ClassPathResource("/ssh/known_hosts").getFile().getPath());
+		sshKey.setStrictHostKeyChecking(true);
+		setupSessionFactory(sshKey);
+
+		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
+		assertThat(sshConfig.getValue("StrictHostKeyChecking"))
+			.as("strictHostKeyChecking=true must be honoured even without an inline hostKey")
+			.isEqualTo("yes");
+
+		// Mirror how JGit's sshd transport interprets the StrictHostKeyChecking value,
+		// then confirm a server key absent from known_hosts
+		boolean strict = "yes".equals(sshConfig.getValue("StrictHostKeyChecking"));
+		ServerKeyDatabase.Configuration config = mock(ServerKeyDatabase.Configuration.class);
+		when(config.getStrictHostKeyChecking())
+			.thenReturn(strict ? ServerKeyDatabase.Configuration.StrictHostKeyChecking.REQUIRE_MATCH
+					: ServerKeyDatabase.Configuration.StrictHostKeyChecking.ACCEPT_ANY);
+
+		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+		keyPairGenerator.initialize(2048);
+		PublicKey attackerKey = keyPairGenerator.generateKeyPair().getPublic();
+		InetSocketAddress address = setupSocketAddress("gitlab.example.local");
+
+		boolean accepted = factory.getServerKeyDatabase(null, null)
+			.accept("address", address, attackerKey, config, null);
+
+		assertThat(accepted).as("host key must be rejected when strictHostKeyChecking=true").isFalse();
 	}
 
 	@Test
