@@ -103,6 +103,7 @@ public class SshPropertyValidatorTest {
 		MultipleJGitEnvironmentProperties invalidKey = new MultipleJGitEnvironmentProperties();
 		invalidKey.setUri(SSH_URI);
 		invalidKey.setIgnoreLocalSshSettings(true);
+		invalidKey.setKnownHostsFile("src/test/resources/ssh/known_hosts");
 		invalidKey.setPrivateKey("-----BEGIN OPENSSH PRIVATE KEY-----\nFOOBAR");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
@@ -115,6 +116,7 @@ public class SshPropertyValidatorTest {
 		MultipleJGitEnvironmentProperties invalidKey = new MultipleJGitEnvironmentProperties();
 		invalidKey.setUri(SSH_URI);
 		invalidKey.setIgnoreLocalSshSettings(true);
+		invalidKey.setKnownHostsFile("src/test/resources/ssh/known_hosts");
 		invalidKey.setPrivateKey("invalid_key");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
@@ -127,6 +129,7 @@ public class SshPropertyValidatorTest {
 		MultipleJGitEnvironmentProperties missingKey = new MultipleJGitEnvironmentProperties();
 		missingKey.setUri(SSH_URI);
 		missingKey.setIgnoreLocalSshSettings(true);
+		missingKey.setKnownHostsFile("src/test/resources/ssh/known_hosts");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
 			.validate(missingKey);
@@ -152,6 +155,7 @@ public class SshPropertyValidatorTest {
 		missingHostKey.setUri(SSH_URI);
 		missingHostKey.setIgnoreLocalSshSettings(true);
 		missingHostKey.setPrivateKey(VALID_PRIVATE_KEY);
+		missingHostKey.setKnownHostsFile("src/test/resources/ssh/known_hosts");
 		missingHostKey.setHostKeyAlgorithm("ssh-rsa");
 
 		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
@@ -215,6 +219,7 @@ public class SshPropertyValidatorTest {
 		MultipleJGitEnvironmentProperties parent = new MultipleJGitEnvironmentProperties();
 		parent.setUri("https://default-repo.example.com/default.git");
 		parent.setIgnoreLocalSshSettings(false);
+		parent.setKnownHostsFile("src/test/resources/ssh/known_hosts");
 
 		// the "team-x" sub-repo opts into property-based SSH and sets a
 		// hostKeyAlgorithm without a matching hostKey.
@@ -223,6 +228,7 @@ public class SshPropertyValidatorTest {
 		teamX.setIgnoreLocalSshSettings(true);
 		teamX.setPrivateKey(VALID_PRIVATE_KEY);
 		teamX.setHostKeyAlgorithm("ssh-ed25519");
+		teamX.setKnownHostsFile("src/test/resources/ssh/known_hosts");
 
 		Map<String, PatternMatchingJGitEnvironmentProperties> repos = new LinkedHashMap<>();
 		repos.put("team-x", teamX);
@@ -275,6 +281,71 @@ public class SshPropertyValidatorTest {
 
 		sshUriProperties.setKnownHostsFile("non-existing.file");
 		assertThat(validator.validate(sshUriProperties)).hasSize(1);
+	}
+
+	@Test
+	public void strictHostKeyCheckingWithNoHostKeyOrKnownHostsFileFails() {
+		MultipleJGitEnvironmentProperties missingHostKeyAndKnownHostsFile = new MultipleJGitEnvironmentProperties();
+		missingHostKeyAndKnownHostsFile.setUri(SSH_URI);
+		missingHostKeyAndKnownHostsFile.setIgnoreLocalSshSettings(true);
+		missingHostKeyAndKnownHostsFile.setPrivateKey(VALID_PRIVATE_KEY);
+		missingHostKeyAndKnownHostsFile.setStrictHostKeyChecking(true);
+
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
+			.validate(missingHostKeyAndKnownHostsFile);
+		assertThat(constraintViolations).hasSize(1);
+	}
+
+	@Test
+	public void strictHostKeyCheckingWithHostKeySucceeds() {
+		MultipleJGitEnvironmentProperties validSettings = new MultipleJGitEnvironmentProperties();
+		validSettings.setUri(SSH_URI);
+		validSettings.setIgnoreLocalSshSettings(true);
+		validSettings.setPrivateKey(VALID_PRIVATE_KEY);
+		validSettings.setStrictHostKeyChecking(true);
+		validSettings.setHostKey(VALID_HOST_KEY);
+		validSettings.setHostKeyAlgorithm("ssh-rsa");
+
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
+			.validate(validSettings);
+		assertThat(constraintViolations).hasSize(0);
+	}
+
+	@Test
+	public void strictHostKeyCheckingWithKnownHostsFileSucceeds() {
+		MultipleJGitEnvironmentProperties validSettings = new MultipleJGitEnvironmentProperties();
+		validSettings.setUri(SSH_URI);
+		validSettings.setIgnoreLocalSshSettings(true);
+		validSettings.setPrivateKey(VALID_PRIVATE_KEY);
+		validSettings.setStrictHostKeyChecking(true);
+		validSettings.setKnownHostsFile("src/test/resources/ssh/known_hosts");
+
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator
+			.validate(validSettings);
+		assertThat(constraintViolations).hasSize(0);
+	}
+
+	@Test
+	public void hostKeyOrKnownHostsFileNotRequiredWhenStrictHostKeyCheckingDisabled() {
+		MultipleJGitEnvironmentProperties settings = new MultipleJGitEnvironmentProperties();
+		settings.setUri(SSH_URI);
+		settings.setIgnoreLocalSshSettings(true);
+		settings.setPrivateKey(VALID_PRIVATE_KEY);
+		settings.setStrictHostKeyChecking(false);
+
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(settings);
+		assertThat(constraintViolations).hasSize(0);
+	}
+
+	@Test
+	public void hostKeyOrKnownHostsFileNotRequiredWhenIgnoreLocalSshSettingsDisabled() {
+		MultipleJGitEnvironmentProperties settings = new MultipleJGitEnvironmentProperties();
+		settings.setUri(SSH_URI);
+		settings.setIgnoreLocalSshSettings(false);
+		settings.setStrictHostKeyChecking(true);
+
+		Set<ConstraintViolation<MultipleJGitEnvironmentProperties>> constraintViolations = validator.validate(settings);
+		assertThat(constraintViolations).hasSize(0);
 	}
 
 }

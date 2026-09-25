@@ -56,7 +56,8 @@ public class TransportConfigurationIntegrationTests {
 		@SpringBootTest(classes = { TestConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
-						"spring.config.name:ssh-private-key-block" })
+						"spring.config.name=ssh-private-key-block",
+						"spring.cloud.config.server.git.known-hosts-file=src/test/resources/ssh/known_hosts" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
 
@@ -85,7 +86,8 @@ public class TransportConfigurationIntegrationTests {
 		@SpringBootTest(classes = { TestConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
-						"spring.config.name:ssh-private-key-block-list" })
+						"spring.config.name=ssh-private-key-block-list",
+						"spring.cloud.config.server.git.known-hosts-file=src/test/resources/ssh/known_hosts" })
 		@ActiveProfiles({ "test", "composite" })
 		public static class ListTest {
 
@@ -118,7 +120,8 @@ public class TransportConfigurationIntegrationTests {
 		@SpringBootTest(classes = { TestConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
-						"spring.config.name:ssh-private-key-newline" })
+						"spring.config.name=ssh-private-key-newline",
+						"spring.cloud.config.server.git.known-hosts-file=src/test/resources/ssh/known_hosts" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
 
@@ -140,7 +143,8 @@ public class TransportConfigurationIntegrationTests {
 		@SpringBootTest(classes = { TestConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
-						"spring.config.name:ssh-private-key-newline-list" })
+						"spring.config.name=ssh-private-key-newline-list",
+						"spring.cloud.config.server.git.known-hosts-file=src/test/resources/ssh/known_hosts" })
 		@ActiveProfiles({ "test", "composite" })
 		public static class ListTest {
 
@@ -166,7 +170,8 @@ public class TransportConfigurationIntegrationTests {
 		@SpringBootTest(classes = { TestConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
-						"spring.config.name:ssh-nested-settings" })
+						"spring.config.name=ssh-nested-settings",
+						"spring.cloud.config.server.git.known-hosts-file=src/test/resources/ssh/known_hosts" })
 		@ActiveProfiles({ "test", "git" })
 		public static class StaticTest {
 
@@ -193,7 +198,8 @@ public class TransportConfigurationIntegrationTests {
 		@SpringBootTest(classes = { TestConfigServerApplication.class, SshPropertyValidator.class },
 				webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 				properties = { "spring.config.additional-location=optional:file:/ssh/,optional:classpath:/ssh/",
-						"spring.config.name:ssh-nested-settings-list" })
+						"spring.config.name=ssh-nested-settings-list",
+						"spring.cloud.config.server.git.known-hosts-file=src/test/resources/ssh/known_hosts" })
 		@ActiveProfiles({ "test", "composite" })
 		public static class ListTest {
 
