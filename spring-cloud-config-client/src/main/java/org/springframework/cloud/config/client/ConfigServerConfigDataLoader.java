@@ -345,7 +345,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					headers.add(STATE_HEADER, state);
 				}
 
-				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
+				final HttpEntity<Void> entity = new HttpEntity<>(null, headers);
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity, Environment.class, args);
 			}
 			catch (HttpClientErrorException | HttpServerErrorException e) {
