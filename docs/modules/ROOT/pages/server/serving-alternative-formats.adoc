@@ -34,6 +34,9 @@ The following URL patterns are supported:
 The flat JSON, YAML, and properties representations have an additional flag (provided as a boolean query parameter called `resolvePlaceholders`) to signal that placeholders in the source documents (in the standard Spring `${...}` form) should be resolved in the output before rendering, where possible.
 This is a useful feature for consumers that do not know about the Spring placeholder conventions.
 
+By default, YAML and JSON placeholder resolution fails when a nested placeholder cannot be resolved.
+To preserve unresolved nested placeholders in these responses instead, set `spring.cloud.config.server.ignore-unresolvable-nested-placeholders` to `true` in the Config Server configuration.
+
 NOTE: There are limitations in using these flat formats, mainly in relation to the loss of metadata.
 For example, the full JSON environment representation is structured as an ordered list of property sources, with names that correlate with the source.
 The flat JSON, YAML, and properties forms are coalesced into a single map, even if the origin of the values has multiple sources, and the names of the original source files are lost.
