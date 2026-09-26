@@ -5,7 +5,7 @@ Edit the files in the src/main/asciidoc/ directory instead.
 ////
 
 
-image::https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/master/graph/badge.svg["Codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/master"]
+image::https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/main/graph/badge.svg["Codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-config/branch/main"]
 
 
 [[features]]
@@ -42,7 +42,7 @@ Specifically for Spring applications, Spring Cloud Config Client lets you:
 [[sample-application]]
 == Sample Application
 
-You can find a sample application https://github.com/spring-cloud/spring-cloud-config/tree/master/spring-cloud-config-sample[here].
+You can find a sample application https://github.com/spring-cloud/spring-cloud-config/tree/main/spring-cloud-config-sample[here].
 It is a Spring Boot application, so you can run it by using the usual mechanisms (for instance, `mvn spring-boot:run`).
 When it runs, it looks for the config server on `http://localhost:8888` (a configurable default), so you can run the server as well to see it all working together.
 
