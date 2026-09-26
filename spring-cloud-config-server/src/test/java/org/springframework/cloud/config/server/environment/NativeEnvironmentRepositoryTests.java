@@ -23,6 +23,8 @@ import io.micrometer.observation.ObservationRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -30,6 +32,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.environment.SearchPathLocator.Locations;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -110,6 +113,26 @@ public class NativeEnvironmentRepositoryTests {
 		// gh-1778 property sources has the same name.
 		assertThat(environment.getPropertySources().get(0).getName())
 			.isNotEqualTo(environment.getPropertySources().get(1).getName());
+	}
+
+	@Test
+	public void emptyYamlArrayInJsonOutput() throws Exception {
+		this.repository.setSearchLocations("classpath:/test/empty-array");
+		Environment environment = this.repository.findOne("application", "default", "master");
+		EnvironmentRepository repository = new EnvironmentRepository() {
+			@Override
+			public Environment findOne(String application, String profile, String label) {
+				return environment;
+			}
+
+			@Override
+			public Environment findOne(String application, String profile, String label, boolean includeOrigin) {
+				return environment;
+			}
+		};
+		EnvironmentController controller = new EnvironmentController(repository);
+		ResponseEntity<String> json = controller.labelledJsonProperties("application", "default", "master", false);
+		JSONAssert.assertEquals("{\"network\":{\"urls\":[]}}", json.getBody(), JSONCompareMode.STRICT);
 	}
 
 	@Test
