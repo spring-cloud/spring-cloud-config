@@ -9,7 +9,7 @@ If you have configured a keystore (`encrypt.keystore.location`), the default loc
 [source,yaml]
 ----
 foo:
-  bar: `\{cipher}{key:testkey}...`
+  bar: '{cipher}{key:testkey}...'
 ----
 
 The locator looks for a key named "testkey".
