@@ -82,6 +82,8 @@ public class EnvironmentController {
 
 	private boolean validateProfiles = true;
 
+	private boolean ignoreUnresolvableNestedPlaceholders = false;
+
 	public EnvironmentController(EnvironmentRepository repository) {
 		this(repository, new JsonMapper());
 	}
@@ -115,6 +117,15 @@ public class EnvironmentController {
 	 */
 	public void setValidateProfiles(boolean validateProfiles) {
 		this.validateProfiles = validateProfiles;
+	}
+
+	/**
+	 * Flag indicating that unresolvable nested placeholders should be ignored when
+	 * resolving placeholders in YAML and JSON responses.
+	 * @param ignoreUnresolvableNestedPlaceholders the flag to set
+	 */
+	public void setIgnoreUnresolvableNestedPlaceholders(boolean ignoreUnresolvableNestedPlaceholders) {
+		this.ignoreUnresolvableNestedPlaceholders = ignoreUnresolvableNestedPlaceholders;
 	}
 
 	@GetMapping(path = "/{name}/{profiles:(?!.*\\b\\.(?:ya?ml|properties|json)\\b).*}",
@@ -201,7 +212,8 @@ public class EnvironmentController {
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> properties = convertToMap(environment);
 		if (resolvePlaceholders) {
-			properties = resolveMapPlaceholders(prepareEnvironment(environment), properties);
+			properties = resolveMapPlaceholders(
+					prepareEnvironment(environment, this.ignoreUnresolvableNestedPlaceholders), properties);
 		}
 		String json = this.objectMapper.writeValueAsString(properties);
 		return getSuccess(json, MediaType.APPLICATION_JSON);
@@ -232,7 +244,8 @@ public class EnvironmentController {
 		Environment environment = labelled(name, profiles, label);
 		Map<String, Object> result = convertToMap(environment);
 		if (resolvePlaceholders) {
-			result = resolveMapPlaceholders(prepareEnvironment(environment), result);
+			result = resolveMapPlaceholders(prepareEnvironment(environment, this.ignoreUnresolvableNestedPlaceholders),
+					result);
 		}
 		if (this.stripDocument && result.size() == 1 && result.keySet().iterator().next().equals("document")) {
 			Object value = result.get("document");

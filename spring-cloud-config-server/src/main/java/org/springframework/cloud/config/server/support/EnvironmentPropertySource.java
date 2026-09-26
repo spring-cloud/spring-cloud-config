@@ -46,10 +46,16 @@ public class EnvironmentPropertySource extends PropertySource<Environment> {
 	}
 
 	public static StandardEnvironment prepareEnvironment(Environment environment) {
+		return prepareEnvironment(environment, false);
+	}
+
+	public static StandardEnvironment prepareEnvironment(Environment environment,
+			boolean ignoreUnresolvableNestedPlaceholders) {
 		StandardEnvironment standardEnvironment = new StandardEnvironment();
 		standardEnvironment.getPropertySources().remove(StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME);
 		standardEnvironment.getPropertySources().remove(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME);
 		standardEnvironment.getPropertySources().addFirst(new EnvironmentPropertySource(environment));
+		standardEnvironment.setIgnoreUnresolvableNestedPlaceholders(ignoreUnresolvableNestedPlaceholders);
 		return standardEnvironment;
 	}
 

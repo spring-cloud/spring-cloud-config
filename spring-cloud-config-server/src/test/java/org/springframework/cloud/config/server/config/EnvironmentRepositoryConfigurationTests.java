@@ -37,6 +37,27 @@ import static org.mockito.Mockito.mock;
 public class EnvironmentRepositoryConfigurationTests {
 
 	@Test
+	public void ignoreUnresolvableNestedPlaceholdersDefaultsToFalse() {
+		new ApplicationContextRunner()
+			.withConfiguration(
+					AutoConfigurations.of(EnableConfigurationPropertiesBeans.class, ConfigServerProperties.class))
+			.run((context) -> assertThat(
+					context.getBean(ConfigServerProperties.class).isIgnoreUnresolvableNestedPlaceholders())
+				.isFalse());
+	}
+
+	@Test
+	public void ignoreUnresolvableNestedPlaceholdersCanBeConfigured() {
+		new ApplicationContextRunner()
+			.withConfiguration(
+					AutoConfigurations.of(EnableConfigurationPropertiesBeans.class, ConfigServerProperties.class))
+			.withPropertyValues("spring.cloud.config.server.ignore-unresolvable-nested-placeholders=true")
+			.run((context) -> assertThat(
+					context.getBean(ConfigServerProperties.class).isIgnoreUnresolvableNestedPlaceholders())
+				.isTrue());
+	}
+
+	@Test
 	public void configTokenProviderCanBeOverridden() {
 		new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
