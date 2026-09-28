@@ -1,0 +1,7 @@
+spring:
+  config:
+    activate:
+      on-profile: profile1 | profile2
+demo:
+  datasource:
+    driverClassName: org.postgresql.Driver

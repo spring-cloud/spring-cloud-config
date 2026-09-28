@@ -391,6 +391,32 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void orExpressionDocumentProducesNoEmptyOrDuplicateSources() throws IOException {
+		// A file containing a single document matched by an OR profile expression must
+		// not produce both an empty "s3:application" source and a
+		// second, real one with the same name. the empty one can silently win on the
+		// client since Spring's MutablePropertySources only keeps one source per name.
+		Resource resource = new ClassPathResource("awss3/application-with-or-profile-expression.yaml");
+		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+		putFiles("application.yaml", yamlString);
+
+		final Environment env = envRepo.findOne("application", "profile2", null);
+		List<PropertySource> propertySources = env.getPropertySources();
+
+		assertThat(propertySources).as("no empty property source should be added")
+			.noneMatch(ps -> ps.getSource().isEmpty());
+
+		List<String> names = propertySources.stream().map(PropertySource::getName).toList();
+		assertThat(names).as("source names must be unique").doesNotHaveDuplicates();
+
+		Optional<PropertySource> matched = propertySources.stream()
+			.filter(ps -> ps.getSource().containsKey("demo.datasource.driverClassName"))
+			.findFirst();
+		assertThat(matched).as("the OR-matched document should be present").isPresent();
+		assertThat(matched.get().getSource().get("demo.datasource.driverClassName")).isEqualTo("org.postgresql.Driver");
+	}
+
+	@Test
 	public void negatedProfileDocumentIncludedWhenProfileNotActive_ApplicationDirVariant() throws IOException {
 		Resource resource = new ClassPathResource("awss3/application-with-negated-profile.yaml");
 		String yamlString = new String(Files.readAllBytes(Paths.get(resource.getURI())));

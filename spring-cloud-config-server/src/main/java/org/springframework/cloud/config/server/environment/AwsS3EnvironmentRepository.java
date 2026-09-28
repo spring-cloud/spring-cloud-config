@@ -860,6 +860,11 @@ class NonProfileSpecificYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
 						: YamlProcessor.MatchStatus.NOT_FOUND);
 	}
 
+	@Override
+	public boolean isShouldIncludeWithEmptyProperties() {
+		return false;
+	}
+
 }
 
 class ProfileSpecificYamlS3ConfigFile extends YamlS3ConfigFile {
@@ -961,6 +966,8 @@ class S3ConfigFileFromKey extends S3ConfigFile {
 
 class NegatedProfileYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
 
+	private final String[] allProfiles;
+
 	NegatedProfileYamlDocumentS3ConfigFile(String application, String label, String bucketName,
 			boolean useApplicationAsDirectory, S3Client s3Client, String[] allProfiles) {
 		super(application, null, label, bucketName, useApplicationAsDirectory, s3Client, properties -> {
@@ -982,6 +989,7 @@ class NegatedProfileYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
 			boolean matches = Profiles.of(expression).matches(allProfilesList::contains);
 			return matches ? YamlProcessor.MatchStatus.FOUND : YamlProcessor.MatchStatus.NOT_FOUND;
 		});
+		this.allProfiles = allProfiles;
 	}
 
 	@Override
@@ -992,6 +1000,17 @@ class NegatedProfileYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
 	@Override
 	public boolean isShouldIncludeWithEmptyProperties() {
 		return false;
+	}
+
+	@Override
+	public String getName() {
+		// This document is matched by evaluating a complex/negated on-profile
+		// expression rather than an exact profile name, so it isn't looked up by a
+		// profile-suffixed key. Suffix the name with the active profiles anyway so it
+		// never collides with the plain, non-profile-specific source's name (which
+		// would otherwise cause one to silently replace the other on the client).
+		String suffix = String.join(",", allProfiles);
+		return suffix.isEmpty() ? super.getName() : super.getName() + "-" + suffix;
 	}
 
 }
