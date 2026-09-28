@@ -16,18 +16,17 @@
 
 package org.springframework.cloud.config.client;
 
-import java.util.List;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.List;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.beans.factory.ObjectProvider;
-
 import org.springframework.aop.Advisor;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -43,8 +42,8 @@ import org.springframework.context.annotation.ProxyType;
 import org.springframework.context.annotation.Proxyable;
 import org.springframework.context.annotation.Role;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.core.retry.RetryTemplate;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 
 /**
  * @author Dave Syer
