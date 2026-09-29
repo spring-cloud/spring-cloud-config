@@ -45,6 +45,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor.ClientRegistrationIdResolver;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.web.client.RestTemplate;
@@ -204,6 +205,44 @@ class ConfigClientRequestTemplateFactoryOAuth2Tests {
 		HttpRequest[] recorded = mockClient.retrieveRecordedRequests(request().withPath("/secure"));
 		assertThat(recorded).hasSize(1);
 		assertThat(recorded[0].getFirstHeader("Authorization")).isEqualTo("Bearer user-supplied-token");
+	}
+
+	@Test
+	void userSuppliedClientRegistrationIdResolverWinsWithoutClientRegistrationId() {
+		// given only 'enabled' is set, with the resolver and manager supplied through the
+		// bootstrap registry, so 'client-registration-id' is not required.
+		Map<String, Object> properties = new HashMap<>();
+		properties.put("spring.cloud.config.oauth2.enabled", "true");
+
+		DefaultBootstrapContext bootstrapContext = new DefaultBootstrapContext();
+		bootstrapContext.register(OAuth2AuthorizedClientManager.class,
+				ctx -> stubManagerReturning("user-resolver-token"));
+		bootstrapContext.register(ClientRegistrationIdResolver.class, ctx -> request -> REGISTRATION_ID);
+
+		RestTemplate restTemplate = createRestTemplate(bootstrapContext, properties);
+
+		// when
+		String url = "http://localhost:" + mockServer.getLocalPort() + "/secure";
+		ResponseEntity<String> response = restTemplate.getForEntity(URI.create(url), String.class);
+
+		// then
+		assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+		HttpRequest[] recorded = mockClient.retrieveRecordedRequests(request().withPath("/secure"));
+		assertThat(recorded).hasSize(1);
+		assertThat(recorded[0].getFirstHeader("Authorization")).isEqualTo("Bearer user-resolver-token");
+	}
+
+	@Test
+	void missingClientRegistrationIdFailsWhenDefaultResolverUsed() {
+		Map<String, Object> properties = new HashMap<>();
+		properties.put("spring.cloud.config.oauth2.enabled", "true");
+
+		DefaultBootstrapContext bootstrapContext = new DefaultBootstrapContext();
+		bootstrapContext.register(OAuth2AuthorizedClientManager.class, ctx -> stubManagerReturning("unused"));
+
+		assertThatThrownBy(() -> createRestTemplate(bootstrapContext, properties))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("spring.cloud.config.oauth2.client-registration-id");
 	}
 
 	private static Map<String, Object> baseOAuth2Properties() {

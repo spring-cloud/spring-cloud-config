@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client.oauth2;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,8 +44,10 @@ import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpReq
  * <p>
  * Each layer of the chain is a {@link ConditionalOnMissingBean} so a user may override
  * any piece (the {@link ClientRegistrationRepository}, the
- * {@link OAuth2AuthorizedClientManager}, the {@link ClientRegistrationIdResolver}, or the
- * {@link #configClientOAuth2Interceptor} bean itself) without rewriting the rest.
+ * {@link OAuth2AuthorizedClientManager}, or the {@link #configClientOAuth2Interceptor}
+ * bean itself) without rewriting the rest. A user may also supply a
+ * {@link ClientRegistrationIdResolver} bean, in which case
+ * {@code spring.cloud.config.oauth2.client-registration-id} is not required.
  * </p>
  */
 @Configuration(proxyBeanMethods = false)
@@ -72,20 +75,20 @@ public class ConfigClientOAuth2BootstrapConfiguration {
 		return OAuth2InterceptorRegistrar.buildAuthorizedClientManager(clientRegistrationRepository);
 	}
 
-	@Bean
-	@ConditionalOnMissingBean
-	public ClientRegistrationIdResolver configClientRegistrationIdResolver(ConfigClientOAuth2Properties properties) {
-		String clientRegistrationId = OAuth2InterceptorRegistrar
-			.requireClientRegistrationId(properties.getClientRegistrationId());
-		return request -> clientRegistrationId;
-	}
-
 	@Bean(name = OAUTH2_INTERCEPTOR_BEAN_NAME)
 	@ConditionalOnMissingBean(name = OAUTH2_INTERCEPTOR_BEAN_NAME)
 	public ClientHttpRequestInterceptor configClientOAuth2Interceptor(
-			OAuth2AuthorizedClientManager authorizedClientManager,
-			ClientRegistrationIdResolver clientRegistrationIdResolver) {
-		return OAuth2InterceptorRegistrar.buildInterceptor(authorizedClientManager, clientRegistrationIdResolver);
+			OAuth2AuthorizedClientManager authorizedClientManager, ConfigClientOAuth2Properties properties,
+			ObjectProvider<ClientRegistrationIdResolver> clientRegistrationIdResolver) {
+		// Resolved at creation time rather than via @ConditionalOnMissingBean, so a user
+		// resolver wins regardless of bootstrap configuration order. The client
+		// registration id is only required, and validated, when no resolver is supplied.
+		ClientRegistrationIdResolver resolver = clientRegistrationIdResolver.getIfAvailable(() -> {
+			String clientRegistrationId = OAuth2InterceptorRegistrar
+				.requireClientRegistrationId(properties.getClientRegistrationId());
+			return request -> clientRegistrationId;
+		});
+		return OAuth2InterceptorRegistrar.buildInterceptor(authorizedClientManager, resolver);
 	}
 
 }

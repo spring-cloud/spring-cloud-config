@@ -17,6 +17,12 @@
     <url>https://spring.io</url>
     <description>Spring Cloud Config Client OAuth2 Integration Tests</description>
 
+    <properties>
+        <testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
+        <commons-io.version>2.20.0</commons-io.version>
+        <mockserver.version>5.15.0</mockserver.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -69,25 +75,26 @@
         <dependency>
             <groupId>com.github.dasniko</groupId>
             <artifactId>testcontainers-keycloak</artifactId>
-            <version>3.4.0</version>
+            <version>${testcontainers-keycloak.version}</version>
             <scope>test</scope>
         </dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.20.0</version>
-		</dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons-io.version}</version>
+            <scope>test</scope>
+        </dependency>
         <!-- MockServer for simulating a protected resource server -->
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-netty</artifactId>
-            <version>5.15.0</version>
+            <version>${mockserver.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-client-java</artifactId>
-            <version>5.15.0</version>
+            <version>${mockserver.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

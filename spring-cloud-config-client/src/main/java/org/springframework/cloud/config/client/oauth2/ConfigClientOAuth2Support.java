@@ -53,7 +53,8 @@ import org.springframework.util.StringUtils;
  * interceptor itself) is looked up in the bootstrap context first via
  * {@link ConfigurableBootstrapContext#getOrElseSupply}, so users can plug in custom
  * implementations by registering them in the bootstrap registry before this support class
- * runs.
+ * runs. {@code spring.cloud.config.oauth2.client-registration-id} is only required when
+ * no {@link ClientRegistrationIdResolver} has been registered.
  * </p>
  *
  * <p>
@@ -117,8 +118,6 @@ public final class ConfigClientOAuth2Support {
 			if (!oauth2Properties.isEnabled()) {
 				return;
 			}
-			String clientRegistrationId = requireClientRegistrationId(oauth2Properties.getClientRegistrationId());
-
 			// Resolve the manager first. The default ClientRegistrationRepository is
 			// built
 			// lazily inside the manager supplier, so a user-supplied manager makes the
@@ -129,8 +128,14 @@ public final class ConfigClientOAuth2Support {
 							bootstrapContext.getOrElseSupply(ClientRegistrationRepository.class,
 									() -> buildClientRegistrationRepository(binder, bindHandler))));
 
+			// The client registration id is only required, and validated, when no
+			// resolver was registered in the bootstrap registry.
 			ClientRegistrationIdResolver registrationIdResolver = bootstrapContext
-				.getOrElseSupply(ClientRegistrationIdResolver.class, () -> request -> clientRegistrationId);
+				.getOrElseSupply(ClientRegistrationIdResolver.class, () -> {
+					String clientRegistrationId = requireClientRegistrationId(
+							oauth2Properties.getClientRegistrationId());
+					return request -> clientRegistrationId;
+				});
 
 			ClientHttpRequestInterceptor interceptor = bootstrapContext.getOrElseSupply(
 					ClientHttpRequestInterceptor.class,
