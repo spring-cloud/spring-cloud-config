@@ -145,7 +145,8 @@ public class SpringVaultClientConfiguration extends AbstractVaultConfiguration {
 		SslConfiguration.KeyStoreConfiguration trustStoreConfiguration = getKeyStoreConfiguration(ssl.getTrustStore(),
 				ssl.getTrustStorePassword());
 
-		return new SslConfiguration(keyStoreConfiguration, trustStoreConfiguration);
+		return new SslConfiguration(keyStoreConfiguration, trustStoreConfiguration, ssl.getEnabledProtocols(),
+				ssl.getEnabledCipherSuites());
 	}
 
 	/**
