@@ -285,8 +285,7 @@ and `spring.cloud.config.oauth2.enabled=true`; otherwise the interceptor is skip
 works for both the Config Data import flow (`spring.config.import=configserver:`) and the
 legacy bootstrap flow. By default the Config Client builds an
 `InMemoryClientRegistrationRepository` from the properties above and an
-`OAuth2AuthorizedClientManager` that supports the `client_credentials` and `refresh_token`
-grant types. Each layer is overridable: register your own `ClientRegistrationRepository`,
+`OAuth2AuthorizedClientManager` that supports the `client_credentials` grant type. Each layer is overridable: register your own `ClientRegistrationRepository`,
 `OAuth2AuthorizedClientManager`, `ClientRegistrationIdResolver`, or the
 `ClientHttpRequestInterceptor` itself (in the bootstrap registry via a
 `BootstrapRegistryInitializer` for the Config Data flow, or as a bean for the legacy

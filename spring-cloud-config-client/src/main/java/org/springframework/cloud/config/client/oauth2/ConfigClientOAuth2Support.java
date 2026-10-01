@@ -171,7 +171,6 @@ public final class ConfigClientOAuth2Support {
 				ClientRegistrationRepository registrationRepository) {
 			OAuth2AuthorizedClientProvider authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder()
 				.clientCredentials()
-				.refreshToken()
 				.build();
 			OAuth2AuthorizedClientService authorizedClientService = new InMemoryOAuth2AuthorizedClientService(
 					registrationRepository);
