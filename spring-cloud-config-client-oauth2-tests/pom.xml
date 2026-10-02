@@ -19,7 +19,7 @@
 
     <properties>
         <testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
-        <commons-io.version>2.20.0</commons-io.version>
+        <commons-io.version>2.22.0</commons-io.version>
         <mockserver.version>5.15.0</mockserver.version>
     </properties>
 
