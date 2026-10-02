@@ -18,7 +18,7 @@
     <description>Spring Cloud Config Client OAuth2 Integration Tests</description>
 
     <properties>
-        <testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
+        <testcontainers-keycloak.version>3.9.1</testcontainers-keycloak.version>
         <commons-io.version>2.22.0</commons-io.version>
         <mockserver.version>5.15.0</mockserver.version>
     </properties>
