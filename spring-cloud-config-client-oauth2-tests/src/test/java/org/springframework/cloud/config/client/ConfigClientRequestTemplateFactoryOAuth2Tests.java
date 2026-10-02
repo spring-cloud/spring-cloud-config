@@ -76,7 +76,7 @@ class ConfigClientRequestTemplateFactoryOAuth2Tests {
 	private static final String REGISTRATION_ID = "config-client";
 
 	@Container
-	static KeycloakContainer keycloak = new KeycloakContainer().withRealmImportFile("test-realm.json"); // classpath
+	static KeycloakContainer keycloak = new KeycloakContainer().withRealmImportFile("test-realm-realm.json"); // classpath
 																										// resource
 
 	private ClientAndServer mockServer;
