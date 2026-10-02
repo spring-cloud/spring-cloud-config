@@ -28,6 +28,7 @@ import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.prepareEnvironment;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolveMapPlaceholders;
 import static org.springframework.cloud.config.server.support.EnvironmentPropertySource.resolvePlaceholders;
@@ -236,6 +237,32 @@ public class EnvironmentPropertySourceTest {
 		Map<String, Object> resolved = resolveMapPlaceholders(prepared, input);
 
 		assertThat(resolved.get("ref")).isEqualTo("${MISSING}");
+	}
+
+	@Test
+	public void unresolvableNestedPlaceholderFailsByDefault() {
+		Environment environment = new Environment("test", "default");
+		Map<String, Object> map = new LinkedHashMap<>();
+		map.put("nested", "${MISSING}");
+		environment.add(new PropertySource("one", map));
+		StandardEnvironment prepared = prepareEnvironment(environment);
+		Map<String, Object> input = new LinkedHashMap<>();
+		input.put("value", "${nested}");
+
+		assertThatThrownBy(() -> resolveMapPlaceholders(prepared, input)).isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	public void unresolvableNestedPlaceholderCanBeIgnored() {
+		Environment environment = new Environment("test", "default");
+		Map<String, Object> map = new LinkedHashMap<>();
+		map.put("nested", "${MISSING}");
+		environment.add(new PropertySource("one", map));
+		StandardEnvironment prepared = prepareEnvironment(environment, true);
+		Map<String, Object> input = new LinkedHashMap<>();
+		input.put("value", "${nested}");
+
+		assertThat(resolveMapPlaceholders(prepared, input)).containsEntry("value", "${MISSING}");
 	}
 
 }

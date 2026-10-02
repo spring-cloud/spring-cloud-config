@@ -97,6 +97,7 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 			controller.setStripDocumentFromYaml(server.isStripDocumentFromYaml());
 			controller.setAcceptEmpty(server.isAcceptEmpty());
 			controller.setValidateProfiles(this.validateProfiles);
+			controller.setIgnoreUnresolvableNestedPlaceholders(server.isIgnoreUnresolvableNestedPlaceholders());
 			return controller;
 		}
 
