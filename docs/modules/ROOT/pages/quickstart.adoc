@@ -173,7 +173,7 @@ To use these features in an application, you can build it as a Spring Boot appli
 The most convenient way to add the dependency is with a Spring Boot starter `org.springframework.cloud:spring-cloud-starter-config`.
 There is also a parent pom and BOM (`spring-cloud-starter-parent`) for Maven users and a Spring IO version management properties file for Gradle and Spring CLI users. The following example shows a typical Maven configuration:
 
-[source,xml,indent=0]
+[source,xml,indent=0,subs="attributes+"]
 .pom.xml
 ----
     <parent>
