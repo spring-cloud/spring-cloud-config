@@ -12,6 +12,7 @@ asciidoc:
     github-issues: https://github.com/spring-cloud/@docs.main@/issues/
     github-wiki: https://github.com/spring-cloud/@docs.main@/wiki
     spring-cloud-version: @project.version@
+    spring-boot-docs-version: @spring-boot.version@
     github-tag: @github-tag@
     version-type: @version-type@
     docs-url: https://docs.spring.io/@docs.main@/docs/@project.version@
