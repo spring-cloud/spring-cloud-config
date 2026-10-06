@@ -1,4 +1,5 @@
 * xref:index.adoc[Introduction]
+* xref:quickstart.adoc[]
 * xref:server.adoc[]
 ** xref:server/environment-repository.adoc[]
 *** xref:server/environment-repository/git-backend.adoc[]

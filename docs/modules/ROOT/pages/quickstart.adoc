@@ -5,13 +5,16 @@ This quick start walks through using both the server and the client of Spring Cl
 
 First create a Spring Boot application with a dependency on `org.springframework.cloud:spring-cloud-config-server`.
 
-.pom.xml
-[source,xml]
+[tabs]
+======
+pom.xml::
++
+[source,xml,subs="attributes+",role="primary"]
 ----
 ...
   <properties>
     <java.version>21</java.version>
-    <spring-cloud.version>2025.1.0</spring-cloud.version>
+    <spring-cloud.version>{spring-cloud-dependencies-version}</spring-cloud.version>
   </properties>
   <dependencies>
     <dependency>
@@ -39,12 +42,13 @@ First create a Spring Boot application with a dependency on `org.springframework
 ...
 ----
 
-.build.gradle
-[source,json]
+build.gradle::
++
+[source,groovy,subs="attributes+",role="secondary"]
 ----
 ...
 ext {
-  set('springCloudVersion', "2025.1.0")
+  set('springCloudVersion', "{spring-cloud-dependencies-version}")
 }
 
 dependencies {
@@ -53,11 +57,12 @@ dependencies {
 
 dependencyManagement {
   imports {
-    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:$\{springCloudVersion}"
   }
 }
 ...
 ----
+======
 
 In the main application class add the `@EnableConfigServer` annotation.
 
@@ -69,7 +74,7 @@ In the main application class add the `@EnableConfigServer` annotation.
 public class ConfigServerApplication {
 
 	public static void main(String[] args) {
-		new SpringApplicationBuilder(ConfigServerApplication.class).run(args);
+		SpringApplication.run(ConfigServerApplication.class, args);
 	}
 
 }
@@ -103,7 +108,7 @@ $ curl localhost:8888/foo/development
   "name": "foo",
   "profiles": [
     "development"
-  ]
+  ],
   ....
   "propertySources": [
     {
@@ -121,6 +126,8 @@ $ curl localhost:8888/foo/development
       }
     },
     ....
+  ]
+}
 ----
 
 The default strategy for locating property sources is to clone a git repository (at `spring.cloud.config.server.git.uri`) and use it to initialize a mini `SpringApplication`.
@@ -176,12 +183,12 @@ There is also a parent pom and BOM (`spring-cloud-starter-parent`) for Maven use
 [source,xml,indent=0,subs="attributes+"]
 .pom.xml
 ----
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>{spring-boot-docs-version}</version>
-        <relativePath /> <!-- lookup parent from repository -->
-    </parent>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>{spring-boot-docs-version}</version>
+		<relativePath /> <!-- lookup parent from repository -->
+	</parent>
 
 	<dependencyManagement>
 		<dependencies>
@@ -221,6 +228,7 @@ There is also a parent pom and BOM (`spring-cloud-starter-parent`) for Maven use
 
 Now you can create a standard Spring Boot application, such as the following HTTP server:
 
+[source,java]
 ----
 @SpringBootApplication
 @RestController
@@ -241,38 +249,43 @@ public class Application {
 When this HTTP server runs, it picks up the external configuration from the default local config server (if it is running) on port 8888.
 To modify the startup behavior, you can change the location of the config server by using `application.properties` as shown in the following example:
 
+[source,properties]
 ----
 spring.config.import=optional:configserver:http://myconfigserver.com
 ----
 
 By default, if no application name is set, `application` will be used. To modify the name, the following property can be added to the `application.properties` file:
 
+[source,properties]
 ----
-spring.application.name: myapp
+spring.application.name=myapp
 ----
 
 NOTE: When setting the property `${spring.application.name}` do not prefix your app name with the reserved word `application-` to prevent issues resolving the correct property source.
 
-The Config Server properties show up in the `/env` endpoint as a high-priority property source, as shown in the following example.
+The Config Server properties show up in the `/actuator/env` endpoint as a high-priority property source, as shown in the following example.
 
 ----
-$ curl localhost:8080/env
+$ curl localhost:8080/actuator/env
 {
   "activeProfiles": [],
-  {
-    "name": "servletContextInitParams",
-    "properties": {}
-  },
-  {
-    "name": "configserver:https://github.com/spring-cloud-samples/config-repo/foo.properties",
-    "properties": {
-      "foo": {
-        "value": "bar",
-        "origin": "Config Server https://github.com/spring-cloud-samples/config-repo/foo.properties:2:12"
+  "defaultProfiles": [],
+  "propertySources": [
+    {
+      "name": "servletContextInitParams",
+      "properties": {}
+    },
+    {
+      "name": "configserver:https://github.com/spring-cloud-samples/config-repo/foo.properties",
+      "properties": {
+        "foo": {
+          "value": "bar",
+          "origin": "Config Server https://github.com/spring-cloud-samples/config-repo/foo.properties:2:12"
+        }
       }
-    }
-  },
-  ...
+    },
+    ...
+  ]
 }
 ----
 
@@ -280,4 +293,4 @@ A property source called `configserver:<URL of remote repository>/<file name>` c
 
 NOTE: The URL in the property source name is the git repository, not the config server URL.
 
-WARNING: If you use Spring Cloud Config Client, you need to set the `spring.config.import` property in order to bind to Config Server. You can read more about it https://docs.spring.io/spring-cloud-config/docs/current/reference/html/#config-data-import[in the Spring Cloud Config Reference Guide].
+WARNING: If you use Spring Cloud Config Client, you need to set the `spring.config.import` property in order to bind to Config Server. You can read more about it xref:client.adoc#config-data-import[in the Spring Cloud Config Reference Guide].
