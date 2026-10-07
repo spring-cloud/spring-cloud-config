@@ -39,3 +39,52 @@ You can set `spring.cloud.config.server.accept-empty` to `false` so that Server 
 
 NOTE:  You cannot place `spring.main.*` properties in a remote `EnvironmentRepository`.  These properties are used as part of the application initialization.
 
+== File Content Resolution
+
+The Config Server can resolve the content of local files and serve them as Base64 encoded values.
+This is particularly useful for serving binary files, such as SSL keystores or certificates, within configuration properties.
+
+To enable this feature, you must set the following property (it is disabled by default for security reasons):
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        file-resolving:
+          enabled: true
+----
+
+WARNING: Enabling this feature allows the Config Server to read files from the local file system where the server is running. Ensure that the process has appropriate file system permissions and is running in a secure environment.
+
+==== Usage
+
+You can use the `{file}` prefix in your configuration values followed by the path to the file.
+The Config Server will read the file, encode its content to a Base64 string, and replace the property value.
+
+**1. Absolute Path**
+
+You can reference files on the Config Server's local file system using an absolute path:
+
+[source,yaml]
+----
+server:
+  ssl:
+    key-store: {file}/etc/certs/keystore.jks
+----
+
+**2. Relative Path (Repository-aware)**
+
+If you are using a repository that supports search paths (like Git, SVN, or Native), you can reference files **relative to the repository root** by starting the path with a dot (`.`):
+
+[source,yaml]
+----
+server:
+  ssl:
+    # Resolves 'certs/keystore.jks' located inside the Git repository
+    key-store: {file}./certs/keystore.jks
+----
+
+In this case, the Config Server will look for the file inside the cloned repository directory.
+If the repository does not support search paths (e.g., JDBC, Vault), relative paths will be ignored.
