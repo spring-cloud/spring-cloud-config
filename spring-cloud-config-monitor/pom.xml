@@ -14,14 +14,14 @@
 	<description>Spring Cloud Config Monitor</description>
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
-		<spring-cloud-bus.version>5.1.0-SNAPSHOT</spring-cloud-bus.version>
+		<spring-cloud-stream.version>5.1.0-SNAPSHOT</spring-cloud-stream.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-bus-dependencies</artifactId>
-				<version>${spring-cloud-bus.version}</version>
+				<artifactId>spring-cloud-stream-dependencies</artifactId>
+				<version>${spring-cloud-stream.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
