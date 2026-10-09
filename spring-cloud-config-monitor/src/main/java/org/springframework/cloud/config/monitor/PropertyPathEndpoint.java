@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.config.server.environment.JGitEnvironmentRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
@@ -71,6 +72,13 @@ public class PropertyPathEndpoint {
 
 	private final List<Pattern> ignoredPaths;
 
+	/**
+	 * Git repositories of this config server. Their refresh rate is expired before the
+	 * applications are notified, so that the configuration the applications fetch on
+	 * refresh includes the change that triggered the notification.
+	 */
+	private final List<JGitEnvironmentRepository> gitRepositories;
+
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, PropertyPathNotifier notifier) {
 		this(extractor, List.of(notifier), MonitorConfigurationProperties.DEFAULT_MAX_DASHES);
 	}
@@ -88,7 +96,13 @@ public class PropertyPathEndpoint {
 
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, List<PropertyPathNotifier> notifiers,
 			int maxDashes, int maxPaths, List<String> ignoredPaths) {
+		this(extractor, notifiers, maxDashes, maxPaths, ignoredPaths, Collections.emptyList());
+	}
+
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, List<PropertyPathNotifier> notifiers,
+			int maxDashes, int maxPaths, List<String> ignoredPaths, List<JGitEnvironmentRepository> gitRepositories) {
 		this.extractor = extractor;
+		this.gitRepositories = gitRepositories == null ? Collections.emptyList() : gitRepositories;
 		this.notifiers = notifiers;
 		this.maxDashes = maxDashes;
 		this.maxPaths = maxPaths;
@@ -120,6 +134,9 @@ public class PropertyPathEndpoint {
 			if (!services.isEmpty()) {
 				for (String service : services) {
 					log.info("Refresh for: " + service);
+				}
+				for (JGitEnvironmentRepository repository : this.gitRepositories) {
+					repository.expireRefreshRate();
 				}
 				for (PropertyPathNotifier notifier : this.notifiers) {
 					notifier.notifyApplications(services);
