@@ -18,6 +18,7 @@ package org.springframework.cloud.config.monitor;
 
 import java.util.List;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -30,6 +31,7 @@ import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilte
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.bus.BusProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.config.server.environment.JGitEnvironmentRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -115,11 +117,12 @@ public class EnvironmentMonitorAutoConfiguration {
 
 		@Bean
 		public PropertyPathEndpoint propertyPathEndpoint(List<PropertyPathNotifier> notifiers,
-				MonitorConfigurationProperties monitorProperties) {
+				MonitorConfigurationProperties monitorProperties,
+				ObjectProvider<JGitEnvironmentRepository> gitRepositories) {
 			Assert.state(!notifiers.isEmpty(), "At least one PropertyPathNotifier must be available");
 			return new PropertyPathEndpoint(new CompositePropertyPathNotificationExtractor(this.extractors), notifiers,
 					monitorProperties.getMaxDashes(), monitorProperties.getMaxPaths(),
-					monitorProperties.getIgnoredPaths());
+					monitorProperties.getIgnoredPaths(), gitRepositories.orderedStream().toList());
 		}
 
 	}
