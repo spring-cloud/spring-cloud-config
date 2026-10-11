@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import com.google.cloud.parametermanager.v1.ParameterManagerClient;
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
+import com.google.cloud.storage.Storage;
 import io.micrometer.observation.ObservationRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.http.client.HttpClient;
@@ -59,6 +60,9 @@ import org.springframework.cloud.config.server.environment.CredhubEnvironmentRep
 import org.springframework.cloud.config.server.environment.CredhubEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
+import org.springframework.cloud.config.server.environment.GcsEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.GcsEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.GcsEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.GoogleParameterManagerEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.GoogleParameterManagerEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.GoogleParameterManagerEnvironmentRepositoryFactory;
@@ -231,6 +235,17 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public AwsS3EnvironmentRepositoryFactory awsS3EnvironmentRepositoryFactory(ConfigServerProperties server) {
 			return new AwsS3EnvironmentRepositoryFactory(server);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(Storage.class)
+	static class GcsFactoryConfig {
+
+		@Bean
+		public GcsEnvironmentRepositoryFactory gcsEnvironmentRepositoryFactory(ConfigServerProperties server) {
+			return new GcsEnvironmentRepositoryFactory(server);
 		}
 
 	}
@@ -434,6 +449,20 @@ class AwsS3RepositoryConfiguration {
 	@ConditionalOnMissingBean(AwsS3EnvironmentRepository.class)
 	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(AwsS3EnvironmentRepositoryFactory factory,
 			AwsS3EnvironmentProperties environmentProperties) {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration(proxyBeanMethods = false)
+@Profile("gcs")
+@ConditionalOnClass(Storage.class)
+class GcsRepositoryConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean(GcsEnvironmentRepository.class)
+	public GcsEnvironmentRepository gcsEnvironmentRepository(GcsEnvironmentRepositoryFactory factory,
+			GcsEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 
