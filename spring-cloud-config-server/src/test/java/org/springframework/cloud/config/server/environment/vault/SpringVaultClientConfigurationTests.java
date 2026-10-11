@@ -272,6 +272,8 @@ class SpringVaultClientConfigurationTests {
 
 		assertThat(sslConfiguration.getKeyStoreConfiguration()).isEqualTo(KeyStoreConfiguration.unconfigured());
 		assertThat(sslConfiguration.getTrustStoreConfiguration()).isEqualTo(KeyStoreConfiguration.unconfigured());
+		assertThat(sslConfiguration.getEnabledProtocols()).isEmpty();
+		assertThat(sslConfiguration.getEnabledCipherSuites()).isEmpty();
 	}
 
 	@Test
@@ -291,6 +293,20 @@ class SpringVaultClientConfigurationTests {
 		assertThat(new String(keyStoreConfiguration.getStorePassword())).isEqualTo("password");
 		assertThat(trustStoreConfiguration.isPresent()).isTrue();
 		assertThat(new String(trustStoreConfiguration.getStorePassword())).isEqualTo("password");
+	}
+
+	@Test
+	public void sslConfigurationWithEnabledProtocolsAndCipherSuites() {
+		VaultEnvironmentProperties properties = new VaultEnvironmentProperties();
+		properties.getSsl().setEnabledProtocols(List.of("TLSv1.3"));
+		properties.getSsl().setEnabledCipherSuites(List.of("TLS_AES_256_GCM_SHA384", "TLS_AES_128_GCM_SHA256"));
+
+		SpringVaultClientConfiguration configuration = getConfiguration(properties);
+		SslConfiguration sslConfiguration = configuration.sslConfiguration();
+
+		assertThat(sslConfiguration.getEnabledProtocols()).containsExactly("TLSv1.3");
+		assertThat(sslConfiguration.getEnabledCipherSuites()).containsExactly("TLS_AES_256_GCM_SHA384",
+				"TLS_AES_128_GCM_SHA256");
 	}
 
 	@Test
