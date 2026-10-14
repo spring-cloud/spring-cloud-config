@@ -1,0 +1,126 @@
+[[azure-key-vault-backend]]
+= Azure Key Vault Backend
+
+Spring Cloud Config Server supports link:https://azure.microsoft.com/products/key-vault/[Azure Key Vault] as a backend for configuration properties.
+
+You can enable this feature by adding the Azure Key Vault Secrets dependency to your application.
+
+[source,xml,indent=0]
+.pom.xml
+----
+<dependency>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-security-keyvault-secrets</artifactId>
+</dependency>
+----
+
+The following configuration uses Azure Key Vault to access secrets.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: azurekeyvault
+  cloud:
+    config:
+      server:
+        azure-keyvault:
+          vault-uri: https://my-vault.vault.azure.net/
+          prefix: ""
+          profile-separator: "-"
+          property-separator: "--"
+          origin: "azure:keyvault:"
+----
+
+== Secret Naming
+
+Azure Key Vault secret names are mapped to Spring configuration property names using the configured `profile-separator` and `property-separator`.
+
+With the default configuration:
+
+[source,yaml]
+----
+profile-separator: "-"
+property-separator: "--"
+----
+
+A secret for an application and profile follows this pattern:
+
+----
+{application}-{profile}-{property-name}
+----
+
+For example:
+
+----
+foo-default-s3--accessKey
+----
+
+is exposed as:
+
+[source,properties]
+----
+s3.accessKey=<secret-value>
+----
+
+Secrets that are not associated with a specific profile follow this pattern:
+
+----
+{application}-{property-name}
+----
+
+For example:
+
+----
+foo-s3--accessKey
+----
+
+is also exposed as:
+
+[source,properties]
+----
+s3.accessKey=<secret-value>
+----
+
+Azure Key Vault authentication uses Azure Identity's `DefaultAzureCredential`.
+
+.Azure Key Vault Configuration Properties
+|===
+|Property Name |Required |Default Value |Remarks
+
+|*vault-uri*
+|yes
+|
+|The URI of the Azure Key Vault.
+
+|*prefix*
+|no
+|``
+|The prefix used for Azure Key Vault secret names.
+
+|*profile-separator*
+|no
+|`-`
+|String that separates the application and profile in secret names.
+
+|*property-separator*
+|no
+|`--`
+|String used to represent dots in property names stored in Azure Key Vault.
+
+|*origin*
+|no
+|`azure:keyvault:`
+|The prefix added to the property source name to show its provenance.
+
+|*order*
+|no
+|`Ordered.LOWEST_PRECEDENCE`
+|The order of the environment repository.
+
+|===
+
+[NOTE]
+====
+When no application is specified, `application` is used as the default application, and when no profile is specified, `default` is used.
+====
