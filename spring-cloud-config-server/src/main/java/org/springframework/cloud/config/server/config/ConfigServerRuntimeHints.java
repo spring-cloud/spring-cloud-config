@@ -36,6 +36,7 @@ import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.internal.transport.sshd.SshdText;
 import org.eclipse.jgit.lib.CoreConfig;
+import org.eclipse.jgit.lib.GcConfig;
 
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
@@ -101,7 +102,8 @@ class ConfigServerRuntimeHints implements RuntimeHintsRegistrar {
 						TypeReference.of(MergeCommand.ConflictStyle.class),
 						TypeReference.of(MergeCommand.FastForwardMode.class), TypeReference.of(FetchCommand.class),
 						TypeReference.of(CoreConfig.TrustLooseRefStat.class),
-						TypeReference.of(CoreConfig.TrustPackedRefsStat.class)),
+						TypeReference.of(CoreConfig.TrustPackedRefsStat.class),
+						TypeReference.of(GcConfig.PackRefsMode.class)),
 						hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_METHODS));
 			hints.reflection()
 				.registerTypes(Set.of(TypeReference.of(SshdText.class)), hint -> hint
