@@ -57,6 +57,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.UnknownContentTypeException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -189,22 +190,6 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@Test
-	public void failFastPointsAtCredentialsWhenServerRespondsWithLoginPage() {
-		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
-		defaults.setFailFast(true);
-		this.locator = new ConfigServicePropertySourceLocator(defaults);
-		this.locator.setRestTemplate(new RestTemplate(MockConfigServerResponses.loginPage()));
-
-		Assertions.assertThatThrownBy(() -> this.locator.locateCollection(this.environment))
-			.isInstanceOf(IllegalStateException.class)
-			.hasMessageContaining("fail fast property is set")
-			.cause()
-			.isExactlyInstanceOf(IllegalStateException.class)
-			.hasMessageContaining("config server at http://localhost:8888")
-			.hasMessageContaining("login page");
-	}
-
-	@Test
 	public void failFastWhenNotFound() throws Exception {
 		Assertions.assertThatThrownBy(() -> {
 			ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
@@ -314,6 +299,23 @@ public class ConfigServicePropertySourceLocatorTests {
 			defaults.setRequestConnectTimeout(-1);
 			factory(defaults).create();
 		}).isInstanceOf(IllegalStateException.class).hasMessageContaining("Invalid Value for Connect Timeout set.");
+	}
+
+	@Test
+	public void shouldNotUseNextUriFor_UnreadableResponse_And_CONNECTION_TIMEOUT_ONLY_Strategy() throws Exception {
+		mockUnreadableResponseFromFirstUri(ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY);
+
+		Assertions.assertThatThrownBy(() -> this.locator.locateCollection(this.environment))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("fail fast property is set")
+			.hasCauseInstanceOf(UnknownContentTypeException.class);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_UnreadableResponse_And_ALWAYS_Strategy() throws Exception {
+		mockUnreadableResponseFromFirstUri(ConfigClientProperties.MultipleUriStrategy.ALWAYS);
+
+		assertThat(this.locator.locateCollection(this.environment)).isNotNull();
 	}
 
 	@Test
@@ -637,8 +639,28 @@ public class ConfigServicePropertySourceLocatorTests {
 		return map;
 	}
 
+	private void mockUnreadableResponseFromFirstUri(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy)
+			throws Exception {
+		ConfigClientProperties clientProperties = new ConfigClientProperties(this.environment);
+		String badURI = "http://baduri";
+		String goodURI = "http://localhost:8888";
+		clientProperties.setUri(new String[] { badURI, goodURI });
+		clientProperties.setFailFast(true);
+		clientProperties.setMultipleUriStrategy(multipleUriStrategy);
+		this.locator = new ConfigServicePropertySourceLocator(clientProperties);
+		ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
+		mockRequestResponse(requestFactory, badURI, HttpStatus.OK, MediaType.TEXT_HTML);
+		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+		this.locator.setRestTemplate(new RestTemplate(requestFactory));
+	}
+
 	private void mockRequestResponse(ClientHttpRequestFactory requestFactory, String baseURI, HttpStatus status)
 			throws Exception {
+		mockRequestResponse(requestFactory, baseURI, status, MediaType.APPLICATION_JSON);
+	}
+
+	private void mockRequestResponse(ClientHttpRequestFactory requestFactory, String baseURI, HttpStatus status,
+			MediaType contentType) throws Exception {
 		ClientHttpRequest request = Mockito.mock(ClientHttpRequest.class);
 		ClientHttpResponse response = Mockito.mock(ClientHttpResponse.class);
 
@@ -657,7 +679,7 @@ public class ConfigServicePropertySourceLocatorTests {
 		Mockito.when(request.execute()).thenReturn(response);
 
 		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setContentType(contentType);
 		Mockito.when(response.getHeaders()).thenReturn(headers);
 		Mockito.when(response.getStatusCode()).thenReturn(status);
 		Mockito.when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));

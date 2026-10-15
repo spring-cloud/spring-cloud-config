@@ -312,7 +312,13 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				}
 			}
 			catch (UnknownContentTypeException e) {
-				throw new IllegalStateException(ConfigServerConfigDataLoader.unreadableResponseMessage(uri, e), e);
+				if (i < noOfUrls - 1 && defaultProperties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info(
+							"Failed to read the response of a config server. Will try the next url if available. Error : "
+									+ e.getMessage());
+					continue;
+				}
+				throw e;
 			}
 
 			if (response == null) {

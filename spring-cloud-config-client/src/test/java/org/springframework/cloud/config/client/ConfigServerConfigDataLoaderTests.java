@@ -71,7 +71,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
@@ -223,52 +222,6 @@ public class ConfigServerConfigDataLoaderTests {
 	}
 
 	@Test
-	public void failFastPointsAtCredentialsWhenServerRespondsWithLoginPage() {
-		when(bootstrapContext.get(RestTemplate.class))
-			.thenReturn(new RestTemplate(MockConfigServerResponses.loginPage()));
-		properties.setUri(new String[] { "http://user:secret@localhost:8888" });
-		properties.setFailFast(true);
-
-		assertThatExceptionOfType(ConfigClientFailFastException.class)
-			.isThrownBy(() -> this.loader.load(context, resource))
-			.withMessageContaining("fail fast property is set")
-			.withCauseExactlyInstanceOf(IllegalStateException.class)
-			.havingCause()
-			.withMessageContaining("config server at http://localhost:8888")
-			.withMessageContaining("content type text/html")
-			.withMessageContaining("login page")
-			.withMessageContaining("spring.cloud.config.username")
-			.withMessageNotContaining("secret")
-			.withCauseExactlyInstanceOf(UnknownContentTypeException.class);
-	}
-
-	@Test
-	public void failFastPointsAtUriWhenServerRespondsWithOtherContent() {
-		when(bootstrapContext.get(RestTemplate.class))
-			.thenReturn(new RestTemplate(MockConfigServerResponses.respondingWith(MediaType.TEXT_PLAIN, "OK")));
-		properties.setFailFast(true);
-
-		assertThatExceptionOfType(ConfigClientFailFastException.class)
-			.isThrownBy(() -> this.loader.load(context, resource))
-			.havingCause()
-			.withMessageContaining("content type text/plain")
-			.withMessageContaining("spring.cloud.config.uri")
-			.withMessageNotContaining("login page");
-	}
-
-	@Test
-	public void warningPointsAtCredentialsWhenServerRespondsWithLoginPage() {
-		Log log = mock(Log.class);
-		this.loader = new ConfigServerConfigDataLoader(destination -> log);
-		when(bootstrapContext.get(RestTemplate.class))
-			.thenReturn(new RestTemplate(MockConfigServerResponses.loginPage()));
-
-		assertThat(this.loader.load(context, resource)).isNull();
-
-		verify(log).warn(ArgumentMatchers.<Object>argThat(message -> message.toString().contains("login page")));
-	}
-
-	@Test
 	public void failFastWhenRequestTimesOut() {
 		mockRequestTimedOut();
 		properties.setFailFast(true);
@@ -347,6 +300,22 @@ public class ConfigServerConfigDataLoaderTests {
 		properties.setRequestConnectTimeout(-1);
 		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> factory(properties).create())
 			.withMessageContaining("Invalid Value for Connect Timeout set.");
+	}
+
+	@Test
+	public void shouldNotUseNextUriFor_UnreadableResponse_And_CONNECTION_TIMEOUT_ONLY_Strategy() throws Exception {
+		mockUnreadableResponseFromFirstUri(ConfigClientProperties.MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY);
+
+		assertThatExceptionOfType(ConfigClientFailFastException.class)
+			.isThrownBy(() -> this.loader.load(context, resource))
+			.withCauseInstanceOf(UnknownContentTypeException.class);
+	}
+
+	@Test
+	public void shouldUseNextUriFor_UnreadableResponse_And_ALWAYS_Strategy() throws Exception {
+		mockUnreadableResponseFromFirstUri(ConfigClientProperties.MultipleUriStrategy.ALWAYS);
+
+		assertThat(this.loader.load(context, resource)).isNotNull();
 	}
 
 	@Test
@@ -827,8 +796,27 @@ public class ConfigServerConfigDataLoaderTests {
 		assertThat(this.loader.load(context, resource)).isNotNull();
 	}
 
+	private void mockUnreadableResponseFromFirstUri(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy)
+			throws Exception {
+		String badURI = "http://baduri";
+		String goodURI = "http://localhost:8888";
+		properties.setUri(new String[] { badURI, goodURI });
+		properties.setFailFast(true);
+		properties.setMultipleUriStrategy(multipleUriStrategy);
+		this.loader = new ConfigServerConfigDataLoader(destination -> logger);
+		ClientHttpRequestFactory requestFactory = mock(ClientHttpRequestFactory.class);
+		mockRequestResponse(requestFactory, badURI, HttpStatus.OK, MediaType.TEXT_HTML);
+		mockRequestResponse(requestFactory, goodURI, HttpStatus.OK);
+		when(bootstrapContext.get(RestTemplate.class)).thenReturn(new RestTemplate(requestFactory));
+	}
+
 	private void mockRequestResponse(ClientHttpRequestFactory requestFactory, String baseURI, HttpStatus status)
 			throws Exception {
+		mockRequestResponse(requestFactory, baseURI, status, MediaType.APPLICATION_JSON);
+	}
+
+	private void mockRequestResponse(ClientHttpRequestFactory requestFactory, String baseURI, HttpStatus status,
+			MediaType contentType) throws Exception {
 		ClientHttpRequest request = mock(ClientHttpRequest.class);
 		ClientHttpResponse response = mock(ClientHttpResponse.class);
 
@@ -845,7 +833,7 @@ public class ConfigServerConfigDataLoaderTests {
 		when(request.execute()).thenReturn(response);
 
 		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setContentType(contentType);
 		when(response.getHeaders()).thenReturn(headers);
 		when(response.getStatusCode()).thenReturn(status);
 		when(response.getBody()).thenReturn(new ByteArrayInputStream("{}".getBytes()));

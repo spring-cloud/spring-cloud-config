@@ -223,25 +223,6 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 		return null;
 	}
 
-	/**
-	 * Describes a config server response that is not an {@link Environment}. An HTML
-	 * response is usually the login page of a secured config server, so the message then
-	 * points at the credentials of the config client.
-	 * @param uri the config server URI
-	 * @param ex the exception thrown for the response
-	 * @return the message
-	 */
-	static String unreadableResponseMessage(String uri, UnknownContentTypeException ex) {
-		String message = "Could not read the response of the config server at " + uri + " (status " + ex.getStatusCode()
-				+ ", content type " + ex.getContentType() + "). ";
-		if (MediaType.TEXT_HTML.includes(ex.getContentType())) {
-			return message + "A secured config server responds with its login page when the credentials of the "
-					+ "config client are missing or wrong: check them, such as spring.cloud.config.username and "
-					+ "spring.cloud.config.password.";
-		}
-		return message + "Check that spring.cloud.config.uri points at a config server.";
-	}
-
 	protected void log(Environment result) {
 		if (logger.isInfoEnabled()) {
 			logger.info(String.format("Located environment: name=%s, profiles=%s, label=%s, version=%s, state=%s",
@@ -389,7 +370,13 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 				}
 			}
 			catch (UnknownContentTypeException e) {
-				throw new IllegalStateException(unreadableResponseMessage(uri, e), e);
+				if (i < noOfUrls - 1 && properties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info(
+							"Failed to read the response of a config server. Will try the next url if available. Error : "
+									+ e.getMessage());
+					continue;
+				}
+				throw e;
 			}
 
 			if (response == null) {
