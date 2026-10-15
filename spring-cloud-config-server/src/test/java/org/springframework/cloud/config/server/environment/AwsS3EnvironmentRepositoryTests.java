@@ -544,12 +544,48 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findWithMultipleProfilesAllFound() {
-		putFiles("foo-profile1.yml", yamlContent);
-		String versionId = putFiles("foo-profile2.yml", jsonContent);
+		// the version is the one of the last property source, here the one of the
+		// first profile, which has the lowest precedence
+		String versionId = putFiles("foo-profile1.yml", yamlContent);
+		putFiles("foo-profile2.yml", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1", "profile2");
+	}
+
+	@Test
+	public void lastProfileTakesPrecedenceForProfileSpecificFiles() {
+		putFiles("foo-profile1.properties", "greeting=profile1");
+		putFiles("foo-profile2.properties", "greeting=profile2");
+
+		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
+
+		assertThat(env.getProfiles()).containsExactly("profile1", "profile2");
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("profile2", "profile1");
+	}
+
+	@Test
+	public void lastProfileTakesPrecedenceForProfileDocuments() {
+		putFiles("foo.yml", "greeting: default\n---\nspring.config.activate.on-profile: profile1\ngreeting: profile1\n"
+				+ "---\nspring.config.activate.on-profile: profile2\ngreeting: profile2\n");
+
+		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
+
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("profile2", "profile1", "default");
+	}
+
+	@Test
+	public void negatedProfileDocumentTakesPrecedenceOverDefaultDocument() {
+		putFiles("foo.yml",
+				"greeting: default\n---\nspring.config.activate.on-profile: \"!other\"\n" + "greeting: not-other\n");
+
+		final Environment env = envRepo.findOne("foo", "profile1", null);
+
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("not-other", "default");
 	}
 
 	@Test
@@ -685,8 +721,10 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findWithMultipleProfilesAllFound_ApplicationDirVariant() {
-		putFiles("foo/application-profile1.yml", yamlContent);
-		String versionId = putFiles("foo/application-profile2.yml", jsonContent);
+		// the version is the one of the last property source, here the one of the
+		// first profile, which has the lowest precedence
+		String versionId = putFiles("foo/application-profile1.yml", yamlContent);
+		putFiles("foo/application-profile2.yml", jsonContent);
 
 		final Environment env = envRepoApplicationDir.findOne("foo", "profile1,profile2", null);
 
