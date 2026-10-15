@@ -62,6 +62,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.UnknownContentTypeException;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,6 +71,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.config.client.ConfigClientProperties.AUTHORIZATION;
 import static org.springframework.cloud.config.environment.EnvironmentMediaType.V2_JSON;
@@ -218,6 +220,52 @@ public class ConfigServerConfigDataLoaderTests {
 			.isThrownBy(() -> this.loader.load(context, resource))
 			.withMessageContaining(
 					"fail fast property is set, failing: None of labels [WeSetUpToReturn_NOT_FOUND_ForThisLabel] found");
+	}
+
+	@Test
+	public void failFastPointsAtCredentialsWhenServerRespondsWithLoginPage() {
+		when(bootstrapContext.get(RestTemplate.class))
+			.thenReturn(new RestTemplate(MockConfigServerResponses.loginPage()));
+		properties.setUri(new String[] { "http://user:secret@localhost:8888" });
+		properties.setFailFast(true);
+
+		assertThatExceptionOfType(ConfigClientFailFastException.class)
+			.isThrownBy(() -> this.loader.load(context, resource))
+			.withMessageContaining("fail fast property is set")
+			.withCauseExactlyInstanceOf(IllegalStateException.class)
+			.havingCause()
+			.withMessageContaining("config server at http://localhost:8888")
+			.withMessageContaining("content type text/html")
+			.withMessageContaining("login page")
+			.withMessageContaining("spring.cloud.config.username")
+			.withMessageNotContaining("secret")
+			.withCauseExactlyInstanceOf(UnknownContentTypeException.class);
+	}
+
+	@Test
+	public void failFastPointsAtUriWhenServerRespondsWithOtherContent() {
+		when(bootstrapContext.get(RestTemplate.class))
+			.thenReturn(new RestTemplate(MockConfigServerResponses.respondingWith(MediaType.TEXT_PLAIN, "OK")));
+		properties.setFailFast(true);
+
+		assertThatExceptionOfType(ConfigClientFailFastException.class)
+			.isThrownBy(() -> this.loader.load(context, resource))
+			.havingCause()
+			.withMessageContaining("content type text/plain")
+			.withMessageContaining("spring.cloud.config.uri")
+			.withMessageNotContaining("login page");
+	}
+
+	@Test
+	public void warningPointsAtCredentialsWhenServerRespondsWithLoginPage() {
+		Log log = mock(Log.class);
+		this.loader = new ConfigServerConfigDataLoader(destination -> log);
+		when(bootstrapContext.get(RestTemplate.class))
+			.thenReturn(new RestTemplate(MockConfigServerResponses.loginPage()));
+
+		assertThat(this.loader.load(context, resource)).isNull();
+
+		verify(log).warn(ArgumentMatchers.<Object>argThat(message -> message.toString().contains("login page")));
 	}
 
 	@Test

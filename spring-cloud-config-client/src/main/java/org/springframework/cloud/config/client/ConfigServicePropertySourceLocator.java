@@ -57,6 +57,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.UnknownContentTypeException;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
@@ -309,6 +310,9 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				else {
 					continue;
 				}
+			}
+			catch (UnknownContentTypeException e) {
+				throw new IllegalStateException(ConfigServerConfigDataLoader.unreadableResponseMessage(uri, e), e);
 			}
 
 			if (response == null) {

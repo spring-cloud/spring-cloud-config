@@ -189,6 +189,22 @@ public class ConfigServicePropertySourceLocatorTests {
 	}
 
 	@Test
+	public void failFastPointsAtCredentialsWhenServerRespondsWithLoginPage() {
+		ConfigClientProperties defaults = new ConfigClientProperties(this.environment);
+		defaults.setFailFast(true);
+		this.locator = new ConfigServicePropertySourceLocator(defaults);
+		this.locator.setRestTemplate(new RestTemplate(MockConfigServerResponses.loginPage()));
+
+		Assertions.assertThatThrownBy(() -> this.locator.locateCollection(this.environment))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("fail fast property is set")
+			.cause()
+			.isExactlyInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("config server at http://localhost:8888")
+			.hasMessageContaining("login page");
+	}
+
+	@Test
 	public void failFastWhenNotFound() throws Exception {
 		Assertions.assertThatThrownBy(() -> {
 			ClientHttpRequestFactory requestFactory = Mockito.mock(ClientHttpRequestFactory.class);
